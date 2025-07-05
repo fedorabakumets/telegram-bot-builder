@@ -174,6 +174,15 @@ Changelog:
     - Added smooth transitions and enhanced visual hierarchy for better UX
     - Created gradient text effects and improved spacing for dark theme compatibility
     - Updated keyboard settings with consistent theming and interactive states
+- July 05, 2025. Enhanced export modal with comprehensive dark theme support for code and files:
+  * Updated all code preview areas (Python, JSON, Requirements, etc.) with dark theme variants
+  * Enhanced file list items with proper hover states and selection indicators
+  * Improved instruction step boxes with color-coded themes and proper contrast
+  * Added dark theme support for validation messages and error states
+  * Enhanced code blocks and inline code elements with themed backgrounds and borders
+  * Updated warning and information sections with dark theme color schemes
+  * Improved mobile export interface with consistent dark theme styling
+  * Added proper theme transitions for all interactive file elements
 ```
 
 ## User Preferences

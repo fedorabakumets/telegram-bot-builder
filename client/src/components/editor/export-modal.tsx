@@ -261,21 +261,21 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
               </CardHeader>
               <CardContent>
                 {validationResult.isValid ? (
-                  <div className="flex items-center space-x-2 text-green-600 p-4 bg-green-50 rounded-lg">
+                  <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800/40">
                     <i className="fas fa-check-circle"></i>
                     <span className="font-medium">Структура бота корректна и готова к экспорту!</span>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-2 text-red-600 p-3 bg-red-50 rounded-lg">
+                    <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-800/40">
                       <i className="fas fa-exclamation-triangle"></i>
                       <span className="font-medium">Найдены ошибки в структуре бота:</span>
                     </div>
                     <div className="space-y-2">
                       {validationResult.errors.map((error, index) => (
-                        <div key={index} className="flex items-start space-x-2 p-3 bg-red-50 rounded border-l-4 border-red-200">
-                          <i className="fas fa-times-circle text-red-500 mt-0.5"></i>
-                          <span className="text-sm text-red-700">{error}</span>
+                        <div key={index} className="flex items-start space-x-2 p-3 bg-red-50 dark:bg-red-950/20 rounded border-l-4 border-red-200 dark:border-red-800/60">
+                          <i className="fas fa-times-circle text-red-500 dark:text-red-400 mt-0.5"></i>
+                          <span className="text-sm text-red-700 dark:text-red-300">{error}</span>
                         </div>
                       ))}
                     </div>
@@ -333,23 +333,23 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <Textarea
                     value={exportContent[selectedFormat]}
                     readOnly
-                    className={`${isMobile ? 'min-h-[200px]' : 'min-h-[350px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-gray-50`}
+                    className={`${isMobile ? 'min-h-[200px]' : 'min-h-[350px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-muted/50 dark:bg-muted/20 border-muted dark:border-muted/40 resize-none`}
                     placeholder="Выберите формат для просмотра..."
                   />
                 ) : (
-                  <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
-                    <i className="fas fa-exclamation-triangle mb-2"></i>
+                  <div className="p-4 bg-muted/50 dark:bg-muted/20 rounded-lg text-center text-muted-foreground border border-muted dark:border-muted/40">
+                    <i className="fas fa-exclamation-triangle mb-2 text-yellow-500 dark:text-yellow-400"></i>
                     <p>Исправьте ошибки валидации для экспорта файлов</p>
                   </div>
                 )}
                 
                 <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 md:grid-cols-3 gap-3'} mt-4`}>
                   {(['python', 'json', 'requirements', 'readme', 'dockerfile', 'config'] as ExportFormat[]).map(format => (
-                    <div key={format} className={`${isMobile ? 'p-2' : 'p-3'} border rounded-lg hover:bg-gray-50 cursor-pointer`} onClick={() => setSelectedFormat(format)}>
+                    <div key={format} className={`${isMobile ? 'p-2' : 'p-3'} border border-muted dark:border-muted/40 rounded-lg hover:bg-muted/50 dark:hover:bg-muted/20 cursor-pointer transition-colors ${format === selectedFormat ? 'bg-primary/10 dark:bg-primary/20 border-primary/50 dark:border-primary/40' : ''}`} onClick={() => setSelectedFormat(format)}>
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{getFileName(format)}</div>
-                          <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500`}>{format === selectedFormat ? 'Выбрано' : 'Нажмите для просмотра'}</div>
+                          <div className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'} text-foreground`}>{getFileName(format)}</div>
+                          <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground`}>{format === selectedFormat ? 'Выбрано' : 'Нажмите для просмотра'}</div>
                         </div>
                         <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); downloadFile(format); }}>
                           <i className="fas fa-download text-xs"></i>
@@ -385,12 +385,12 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <Textarea
                     value={exportContent.python}
                     readOnly
-                    className={`${isMobile ? 'min-h-[300px] max-h-[400px]' : 'min-h-[400px] max-h-[600px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-gray-50 resize-none`}
+                    className={`${isMobile ? 'min-h-[300px] max-h-[400px]' : 'min-h-[400px] max-h-[600px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-muted/50 dark:bg-muted/20 border-muted dark:border-muted/40 resize-none`}
                     placeholder="Генерация кода..."
                   />
                 ) : (
-                  <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
-                    <i className="fas fa-exclamation-triangle mb-2"></i>
+                  <div className="p-4 bg-muted/50 dark:bg-muted/20 rounded-lg text-center text-muted-foreground border border-muted dark:border-muted/40">
+                    <i className="fas fa-exclamation-triangle mb-2 text-yellow-500 dark:text-yellow-400"></i>
                     <p>Исправьте ошибки валидации для генерации кода</p>
                   </div>
                 )}
@@ -422,17 +422,17 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                         Копировать
                       </Button>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-muted-foreground mb-2">
                       Скопируйте и отправьте @BotFather для настройки меню команд:
                     </p>
                     <Textarea
                       value={botFatherCommands}
                       readOnly
-                      className={`${isMobile ? 'min-h-[120px] max-h-[200px]' : 'min-h-[150px] max-h-[300px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-gray-50 resize-none`}
+                      className={`${isMobile ? 'min-h-[120px] max-h-[200px]' : 'min-h-[150px] max-h-[300px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-muted/50 dark:bg-muted/20 border-muted dark:border-muted/40 resize-none`}
                     />
                   </div>
                 ) : (
-                  <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
+                  <div className="p-4 bg-muted/50 dark:bg-muted/20 rounded-lg text-center text-muted-foreground border border-muted dark:border-muted/40">
                     <p>Нет команд для настройки в меню</p>
                   </div>
                 )}
@@ -442,47 +442,47 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 <div className="space-y-3">
                   <h4 className="font-medium">Подробная инструкция по запуску:</h4>
                   
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-blue-800 mb-2">Шаг 1: Подготовка окружения</h5>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                  <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800/40">
+                    <h5 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Шаг 1: Подготовка окружения</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-300">
                       <li>Убедитесь, что у вас установлен Python 3.8 или выше</li>
                       <li>Создайте папку для вашего бота и перейдите в неё</li>
                       <li>Скачайте все необходимые файлы (Python код, requirements.txt, README.md)</li>
                       <li>Рекомендуется создать виртуальное окружение:
                         <div className="mt-1 ml-4">
-                          <code className="bg-gray-100 px-1 rounded text-xs">python -m venv venv</code><br />
-                          <code className="bg-gray-100 px-1 rounded text-xs">source venv/bin/activate</code> (Linux/Mac) или<br />
-                          <code className="bg-gray-100 px-1 rounded text-xs">venv\Scripts\activate</code> (Windows)
+                          <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded text-xs border border-muted dark:border-muted/60">python -m venv venv</code><br />
+                          <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded text-xs border border-muted dark:border-muted/60">source venv/bin/activate</code> (Linux/Mac) или<br />
+                          <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded text-xs border border-muted dark:border-muted/60">venv\Scripts\activate</code> (Windows)
                         </div>
                       </li>
                     </ol>
                   </div>
 
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-green-800 mb-2">Шаг 2: Установка зависимостей</h5>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                      <li>Установите aiogram (версия 3.x): <code className="bg-gray-100 px-1 rounded">pip install aiogram</code></li>
-                      <li>Или используйте файл requirements.txt: <code className="bg-gray-100 px-1 rounded">pip install -r requirements.txt</code></li>
-                      <li>Проверьте установку: <code className="bg-gray-100 px-1 rounded">python -c "import aiogram; print(aiogram.__version__)"</code></li>
+                  <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800/40">
+                    <h5 className="font-medium text-green-800 dark:text-green-200 mb-2">Шаг 2: Установка зависимостей</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-green-700 dark:text-green-300">
+                      <li>Установите aiogram (версия 3.x): <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install aiogram</code></li>
+                      <li>Или используйте файл requirements.txt: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install -r requirements.txt</code></li>
+                      <li>Проверьте установку: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">python -c "import aiogram; print(aiogram.__version__)"</code></li>
                     </ol>
                   </div>
 
-                  <div className="bg-amber-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-amber-800 mb-2">Шаг 3: Настройка бота</h5>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                      <li>Откройте файл <code className="bg-gray-100 px-1 rounded">{projectName.replace(/\s+/g, '_')}_bot.py</code></li>
-                      <li>Найдите строку <code className="bg-gray-100 px-1 rounded">BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"</code></li>
-                      <li>Замените <code className="bg-gray-100 px-1 rounded">YOUR_BOT_TOKEN_HERE</code> на токен вашего бота от @BotFather</li>
-                      <li>Найдите строку <code className="bg-gray-100 px-1 rounded">ADMIN_IDS = [123456789]</code></li>
-                      <li>Замените <code className="bg-gray-100 px-1 rounded">123456789</code> на ваш Telegram ID (можно узнать у @userinfobot)</li>
+                  <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-200 dark:border-amber-800/40">
+                    <h5 className="font-medium text-amber-800 dark:text-amber-200 mb-2">Шаг 3: Настройка бота</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-amber-700 dark:text-amber-300">
+                      <li>Откройте файл <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">{projectName.replace(/\s+/g, '_')}_bot.py</code></li>
+                      <li>Найдите строку <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"</code></li>
+                      <li>Замените <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">YOUR_BOT_TOKEN_HERE</code> на токен вашего бота от @BotFather</li>
+                      <li>Найдите строку <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">ADMIN_IDS = [123456789]</code></li>
+                      <li>Замените <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">123456789</code> на ваш Telegram ID (можно узнать у @userinfobot)</li>
                       <li>Сохраните файл</li>
                     </ol>
                   </div>
 
-                  <div className="bg-purple-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-purple-800 mb-2">Шаг 4: Запуск и тестирование</h5>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                      <li>Запустите бота: <code className="bg-gray-100 px-1 rounded">python {projectName.replace(/\s+/g, '_')}_bot.py</code></li>
+                  <div className="bg-purple-50 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-200 dark:border-purple-800/40">
+                    <h5 className="font-medium text-purple-800 dark:text-purple-200 mb-2">Шаг 4: Запуск и тестирование</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-purple-700 dark:text-purple-300">
+                      <li>Запустите бота: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">python {projectName.replace(/\s+/g, '_')}_bot.py</code></li>
                       <li>Дождитесь сообщения "Бот запущен и готов к работе!"</li>
                       <li>Найдите вашего бота в Telegram и отправьте команду /start</li>
                       <li>Проверьте работу всех команд и кнопок</li>
@@ -496,11 +496,11 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 <div className="space-y-3">
                   <h4 className="font-medium">Настройка меню команд в @BotFather:</h4>
                   
-                  <div className="bg-indigo-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-indigo-800 mb-2">Автоматическая настройка меню</h5>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                  <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800/40">
+                    <h5 className="font-medium text-indigo-800 dark:text-indigo-200 mb-2">Автоматическая настройка меню</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-indigo-700 dark:text-indigo-300">
                       <li>Найдите @BotFather в Telegram</li>
-                      <li>Отправьте команду <code className="bg-gray-100 px-1 rounded">/setcommands</code></li>
+                      <li>Отправьте команду <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setcommands</code></li>
                       <li>Выберите своего бота из списка</li>
                       <li>Скопируйте команды из раздела "Команды для @BotFather" выше</li>
                       <li>Вставьте команды в чат с @BotFather и отправьте</li>
@@ -508,13 +508,13 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                     </ol>
                   </div>
 
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <h6 className="font-medium text-gray-800 mb-1">Дополнительные настройки @BotFather:</h6>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• <code className="bg-gray-100 px-1 rounded">/setdescription</code> - установить описание бота</li>
-                      <li>• <code className="bg-gray-100 px-1 rounded">/setuserpic</code> - установить фото профиля</li>
-                      <li>• <code className="bg-gray-100 px-1 rounded">/setname</code> - изменить имя бота</li>
-                      <li>• <code className="bg-gray-100 px-1 rounded">/setabouttext</code> - установить текст "О боте"</li>
+                  <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
+                    <h6 className="font-medium text-foreground mb-1">Дополнительные настройки @BotFather:</h6>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setdescription</code> - установить описание бота</li>
+                      <li>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setuserpic</code> - установить фото профиля</li>
+                      <li>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setname</code> - изменить имя бота</li>
+                      <li>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setabouttext</code> - установить текст "О боте"</li>
                     </ul>
                   </div>
                 </div>
@@ -525,43 +525,43 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <h4 className="font-medium">Описание экспортируемых файлов:</h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <h6 className="font-medium text-gray-800 mb-1">Python код (.py)</h6>
-                      <p className="text-sm text-gray-600">Основной файл бота с логикой обработки команд, сообщений и кнопок. Использует aiogram 3.x.</p>
+                    <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
+                      <h6 className="font-medium text-foreground mb-1">Python код (.py)</h6>
+                      <p className="text-sm text-muted-foreground">Основной файл бота с логикой обработки команд, сообщений и кнопок. Использует aiogram 3.x.</p>
                     </div>
                     
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <h6 className="font-medium text-gray-800 mb-1">JSON данные (.json)</h6>
-                      <p className="text-sm text-gray-600">Структурированные данные бота для импорта в другие системы или резервного копирования.</p>
+                    <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
+                      <h6 className="font-medium text-foreground mb-1">JSON данные (.json)</h6>
+                      <p className="text-sm text-muted-foreground">Структурированные данные бота для импорта в другие системы или резервного копирования.</p>
                     </div>
                     
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <h6 className="font-medium text-gray-800 mb-1">Зависимости (.txt)</h6>
-                      <p className="text-sm text-gray-600">Файл requirements.txt со всеми необходимыми Python библиотеками для работы бота.</p>
+                    <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
+                      <h6 className="font-medium text-foreground mb-1">Зависимости (.txt)</h6>
+                      <p className="text-sm text-muted-foreground">Файл requirements.txt со всеми необходимыми Python библиотеками для работы бота.</p>
                     </div>
                     
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <h6 className="font-medium text-gray-800 mb-1">Документация (.md)</h6>
-                      <p className="text-sm text-gray-600">README файл с подробным описанием бота, его функций и инструкцией по установке.</p>
+                    <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
+                      <h6 className="font-medium text-foreground mb-1">Документация (.md)</h6>
+                      <p className="text-sm text-muted-foreground">README файл с подробным описанием бота, его функций и инструкцией по установке.</p>
                     </div>
                     
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <h6 className="font-medium text-gray-800 mb-1">Dockerfile</h6>
-                      <p className="text-sm text-gray-600">Конфигурация для контейнеризации бота с помощью Docker для простого развертывания.</p>
+                    <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
+                      <h6 className="font-medium text-foreground mb-1">Dockerfile</h6>
+                      <p className="text-sm text-muted-foreground">Конфигурация для контейнеризации бота с помощью Docker для простого развертывания.</p>
                     </div>
                     
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <h6 className="font-medium text-gray-800 mb-1">Конфигурация (.yaml)</h6>
-                      <p className="text-sm text-gray-600">Файл конфигурации для развертывания бота на серверах с автоматической настройкой.</p>
+                    <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
+                      <h6 className="font-medium text-foreground mb-1">Конфигурация (.yaml)</h6>
+                      <p className="text-sm text-muted-foreground">Файл конфигурации для развертывания бота на серверах с автоматической настройкой.</p>
                     </div>
                   </div>
                 </div>
 
                 <Separator className="my-4" />
 
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-red-800 mb-2">⚠️ Важные замечания:</h5>
-                  <ul className="text-sm text-red-700 space-y-1">
+                <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-lg border border-red-200 dark:border-red-800/40">
+                  <h5 className="font-medium text-red-800 dark:text-red-200 mb-2">⚠️ Важные замечания:</h5>
+                  <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
                     <li>• Никогда не публикуйте токен бота в открытом доступе</li>
                     <li>• Регулярно обновляйте токен бота при подозрении на компрометацию</li>
                     <li>• Для продакшена используйте переменные окружения для хранения токена</li>
@@ -615,17 +615,17 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <Separator />
                   
                   {validationResult.isValid ? (
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-600 mb-2">Предварительный просмотр:</div>
-                      <div className="bg-white rounded p-2 max-h-32 overflow-y-auto">
-                        <pre className="text-xs font-mono text-gray-800">
+                    <div className="bg-muted/50 dark:bg-muted/20 rounded-lg p-2 border border-muted dark:border-muted/40">
+                      <div className="text-xs text-muted-foreground mb-2">Предварительный просмотр:</div>
+                      <div className="bg-background dark:bg-background/60 rounded p-2 max-h-32 overflow-y-auto border border-muted dark:border-muted/40">
+                        <pre className="text-xs font-mono text-foreground">
                           {exportContent[selectedFormat].substring(0, 200)}...
                         </pre>
                       </div>
                     </div>
                   ) : (
-                    <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
-                      <i className="fas fa-exclamation-triangle mb-2"></i>
+                    <div className="p-4 bg-muted/50 dark:bg-muted/20 rounded-lg text-center text-muted-foreground border border-muted dark:border-muted/40">
+                      <i className="fas fa-exclamation-triangle mb-2 text-yellow-500 dark:text-yellow-400"></i>
                       <p className="text-sm">Исправьте ошибки валидации для экспорта</p>
                     </div>
                   )}
