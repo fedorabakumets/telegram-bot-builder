@@ -7,6 +7,7 @@ import { Button as UIButton } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
@@ -437,54 +438,63 @@ export function PropertiesPanel({
 
         {/* Command Advanced Settings */}
         {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Расширенные настройки команды</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-xs font-medium text-gray-700">Показать в меню</Label>
-                  <div className="text-xs text-gray-500">Команда появится в меню @BotFather</div>
+          <Accordion type="single" collapsible>
+            <AccordionItem value="advanced-settings">
+              <AccordionTrigger className="text-sm font-medium text-gray-900 hover:no-underline">
+                <div className="flex items-center space-x-2">
+                  <i className="fas fa-cogs text-gray-500 text-xs"></i>
+                  <span>Расширенные настройки команды</span>
                 </div>
-                <Switch
-                  checked={selectedNode.data.showInMenu ?? true}
-                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { showInMenu: checked })}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-xs font-medium text-gray-700">Только в приватных чатах</Label>
-                  <div className="text-xs text-gray-500">Команда работает только в диалоге с ботом</div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xs font-medium text-gray-700">Показать в меню</Label>
+                      <div className="text-xs text-gray-500">Команда появится в меню @BotFather</div>
+                    </div>
+                    <Switch
+                      checked={selectedNode.data.showInMenu ?? true}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { showInMenu: checked })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xs font-medium text-gray-700">Только в приватных чатах</Label>
+                      <div className="text-xs text-gray-500">Команда работает только в диалоге с ботом</div>
+                    </div>
+                    <Switch
+                      checked={selectedNode.data.isPrivateOnly ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { isPrivateOnly: checked })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xs font-medium text-gray-700">Требует авторизации</Label>
+                      <div className="text-xs text-gray-500">Пользователь должен быть зарегистрирован</div>
+                    </div>
+                    <Switch
+                      checked={selectedNode.data.requiresAuth ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { requiresAuth: checked })}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-xs font-medium text-gray-700">Только для администраторов</Label>
+                      <div className="text-xs text-gray-500">Команда доступна только админам</div>
+                    </div>
+                    <Switch
+                      checked={selectedNode.data.adminOnly ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
+                    />
+                  </div>
                 </div>
-                <Switch
-                  checked={selectedNode.data.isPrivateOnly ?? false}
-                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { isPrivateOnly: checked })}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-xs font-medium text-gray-700">Требует авторизации</Label>
-                  <div className="text-xs text-gray-500">Пользователь должен быть зарегистрирован</div>
-                </div>
-                <Switch
-                  checked={selectedNode.data.requiresAuth ?? false}
-                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { requiresAuth: checked })}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-xs font-medium text-gray-700">Только для администраторов</Label>
-                  <div className="text-xs text-gray-500">Команда доступна только админам</div>
-                </div>
-                <Switch
-                  checked={selectedNode.data.adminOnly ?? false}
-                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
-                />
-              </div>
-            </div>
-          </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         )}
 
         <Separator />
