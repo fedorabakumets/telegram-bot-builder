@@ -25,6 +25,12 @@ function createBotFile(botCode: string, projectId: number): string {
 // Функция для запуска бота
 async function startBot(projectId: number, token: string): Promise<{ success: boolean; error?: string; processId?: string }> {
   try {
+    // Проверяем, не запущен ли уже бот
+    const existingInstance = await storage.getBotInstance(projectId);
+    if (existingInstance && existingInstance.status === 'running') {
+      return { success: false, error: "Бот уже запущен" };
+    }
+
     const project = await storage.getBotProject(projectId);
     if (!project) {
       return { success: false, error: "Проект не найден" };
@@ -116,6 +122,34 @@ async function stopBot(projectId: number): Promise<{ success: boolean; error?: s
   }
 }
 
+// Функция для перезапуска бота (если он запущен)
+async function restartBotIfRunning(projectId: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    const instance = await storage.getBotInstance(projectId);
+    if (!instance || instance.status !== 'running') {
+      return { success: true }; // Бот не запущен, ничего не делаем
+    }
+
+    console.log(`Перезапускаем бота ${projectId} из-за обновления кода...`);
+    
+    // Останавливаем текущий бот
+    const stopResult = await stopBot(projectId);
+    if (!stopResult.success) {
+      return stopResult;
+    }
+
+    // Ждем немного для корректного завершения процесса
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Запускаем заново с тем же токеном
+    const startResult = await startBot(projectId, instance.token);
+    return startResult;
+  } catch (error) {
+    console.error('Ошибка перезапуска бота:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+  }
+}
+
 function generatePythonCode(botData: any): string {
   const { nodes } = botData;
   
@@ -156,7 +190,7 @@ async def start_handler(message: types.Message):
 `;
         });
         
-        code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard}, one_time_keyboard=${node.data.oneTimeKeyboard})
+        code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
     await message.answer(text, reply_markup=keyboard)
 `;
       } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
@@ -255,6 +289,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
+      
+      // Если обновляется data (структура бота), перезапускаем бота если он запущен
+      if (validatedData.data) {
+        console.log(`Проект ${id} обновлен, проверяем необходимость перезапуска бота...`);
+        const restartResult = await restartBotIfRunning(id);
+        if (!restartResult.success) {
+          console.error(`Ошибка перезапуска бота ${id}:`, restartResult.error);
+        }
+      }
+      
       res.json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
