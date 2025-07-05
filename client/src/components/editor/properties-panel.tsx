@@ -347,9 +347,11 @@ export function PropertiesPanel({
                           size="sm"
                           variant="ghost"
                           onClick={() => onButtonDelete(selectedNode.id, button.id)}
-                          className="text-gray-400 hover:text-red-500 h-auto p-1"
+                          className="text-muted-foreground hover:text-destructive dark:text-muted-foreground dark:hover:text-destructive h-auto p-1 transition-colors duration-200"
                         >
-                          <i className="fas fa-trash text-xs"></i>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
                         </UIButton>
                       </div>
                       <Select
@@ -420,8 +422,10 @@ export function PropertiesPanel({
                           />
                           
                           {button.target && !button.target.startsWith('/') && (
-                            <div className="flex items-center text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                              <i className="fas fa-exclamation-triangle mr-2"></i>
+                            <div className="flex items-center text-xs text-warning-foreground bg-warning/10 dark:bg-warning/5 border border-warning/20 dark:border-warning/10 p-2 rounded-md">
+                              <svg className="w-3 h-3 mr-2 text-warning" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
                               <span>Команда должна начинаться с символа "/"</span>
                             </div>
                           )}
@@ -482,58 +486,96 @@ export function PropertiesPanel({
 
         {/* Command Advanced Settings */}
         {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
-          <Accordion type="single" collapsible>
-            <AccordionItem value="advanced-settings">
-              <AccordionTrigger className="text-sm font-medium text-gray-900 hover:no-underline">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="advanced-settings" className="border-border">
+              <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline hover:text-foreground/90 transition-colors duration-200">
                 <div className="flex items-center space-x-2">
-                  <i className="fas fa-cogs text-gray-500 text-xs"></i>
-                  <span>Расширенные настройки команды</span>
+                  <div className="w-4 h-4 rounded-full bg-gradient-to-r from-primary/20 to-primary/10 flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <span className="bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                    Расширенные настройки команды
+                  </span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-4 pt-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-xs font-medium text-gray-700">Показать в меню</Label>
-                      <div className="text-xs text-gray-500">Команда появится в меню @BotFather</div>
+              <AccordionContent className="bg-gradient-to-br from-background to-muted/20 dark:from-background dark:to-muted/10 border border-border/50 rounded-lg mt-2 overflow-hidden">
+                <div className="space-y-4 p-4">
+                  {/* Show in Menu Setting */}
+                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-foreground group-hover:text-primary transition-colors duration-200">
+                        Показать в меню
+                      </Label>
+                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Команда появится в меню @BotFather
+                      </div>
                     </div>
-                    <Switch
-                      checked={selectedNode.data.showInMenu ?? true}
-                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { showInMenu: checked })}
-                    />
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.showInMenu ?? true}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { showInMenu: checked })}
+                        className="data-[state=checked]:bg-primary"
+                      />
+                    </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-xs font-medium text-gray-700">Только в приватных чатах</Label>
-                      <div className="text-xs text-gray-500">Команда работает только в диалоге с ботом</div>
+                  {/* Private Only Setting */}
+                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-warning/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-foreground group-hover:text-warning transition-colors duration-200">
+                        Только в приватных чатах
+                      </Label>
+                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Команда работает только в диалоге с ботом
+                      </div>
                     </div>
-                    <Switch
-                      checked={selectedNode.data.isPrivateOnly ?? false}
-                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { isPrivateOnly: checked })}
-                    />
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.isPrivateOnly ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { isPrivateOnly: checked })}
+                        className="data-[state=checked]:bg-warning"
+                      />
+                    </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-xs font-medium text-gray-700">Требует авторизации</Label>
-                      <div className="text-xs text-gray-500">Пользователь должен быть зарегистрирован</div>
+                  {/* Requires Auth Setting */}
+                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-info/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-foreground group-hover:text-info transition-colors duration-200">
+                        Требует авторизации
+                      </Label>
+                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Пользователь должен быть зарегистрирован
+                      </div>
                     </div>
-                    <Switch
-                      checked={selectedNode.data.requiresAuth ?? false}
-                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { requiresAuth: checked })}
-                    />
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.requiresAuth ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { requiresAuth: checked })}
+                        className="data-[state=checked]:bg-info"
+                      />
+                    </div>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-xs font-medium text-gray-700">Только для администраторов</Label>
-                      <div className="text-xs text-gray-500">Команда доступна только админам</div>
+                  {/* Admin Only Setting */}
+                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-destructive/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-foreground group-hover:text-destructive transition-colors duration-200">
+                        Только для администраторов
+                      </Label>
+                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Команда доступна только админам
+                      </div>
                     </div>
-                    <Switch
-                      checked={selectedNode.data.adminOnly ?? false}
-                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
-                    />
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.adminOnly ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
+                        className="data-[state=checked]:bg-destructive"
+                      />
+                    </div>
                   </div>
                 </div>
               </AccordionContent>
@@ -543,31 +585,55 @@ export function PropertiesPanel({
 
         <Separator />
 
-        {/* Advanced Settings */}
+        {/* Keyboard Advanced Settings */}
         {selectedNode.data.keyboardType === 'reply' && (
-          <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Настройки клавиатуры</h3>
+          <div className="bg-gradient-to-br from-background to-muted/20 dark:from-background dark:to-muted/10 border border-border/50 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="w-4 h-4 rounded-full bg-gradient-to-r from-secondary/20 to-secondary/10 flex items-center justify-center">
+                <svg className="w-2.5 h-2.5 text-secondary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-medium text-foreground bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text">
+                Настройки клавиатуры
+              </h3>
+            </div>
+            
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-xs font-medium text-gray-700">Одноразовая клавиатура</Label>
-                  <div className="text-xs text-gray-500">Скрыть после нажатия</div>
+              <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-secondary/30 hover:bg-card/80 transition-all duration-200">
+                <div className="flex-1">
+                  <Label className="text-xs font-medium text-foreground group-hover:text-secondary transition-colors duration-200">
+                    Одноразовая клавиатура
+                  </Label>
+                  <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Скрыть после нажатия
+                  </div>
                 </div>
-                <Switch
-                  checked={selectedNode.data.oneTimeKeyboard}
-                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { oneTimeKeyboard: checked })}
-                />
+                <div className="ml-4">
+                  <Switch
+                    checked={selectedNode.data.oneTimeKeyboard}
+                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { oneTimeKeyboard: checked })}
+                    className="data-[state=checked]:bg-secondary"
+                  />
+                </div>
               </div>
               
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-xs font-medium text-gray-700">Изменить размер клавиатуры</Label>
-                  <div className="text-xs text-gray-500">Подогнать под содержимое</div>
+              <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-secondary/30 hover:bg-card/80 transition-all duration-200">
+                <div className="flex-1">
+                  <Label className="text-xs font-medium text-foreground group-hover:text-secondary transition-colors duration-200">
+                    Изменить размер клавиатуры
+                  </Label>
+                  <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Подогнать под содержимое
+                  </div>
                 </div>
-                <Switch
-                  checked={selectedNode.data.resizeKeyboard}
-                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
-                />
+                <div className="ml-4">
+                  <Switch
+                    checked={selectedNode.data.resizeKeyboard}
+                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
+                    className="data-[state=checked]:bg-secondary"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -575,11 +641,11 @@ export function PropertiesPanel({
       </div>
 
       {/* Properties Footer */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-border bg-gradient-to-r from-background to-muted/10 dark:from-background dark:to-muted/5">
         <div className="flex space-x-2">
           <UIButton 
             variant="outline" 
-            className="flex-1"
+            className="flex-1 hover:bg-muted/80 dark:hover:bg-muted/60 transition-all duration-200"
             onClick={() => {
               // Reset to default values
               onNodeUpdate(selectedNode.id, {
@@ -594,7 +660,7 @@ export function PropertiesPanel({
           >
             Сбросить
           </UIButton>
-          <UIButton className="flex-1">
+          <UIButton className="flex-1 bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/80 transition-all duration-200">
             Применить
           </UIButton>
         </div>

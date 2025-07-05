@@ -166,6 +166,14 @@ Changelog:
     - Added visual feedback for drag-and-drop operations with animated grid
     - Implemented zoom indicator with smooth animations and transitions
     - Enhanced control buttons with scale animations and color transitions
+  * Enhanced advanced command settings with comprehensive dark theme support:
+    - Redesigned command advanced settings accordion with gradient backgrounds and themed icons
+    - Added color-coded setting groups with hover effects and visual feedback
+    - Implemented themed switches with proper dark mode styling
+    - Enhanced warning messages with theme-aware colors and modern SVG icons
+    - Added smooth transitions and enhanced visual hierarchy for better UX
+    - Created gradient text effects and improved spacing for dark theme compatibility
+    - Updated keyboard settings with consistent theming and interactive states
 ```
 
 ## User Preferences
