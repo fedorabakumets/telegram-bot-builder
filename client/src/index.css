@@ -118,3 +118,132 @@
 .dark .hover\:shadow-xl:hover {
   box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.4), 0 15px 15px -5px rgba(0, 0, 0, 0.3);
 }
+
+/* ResizablePanel enhancements for dark theme */
+[data-panel-resize-handle-enabled="true"]:hover {
+  background: var(--primary) !important;
+  opacity: 0.8;
+}
+
+[data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"] {
+  background: var(--primary) !important;
+  opacity: 1;
+}
+
+.dark [data-panel-resize-handle-enabled="true"] {
+  background: hsl(var(--border));
+  box-shadow: 0 0 0 1px hsl(var(--border));
+}
+
+.dark [data-panel-resize-handle-enabled="true"]:hover {
+  background: hsl(var(--primary) / 0.6) !important;
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.8);
+}
+
+.dark [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"] {
+  background: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 1px hsl(var(--primary)), 0 0 8px hsl(var(--primary) / 0.3);
+}
+
+/* Enhanced resize handle cursor */
+[data-panel-resize-handle-enabled="true"] {
+  cursor: col-resize;
+  transition: all 0.2s ease;
+}
+
+[data-panel-resize-handle-enabled="true"][data-panel-group-direction="vertical"] {
+  cursor: row-resize;
+}
+
+/* Smooth panel transitions */
+[data-panel-group] > [data-panel] {
+  transition: flex-basis 0.2s ease;
+}
+
+/* Enhanced visual feedback for resize handles */
+[data-panel-resize-handle-enabled="true"] {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-panel-resize-handle-enabled="true"]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  transition: background-color 0.15s ease;
+  z-index: -1;
+}
+
+[data-panel-resize-handle-enabled="true"]:hover::before {
+  background: hsl(var(--primary) / 0.05);
+}
+
+.dark [data-panel-resize-handle-enabled="true"]:hover::before {
+  background: hsl(var(--primary) / 0.1);
+}
+
+[data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"]::before {
+  background: hsl(var(--primary) / 0.15);
+  animation: pulse-resize 0.6s ease-in-out infinite alternate;
+}
+
+.dark [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"]::before {
+  background: hsl(var(--primary) / 0.2);
+}
+
+/* Pulse animation for active resize handles */
+@keyframes pulse-resize {
+  from {
+    background: hsl(var(--primary) / 0.1);
+  }
+  to {
+    background: hsl(var(--primary) / 0.25);
+  }
+}
+
+/* Glow effect for dark theme */
+.dark [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"] {
+  box-shadow: 
+    0 0 0 1px hsl(var(--primary)), 
+    0 0 8px hsl(var(--primary) / 0.3),
+    0 0 16px hsl(var(--primary) / 0.1);
+}
+
+/* Improved handle visibility in dark theme */
+.dark [data-panel-resize-handle-enabled="true"] .grip-handle {
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+}
+
+.dark [data-panel-resize-handle-enabled="true"]:hover .grip-handle {
+  background: hsl(var(--muted-foreground) / 0.1);
+  border-color: hsl(var(--primary) / 0.5);
+  box-shadow: 0 2px 4px hsl(var(--background) / 0.1);
+}
+
+/* Smooth resize cursor transitions */
+body {
+  cursor-transition: cursor 0.1s ease;
+}
+
+/* Panel borders enhancement for dark theme */
+.dark [data-panel-group] {
+  border-color: hsl(var(--border));
+}
+
+/* Responsive resize handles */
+@media (max-width: 768px) {
+  [data-panel-resize-handle-enabled="true"] {
+    width: 8px !important;
+  }
+  
+  [data-panel-resize-handle-enabled="true"][data-panel-group-direction="vertical"] {
+    height: 8px !important;
+  }
+  
+  .grip-handle {
+    width: 20px !important;
+    height: 24px !important;
+  }
+}

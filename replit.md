@@ -147,6 +147,12 @@ Changelog:
   * Implemented smooth transitions and enhanced shadows for better dark mode experience
   * Fixed CSS import order and added theme-specific scrollbar styling
   * Enhanced export modal with theme-aware colored statistics and better visual hierarchy
+  * Improved ResizablePanel components with enhanced dark theme support:
+    - Added interactive states (hover, active, dragging) with visual feedback
+    - Implemented smooth animations and transitions for resize handles
+    - Added glow effects and pulse animations for dark theme
+    - Enhanced grip handles with better visibility and responsive design
+    - Added gradient overlays and improved cursor feedback
 ```
 
 ## User Preferences
