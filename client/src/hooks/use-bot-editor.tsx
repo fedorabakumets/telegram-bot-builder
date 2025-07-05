@@ -6,7 +6,7 @@ export function useBotEditor(initialData?: BotData) {
   const [connections, setConnections] = useState<Connection[]>(initialData?.connections || []);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-  const selectedNode = nodes.find(node => node.id === selectedNodeId);
+  const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
 
   const addNode = useCallback((node: Node) => {
     setNodes(prev => [...prev, node]);

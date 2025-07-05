@@ -276,25 +276,24 @@ export function PropertiesPanel({
                             <SelectContent>
                               {allNodes
                                 .filter(node => node.id !== selectedNode.id)
-                                .map((node) => (
-                                  <SelectItem key={node.id} value={node.id}>
-                                    <div className="flex items-center space-x-2">
-                                      <i className={nodeIcons[node.type]}></i>
-                                      <span>
-                                        {node.type === 'start' && node.data.command}
-                                        {node.type === 'command' && node.data.command}
-                                        {node.type === 'message' && 'Сообщение'}
-                                        {node.type === 'photo' && 'Фото'}
-                                        {node.type === 'keyboard' && 'Клавиатура'}
-                                        {node.type === 'condition' && 'Условие'}
-                                        {node.type === 'input' && 'Ввод'}
-                                      </span>
-                                      <code className="text-xs text-gray-500">({node.id})</code>
-                                    </div>
-                                  </SelectItem>
-                                ))}
+                                .map((node) => {
+                                  const nodeName = 
+                                    node.type === 'start' ? node.data.command :
+                                    node.type === 'command' ? node.data.command :
+                                    node.type === 'message' ? 'Сообщение' :
+                                    node.type === 'photo' ? 'Фото' :
+                                    node.type === 'keyboard' ? 'Клавиатура' :
+                                    node.type === 'condition' ? 'Условие' :
+                                    node.type === 'input' ? 'Ввод' : 'Узел';
+                                  
+                                  return (
+                                    <SelectItem key={node.id} value={node.id}>
+                                      {nodeName} ({node.id})
+                                    </SelectItem>
+                                  );
+                                })}
                               {allNodes.filter(node => node.id !== selectedNode.id).length === 0 && (
-                                <SelectItem value="" disabled>
+                                <SelectItem value="no-nodes" disabled>
                                   Создайте другие экраны для выбора
                                 </SelectItem>
                               )}
