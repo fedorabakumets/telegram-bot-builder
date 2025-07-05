@@ -439,27 +439,135 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 
                 <Separator />
                 
-                <div className="space-y-2">
-                  <h4 className="font-medium">Инструкция по запуску:</h4>
-                  <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                    <li>Скачайте сгенерированный Python файл</li>
-                    <li>Установите библиотеку: <code className="bg-gray-100 px-1 rounded">pip install aiogram</code></li>
-                    <li>Замените <code className="bg-gray-100 px-1 rounded">YOUR_BOT_TOKEN_HERE</code> на токен вашего бота</li>
-                    <li>Добавьте свой Telegram ID в список администраторов</li>
-                    <li>Запустите бота: <code className="bg-gray-100 px-1 rounded">python bot.py</code></li>
-                  </ol>
+                <div className="space-y-3">
+                  <h4 className="font-medium">Подробная инструкция по запуску:</h4>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h5 className="font-medium text-blue-800 mb-2">Шаг 1: Подготовка окружения</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                      <li>Убедитесь, что у вас установлен Python 3.8 или выше</li>
+                      <li>Создайте папку для вашего бота и перейдите в неё</li>
+                      <li>Скачайте все необходимые файлы (Python код, requirements.txt, README.md)</li>
+                      <li>Рекомендуется создать виртуальное окружение:
+                        <div className="mt-1 ml-4">
+                          <code className="bg-gray-100 px-1 rounded text-xs">python -m venv venv</code><br />
+                          <code className="bg-gray-100 px-1 rounded text-xs">source venv/bin/activate</code> (Linux/Mac) или<br />
+                          <code className="bg-gray-100 px-1 rounded text-xs">venv\Scripts\activate</code> (Windows)
+                        </div>
+                      </li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h5 className="font-medium text-green-800 mb-2">Шаг 2: Установка зависимостей</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                      <li>Установите aiogram (версия 3.x): <code className="bg-gray-100 px-1 rounded">pip install aiogram</code></li>
+                      <li>Или используйте файл requirements.txt: <code className="bg-gray-100 px-1 rounded">pip install -r requirements.txt</code></li>
+                      <li>Проверьте установку: <code className="bg-gray-100 px-1 rounded">python -c "import aiogram; print(aiogram.__version__)"</code></li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-amber-50 p-4 rounded-lg">
+                    <h5 className="font-medium text-amber-800 mb-2">Шаг 3: Настройка бота</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                      <li>Откройте файл <code className="bg-gray-100 px-1 rounded">{projectName.replace(/\s+/g, '_')}_bot.py</code></li>
+                      <li>Найдите строку <code className="bg-gray-100 px-1 rounded">BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"</code></li>
+                      <li>Замените <code className="bg-gray-100 px-1 rounded">YOUR_BOT_TOKEN_HERE</code> на токен вашего бота от @BotFather</li>
+                      <li>Найдите строку <code className="bg-gray-100 px-1 rounded">ADMIN_IDS = [123456789]</code></li>
+                      <li>Замените <code className="bg-gray-100 px-1 rounded">123456789</code> на ваш Telegram ID (можно узнать у @userinfobot)</li>
+                      <li>Сохраните файл</li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <h5 className="font-medium text-purple-800 mb-2">Шаг 4: Запуск и тестирование</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                      <li>Запустите бота: <code className="bg-gray-100 px-1 rounded">python {projectName.replace(/\s+/g, '_')}_bot.py</code></li>
+                      <li>Дождитесь сообщения "Бот запущен и готов к работе!"</li>
+                      <li>Найдите вашего бота в Telegram и отправьте команду /start</li>
+                      <li>Проверьте работу всех команд и кнопок</li>
+                      <li>Для остановки бота нажмите Ctrl+C в терминале</li>
+                    </ol>
+                  </div>
                 </div>
 
-                <Separator className="my-3" />
+                <Separator className="my-4" />
 
-                <div className="space-y-2">
-                  <h4 className="font-medium">Настройка @BotFather:</h4>
-                  <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                    <li>Найдите @BotFather в Telegram</li>
-                    <li>Отправьте команду <code className="bg-gray-100 px-1 rounded">/setcommands</code></li>
-                    <li>Выберите своего бота</li>
-                    <li>Скопируйте и отправьте команды выше</li>
-                  </ol>
+                <div className="space-y-3">
+                  <h4 className="font-medium">Настройка меню команд в @BotFather:</h4>
+                  
+                  <div className="bg-indigo-50 p-4 rounded-lg">
+                    <h5 className="font-medium text-indigo-800 mb-2">Автоматическая настройка меню</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                      <li>Найдите @BotFather в Telegram</li>
+                      <li>Отправьте команду <code className="bg-gray-100 px-1 rounded">/setcommands</code></li>
+                      <li>Выберите своего бота из списка</li>
+                      <li>Скопируйте команды из раздела "Команды для @BotFather" выше</li>
+                      <li>Вставьте команды в чат с @BotFather и отправьте</li>
+                      <li>Получите подтверждение "Ok, command list updated"</li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <h6 className="font-medium text-gray-800 mb-1">Дополнительные настройки @BotFather:</h6>
+                    <ul className="text-sm text-gray-600 space-y-1">
+                      <li>• <code className="bg-gray-100 px-1 rounded">/setdescription</code> - установить описание бота</li>
+                      <li>• <code className="bg-gray-100 px-1 rounded">/setuserpic</code> - установить фото профиля</li>
+                      <li>• <code className="bg-gray-100 px-1 rounded">/setname</code> - изменить имя бота</li>
+                      <li>• <code className="bg-gray-100 px-1 rounded">/setabouttext</code> - установить текст "О боте"</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <Separator className="my-4" />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium">Описание экспортируемых файлов:</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <h6 className="font-medium text-gray-800 mb-1">Python код (.py)</h6>
+                      <p className="text-sm text-gray-600">Основной файл бота с логикой обработки команд, сообщений и кнопок. Использует aiogram 3.x.</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <h6 className="font-medium text-gray-800 mb-1">JSON данные (.json)</h6>
+                      <p className="text-sm text-gray-600">Структурированные данные бота для импорта в другие системы или резервного копирования.</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <h6 className="font-medium text-gray-800 mb-1">Зависимости (.txt)</h6>
+                      <p className="text-sm text-gray-600">Файл requirements.txt со всеми необходимыми Python библиотеками для работы бота.</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <h6 className="font-medium text-gray-800 mb-1">Документация (.md)</h6>
+                      <p className="text-sm text-gray-600">README файл с подробным описанием бота, его функций и инструкцией по установке.</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <h6 className="font-medium text-gray-800 mb-1">Dockerfile</h6>
+                      <p className="text-sm text-gray-600">Конфигурация для контейнеризации бота с помощью Docker для простого развертывания.</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <h6 className="font-medium text-gray-800 mb-1">Конфигурация (.yaml)</h6>
+                      <p className="text-sm text-gray-600">Файл конфигурации для развертывания бота на серверах с автоматической настройкой.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="my-4" />
+
+                <div className="bg-red-50 p-4 rounded-lg">
+                  <h5 className="font-medium text-red-800 mb-2">⚠️ Важные замечания:</h5>
+                  <ul className="text-sm text-red-700 space-y-1">
+                    <li>• Никогда не публикуйте токен бота в открытом доступе</li>
+                    <li>• Регулярно обновляйте токен бота при подозрении на компрометацию</li>
+                    <li>• Для продакшена используйте переменные окружения для хранения токена</li>
+                    <li>• Тестируйте бота в приватном чате перед публикацией</li>
+                    <li>• Сохраняйте резервные копии кода и настроек</li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>

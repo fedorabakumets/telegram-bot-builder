@@ -121,6 +121,13 @@ Changelog:
   * Created separate mobile export interface
   * Improved button layouts and text sizes for mobile
   * Added responsive file list and code preview areas
+- July 05, 2025. Enhanced export documentation and instructions:
+  * Added comprehensive step-by-step setup guide
+  * Included detailed environment preparation instructions
+  * Added security best practices and warnings
+  * Expanded BotFather configuration instructions
+  * Added detailed descriptions for all export file types
+  * Included troubleshooting and testing guidelines
 ```
 
 ## User Preferences
