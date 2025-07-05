@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Header } from '@/components/editor/header';
@@ -73,11 +73,13 @@ export default function Editor() {
   const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
+      // Auto-save before showing preview
+      updateProjectMutation.mutate({});
       setShowPreview(true);
     } else if (tab === 'export') {
       setShowExport(true);
     }
-  }, []);
+  }, [updateProjectMutation]);
 
   const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
     updateNode(nodeId, { position });
