@@ -165,7 +165,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[95vh] w-full h-[95vh]' : 'max-w-6xl max-h-[90vh] w-[90vw] h-[90vh]'} flex flex-col p-4`}>
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[95vh] w-full' : 'max-w-6xl max-h-[90vh] w-[90vw]'} flex flex-col p-4`}>
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center space-x-3">
             <i className="fas fa-download text-primary"></i>
@@ -173,7 +173,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="stats" className="flex-1 flex flex-col min-h-0 mt-2">
+        <Tabs defaultValue="stats" className="flex flex-col mt-2">
           <TabsList className={`${isMobile ? 'grid w-full grid-cols-2' : 'grid w-full grid-cols-5'} flex-shrink-0`}>
             <TabsTrigger value="stats" className={`${isMobile ? 'text-xs' : ''}`}>Статистика</TabsTrigger>
             <TabsTrigger value="validation" className={`${isMobile ? 'text-xs' : ''}`}>Валидация</TabsTrigger>
@@ -183,7 +183,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             {isMobile && <TabsTrigger value="export" className="text-xs">Экспорт</TabsTrigger>}
           </TabsList>
 
-          <TabsContent value="stats" className="flex-1 space-y-4 overflow-y-auto min-h-0">
+          <TabsContent value="stats" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -247,7 +247,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             </Card>
           </TabsContent>
 
-          <TabsContent value="validation" className="flex-1 space-y-4 overflow-y-auto min-h-0">
+          <TabsContent value="validation" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -285,7 +285,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             </Card>
           </TabsContent>
 
-          <TabsContent value="files" className="flex-1 space-y-4 overflow-y-auto min-h-0">
+          <TabsContent value="files" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -362,7 +362,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             </Card>
           </TabsContent>
 
-          <TabsContent value="code" className="flex-1 space-y-4 overflow-y-auto min-h-0">
+          <TabsContent value="code" className="space-y-4">
             <Card>
               <CardHeader className={`${isMobile ? 'flex flex-col space-y-4' : 'flex flex-row items-center justify-between'}`}>
                 <div>
@@ -398,7 +398,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             </Card>
           </TabsContent>
 
-          <TabsContent value="setup" className="flex-1 space-y-3 overflow-y-auto min-h-0">
+          <TabsContent value="setup" className="space-y-3">
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center space-x-2">
@@ -467,7 +467,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
           {/* Мобильная версия объединенного экспорта */}
           {isMobile && (
-            <TabsContent value="export" className="flex-1 space-y-4 overflow-y-auto min-h-0">
+            <TabsContent value="export" className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
