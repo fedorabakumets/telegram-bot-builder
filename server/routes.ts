@@ -25,10 +25,22 @@ function createBotFile(botCode: string, projectId: number): string {
 // Функция для запуска бота
 async function startBot(projectId: number, token: string): Promise<{ success: boolean; error?: string; processId?: string }> {
   try {
-    // Проверяем, не запущен ли уже бот
+    // Проверяем, не запущен ли уже бот в базе данных
     const existingInstance = await storage.getBotInstance(projectId);
     if (existingInstance && existingInstance.status === 'running') {
       return { success: false, error: "Бот уже запущен" };
+    }
+
+    // Проверяем, нет ли уже активного процесса в памяти
+    if (botProcesses.has(projectId)) {
+      console.log(`Найден существующий процесс для бота ${projectId}, останавливаем его`);
+      const oldProcess = botProcesses.get(projectId);
+      if (oldProcess && !oldProcess.killed) {
+        oldProcess.kill('SIGTERM');
+      }
+      botProcesses.delete(projectId);
+      // Ждем немного для завершения старого процесса
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
 
     const project = await storage.getBotProject(projectId);
@@ -138,8 +150,15 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
       return stopResult;
     }
 
-    // Ждем немного для корректного завершения процесса
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Ждем дольше для полного завершения процесса и избежания конфликтов
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    // Проверяем, что процесс действительно завершен
+    const processExists = botProcesses.has(projectId);
+    if (processExists) {
+      console.log(`Процесс бота ${projectId} еще не завершен, принудительно удаляем из памяти`);
+      botProcesses.delete(projectId);
+    }
 
     // Запускаем заново с тем же токеном
     const startResult = await startBot(projectId, instance.token);

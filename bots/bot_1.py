@@ -16,6 +16,11 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+    text = "Привет! Обновленное сообщение!"
+    await message.answer(text)
+
 
 # Запуск бота
 async def main():

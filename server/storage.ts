@@ -130,6 +130,12 @@ export class MemStorage implements IStorage {
   }
 
   async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
+    // Сначала удаляем существующий экземпляр для этого проекта
+    const existingInstance = await this.getBotInstance(insertInstance.projectId);
+    if (existingInstance) {
+      await this.deleteBotInstance(existingInstance.id);
+    }
+
     const id = this.currentInstanceId++;
     const instance: BotInstance = {
       ...insertInstance,
