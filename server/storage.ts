@@ -77,6 +77,7 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       updatedAt: new Date(),
+      description: insertProject.description || null,
     };
     this.projects.set(id, project);
     return project;

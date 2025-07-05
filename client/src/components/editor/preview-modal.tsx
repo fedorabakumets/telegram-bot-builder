@@ -58,19 +58,57 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
 
     setMessageHistory(prev => [...prev, userMessage]);
 
-    // Simulate bot response (in real bot, this would navigate to the target node)
+    // Navigate to target node if exists
     setTimeout(() => {
-      const botResponse = {
-        id: `msg-${Date.now()}-bot`,
-        type: 'bot' as const,
-        text: target ? `Переход к: ${target}` : 'Функция в разработке',
-        time: new Date().toLocaleTimeString('ru-RU', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        })
-      };
+      if (target) {
+        // Find the target node by ID
+        const targetNode = nodes.find(node => node.id === target);
+        
+        if (targetNode) {
+          // Update current node
+          setCurrentNodeId(targetNode.id);
+          
+          // Create bot response from target node
+          const botResponse = {
+            id: `msg-${Date.now()}-bot`,
+            type: 'bot' as const,
+            text: targetNode.data.messageText || 'Сообщение',
+            time: new Date().toLocaleTimeString('ru-RU', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }),
+            buttons: targetNode.data.keyboardType !== 'none' ? targetNode.data.buttons : undefined
+          };
 
-      setMessageHistory(prev => [...prev, botResponse]);
+          setMessageHistory(prev => [...prev, botResponse]);
+        } else {
+          // Node not found - show error
+          const errorResponse = {
+            id: `msg-${Date.now()}-bot`,
+            type: 'bot' as const,
+            text: `❌ Экран с ID "${target}" не найден`,
+            time: new Date().toLocaleTimeString('ru-RU', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })
+          };
+
+          setMessageHistory(prev => [...prev, errorResponse]);
+        }
+      } else {
+        // No target specified
+        const defaultResponse = {
+          id: `msg-${Date.now()}-bot`,
+          type: 'bot' as const,
+          text: 'Функция в разработке',
+          time: new Date().toLocaleTimeString('ru-RU', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })
+        };
+
+        setMessageHistory(prev => [...prev, defaultResponse]);
+      }
     }, 500);
   };
 
