@@ -163,10 +163,17 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
           setWaitingForInput(targetNode.type === 'input' && targetNode.data.keyboardType === 'none');
         } else {
           // Node not found - show error
+          let errorText = '';
+          if (action === 'command') {
+            errorText = `❌ Команда "${target}" не найдена в боте`;
+          } else {
+            errorText = `❌ Экран с ID "${target}" не найден`;
+          }
+          
           const errorResponse = {
             id: `msg-${Date.now()}-bot`,
             type: 'bot' as const,
-            text: `❌ Экран с ID "${target}" не найден`,
+            text: errorText,
             time: new Date().toLocaleTimeString('ru-RU', { 
               hour: '2-digit', 
               minute: '2-digit' 

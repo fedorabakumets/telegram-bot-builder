@@ -108,6 +108,13 @@ This is a visual Telegram bot builder application that allows users to create Te
 ```
 Changelog:
 - July 05, 2025. Initial setup
+- July 05, 2025. Enhanced command support:
+  * Added standard command templates (/help, /settings, /menu)
+  * Implemented command autocompletion and validation
+  * Added advanced command settings (privacy, auth, admin-only)
+  * Enhanced button command selection with dropdown
+  * Improved code generation with security checks
+  * Enhanced export modal with bot statistics and BotFather setup
 ```
 
 ## User Preferences

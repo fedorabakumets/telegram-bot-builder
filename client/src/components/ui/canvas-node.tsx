@@ -102,8 +102,19 @@ export function CanvasNode({ node, isSelected, onClick, onDelete }: CanvasNodePr
           {node.data.keyboardType === 'inline' ? (
             <div className="grid grid-cols-2 gap-2">
               {node.data.buttons.slice(0, 4).map((button) => (
-                <div key={button.id} className="p-2 bg-blue-50 rounded-lg text-xs font-medium text-blue-900 text-center border border-blue-200">
-                  {button.text}
+                <div key={button.id} className="p-2 bg-blue-50 rounded-lg text-xs font-medium text-blue-900 text-center border border-blue-200 relative">
+                  <div className="flex items-center justify-center space-x-1">
+                    <span>{button.text}</span>
+                    {button.action === 'command' && (
+                      <i className="fas fa-terminal text-green-600 text-xs" title="Команда"></i>
+                    )}
+                    {button.action === 'url' && (
+                      <i className="fas fa-external-link-alt text-purple-600 text-xs" title="Ссылка"></i>
+                    )}
+                    {button.action === 'goto' && (
+                      <i className="fas fa-arrow-right text-blue-600 text-xs" title="Переход"></i>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -111,7 +122,17 @@ export function CanvasNode({ node, isSelected, onClick, onDelete }: CanvasNodePr
             node.data.buttons.slice(0, 2).map((button) => (
               <div key={button.id} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
                 <span className="text-sm font-medium text-blue-900">{button.text}</span>
-                <i className="fas fa-chevron-right text-blue-600 text-xs"></i>
+                <div className="flex items-center space-x-1">
+                  {button.action === 'command' && (
+                    <i className="fas fa-terminal text-green-600 text-xs" title="Команда"></i>
+                  )}
+                  {button.action === 'url' && (
+                    <i className="fas fa-external-link-alt text-purple-600 text-xs" title="Ссылка"></i>
+                  )}
+                  {button.action === 'goto' && (
+                    <i className="fas fa-arrow-right text-blue-600 text-xs" title="Переход"></i>
+                  )}
+                </div>
               </div>
             ))
           )}

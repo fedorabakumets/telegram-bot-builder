@@ -332,6 +332,57 @@ export function PropertiesPanel({
                         />
                       )}
                       
+                      {button.action === 'command' && (
+                        <div className="mt-2 space-y-2">
+                          <Select
+                            value={button.target || ''}
+                            onValueChange={(value) => onButtonUpdate(selectedNode.id, button.id, { target: value })}
+                          >
+                            <SelectTrigger className="text-xs">
+                              <SelectValue placeholder="Выберите команду" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allNodes
+                                .filter(node => (node.type === 'start' || node.type === 'command') && node.data.command)
+                                .map((node) => (
+                                  <SelectItem key={node.id} value={node.data.command!}>
+                                    <div className="flex items-center space-x-2">
+                                      <i className={`${node.type === 'start' ? 'fas fa-play' : 'fas fa-terminal'} text-xs`}></i>
+                                      <span>{node.data.command}</span>
+                                      {node.data.description && (
+                                        <span className="text-gray-500">- {node.data.description}</span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              {STANDARD_COMMANDS.map((cmd) => (
+                                <SelectItem key={cmd.command} value={cmd.command}>
+                                  <div className="flex items-center space-x-2">
+                                    <i className="fas fa-lightbulb text-yellow-500 text-xs"></i>
+                                    <span>{cmd.command}</span>
+                                    <span className="text-gray-500">- {cmd.description}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          
+                          <Input
+                            value={button.target || ''}
+                            onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { target: e.target.value })}
+                            className="text-xs"
+                            placeholder="Или введите команду вручную (например: /help)"
+                          />
+                          
+                          {button.target && !button.target.startsWith('/') && (
+                            <div className="flex items-center text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                              <i className="fas fa-exclamation-triangle mr-2"></i>
+                              <span>Команда должна начинаться с символа "/"</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {button.action === 'goto' && (
                         <div className="mt-2 space-y-2">
                           <Select
