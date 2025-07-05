@@ -89,7 +89,9 @@ export function Canvas({
           className="min-h-full relative"
           style={{
             backgroundImage: 'radial-gradient(circle, #e2e8f0 1px, transparent 1px)',
-            backgroundSize: '20px 20px'
+            backgroundSize: '20px 20px',
+            minHeight: '100vh',
+            minWidth: '100%'
           }}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -103,6 +105,7 @@ export function Canvas({
               isSelected={selectedNodeId === node.id}
               onClick={() => onNodeSelect(node.id)}
               onDelete={() => onNodeDelete(node.id)}
+              onMove={(position) => onNodeMove(node.id, position)}
             />
           ))}
           

@@ -1,11 +1,13 @@
 import { Node } from '@/types/bot';
 import { cn } from '@/lib/utils';
+import { useState, useRef, useEffect } from 'react';
 
 interface CanvasNodeProps {
   node: Node;
   isSelected?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
+  onMove?: (position: { x: number; y: number }) => void;
 }
 
 const nodeIcons = {
@@ -28,18 +30,96 @@ const nodeColors = {
   command: 'bg-indigo-100 text-indigo-600'
 };
 
-export function CanvasNode({ node, isSelected, onClick, onDelete }: CanvasNodeProps) {
+export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: CanvasNodeProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const nodeRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!onMove) return;
+    
+    // Не запускать драг если кликнули по кнопке удаления
+    if ((e.target as HTMLElement).closest('button')) return;
+    
+    const rect = nodeRef.current?.getBoundingClientRect();
+    if (rect) {
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setIsDragging(true);
+    }
+    
+    // Предотвращаем выделение текста при перетаскивании
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging || !onMove) return;
+    
+    const canvas = nodeRef.current?.parentElement;
+    if (canvas) {
+      const canvasRect = canvas.getBoundingClientRect();
+      const newX = e.clientX - canvasRect.left - dragOffset.x;
+      const newY = e.clientY - canvasRect.top - dragOffset.y;
+      
+      // Привязка к сетке (20px grid)
+      const gridSize = 20;
+      const snappedX = Math.round(newX / gridSize) * gridSize;
+      const snappedY = Math.round(newY / gridSize) * gridSize;
+      
+      // Ограничиваем позицию в пределах canvas с отступами
+      const minX = 20;
+      const minY = 20;
+      const maxX = Math.max(minX, canvas.clientWidth - 340);
+      const maxY = Math.max(minY, canvas.clientHeight - 220);
+      
+      const boundedX = Math.max(minX, Math.min(snappedX, maxX));
+      const boundedY = Math.max(minY, Math.min(snappedY, maxY));
+      
+      onMove({ x: boundedX, y: boundedY });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Добавляем и удаляем обработчики событий
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'grabbing';
+      document.body.style.userSelect = 'none';
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      };
+    }
+  }, [isDragging, dragOffset, onMove]);
+
   return (
     <div
+      ref={nodeRef}
       className={cn(
-        "bg-white rounded-xl shadow-lg border p-6 w-80 cursor-pointer hover:shadow-xl transition-all relative",
-        isSelected ? "border-2 border-primary" : "border border-gray-200"
+        "bg-white rounded-xl shadow-lg border p-6 w-80 transition-all duration-200 relative select-none",
+        isSelected ? "border-2 border-primary ring-2 ring-primary ring-opacity-20" : "border border-gray-200",
+        isDragging ? "shadow-2xl scale-105 cursor-grabbing z-50 border-primary bg-blue-50" : "hover:shadow-xl",
+        onMove ? "cursor-grab hover:cursor-grab hover:border-blue-300" : "cursor-pointer"
       )}
-      onClick={onClick}
+      onClick={!isDragging ? onClick : undefined}
+      onMouseDown={handleMouseDown}
       style={{
         position: 'absolute',
         left: node.position.x,
-        top: node.position.y
+        top: node.position.y,
+        transform: isDragging ? 'rotate(2deg) scale(1.05)' : 'rotate(0deg) scale(1)',
+        zIndex: isDragging ? 1000 : isSelected ? 10 : 1,
+        transition: isDragging ? 'none' : 'all 0.2s ease'
       }}
     >
       {/* Delete button */}
@@ -56,12 +136,12 @@ export function CanvasNode({ node, isSelected, onClick, onDelete }: CanvasNodePr
       )}
 
       {/* Node header */}
-      <div className="flex items-center mb-4">
+      <div className="flex items-center mb-4 relative">
         <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center mr-3", nodeColors[node.type])}>
           <i className={nodeIcons[node.type]}></i>
         </div>
-        <div>
-          <h3 className="font-semibold text-gray-900">
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900 flex items-center">
             {node.type === 'start' && node.data.command}
             {node.type === 'command' && node.data.command}
             {node.type === 'message' && 'Сообщение'}
@@ -69,6 +149,11 @@ export function CanvasNode({ node, isSelected, onClick, onDelete }: CanvasNodePr
             {node.type === 'keyboard' && 'Клавиатура'}
             {node.type === 'condition' && 'Условие'}
             {node.type === 'input' && 'Ввод данных'}
+            {onMove && (
+              <div className="ml-2 opacity-30 hover:opacity-60 transition-opacity">
+                <i className="fas fa-arrows-alt text-xs"></i>
+              </div>
+            )}
           </h3>
           <p className="text-xs text-gray-500">
             {node.data.description || 'Элемент бота'}
