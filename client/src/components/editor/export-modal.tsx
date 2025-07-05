@@ -165,15 +165,15 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[95vh] w-full h-[95vh]' : 'max-w-6xl max-h-[90vh] w-[90vw] h-[90vh]'} flex flex-col`}>
-        <DialogHeader>
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[95vh] w-full h-[95vh]' : 'max-w-6xl max-h-[90vh] w-[90vw] h-[90vh]'} flex flex-col p-4`}>
+        <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center space-x-3">
             <i className="fas fa-download text-primary"></i>
             <span className={`${isMobile ? 'text-sm' : ''}`}>Экспорт кода бота</span>
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="stats" className="flex-1 flex flex-col min-h-0">
+        <Tabs defaultValue="stats" className="flex-1 flex flex-col min-h-0 mt-2">
           <TabsList className={`${isMobile ? 'grid w-full grid-cols-2' : 'grid w-full grid-cols-5'} flex-shrink-0`}>
             <TabsTrigger value="stats" className={`${isMobile ? 'text-xs' : ''}`}>Статистика</TabsTrigger>
             <TabsTrigger value="validation" className={`${isMobile ? 'text-xs' : ''}`}>Валидация</TabsTrigger>
@@ -398,16 +398,16 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             </Card>
           </TabsContent>
 
-          <TabsContent value="setup" className="flex-1 space-y-4 overflow-y-auto min-h-0">
+          <TabsContent value="setup" className="flex-1 space-y-3 overflow-y-auto min-h-0">
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center space-x-2">
                   <i className="fas fa-cogs text-blue-500"></i>
                   <span>Настройка бота в @BotFather</span>
                 </CardTitle>
                 <CardDescription>Команды для настройки меню вашего бота</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 pt-0">
                 {botFatherCommands ? (
                   <div>
                     <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'justify-between items-center'} mb-2`}>
@@ -439,9 +439,9 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 
                 <Separator />
                 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h4 className="font-medium">Инструкция по запуску:</h4>
-                  <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                  <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
                     <li>Скачайте сгенерированный Python файл</li>
                     <li>Установите библиотеку: <code className="bg-gray-100 px-1 rounded">pip install aiogram</code></li>
                     <li>Замените <code className="bg-gray-100 px-1 rounded">YOUR_BOT_TOKEN_HERE</code> на токен вашего бота</li>
@@ -450,11 +450,11 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   </ol>
                 </div>
 
-                <Separator />
+                <Separator className="my-3" />
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h4 className="font-medium">Настройка @BotFather:</h4>
-                  <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                  <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
                     <li>Найдите @BotFather в Telegram</li>
                     <li>Отправьте команду <code className="bg-gray-100 px-1 rounded">/setcommands</code></li>
                     <li>Выберите своего бота</li>
