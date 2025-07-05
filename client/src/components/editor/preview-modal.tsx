@@ -16,7 +16,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
     type: 'bot' | 'user';
     text: string;
     time: string;
-    buttons?: Array<{ text: string; target?: string; }>;
+    buttons?: Array<{ text: string; target?: string; action?: string; }>;
   }>>([]);
 
   // Find start node or first node
@@ -35,14 +35,18 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
       type: 'bot' as const,
       text: startNode.data.messageText || 'Привет!',
       time,
-      buttons: startNode.data.keyboardType !== 'none' ? startNode.data.buttons : undefined
+      buttons: startNode.data.keyboardType !== 'none' ? startNode.data.buttons.map(btn => ({
+        text: btn.text,
+        target: btn.target,
+        action: btn.action
+      })) : undefined
     };
 
     setMessageHistory([botMessage]);
     setCurrentNodeId(startNode.id);
   };
 
-  const handleButtonClick = (buttonText: string, target?: string) => {
+  const handleButtonClick = (buttonText: string, target?: string, action?: string) => {
     const time = new Date().toLocaleTimeString('ru-RU', { 
       hour: '2-digit', 
       minute: '2-digit' 
@@ -61,23 +65,49 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
     // Navigate to target node if exists
     setTimeout(() => {
       if (target) {
-        // Find the target node by ID
-        const targetNode = nodes.find(node => node.id === target);
+        // Find the target node by ID or by command if action is 'command'
+        let targetNode;
+        if (action === 'command') {
+          // Find node with matching command
+          targetNode = nodes.find(node => 
+            (node.type === 'command' || node.type === 'start') && 
+            node.data.command === target
+          );
+        } else {
+          // Find node by ID
+          targetNode = nodes.find(node => node.id === target);
+        }
         
         if (targetNode) {
           // Update current node
           setCurrentNodeId(targetNode.id);
           
+          // Get appropriate text based on node type
+          let responseText = '';
+          if (targetNode.data.messageText) {
+            responseText = targetNode.data.messageText;
+          } else if (targetNode.type === 'command') {
+            responseText = `Команда: ${targetNode.data.command || 'Неизвестная команда'}`;
+          } else if (targetNode.type === 'start') {
+            responseText = `Стартовая команда: ${targetNode.data.command || '/start'}`;
+          } else {
+            responseText = 'Сообщение';
+          }
+          
           // Create bot response from target node
           const botResponse = {
             id: `msg-${Date.now()}-bot`,
             type: 'bot' as const,
-            text: targetNode.data.messageText || 'Сообщение',
+            text: responseText,
             time: new Date().toLocaleTimeString('ru-RU', { 
               hour: '2-digit', 
               minute: '2-digit' 
             }),
-            buttons: targetNode.data.keyboardType !== 'none' ? targetNode.data.buttons : undefined
+            buttons: targetNode.data.keyboardType !== 'none' ? targetNode.data.buttons.map(btn => ({
+              text: btn.text,
+              target: btn.target,
+              action: btn.action
+            })) : undefined
           };
 
           setMessageHistory(prev => [...prev, botResponse]);
@@ -183,7 +213,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                         {message.buttons.map((button, index) => (
                           <button
                             key={index}
-                            onClick={() => handleButtonClick(button.text, button.target)}
+                            onClick={() => handleButtonClick(button.text, button.target, button.action)}
                             className="w-full bg-blue-500 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
                           >
                             {button.text}
@@ -195,7 +225,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                         {message.buttons.map((button, index) => (
                           <button
                             key={index}
-                            onClick={() => handleButtonClick(button.text, button.target)}
+                            onClick={() => handleButtonClick(button.text, button.target, button.action)}
                             className="bg-blue-500 text-white text-xs font-medium py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors"
                           >
                             {button.text}
