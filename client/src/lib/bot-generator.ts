@@ -302,3 +302,198 @@ function validateCommand(command: string): { isValid: boolean; errors: string[] 
     errors
   };
 }
+
+export function generateRequirementsTxt(): string {
+  const lines = [
+    '# Telegram Bot Requirements',
+    'aiogram==3.4.1',
+    'python-dotenv==1.0.0',
+    'aiofiles==23.2.1',
+    'aiohttp==3.9.1',
+    'async-timeout==4.0.3',
+    'certifi==2023.11.17',
+    'multidict==6.0.4',
+    'yarl==1.9.4',
+    '',
+    '# Optional dependencies for extended functionality',
+    '# redis==5.0.1  # For session storage',
+    '# asyncpg==0.29.0  # For PostgreSQL database',
+    '# motor==3.3.2  # For MongoDB',
+    '# pillow==10.1.0  # For image processing',
+    '# requests==2.31.0  # For HTTP requests'
+  ];
+  return lines.join('\n');
+}
+
+export function generateReadme(botData: BotData, botName: string): string {
+  const commandNodes = botData.nodes.filter(node => 
+    (node.type === 'start' || node.type === 'command') && node.data.command
+  );
+  
+  let readme = '# ' + botName + '\n\n';
+  readme += 'Telegram бот, созданный с помощью TelegramBot Builder.\n\n';
+  readme += '## Описание\n\n';
+  readme += 'Этот бот содержит ' + botData.nodes.length + ' узлов и ' + botData.connections.length + ' соединений.\n\n';
+  readme += '### Команды бота\n\n';
+
+  commandNodes.forEach(node => {
+    const command = node.data.command || '/unknown';
+    const description = node.data.description || 'Описание отсутствует';
+    readme += '- `' + command + '` - ' + description + '\n';
+    
+    if (node.data.adminOnly) {
+      readme += '  - 🔒 Только для администраторов\n';
+    }
+    if (node.data.isPrivateOnly) {
+      readme += '  - 👤 Только в приватных чатах\n';
+    }
+    if (node.data.requiresAuth) {
+      readme += '  - 🔐 Требует авторизации\n';
+    }
+  });
+
+  readme += '\n## Установка\n\n';
+  readme += '1. Клонируйте или скачайте файлы проекта\n';
+  readme += '2. Установите зависимости:\n';
+  readme += '   ```bash\n';
+  readme += '   pip install -r requirements.txt\n';
+  readme += '   ```\n\n';
+  readme += '3. Создайте файл `.env` и добавьте ваш токен бота:\n';
+  readme += '   ```\n';
+  readme += '   BOT_TOKEN=your_bot_token_here\n';
+  readme += '   ```\n\n';
+  readme += '4. Запустите бота:\n';
+  readme += '   ```bash\n';
+  readme += '   python bot.py\n';
+  readme += '   ```\n\n';
+  
+  readme += '## Настройка\n\n';
+  readme += '### Получение токена бота\n\n';
+  readme += '1. Найдите [@BotFather](https://t.me/BotFather) в Telegram\n';
+  readme += '2. Отправьте команду `/newbot`\n';
+  readme += '3. Следуйте инструкциям для создания нового бота\n';
+  readme += '4. Скопируйте полученный токен\n\n';
+  
+  readme += '### Настройка команд в @BotFather\n\n';
+  readme += '1. Отправьте команду `/setcommands` в @BotFather\n';
+  readme += '2. Выберите своего бота\n';
+  readme += '3. Скопируйте и отправьте следующие команды:\n\n';
+  readme += '```\n';
+  readme += generateBotFatherCommands(botData.nodes);
+  readme += '\n```\n\n';
+  
+  readme += '## Структура проекта\n\n';
+  readme += '- `bot.py` - Основной файл бота\n';
+  readme += '- `requirements.txt` - Зависимости Python\n';
+  readme += '- `config.yaml` - Конфигурационный файл\n';
+  readme += '- `README.md` - Документация\n';
+  readme += '- `Dockerfile` - Для контейнеризации (опционально)\n\n';
+  
+  readme += '## Функциональность\n\n';
+  readme += '### Статистика\n\n';
+  readme += '- **Всего узлов**: ' + botData.nodes.length + '\n';
+  readme += '- **Команд**: ' + commandNodes.length + '\n';
+  readme += '- **Сообщений**: ' + botData.nodes.filter(n => n.type === 'message').length + '\n';
+  readme += '- **Фото**: ' + botData.nodes.filter(n => n.type === 'photo').length + '\n';
+  readme += '- **Кнопок**: ' + botData.nodes.reduce((sum, node) => sum + node.data.buttons.length, 0) + '\n\n';
+  
+  readme += '### Безопасность\n\n';
+  readme += 'Бот включает следующие функции безопасности:\n';
+  readme += '- Проверка администраторских прав\n';
+  readme += '- Ограничения на приватные чаты\n';
+  readme += '- Система авторизации пользователей\n\n';
+  
+  readme += '## Разработка\n\n';
+  readme += 'Этот бот создан с использованием:\n';
+  readme += '- [aiogram 3.x](https://docs.aiogram.dev/) - современная библиотека для Telegram Bot API\n';
+  readme += '- Python 3.8+\n';
+  readme += '- Асинхронное программирование\n\n';
+  
+  readme += '## Лицензия\n\n';
+  readme += 'Сгенерировано с помощью TelegramBot Builder\n';
+
+  return readme;
+}
+
+export function generateDockerfile(): string {
+  const lines = [
+    '# Dockerfile для Telegram бота',
+    'FROM python:3.11-slim',
+    '',
+    '# Установка системных зависимостей',
+    'RUN apt-get update && apt-get install -y \\',
+    '    gcc \\',
+    '    && rm -rf /var/lib/apt/lists/*',
+    '',
+    '# Создание рабочей директории',
+    'WORKDIR /app',
+    '',
+    '# Копирование requirements.txt и установка зависимостей',
+    'COPY requirements.txt .',
+    'RUN pip install --no-cache-dir -r requirements.txt',
+    '',
+    '# Копирование исходного кода',
+    'COPY . .',
+    '',
+    '# Создание пользователя для безопасности',
+    'RUN adduser --disabled-password --gecos \'\' botuser',
+    'RUN chown -R botuser:botuser /app',
+    'USER botuser',
+    '',
+    '# Запуск бота',
+    'CMD ["python", "bot.py"]'
+  ];
+  return lines.join('\n');
+}
+
+export function generateConfigYaml(botName: string): string {
+  const lines = [
+    '# Конфигурация бота',
+    'bot:',
+    '  name: "' + botName + '"',
+    '  description: "Telegram бот, созданный с помощью TelegramBot Builder"',
+    '',
+    '# Настройки логирования',
+    'logging:',
+    '  level: INFO',
+    '  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"',
+    '',
+    '# Настройки базы данных (опционально)',
+    'database:',
+    '  # type: sqlite',
+    '  # url: "sqlite:///bot.db"',
+    '',
+    '  # type: postgresql',
+    '  # host: localhost',
+    '  # port: 5432',
+    '  # name: botdb',
+    '  # user: botuser',
+    '  # password: botpass',
+    '',
+    '# Настройки Redis (опционально)',
+    'redis:',
+    '  # host: localhost',
+    '  # port: 6379',
+    '  # db: 0',
+    '  # password: ""',
+    '',
+    '# Настройки webhook (для продакшена)',
+    'webhook:',
+    '  # enabled: false',
+    '  # host: "0.0.0.0"',
+    '  # port: 8080',
+    '  # path: "/webhook"',
+    '  # url: "https://yourdomain.com/webhook"',
+    '',
+    '# Настройки администраторов',
+    'admins:',
+    '  - 123456789  # Замените на реальные Telegram ID администраторов',
+    '',
+    '# Дополнительные настройки',
+    'settings:',
+    '  timezone: "UTC"',
+    '  language: "ru"',
+    '  debug: false'
+  ];
+  return lines.join('\n');
+}

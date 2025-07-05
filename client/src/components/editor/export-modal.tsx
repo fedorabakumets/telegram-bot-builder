@@ -5,8 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { generatePythonCode, validateBotStructure } from '@/lib/bot-generator';
+import { generatePythonCode, validateBotStructure, generateRequirementsTxt, generateReadme, generateDockerfile, generateConfigYaml } from '@/lib/bot-generator';
 import { generateBotFatherCommands } from '@/lib/commands';
 import { BotData } from '@/types/bot';
 import { useState, useEffect } from 'react';
@@ -18,8 +19,19 @@ interface ExportModalProps {
   projectName: string;
 }
 
+type ExportFormat = 'python' | 'json' | 'requirements' | 'readme' | 'dockerfile' | 'config';
+
 export function ExportModal({ isOpen, onClose, botData, projectName }: ExportModalProps) {
   const [generatedCode, setGeneratedCode] = useState('');
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('python');
+  const [exportContent, setExportContent] = useState<Record<ExportFormat, string>>({
+    python: '',
+    json: '',
+    requirements: '',
+    readme: '',
+    dockerfile: '',
+    config: ''
+  });
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
   const [botFatherCommands, setBotFatherCommands] = useState('');
   const { toast } = useToast();
@@ -49,8 +61,23 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
       setValidationResult(validation);
       
       if (validation.isValid) {
-        const code = generatePythonCode(botData, projectName);
-        setGeneratedCode(code);
+        // Generate all export formats
+        const pythonCode = generatePythonCode(botData, projectName);
+        const jsonData = JSON.stringify(botData, null, 2);
+        const requirements = generateRequirementsTxt();
+        const readme = generateReadme(botData, projectName);
+        const dockerfile = generateDockerfile();
+        const config = generateConfigYaml(projectName);
+        
+        setGeneratedCode(pythonCode);
+        setExportContent({
+          python: pythonCode,
+          json: jsonData,
+          requirements: requirements,
+          readme: readme,
+          dockerfile: dockerfile,
+          config: config
+        });
       }
       
       // Генерация команд для BotFather
@@ -59,28 +86,58 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     }
   }, [isOpen, botData, projectName]);
 
-  const copyToClipboard = async () => {
+  const getFileExtension = (format: ExportFormat): string => {
+    const extensions = {
+      python: 'py',
+      json: 'json',
+      requirements: 'txt',
+      readme: 'md',
+      dockerfile: '',
+      config: 'yaml'
+    };
+    return extensions[format];
+  };
+
+  const getFileName = (format: ExportFormat): string => {
+    const baseFileName = projectName.replace(/\s+/g, '_');
+    const names = {
+      python: `${baseFileName}_bot.py`,
+      json: `${baseFileName}_data.json`,
+      requirements: 'requirements.txt',
+      readme: 'README.md',
+      dockerfile: 'Dockerfile',
+      config: 'config.yaml'
+    };
+    return names[format];
+  };
+
+  const copyToClipboard = async (content?: string) => {
+    const textToCopy = content || exportContent[selectedFormat];
     try {
-      await navigator.clipboard.writeText(generatedCode);
+      await navigator.clipboard.writeText(textToCopy);
       toast({
-        title: "Код скопирован!",
-        description: "Код бота скопирован в буфер обмена",
+        title: "Содержимое скопировано!",
+        description: "Содержимое скопировано в буфер обмена",
       });
     } catch (error) {
       toast({
         title: "Ошибка копирования",
-        description: "Не удалось скопировать код в буфер обмена",
+        description: "Не удалось скопировать содержимое в буфер обмена",
         variant: "destructive",
       });
     }
   };
 
-  const downloadFile = () => {
-    const blob = new Blob([generatedCode], { type: 'text/plain' });
+  const downloadFile = (format?: ExportFormat) => {
+    const formatToDownload = format || selectedFormat;
+    const content = exportContent[formatToDownload];
+    const fileName = getFileName(formatToDownload);
+    
+    const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${projectName.replace(/\s+/g, '_')}_bot.py`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -88,7 +145,19 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     
     toast({
       title: "Файл загружен!",
-      description: "Код бота сохранен в файл",
+      description: `Файл ${fileName} сохранен`,
+    });
+  };
+
+  const downloadAllFiles = () => {
+    const formats: ExportFormat[] = ['python', 'json', 'requirements', 'readme', 'dockerfile', 'config'];
+    formats.forEach(format => {
+      setTimeout(() => downloadFile(format), formats.indexOf(format) * 100);
+    });
+    
+    toast({
+      title: "Все файлы загружены!",
+      description: "Полный проект бота загружен",
     });
   };
 
@@ -103,10 +172,11 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
         </DialogHeader>
 
         <Tabs defaultValue="stats" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="stats">Статистика</TabsTrigger>
             <TabsTrigger value="validation">Валидация</TabsTrigger>
-            <TabsTrigger value="code">Python код</TabsTrigger>
+            <TabsTrigger value="files">Файлы</TabsTrigger>
+            <TabsTrigger value="code">Код</TabsTrigger>
             <TabsTrigger value="setup">Настройка</TabsTrigger>
           </TabsList>
 
@@ -212,6 +282,83 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             </Card>
           </TabsContent>
 
+          <TabsContent value="files" className="flex-1 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <i className="fas fa-file-archive text-blue-500"></i>
+                  <span>Экспорт файлов проекта</span>
+                </CardTitle>
+                <CardDescription>Выберите формат для экспорта или загрузите все файлы</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <Select value={selectedFormat} onValueChange={(value: ExportFormat) => setSelectedFormat(value)}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Выберите формат" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="python">Python код (.py)</SelectItem>
+                        <SelectItem value="json">JSON данные (.json)</SelectItem>
+                        <SelectItem value="requirements">Зависимости (.txt)</SelectItem>
+                        <SelectItem value="readme">Документация (.md)</SelectItem>
+                        <SelectItem value="dockerfile">Dockerfile</SelectItem>
+                        <SelectItem value="config">Конфигурация (.yaml)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => copyToClipboard()}>
+                      <i className="fas fa-copy mr-2"></i>
+                      Копировать
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => downloadFile()}>
+                      <i className="fas fa-download mr-2"></i>
+                      Скачать
+                    </Button>
+                    <Button size="sm" onClick={downloadAllFiles}>
+                      <i className="fas fa-archive mr-2"></i>
+                      Скачать все
+                    </Button>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                {validationResult.isValid ? (
+                  <Textarea
+                    value={exportContent[selectedFormat]}
+                    readOnly
+                    className="min-h-[350px] font-mono text-sm bg-gray-50"
+                    placeholder="Выберите формат для просмотра..."
+                  />
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
+                    <i className="fas fa-exclamation-triangle mb-2"></i>
+                    <p>Исправьте ошибки валидации для экспорта файлов</p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+                  {(['python', 'json', 'requirements', 'readme', 'dockerfile', 'config'] as ExportFormat[]).map(format => (
+                    <div key={format} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedFormat(format)}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-sm">{getFileName(format)}</div>
+                          <div className="text-xs text-gray-500">{format === selectedFormat ? 'Выбрано' : 'Нажмите для просмотра'}</div>
+                        </div>
+                        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); downloadFile(format); }}>
+                          <i className="fas fa-download text-xs"></i>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="code" className="flex-1 space-y-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -220,11 +367,11 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <CardDescription>Готовый к использованию код для aiogram 3.x</CardDescription>
                 </div>
                 <div className="flex space-x-2">
-                  <Button onClick={copyToClipboard} variant="outline" size="sm">
+                  <Button onClick={() => copyToClipboard(exportContent.python)} variant="outline" size="sm">
                     <i className="fas fa-copy mr-2"></i>
                     Копировать
                   </Button>
-                  <Button onClick={downloadFile} size="sm">
+                  <Button onClick={() => downloadFile('python')} size="sm">
                     <i className="fas fa-download mr-2"></i>
                     Скачать
                   </Button>
@@ -233,7 +380,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
               <CardContent>
                 {validationResult.isValid ? (
                   <Textarea
-                    value={generatedCode}
+                    value={exportContent.python}
                     readOnly
                     className="min-h-[400px] font-mono text-sm bg-gray-50"
                     placeholder="Генерация кода..."
@@ -315,11 +462,11 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-gray-900">Сгенерированный код</h3>
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                <Button variant="outline" size="sm" onClick={() => copyToClipboard()}>
                   <i className="fas fa-copy mr-2"></i>
                   Копировать
                 </Button>
-                <Button size="sm" onClick={downloadFile}>
+                <Button size="sm" onClick={() => downloadFile()}>
                   <i className="fas fa-download mr-2"></i>
                   Скачать
                 </Button>
