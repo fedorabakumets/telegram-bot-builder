@@ -6,8 +6,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   let code = '"""\\n';
   code += `${botName} - Telegram Bot\\n`;
-  code += 'Сгенерировано с помощью TelegramBot Builder\\n\\n';
-  code += generateBotFatherCommands(nodes);
+  code += 'Сгенерировано с помощью TelegramBot Builder\\n';
+  
+  const botFatherCommands = generateBotFatherCommands(nodes);
+  if (botFatherCommands) {
+    code += '\\nКоманды для @BotFather:\\n';
+    code += botFatherCommands;
+  }
+  
   code += '"""\\n\\n';
   
   code += 'import asyncio\\n';

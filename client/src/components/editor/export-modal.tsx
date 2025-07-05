@@ -422,6 +422,9 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                         Копировать
                       </Button>
                     </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Скопируйте и отправьте @BotFather для настройки меню команд:
+                    </p>
                     <Textarea
                       value={botFatherCommands}
                       readOnly

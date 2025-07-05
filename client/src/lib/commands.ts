@@ -173,7 +173,7 @@ export function generateBotFatherCommands(nodes: any[]): string {
     return '';
   }
   
-  let botFatherCommands = 'Скопируйте и отправьте @BotFather для настройки меню команд:\n\n';
+  let botFatherCommands = '';
   
   commandNodes.forEach(node => {
     const command = node.data.command.replace('/', '');
@@ -181,5 +181,5 @@ export function generateBotFatherCommands(nodes: any[]): string {
     botFatherCommands += `${command} - ${description}\n`;
   });
   
-  return botFatherCommands;
+  return botFatherCommands.trim();
 }
