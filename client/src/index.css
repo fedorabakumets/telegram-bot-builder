@@ -26,6 +26,25 @@
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
   --ring: hsl(20, 14.3%, 4.1%);
   --radius: 0.5rem;
+  
+  /* Enhanced theme variables */
+  --success: hsl(142, 76%, 36%);
+  --success-foreground: hsl(355, 7%, 97%);
+  --warning: hsl(38, 92%, 50%);
+  --warning-foreground: hsl(48, 96%, 89%);
+  --info: hsl(199, 89%, 48%);
+  --info-foreground: hsl(210, 20%, 98%);
+  
+  /* Gradient colors */
+  --gradient-primary-start: hsl(207, 90%, 54%);
+  --gradient-primary-end: hsl(217, 100%, 64%);
+  --gradient-secondary-start: hsl(60, 4.8%, 95.9%);
+  --gradient-secondary-end: hsl(60, 4.8%, 88%);
+  
+  /* Shadow colors */
+  --shadow-light: hsl(20, 5.9%, 50% / 0.1);
+  --shadow-medium: hsl(20, 5.9%, 30% / 0.15);
+  --shadow-heavy: hsl(20, 5.9%, 10% / 0.2);
 }
 
 .dark {
@@ -35,20 +54,48 @@
   --muted-foreground: hsl(240, 5%, 64.9%);
   --popover: hsl(240, 10%, 3.9%);
   --popover-foreground: hsl(0, 0%, 98%);
-  --card: hsl(240, 10%, 3.9%);
+  --card: hsl(240, 10%, 7%);
   --card-foreground: hsl(0, 0%, 98%);
-  --border: hsl(240, 3.7%, 15.9%);
+  --border: hsl(240, 3.7%, 18%);
   --input: hsl(240, 3.7%, 15.9%);
-  --primary: hsl(207, 90%, 54%);
+  --primary: hsl(207, 90%, 60%);
   --primary-foreground: hsl(211, 100%, 99%);
-  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary: hsl(240, 3.7%, 20%);
   --secondary-foreground: hsl(0, 0%, 98%);
-  --accent: hsl(240, 3.7%, 15.9%);
+  --accent: hsl(240, 3.7%, 20%);
   --accent-foreground: hsl(0, 0%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive: hsl(0, 75%, 60%);
   --destructive-foreground: hsl(0, 0%, 98%);
   --ring: hsl(240, 4.9%, 83.9%);
   --radius: 0.5rem;
+  
+  /* Enhanced dark theme variables */
+  --success: hsl(142, 76%, 45%);
+  --success-foreground: hsl(355, 7%, 97%);
+  --warning: hsl(38, 92%, 55%);
+  --warning-foreground: hsl(48, 96%, 89%);
+  --info: hsl(199, 89%, 55%);
+  --info-foreground: hsl(210, 20%, 98%);
+  
+  /* Dark gradient colors */
+  --gradient-primary-start: hsl(207, 90%, 60%);
+  --gradient-primary-end: hsl(217, 100%, 70%);
+  --gradient-secondary-start: hsl(240, 3.7%, 20%);
+  --gradient-secondary-end: hsl(240, 3.7%, 30%);
+  
+  /* Dark shadow colors */
+  --shadow-light: hsl(0, 0%, 0% / 0.2);
+  --shadow-medium: hsl(0, 0%, 0% / 0.3);
+  --shadow-heavy: hsl(0, 0%, 0% / 0.5);
+  
+  /* Surface colors for better depth */
+  --surface-1: hsl(240, 8%, 8%);
+  --surface-2: hsl(240, 8%, 12%);
+  --surface-3: hsl(240, 8%, 16%);
+  
+  /* Glass effect colors */
+  --glass-bg: hsl(240, 10%, 10% / 0.8);
+  --glass-border: hsl(240, 10%, 30% / 0.2);
 }
 
 @layer base {
