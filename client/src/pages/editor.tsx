@@ -125,6 +125,7 @@ export default function Editor() {
         
         <PropertiesPanel
           selectedNode={selectedNode}
+          allNodes={nodes}
           onNodeUpdate={updateNodeData}
           onButtonAdd={addButton}
           onButtonUpdate={updateButton}

@@ -6,9 +6,11 @@ import { Switch } from '@/components/ui/switch';
 import { Button as UIButton } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { nanoid } from 'nanoid';
+import { useToast } from '@/hooks/use-toast';
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
+  allNodes?: Node[];
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
   onButtonAdd: (nodeId: string, button: Button) => void;
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
@@ -16,12 +18,14 @@ interface PropertiesPanelProps {
 }
 
 export function PropertiesPanel({ 
-  selectedNode, 
+  selectedNode,
+  allNodes = [],
   onNodeUpdate, 
   onButtonAdd, 
   onButtonUpdate, 
   onButtonDelete 
 }: PropertiesPanelProps) {
+  const { toast } = useToast();
   if (!selectedNode) {
     return (
       <aside className="w-80 bg-white border-l border-gray-200 flex flex-col">
@@ -89,7 +93,23 @@ export function PropertiesPanel({
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${nodeColors[selectedNode.type]}`}>
             <i className={`${nodeIcons[selectedNode.type]} text-sm`}></i>
           </div>
-          <h2 className="text-sm font-semibold text-gray-900">{nodeTypeNames[selectedNode.type]}</h2>
+          <div className="flex-1">
+            <h2 className="text-sm font-semibold text-gray-900">{nodeTypeNames[selectedNode.type]}</h2>
+            <div className="flex items-center mt-1">
+              <span className="text-xs text-gray-500">ID:</span>
+              <code className="ml-1 px-2 py-0.5 bg-gray-100 rounded text-xs font-mono text-gray-700 cursor-pointer hover:bg-gray-200 transition-colors"
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedNode.id);
+                      toast({
+                        title: "ID скопирован!",
+                        description: `ID "${selectedNode.id}" скопирован в буфер обмена`,
+                      });
+                    }}
+                    title="Нажмите, чтобы скопировать">
+                {selectedNode.id}
+              </code>
+            </div>
+          </div>
         </div>
         <p className="text-xs text-gray-500">Настройте параметры выбранного элемента</p>
       </div>
@@ -245,12 +265,49 @@ export function PropertiesPanel({
                       )}
                       
                       {button.action === 'goto' && (
-                        <Input
-                          value={button.target || ''}
-                          onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { target: e.target.value })}
-                          className="mt-2 text-xs"
-                          placeholder="ID экрана"
-                        />
+                        <div className="mt-2 space-y-2">
+                          <Select
+                            value={button.target || ''}
+                            onValueChange={(value) => onButtonUpdate(selectedNode.id, button.id, { target: value })}
+                          >
+                            <SelectTrigger className="text-xs">
+                              <SelectValue placeholder="Выберите экран" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allNodes
+                                .filter(node => node.id !== selectedNode.id)
+                                .map((node) => (
+                                  <SelectItem key={node.id} value={node.id}>
+                                    <div className="flex items-center space-x-2">
+                                      <i className={nodeIcons[node.type]}></i>
+                                      <span>
+                                        {node.type === 'start' && node.data.command}
+                                        {node.type === 'command' && node.data.command}
+                                        {node.type === 'message' && 'Сообщение'}
+                                        {node.type === 'photo' && 'Фото'}
+                                        {node.type === 'keyboard' && 'Клавиатура'}
+                                        {node.type === 'condition' && 'Условие'}
+                                        {node.type === 'input' && 'Ввод'}
+                                      </span>
+                                      <code className="text-xs text-gray-500">({node.id})</code>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              {allNodes.filter(node => node.id !== selectedNode.id).length === 0 && (
+                                <SelectItem value="" disabled>
+                                  Создайте другие экраны для выбора
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          
+                          <Input
+                            value={button.target || ''}
+                            onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { target: e.target.value })}
+                            className="text-xs"
+                            placeholder="Или введите ID вручную"
+                          />
+                        </div>
                       )}
                     </div>
                   ))}
