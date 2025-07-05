@@ -38,7 +38,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
 
   // Получаем статус бота
   const { data: botStatus, isLoading: isLoadingStatus } = useQuery<BotStatusResponse>({
-    queryKey: ['/api/projects', projectId, 'bot'],
+    queryKey: [`/api/projects/${projectId}/bot`],
     refetchInterval: 2000, // Обновляем каждые 2 секунды
   });
 
@@ -52,7 +52,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         title: "Бот запущен",
         description: "Бот успешно запущен и готов к работе.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'bot'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
     },
     onError: (error: any) => {
       toast({
@@ -73,7 +73,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         title: "Бот остановлен",
         description: "Бот успешно остановлен.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'bot'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
     },
     onError: (error: any) => {
       toast({

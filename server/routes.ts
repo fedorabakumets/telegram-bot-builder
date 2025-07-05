@@ -42,6 +42,15 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
       detached: false
     });
 
+    // Логируем вывод процесса
+    process.stdout?.on('data', (data) => {
+      console.log(`Бот ${projectId} stdout:`, data.toString());
+    });
+
+    process.stderr?.on('data', (data) => {
+      console.error(`Бот ${projectId} stderr:`, data.toString());
+    });
+
     const processId = process.pid?.toString();
     
     // Сохраняем процесс
@@ -178,10 +187,21 @@ async def start_handler(message: types.Message):
 
 # Запуск бота
 async def main():
-    await dp.start_polling(bot)
+    try:
+        print("Запускаем бота...")
+        await dp.start_polling(bot)
+    except Exception as e:
+        print(f"Ошибка запуска бота: {e}")
+        raise
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Бот остановлен")
+    except Exception as e:
+        print(f"Критическая ошибка: {e}")
+        exit(1)
 `;
 
   return code;

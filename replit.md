@@ -128,6 +128,15 @@ Changelog:
   * Expanded BotFather configuration instructions
   * Added detailed descriptions for all export file types
   * Included troubleshooting and testing guidelines
+- July 05, 2025. Added bot execution functionality:
+  * Created new "Bot" tab in the editor interface
+  * Implemented bot instance management with start/stop controls
+  * Added real-time status monitoring with automatic updates
+  * Integrated Python process management for bot execution
+  * Created comprehensive API endpoints for bot lifecycle management
+  * Added proper error handling and logging for bot processes
+  * Established database schema for tracking bot instances
+  * Configured aiogram integration for Telegram Bot API
 ```
 
 ## User Preferences
