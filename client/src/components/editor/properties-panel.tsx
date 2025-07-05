@@ -109,7 +109,7 @@ export function PropertiesPanel({
   };
 
   return (
-    <aside className="w-80 bg-white border-l border-gray-200 flex flex-col">
+    <aside className="w-full h-full bg-white border-l border-gray-200 flex flex-col">
       {/* Properties Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center mb-3">

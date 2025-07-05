@@ -64,7 +64,7 @@ export function Canvas({
   }, [onNodeSelect]);
 
   return (
-    <main className="flex-1 bg-gray-50 relative overflow-hidden">
+    <main className="w-full h-full bg-gray-50 relative overflow-hidden">
       <div className="absolute inset-0 overflow-auto p-8">
         {/* Canvas Controls */}
         <div className="absolute top-4 left-4 flex items-center space-x-2 z-10">

@@ -7,6 +7,7 @@ import { Canvas } from '@/components/editor/canvas';
 import { PropertiesPanel } from '@/components/editor/properties-panel';
 import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -113,26 +114,38 @@ export default function Editor() {
         isSaving={updateProjectMutation.isPending}
       />
 
-      <div className="flex h-[calc(100vh-4rem)]">
-        <ComponentsSidebar onComponentDrag={handleComponentDrag} />
-        
-        <Canvas
-          nodes={nodes}
-          selectedNodeId={selectedNodeId}
-          onNodeSelect={setSelectedNodeId}
-          onNodeAdd={addNode}
-          onNodeDelete={deleteNode}
-          onNodeMove={handleNodeMove}
-        />
-        
-        <PropertiesPanel
-          selectedNode={selectedNode}
-          allNodes={nodes}
-          onNodeUpdate={updateNodeData}
-          onButtonAdd={addButton}
-          onButtonUpdate={updateButton}
-          onButtonDelete={deleteButton}
-        />
+      <div className="h-[calc(100vh-4rem)]">
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
+            <ComponentsSidebar onComponentDrag={handleComponentDrag} />
+          </ResizablePanel>
+          
+          <ResizableHandle withHandle />
+          
+          <ResizablePanel defaultSize={60} minSize={30}>
+            <Canvas
+              nodes={nodes}
+              selectedNodeId={selectedNodeId}
+              onNodeSelect={setSelectedNodeId}
+              onNodeAdd={addNode}
+              onNodeDelete={deleteNode}
+              onNodeMove={handleNodeMove}
+            />
+          </ResizablePanel>
+          
+          <ResizableHandle withHandle />
+          
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
+            <PropertiesPanel
+              selectedNode={selectedNode}
+              allNodes={nodes}
+              onNodeUpdate={updateNodeData}
+              onButtonAdd={addButton}
+              onButtonUpdate={updateButton}
+              onButtonDelete={deleteButton}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
 
       <PreviewModal
