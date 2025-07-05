@@ -1,8 +1,111 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { spawn, ChildProcess } from "child_process";
+import { writeFileSync, existsSync, mkdirSync } from "fs";
+import { join } from "path";
 import { storage } from "./storage";
-import { insertBotProjectSchema, botDataSchema } from "@shared/schema";
+import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema } from "@shared/schema";
 import { z } from "zod";
+
+// Глобальное хранилище активных процессов ботов
+const botProcesses = new Map<number, ChildProcess>();
+
+// Функция для создания Python файла бота
+function createBotFile(botCode: string, projectId: number): string {
+  const botsDir = join(process.cwd(), 'bots');
+  if (!existsSync(botsDir)) {
+    mkdirSync(botsDir, { recursive: true });
+  }
+  
+  const filePath = join(botsDir, `bot_${projectId}.py`);
+  writeFileSync(filePath, botCode);
+  return filePath;
+}
+
+// Функция для запуска бота
+async function startBot(projectId: number, token: string): Promise<{ success: boolean; error?: string; processId?: string }> {
+  try {
+    const project = await storage.getBotProject(projectId);
+    if (!project) {
+      return { success: false, error: "Проект не найден" };
+    }
+
+    // Генерируем код бота
+    const botCode = generatePythonCode(project.data).replace('YOUR_BOT_TOKEN_HERE', token);
+    
+    // Создаем файл бота
+    const filePath = createBotFile(botCode, projectId);
+    
+    // Запускаем бота
+    const process = spawn('python', [filePath], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      detached: false
+    });
+
+    const processId = process.pid?.toString();
+    
+    // Сохраняем процесс
+    botProcesses.set(projectId, process);
+    
+    // Создаем запись в базе данных
+    await storage.createBotInstance({
+      projectId,
+      status: 'running',
+      token,
+      processId,
+    });
+
+    // Обрабатываем события процесса
+    process.on('error', async (error) => {
+      console.error(`Ошибка запуска бота ${projectId}:`, error);
+      const instance = await storage.getBotInstance(projectId);
+      if (instance) {
+        await storage.updateBotInstance(instance.id, { 
+          status: 'error', 
+          errorMessage: error.message 
+        });
+      }
+      botProcesses.delete(projectId);
+    });
+
+    process.on('exit', async (code) => {
+      console.log(`Бот ${projectId} завершен с кодом ${code}`);
+      const instance = await storage.getBotInstance(projectId);
+      if (instance) {
+        await storage.updateBotInstance(instance.id, { 
+          status: 'stopped',
+          errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null
+        });
+      }
+      botProcesses.delete(projectId);
+    });
+
+    return { success: true, processId };
+  } catch (error) {
+    console.error('Ошибка запуска бота:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+  }
+}
+
+// Функция для остановки бота
+async function stopBot(projectId: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    const process = botProcesses.get(projectId);
+    if (!process) {
+      return { success: false, error: "Процесс бота не найден" };
+    }
+
+    process.kill('SIGTERM');
+    botProcesses.delete(projectId);
+    
+    await storage.stopBotInstance(projectId);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Ошибка остановки бота:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+  }
+}
 
 function generatePythonCode(botData: any): string {
   const { nodes } = botData;
@@ -168,6 +271,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ code: pythonCode });
     } catch (error) {
       res.status(500).json({ message: "Failed to generate code" });
+    }
+  });
+
+  // Bot management endpoints
+  
+  // Get bot instance status
+  app.get("/api/projects/:id/bot", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const instance = await storage.getBotInstance(projectId);
+      if (!instance) {
+        return res.json({ status: 'stopped', instance: null });
+      }
+      res.json({ status: instance.status, instance });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get bot status" });
+    }
+  });
+
+  // Start bot
+  app.post("/api/projects/:id/bot/start", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { token } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Bot token is required" });
+      }
+
+      // Проверяем, не запущен ли уже бот
+      const existingInstance = await storage.getBotInstance(projectId);
+      if (existingInstance && existingInstance.status === 'running') {
+        return res.status(400).json({ message: "Bot is already running" });
+      }
+
+      const result = await startBot(projectId, token);
+      if (result.success) {
+        res.json({ message: "Bot started successfully", processId: result.processId });
+      } else {
+        res.status(500).json({ message: result.error || "Failed to start bot" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to start bot" });
+    }
+  });
+
+  // Stop bot
+  app.post("/api/projects/:id/bot/stop", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      
+      const result = await stopBot(projectId);
+      if (result.success) {
+        res.json({ message: "Bot stopped successfully" });
+      } else {
+        res.status(500).json({ message: result.error || "Failed to stop bot" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to stop bot" });
+    }
+  });
+
+  // Get all bot instances
+  app.get("/api/bots", async (req, res) => {
+    try {
+      const instances = await storage.getAllBotInstances();
+      res.json(instances);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bot instances" });
     }
   });
 

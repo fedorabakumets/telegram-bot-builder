@@ -11,14 +11,35 @@ export const botProjects = pgTable("bot_projects", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const botInstances = pgTable("bot_instances", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => botProjects.id).notNull(),
+  status: text("status").notNull(), // "running", "stopped", "error"
+  token: text("token").notNull(),
+  processId: text("process_id"),
+  startedAt: timestamp("started_at").defaultNow(),
+  stoppedAt: timestamp("stopped_at"),
+  errorMessage: text("error_message"),
+});
+
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
   name: true,
   description: true,
   data: true,
 });
 
+export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
+  projectId: true,
+  status: true,
+  token: true,
+  processId: true,
+  errorMessage: true,
+});
+
 export type InsertBotProject = z.infer<typeof insertBotProjectSchema>;
 export type BotProject = typeof botProjects.$inferSelect;
+export type InsertBotInstance = z.infer<typeof insertBotInstanceSchema>;
+export type BotInstance = typeof botInstances.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({

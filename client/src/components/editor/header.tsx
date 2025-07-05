@@ -3,8 +3,8 @@ import { useState } from 'react';
 
 interface HeaderProps {
   projectName: string;
-  currentTab: 'editor' | 'preview' | 'export';
-  onTabChange: (tab: 'editor' | 'preview' | 'export') => void;
+  currentTab: 'editor' | 'preview' | 'export' | 'bot';
+  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot') => void;
   onSave: () => void;
   onExport: () => void;
   isSaving?: boolean;
@@ -56,6 +56,16 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             }`}
           >
             Экспорт
+          </button>
+          <button 
+            onClick={() => onTabChange('bot')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              currentTab === 'bot' 
+                ? 'text-primary bg-primary/10' 
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+          >
+            Бот
           </button>
         </nav>
       </div>

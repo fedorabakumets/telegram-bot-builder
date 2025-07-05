@@ -1,4 +1,11 @@
-import { botProjects, type BotProject, type InsertBotProject } from "@shared/schema";
+import { 
+  botProjects, 
+  botInstances,
+  type BotProject, 
+  type InsertBotProject,
+  type BotInstance,
+  type InsertBotInstance 
+} from "@shared/schema";
 
 export interface IStorage {
   getBotProject(id: number): Promise<BotProject | undefined>;
@@ -6,15 +13,27 @@ export interface IStorage {
   createBotProject(project: InsertBotProject): Promise<BotProject>;
   updateBotProject(id: number, project: Partial<InsertBotProject>): Promise<BotProject | undefined>;
   deleteBotProject(id: number): Promise<boolean>;
+  
+  // Bot instances
+  getBotInstance(projectId: number): Promise<BotInstance | undefined>;
+  getAllBotInstances(): Promise<BotInstance[]>;
+  createBotInstance(instance: InsertBotInstance): Promise<BotInstance>;
+  updateBotInstance(id: number, instance: Partial<InsertBotInstance>): Promise<BotInstance | undefined>;
+  deleteBotInstance(id: number): Promise<boolean>;
+  stopBotInstance(projectId: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private projects: Map<number, BotProject>;
+  private instances: Map<number, BotInstance>;
   currentId: number;
+  currentInstanceId: number;
 
   constructor() {
     this.projects = new Map();
+    this.instances = new Map();
     this.currentId = 1;
+    this.currentInstanceId = 1;
     
     // Add a default project
     const defaultProject: BotProject = {
@@ -99,6 +118,57 @@ export class MemStorage implements IStorage {
 
   async deleteBotProject(id: number): Promise<boolean> {
     return this.projects.delete(id);
+  }
+
+  // Bot instances methods
+  async getBotInstance(projectId: number): Promise<BotInstance | undefined> {
+    return Array.from(this.instances.values()).find(instance => instance.projectId === projectId);
+  }
+
+  async getAllBotInstances(): Promise<BotInstance[]> {
+    return Array.from(this.instances.values());
+  }
+
+  async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
+    const id = this.currentInstanceId++;
+    const instance: BotInstance = {
+      ...insertInstance,
+      id,
+      startedAt: new Date(),
+      stoppedAt: null,
+      errorMessage: insertInstance.errorMessage || null,
+      processId: insertInstance.processId || null,
+    };
+    this.instances.set(id, instance);
+    return instance;
+  }
+
+  async updateBotInstance(id: number, updateData: Partial<InsertBotInstance>): Promise<BotInstance | undefined> {
+    const instance = this.instances.get(id);
+    if (!instance) return undefined;
+
+    const updatedInstance: BotInstance = {
+      ...instance,
+      ...updateData,
+      stoppedAt: updateData.status === 'stopped' ? new Date() : instance.stoppedAt,
+    };
+    
+    this.instances.set(id, updatedInstance);
+    return updatedInstance;
+  }
+
+  async deleteBotInstance(id: number): Promise<boolean> {
+    return this.instances.delete(id);
+  }
+
+  async stopBotInstance(projectId: number): Promise<boolean> {
+    const instance = await this.getBotInstance(projectId);
+    if (!instance) return false;
+    
+    const updated = await this.updateBotInstance(instance.id, { 
+      status: 'stopped'
+    });
+    return !!updated;
   }
 }
 
