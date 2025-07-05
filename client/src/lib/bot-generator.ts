@@ -4,53 +4,53 @@ import { generateBotFatherCommands } from './commands';
 export function generatePythonCode(botData: BotData, botName: string = "MyBot"): string {
   const { nodes } = botData;
   
-  let code = '"""\\n';
-  code += `${botName} - Telegram Bot\\n`;
-  code += 'Сгенерировано с помощью TelegramBot Builder\\n';
+  let code = '"""\n';
+  code += `${botName} - Telegram Bot\n`;
+  code += 'Сгенерировано с помощью TelegramBot Builder\n';
   
   const botFatherCommands = generateBotFatherCommands(nodes);
   if (botFatherCommands) {
-    code += '\\nКоманды для @BotFather:\\n';
+    code += '\nКоманды для @BotFather:\n';
     code += botFatherCommands;
   }
   
-  code += '"""\\n\\n';
+  code += '"""\n\n';
   
-  code += 'import asyncio\\n';
-  code += 'import logging\\n';
-  code += 'from aiogram import Bot, Dispatcher, types\\n';
-  code += 'from aiogram.filters import CommandStart, Command\\n';
-  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand\\n';
-  code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\\n';
-  code += 'from aiogram.enums import ParseMode\\n\\n';
+  code += 'import asyncio\n';
+  code += 'import logging\n';
+  code += 'from aiogram import Bot, Dispatcher, types\n';
+  code += 'from aiogram.filters import CommandStart, Command\n';
+  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand\n';
+  code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
+  code += 'from aiogram.enums import ParseMode\n\n';
   
-  code += '# Токен вашего бота (получите у @BotFather)\\n';
-  code += 'BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"\\n\\n';
+  code += '# Токен вашего бота (получите у @BotFather)\n';
+  code += 'BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"\n\n';
   
-  code += '# Настройка логирования\\n';
-  code += 'logging.basicConfig(level=logging.INFO)\\n\\n';
+  code += '# Настройка логирования\n';
+  code += 'logging.basicConfig(level=logging.INFO)\n\n';
   
-  code += '# Создание бота и диспетчера\\n';
-  code += 'bot = Bot(token=BOT_TOKEN)\\n';
-  code += 'dp = Dispatcher()\\n\\n';
+  code += '# Создание бота и диспетчера\n';
+  code += 'bot = Bot(token=BOT_TOKEN)\n';
+  code += 'dp = Dispatcher()\n\n';
   
-  code += '# Список администраторов (добавьте свой Telegram ID)\\n';
-  code += 'ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов\\n\\n';
+  code += '# Список администраторов (добавьте свой Telegram ID)\n';
+  code += 'ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов\n\n';
   
-  code += '# Хранилище пользователей (в реальном боте используйте базу данных)\\n';
-  code += 'user_data = {}\\n\\n';
+  code += '# Хранилище пользователей (в реальном боте используйте базу данных)\n';
+  code += 'user_data = {}\n\n';
 
   // Добавляем утилитарные функции
-  code += '\\n# Утилитарные функции\\n';
-  code += 'async def is_admin(user_id: int) -> bool:\\n';
-  code += '    return user_id in ADMIN_IDS\\n\\n';
+  code += '\n# Утилитарные функции\n';
+  code += 'async def is_admin(user_id: int) -> bool:\n';
+  code += '    return user_id in ADMIN_IDS\n\n';
   
-  code += 'async def is_private_chat(message: types.Message) -> bool:\\n';
-  code += '    return message.chat.type == "private"\\n\\n';
+  code += 'async def is_private_chat(message: types.Message) -> bool:\n';
+  code += '    return message.chat.type == "private"\n\n';
   
-  code += 'async def check_auth(user_id: int) -> bool:\\n';
-  code += '    # Здесь можно добавить логику проверки авторизации\\n';
-  code += '    return user_id in user_data\\n\\n';
+  code += 'async def check_auth(user_id: int) -> bool:\n';
+  code += '    # Здесь можно добавить логику проверки авторизации\n';
+  code += '    return user_id in user_data\n\n';
 
   // Настройка меню команд для BotFather
   const menuCommands = nodes.filter(node => 
@@ -60,18 +60,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   );
 
   if (menuCommands.length > 0) {
-    code += '\\n# Настройка меню команд\\n';
-    code += 'async def set_bot_commands():\\n';
-    code += '    commands = [\\n';
+    code += '\n# Настройка меню команд\n';
+    code += 'async def set_bot_commands():\n';
+    code += '    commands = [\n';
     
     menuCommands.forEach(node => {
       const command = node.data.command?.replace('/', '') || '';
       const description = node.data.description || 'Команда бота';
-      code += `        BotCommand(command="${command}", description="${description}"),\\n`;
+      code += `        BotCommand(command="${command}", description="${description}"),\n`;
     });
     
-    code += '    ]\\n';
-    code += '    await bot.set_my_commands(commands)\\n\\n';
+    code += '    ]\n';
+    code += '    await bot.set_my_commands(commands)\n\n';
   }
 
   // Generate handlers for each node
@@ -91,68 +91,68 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   );
 
   if (inlineNodes.length > 0) {
-    code += '\\n# Обработчики inline кнопок\\n';
+    code += '\n# Обработчики inline кнопок\n';
     inlineNodes.forEach(node => {
       node.data.buttons.forEach(button => {
         if (button.action === 'goto') {
-          code += `\\n@dp.callback_query(lambda c: c.data == "${button.target || button.text}")\\n`;
-          code += `async def handle_${button.id}(callback_query: types.CallbackQuery):\\n`;
-          code += '    await callback_query.answer()\\n';
-          code += `    # TODO: Implement navigation to ${button.target}\\n`;
-          code += `    await callback_query.message.answer("Переход к: ${button.text}")\\n`;
+          code += `\n@dp.callback_query(lambda c: c.data == "${button.target || button.text}")\n`;
+          code += `async def handle_${button.id}(callback_query: types.CallbackQuery):\n`;
+          code += '    await callback_query.answer()\n';
+          code += `    # TODO: Implement navigation to ${button.target}\n`;
+          code += `    await callback_query.message.answer("Переход к: ${button.text}")\n`;
         }
       });
     });
   }
 
-  code += '\\n\\n# Запуск бота\\n';
-  code += 'async def main():\\n';
+  code += '\n\n# Запуск бота\n';
+  code += 'async def main():\n';
   if (menuCommands.length > 0) {
-    code += '    await set_bot_commands()\\n';
+    code += '    await set_bot_commands()\n';
   }
-  code += '    print("Бот запущен!")\\n';
-  code += '    await dp.start_polling(bot)\\n\\n';
+  code += '    print("Бот запущен!")\n';
+  code += '    await dp.start_polling(bot)\n\n';
   
-  code += 'if __name__ == "__main__":\\n';
-  code += '    asyncio.run(main())\\n';
+  code += 'if __name__ == "__main__":\n';
+  code += '    asyncio.run(main())\n';
 
   return code;
 }
 
 function generateStartHandler(node: Node): string {
-  let code = '\\n@dp.message(CommandStart())\\n';
-  code += 'async def start_handler(message: types.Message):\\n';
+  let code = '\n@dp.message(CommandStart())\n';
+  code += 'async def start_handler(message: types.Message):\n';
 
   // Добавляем проверки безопасности
   if (node.data.isPrivateOnly) {
-    code += '    if not await is_private_chat(message):\\n';
-    code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\\n';
-    code += '        return\\n';
+    code += '    if not await is_private_chat(message):\n';
+    code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+    code += '        return\n';
   }
 
   if (node.data.adminOnly) {
-    code += '    if not await is_admin(message.from_user.id):\\n';
-    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\\n';
-    code += '        return\\n';
+    code += '    if not await is_admin(message.from_user.id):\n';
+    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+    code += '        return\n';
   }
 
   if (node.data.requiresAuth) {
-    code += '    if not await check_auth(message.from_user.id):\\n';
-    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\\n';
-    code += '        return\\n';
+    code += '    if not await check_auth(message.from_user.id):\n';
+    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
+    code += '        return\n';
   }
 
   // Регистрируем пользователя
-  code += '\\n    # Регистрируем пользователя в системе\\n';
-  code += '    user_data[message.from_user.id] = {\\n';
-  code += '        "username": message.from_user.username,\\n';
-  code += '        "first_name": message.from_user.first_name,\\n';
-  code += '        "last_name": message.from_user.last_name,\\n';
-  code += '        "registered_at": message.date\\n';
-  code += '    }\\n\\n';
+  code += '\n    # Регистрируем пользователя в системе\n';
+  code += '    user_data[message.from_user.id] = {\n';
+  code += '        "username": message.from_user.username,\n';
+  code += '        "first_name": message.from_user.first_name,\n';
+  code += '        "last_name": message.from_user.last_name,\n';
+  code += '        "registered_at": message.date\n';
+  code += '    }\n\n';
   
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
-  code += `    text = "${messageText}"\\n`;
+  code += `    text = "${messageText}"\n`;
   
   return code + generateKeyboard(node);
 }
@@ -161,39 +161,39 @@ function generateCommandHandler(node: Node): string {
   const command = node.data.command || "/help";
   const functionName = command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
   
-  let code = `\\n@dp.message(Command("${command.replace('/', '')}"))\\n`;
-  code += `async def ${functionName}_handler(message: types.Message):\\n`;
+  let code = `\n@dp.message(Command("${command.replace('/', '')}"))\n`;
+  code += `async def ${functionName}_handler(message: types.Message):\n`;
 
   // Добавляем проверки безопасности
   if (node.data.isPrivateOnly) {
-    code += '    if not await is_private_chat(message):\\n';
-    code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\\n';
-    code += '        return\\n';
+    code += '    if not await is_private_chat(message):\n';
+    code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+    code += '        return\n';
   }
 
   if (node.data.adminOnly) {
-    code += '    if not await is_admin(message.from_user.id):\\n';
-    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\\n';
-    code += '        return\\n';
+    code += '    if not await is_admin(message.from_user.id):\n';
+    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+    code += '        return\n';
   }
 
   if (node.data.requiresAuth) {
-    code += '    if not await check_auth(message.from_user.id):\\n';
-    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\\n';
-    code += '        return\\n';
+    code += '    if not await check_auth(message.from_user.id):\n';
+    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
+    code += '        return\n';
   }
 
   const messageText = node.data.messageText || "Команда выполнена";
-  code += `\\n    text = "${messageText}"\\n`;
+  code += `\n    text = "${messageText}"\n`;
   
   return code + generateKeyboard(node);
 }
 
 function generateMessageHandler(node: Node): string {
   const messageText = node.data.messageText || "Сообщение";
-  let code = `\\n# Обработчик для сообщения: ${node.id}\\n`;
-  code += `async def handle_${node.id}(message: types.Message):\\n`;
-  code += `    text = "${messageText}"\\n`;
+  let code = `\n# Обработчик для сообщения: ${node.id}\n`;
+  code += `async def handle_${node.id}(message: types.Message):\n`;
+  code += `    text = "${messageText}"\n`;
   
   return code + generateKeyboard(node);
 }
@@ -202,29 +202,29 @@ function generateKeyboard(node: Node): string {
   let code = '';
   
   if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
-    code += '    \\n';
-    code += '    builder = ReplyKeyboardBuilder()\\n';
+    code += '    \n';
+    code += '    builder = ReplyKeyboardBuilder()\n';
     node.data.buttons.forEach(button => {
-      code += `    builder.add(KeyboardButton(text="${button.text}"))\\n`;
+      code += `    builder.add(KeyboardButton(text="${button.text}"))\n`;
     });
     
-    code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard}, one_time_keyboard=${node.data.oneTimeKeyboard})\\n`;
-    code += '    await message.answer(text, reply_markup=keyboard)\\n';
+    code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard}, one_time_keyboard=${node.data.oneTimeKeyboard})\n`;
+    code += '    await message.answer(text, reply_markup=keyboard)\n';
   } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-    code += '    \\n';
-    code += '    builder = InlineKeyboardBuilder()\\n';
+    code += '    \n';
+    code += '    builder = InlineKeyboardBuilder()\n';
     node.data.buttons.forEach(button => {
       if (button.action === "url") {
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\\n`;
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
       } else {
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))\\n`;
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))\n`;
       }
     });
     
-    code += '    keyboard = builder.as_markup()\\n';
-    code += '    await message.answer(text, reply_markup=keyboard)\\n';
+    code += '    keyboard = builder.as_markup()\n';
+    code += '    await message.answer(text, reply_markup=keyboard)\n';
   } else {
-    code += '    await message.answer(text)\\n';
+    code += '    await message.answer(text)\n';
   }
   
   return code;
