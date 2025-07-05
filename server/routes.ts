@@ -176,7 +176,7 @@ function generatePythonCode(botData: any): string {
 import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart, Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 # Токен вашего бота (получите у @BotFather)
@@ -227,10 +227,104 @@ async def start_handler(message: types.Message):
         });
         
         code += `    keyboard = builder.as_markup()
-    await message.answer(text, reply_markup=keyboard)
+    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
       } else {
-        code += `    await message.answer(text)
+        code += `    # Удаляем предыдущие reply клавиатуры если они были
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+`;
+      }
+    } else if (node.type === "command") {
+      const command = node.data.command || "/help";
+      const functionName = command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
+      
+      code += `
+@dp.message(Command("${command.replace('/', '')}"))
+async def ${functionName}_handler(message: types.Message):
+    text = "${node.data.messageText || "Команда выполнена"}"
+`;
+      
+      if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
+        code += `    
+    builder = ReplyKeyboardBuilder()
+`;
+        node.data.buttons.forEach((button: any) => {
+          code += `    builder.add(KeyboardButton(text="${button.text}"))
+`;
+        });
+        
+        code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
+    await message.answer(text, reply_markup=keyboard)
+`;
+      } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+        code += `    
+    builder = InlineKeyboardBuilder()
+`;
+        node.data.buttons.forEach((button: any) => {
+          if (button.action === "url") {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
+`;
+          } else {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
+`;
+          }
+        });
+        
+        code += `    keyboard = builder.as_markup()
+    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer("Выберите действие:", reply_markup=keyboard)
+`;
+      } else {
+        code += `    # Удаляем предыдущие reply клавиатуры если они были
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+`;
+      }
+    } else if (node.type === "message") {
+      const functionName = `message_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+      
+      code += `
+@dp.message()
+async def ${functionName}_handler(message: types.Message):
+    text = "${node.data.messageText || "Сообщение получено"}"
+`;
+      
+      if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
+        code += `    
+    builder = ReplyKeyboardBuilder()
+`;
+        node.data.buttons.forEach((button: any) => {
+          code += `    builder.add(KeyboardButton(text="${button.text}"))
+`;
+        });
+        
+        code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
+    await message.answer(text, reply_markup=keyboard)
+`;
+      } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+        code += `    
+    builder = InlineKeyboardBuilder()
+`;
+        node.data.buttons.forEach((button: any) => {
+          if (button.action === "url") {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
+`;
+          } else {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
+`;
+          }
+        });
+        
+        code += `    keyboard = builder.as_markup()
+    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer("Выберите действие:", reply_markup=keyboard)
+`;
+      } else {
+        code += `    # Удаляем предыдущие reply клавиатуры если они были
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
 `;
       }
     }

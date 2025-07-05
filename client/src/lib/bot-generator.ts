@@ -20,7 +20,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'import logging\n';
   code += 'from aiogram import Bot, Dispatcher, types\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
-  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand\n';
+  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from aiogram.enums import ParseMode\n\n';
   
