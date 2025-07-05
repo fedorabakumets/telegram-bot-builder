@@ -64,32 +64,44 @@ export function Canvas({
   }, [onNodeSelect]);
 
   return (
-    <main className="w-full h-full bg-muted/30 relative overflow-hidden">
+    <main className="w-full h-full bg-canvas-bg relative overflow-hidden">
       <div className="absolute inset-0 overflow-auto p-8">
-        {/* Canvas Controls */}
-        <div className="absolute top-4 left-4 flex items-center space-x-2 z-10">
-          <div className="bg-background rounded-lg shadow-sm border border-border flex items-center">
-            <button className="p-2 hover:bg-muted rounded-l-lg">
-              <i className="fas fa-search-minus text-muted-foreground text-sm"></i>
+        {/* Enhanced Canvas Controls */}
+        <div className="absolute top-4 left-4 flex items-center space-x-2 z-10 canvas-controls">
+          <div className="bg-background/95 backdrop-blur-sm rounded-lg shadow-lg border border-border/60 flex items-center overflow-hidden">
+            <button className="p-2 hover:bg-muted/80 transition-all duration-200 hover:scale-105 group">
+              <i className="fas fa-search-minus text-muted-foreground text-sm group-hover:text-primary transition-colors"></i>
             </button>
-            <span className="px-3 py-2 text-sm text-foreground border-x border-border">100%</span>
-            <button className="p-2 hover:bg-muted rounded-r-lg">
-              <i className="fas fa-search-plus text-muted-foreground text-sm"></i>
+            <span className="px-3 py-2 text-sm text-foreground border-x border-border/60 font-mono min-w-[3rem] text-center zoom-indicator">100%</span>
+            <button className="p-2 hover:bg-muted/80 transition-all duration-200 hover:scale-105 group">
+              <i className="fas fa-search-plus text-muted-foreground text-sm group-hover:text-primary transition-colors"></i>
             </button>
           </div>
           
-          <button className="p-2 bg-background rounded-lg shadow-sm border border-border hover:bg-muted">
-            <i className="fas fa-expand-arrows-alt text-muted-foreground text-sm"></i>
+          <button className="p-2 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg border border-border/60 hover:bg-muted/80 transition-all duration-200 hover:scale-105 group">
+            <i className="fas fa-expand-arrows-alt text-muted-foreground text-sm group-hover:text-primary transition-colors"></i>
+          </button>
+
+          <button className="p-2 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg border border-border/60 hover:bg-muted/80 transition-all duration-200 hover:scale-105 group">
+            <i className="fas fa-undo text-muted-foreground text-sm group-hover:text-primary transition-colors"></i>
+          </button>
+
+          <button className="p-2 bg-background/95 backdrop-blur-sm rounded-lg shadow-lg border border-border/60 hover:bg-muted/80 transition-all duration-200 hover:scale-105 group">
+            <i className="fas fa-redo text-muted-foreground text-sm group-hover:text-primary transition-colors"></i>
           </button>
         </div>
         
-        {/* Canvas Grid */}
+        {/* Enhanced Canvas Grid */}
         <div 
           ref={canvasRef}
-          className="min-h-full relative"
+          className="min-h-full relative canvas-grid"
           style={{
-            backgroundImage: 'radial-gradient(circle, hsl(var(--muted-foreground) / 0.2) 1px, transparent 1px)',
-            backgroundSize: '20px 20px',
+            backgroundImage: `
+              radial-gradient(circle, hsl(var(--muted-foreground) / 0.15) 1px, transparent 1px),
+              linear-gradient(hsl(var(--muted-foreground) / 0.03) 1px, transparent 1px),
+              linear-gradient(90deg, hsl(var(--muted-foreground) / 0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: '20px 20px, 20px 20px, 20px 20px',
             minHeight: '100vh',
             minWidth: '100%'
           }}

@@ -247,3 +247,252 @@ body {
     height: 24px !important;
   }
 }
+
+/* Empty State Enhancements for Dark Theme */
+.empty-state-icon {
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.empty-state-icon:hover {
+  transform: scale(1.05);
+}
+
+.empty-state-icon::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(45deg, transparent, hsl(var(--primary) / 0.1), transparent);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.empty-state-icon:hover::before {
+  opacity: 1;
+}
+
+/* Dark theme specific enhancements for empty state */
+.dark .empty-state-container {
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.3) 100%);
+}
+
+.dark .empty-state-icon-bg {
+  background: linear-gradient(135deg, hsl(var(--muted) / 0.4) 0%, hsl(var(--muted) / 0.6) 100%);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 
+    0 4px 6px -1px hsl(var(--background) / 0.1),
+    0 2px 4px -1px hsl(var(--background) / 0.06);
+}
+
+.dark .empty-state-tip {
+  background: hsl(var(--muted) / 0.2);
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.dark .empty-state-tip:hover {
+  background: hsl(var(--muted) / 0.3);
+  border-color: hsl(var(--primary) / 0.3);
+  transform: translateY(-1px);
+}
+
+/* Floating animation for tips */
+.floating-tip {
+  animation: float 3s ease-in-out infinite;
+}
+
+.floating-tip:nth-child(2) {
+  animation-delay: 1.5s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Gradient text effect for dark theme */
+.dark .gradient-text {
+  background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--muted-foreground)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Enhanced pulse animation for dark theme */
+.dark .pulse-primary {
+  animation: pulse-primary-dark 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-primary-dark {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+/* Canvas Theme Support */
+.bg-canvas-bg {
+  background: linear-gradient(135deg, 
+    hsl(var(--muted) / 0.1) 0%, 
+    hsl(var(--muted) / 0.3) 25%, 
+    hsl(var(--muted) / 0.1) 50%, 
+    hsl(var(--muted) / 0.4) 75%, 
+    hsl(var(--muted) / 0.2) 100%
+  );
+}
+
+.dark .bg-canvas-bg {
+  background: linear-gradient(135deg, 
+    hsl(var(--background)) 0%, 
+    hsl(var(--muted) / 0.2) 25%, 
+    hsl(var(--background)) 50%, 
+    hsl(var(--muted) / 0.3) 75%, 
+    hsl(var(--background)) 100%
+  );
+}
+
+/* Canvas Grid Enhancements */
+.canvas-grid {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.canvas-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, 
+    hsl(var(--primary) / 0.02) 0%, 
+    transparent 50%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.canvas-grid:hover::before {
+  opacity: 1;
+}
+
+.dark .canvas-grid {
+  background-image: 
+    radial-gradient(circle, hsl(var(--muted-foreground) / 0.25) 1px, transparent 1px),
+    linear-gradient(hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--muted-foreground) / 0.05) 1px, transparent 1px) !important;
+}
+
+/* Canvas Controls Enhancements */
+.canvas-controls {
+  animation: slideInFromTop 0.5s ease-out;
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dark .canvas-controls button {
+  background: hsl(var(--background) / 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid hsl(var(--border) / 0.7);
+  box-shadow: 
+    0 4px 6px -1px hsl(var(--background) / 0.1),
+    0 2px 4px -1px hsl(var(--background) / 0.06),
+    inset 0 1px 0 hsl(var(--foreground) / 0.1);
+}
+
+.dark .canvas-controls button:hover {
+  background: hsl(var(--muted) / 0.8);
+  border-color: hsl(var(--primary) / 0.5);
+  box-shadow: 
+    0 8px 10px -2px hsl(var(--background) / 0.15),
+    0 4px 6px -1px hsl(var(--background) / 0.1),
+    inset 0 1px 0 hsl(var(--foreground) / 0.15);
+}
+
+/* Canvas Node Drop Zone */
+.canvas-grid[data-drag-over="true"] {
+  background-color: hsl(var(--primary) / 0.05) !important;
+  background-image: 
+    radial-gradient(circle, hsl(var(--primary) / 0.3) 1px, transparent 1px),
+    linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px) !important;
+  animation: pulse-grid 1s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-grid {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dark .canvas-grid[data-drag-over="true"] {
+  background-color: hsl(var(--primary) / 0.1) !important;
+  box-shadow: inset 0 0 20px hsl(var(--primary) / 0.2);
+}
+
+/* Canvas Zoom Indicator */
+.zoom-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.zoom-indicator::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    hsl(var(--primary) / 0.1) 50%, 
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.zoom-indicator:hover::after {
+  transform: translateX(100%);
+}
+
+/* Canvas Selection Area */
+.canvas-selection {
+  position: absolute;
+  border: 2px dashed hsl(var(--primary));
+  background: hsl(var(--primary) / 0.1);
+  border-radius: 4px;
+  pointer-events: none;
+  animation: dash-border 1s linear infinite;
+}
+
+@keyframes dash-border {
+  to {
+    stroke-dashoffset: 20;
+  }
+}
+
+.dark .canvas-selection {
+  border-color: hsl(var(--primary) / 0.8);
+  background: hsl(var(--primary) / 0.15);
+  box-shadow: 0 0 10px hsl(var(--primary) / 0.3);
+}

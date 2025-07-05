@@ -51,17 +51,61 @@ export function PropertiesPanel({
   }, [commandInput]);
   if (!selectedNode) {
     return (
-      <aside className="w-80 bg-white border-l border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-900">Свойства</h2>
-          <p className="text-xs text-gray-500 mt-1">Выберите элемент для настройки</p>
-        </div>
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center">
-            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <i className="fas fa-cog text-gray-400 text-xl"></i>
+      <aside className="w-full h-full bg-background border-l border-border flex flex-col">
+        {/* Empty State Header */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-muted/50 rounded-lg flex items-center justify-center">
+              <i className="fas fa-sliders-h text-muted-foreground text-sm"></i>
             </div>
-            <p className="text-sm text-gray-500">Нет выбранного элемента</p>
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Свойства</h2>
+              <p className="text-xs text-muted-foreground">Выберите элемент для настройки</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Empty State Content */}
+        <div className="flex-1 flex items-center justify-center p-8 empty-state-container">
+          <div className="text-center max-w-xs">
+            {/* Animated Icon */}
+            <div className="relative mx-auto mb-6 empty-state-icon">
+              <div className="w-16 h-16 empty-state-icon-bg rounded-2xl flex items-center justify-center mx-auto">
+                <i className="fas fa-mouse-pointer text-muted-foreground text-xl transition-all duration-300 hover:text-primary hover:scale-110"></i>
+              </div>
+              {/* Enhanced pulse effect */}
+              <div className="absolute inset-0 w-16 h-16 bg-primary/10 rounded-2xl pulse-primary"></div>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-3 mb-6">
+              <h3 className="text-sm font-medium text-foreground gradient-text">Выберите элемент</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Нажмите на любой элемент в редакторе, чтобы увидеть его настройки здесь
+              </p>
+            </div>
+
+            {/* Enhanced Help Tips */}
+            <div className="space-y-3">
+              <div className="flex items-center text-xs text-muted-foreground empty-state-tip floating-tip">
+                <div className="w-5 h-5 bg-gradient-to-br from-primary/20 to-primary/30 rounded-md flex items-center justify-center mr-3 flex-shrink-0 shadow-sm">
+                  <i className="fas fa-lightbulb text-primary text-xs"></i>
+                </div>
+                <span>Перетащите компоненты из левой панели</span>
+              </div>
+              <div className="flex items-center text-xs text-muted-foreground empty-state-tip floating-tip">
+                <div className="w-5 h-5 bg-gradient-to-br from-primary/20 to-primary/30 rounded-md flex items-center justify-center mr-3 flex-shrink-0 shadow-sm">
+                  <i className="fas fa-hand-pointer text-primary text-xs"></i>
+                </div>
+                <span>Кликните по элементу для настройки</span>
+              </div>
+              <div className="flex items-center text-xs text-muted-foreground empty-state-tip floating-tip">
+                <div className="w-5 h-5 bg-gradient-to-br from-primary/20 to-primary/30 rounded-md flex items-center justify-center mr-3 flex-shrink-0 shadow-sm">
+                  <i className="fas fa-magic text-primary text-xs"></i>
+                </div>
+                <span>Используйте предварительный просмотр для тестирования</span>
+              </div>
+            </div>
           </div>
         </div>
       </aside>

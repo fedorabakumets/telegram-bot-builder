@@ -153,6 +153,19 @@ Changelog:
     - Added glow effects and pulse animations for dark theme
     - Enhanced grip handles with better visibility and responsive design
     - Added gradient overlays and improved cursor feedback
+  * Enhanced empty state for properties panel with comprehensive dark theme support:
+    - Created animated empty state with interactive elements and visual feedback
+    - Added floating animations and gradient effects for better user guidance
+    - Implemented enhanced help tips with contextual icons and hover effects
+    - Added pulse animations and gradient text effects for dark theme
+    - Improved visual hierarchy with proper color contrast and spacing
+  * Enhanced canvas with comprehensive dark theme support:
+    - Added specialized canvas background with gradient overlays for dark theme
+    - Implemented enhanced grid patterns with better visibility in dark mode
+    - Created interactive canvas controls with backdrop blur and hover effects
+    - Added visual feedback for drag-and-drop operations with animated grid
+    - Implemented zoom indicator with smooth animations and transitions
+    - Enhanced control buttons with scale animations and color transitions
 ```
 
 ## User Preferences
