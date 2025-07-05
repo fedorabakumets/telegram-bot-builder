@@ -18,32 +18,7 @@ dp = Dispatcher()
 
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
-    text = "Главное меню с inline кнопками"
-    
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📊 Статистика", callback_data="stats"))
-    builder.add(InlineKeyboardButton(text="⚙️ Настройки", callback_data="settings"))
-    builder.add(InlineKeyboardButton(text="🌐 Сайт", url="https://example.com"))
-    keyboard = builder.as_markup()
-    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-    await message.answer("Выберите действие:", reply_markup=keyboard)
-
-@dp.message(Command("menu"))
-async def menu_handler(message: types.Message):
-    text = "Дополнительное меню"
-    
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📈 Графики", callback_data="charts"))
-    builder.add(InlineKeyboardButton(text="📝 Отчеты", callback_data="reports"))
-    keyboard = builder.as_markup()
-    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-    await message.answer("Выберите действие:", reply_markup=keyboard)
-
-@dp.message()
-async def message_msg_1_handler(message: types.Message):
-    text = "Простое сообщение без кнопок"
+    text = "Привет! Добро пожаловать!"
     # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
