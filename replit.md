@@ -115,6 +115,12 @@ Changelog:
   * Enhanced button command selection with dropdown
   * Improved code generation with security checks
   * Enhanced export modal with bot statistics and BotFather setup
+- July 05, 2025. Improved responsive design for export modal:
+  * Added mobile-friendly layout with adaptive tabs
+  * Optimized statistics display for small screens
+  * Created separate mobile export interface
+  * Improved button layouts and text sizes for mobile
+  * Added responsive file list and code preview areas
 ```
 
 ## User Preferences

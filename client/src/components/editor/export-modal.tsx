@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { generatePythonCode, validateBotStructure, generateRequirementsTxt, generateReadme, generateDockerfile, generateConfigYaml } from '@/lib/bot-generator';
 import { generateBotFatherCommands } from '@/lib/commands';
 import { BotData } from '@/types/bot';
@@ -35,6 +36,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
   const [botFatherCommands, setBotFatherCommands] = useState('');
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Статистика бота
   const botStats = {
@@ -163,21 +165,22 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[95vh] w-full' : 'max-w-4xl max-h-[90vh]'} flex flex-col`}>
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-3">
             <i className="fas fa-download text-primary"></i>
-            <span>Экспорт кода бота</span>
+            <span className={`${isMobile ? 'text-sm' : ''}`}>Экспорт кода бота</span>
           </DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="stats" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="stats">Статистика</TabsTrigger>
-            <TabsTrigger value="validation">Валидация</TabsTrigger>
-            <TabsTrigger value="files">Файлы</TabsTrigger>
-            <TabsTrigger value="code">Код</TabsTrigger>
-            <TabsTrigger value="setup">Настройка</TabsTrigger>
+          <TabsList className={`${isMobile ? 'grid w-full grid-cols-2' : 'grid w-full grid-cols-5'}`}>
+            <TabsTrigger value="stats" className={`${isMobile ? 'text-xs' : ''}`}>Статистика</TabsTrigger>
+            <TabsTrigger value="validation" className={`${isMobile ? 'text-xs' : ''}`}>Валидация</TabsTrigger>
+            {!isMobile && <TabsTrigger value="files">Файлы</TabsTrigger>}
+            {!isMobile && <TabsTrigger value="code">Код</TabsTrigger>}
+            {!isMobile && <TabsTrigger value="setup">Настройка</TabsTrigger>}
+            {isMobile && <TabsTrigger value="export" className="text-xs">Экспорт</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="stats" className="flex-1 space-y-4">
@@ -190,30 +193,30 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 <CardDescription>Обзор структуры и компонентов вашего бота</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-blue-600">{botStats.totalNodes}</div>
-                    <div className="text-sm text-blue-700">Всего узлов</div>
+                <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 md:grid-cols-3 gap-4'}`}>
+                  <div className={`bg-blue-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-blue-600`}>{botStats.totalNodes}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-700`}>Всего узлов</div>
                   </div>
-                  <div className="bg-green-50 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-green-600">{botStats.commandNodes}</div>
-                    <div className="text-sm text-green-700">Команд</div>
+                  <div className={`bg-green-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-green-600`}>{botStats.commandNodes}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700`}>Команд</div>
                   </div>
-                  <div className="bg-purple-50 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-purple-600">{botStats.totalButtons}</div>
-                    <div className="text-sm text-purple-700">Кнопок</div>
+                  <div className={`bg-purple-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-purple-600`}>{botStats.totalButtons}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-purple-700`}>Кнопок</div>
                   </div>
-                  <div className="bg-amber-50 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-amber-600">{botStats.keyboardNodes}</div>
-                    <div className="text-sm text-amber-700">С клавиатурой</div>
+                  <div className={`bg-amber-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-amber-600`}>{botStats.keyboardNodes}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-amber-700`}>С клавиатурой</div>
                   </div>
-                  <div className="bg-indigo-50 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-indigo-600">{botStats.commandsInMenu}</div>
-                    <div className="text-sm text-indigo-700">В меню</div>
+                  <div className={`bg-indigo-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-indigo-600`}>{botStats.commandsInMenu}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-indigo-700`}>В меню</div>
                   </div>
-                  <div className="bg-red-50 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-red-600">{botStats.adminOnlyCommands}</div>
-                    <div className="text-sm text-red-700">Только админ</div>
+                  <div className={`bg-red-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-red-600`}>{botStats.adminOnlyCommands}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-red-700`}>Только админ</div>
                   </div>
                 </div>
                 
@@ -292,10 +295,10 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 <CardDescription>Выберите формат для экспорта или загрузите все файлы</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex items-center justify-between'}`}>
+                  <div className={`${isMobile ? 'w-full' : 'flex items-center space-x-4'}`}>
                     <Select value={selectedFormat} onValueChange={(value: ExportFormat) => setSelectedFormat(value)}>
-                      <SelectTrigger className="w-[200px]">
+                      <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[200px]'}`}>
                         <SelectValue placeholder="Выберите формат" />
                       </SelectTrigger>
                       <SelectContent>
@@ -308,16 +311,16 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard()}>
+                  <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'space-x-2'}`}>
+                    <Button variant="outline" size="sm" onClick={() => copyToClipboard()} className={`${isMobile ? 'w-full' : ''}`}>
                       <i className="fas fa-copy mr-2"></i>
                       Копировать
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => downloadFile()}>
+                    <Button variant="outline" size="sm" onClick={() => downloadFile()} className={`${isMobile ? 'w-full' : ''}`}>
                       <i className="fas fa-download mr-2"></i>
                       Скачать
                     </Button>
-                    <Button size="sm" onClick={downloadAllFiles}>
+                    <Button size="sm" onClick={downloadAllFiles} className={`${isMobile ? 'w-full' : ''}`}>
                       <i className="fas fa-archive mr-2"></i>
                       Скачать все
                     </Button>
@@ -330,7 +333,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <Textarea
                     value={exportContent[selectedFormat]}
                     readOnly
-                    className="min-h-[350px] font-mono text-sm bg-gray-50"
+                    className={`${isMobile ? 'min-h-[200px]' : 'min-h-[350px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-gray-50`}
                     placeholder="Выберите формат для просмотра..."
                   />
                 ) : (
@@ -340,13 +343,13 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   </div>
                 )}
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-2 md:grid-cols-3 gap-3'} mt-4`}>
                   {(['python', 'json', 'requirements', 'readme', 'dockerfile', 'config'] as ExportFormat[]).map(format => (
-                    <div key={format} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedFormat(format)}>
+                    <div key={format} className={`${isMobile ? 'p-2' : 'p-3'} border rounded-lg hover:bg-gray-50 cursor-pointer`} onClick={() => setSelectedFormat(format)}>
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="font-medium text-sm">{getFileName(format)}</div>
-                          <div className="text-xs text-gray-500">{format === selectedFormat ? 'Выбрано' : 'Нажмите для просмотра'}</div>
+                          <div className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{getFileName(format)}</div>
+                          <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500`}>{format === selectedFormat ? 'Выбрано' : 'Нажмите для просмотра'}</div>
                         </div>
                         <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); downloadFile(format); }}>
                           <i className="fas fa-download text-xs"></i>
@@ -361,17 +364,17 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
           <TabsContent value="code" className="flex-1 space-y-4">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className={`${isMobile ? 'flex flex-col space-y-4' : 'flex flex-row items-center justify-between'}`}>
                 <div>
                   <CardTitle>Сгенерированный Python код</CardTitle>
                   <CardDescription>Готовый к использованию код для aiogram 3.x</CardDescription>
                 </div>
-                <div className="flex space-x-2">
-                  <Button onClick={() => copyToClipboard(exportContent.python)} variant="outline" size="sm">
+                <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'space-x-2'}`}>
+                  <Button onClick={() => copyToClipboard(exportContent.python)} variant="outline" size="sm" className={`${isMobile ? 'w-full' : ''}`}>
                     <i className="fas fa-copy mr-2"></i>
                     Копировать
                   </Button>
-                  <Button onClick={() => downloadFile('python')} size="sm">
+                  <Button onClick={() => downloadFile('python')} size="sm" className={`${isMobile ? 'w-full' : ''}`}>
                     <i className="fas fa-download mr-2"></i>
                     Скачать
                   </Button>
@@ -382,7 +385,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <Textarea
                     value={exportContent.python}
                     readOnly
-                    className="min-h-[400px] font-mono text-sm bg-gray-50"
+                    className={`${isMobile ? 'min-h-[250px]' : 'min-h-[400px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-gray-50`}
                     placeholder="Генерация кода..."
                   />
                 ) : (
@@ -407,12 +410,13 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
               <CardContent className="space-y-4">
                 {botFatherCommands ? (
                   <div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'justify-between items-center'} mb-2`}>
                       <h4 className="font-medium">Команды для @BotFather:</h4>
                       <Button 
                         onClick={() => navigator.clipboard.writeText(botFatherCommands)}
                         variant="outline" 
                         size="sm"
+                        className={`${isMobile ? 'w-full' : ''}`}
                       >
                         <i className="fas fa-copy mr-2"></i>
                         Копировать
@@ -421,7 +425,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                     <Textarea
                       value={botFatherCommands}
                       readOnly
-                      className="min-h-[120px] font-mono text-sm bg-gray-50"
+                      className={`${isMobile ? 'min-h-[100px]' : 'min-h-[120px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-gray-50`}
                     />
                   </div>
                 ) : (
@@ -457,6 +461,77 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Мобильная версия объединенного экспорта */}
+          {isMobile && (
+            <TabsContent value="export" className="flex-1 space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <i className="fas fa-download text-blue-500"></i>
+                    <span>Экспорт кода</span>
+                  </CardTitle>
+                  <CardDescription>Выберите формат для экспорта</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <Select value={selectedFormat} onValueChange={(value: ExportFormat) => setSelectedFormat(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите формат" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="python">Python код (.py)</SelectItem>
+                        <SelectItem value="json">JSON данные (.json)</SelectItem>
+                        <SelectItem value="requirements">Зависимости (.txt)</SelectItem>
+                        <SelectItem value="readme">Документация (.md)</SelectItem>
+                        <SelectItem value="dockerfile">Dockerfile</SelectItem>
+                        <SelectItem value="config">Конфигурация (.yaml)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => copyToClipboard()} className="flex-1">
+                        <i className="fas fa-copy mr-2"></i>
+                        Копировать
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => downloadFile()} className="flex-1">
+                        <i className="fas fa-download mr-2"></i>
+                        Скачать
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <Separator />
+                  
+                  {validationResult.isValid ? (
+                    <div className="bg-gray-50 rounded-lg p-2">
+                      <div className="text-xs text-gray-600 mb-2">Предварительный просмотр:</div>
+                      <div className="bg-white rounded p-2 max-h-32 overflow-y-auto">
+                        <pre className="text-xs font-mono text-gray-800">
+                          {exportContent[selectedFormat].substring(0, 200)}...
+                        </pre>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
+                      <i className="fas fa-exclamation-triangle mb-2"></i>
+                      <p className="text-sm">Исправьте ошибки валидации для экспорта</p>
+                    </div>
+                  )}
+                  
+                  <Separator />
+                  
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Быстрый экспорт всех файлов:</h4>
+                    <Button size="sm" onClick={downloadAllFiles} className="w-full">
+                      <i className="fas fa-archive mr-2"></i>
+                      Скачать все файлы
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           <TabsContent value="code" className="flex-1 flex flex-col space-y-4">
             <div className="flex items-center justify-between">
