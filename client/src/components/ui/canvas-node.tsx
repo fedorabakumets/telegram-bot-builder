@@ -106,10 +106,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
     <div
       ref={nodeRef}
       className={cn(
-        "bg-white rounded-xl shadow-lg border p-6 w-80 transition-all duration-200 relative select-none",
-        isSelected ? "border-2 border-primary ring-2 ring-primary ring-opacity-20" : "border border-gray-200",
-        isDragging ? "shadow-2xl scale-105 cursor-grabbing z-50 border-primary bg-blue-50" : "hover:shadow-xl",
-        onMove ? "cursor-grab hover:cursor-grab hover:border-blue-300" : "cursor-pointer"
+        "bg-background rounded-xl shadow-lg border p-6 w-80 transition-all duration-200 relative select-none",
+        isSelected ? "border-2 border-primary ring-2 ring-primary ring-opacity-20" : "border border-border",
+        isDragging ? "shadow-2xl scale-105 cursor-grabbing z-50 border-primary bg-primary/10" : "hover:shadow-xl",
+        onMove ? "cursor-grab hover:cursor-grab hover:border-primary/50" : "cursor-pointer"
       )}
       onClick={!isDragging ? onClick : undefined}
       onMouseDown={handleMouseDown}
@@ -141,7 +141,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
           <i className={nodeIcons[node.type]}></i>
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 flex items-center">
+          <h3 className="font-semibold text-foreground flex items-center">
             {node.type === 'start' && node.data.command}
             {node.type === 'command' && node.data.command}
             {node.type === 'message' && 'Сообщение'}
@@ -155,7 +155,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
               </div>
             )}
           </h3>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             {node.data.description || 'Элемент бота'}
           </p>
         </div>
@@ -163,8 +163,8 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
 
       {/* Message preview */}
       {node.data.messageText && (
-        <div className="bg-gray-50 rounded-lg p-3 mb-4">
-          <p className="text-sm text-gray-700 line-clamp-3">
+        <div className="bg-muted rounded-lg p-3 mb-4">
+          <p className="text-sm text-foreground line-clamp-3">
             {node.data.messageText}
           </p>
         </div>
@@ -172,11 +172,11 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
 
       {/* Image preview */}
       {node.type === 'photo' && (
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
           {node.data.imageUrl ? (
             <img src={node.data.imageUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
           ) : (
-            <i className="fas fa-image text-purple-300 text-3xl"></i>
+            <i className="fas fa-image text-purple-400 dark:text-purple-300 text-3xl"></i>
           )}
         </div>
       )}
@@ -187,7 +187,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
           {node.data.keyboardType === 'inline' ? (
             <div className="grid grid-cols-2 gap-2">
               {node.data.buttons.slice(0, 4).map((button) => (
-                <div key={button.id} className="p-2 bg-blue-50 rounded-lg text-xs font-medium text-blue-900 text-center border border-blue-200 relative">
+                <div key={button.id} className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg text-xs font-medium text-primary text-center border border-primary/30 relative">
                   <div className="flex items-center justify-center space-x-1">
                     <span>{button.text}</span>
                     {button.action === 'command' && (
@@ -197,7 +197,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
                       <i className="fas fa-external-link-alt text-purple-600 text-xs" title="Ссылка"></i>
                     )}
                     {button.action === 'goto' && (
-                      <i className="fas fa-arrow-right text-blue-600 text-xs" title="Переход"></i>
+                      <i className="fas fa-arrow-right text-primary text-xs" title="Переход"></i>
                     )}
                   </div>
                 </div>
@@ -205,8 +205,8 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
             </div>
           ) : (
             node.data.buttons.slice(0, 2).map((button) => (
-              <div key={button.id} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg border border-blue-200">
-                <span className="text-sm font-medium text-blue-900">{button.text}</span>
+              <div key={button.id} className="flex items-center justify-between p-2 bg-primary/10 dark:bg-primary/20 rounded-lg border border-primary/30">
+                <span className="text-sm font-medium text-primary">{button.text}</span>
                 <div className="flex items-center space-x-1">
                   {button.action === 'command' && (
                     <i className="fas fa-terminal text-green-600 text-xs" title="Команда"></i>
@@ -215,14 +215,14 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
                     <i className="fas fa-external-link-alt text-purple-600 text-xs" title="Ссылка"></i>
                   )}
                   {button.action === 'goto' && (
-                    <i className="fas fa-arrow-right text-blue-600 text-xs" title="Переход"></i>
+                    <i className="fas fa-arrow-right text-primary text-xs" title="Переход"></i>
                   )}
                 </div>
               </div>
             ))
           )}
           {node.data.buttons.length > (node.data.keyboardType === 'inline' ? 4 : 2) && (
-            <div className="text-xs text-gray-500 text-center">
+            <div className="text-xs text-muted-foreground text-center">
               +{node.data.buttons.length - (node.data.keyboardType === 'inline' ? 4 : 2)} еще
             </div>
           )}
@@ -230,8 +230,8 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
       )}
 
       {/* Connection points */}
-      <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gray-300 rounded-full border-2 border-white shadow-md"></div>
-      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-primary rounded-full border-2 border-white shadow-md"></div>
+      <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-muted-foreground rounded-full border-2 border-background shadow-md"></div>
+      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-primary rounded-full border-2 border-background shadow-md"></div>
     </div>
   );
 }

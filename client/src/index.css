@@ -1,3 +1,6 @@
+/* Font Awesome icons via CDN */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -74,17 +77,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(60, 4.8%, 95.9%);
+  background: var(--muted);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(25, 5.3%, 44.7%);
+  background: var(--muted-foreground);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(20, 14.3%, 4.1%);
+  background: var(--foreground);
 }
-
-/* Font Awesome icons via CDN */
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');

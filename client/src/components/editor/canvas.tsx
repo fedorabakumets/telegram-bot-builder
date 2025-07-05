@@ -64,22 +64,22 @@ export function Canvas({
   }, [onNodeSelect]);
 
   return (
-    <main className="w-full h-full bg-gray-50 relative overflow-hidden">
+    <main className="w-full h-full bg-muted/30 relative overflow-hidden">
       <div className="absolute inset-0 overflow-auto p-8">
         {/* Canvas Controls */}
         <div className="absolute top-4 left-4 flex items-center space-x-2 z-10">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex items-center">
-            <button className="p-2 hover:bg-gray-50 rounded-l-lg">
-              <i className="fas fa-search-minus text-gray-600 text-sm"></i>
+          <div className="bg-background rounded-lg shadow-sm border border-border flex items-center">
+            <button className="p-2 hover:bg-muted rounded-l-lg">
+              <i className="fas fa-search-minus text-muted-foreground text-sm"></i>
             </button>
-            <span className="px-3 py-2 text-sm text-gray-700 border-x border-gray-200">100%</span>
-            <button className="p-2 hover:bg-gray-50 rounded-r-lg">
-              <i className="fas fa-search-plus text-gray-600 text-sm"></i>
+            <span className="px-3 py-2 text-sm text-foreground border-x border-border">100%</span>
+            <button className="p-2 hover:bg-muted rounded-r-lg">
+              <i className="fas fa-search-plus text-muted-foreground text-sm"></i>
             </button>
           </div>
           
-          <button className="p-2 bg-white rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50">
-            <i className="fas fa-expand-arrows-alt text-gray-600 text-sm"></i>
+          <button className="p-2 bg-background rounded-lg shadow-sm border border-border hover:bg-muted">
+            <i className="fas fa-expand-arrows-alt text-muted-foreground text-sm"></i>
           </button>
         </div>
         
@@ -88,7 +88,7 @@ export function Canvas({
           ref={canvasRef}
           className="min-h-full relative"
           style={{
-            backgroundImage: 'radial-gradient(circle, #e2e8f0 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(circle, hsl(var(--muted-foreground) / 0.2) 1px, transparent 1px)',
             backgroundSize: '20px 20px',
             minHeight: '100vh',
             minWidth: '100%'

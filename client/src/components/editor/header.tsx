@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -12,19 +13,19 @@ interface HeaderProps {
 
 export function Header({ projectName, currentTab, onTabChange, onSave, onExport, isSaving }: HeaderProps) {
   return (
-    <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 relative z-50">
+    <header className="bg-background border-b border-border h-16 flex items-center justify-between px-6 relative z-50">
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <i className="fab fa-telegram-plane text-white text-lg"></i>
+            <i className="fab fa-telegram-plane text-primary-foreground text-lg"></i>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">TelegramBot Builder</h1>
-            <p className="text-xs text-gray-500">{projectName}</p>
+            <h1 className="text-lg font-semibold text-foreground">TelegramBot Builder</h1>
+            <p className="text-xs text-muted-foreground">{projectName}</p>
           </div>
         </div>
         
-        <div className="h-6 w-px bg-gray-200"></div>
+        <div className="h-6 w-px bg-border"></div>
         
         <nav className="flex items-center space-x-1">
           <button 
@@ -32,7 +33,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               currentTab === 'editor' 
                 ? 'text-primary bg-primary/10' 
-                : 'text-gray-600 hover:bg-gray-100'
+                : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             Редактор
@@ -42,7 +43,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               currentTab === 'preview' 
                 ? 'text-primary bg-primary/10' 
-                : 'text-gray-600 hover:bg-gray-100'
+                : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             Превью
@@ -52,7 +53,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               currentTab === 'export' 
                 ? 'text-primary bg-primary/10' 
-                : 'text-gray-600 hover:bg-gray-100'
+                : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             Экспорт
@@ -62,7 +63,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               currentTab === 'bot' 
                 ? 'text-primary bg-primary/10' 
-                : 'text-gray-600 hover:bg-gray-100'
+                : 'text-muted-foreground hover:bg-muted'
             }`}
           >
             Бот
@@ -78,7 +79,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
           disabled={isSaving}
           className="flex items-center space-x-2"
         >
-          <i className={`fas ${isSaving ? 'fa-spinner fa-spin' : 'fa-save'} text-gray-500`}></i>
+          <i className={`fas ${isSaving ? 'fa-spinner fa-spin' : 'fa-save'} text-muted-foreground`}></i>
           <span>{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
         </Button>
         
@@ -91,10 +92,12 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
           <span>Экспорт кода</span>
         </Button>
         
-        <div className="h-6 w-px bg-gray-200"></div>
+        <div className="h-6 w-px bg-border"></div>
         
-        <button className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
-          <i className="fas fa-user text-gray-600 text-sm"></i>
+        <ThemeToggle />
+        
+        <button className="w-8 h-8 bg-muted hover:bg-muted/80 rounded-full flex items-center justify-center transition-colors">
+          <i className="fas fa-user text-muted-foreground text-sm"></i>
         </button>
       </div>
     </header>

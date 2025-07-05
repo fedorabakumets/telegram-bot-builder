@@ -255,15 +255,15 @@ export function ComponentsSidebar({ onComponentDrag }: ComponentsSidebarProps) {
   };
 
   return (
-    <aside className="w-full h-full bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-full h-full bg-background border-r border-border flex flex-col">
       {/* Sidebar Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-sm font-semibold text-gray-900 mb-3">Компоненты</h2>
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-          <button className="flex-1 px-3 py-1.5 text-xs font-medium bg-white text-gray-900 rounded-md shadow-sm">
+      <div className="p-4 border-b border-border">
+        <h2 className="text-sm font-semibold text-foreground mb-3">Компоненты</h2>
+        <div className="flex space-x-1 bg-muted rounded-lg p-1">
+          <button className="flex-1 px-3 py-1.5 text-xs font-medium bg-background text-foreground rounded-md shadow-sm">
             Элементы
           </button>
-          <button className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900">
+          <button className="flex-1 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
             Шаблоны
           </button>
         </div>
@@ -273,7 +273,7 @@ export function ComponentsSidebar({ onComponentDrag }: ComponentsSidebarProps) {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {componentCategories.map((category) => (
           <div key={category.title}>
-            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               {category.title}
             </h3>
             <div className="space-y-2">
@@ -282,14 +282,14 @@ export function ComponentsSidebar({ onComponentDrag }: ComponentsSidebarProps) {
                   key={component.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, component)}
-                  className="flex items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-move transition-colors"
+                  className="flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors"
                 >
                   <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mr-3", component.color)}>
                     <i className={`${component.icon} text-sm`}></i>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{component.name}</p>
-                    <p className="text-xs text-gray-500">{component.description}</p>
+                    <p className="text-sm font-medium text-foreground">{component.name}</p>
+                    <p className="text-xs text-muted-foreground">{component.description}</p>
                   </div>
                 </div>
               ))}
