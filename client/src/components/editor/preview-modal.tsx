@@ -1,6 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Node } from '@/types/bot';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface PreviewModalProps {
   isOpen: boolean;
@@ -17,10 +19,23 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
     text: string;
     time: string;
     buttons?: Array<{ text: string; target?: string; action?: string; }>;
+    keyboardType?: 'reply' | 'inline' | 'none';
   }>>([]);
+  const [currentReplyKeyboard, setCurrentReplyKeyboard] = useState<Array<{ text: string; target?: string; action?: string; }> | null>(null);
+  const [textInput, setTextInput] = useState('');
+  const [waitingForInput, setWaitingForInput] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const chatAreaRef = useRef<HTMLDivElement>(null);
 
   // Find start node or first node
   const startNode = nodes.find(node => node.type === 'start') || nodes[0];
+
+  // Auto-scroll to bottom when new messages are added
+  useEffect(() => {
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+    }
+  }, [messageHistory]);
 
   const handleStart = () => {
     if (!startNode) return;
@@ -30,23 +45,41 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
       minute: '2-digit' 
     });
 
+    const buttons = startNode.data.keyboardType !== 'none' ? startNode.data.buttons.map(btn => ({
+      text: btn.text,
+      target: btn.target,
+      action: btn.action
+    })) : undefined;
+
     const botMessage = {
       id: `msg-${Date.now()}`,
       type: 'bot' as const,
       text: startNode.data.messageText || 'Привет!',
       time,
-      buttons: startNode.data.keyboardType !== 'none' ? startNode.data.buttons.map(btn => ({
-        text: btn.text,
-        target: btn.target,
-        action: btn.action
-      })) : undefined
+      buttons,
+      keyboardType: startNode.data.keyboardType
     };
 
     setMessageHistory([botMessage]);
     setCurrentNodeId(startNode.id);
+    
+    // Set reply keyboard if applicable
+    if (startNode.data.keyboardType === 'reply' && buttons) {
+      setCurrentReplyKeyboard(buttons);
+    } else {
+      setCurrentReplyKeyboard(null);
+    }
+    
+    // Check if this node expects input
+    const inputNode = nodes.find(node => node.type === 'input');
+    setWaitingForInput(!!inputNode && startNode.data.keyboardType === 'none');
   };
 
   const handleButtonClick = (buttonText: string, target?: string, action?: string) => {
+    handleUserMessage(buttonText, target, action);
+  };
+
+  const handleUserMessage = (messageText: string, target?: string, action?: string) => {
     const time = new Date().toLocaleTimeString('ru-RU', { 
       hour: '2-digit', 
       minute: '2-digit' 
@@ -56,11 +89,12 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
     const userMessage = {
       id: `msg-${Date.now()}-user`,
       type: 'user' as const,
-      text: buttonText,
+      text: messageText,
       time
     };
 
     setMessageHistory(prev => [...prev, userMessage]);
+    setWaitingForInput(false);
 
     // Navigate to target node if exists
     setTimeout(() => {
@@ -90,10 +124,18 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
             responseText = `Команда: ${targetNode.data.command || 'Неизвестная команда'}`;
           } else if (targetNode.type === 'start') {
             responseText = `Стартовая команда: ${targetNode.data.command || '/start'}`;
+          } else if (targetNode.type === 'input') {
+            responseText = 'Ожидаю ввод...';
           } else {
             responseText = 'Сообщение';
           }
           
+          const buttons = targetNode.data.keyboardType !== 'none' ? targetNode.data.buttons.map(btn => ({
+            text: btn.text,
+            target: btn.target,
+            action: btn.action
+          })) : undefined;
+
           // Create bot response from target node
           const botResponse = {
             id: `msg-${Date.now()}-bot`,
@@ -103,14 +145,21 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
               hour: '2-digit', 
               minute: '2-digit' 
             }),
-            buttons: targetNode.data.keyboardType !== 'none' ? targetNode.data.buttons.map(btn => ({
-              text: btn.text,
-              target: btn.target,
-              action: btn.action
-            })) : undefined
+            buttons,
+            keyboardType: targetNode.data.keyboardType
           };
 
           setMessageHistory(prev => [...prev, botResponse]);
+          
+          // Update reply keyboard based on target node
+          if (targetNode.data.keyboardType === 'reply' && buttons) {
+            setCurrentReplyKeyboard(buttons);
+          } else if (targetNode.data.keyboardType === 'none') {
+            setCurrentReplyKeyboard(null);
+          }
+          
+          // Check if target node expects input
+          setWaitingForInput(targetNode.type === 'input' && targetNode.data.keyboardType === 'none');
         } else {
           // Node not found - show error
           const errorResponse = {
@@ -126,11 +175,11 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
           setMessageHistory(prev => [...prev, errorResponse]);
         }
       } else {
-        // No target specified
+        // No target specified - handle free text input
         const defaultResponse = {
           id: `msg-${Date.now()}-bot`,
           type: 'bot' as const,
-          text: 'Функция в разработке',
+          text: `Вы написали: "${messageText}"`,
           time: new Date().toLocaleTimeString('ru-RU', { 
             hour: '2-digit', 
             minute: '2-digit' 
@@ -142,14 +191,31 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
     }, 500);
   };
 
+  const handleSendText = () => {
+    if (!textInput.trim()) return;
+    
+    handleUserMessage(textInput.trim());
+    setTextInput('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendText();
+    }
+  };
+
   const reset = () => {
     setMessageHistory([]);
     setCurrentNodeId('');
+    setCurrentReplyKeyboard(null);
+    setTextInput('');
+    setWaitingForInput(false);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[80vh] p-0">
+      <DialogContent className="max-w-md max-h-[85vh] p-0 flex flex-col">
         <DialogHeader className="p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -163,7 +229,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
         </DialogHeader>
 
         {/* Chat Area */}
-        <div className="h-96 bg-gray-100 overflow-y-auto p-4 space-y-3">
+        <div ref={chatAreaRef} className="flex-1 bg-gray-100 overflow-y-auto p-4 space-y-3 min-h-[300px] max-h-[400px]">
           {messageHistory.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -205,8 +271,8 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                   </div>
                 )}
 
-                {/* Buttons */}
-                {message.type === 'bot' && message.buttons && (
+                {/* Inline Buttons */}
+                {message.type === 'bot' && message.buttons && message.keyboardType === 'inline' && (
                   <div className="ml-10 mt-2">
                     {message.buttons.length <= 2 ? (
                       <div className="space-y-1">
@@ -240,8 +306,48 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
           )}
         </div>
 
-        {/* Controls */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
+        {/* Reply Keyboard */}
+        {currentReplyKeyboard && (
+          <div className="p-4 bg-gray-50 border-t border-gray-200">
+            <div className="space-y-2">
+              <p className="text-xs text-gray-600 mb-2">Reply клавиатура:</p>
+              <div className="grid grid-cols-2 gap-2">
+                {currentReplyKeyboard.map((button, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleButtonClick(button.text, button.target, button.action)}
+                    className="bg-white border border-gray-300 text-gray-700 text-sm font-medium py-2 px-3 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
+                  >
+                    {button.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Text Input Area */}
+        <div className="p-4 border-t border-gray-200 bg-white">
+          <div className="flex items-center space-x-2 mb-3">
+            <Input
+              ref={inputRef}
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={waitingForInput ? "Бот ожидает ввод..." : "Введите сообщение..."}
+              className="flex-1"
+              disabled={!messageHistory.length}
+            />
+            <Button
+              onClick={handleSendText}
+              disabled={!textInput.trim() || !messageHistory.length}
+              size="sm"
+            >
+              <i className="fas fa-paper-plane"></i>
+            </Button>
+          </div>
+          
+          {/* Controls */}
           <div className="flex items-center space-x-2">
             <button
               onClick={reset}
