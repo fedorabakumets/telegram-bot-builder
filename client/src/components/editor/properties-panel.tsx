@@ -5,8 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Button as UIButton } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
+import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
+import { useState, useMemo } from 'react';
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
@@ -26,6 +30,24 @@ export function PropertiesPanel({
   onButtonDelete 
 }: PropertiesPanelProps) {
   const { toast } = useToast();
+  const [commandInput, setCommandInput] = useState('');
+  const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
+
+  // Валидация команды
+  const commandValidation = useMemo(() => {
+    if (selectedNode && (selectedNode.type === 'start' || selectedNode.type === 'command')) {
+      return validateCommand(selectedNode.data.command || '');
+    }
+    return { isValid: true, errors: [] };
+  }, [selectedNode?.data.command]);
+
+  // Автодополнение команд
+  const commandSuggestions = useMemo(() => {
+    if (commandInput.length > 0) {
+      return getCommandSuggestions(commandInput);
+    }
+    return STANDARD_COMMANDS.slice(0, 5);
+  }, [commandInput]);
   if (!selectedNode) {
     return (
       <aside className="w-80 bg-white border-l border-gray-200 flex flex-col">
@@ -123,15 +145,58 @@ export function PropertiesPanel({
           <div className="space-y-4">
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
               <>
-                <div>
+                <div className="relative">
                   <Label className="text-xs font-medium text-gray-700">Команда</Label>
-                  <Input
-                    value={selectedNode.data.command || ''}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { command: e.target.value })}
-                    className="mt-2"
-                    placeholder="/start"
-                  />
+                  <div className="relative">
+                    <Input
+                      value={selectedNode.data.command || ''}
+                      onChange={(e) => {
+                        onNodeUpdate(selectedNode.id, { command: e.target.value });
+                        setCommandInput(e.target.value);
+                        setShowCommandSuggestions(e.target.value.length > 0);
+                      }}
+                      onFocus={() => setShowCommandSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowCommandSuggestions(false), 200)}
+                      className={`mt-2 ${!commandValidation.isValid ? 'border-red-500' : ''}`}
+                      placeholder="/start"
+                    />
+                    
+                    {/* Автодополнение команд */}
+                    {showCommandSuggestions && commandSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                        {commandSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
+                            onClick={() => {
+                              onNodeUpdate(selectedNode.id, { 
+                                command: suggestion.command,
+                                description: suggestion.description 
+                              });
+                              setShowCommandSuggestions(false);
+                            }}
+                          >
+                            <div className="font-medium text-gray-900">{suggestion.command}</div>
+                            <div className="text-xs text-gray-500">{suggestion.description}</div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Ошибки валидации */}
+                  {!commandValidation.isValid && commandValidation.errors.length > 0 && (
+                    <div className="mt-1 space-y-1">
+                      {commandValidation.errors.map((error, index) => (
+                        <div key={index} className="flex items-center text-xs text-red-600">
+                          <i className="fas fa-exclamation-circle mr-1"></i>
+                          {error}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+                
                 <div>
                   <Label className="text-xs font-medium text-gray-700">Описание</Label>
                   <Input
@@ -140,6 +205,9 @@ export function PropertiesPanel({
                     className="mt-2"
                     placeholder="Описание команды"
                   />
+                  <div className="text-xs text-gray-500 mt-1">
+                    Используется для меню команд в @BotFather
+                  </div>
                 </div>
               </>
             )}
@@ -316,13 +384,70 @@ export function PropertiesPanel({
           </div>
         </div>
 
+        {/* Command Advanced Settings */}
+        {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Расширенные настройки команды</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">Показать в меню</Label>
+                  <div className="text-xs text-gray-500">Команда появится в меню @BotFather</div>
+                </div>
+                <Switch
+                  checked={selectedNode.data.showInMenu ?? true}
+                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { showInMenu: checked })}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">Только в приватных чатах</Label>
+                  <div className="text-xs text-gray-500">Команда работает только в диалоге с ботом</div>
+                </div>
+                <Switch
+                  checked={selectedNode.data.isPrivateOnly ?? false}
+                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { isPrivateOnly: checked })}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">Требует авторизации</Label>
+                  <div className="text-xs text-gray-500">Пользователь должен быть зарегистрирован</div>
+                </div>
+                <Switch
+                  checked={selectedNode.data.requiresAuth ?? false}
+                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { requiresAuth: checked })}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">Только для администраторов</Label>
+                  <div className="text-xs text-gray-500">Команда доступна только админам</div>
+                </div>
+                <Switch
+                  checked={selectedNode.data.adminOnly ?? false}
+                  onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Separator />
+
         {/* Advanced Settings */}
         {selectedNode.data.keyboardType === 'reply' && (
           <div>
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Дополнительно</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Настройки клавиатуры</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium text-gray-700">Одноразовая клавиатура</Label>
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">Одноразовая клавиатура</Label>
+                  <div className="text-xs text-gray-500">Скрыть после нажатия</div>
+                </div>
                 <Switch
                   checked={selectedNode.data.oneTimeKeyboard}
                   onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { oneTimeKeyboard: checked })}
@@ -330,7 +455,10 @@ export function PropertiesPanel({
               </div>
               
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium text-gray-700">Изменить размер клавиатуры</Label>
+                <div>
+                  <Label className="text-xs font-medium text-gray-700">Изменить размер клавиатуры</Label>
+                  <div className="text-xs text-gray-500">Подогнать под содержимое</div>
+                </div>
                 <Switch
                   checked={selectedNode.data.resizeKeyboard}
                   onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}

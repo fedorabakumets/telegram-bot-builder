@@ -124,7 +124,85 @@ const components: ComponentDefinition[] = [
       buttons: [],
       markdown: false,
       oneTimeKeyboard: false,
-      resizeKeyboard: true
+      resizeKeyboard: true,
+      showInMenu: true,
+      isPrivateOnly: false,
+      requiresAuth: false,
+      adminOnly: false
+    }
+  },
+  {
+    id: 'help-command',
+    name: '/help команда',
+    description: 'Справка по боту',
+    icon: 'fas fa-question-circle',
+    color: 'bg-blue-100 text-blue-600',
+    type: 'command',
+    defaultData: {
+      command: '/help',
+      description: 'Справка по боту',
+      messageText: '🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка\n/settings - Настройки',
+      keyboardType: 'none',
+      buttons: [],
+      markdown: true,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      showInMenu: true,
+      isPrivateOnly: false,
+      requiresAuth: false,
+      adminOnly: false
+    }
+  },
+  {
+    id: 'settings-command',
+    name: '/settings команда',
+    description: 'Настройки бота',
+    icon: 'fas fa-cog',
+    color: 'bg-gray-100 text-gray-600',
+    type: 'command',
+    defaultData: {
+      command: '/settings',
+      description: 'Настройки бота',
+      messageText: '⚙️ Настройки бота:',
+      keyboardType: 'inline',
+      buttons: [
+        { id: 'btn-1', text: '📋 Язык', action: 'command', target: '/language' },
+        { id: 'btn-2', text: '🔔 Уведомления', action: 'command', target: '/notifications' }
+      ],
+      markdown: true,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      showInMenu: true,
+      isPrivateOnly: false,
+      requiresAuth: false,
+      adminOnly: false
+    }
+  },
+  {
+    id: 'menu-command',
+    name: '/menu команда',
+    description: 'Главное меню',
+    icon: 'fas fa-bars',
+    color: 'bg-purple-100 text-purple-600',
+    type: 'command',
+    defaultData: {
+      command: '/menu',
+      description: 'Главное меню',
+      messageText: '📋 Главное меню:',
+      keyboardType: 'reply',
+      buttons: [
+        { id: 'btn-1', text: '📖 Информация', action: 'command', target: '/info' },
+        { id: 'btn-2', text: '⚙️ Настройки', action: 'command', target: '/settings' },
+        { id: 'btn-3', text: '❓ Помощь', action: 'command', target: '/help' },
+        { id: 'btn-4', text: '📞 Поддержка', action: 'command', target: '/support' }
+      ],
+      markdown: true,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      showInMenu: true,
+      isPrivateOnly: false,
+      requiresAuth: false,
+      adminOnly: false
     }
   },
   {
@@ -135,14 +213,18 @@ const components: ComponentDefinition[] = [
     color: 'bg-indigo-100 text-indigo-600',
     type: 'command',
     defaultData: {
-      command: '/help',
-      description: 'Помощь',
-      messageText: 'Справка по боту',
+      command: '/custom',
+      description: 'Новая команда',
+      messageText: 'Команда выполнена',
       keyboardType: 'none',
       buttons: [],
       markdown: false,
       oneTimeKeyboard: false,
-      resizeKeyboard: true
+      resizeKeyboard: true,
+      showInMenu: true,
+      isPrivateOnly: false,
+      requiresAuth: false,
+      adminOnly: false
     }
   }
 ];

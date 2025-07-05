@@ -2,8 +2,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { generatePythonCode, validateBotStructure } from '@/lib/bot-generator';
+import { generateBotFatherCommands } from '@/lib/commands';
 import { BotData } from '@/types/bot';
 import { useState, useEffect } from 'react';
 
@@ -17,7 +21,27 @@ interface ExportModalProps {
 export function ExportModal({ isOpen, onClose, botData, projectName }: ExportModalProps) {
   const [generatedCode, setGeneratedCode] = useState('');
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
+  const [botFatherCommands, setBotFatherCommands] = useState('');
   const { toast } = useToast();
+
+  // Статистика бота
+  const botStats = {
+    totalNodes: botData.nodes.length,
+    commandNodes: botData.nodes.filter(node => node.type === 'start' || node.type === 'command').length,
+    messageNodes: botData.nodes.filter(node => node.type === 'message').length,
+    photoNodes: botData.nodes.filter(node => node.type === 'photo').length,
+    keyboardNodes: botData.nodes.filter(node => node.data.keyboardType !== 'none').length,
+    totalButtons: botData.nodes.reduce((sum, node) => sum + node.data.buttons.length, 0),
+    commandsInMenu: botData.nodes.filter(node => 
+      (node.type === 'start' || node.type === 'command') && node.data.showInMenu
+    ).length,
+    adminOnlyCommands: botData.nodes.filter(node => 
+      (node.type === 'start' || node.type === 'command') && node.data.adminOnly
+    ).length,
+    privateOnlyCommands: botData.nodes.filter(node => 
+      (node.type === 'start' || node.type === 'command') && node.data.isPrivateOnly
+    ).length
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -28,6 +52,10 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
         const code = generatePythonCode(botData, projectName);
         setGeneratedCode(code);
       }
+      
+      // Генерация команд для BotFather
+      const botFatherCmds = generateBotFatherCommands(botData.nodes);
+      setBotFatherCommands(botFatherCmds);
     }
   }, [isOpen, botData, projectName]);
 
@@ -74,62 +102,213 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="code" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="stats" className="flex-1 flex flex-col">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="stats">Статистика</TabsTrigger>
             <TabsTrigger value="validation">Валидация</TabsTrigger>
             <TabsTrigger value="code">Python код</TabsTrigger>
-            <TabsTrigger value="instructions">Инструкции</TabsTrigger>
+            <TabsTrigger value="setup">Настройка</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="validation" className="flex-1 space-y-4">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="font-medium text-gray-900 mb-3">Проверка структуры бота</h3>
-              
-              {validationResult.isValid ? (
-                <div className="flex items-center space-x-2 text-green-600">
-                  <i className="fas fa-check-circle"></i>
-                  <span className="text-sm font-medium">Структура бота корректна</span>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-red-600">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    <span className="text-sm font-medium">Найдены ошибки:</span>
+          <TabsContent value="stats" className="flex-1 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <i className="fas fa-chart-bar text-blue-500"></i>
+                  <span>Статистика бота</span>
+                </CardTitle>
+                <CardDescription>Обзор структуры и компонентов вашего бота</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-blue-600">{botStats.totalNodes}</div>
+                    <div className="text-sm text-blue-700">Всего узлов</div>
                   </div>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-red-600 ml-6">
-                    {validationResult.errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
+                  <div className="bg-green-50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-green-600">{botStats.commandNodes}</div>
+                    <div className="text-sm text-green-700">Команд</div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-purple-600">{botStats.totalButtons}</div>
+                    <div className="text-sm text-purple-700">Кнопок</div>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-amber-600">{botStats.keyboardNodes}</div>
+                    <div className="text-sm text-amber-700">С клавиатурой</div>
+                  </div>
+                  <div className="bg-indigo-50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-indigo-600">{botStats.commandsInMenu}</div>
+                    <div className="text-sm text-indigo-700">В меню</div>
+                  </div>
+                  <div className="bg-red-50 rounded-lg p-3">
+                    <div className="text-2xl font-bold text-red-600">{botStats.adminOnlyCommands}</div>
+                    <div className="text-sm text-red-700">Только админ</div>
+                  </div>
                 </div>
-              )}
-            </div>
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-3">
+                  <h4 className="font-medium">Детальная статистика:</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Текстовые сообщения:</span>
+                      <Badge variant="secondary">{botStats.messageNodes}</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Фото сообщения:</span>
+                      <Badge variant="secondary">{botStats.photoNodes}</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Приватные команды:</span>
+                      <Badge variant="outline">{botStats.privateOnlyCommands}</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Соединения между узлами:</span>
+                      <Badge variant="outline">{botData.connections.length}</Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Статистика проекта</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+          <TabsContent value="validation" className="flex-1 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  {validationResult.isValid ? (
+                    <i className="fas fa-check-circle text-green-500"></i>
+                  ) : (
+                    <i className="fas fa-exclamation-triangle text-red-500"></i>
+                  )}
+                  <span>Проверка структуры бота</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {validationResult.isValid ? (
+                  <div className="flex items-center space-x-2 text-green-600 p-4 bg-green-50 rounded-lg">
+                    <i className="fas fa-check-circle"></i>
+                    <span className="font-medium">Структура бота корректна и готова к экспорту!</span>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 text-red-600 p-3 bg-red-50 rounded-lg">
+                      <i className="fas fa-exclamation-triangle"></i>
+                      <span className="font-medium">Найдены ошибки в структуре бота:</span>
+                    </div>
+                    <div className="space-y-2">
+                      {validationResult.errors.map((error, index) => (
+                        <div key={index} className="flex items-start space-x-2 p-3 bg-red-50 rounded border-l-4 border-red-200">
+                          <i className="fas fa-times-circle text-red-500 mt-0.5"></i>
+                          <span className="text-sm text-red-700">{error}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="code" className="flex-1 space-y-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <span className="text-blue-700">Узлов:</span>
-                  <span className="ml-2 font-medium">{botData.nodes.length}</span>
+                  <CardTitle>Сгенерированный Python код</CardTitle>
+                  <CardDescription>Готовый к использованию код для aiogram 3.x</CardDescription>
                 </div>
-                <div>
-                  <span className="text-blue-700">Соединений:</span>
-                  <span className="ml-2 font-medium">{botData.connections.length}</span>
+                <div className="flex space-x-2">
+                  <Button onClick={copyToClipboard} variant="outline" size="sm">
+                    <i className="fas fa-copy mr-2"></i>
+                    Копировать
+                  </Button>
+                  <Button onClick={downloadFile} size="sm">
+                    <i className="fas fa-download mr-2"></i>
+                    Скачать
+                  </Button>
                 </div>
-                <div>
-                  <span className="text-blue-700">Кнопок:</span>
-                  <span className="ml-2 font-medium">
-                    {botData.nodes.reduce((total, node) => total + node.data.buttons.length, 0)}
-                  </span>
+              </CardHeader>
+              <CardContent>
+                {validationResult.isValid ? (
+                  <Textarea
+                    value={generatedCode}
+                    readOnly
+                    className="min-h-[400px] font-mono text-sm bg-gray-50"
+                    placeholder="Генерация кода..."
+                  />
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
+                    <i className="fas fa-exclamation-triangle mb-2"></i>
+                    <p>Исправьте ошибки валидации для генерации кода</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="setup" className="flex-1 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <i className="fas fa-cogs text-blue-500"></i>
+                  <span>Настройка бота в @BotFather</span>
+                </CardTitle>
+                <CardDescription>Команды для настройки меню вашего бота</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {botFatherCommands ? (
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="font-medium">Команды для @BotFather:</h4>
+                      <Button 
+                        onClick={() => navigator.clipboard.writeText(botFatherCommands)}
+                        variant="outline" 
+                        size="sm"
+                      >
+                        <i className="fas fa-copy mr-2"></i>
+                        Копировать
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={botFatherCommands}
+                      readOnly
+                      className="min-h-[120px] font-mono text-sm bg-gray-50"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
+                    <p>Нет команд для настройки в меню</p>
+                  </div>
+                )}
+                
+                <Separator />
+                
+                <div className="space-y-3">
+                  <h4 className="font-medium">Инструкция по запуску:</h4>
+                  <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                    <li>Скачайте сгенерированный Python файл</li>
+                    <li>Установите библиотеку: <code className="bg-gray-100 px-1 rounded">pip install aiogram</code></li>
+                    <li>Замените <code className="bg-gray-100 px-1 rounded">YOUR_BOT_TOKEN_HERE</code> на токен вашего бота</li>
+                    <li>Добавьте свой Telegram ID в список администраторов</li>
+                    <li>Запустите бота: <code className="bg-gray-100 px-1 rounded">python bot.py</code></li>
+                  </ol>
                 </div>
-                <div>
-                  <span className="text-blue-700">Команд:</span>
-                  <span className="ml-2 font-medium">
-                    {botData.nodes.filter(node => node.type === 'start' || node.type === 'command').length}
-                  </span>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium">Настройка @BotFather:</h4>
+                  <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                    <li>Найдите @BotFather в Telegram</li>
+                    <li>Отправьте команду <code className="bg-gray-100 px-1 rounded">/setcommands</code></li>
+                    <li>Выберите своего бота</li>
+                    <li>Скопируйте и отправьте команды выше</li>
+                  </ol>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="code" className="flex-1 flex flex-col space-y-4">

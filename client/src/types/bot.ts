@@ -21,6 +21,12 @@ export interface NodeData {
   oneTimeKeyboard: boolean;
   resizeKeyboard: boolean;
   markdown: boolean;
+  // Расширенные настройки команд
+  commandAliases?: string[]; // Альтернативные варианты команды
+  isPrivateOnly?: boolean; // Команда только в приватных чатах
+  requiresAuth?: boolean; // Команда требует авторизации
+  adminOnly?: boolean; // Команда только для администраторов
+  showInMenu?: boolean; // Показывать в меню команд бота
 }
 
 export interface Node {

@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Node } from '@/types/bot';
+import { parseCommandFromText } from '@/lib/commands';
 import { useState, useRef, useEffect } from 'react';
 
 interface PreviewModalProps {
@@ -194,7 +195,27 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
   const handleSendText = () => {
     if (!textInput.trim()) return;
     
-    handleUserMessage(textInput.trim());
+    const userInput = textInput.trim();
+    
+    // Check if input is a command
+    const commandFromText = parseCommandFromText(userInput);
+    if (commandFromText) {
+      // Find the command node
+      const commandNode = nodes.find(node => 
+        (node.type === 'command' || node.type === 'start') && 
+        node.data.command === commandFromText
+      );
+      
+      if (commandNode) {
+        handleUserMessage(userInput, commandNode.id, 'goto');
+      } else {
+        handleUserMessage(userInput, commandFromText, 'command');
+      }
+    } else {
+      // Regular text input
+      handleUserMessage(userInput);
+    }
+    
     setTextInput('');
   };
 
