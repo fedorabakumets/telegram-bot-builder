@@ -111,7 +111,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   };
 
   const getStatusBadge = () => {
-    if (isRunning) return <Badge variant="default" className="bg-green-100 text-green-800">Работает</Badge>;
+    if (isRunning) return <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">Работает</Badge>;
     if (isError) return <Badge variant="destructive">Ошибка</Badge>;
     return <Badge variant="secondary">Остановлен</Badge>;
   };
@@ -141,8 +141,8 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         </div>
 
         {isError && botStatus?.instance?.errorMessage && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-700">
+          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+            <p className="text-sm text-red-700 dark:text-red-300">
               <strong>Ошибка:</strong> {botStatus.instance.errorMessage}
             </p>
           </div>

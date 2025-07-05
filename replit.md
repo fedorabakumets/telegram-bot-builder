@@ -137,14 +137,16 @@ Changelog:
   * Added proper error handling and logging for bot processes
   * Established database schema for tracking bot instances
   * Configured aiogram integration for Telegram Bot API
-- July 05, 2025. Implemented dark theme support:
-  * Created ThemeProvider component with localStorage persistence
-  * Added theme toggle component with light/dark/system options
+- July 05, 2025. Implemented comprehensive dark theme support:
+  * Created ThemeProvider component with localStorage persistence and system preference detection
+  * Added enhanced theme toggle component with visual indicators and smooth animations
   * Updated all UI components to use CSS variables for theme-aware styling
-  * Configured Tailwind CSS with class-based dark mode
-  * Enhanced header with theme switcher integration
-  * Updated sidebar, canvas, and node components for theme compatibility
-  * Fixed CSS import order to eliminate build warnings
+  * Configured Tailwind CSS with class-based dark mode and enhanced color schemes
+  * Enhanced header, sidebar, canvas, properties panel, and modal components for theme compatibility
+  * Added improved visual feedback with color-coded statistics cards and status indicators
+  * Implemented smooth transitions and enhanced shadows for better dark mode experience
+  * Fixed CSS import order and added theme-specific scrollbar styling
+  * Enhanced export modal with theme-aware colored statistics and better visual hierarchy
 ```
 
 ## User Preferences

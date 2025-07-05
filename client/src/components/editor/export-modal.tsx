@@ -194,29 +194,29 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
               </CardHeader>
               <CardContent>
                 <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 md:grid-cols-3 gap-4'}`}>
-                  <div className={`bg-blue-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-blue-600`}>{botStats.totalNodes}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-700`}>Всего узлов</div>
+                  <div className={`bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-blue-600 dark:text-blue-400`}>{botStats.totalNodes}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-700 dark:text-blue-300`}>Всего узлов</div>
                   </div>
-                  <div className={`bg-green-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-green-600`}>{botStats.commandNodes}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700`}>Команд</div>
+                  <div className={`bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-green-600 dark:text-green-400`}>{botStats.commandNodes}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700 dark:text-green-300`}>Команд</div>
                   </div>
-                  <div className={`bg-purple-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-purple-600`}>{botStats.totalButtons}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-purple-700`}>Кнопок</div>
+                  <div className={`bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-purple-600 dark:text-purple-400`}>{botStats.totalButtons}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-purple-700 dark:text-purple-300`}>Кнопок</div>
                   </div>
-                  <div className={`bg-amber-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-amber-600`}>{botStats.keyboardNodes}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-amber-700`}>С клавиатурой</div>
+                  <div className={`bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-amber-600 dark:text-amber-400`}>{botStats.keyboardNodes}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-amber-700 dark:text-amber-300`}>С клавиатурой</div>
                   </div>
-                  <div className={`bg-indigo-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-indigo-600`}>{botStats.commandsInMenu}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-indigo-700`}>В меню</div>
+                  <div className={`bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-indigo-600 dark:text-indigo-400`}>{botStats.commandsInMenu}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-indigo-700 dark:text-indigo-300`}>В меню</div>
                   </div>
-                  <div className={`bg-red-50 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-red-600`}>{botStats.adminOnlyCommands}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-red-700`}>Только админ</div>
+                  <div className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-red-600 dark:text-red-400`}>{botStats.adminOnlyCommands}</div>
+                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-red-700 dark:text-red-300`}>Только админ</div>
                   </div>
                 </div>
                 

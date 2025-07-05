@@ -83,8 +83,38 @@
 ::-webkit-scrollbar-thumb {
   background: var(--muted-foreground);
   border-radius: 3px;
+  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--foreground);
+}
+
+/* Dark theme improvements */
+.dark {
+  color-scheme: dark;
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Enhanced focus styles for dark theme */
+.dark .focus\:ring-primary:focus {
+  --tw-ring-color: hsl(var(--primary) / 0.5);
+}
+
+/* Better shadow for dark theme */
+.dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced hover effects for dark theme */
+.dark .hover\:shadow-xl:hover {
+  box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.4), 0 15px 15px -5px rgba(0, 0, 0, 0.3);
 }

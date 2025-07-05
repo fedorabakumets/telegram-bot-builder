@@ -109,18 +109,18 @@ export function PropertiesPanel({
   };
 
   return (
-    <aside className="w-full h-full bg-white border-l border-gray-200 flex flex-col">
+    <aside className="w-full h-full bg-background border-l border-border flex flex-col">
       {/* Properties Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center mb-3">
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 ${nodeColors[selectedNode.type]}`}>
             <i className={`${nodeIcons[selectedNode.type]} text-sm`}></i>
           </div>
           <div className="flex-1">
-            <h2 className="text-sm font-semibold text-gray-900">{nodeTypeNames[selectedNode.type]}</h2>
+            <h2 className="text-sm font-semibold text-foreground">{nodeTypeNames[selectedNode.type]}</h2>
             <div className="flex items-center mt-1">
-              <span className="text-xs text-gray-500">ID:</span>
-              <code className="ml-1 px-2 py-0.5 bg-gray-100 rounded text-xs font-mono text-gray-700 cursor-pointer hover:bg-gray-200 transition-colors"
+              <span className="text-xs text-muted-foreground">ID:</span>
+              <code className="ml-1 px-2 py-0.5 bg-muted rounded text-xs font-mono text-muted-foreground cursor-pointer hover:bg-muted/80 transition-colors"
                     onClick={() => {
                       navigator.clipboard.writeText(selectedNode.id);
                       toast({
@@ -134,7 +134,7 @@ export function PropertiesPanel({
             </div>
           </div>
         </div>
-        <p className="text-xs text-gray-500">Настройте параметры выбранного элемента</p>
+        <p className="text-xs text-muted-foreground">Настройте параметры выбранного элемента</p>
       </div>
 
       {/* Properties Content */}
@@ -142,12 +142,12 @@ export function PropertiesPanel({
         
         {/* Basic Settings */}
         <div>
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Основные настройки</h3>
+          <h3 className="text-sm font-medium text-foreground mb-3">Основные настройки</h3>
           <div className="space-y-4">
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
               <>
                 <div className="relative">
-                  <Label className="text-xs font-medium text-gray-700">Команда</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">Команда</Label>
                   <div className="relative">
                     <Input
                       value={selectedNode.data.command || ''}
@@ -164,11 +164,11 @@ export function PropertiesPanel({
                     
                     {/* Автодополнение команд */}
                     {showCommandSuggestions && commandSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                      <div className="absolute top-full left-0 right-0 bg-background border border-border rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
                         {commandSuggestions.map((suggestion, index) => (
                           <button
                             key={index}
-                            className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm border-b border-gray-100 last:border-b-0"
+                            className="w-full text-left px-3 py-2 hover:bg-muted text-sm border-b border-border last:border-b-0"
                             onClick={() => {
                               onNodeUpdate(selectedNode.id, { 
                                 command: suggestion.command,
@@ -177,8 +177,8 @@ export function PropertiesPanel({
                               setShowCommandSuggestions(false);
                             }}
                           >
-                            <div className="font-medium text-gray-900">{suggestion.command}</div>
-                            <div className="text-xs text-gray-500">{suggestion.description}</div>
+                            <div className="font-medium text-foreground">{suggestion.command}</div>
+                            <div className="text-xs text-muted-foreground">{suggestion.description}</div>
                           </button>
                         ))}
                       </div>
@@ -199,14 +199,14 @@ export function PropertiesPanel({
                 </div>
                 
                 <div>
-                  <Label className="text-xs font-medium text-gray-700">Описание</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">Описание</Label>
                   <Input
                     value={selectedNode.data.description || ''}
                     onChange={(e) => onNodeUpdate(selectedNode.id, { description: e.target.value })}
                     className="mt-2"
                     placeholder="Описание команды"
                   />
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-muted-foreground mt-1">
                     Используется для меню команд в @BotFather
                   </div>
                 </div>
@@ -215,7 +215,7 @@ export function PropertiesPanel({
 
             {selectedNode.type === 'photo' && (
               <div>
-                <Label className="text-xs font-medium text-gray-700">URL изображения</Label>
+                <Label className="text-xs font-medium text-muted-foreground">URL изображения</Label>
                 <Input
                   value={selectedNode.data.imageUrl || ''}
                   onChange={(e) => onNodeUpdate(selectedNode.id, { imageUrl: e.target.value })}
@@ -229,10 +229,10 @@ export function PropertiesPanel({
 
         {/* Message Content */}
         <div>
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Содержимое сообщения</h3>
+          <h3 className="text-sm font-medium text-foreground mb-3">Содержимое сообщения</h3>
           <div className="space-y-4">
             <div>
-              <Label className="text-xs font-medium text-gray-700">Текст сообщения</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Текст сообщения</Label>
               <Textarea
                 value={selectedNode.data.messageText || ''}
                 onChange={(e) => onNodeUpdate(selectedNode.id, { messageText: e.target.value })}
@@ -242,7 +242,7 @@ export function PropertiesPanel({
             </div>
             
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-gray-700">Поддержка Markdown</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Поддержка Markdown</Label>
               <Switch
                 checked={selectedNode.data.markdown}
                 onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { markdown: checked })}
@@ -253,10 +253,10 @@ export function PropertiesPanel({
 
         {/* Keyboard Settings */}
         <div>
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Клавиатура</h3>
+          <h3 className="text-sm font-medium text-foreground mb-3">Клавиатура</h3>
           <div className="space-y-4">
             <div>
-              <Label className="text-xs font-medium text-gray-700">Тип клавиатуры</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Тип клавиатуры</Label>
               <Select
                 value={selectedNode.data.keyboardType}
                 onValueChange={(value: 'reply' | 'inline' | 'none') => 
@@ -278,12 +278,12 @@ export function PropertiesPanel({
             {selectedNode.data.keyboardType !== 'none' && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-xs font-medium text-gray-700">Кнопки</Label>
+                  <Label className="text-xs font-medium text-muted-foreground">Кнопки</Label>
                   <UIButton
                     size="sm"
                     variant="ghost"
                     onClick={handleAddButton}
-                    className="text-xs text-primary hover:text-blue-700 font-medium h-auto p-1"
+                    className="text-xs text-primary hover:text-primary/80 font-medium h-auto p-1"
                   >
                     + Добавить
                   </UIButton>
@@ -291,7 +291,7 @@ export function PropertiesPanel({
                 
                 <div className="space-y-2">
                   {selectedNode.data.buttons.map((button) => (
-                    <div key={button.id} className="bg-gray-50 rounded-lg p-3">
+                    <div key={button.id} className="bg-muted/50 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
                         <Input
                           value={button.text}
