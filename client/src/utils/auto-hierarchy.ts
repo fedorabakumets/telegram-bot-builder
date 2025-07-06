@@ -22,6 +22,12 @@ export interface LayoutConfig {
   centerAlign: boolean;
   compactLayout: boolean;
   respectNodeTypes: boolean;
+  // New viewport-aware properties
+  zoom?: number;
+  viewportWidth?: number;
+  viewportHeight?: number;
+  viewportCenterX?: number;
+  viewportCenterY?: number;
 }
 
 export interface NodeBounds {
@@ -115,10 +121,40 @@ export function calculateAutoHierarchy(
     preventOverlaps: true,
     centerAlign: true,
     compactLayout: false,
-    respectNodeTypes: true
+    respectNodeTypes: true,
+    zoom: 100,
+    viewportWidth: 1200,
+    viewportHeight: 800,
+    viewportCenterX: 600,
+    viewportCenterY: 400
   };
   
   const finalConfig = { ...defaultConfig, ...config };
+  
+  // Adjust spacing based on zoom level
+  if (finalConfig.zoom && finalConfig.zoom !== 100) {
+    const zoomFactor = finalConfig.zoom / 100;
+    finalConfig.levelSpacing = Math.max(200, finalConfig.levelSpacing * zoomFactor);
+    finalConfig.nodeSpacing = Math.max(120, finalConfig.nodeSpacing * zoomFactor);
+  }
+  
+  // Adjust layout for viewport size
+  if (finalConfig.viewportWidth && finalConfig.viewportHeight) {
+    const viewportArea = finalConfig.viewportWidth * finalConfig.viewportHeight;
+    const nodeArea = nodes.length * finalConfig.nodeWidth * finalConfig.nodeHeight;
+    
+    if (nodeArea > viewportArea * 0.6) {
+      finalConfig.compactLayout = true;
+      finalConfig.levelSpacing = Math.max(180, finalConfig.levelSpacing * 0.8);
+      finalConfig.nodeSpacing = Math.max(100, finalConfig.nodeSpacing * 0.8);
+    }
+    
+    // Center the layout in the viewport
+    if (finalConfig.centerAlign && finalConfig.viewportCenterX && finalConfig.viewportCenterY) {
+      finalConfig.startX = Math.max(50, finalConfig.viewportCenterX - (finalConfig.viewportWidth * 0.4));
+      finalConfig.startY = Math.max(50, finalConfig.viewportCenterY - (finalConfig.viewportHeight * 0.4));
+    }
+  }
   
   switch (finalConfig.algorithm) {
     case 'hierarchical':
@@ -622,7 +658,7 @@ function detectCircularReferences(nodes: Node[], graph: Map<string, Set<string>>
     
     const targets = graph.get(nodeId);
     if (targets) {
-      for (const targetId of targets) {
+      for (const targetId of Array.from(targets)) {
         if (hasCycle(targetId)) return true;
       }
     }

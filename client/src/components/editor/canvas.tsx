@@ -4,7 +4,8 @@ import { ConnectionsLayer } from '@/components/ui/connections-layer';
 import { TemporaryConnection } from '@/components/ui/temporary-connection';
 import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
 import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
-import { EnhancedAutoHierarchyPanel } from '@/components/ui/enhanced-auto-hierarchy-panel';
+import { SimpleAutoHierarchyButton } from '@/components/ui/simple-auto-hierarchy-button';
+import { AutoHierarchySettings } from '@/components/ui/auto-hierarchy-settings';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Node, ComponentDefinition, Connection } from '@shared/schema';
@@ -523,13 +524,29 @@ export function Canvas({
               <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
 
+            <SimpleAutoHierarchyButton
+              nodes={displayNodes}
+              connections={connections}
+              onApplyLayout={handleApplyLayout}
+              zoom={zoom}
+              viewportWidth={canvasRef.current?.clientWidth || 1200}
+              viewportHeight={canvasRef.current?.clientHeight || 800}
+              viewportCenterX={canvasRef.current ? canvasRef.current.clientWidth / 2 : 600}
+              viewportCenterY={canvasRef.current ? canvasRef.current.clientHeight / 2 : 400}
+            />
+
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50">
-              <EnhancedAutoHierarchyPanel
-                nodes={nodes}
+              <AutoHierarchySettings
+                nodes={displayNodes}
                 connections={connections}
                 onApplyLayout={handleApplyLayout}
                 onPreviewLayout={handlePreviewLayout}
                 onCancelPreview={handleCancelPreview}
+                zoom={zoom}
+                viewportWidth={canvasRef.current?.clientWidth || 1200}
+                viewportHeight={canvasRef.current?.clientHeight || 800}
+                viewportCenterX={canvasRef.current ? canvasRef.current.clientWidth / 2 : 600}
+                viewportCenterY={canvasRef.current ? canvasRef.current.clientHeight / 2 : 400}
               />
             </div>
 
@@ -679,7 +696,6 @@ export function Canvas({
                 connectionStart={connectionStart}
                 zoom={zoom}
                 pan={pan}
-                className={isPreviewMode ? 'pointer-events-none opacity-75' : ''}
               />
             ))}
           </div>
