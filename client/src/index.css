@@ -415,11 +415,14 @@ body {
   width: 52px;
   height: 28px;
   border-radius: 14px;
-  background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.8) 100%);
+  background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.6) 100%);
   border: 2px solid hsl(var(--border));
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
   overflow: hidden;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .photo-settings-switch::before {
@@ -437,11 +440,58 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform: translateX(0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  font-size: 8px;
+  color: rgba(0, 0, 0, 0.3);
+}
+
+.photo-settings-switch[data-state="unchecked"]::before {
+  content: '\f00d'; /* Font Awesome X icon */
+}
+
+.photo-settings-switch[data-state="checked"]::before {
+  content: '\f00c'; /* Font Awesome check icon */
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .photo-settings-switch:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, hsl(var(--muted) / 1.1) 0%, hsl(var(--muted) / 0.9) 100%);
+}
+
+/* Enhanced disabled state styling */
+.photo-settings-switch[data-state="unchecked"] {
+  background: linear-gradient(135deg, 
+    hsl(var(--muted) / 0.4) 0%, 
+    hsl(var(--muted) / 0.2) 50%, 
+    hsl(var(--muted) / 0.4) 100%);
+  border: 2px solid hsl(var(--border) / 0.6);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.photo-settings-switch[data-state="unchecked"]:hover {
+  background: linear-gradient(135deg, 
+    hsl(var(--muted) / 0.6) 0%, 
+    hsl(var(--muted) / 0.4) 50%, 
+    hsl(var(--muted) / 0.6) 100%);
+  border-color: hsl(var(--border) / 0.8);
+}
+
+.photo-settings-switch[data-state="unchecked"]::before {
+  background: linear-gradient(145deg, 
+    hsl(var(--background)) 0%, 
+    hsl(var(--muted) / 0.8) 100%);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .photo-settings-switch[data-state="checked"] {
@@ -463,6 +513,42 @@ body {
 .dark .photo-settings-switch {
   background: linear-gradient(135deg, hsl(var(--muted) / 0.3) 0%, hsl(var(--muted) / 0.1) 100%);
   border-color: hsl(var(--border) / 0.5);
+}
+
+.dark .photo-settings-switch[data-state="unchecked"] {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.02) 50%, 
+    rgba(255, 255, 255, 0.05) 100%);
+  border: 2px solid hsl(var(--border) / 0.3);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dark .photo-settings-switch[data-state="unchecked"]:hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.08) 0%, 
+    rgba(255, 255, 255, 0.04) 50%, 
+    rgba(255, 255, 255, 0.08) 100%);
+  border-color: hsl(var(--border) / 0.5);
+}
+
+.dark .photo-settings-switch[data-state="unchecked"]::before {
+  background: linear-gradient(145deg, 
+    hsl(var(--muted) / 0.8) 0%, 
+    hsl(var(--muted) / 0.6) 100%);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  content: '\f00d'; /* Font Awesome X icon */
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.dark .photo-settings-switch[data-state="checked"]::before {
+  content: '\f00c'; /* Font Awesome check icon */
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .dark .photo-settings-switch::before {
