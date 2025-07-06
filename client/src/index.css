@@ -461,36 +461,6 @@ body {
   }
 }
 
-/* Performance optimizations */
-.canvas-grid-zoomed::before,
-.dark .bg-canvas-bg::before {
-  will-change: opacity, transform;
-  backface-visibility: hidden;
-  transform-style: preserve-3d;
-}
-
-/* Reduce animation complexity on low-end devices */
-@media (prefers-reduced-motion: reduce) {
-  .canvas-ambient,
-  .canvas-fit-animation,
-  .canvas-transform {
-    animation-duration: 0.1s !important;
-    transition-duration: 0.1s !important;
-  }
-  
-  .dark .bg-canvas-bg::before {
-    animation: none !important;
-  }
-}
-
-/* GPU acceleration for performance-critical elements */
-.canvas-transform,
-.canvas-minimap,
-.canvas-grid-zoomed::before {
-  transform: translateZ(0);
-  will-change: transform;
-}
-
 /* Enhanced Canvas Drop Zone Hint for Dark Theme */
 .dark .canvas-drop-hint {
   background: 
@@ -780,26 +750,6 @@ body {
 
 .dark .canvas-controls:hover .zoom-indicator::after {
   animation: zoom-shimmer 2s ease-in-out infinite;
-}
-
-/* Оптимизация производительности для узлов canvas */
-.canvas-node {
-  will-change: transform;
-  backface-visibility: hidden;
-  perspective: 1000px;
-  transform-style: preserve-3d;
-}
-
-.canvas-node.dragging {
-  transform-origin: center center;
-  will-change: transform, box-shadow;
-  /* Отключаем transition только при перетаскивании для мгновенного отклика */
-  transition: none !important;
-}
-
-.canvas-node:not(.dragging) {
-  /* Включаем плавные переходы только когда не перетаскиваем */
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes controls-fade-in {

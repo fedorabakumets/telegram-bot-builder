@@ -1,17 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { HistoryIndicator } from './history-indicator';
-import { AutoSaveIndicator } from './auto-save-indicator';
-import { FloatingTemplateManager } from '@/components/ui/floating-template-manager';
-import { ImportExportControls } from '@/components/import-export';
-import { FolderOpen, Bookmark, Save, Download, User, Send, Library } from 'lucide-react';
+import { FolderOpen, Bookmark, Save, Download, User, Send } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'wouter';
 
 interface HeaderProps {
   projectName: string;
-  projectId?: number;
-  projectDescription?: string;
   currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'connections';
   onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections') => void;
   onSave: () => void;
@@ -19,45 +12,9 @@ interface HeaderProps {
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
   isSaving?: boolean;
-  // Bot data for template creation
-  botData?: any;
-  onTemplateSaved?: (templateId: number) => void;
-  // Import/Export callbacks
-  onImportSuccess?: (result: any) => void;
-  // История изменений
-  canUndo?: boolean;
-  canRedo?: boolean;
-  onUndo?: () => void;
-  onRedo?: () => void;
-  // Автосохранение
-  autoSaveStatus?: {
-    isSaving: boolean;
-    lastSaved: Date | null;
-    hasUnsavedChanges: boolean;
-    isEnabled: boolean;
-  };
 }
 
-export function Header({ 
-  projectName, 
-  projectId,
-  projectDescription,
-  currentTab, 
-  onTabChange, 
-  onSave, 
-  onExport, 
-  onSaveAsTemplate, 
-  onLoadTemplate, 
-  isSaving,
-  botData,
-  onTemplateSaved,
-  onImportSuccess,
-  canUndo = false,
-  canRedo = false,
-  onUndo,
-  onRedo,
-  autoSaveStatus
-}: HeaderProps) {
+export function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSaveAsTemplate, onLoadTemplate, isSaving }: HeaderProps) {
   return (
     <header className="bg-background border-b border-border h-16 flex items-center justify-between px-6 relative z-50">
       <div className="flex items-center space-x-4">
@@ -128,30 +85,7 @@ export function Header({
       </div>
       
       <div className="flex items-center space-x-3">
-        {/* Enhanced Template Manager */}
-        {botData && (
-          <FloatingTemplateManager
-            botData={botData}
-            projectName={projectName}
-            onTemplateSaved={onTemplateSaved}
-            onLoadTemplate={onLoadTemplate}
-          />
-        )}
-        
-        {/* Templates Page Link */}
-        <Link href="/templates">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex items-center space-x-2"
-          >
-            <Library className="h-4 w-4 text-muted-foreground" />
-            <span>Библиотека</span>
-          </Button>
-        </Link>
-        
-        {/* Fallback for legacy template buttons when botData is not available */}
-        {!botData && onLoadTemplate && (
+        {onLoadTemplate && (
           <Button 
             variant="outline" 
             size="sm"
@@ -166,7 +100,7 @@ export function Header({
           </Button>
         )}
         
-        {!botData && onSaveAsTemplate && (
+        {onSaveAsTemplate && (
           <Button 
             variant="outline" 
             size="sm"
@@ -178,18 +112,6 @@ export function Header({
           </Button>
         )}
         
-        {/* Import/Export Controls */}
-        <ImportExportControls
-          sourceType={projectId ? 'project' : undefined}
-          sourceId={projectId}
-          sourceName={projectName}
-          sourceDescription={projectDescription}
-          onImportSuccess={onImportSuccess}
-          variant="split"
-          size="sm"
-          showLabels={false}
-        />
-        
         <Button 
           variant="outline" 
           size="sm"
@@ -200,29 +122,6 @@ export function Header({
           <Save className={`h-4 w-4 text-muted-foreground ${isSaving ? 'animate-spin' : ''}`} />
           <span>{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
         </Button>
-        
-        {/* Индикатор автосохранения */}
-        {autoSaveStatus && (
-          <AutoSaveIndicator
-            isSaving={autoSaveStatus.isSaving}
-            lastSaved={autoSaveStatus.lastSaved}
-            hasUnsavedChanges={autoSaveStatus.hasUnsavedChanges}
-            isEnabled={autoSaveStatus.isEnabled}
-          />
-        )}
-
-        {/* Индикатор истории - только в режиме редактора */}
-        {currentTab === 'editor' && onUndo && onRedo && (
-          <div className="flex items-center">
-            <div className="h-4 w-px bg-border mx-1"></div>
-            <HistoryIndicator
-              canUndo={canUndo}
-              canRedo={canRedo}
-              onUndo={onUndo}
-              onRedo={onRedo}
-            />
-          </div>
-        )}
         
         <Button 
           size="sm"

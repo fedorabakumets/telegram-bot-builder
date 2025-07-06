@@ -4,15 +4,11 @@ import { ConnectionsLayer } from '@/components/ui/connections-layer';
 import { TemporaryConnection } from '@/components/ui/temporary-connection';
 import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
 import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
-import { SimpleAutoHierarchyButton } from '@/components/ui/simple-auto-hierarchy-button';
-import { AutoHierarchySettings } from '@/components/ui/auto-hierarchy-settings';
-import { AutoConnectionButton } from '@/components/ui/auto-connection-button';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Node, ComponentDefinition, Connection } from '@shared/schema';
+import { Node, ComponentDefinition, Connection } from '@/types/bot';
 import { generateAutoConnections } from '@/utils/auto-connection';
 import { ConnectionManager } from '@/utils/connection-manager';
-import { animatedHierarchyLayout, animatedAdaptiveLayout } from '@/utils/auto-hierarchy';
 import { nanoid } from 'nanoid';
 
 interface CanvasProps {
@@ -28,11 +24,6 @@ interface CanvasProps {
   onConnectionDelete?: (connectionId: string) => void;
   onConnectionAdd?: (connection: Connection) => void;
   onNodesUpdate?: (nodes: Node[]) => void;
-  // История изменений
-  canUndo?: boolean;
-  canRedo?: boolean;
-  onUndo?: () => void;
-  onRedo?: () => void;
 }
 
 export function Canvas({ 
@@ -47,11 +38,7 @@ export function Canvas({
   onConnectionSelect,
   onConnectionDelete,
   onConnectionAdd,
-  onNodesUpdate,
-  canUndo = false,
-  canRedo = false,
-  onUndo,
-  onRedo
+  onNodesUpdate
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -68,8 +55,6 @@ export function Canvas({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
-  const [previewNodes, setPreviewNodes] = useState<Node[] | null>(null);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   // Zoom utility functions
   const zoomIn = useCallback(() => {
@@ -90,9 +75,9 @@ export function Canvas({
   }, []);
 
   const fitToContent = useCallback(() => {
-    if (displayNodes.length === 0) return;
+    if (nodes.length === 0) return;
     
-    const nodeBounds = displayNodes.reduce((bounds, node) => {
+    const nodeBounds = nodes.reduce((bounds, node) => {
       const left = node.position.x;
       const right = node.position.x + 320; // Approximate node width
       const top = node.position.y;
@@ -206,36 +191,13 @@ export function Canvas({
             e.preventDefault();
             fitToContent();
             break;
-          case 'z':
-          case 'Z':
-            e.preventDefault();
-            if (e.shiftKey) {
-              // Ctrl+Shift+Z для redo (альтернативный способ)
-              if (canRedo && onRedo) {
-                onRedo();
-              }
-            } else {
-              // Ctrl+Z для undo
-              if (canUndo && onUndo) {
-                onUndo();
-              }
-            }
-            break;
-          case 'y':
-          case 'Y':
-            e.preventDefault();
-            // Ctrl+Y для redo
-            if (canRedo && onRedo) {
-              onRedo();
-            }
-            break;
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [zoomIn, zoomOut, resetZoom, fitToContent, canUndo, canRedo, onUndo, onRedo]);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent]);
 
   // Handle mouse events for panning
   useEffect(() => {
@@ -405,70 +367,6 @@ export function Canvas({
     }
   }, [nodes, connections, handleCreateSuggestedConnection]);
 
-  const handleAutoHierarchy = useCallback(() => {
-    if (nodes.length === 0 || !onNodesUpdate) return;
-    
-    animatedHierarchyLayout(
-      nodes,
-      connections,
-      onNodesUpdate,
-      800 // Продолжительность анимации 800ms
-    );
-  }, [nodes, connections, onNodesUpdate]);
-
-  const handlePreviewLayout = useCallback((previewedNodes: Node[]) => {
-    setPreviewNodes(previewedNodes);
-    setIsPreviewMode(true);
-  }, []);
-
-  const handleCancelPreview = useCallback(() => {
-    setPreviewNodes(null);
-    setIsPreviewMode(false);
-  }, []);
-
-  const handleApplyLayout = useCallback((layoutNodes: Node[]) => {
-    if (onNodesUpdate) {
-      onNodesUpdate(layoutNodes);
-    }
-    setPreviewNodes(null);
-    setIsPreviewMode(false);
-  }, [onNodesUpdate]);
-
-  const handleApplyLayoutWithConnections = useCallback((layoutNodes: Node[], newConnections: Connection[]) => {
-    if (onNodesUpdate) {
-      onNodesUpdate(layoutNodes);
-    }
-    
-    // Добавляем новые соединения
-    newConnections.forEach(connection => {
-      // Проверяем, что соединение еще не существует
-      const existingConnection = connections.find(c => 
-        c.source === connection.source && c.target === connection.target
-      );
-      if (!existingConnection && onConnectionAdd) {
-        onConnectionAdd(connection);
-      }
-    });
-    
-    setPreviewNodes(null);
-    setIsPreviewMode(false);
-  }, [onNodesUpdate, onConnectionAdd, connections]);
-
-  const handleConnectionsAdd = useCallback((newConnections: Connection[]) => {
-    newConnections.forEach(connection => {
-      // Проверяем, что соединение еще не существует
-      const existingConnection = connections.find(c => 
-        c.source === connection.source && c.target === connection.target
-      );
-      if (!existingConnection && onConnectionAdd) {
-        onConnectionAdd(connection);
-      }
-    });
-  }, [onConnectionAdd, connections]);
-
-  // Use preview nodes if in preview mode, otherwise use actual nodes
-  const displayNodes = isPreviewMode && previewNodes ? previewNodes : nodes;
-
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
       <div className="absolute inset-0 overflow-auto p-8">
@@ -557,54 +455,16 @@ export function Canvas({
               <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
 
-            <SimpleAutoHierarchyButton
-              nodes={displayNodes}
-              connections={connections}
-              onApplyLayout={handleApplyLayout}
-              onApplyLayoutWithConnections={handleApplyLayoutWithConnections}
-              zoom={zoom}
-              viewportWidth={canvasRef.current?.clientWidth || 1200}
-              viewportHeight={canvasRef.current?.clientHeight || 800}
-              viewportCenterX={canvasRef.current ? canvasRef.current.clientWidth / 2 : 600}
-              viewportCenterY={canvasRef.current ? canvasRef.current.clientHeight / 2 : 400}
-            />
-
-            <AutoConnectionButton
-              nodes={displayNodes}
-              connections={connections}
-              onConnectionsAdd={handleConnectionsAdd}
-              disabled={isPreviewMode}
-            />
-
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50">
-              <AutoHierarchySettings
-                nodes={displayNodes}
-                connections={connections}
-                onApplyLayout={handleApplyLayout}
-                onPreviewLayout={handlePreviewLayout}
-                onCancelPreview={handleCancelPreview}
-                zoom={zoom}
-                viewportWidth={canvasRef.current?.clientWidth || 1200}
-                viewportHeight={canvasRef.current?.clientHeight || 800}
-                viewportCenterX={canvasRef.current ? canvasRef.current.clientWidth / 2 : 600}
-                viewportCenterY={canvasRef.current ? canvasRef.current.clientHeight / 2 : 400}
-              />
-            </div>
-
             <button 
-              onClick={onUndo}
-              disabled={!canUndo}
-              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-              title={`Отменить действие (Ctrl + Z)${!canUndo ? ' - нет действий для отмены' : ''}`}
+              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+              title="Отменить действие (Ctrl + Z)"
             >
               <i className="fas fa-undo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
 
             <button 
-              onClick={onRedo}
-              disabled={!canRedo}
-              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-              title={`Повторить действие (Ctrl + Y)${!canRedo ? ' - нет действий для повтора' : ''}`}
+              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+              title="Повторить действие (Ctrl + Y)"
             >
               <i className="fas fa-redo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
@@ -625,93 +485,41 @@ export function Canvas({
               </div>
             )}
             
-            {/* Canvas Management Help */}
+            {/* Zoom Help */}
             <Popover>
               <PopoverTrigger asChild>
                 <button className="p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group">
                   <i className="fas fa-question-circle text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-500 transition-colors"></i>
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="bottom" className="w-80 p-3">
-                <div className="space-y-4">
-                  <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100">Управление холстом</h4>
-                  
-                  {/* Масштабирование */}
-                  <div className="space-y-2">
-                    <h5 className="font-medium text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wide">Масштабирование</h5>
-                    <div className="space-y-1.5 text-xs">
+              <PopoverContent side="bottom" className="w-64 p-3">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">Управление масштабом</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Увеличить:</span>
+                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + +</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Уменьшить:</span>
+                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + -</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Сбросить:</span>
+                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 0</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Уместить всё:</span>
+                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 1</code>
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-slate-600 pt-2 mt-2">
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Увеличить:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + +</code>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Уменьшить:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + -</code>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Сбросить масштаб:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 0</code>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Уместить всё:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 1</code>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Колесом мыши:</span>
+                        <span className="text-gray-600 dark:text-gray-400">Масштабирование:</span>
                         <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + колесо</code>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Навигация */}
-                  <div className="space-y-2">
-                    <h5 className="font-medium text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wide">Навигация</h5>
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between mt-1">
                         <span className="text-gray-600 dark:text-gray-400">Панорамирование:</span>
                         <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Alt + ЛКМ</code>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Перемещение узла:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Перетаскивание</code>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Выделение узла:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">ЛКМ</code>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Редактирование */}
-                  <div className="space-y-2">
-                    <h5 className="font-medium text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wide">Редактирование</h5>
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Отменить:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + Z</code>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Повторить:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + Y</code>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Создать связь:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Точки на узлах</code>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Дополнительные возможности */}
-                  <div className="space-y-2">
-                    <h5 className="font-medium text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wide">Дополнительно</h5>
-                    <div className="space-y-1.5 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Добавить узел:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Перетащить из боковой панели</code>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Авто-иерархия:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Кнопка в панели</code>
                       </div>
                     </div>
                   </div>
@@ -777,15 +585,15 @@ export function Canvas({
             )}
             
             {/* Nodes */}
-            {displayNodes.map((node) => (
+            {nodes.map((node) => (
               <CanvasNode
                 key={node.id}
                 node={node}
                 isSelected={selectedNodeId === node.id}
                 onClick={() => onNodeSelect(node.id)}
                 onDelete={() => onNodeDelete(node.id)}
-                onMove={(position) => isPreviewMode ? undefined : onNodeMove(node.id, position)}
-                onConnectionStart={isPreviewMode ? undefined : handleConnectionStart}
+                onMove={(position) => onNodeMove(node.id, position)}
+                onConnectionStart={handleConnectionStart}
                 connectionStart={connectionStart}
                 zoom={zoom}
                 pan={pan}
@@ -793,24 +601,6 @@ export function Canvas({
             ))}
           </div>
           
-          {/* Preview Mode Indicator */}
-          {isPreviewMode && (
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20">
-              <div className="bg-blue-600/90 dark:bg-blue-500/90 backdrop-blur-md text-white px-4 py-2 rounded-full shadow-lg border border-blue-400/50 flex items-center gap-2">
-                <i className="fas fa-eye text-sm"></i>
-                <span className="text-sm font-medium">Режим предпросмотра</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 text-white hover:bg-white/20"
-                  onClick={handleCancelPreview}
-                >
-                  <i className="fas fa-times text-xs"></i>
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Drop Zone Hint */}
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg rounded-2xl shadow-2xl border-2 border-dashed border-gray-300 dark:border-slate-600 p-10 w-96 text-center">

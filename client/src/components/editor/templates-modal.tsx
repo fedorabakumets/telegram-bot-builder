@@ -1,23 +1,17 @@
 import { useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, 
-  Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield, Upload,
-  BarChart3, Users, Zap, Award, ArrowRight, Grid3X3, Play, CheckCircle
-} from 'lucide-react';
+import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { TemplateImport } from '@/components/import-export';
 import type { BotTemplate } from '@shared/schema';
 import type { BotData } from '@/types/bot';
 
@@ -34,7 +28,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
   const [showPreview, setShowPreview] = useState(false);
   const [currentTab, setCurrentTab] = useState('all');
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'recent' | 'name'>('popular');
-  const [showImport, setShowImport] = useState(false);
 
   const { toast } = useToast();
 
@@ -412,125 +405,90 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 py-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 py-4">
         {templates.map((template: BotTemplate) => {
           const stats = getTemplateStats(template.data as BotData);
           
           return (
-            <Card key={template.id} className="group relative overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/30 dark:from-gray-900 dark:to-gray-800/30 hover:scale-[1.02]">
-              {/* Featured Badge */}
-              {template.featured === 1 && (
-                <div className="absolute top-3 right-3 z-10">
-                  <div className="flex items-center gap-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-lg">
-                    <Crown className="h-3 w-3" />
-                    Топ
-                  </div>
-                </div>
-              )}
-              
-              {/* Gradient Header */}
-              <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-              
-              <CardHeader className="pb-4">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg font-semibold leading-tight text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors">
-                        {template.name}
-                      </CardTitle>
-                      {template.description && (
-                        <CardDescription className="mt-2 line-clamp-2 text-sm">
-                          {template.description}
-                        </CardDescription>
+            <Card key={template.id} className="hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 dark:bg-card/50 dark:hover:bg-card/80">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CardTitle className="text-base">{template.name}</CardTitle>
+                      {template.featured === 1 && (
+                        <Crown className="h-4 w-4 text-yellow-500" />
                       )}
                     </div>
+                    {template.description && (
+                      <CardDescription className="mt-1 line-clamp-2">
+                        {template.description}
+                      </CardDescription>
+                    )}
                   </div>
-                  
-                  {/* Author and Category */}
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <User className="h-3 w-3" />
-                      <span>{template.authorName || 'Система'}</span>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {template.category}
-                    </Badge>
+                  <Badge variant={template.isPublic ? 'default' : 'secondary'}>
+                    {template.isPublic ? 'Публичный' : 'Личный'}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-current" />
+                    <span>{template.rating || 0}</span>
+                    <span>({template.ratingCount || 0})</span>
                   </div>
-                  
-                  {/* Rating and Difficulty */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">{template.rating || 0}</span>
-                        <span className="text-muted-foreground text-sm">({template.ratingCount || 0})</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <TrendingUp className="h-4 w-4" />
-                        <span className="font-medium">{template.useCount || 0}</span>
-                      </div>
-                    </div>
-                    <Badge 
-                      variant="outline" 
-                      className={`
-                        ${template.difficulty === 'easy' ? 'border-green-200 text-green-700 bg-green-50 dark:border-green-800 dark:text-green-300 dark:bg-green-950' : ''}
-                        ${template.difficulty === 'medium' ? 'border-yellow-200 text-yellow-700 bg-yellow-50 dark:border-yellow-800 dark:text-yellow-300 dark:bg-yellow-950' : ''}
-                        ${template.difficulty === 'hard' ? 'border-red-200 text-red-700 bg-red-50 dark:border-red-800 dark:text-red-300 dark:bg-red-950' : ''}
-                      `}
-                    >
-                      {difficultyLabels[template.difficulty as keyof typeof difficultyLabels] || template.difficulty}
-                    </Badge>
+                  <div className="flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3" />
+                    <span>{template.useCount || 0} исп.</span>
                   </div>
+                  <Badge variant="outline" className="text-xs">
+                    {difficultyLabels[template.difficulty as keyof typeof difficultyLabels] || template.difficulty}
+                  </Badge>
                 </div>
               </CardHeader>
               
-              <CardContent className="space-y-4">
-                {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-3">
-                  <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg border border-blue-100 dark:border-blue-900">
-                    <Grid3X3 className="h-4 w-4 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
-                    <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">{stats.nodes}</div>
-                    <div className="text-xs text-blue-600/70 dark:text-blue-400/70">узлов</div>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-4 gap-2 text-xs">
+                  <div className="text-center p-2 bg-muted dark:bg-muted/30 rounded">
+                    <div className="font-medium">{stats.nodes}</div>
+                    <div className="text-muted-foreground">узлов</div>
                   </div>
-                  <div className="text-center p-3 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-lg border border-green-100 dark:border-green-900">
-                    <Zap className="h-4 w-4 text-green-600 dark:text-green-400 mx-auto mb-1" />
-                    <div className="text-sm font-semibold text-green-700 dark:text-green-300">{stats.connections}</div>
-                    <div className="text-xs text-green-600/70 dark:text-green-400/70">связей</div>
+                  <div className="text-center p-2 bg-muted dark:bg-muted/30 rounded">
+                    <div className="font-medium">{stats.connections}</div>
+                    <div className="text-muted-foreground">связей</div>
                   </div>
-                  <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 rounded-lg border border-purple-100 dark:border-purple-900">
-                    <Play className="h-4 w-4 text-purple-600 dark:text-purple-400 mx-auto mb-1" />
-                    <div className="text-sm font-semibold text-purple-700 dark:text-purple-300">{stats.commands}</div>
-                    <div className="text-xs text-purple-600/70 dark:text-purple-400/70">команд</div>
+                  <div className="text-center p-2 bg-muted dark:bg-muted/30 rounded">
+                    <div className="font-medium">{stats.commands}</div>
+                    <div className="text-muted-foreground">команд</div>
                   </div>
-                  <div className="text-center p-3 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 rounded-lg border border-orange-100 dark:border-orange-900">
-                    <CheckCircle className="h-4 w-4 text-orange-600 dark:text-orange-400 mx-auto mb-1" />
-                    <div className="text-sm font-semibold text-orange-700 dark:text-orange-300">{stats.buttons}</div>
-                    <div className="text-xs text-orange-600/70 dark:text-orange-400/70">кнопок</div>
+                  <div className="text-center p-2 bg-muted dark:bg-muted/30 rounded">
+                    <div className="font-medium">{stats.buttons}</div>
+                    <div className="text-muted-foreground">кнопок</div>
                   </div>
                 </div>
 
-                {/* Meta Info */}
-                <div className="flex items-center justify-between text-sm p-3 bg-gray-50/50 dark:bg-gray-800/30 rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Eye className="h-3 w-3" />
-                      <span>{template.viewCount || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Download className="h-3 w-3" />
-                      <span>{template.downloadCount || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>{template.estimatedTime || 5} мин</span>
-                    </div>
+                {/* Расширенная статистика */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded">
+                    <Eye className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{template.viewCount || 0}</span>
+                    <span className="text-muted-foreground">просмотров</span>
                   </div>
-                  {template.isPublic && (
-                    <Badge variant="secondary" className="text-xs">
-                      <Globe className="h-3 w-3 mr-1" />
-                      Публичный
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded">
+                    <Download className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{template.downloadCount || 0}</span>
+                    <span className="text-muted-foreground">скачиваний</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded">
+                    <Heart className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{template.likeCount || 0}</span>
+                    <span className="text-muted-foreground">лайков</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded">
+                    <Clock className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{template.estimatedTime || 5}</span>
+                    <span className="text-muted-foreground">мин.</span>
+                  </div>
                 </div>
 
                 {/* Дополнительные индикаторы */}
@@ -660,23 +618,12 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
-              Шаблоны ботов
-            </DialogTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowImport(true)}
-              className="flex items-center gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              Импорт
-            </Button>
-          </div>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5" />
+            Шаблоны ботов
+          </DialogTitle>
         </DialogHeader>
 
         {showPreview && selectedTemplate ? (
@@ -799,20 +746,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
           </Tabs>
         )}
       </DialogContent>
-      
-      <TemplateImport
-        open={showImport}
-        onOpenChange={setShowImport}
-        onSuccess={(result) => {
-          toast({
-            title: "Импорт завершен",
-            description: result.message,
-          });
-          // Обновляем список шаблонов
-          queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
-        }}
-      />
     </Dialog>
   );
 }

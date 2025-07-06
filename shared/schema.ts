@@ -182,7 +182,6 @@ export const connectionSchema = z.object({
   target: z.string(),
   sourceHandle: z.string().optional(),
   targetHandle: z.string().optional(),
-  buttonText: z.string().optional(),
 });
 
 export const botDataSchema = z.object({

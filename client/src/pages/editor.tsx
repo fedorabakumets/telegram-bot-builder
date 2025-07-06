@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Header } from '@/components/editor/header';
@@ -16,7 +16,6 @@ import { ConnectionVisualization } from '@/components/editor/connection-visualiz
 import { SmartConnectionCreator } from '@/components/editor/smart-connection-creator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
-import { useAutoSave } from '@/hooks/use-auto-save-simple';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotProject, Connection, ComponentDefinition, BotData } from '@shared/schema';
@@ -41,9 +40,6 @@ export default function Editor() {
 
   const currentProject = projects?.[0];
 
-  // Создаем ref для автосохранения
-  const autoSaveRef = useRef<((data: BotData) => void) | null>(null);
-
   const {
     nodes,
     connections,
@@ -52,7 +48,6 @@ export default function Editor() {
     setSelectedNodeId,
     addNode,
     updateNode,
-    updateNodePositionLive,
     deleteNode,
     addConnection,
     deleteConnection,
@@ -62,32 +57,8 @@ export default function Editor() {
     deleteButton,
     updateNodes,
     setBotData,
-    getBotData,
-    // История изменений
-    canUndo,
-    canRedo,
-    undo,
-    redo,
-    resetHistory
-  } = useBotEditor(currentProject?.data as BotData, {
-    onChange: (data) => autoSaveRef.current?.(data) // Подключаем автосохранение к изменениям
-  });
-
-  // Инициализируем auto-save hook после получения getBotData
-  const autoSave = useAutoSave(
-    currentProject,
-    getBotData,
-    {
-      enabled: true,
-      delay: 800, // Автосохранение через 800мс после изменений
-      showToasts: false, // Не показываем уведомления чтобы не отвлекать
-    }
-  );
-
-  // Обновляем ref для автосохранения
-  useEffect(() => {
-    autoSaveRef.current = autoSave.triggerAutoSave;
-  }, [autoSave.triggerAutoSave]);
+    getBotData
+  } = useBotEditor(currentProject?.data as BotData);
 
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -134,8 +105,8 @@ export default function Editor() {
   }, [updateProjectMutation]);
 
   const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
-    updateNodePositionLive(nodeId, position);
-  }, [updateNodePositionLive]);
+    updateNode(nodeId, { position });
+  }, [updateNode]);
 
   const handleComponentDrag = useCallback((component: ComponentDefinition) => {
     // Handle component drag start if needed
@@ -238,8 +209,6 @@ export default function Editor() {
     <div className="h-screen overflow-hidden bg-gray-50">
       <Header
         projectName={currentProject.name}
-        projectId={currentProject.id}
-        projectDescription={currentProject.description ?? undefined}
         currentTab={currentTab}
         onTabChange={handleTabChange}
         onSave={handleSave}
@@ -247,31 +216,6 @@ export default function Editor() {
         onSaveAsTemplate={handleSaveAsTemplate}
         onLoadTemplate={handleLoadTemplate}
         isSaving={updateProjectMutation.isPending}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onUndo={undo}
-        onRedo={redo}
-        botData={{ nodes, connections }}
-        onTemplateSaved={(templateId) => {
-          toast({
-            title: "Шаблон сохранен",
-            description: "Шаблон успешно добавлен в библиотеку",
-          });
-        }}
-        onImportSuccess={(result) => {
-          toast({
-            title: "Импорт завершен",
-            description: result.message,
-          });
-          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
-        }}
-        autoSaveStatus={{
-          isSaving: autoSave.isSaving,
-          lastSaved: null, // Можно добавить отслеживание времени последнего сохранения позже
-          hasUnsavedChanges: false, // Простая реализация для начала
-          isEnabled: autoSave.isEnabled
-        }}
       />
 
       <div className="h-[calc(100vh-4rem)]">
@@ -297,10 +241,6 @@ export default function Editor() {
                 onConnectionDelete={deleteConnection}
                 onConnectionAdd={addConnection}
                 onNodesUpdate={updateNodes}
-                canUndo={canUndo}
-                canRedo={canRedo}
-                onUndo={undo}
-                onRedo={redo}
               />
             </ResizablePanel>
             

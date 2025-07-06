@@ -6,11 +6,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Tag, Save, Loader2, Sparkles } from 'lucide-react';
+import { X, Tag, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { EnhancedSaveTemplateModal } from './enhanced-save-template-modal';
 import type { BotData } from '@/types/bot';
 
 interface SaveTemplateModalProps {
@@ -18,8 +17,6 @@ interface SaveTemplateModalProps {
   onClose: () => void;
   botData: BotData;
   projectName?: string;
-  useEnhanced?: boolean; // Использовать ли улучшенную версию
-  onTemplateSaved?: (templateId: number) => void;
 }
 
 interface TemplateFormData {
@@ -35,21 +32,7 @@ interface TemplateFormData {
   estimatedTime: number;
 }
 
-export function SaveTemplateModal({ isOpen, onClose, botData, projectName, useEnhanced = true, onTemplateSaved }: SaveTemplateModalProps) {
-  // Если включен улучшенный режим, используем новый компонент
-  if (useEnhanced) {
-    return (
-      <EnhancedSaveTemplateModal
-        isOpen={isOpen}
-        onClose={onClose}
-        botData={botData}
-        projectName={projectName}
-        onTemplateSaved={onTemplateSaved}
-      />
-    );
-  }
-
-  // Оригинальная реализация для обратной совместимости
+export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: SaveTemplateModalProps) {
   const [formData, setFormData] = useState<TemplateFormData>({
     name: projectName ? `${projectName} - Шаблон` : 'Новый шаблон',
     description: '',

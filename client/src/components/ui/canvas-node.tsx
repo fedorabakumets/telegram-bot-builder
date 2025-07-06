@@ -41,7 +41,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number | null>(null);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!onMove) return;
@@ -78,55 +77,42 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging || !onMove) return;
     
-    // Отменяем предыдущий кадр анимации
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-    }
+    // Находим канвас (родительский элемент трансформируемого контейнера)
+    const transformedContainer = nodeRef.current?.parentElement;
+    const canvas = transformedContainer?.parentElement;
     
-    // Используем requestAnimationFrame для плавного обновления
-    rafRef.current = requestAnimationFrame(() => {
-      // Находим канвас (родительский элемент трансформируемого контейнера)
-      const transformedContainer = nodeRef.current?.parentElement;
-      const canvas = transformedContainer?.parentElement;
+    if (canvas && transformedContainer) {
+      const canvasRect = canvas.getBoundingClientRect();
       
-      if (canvas && transformedContainer) {
-        const canvasRect = canvas.getBoundingClientRect();
-        
-        // Получаем экранные координаты мыши относительно канваса
-        const screenX = e.clientX - canvasRect.left;
-        const screenY = e.clientY - canvasRect.top;
-        
-        // Преобразуем экранные координаты в координаты канваса с учетом зума и панорамирования
-        const zoomFactor = zoom / 100;
-        const canvasX = (screenX - pan.x) / zoomFactor - dragOffset.x;
-        const canvasY = (screenY - pan.y) / zoomFactor - dragOffset.y;
-        
-        // Привязка к сетке (20px grid в канвасных координатах)
-        const gridSize = 20;
-        const snappedX = Math.round(canvasX / gridSize) * gridSize;
-        const snappedY = Math.round(canvasY / gridSize) * gridSize;
-        
-        // Ограничиваем позицию в пределах canvas с отступами (в канвасных координатах)
-        const minX = 20;
-        const minY = 20;
-        const maxX = Math.max(minX, (canvas.clientWidth / zoomFactor) - 340);
-        const maxY = Math.max(minY, (canvas.clientHeight / zoomFactor) - 220);
-        
-        const boundedX = Math.max(minX, Math.min(snappedX, maxX));
-        const boundedY = Math.max(minY, Math.min(snappedY, maxY));
-        
-        onMove({ x: boundedX, y: boundedY });
-      }
-    });
+      // Получаем экранные координаты мыши относительно канваса
+      const screenX = e.clientX - canvasRect.left;
+      const screenY = e.clientY - canvasRect.top;
+      
+      // Преобразуем экранные координаты в координаты канваса с учетом зума и панорамирования
+      const zoomFactor = zoom / 100;
+      const canvasX = (screenX - pan.x) / zoomFactor - dragOffset.x;
+      const canvasY = (screenY - pan.y) / zoomFactor - dragOffset.y;
+      
+      // Привязка к сетке (20px grid в канвасных координатах)
+      const gridSize = 20;
+      const snappedX = Math.round(canvasX / gridSize) * gridSize;
+      const snappedY = Math.round(canvasY / gridSize) * gridSize;
+      
+      // Ограничиваем позицию в пределах canvas с отступами (в канвасных координатах)
+      const minX = 20;
+      const minY = 20;
+      const maxX = Math.max(minX, (canvas.clientWidth / zoomFactor) - 340);
+      const maxY = Math.max(minY, (canvas.clientHeight / zoomFactor) - 220);
+      
+      const boundedX = Math.max(minX, Math.min(snappedX, maxX));
+      const boundedY = Math.max(minY, Math.min(snappedY, maxY));
+      
+      onMove({ x: boundedX, y: boundedY });
+    }
   };
 
   const handleMouseUp = () => {
     setIsDragging(false);
-    // Отменяем анимацию при окончании перетаскивания
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
   };
 
   // Добавляем и удаляем обработчики событий
@@ -142,11 +128,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
         document.removeEventListener('mouseup', handleMouseUp);
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
-        // Очищаем запланированную анимацию
-        if (rafRef.current) {
-          cancelAnimationFrame(rafRef.current);
-          rafRef.current = null;
-        }
       };
     }
   }, [isDragging, dragOffset, onMove]);
@@ -155,8 +136,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
     <div
       ref={nodeRef}
       className={cn(
-        "canvas-node bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 relative select-none",
-        isDragging ? "dragging" : "",
+        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 transition-all duration-300 relative select-none",
         isSelected ? "border-blue-500 ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10" : "border-gray-200 dark:border-slate-700",
         isDragging ? "shadow-3xl scale-105 cursor-grabbing z-50 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "hover:shadow-2xl hover:border-gray-300 dark:hover:border-slate-600",
         onMove ? "cursor-grab hover:cursor-grab" : "cursor-pointer"

@@ -6,7 +6,6 @@ import { join } from "path";
 import { storage } from "./storage";
 import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
-import { createTemplateExport, validateTemplateImport, createTemplateFileName } from "@shared/template-format";
 import { z } from "zod";
 
 // Глобальное хранилище активных процессов ботов
@@ -192,8 +191,8 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
       return { success: true }; // Возвращаем true, чтобы не блокировать сохранение проекта
     }
 
-    // Ждем дольше для полного завершения процесса и избежания конфликтов Telegram
-    await new Promise(resolve => setTimeout(resolve, 7000));
+    // Ждем дольше для полного завершения процесса и избежания конфликтов
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     // Проверяем, что процесс действительно завершен
     const processExists = botProcesses.has(projectId);
@@ -202,30 +201,8 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
       botProcesses.delete(projectId);
     }
 
-    // Получаем актуальный токен (может измениться)
-    let tokenToUse = instance.token;
-    
-    // Проверяем, есть ли токен по умолчанию
-    const defaultToken = await storage.getDefaultBotToken(projectId);
-    if (defaultToken) {
-      tokenToUse = defaultToken.token;
-      console.log(`Используем токен по умолчанию для перезапуска бота ${projectId}`);
-    } else {
-      // Если нет токена по умолчанию, используем токен из проекта
-      const project = await storage.getBotProject(projectId);
-      if (project?.botToken) {
-        tokenToUse = project.botToken;
-        console.log(`Используем сохраненный токен проекта для перезапуска бота ${projectId}`);
-      }
-    }
-
-    // Запускаем заново с актуальным токеном
-    const startResult = await startBot(projectId, tokenToUse);
-    if (startResult.success) {
-      console.log(`Бот ${projectId} успешно перезапущен после обновления структуры`);
-    } else {
-      console.error(`Ошибка при перезапуске бота ${projectId}:`, startResult.error);
-    }
+    // Запускаем заново с тем же токеном
+    const startResult = await startBot(projectId, instance.token);
     return startResult;
   } catch (error) {
     console.error('Ошибка перезапуска бота:', error);
@@ -1082,247 +1059,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ hasDefault: true, token: safeToken });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch default token" });
-    }
-  });
-
-  // Template Import/Export Endpoints
-  
-  // Export template as file
-  app.get("/api/templates/:id/export", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const template = await storage.getBotTemplate(id);
-      if (!template) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-
-      // Получаем параметры экспорта
-      const includeDocumentation = req.query.includeDocumentation === 'true';
-      const generateChecksum = req.query.generateChecksum === 'true';
-      const includeScreenshots = req.query.includeScreenshots === 'true';
-
-      // Create export data
-      const exportData = createTemplateExport(
-        template.name,
-        template.description || "",
-        template.data,
-        {
-          version: template.version || "1.0.0",
-          author: template.authorName || "Unknown",
-          category: template.category as any,
-          difficulty: template.difficulty as any,
-          language: template.language as any,
-          tags: template.tags || [],
-          complexity: template.complexity || 1,
-          estimatedTime: template.estimatedTime || 5,
-          requiresToken: Boolean(template.requiresToken),
-          createdAt: template.createdAt?.toISOString(),
-        },
-        template.authorName || "Unknown",
-        {
-          includeDocumentation,
-          generateChecksum,
-          includeScreenshots,
-        }
-      );
-
-      // Generate filename
-      const fileName = createTemplateFileName(template.name);
-
-      // Return export data with filename
-      res.json({
-        filename: fileName,
-        data: exportData
-      });
-    } catch (error) {
-      console.error('Template export error:', error);
-      res.status(500).json({ message: "Failed to export template" });
-    }
-  });
-
-  // Export project as template file
-  app.get("/api/projects/:id/export", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const project = await storage.getBotProject(id);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-
-      // Получаем параметры экспорта
-      const includeDocumentation = req.query.includeDocumentation === 'true';
-      const generateChecksum = req.query.generateChecksum === 'true';
-      const includeScreenshots = req.query.includeScreenshots === 'true';
-
-      // Create export data from project
-      const exportData = createTemplateExport(
-        project.name,
-        project.description || "",
-        project.data,
-        {
-          category: "custom",
-          difficulty: "easy",
-          language: "ru",
-          tags: ["custom", "export"],
-          complexity: 1,
-          estimatedTime: 5,
-          requiresToken: true,
-        },
-        "User",
-        {
-          includeDocumentation,
-          generateChecksum,
-          includeScreenshots,
-        }
-      );
-
-      // Generate filename
-      const fileName = createTemplateFileName(project.name);
-
-      // Return export data with filename
-      res.json({
-        filename: fileName,
-        data: exportData
-      });
-    } catch (error) {
-      console.error('Project export error:', error);
-      res.status(500).json({ message: "Failed to export project" });
-    }
-  });
-
-  // Import template from file
-  app.post("/api/templates/import", async (req, res) => {
-    try {
-      let importData = req.body;
-      
-      // Handle exported file format that wraps template data in a "data" field
-      if (importData.filename && importData.data) {
-        importData = importData.data;
-      }
-      
-      // Validate the imported data using new validation function
-      const validationResult = validateTemplateImport(importData);
-      
-      if (!validationResult.isValid) {
-        return res.status(400).json({ 
-          message: "Invalid template format", 
-          errors: validationResult.errors,
-          warnings: validationResult.warnings,
-          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
-        });
-      }
-
-      const templateData = validationResult.template!;
-
-      // Create template in database
-      const newTemplate = await storage.createBotTemplate({
-        name: templateData.name,
-        description: templateData.description || "",
-        data: templateData.botData,
-        category: templateData.metadata.category,
-        tags: templateData.metadata.tags,
-        isPublic: 0, // Imported templates are private by default
-        difficulty: templateData.metadata.difficulty,
-        authorId: null,
-        authorName: templateData.metadata.author || "Imported",
-        version: templateData.metadata.version,
-        previewImage: templateData.metadata.previewImage || null,
-        featured: 0,
-        language: templateData.metadata.language,
-        requiresToken: templateData.metadata.requiresToken ? 1 : 0,
-        complexity: templateData.metadata.complexity,
-        estimatedTime: templateData.metadata.estimatedTime,
-      });
-
-      res.status(201).json({
-        message: "Template imported successfully",
-        template: newTemplate,
-        warnings: validationResult.warnings,
-        importInfo: {
-          originalAuthor: templateData.metadata.author,
-          exportedAt: templateData.metadata.exportedAt,
-          formatVersion: templateData.exportInfo.formatVersion,
-          fileSize: templateData.exportInfo.fileSize,
-          hasAdvancedFeatures: templateData.metadata.hasAdvancedFeatures,
-          nodeCount: templateData.metadata.nodeCount,
-          connectionCount: templateData.metadata.connectionCount,
-        }
-      });
-    } catch (error) {
-      console.error('Template import error:', error);
-      res.status(500).json({ message: "Failed to import template" });
-    }
-  });
-
-  // Validate template file before import
-  app.post("/api/templates/validate", async (req, res) => {
-    try {
-      let validationData = req.body;
-      
-      // Handle exported file format that wraps template data in a "data" field
-      if (validationData.filename && validationData.data) {
-        validationData = validationData.data;
-      }
-      
-      const validationResult = validateTemplateImport(validationData);
-      res.json(validationResult);
-    } catch (error) {
-      console.error('Template validation error:', error);
-      res.status(500).json({
-        isValid: false,
-        errors: ["Ошибка валидации на сервере"],
-        warnings: []
-      });
-    }
-  });
-
-  // Import template as new project
-  app.post("/api/projects/import", async (req, res) => {
-    try {
-      let importData = req.body;
-      
-      // Handle exported file format that wraps template data in a "data" field
-      if (importData.filename && importData.data) {
-        importData = importData.data;
-      }
-      
-      // Validate the imported data using new validation function
-      const validationResult = validateTemplateImport(importData);
-      
-      if (!validationResult.isValid) {
-        return res.status(400).json({ 
-          message: "Invalid template format", 
-          errors: validationResult.errors,
-          warnings: validationResult.warnings,
-          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
-        });
-      }
-
-      const templateData = validationResult.template!;
-
-      // Create new project from template
-      const newProject = await storage.createBotProject({
-        name: `${templateData.name} (Imported)`,
-        description: templateData.description || "",
-        data: templateData.botData,
-      });
-
-      res.status(201).json({
-        message: "Project imported successfully",
-        project: newProject,
-        warnings: validationResult.warnings,
-        importInfo: {
-          originalName: templateData.name,
-          originalAuthor: templateData.metadata.author,
-          exportedAt: templateData.metadata.exportedAt,
-          nodeCount: templateData.metadata.nodeCount,
-          connectionCount: templateData.metadata.connectionCount,
-          hasAdvancedFeatures: templateData.metadata.hasAdvancedFeatures,
-        }
-      });
-    } catch (error) {
-      console.error('Project import error:', error);
-      res.status(500).json({ message: "Failed to import project" });
     }
   });
 
