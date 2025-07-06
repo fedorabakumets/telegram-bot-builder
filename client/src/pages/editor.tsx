@@ -185,7 +185,8 @@ export default function Editor() {
             requiresToken: 1,
             language: 'ru',
             complexity: template.complexity || 1,
-            estimatedTime: template.estimatedTime || 5
+            estimatedTime: template.estimatedTime || 5,
+            version: template.version || '1.0.0'
           };
           
           console.log('Отправляем данные для сохранения шаблона:', JSON.stringify(saveData, null, 2));

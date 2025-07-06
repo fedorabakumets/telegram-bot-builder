@@ -166,23 +166,40 @@ export default function TemplatesPage() {
       // Если это системный шаблон (не пользовательский), сохраняем его как пользовательский
       if (template.category !== 'custom') {
         try {
-          await apiRequest('POST', '/api/templates', {
+          const saveData = {
             name: template.name,
             description: template.description || `Сохранен из библиотеки: ${template.name}`,
             category: 'custom',
             data: template.data,
             difficulty: template.difficulty || 'easy',
             tags: template.tags || [],
-            isPublic: false
-          });
+            isPublic: 0, // 0 для false, 1 для true
+            language: template.language || 'ru',
+            requiresToken: template.requiresToken || 0,
+            complexity: template.complexity || 1,
+            estimatedTime: template.estimatedTime || 5,
+            version: template.version || '1.0.0'
+          };
+          
+          console.log('Отправляем данные для сохранения шаблона:', saveData);
+          
+          const result = await apiRequest('POST', '/api/templates', saveData);
+          
+          console.log('Результат сохранения шаблона:', result);
           
           // Инвалидируем кэш пользовательских шаблонов
           queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
           
           console.log('Шаблон сохранен в пользовательских');
         } catch (saveError) {
           console.error('Ошибка сохранения шаблона в пользовательских:', saveError);
-          // Не показываем ошибку пользователю, это не критично
+          // Показываем ошибку пользователю, так как это важно
+          toast({
+            title: 'Предупреждение',
+            description: 'Шаблон применен, но не сохранен в личных шаблонах',
+            variant: 'destructive',
+          });
         }
       }
       

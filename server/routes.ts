@@ -811,14 +811,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new template
   app.post("/api/templates", async (req, res) => {
     try {
+      console.log('Получены данные для создания шаблона:', JSON.stringify(req.body, null, 2));
       const validatedData = insertBotTemplateSchema.parse(req.body);
+      console.log('Данные прошли валидацию:', JSON.stringify(validatedData, null, 2));
       const template = await storage.createBotTemplate(validatedData);
+      console.log('Шаблон создан:', template);
       res.status(201).json(template);
     } catch (error) {
+      console.error('Ошибка создания шаблона:', error);
       if (error instanceof z.ZodError) {
+        console.error('Ошибки валидации:', error.errors);
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create template" });
+      res.status(500).json({ message: "Failed to create template", error: error.message });
     }
   });
 
