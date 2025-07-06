@@ -222,7 +222,7 @@ export default function Editor() {
         {currentTab === 'editor' ? (
           <ResizablePanelGroup direction="horizontal" className="h-full">
             <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-              <ComponentsSidebar onComponentDrag={handleComponentDrag} />
+              <ComponentsSidebar onComponentDrag={handleComponentDrag} onLoadTemplate={handleLoadTemplate} />
             </ResizablePanel>
             
             <ResizableHandle withHandle />
@@ -232,7 +232,7 @@ export default function Editor() {
                 nodes={nodes}
                 connections={connections}
                 selectedNodeId={selectedNodeId}
-                selectedConnectionId={selectedConnectionId}
+                selectedConnectionId={selectedConnectionId || undefined}
                 onNodeSelect={setSelectedNodeId}
                 onNodeAdd={addNode}
                 onNodeDelete={deleteNode}
@@ -277,7 +277,7 @@ export default function Editor() {
                     onConnectionAdd={addConnection}
                     onNodesChange={updateNodes}
                     autoButtonCreation={autoButtonCreation}
-                    selectedNodeId={selectedNodeId}
+                    selectedNodeId={selectedNodeId || undefined}
                   />
                   
                   <EnhancedConnectionControls
@@ -285,7 +285,7 @@ export default function Editor() {
                     connections={connections}
                     onConnectionsChange={handleConnectionsChange}
                     onNodesChange={updateNodes}
-                    selectedConnection={selectedConnection}
+                    selectedConnection={selectedConnection || undefined}
                     onConnectionSelect={handleConnectionSelect}
                     autoButtonCreation={autoButtonCreation}
                     onAutoButtonCreationChange={setAutoButtonCreation}
@@ -303,7 +303,7 @@ export default function Editor() {
                     onConnectionSelect={handleConnectionSelect}
                     onConnectionDelete={handleConnectionDelete}
                     onConnectionEdit={handleConnectionEdit}
-                    selectedConnectionId={selectedConnectionId}
+                    selectedConnectionId={selectedConnectionId || undefined}
                     showLabels={true}
                     showMetrics={true}
                     interactive={true}

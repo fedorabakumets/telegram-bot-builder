@@ -1,8 +1,10 @@
 import { ComponentDefinition } from '@/types/bot';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface ComponentsSidebarProps {
   onComponentDrag: (component: ComponentDefinition) => void;
+  onLoadTemplate?: () => void;
 }
 
 const components: ComponentDefinition[] = [
@@ -248,10 +250,20 @@ const componentCategories = [
   }
 ];
 
-export function ComponentsSidebar({ onComponentDrag }: ComponentsSidebarProps) {
+export function ComponentsSidebar({ onComponentDrag, onLoadTemplate }: ComponentsSidebarProps) {
+  const [currentTab, setCurrentTab] = useState<'elements' | 'templates'>('elements');
+  
   const handleDragStart = (e: React.DragEvent, component: ComponentDefinition) => {
     e.dataTransfer.setData('application/json', JSON.stringify(component));
     onComponentDrag(component);
+  };
+
+  const handleTemplatesClick = () => {
+    setCurrentTab('templates');
+    if (onLoadTemplate) {
+      console.log('Templates button clicked in sidebar');
+      onLoadTemplate();
+    }
   };
 
   return (
@@ -260,10 +272,24 @@ export function ComponentsSidebar({ onComponentDrag }: ComponentsSidebarProps) {
       <div className="p-4 border-b border-border">
         <h2 className="text-sm font-semibold text-foreground mb-3">Компоненты</h2>
         <div className="flex space-x-1 bg-muted rounded-lg p-1">
-          <button className="flex-1 px-3 py-1.5 text-xs font-medium bg-background text-foreground rounded-md shadow-sm">
+          <button 
+            onClick={() => setCurrentTab('elements')}
+            className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              currentTab === 'elements' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
             Элементы
           </button>
-          <button className="flex-1 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
+          <button 
+            onClick={handleTemplatesClick}
+            className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              currentTab === 'templates' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
             Шаблоны
           </button>
         </div>
