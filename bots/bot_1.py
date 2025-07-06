@@ -22,6 +22,12 @@ async def start_handler(message: types.Message):
     # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
+@dp.message()
+async def message_hPpcY9U6tXzQUtlnglr6j_handler(message: types.Message):
+    text = "Новое сообщение"
+    # Удаляем предыдущие reply клавиатуры если они были
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+
 
 # Обработчики синонимов команд
 @dp.message(lambda message: message.text and message.text.lower() == "старт")

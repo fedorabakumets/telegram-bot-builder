@@ -210,19 +210,62 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
 
   // Generate callback handlers for inline buttons
   const inlineNodes = nodes.filter(node => 
-    node.data.keyboardType === 'inline' && node.data.buttons.length > 0
+    (node.data.keyboardType === 'inline' || node.data.keyboardType === 'combined') && 
+    node.data.inlineButtons && node.data.inlineButtons.length > 0
   );
 
   if (inlineNodes.length > 0) {
     code += '\n# Обработчики inline кнопок\n';
     inlineNodes.forEach(node => {
-      node.data.buttons.forEach(button => {
+      node.data.inlineButtons.forEach(button => {
+        const callbackData = button.target || button.text;
+        const handlerId = button.id.replace(/[^a-zA-Z0-9_]/g, '_');
+        
         if (button.action === 'goto') {
-          code += `\n@dp.callback_query(lambda c: c.data == "${button.target || button.text}")\n`;
-          code += `async def handle_${button.id}(callback_query: types.CallbackQuery):\n`;
+          // Find target node
+          const targetNode = nodes.find(n => n.id === button.target);
+          
+          code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
+          code += `async def handle_inline_${handlerId}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
-          code += `    # TODO: Implement navigation to ${button.target}\n`;
-          code += `    await callback_query.message.answer("Переход к: ${button.text}")\n`;
+          
+          if (targetNode) {
+            // Navigate to target node
+            if (targetNode.type === 'message') {
+              code += `    text = "${targetNode.data.messageText || 'Сообщение'}"\n`;
+              code += '    await callback_query.message.answer(text)\n';
+            } else if (targetNode.type === 'photo') {
+              code += `    text = "${targetNode.data.messageText || ''}"\n`;
+              code += `    photo_url = "${targetNode.data.imageUrl || ''}"\n`;
+              code += '    if photo_url:\n';
+              code += '        await send_photo_safe(callback_query.message, photo_url, text)\n';
+              code += '    else:\n';
+              code += '        await callback_query.message.answer(text or "Фото недоступно")\n';
+            } else {
+              code += `    await callback_query.message.answer("Переход к: ${button.text}")\n`;
+            }
+          } else {
+            code += `    await callback_query.message.answer("Переход к: ${button.text}")\n`;
+          }
+        } else if (button.action === 'command') {
+          code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
+          code += `async def handle_inline_${handlerId}(callback_query: types.CallbackQuery):\n`;
+          code += '    await callback_query.answer()\n';
+          code += `    # Выполняем команду: ${button.target}\n`;
+          
+          // Find command handler
+          const commandNode = nodes.find(n => n.data.command === button.target);
+          if (commandNode && commandNode.type === 'start') {
+            code += '    await start_handler(callback_query.message)\n';
+          } else if (commandNode) {
+            const funcName = (button.target || '').replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
+            code += `    await ${funcName}_handler(callback_query.message)\n`;
+          } else {
+            code += `    await callback_query.message.answer("Команда: ${button.target}")\n`;
+          }
+        } else if (button.action === 'url') {
+          // URL buttons don't need callback handlers as they open directly
+          return;
         }
       });
     });
@@ -506,8 +549,8 @@ function generateKeyboard(node: Node): string {
       if (shouldSeparateMessages) {
         code += `    await message.answer("${keyboardTitle}", reply_markup=inline_keyboard)\n`;
       } else {
-        code += '    # Отправляем inline кнопки в том же сообщении\n';
-        code += `    await message.edit_reply_markup(reply_markup=inline_keyboard)\n`;
+        code += '    # Отправляем inline кнопки отдельным сообщением\n';
+        code += `    await message.answer("${keyboardTitle}", reply_markup=inline_keyboard)\n`;
       }
       
     } else if (hasReplyButtons) {
