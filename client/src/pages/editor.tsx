@@ -174,7 +174,7 @@ export default function Editor() {
       // Если это системный шаблон (не пользовательский), сохраняем его как пользовательский
       if (template.category !== 'custom') {
         try {
-          await apiRequest('POST', '/api/templates', {
+          const saveData = {
             name: template.name,
             description: template.description || `Сохранен из библиотеки: ${template.name}`,
             category: 'custom',
@@ -186,7 +186,11 @@ export default function Editor() {
             language: 'ru',
             complexity: template.complexity || 1,
             estimatedTime: template.estimatedTime || 5
-          });
+          };
+          
+          console.log('Отправляем данные для сохранения шаблона:', JSON.stringify(saveData, null, 2));
+          
+          await apiRequest('POST', '/api/templates', saveData);
           
           // Инвалидируем кэш пользовательских шаблонов
           queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
