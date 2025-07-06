@@ -85,7 +85,7 @@ export function AutoSaveIndicator({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div 
+          <span 
             className={`
               flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium
               transition-all duration-200 cursor-default rounded-md border
@@ -95,7 +95,7 @@ export function AutoSaveIndicator({
           >
             <StatusIcon size={12} className={isSaving ? 'opacity-60' : ''} />
             <span className="hidden sm:inline">{status.text}</span>
-          </div>
+          </span>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">
           <div className="space-y-1">
