@@ -189,7 +189,7 @@ export function Header({
 
         {/* Индикатор истории - только в режиме редактора */}
         {currentTab === 'editor' && onUndo && onRedo && (
-          <div className="flex items-center">
+          <>
             <div className="h-4 w-px bg-border mx-1"></div>
             <HistoryIndicator
               canUndo={canUndo}
@@ -197,7 +197,7 @@ export function Header({
               onUndo={onUndo}
               onRedo={onRedo}
             />
-          </div>
+          </>
         )}
         
         <Button 
