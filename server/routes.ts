@@ -331,6 +331,40 @@ async def ${functionName}_handler(message: types.Message):
     }
   });
 
+  // Generate synonym handlers for commands
+  const nodesWithSynonyms = nodes.filter((node: any) => 
+    (node.type === 'start' || node.type === 'command') && 
+    node.data.synonyms && 
+    node.data.synonyms.length > 0
+  );
+
+  if (nodesWithSynonyms.length > 0) {
+    code += `
+
+# Обработчики синонимов команд`;
+    nodesWithSynonyms.forEach((node: any) => {
+      if (node.data.synonyms) {
+        node.data.synonyms.forEach((synonym: string) => {
+          const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+          const originalCommand = node.data.command || (node.type === 'start' ? '/start' : '/help');
+          const functionName = originalCommand.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
+          
+          code += `
+@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")
+async def ${functionName}_synonym_${sanitizedSynonym}_handler(message: types.Message):
+    # Синоним для команды ${originalCommand}
+`;
+          
+          if (node.type === 'start') {
+            code += '    await start_handler(message)';
+          } else {
+            code += `    await ${functionName}_handler(message)`;
+          }
+        });
+      }
+    });
+  }
+
   code += `
 
 # Запуск бота
@@ -778,3 +812,4 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   return httpServer;
 }
+
