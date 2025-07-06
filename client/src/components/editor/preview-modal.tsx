@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Node } from '@/types/bot';
+import { Node } from '@shared/schema';
 import { parseCommandFromText } from '@/lib/commands';
 import { useState, useRef, useEffect } from 'react';
 
@@ -219,8 +219,19 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
         handleUserMessage(userInput, commandFromText, 'command');
       }
     } else {
-      // Regular text input
-      handleUserMessage(userInput);
+      // Check if input matches any node's synonyms
+      const synonymNode = nodes.find(node => 
+        node.data.synonyms && 
+        Array.isArray(node.data.synonyms) &&
+        node.data.synonyms.includes(userInput.toLowerCase())
+      );
+      
+      if (synonymNode) {
+        handleUserMessage(userInput, synonymNode.id, 'goto');
+      } else {
+        // Regular text input
+        handleUserMessage(userInput);
+      }
     }
     
     setTextInput('');
