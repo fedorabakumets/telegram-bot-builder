@@ -34,6 +34,10 @@ async def message_hPpcY9U6tXzQUtlnglr6j_handler(message: types.Message):
 async def start_synonym_старт_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
+@dp.message(lambda message: message.text and message.text.lower() == "начать")
+async def start_synonym_начать_handler(message: types.Message):
+    # Синоним для команды /start
+    await start_handler(message)
 
 # Запуск бота
 async def main():
