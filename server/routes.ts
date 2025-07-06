@@ -56,19 +56,34 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
     // Создаем файл бота
     const filePath = createBotFile(botCode, projectId);
     
-    // Запускаем бота
+    // Запускаем бота с правильной обработкой кодировки
     const process = spawn('python', [filePath], {
       stdio: ['pipe', 'pipe', 'pipe'],
-      detached: false
+      detached: false,
+      env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
     });
 
-    // Логируем вывод процесса
+    // Устанавливаем кодировку для предотвращения проблем с выводом
+    process.stdout?.setEncoding('utf8');
+    process.stderr?.setEncoding('utf8');
+
+    // Логируем вывод процесса с защитой от некорректных символов
     process.stdout?.on('data', (data) => {
-      console.log(`Бот ${projectId} stdout:`, data.toString());
+      try {
+        const output = data.toString().replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+        console.log(`Бот ${projectId} stdout:`, output);
+      } catch (err) {
+        console.log(`Бот ${projectId} stdout (binary):`, data);
+      }
     });
 
     process.stderr?.on('data', (data) => {
-      console.error(`Бот ${projectId} stderr:`, data.toString());
+      try {
+        const output = data.toString().replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+        console.error(`Бот ${projectId} stderr:`, output);
+      } catch (err) {
+        console.error(`Бот ${projectId} stderr (binary):`, data);
+      }
     });
 
     const processId = process.pid?.toString();
@@ -129,10 +144,10 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
 // Функция для остановки бота
 async function stopBot(projectId: number): Promise<{ success: boolean; error?: string }> {
   try {
-    const process = botProcesses.get(projectId);
+    const botProcess = botProcesses.get(projectId);
     
     // Если процесс не найден в памяти, но в базе есть запись - исправляем несоответствие
-    if (!process) {
+    if (!botProcess) {
       const instance = await storage.getBotInstance(projectId);
       if (instance && instance.status === 'running') {
         console.log(`Процесс бота ${projectId} не найден в памяти, но помечен как запущенный в базе. Исправляем состояние.`);
@@ -142,9 +157,23 @@ async function stopBot(projectId: number): Promise<{ success: boolean; error?: s
       return { success: false, error: "Процесс бота не найден" };
     }
 
-    process.kill('SIGTERM');
-    botProcesses.delete(projectId);
+    // Корректно завершаем процесс бота с дополнительной обработкой
+    try {
+      // Пытаемся мягко завершить процесс
+      botProcess.kill('SIGTERM');
+      
+      // Ждем некоторое время для мягкого завершения
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Если процесс все еще активен, принудительно завершаем
+      if (!botProcess.killed) {
+        botProcess.kill('SIGKILL');
+      }
+    } catch (killError) {
+      console.warn(`Предупреждение при завершении процесса бота ${projectId}:`, killError);
+    }
     
+    botProcesses.delete(projectId);
     await storage.stopBotInstance(projectId);
     
     return { success: true };
@@ -1113,7 +1142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Ошибки валидации:', error.errors);
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create template", error: error.message });
+      res.status(500).json({ message: "Failed to create template", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
