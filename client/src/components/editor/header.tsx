@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { FolderOpen, Bookmark, Save, Download, User, Send } from 'lucide-react';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -81,7 +82,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             onClick={onLoadTemplate}
             className="flex items-center space-x-2"
           >
-            <i className="fas fa-folder-open text-muted-foreground"></i>
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
             <span>Шаблоны</span>
           </Button>
         )}
@@ -93,7 +94,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             onClick={onSaveAsTemplate}
             className="flex items-center space-x-2"
           >
-            <i className="fas fa-bookmark text-muted-foreground"></i>
+            <Bookmark className="h-4 w-4 text-muted-foreground" />
             <span>Сохранить шаблон</span>
           </Button>
         )}
@@ -105,7 +106,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
           disabled={isSaving}
           className="flex items-center space-x-2"
         >
-          <i className={`fas ${isSaving ? 'fa-spinner fa-spin' : 'fa-save'} text-muted-foreground`}></i>
+          <Save className={`h-4 w-4 text-muted-foreground ${isSaving ? 'animate-spin' : ''}`} />
           <span>{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
         </Button>
         
