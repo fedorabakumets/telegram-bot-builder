@@ -23,9 +23,16 @@ async def message_2mpSTHjy7JRIfiUMO2bT5_handler(message: types.Message):
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="Новая кнопка"))
     keyboard = builder.as_markup()
-    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-    await message.answer("Выберите действие:", reply_markup=keyboard)
+    
+    # Отправляем сообщение с inline кнопками
+    await message.answer(text, reply_markup=keyboard)
+
+
+# Обработчик для inline кнопки
+@dp.callback_query(lambda c: c.data == "Новая кнопка")
+async def handle_new_button(callback_query: types.CallbackQuery):
+    await callback_query.answer("Кнопка нажата!")
+    await callback_query.message.answer("Вы нажали на новую кнопку!")
 
 
 # Запуск бота
