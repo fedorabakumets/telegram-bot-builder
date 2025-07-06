@@ -17,10 +17,13 @@ dp = Dispatcher()
 
 
 @dp.message()
-async def message_W8GeqSgHjgURSkhUinrbf_handler(message: types.Message):
+async def message_DJk66HmxQlKpTQ9OEULOD_handler(message: types.Message):
     text = "Новое сообщение"
-    # Удаляем предыдущие reply клавиатуры если они были
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="Новая_кнопка"))
+    keyboard = builder.as_markup()
+    await message.answer(text, reply_markup=keyboard)
 
 
 # Запуск бота
