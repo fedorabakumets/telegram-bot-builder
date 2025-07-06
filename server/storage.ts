@@ -9,6 +9,8 @@ import {
   type BotTemplate,
   type InsertBotTemplate
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
 
 export interface IStorage {
   getBotProject(id: number): Promise<BotProject | undefined>;
@@ -42,7 +44,8 @@ export interface IStorage {
   searchTemplates(query: string): Promise<BotTemplate[]>;
 }
 
-export class MemStorage implements IStorage {
+// Legacy Memory Storage - kept for reference
+class MemStorage implements IStorage {
   private projects: Map<number, BotProject>;
   private instances: Map<number, BotInstance>;
   private templates: Map<number, BotTemplate>;
@@ -371,4 +374,221 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DatabaseStorage implements IStorage {
+  // Bot Projects
+  async getBotProject(id: number): Promise<BotProject | undefined> {
+    const [project] = await db.select().from(botProjects).where(eq(botProjects.id, id));
+    return project || undefined;
+  }
+
+  async getAllBotProjects(): Promise<BotProject[]> {
+    return await db.select().from(botProjects).orderBy(desc(botProjects.updatedAt));
+  }
+
+  async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
+    const [project] = await db
+      .insert(botProjects)
+      .values(insertProject)
+      .returning();
+    return project;
+  }
+
+  async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
+    const [project] = await db
+      .update(botProjects)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(botProjects.id, id))
+      .returning();
+    return project || undefined;
+  }
+
+  async deleteBotProject(id: number): Promise<boolean> {
+    const result = await db.delete(botProjects).where(eq(botProjects.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Bot Instances
+  async getBotInstance(projectId: number): Promise<BotInstance | undefined> {
+    const [instance] = await db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
+    return instance || undefined;
+  }
+
+  async getAllBotInstances(): Promise<BotInstance[]> {
+    return await db.select().from(botInstances).orderBy(desc(botInstances.startedAt));
+  }
+
+  async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
+    const [instance] = await db
+      .insert(botInstances)
+      .values(insertInstance)
+      .returning();
+    return instance;
+  }
+
+  async updateBotInstance(id: number, updateData: Partial<InsertBotInstance>): Promise<BotInstance | undefined> {
+    const [instance] = await db
+      .update(botInstances)
+      .set(updateData)
+      .where(eq(botInstances.id, id))
+      .returning();
+    return instance || undefined;
+  }
+
+  async deleteBotInstance(id: number): Promise<boolean> {
+    const result = await db.delete(botInstances).where(eq(botInstances.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async stopBotInstance(projectId: number): Promise<boolean> {
+    const result = await db
+      .update(botInstances)
+      .set({ status: 'stopped', stoppedAt: new Date() })
+      .where(eq(botInstances.projectId, projectId));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Bot Templates
+  async getBotTemplate(id: number): Promise<BotTemplate | undefined> {
+    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    return template || undefined;
+  }
+
+  async getAllBotTemplates(): Promise<BotTemplate[]> {
+    return await db.select().from(botTemplates).orderBy(desc(botTemplates.createdAt));
+  }
+
+  async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
+    const [template] = await db
+      .insert(botTemplates)
+      .values(insertTemplate)
+      .returning();
+    return template;
+  }
+
+  async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
+    const [template] = await db
+      .update(botTemplates)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(botTemplates.id, id))
+      .returning();
+    return template || undefined;
+  }
+
+  async deleteBotTemplate(id: number): Promise<boolean> {
+    const result = await db.delete(botTemplates).where(eq(botTemplates.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async incrementTemplateUseCount(id: number): Promise<boolean> {
+    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    if (!template) return false;
+    
+    const result = await db
+      .update(botTemplates)
+      .set({ 
+        useCount: (template.useCount || 0) + 1,
+        lastUsedAt: new Date()
+      })
+      .where(eq(botTemplates.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async incrementTemplateViewCount(id: number): Promise<boolean> {
+    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    if (!template) return false;
+    
+    const result = await db
+      .update(botTemplates)
+      .set({ 
+        viewCount: (template.viewCount || 0) + 1
+      })
+      .where(eq(botTemplates.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async incrementTemplateDownloadCount(id: number): Promise<boolean> {
+    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    if (!template) return false;
+    
+    const result = await db
+      .update(botTemplates)
+      .set({ 
+        downloadCount: (template.downloadCount || 0) + 1
+      })
+      .where(eq(botTemplates.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async toggleTemplateLike(id: number, liked: boolean): Promise<boolean> {
+    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    if (!template) return false;
+    
+    const current = template.likeCount || 0;
+    const newCount = liked ? current + 1 : Math.max(0, current - 1);
+    
+    const result = await db
+      .update(botTemplates)
+      .set({ 
+        likeCount: newCount
+      })
+      .where(eq(botTemplates.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean> {
+    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    if (!template) return false;
+    
+    const current = template.bookmarkCount || 0;
+    const newCount = bookmarked ? current + 1 : Math.max(0, current - 1);
+    
+    const result = await db
+      .update(botTemplates)
+      .set({ 
+        bookmarkCount: newCount
+      })
+      .where(eq(botTemplates.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async rateTemplate(id: number, rating: number): Promise<boolean> {
+    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    if (!template) return false;
+
+    const currentRating = template.rating || 0;
+    const currentRatingCount = template.ratingCount || 0;
+    const newRatingCount = currentRatingCount + 1;
+    const newRating = Math.round(((currentRating * currentRatingCount) + rating) / newRatingCount);
+
+    const result = await db
+      .update(botTemplates)
+      .set({ 
+        rating: newRating,
+        ratingCount: newRatingCount,
+        updatedAt: new Date()
+      })
+      .where(eq(botTemplates.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async getFeaturedTemplates(): Promise<BotTemplate[]> {
+    return await db.select().from(botTemplates).where(eq(botTemplates.featured, 1)).orderBy(desc(botTemplates.rating));
+  }
+
+  async getTemplatesByCategory(category: string): Promise<BotTemplate[]> {
+    return await db.select().from(botTemplates).where(eq(botTemplates.category, category)).orderBy(desc(botTemplates.createdAt));
+  }
+
+  async searchTemplates(query: string): Promise<BotTemplate[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    return await db.select().from(botTemplates).where(
+      or(
+        ilike(botTemplates.name, searchTerm),
+        ilike(botTemplates.description, searchTerm)
+      )
+    ).orderBy(desc(botTemplates.rating));
+  }
+}
+
+export const storage = new DatabaseStorage();
