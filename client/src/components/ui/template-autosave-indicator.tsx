@@ -37,7 +37,7 @@ export function TemplateAutoSaveIndicator({
   const getStatus = () => {
     if (isCreating) {
       return {
-        icon: <Sparkles className="h-3 w-3 animate-pulse" />,
+        icon: <Sparkles className="h-3 w-3 opacity-70" />,
         text: 'Создание шаблона...',
         variant: 'secondary' as const,
         color: 'text-blue-600 dark:text-blue-400',
@@ -47,7 +47,7 @@ export function TemplateAutoSaveIndicator({
     
     if (isSaving) {
       return {
-        icon: <Loader2 className="h-3 w-3 animate-spin" />,
+        icon: <Loader2 className="h-3 w-3 opacity-70" />,
         text: templateId ? 'Обновление...' : 'Сохранение...',
         variant: 'secondary' as const,
         color: 'text-orange-600 dark:text-orange-400',
@@ -102,7 +102,7 @@ export function TemplateAutoSaveIndicator({
             <Badge 
               variant={status.variant}
               className={cn(
-                "flex items-center space-x-1.5 transition-all duration-300 hover:scale-105",
+                "flex items-center space-x-1.5 transition-all duration-300",
                 status.bgColor,
                 status.color,
                 "border-0 shadow-sm"
@@ -116,9 +116,9 @@ export function TemplateAutoSaveIndicator({
             {isCreating && (
               <div className="flex items-center space-x-1 text-xs text-muted-foreground">
                 <div className="flex space-x-1">
-                  <div className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                  <div className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                  <div className="w-1 h-1 bg-blue-400 rounded-full animate-bounce"></div>
+                  <div className="w-1 h-1 bg-blue-400 rounded-full opacity-40"></div>
+                  <div className="w-1 h-1 bg-blue-400 rounded-full opacity-60"></div>
+                  <div className="w-1 h-1 bg-blue-400 rounded-full opacity-80"></div>
                 </div>
               </div>
             )}
@@ -169,8 +169,8 @@ export function CompactTemplateAutoSaveIndicator({
   className
 }: Pick<TemplateAutoSaveIndicatorProps, 'isSaving' | 'isCreating' | 'hasUnsavedChanges' | 'lastSaved' | 'className'>) {
   const getStatusIcon = () => {
-    if (isCreating) return <Sparkles className="h-4 w-4 text-blue-500 animate-pulse" />;
-    if (isSaving) return <Loader2 className="h-4 w-4 text-orange-500 animate-spin" />;
+    if (isCreating) return <Sparkles className="h-4 w-4 text-blue-500 opacity-70" />;
+    if (isSaving) return <Loader2 className="h-4 w-4 text-orange-500 opacity-70" />;
     if (hasUnsavedChanges) return <AlertCircle className="h-4 w-4 text-amber-500" />;
     if (lastSaved) return <CheckCircle className="h-4 w-4 text-green-500" />;
     return <Save className="h-4 w-4 text-muted-foreground" />;

@@ -31,7 +31,7 @@ export function AutoSaveIndicator({
         icon: Save,
         text: 'Сохранение...',
         variant: 'default' as const,
-        className: 'text-primary animate-pulse'
+        className: 'text-primary opacity-70'
       };
     }
 
@@ -92,10 +92,9 @@ export function AutoSaveIndicator({
               flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium
               transition-all duration-200 cursor-default
               ${status.className}
-              ${isSaving ? 'scale-105' : ''}
             `}
           >
-            <StatusIcon size={12} className={isSaving ? 'animate-spin' : ''} />
+            <StatusIcon size={12} className={isSaving ? 'opacity-60' : ''} />
             <span className="hidden sm:inline">{status.text}</span>
           </Badge>
         </TooltipTrigger>
