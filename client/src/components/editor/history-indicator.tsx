@@ -18,7 +18,6 @@ export function HistoryIndicator({ canUndo, canRedo, onUndo, onRedo }: HistoryIn
         className="h-7 w-7 p-0"
         title="Отменить (Ctrl+Z)"
       >
-        <i className="fas fa-undo text-xs"></i>
       </Button>
       <Button
         variant="ghost"
@@ -28,7 +27,6 @@ export function HistoryIndicator({ canUndo, canRedo, onUndo, onRedo }: HistoryIn
         className="h-7 w-7 p-0"
         title="Повторить (Ctrl+Y)"
       >
-        <i className="fas fa-redo text-xs"></i>
       </Button>
     </>
   );
