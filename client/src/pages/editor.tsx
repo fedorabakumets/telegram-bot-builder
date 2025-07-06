@@ -9,7 +9,7 @@ import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
-import { TemplatesModal } from '@/components/editor/templates-modal';
+// import { TemplatesModal } from '@/components/editor/templates-modal'; // Заменено на отдельную страницу
 import { ConnectionManagerPanel } from '@/components/editor/connection-manager-panel';
 import { EnhancedConnectionControls } from '@/components/editor/enhanced-connection-controls';
 import { ConnectionVisualization } from '@/components/editor/connection-visualization';
@@ -27,7 +27,7 @@ export default function Editor() {
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
+  // const [showTemplates, setShowTemplates] = useState(false); // Заменено на переход к странице
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
@@ -146,9 +146,9 @@ export default function Editor() {
   }, []);
 
   const handleLoadTemplate = useCallback(() => {
-    console.log('Template button clicked, opening modal...');
-    setShowTemplates(true);
-  }, []);
+    console.log('Template button clicked, redirecting to templates page...');
+    setLocation('/templates');
+  }, [setLocation]);
 
   const handleSelectTemplate = useCallback((template: any) => {
     // Применяем шаблон к текущему проекту
@@ -402,11 +402,7 @@ export default function Editor() {
         projectName={currentProject.name}
       />
 
-      <TemplatesModal
-        isOpen={showTemplates}
-        onClose={() => setShowTemplates(false)}
-        onSelectTemplate={handleSelectTemplate}
-      />
+      {/* TemplatesModal заменено на отдельную страницу /templates */}
     </div>
   );
 }

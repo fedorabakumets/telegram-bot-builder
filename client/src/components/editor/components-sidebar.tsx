@@ -1,6 +1,7 @@
 import { ComponentDefinition } from '@shared/schema';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { Link } from 'wouter';
 
 interface ComponentsSidebarProps {
   onComponentDrag: (component: ComponentDefinition) => void;
@@ -258,13 +259,7 @@ export function ComponentsSidebar({ onComponentDrag, onLoadTemplate }: Component
     onComponentDrag(component);
   };
 
-  const handleTemplatesClick = () => {
-    setCurrentTab('templates');
-    if (onLoadTemplate) {
-      console.log('Templates button clicked in sidebar');
-      onLoadTemplate();
-    }
-  };
+  // handleTemplatesClick заменен на прямую ссылку к /templates
 
   return (
     <aside className="w-full h-full bg-background border-r border-border flex flex-col">
@@ -282,16 +277,13 @@ export function ComponentsSidebar({ onComponentDrag, onLoadTemplate }: Component
           >
             Элементы
           </button>
-          <button 
-            onClick={handleTemplatesClick}
-            className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              currentTab === 'templates' 
-                ? 'bg-background text-foreground shadow-sm' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Шаблоны
-          </button>
+          <Link href="/templates">
+            <button 
+              className="w-full flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
+            >
+              Шаблоны
+            </button>
+          </Link>
         </div>
       </div>
       
