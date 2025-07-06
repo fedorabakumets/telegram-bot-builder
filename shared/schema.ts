@@ -7,6 +7,7 @@ export const botProjects = pgTable("bot_projects", {
   name: text("name").notNull(),
   description: text("description"),
   data: jsonb("data").notNull(),
+  botToken: text("bot_token"), // Сохраненный токен бота
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -56,6 +57,9 @@ export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
   name: true,
   description: true,
   data: true,
+  botToken: true,
+}).extend({
+  botToken: z.string().nullish(),
 });
 
 export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({

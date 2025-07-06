@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Play, Square, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit } from 'lucide-react';
 
 interface BotControlProps {
   projectId: number;
@@ -31,8 +31,14 @@ interface BotStatusResponse {
   instance: BotInstance | null;
 }
 
+interface TokenInfo {
+  hasToken: boolean;
+  tokenPreview: string | null;
+}
+
 export function BotControl({ projectId, projectName }: BotControlProps) {
   const [token, setToken] = useState('');
+  const [useNewToken, setUseNewToken] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -40,6 +46,11 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const { data: botStatus, isLoading: isLoadingStatus } = useQuery<BotStatusResponse>({
     queryKey: [`/api/projects/${projectId}/bot`],
     refetchInterval: 2000, // Обновляем каждые 2 секунды
+  });
+
+  // Получаем информацию о сохраненном токене
+  const { data: tokenInfo } = useQuery<TokenInfo>({
+    queryKey: [`/api/projects/${projectId}/token`],
   });
 
   // Запуск бота
@@ -84,12 +95,37 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     },
   });
 
+  // Очистка сохраненного токена
+  const clearTokenMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('DELETE', `/api/projects/${projectId}/token`, {});
+    },
+    onSuccess: () => {
+      toast({
+        title: "Токен удален",
+        description: "Сохраненный токен бота удален.",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/token`] });
+      setUseNewToken(true);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Ошибка удаления",
+        description: error.message || "Не удалось удалить токен.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const isRunning = botStatus?.status === 'running';
   const isError = botStatus?.status === 'error';
   const isStopped = botStatus?.status === 'stopped' || !botStatus?.instance;
 
   const handleStart = () => {
-    if (!token.trim()) {
+    // Используем новый токен, если он введен, или полагаемся на сохраненный
+    const tokenToUse = useNewToken ? token.trim() : '';
+    
+    if (useNewToken && !tokenToUse) {
       toast({
         title: "Требуется токен",
         description: "Введите токен бота для запуска.",
@@ -97,7 +133,18 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       });
       return;
     }
-    startBotMutation.mutate({ token });
+    
+    if (!useNewToken && !tokenInfo?.hasToken) {
+      toast({
+        title: "Требуется токен",
+        description: "Токен не сохранен. Введите новый токен.",
+        variant: "destructive",
+      });
+      setUseNewToken(true);
+      return;
+    }
+    
+    startBotMutation.mutate({ token: tokenToUse });
   };
 
   const handleStop = () => {
@@ -151,26 +198,83 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         <Separator />
 
         <div className="space-y-3">
-          <div className="space-y-2">
-            <Label htmlFor="bot-token">Токен бота</Label>
-            <Input
-              id="bot-token"
-              type="password"
-              placeholder="Введите токен бота от @BotFather"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              disabled={isRunning}
-            />
-            <p className="text-xs text-muted-foreground">
-              Получите токен у @BotFather в Telegram
-            </p>
-          </div>
+          {/* Информация о сохраненном токене */}
+          {tokenInfo?.hasToken && !useNewToken && (
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                    Токен сохранен
+                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    {tokenInfo.tokenPreview}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setUseNewToken(true)}
+                    className="text-xs"
+                  >
+                    Изменить
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => clearTokenMutation.mutate()}
+                    disabled={clearTokenMutation.isPending}
+                    className="text-xs text-red-600 dark:text-red-400"
+                  >
+                    Удалить
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Ввод нового токена */}
+          {(useNewToken || !tokenInfo?.hasToken) && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="bot-token">Токен бота</Label>
+                {tokenInfo?.hasToken && useNewToken && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setUseNewToken(false);
+                      setToken('');
+                    }}
+                    className="text-xs h-auto p-1"
+                  >
+                    Использовать сохраненный
+                  </Button>
+                )}
+              </div>
+              <Input
+                id="bot-token"
+                type="password"
+                placeholder="Введите токен бота от @BotFather"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                disabled={isRunning}
+              />
+              <p className="text-xs text-muted-foreground">
+                Получите токен у @BotFather в Telegram. Токен будет сохранен для следующих запусков.
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-2">
             {isStopped || isError ? (
               <Button
                 onClick={handleStart}
-                disabled={startBotMutation.isPending || !token.trim()}
+                disabled={
+                  startBotMutation.isPending || 
+                  (useNewToken && !token.trim()) ||
+                  (!useNewToken && !tokenInfo?.hasToken)
+                }
                 className="flex items-center gap-2"
               >
                 <Play className="w-4 h-4" />

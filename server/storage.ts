@@ -99,6 +99,7 @@ class MemStorage implements IStorage {
         ],
         connections: []
       },
+      botToken: null,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -123,6 +124,7 @@ class MemStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
       description: insertProject.description || null,
+      botToken: insertProject.botToken ?? null,
     };
     this.projects.set(id, project);
     return project;

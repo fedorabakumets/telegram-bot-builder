@@ -607,7 +607,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.id);
       const { token } = req.body;
       
-      if (!token) {
+      // Проверяем проект
+      const project = await storage.getBotProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      // Используем переданный токен или сохраненный в проекте
+      const botToken = token || project.botToken;
+      if (!botToken) {
         return res.status(400).json({ message: "Bot token is required" });
       }
 
@@ -617,9 +625,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Bot is already running" });
       }
 
-      const result = await startBot(projectId, token);
+      // Сохраняем токен в проекте если он был передан
+      if (token && token !== project.botToken) {
+        await storage.updateBotProject(projectId, { botToken: token });
+      }
+
+      const result = await startBot(projectId, botToken);
       if (result.success) {
-        res.json({ message: "Bot started successfully", processId: result.processId });
+        res.json({ message: "Bot started successfully", processId: result.processId, tokenSaved: token && token !== project.botToken });
       } else {
         res.status(500).json({ message: result.error || "Failed to start bot" });
       }
@@ -641,6 +654,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       res.status(500).json({ message: "Failed to stop bot" });
+    }
+  });
+
+  // Get saved bot token
+  app.get("/api/projects/:id/token", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getBotProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      res.json({ 
+        hasToken: !!project.botToken, 
+        tokenPreview: project.botToken ? `${project.botToken.substring(0, 10)}...` : null 
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get token info" });
+    }
+  });
+
+  // Clear saved bot token
+  app.delete("/api/projects/:id/token", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.updateBotProject(projectId, { botToken: null });
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      res.json({ message: "Token cleared successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to clear token" });
     }
   });
 
