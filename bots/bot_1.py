@@ -17,20 +17,31 @@ dp = Dispatcher()
 
 
 @dp.message()
-async def message___HwJQRzWZX0MA6A3pkJN_handler(message: types.Message):
+async def message_w8AgXqwRcYMe3H1tbBBj__handler(message: types.Message):
     text = "Новое сообщение"
     
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="oIfC5qbiBxJhFu0mNd3Kq"))
-    keyboard = builder.as_markup()
-    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-    await message.answer("Выберите действие:", reply_markup=keyboard)
+    # Создаем комбинированную клавиатуру (Reply + Inline)
+    
+    # Сначала создаем reply клавиатуру
+    reply_builder = ReplyKeyboardBuilder()
+    reply_builder.add(KeyboardButton(text="Новая кнопка"))
+    reply_keyboard = reply_builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    # Отправляем основное сообщение с reply клавиатурой
+    sent_message = await message.answer(text, reply_markup=reply_keyboard)
+    
+    # Затем создаем inline клавиатуру
+    inline_builder = InlineKeyboardBuilder()
+    inline_builder.add(InlineKeyboardButton(text="Новая inline кнопка", callback_data="Новая inline кнопка"))
+    inline_keyboard = inline_builder.as_markup()
+    # Прикрепляем inline кнопки к тому же сообщению
+    await message.answer(text, reply_markup=inline_keyboard)
+    # Устанавливаем reply клавиатуру отдельным минимальным сообщением
+    await message.answer("⚡", reply_markup=reply_keyboard)
 
 
 # Обработчики inline кнопок
-@dp.callback_query(lambda c: c.data == "oIfC5qbiBxJhFu0mNd3Kq")
-async def handle_inline_krIgtlMpkWNeC884P640z(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "Новая inline кнопка")
+async def handle_inline_oEgUoL78pEz3fbJTTDy0X(callback_query: types.CallbackQuery):
     await callback_query.answer()
     await callback_query.message.answer("Переход к: Новая inline кнопка")
 
