@@ -60,6 +60,9 @@ export default function Editor() {
     addButton,
     updateButton,
     deleteButton,
+    addInlineButton,
+    updateInlineButton,
+    deleteInlineButton,
     updateNodes,
     setBotData,
     getBotData,
@@ -370,6 +373,9 @@ export default function Editor() {
                 onButtonAdd={addButton}
                 onButtonUpdate={updateButton}
                 onButtonDelete={deleteButton}
+                onInlineButtonAdd={addInlineButton}
+                onInlineButtonUpdate={updateInlineButton}
+                onInlineButtonDelete={deleteInlineButton}
               />
             </ResizablePanel>
           </ResizablePanelGroup>
