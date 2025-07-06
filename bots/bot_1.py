@@ -32,7 +32,8 @@ async def message_gAYXeIRJo2RqxUJj74MMZ_handler(message: types.Message):
     inline_builder = InlineKeyboardBuilder()
     inline_builder.add(InlineKeyboardButton(text="Новая inline кнопка", callback_data="Новая inline кнопка"))
     inline_keyboard = inline_builder.as_markup()
-    await message.answer("Дополнительные действия:", reply_markup=inline_keyboard)
+    # Отправляем inline кнопки минимальным сообщением для прикрепления к основному тексту
+    await message.answer("⚡", reply_markup=inline_keyboard, parse_mode="HTML")
 
 
 # Обработчики inline кнопок

@@ -546,12 +546,9 @@ function generateKeyboard(node: Node): string {
       const keyboardTitle = node.data.keyboardTitle || "Дополнительные действия:";
       const shouldSeparateMessages = node.data.separateMessages;
       
-      if (shouldSeparateMessages) {
-        code += `    await message.answer("${keyboardTitle}", reply_markup=inline_keyboard)\n`;
-      } else {
-        code += '    # Отправляем inline кнопки отдельным сообщением\n';
-        code += `    await message.answer("${keyboardTitle}", reply_markup=inline_keyboard)\n`;
-      }
+      // Отправляем inline кнопки минимальным сообщением для прикрепления к основному тексту
+      code += '    # Отправляем inline кнопки минимальным сообщением для прикрепления к основному тексту\n';
+      code += `    await message.answer("⚡", reply_markup=inline_keyboard, parse_mode="HTML")\n`;
       
     } else if (hasReplyButtons) {
       // Only reply buttons with enhanced layout

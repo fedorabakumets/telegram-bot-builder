@@ -329,7 +329,8 @@ async def start_handler(message: types.Message):
           });
           
           code += `    inline_keyboard = inline_builder.as_markup()
-    await message.answer("Дополнительные действия:", reply_markup=inline_keyboard)
+    # Отправляем inline кнопки минимальным сообщением для прикрепления к основному тексту
+    await message.answer("⚡", reply_markup=inline_keyboard, parse_mode="HTML")
 `;
         } else if (hasReplyButtons) {
           // Only reply buttons
@@ -447,7 +448,8 @@ async def ${functionName}_handler(message: types.Message):
           });
           
           code += `    inline_keyboard = inline_builder.as_markup()
-    await message.answer("Дополнительные действия:", reply_markup=inline_keyboard)
+    # Отправляем inline кнопки минимальным сообщением для прикрепления к основному тексту
+    await message.answer("⚡", reply_markup=inline_keyboard, parse_mode="HTML")
 `;
         } else if (hasReplyButtons) {
           // Only reply buttons
@@ -564,7 +566,8 @@ async def ${functionName}_handler(message: types.Message):
           });
           
           code += `    inline_keyboard = inline_builder.as_markup()
-    await message.answer("Дополнительные действия:", reply_markup=inline_keyboard)
+    # Отправляем inline кнопки минимальным сообщением для прикрепления к основному тексту
+    await message.answer("⚡", reply_markup=inline_keyboard, parse_mode="HTML")
 `;
         } else if (hasReplyButtons) {
           // Only reply buttons
