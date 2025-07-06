@@ -516,10 +516,7 @@ function generateKeyboard(node: Node): string {
       code += `        persistent=${node.data.persistentKeyboard ? 'True' : 'False'}\n`;
       code += `    )\n`;
       
-      // Send message with reply keyboard
-      code += '    await message.answer(text, reply_markup=reply_keyboard)\n';
-      
-      // Create inline keyboard
+      // Create inline keyboard first
       code += '    \n';
       code += '    # Создаем inline клавиатуру\n';
       code += '    inline_builder = InlineKeyboardBuilder()\n';
@@ -541,14 +538,15 @@ function generateKeyboard(node: Node): string {
       });
       
       code += '    inline_keyboard = inline_builder.as_markup()\n';
+      code += '    \n';
       
-      // Send inline keyboard message
-      const keyboardTitle = node.data.keyboardTitle || "Дополнительные действия:";
-      const shouldSeparateMessages = node.data.separateMessages;
+      // Send message with reply keyboard
+      code += '    # Отправляем основное сообщение с reply клавиатурой\n';
+      code += '    await message.answer(text, reply_markup=reply_keyboard)\n';
       
-      // Отправляем inline кнопки минимальным сообщением для прикрепления к основному тексту
-      code += '    # Отправляем inline кнопки минимальным сообщением для прикрепления к основному тексту\n';
-      code += `    await message.answer("⚡", reply_markup=inline_keyboard, parse_mode="HTML")\n`;
+      // Attach inline buttons to the same message with minimal indicator
+      code += '    # Прикрепляем inline кнопки к сообщению с минимальным индикатором\n';
+      code += `    await message.answer("⚡", reply_markup=inline_keyboard)\n`;
       
     } else if (hasReplyButtons) {
       // Only reply buttons with enhanced layout
