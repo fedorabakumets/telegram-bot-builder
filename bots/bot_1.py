@@ -16,16 +16,21 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-@dp.message()
-async def message_acxU5jzaotAmzbuy2Gm_H_handler(message: types.Message):
-    text = "Новое сообщение"
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+    text = "Привет! Добро пожаловать!"
     
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="Новая кнопка"))
-    keyboard = builder.as_markup()
-    # Отправляем сообщение с inline кнопками
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="Новая кнопка"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
     await message.answer(text, reply_markup=keyboard)
 
+
+# Обработчики синонимов команд
+@dp.message(lambda message: message.text and message.text.lower() == "")
+async def start_synonym__handler(message: types.Message):
+    # Синоним для команды /start
+    await start_handler(message)
 
 # Запуск бота
 async def main():
