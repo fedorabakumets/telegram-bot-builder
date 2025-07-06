@@ -18,7 +18,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   code += 'import asyncio\n';
   code += 'import logging\n';
-  code += 'from aiogram import Bot, Dispatcher, types\n';
+  code += 'from aiogram import Bot, Dispatcher, types, F\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
   code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
@@ -80,9 +80,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += generateStartHandler(node);
     } else if (node.type === "command") {
       code += generateCommandHandler(node);
-    } else if (node.type === "message") {
-      code += generateMessageHandler(node);
     }
+    // Note: Message nodes are handled via callback handlers, not as separate message handlers
   });
 
   // Generate synonym handlers for commands
@@ -217,6 +216,39 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     });
   }
 
+  // Generate handlers for contact and location buttons
+  const contactButtons = replyNodes.flatMap(node => 
+    node.data.buttons.filter(button => button.action === 'contact')
+  );
+  
+  const locationButtons = replyNodes.flatMap(node => 
+    node.data.buttons.filter(button => button.action === 'location')
+  );
+  
+  if (contactButtons.length > 0 || locationButtons.length > 0) {
+    code += '\n# Обработчики специальных кнопок\n';
+    
+    if (contactButtons.length > 0) {
+      code += '\n@dp.message(F.contact)\n';
+      code += 'async def handle_contact(message: types.Message):\n';
+      code += '    contact = message.contact\n';
+      code += '    text = f"Спасибо за контакт!\\n"\n';
+      code += '    text += f"Имя: {contact.first_name}\\n"\n';
+      code += '    text += f"Телефон: {contact.phone_number}"\n';
+      code += '    await message.answer(text)\n';
+    }
+    
+    if (locationButtons.length > 0) {
+      code += '\n@dp.message(F.location)\n';
+      code += 'async def handle_location(message: types.Message):\n';
+      code += '    location = message.location\n';
+      code += '    text = f"Спасибо за геолокацию!\\n"\n';
+      code += '    text += f"Широта: {location.latitude}\\n"\n';
+      code += '    text += f"Долгота: {location.longitude}"\n';
+      code += '    await message.answer(text)\n';
+    }
+  }
+
   code += '\n\n# Запуск бота\n';
   code += 'async def main():\n';
   if (menuCommands.length > 0) {
@@ -301,14 +333,7 @@ function generateCommandHandler(node: Node): string {
   return code + generateKeyboard(node);
 }
 
-function generateMessageHandler(node: Node): string {
-  const messageText = node.data.messageText || "Сообщение";
-  let code = `\n# Обработчик для сообщения: ${node.id}\n`;
-  code += `async def handle_${node.id}(message: types.Message):\n`;
-  code += `    text = "${messageText}"\n`;
-  
-  return code + generateKeyboard(node);
-}
+// generateMessageHandler removed - message nodes are handled via callback handlers only
 
 function generateSynonymHandler(node: Node, synonym: string): string {
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
@@ -335,7 +360,13 @@ function generateKeyboard(node: Node): string {
     code += '    \n';
     code += '    builder = ReplyKeyboardBuilder()\n';
     node.data.buttons.forEach(button => {
-      code += `    builder.add(KeyboardButton(text="${button.text}"))\n`;
+      if (button.action === "contact" && button.requestContact) {
+        code += `    builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+      } else if (button.action === "location" && button.requestLocation) {
+        code += `    builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+      } else {
+        code += `    builder.add(KeyboardButton(text="${button.text}"))\n`;
+      }
     });
     
     code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard}, one_time_keyboard=${node.data.oneTimeKeyboard})\n`;
@@ -353,7 +384,7 @@ function generateKeyboard(node: Node): string {
     });
     
     code += '    keyboard = builder.as_markup()\n';
-    code += '    # Отправляем сообщение с inline кнопками\n';
+    code += '    # Отправляем сообщение с прикрепленными inline кнопками\n';
     code += '    await message.answer(text, reply_markup=keyboard)\n';
   } else if (node.data.keyboardType === "none" || !node.data.keyboardType) {
     code += '    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)\n';

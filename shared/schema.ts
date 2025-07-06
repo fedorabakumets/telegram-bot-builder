@@ -144,9 +144,11 @@ export type BotToken = typeof botTokens.$inferSelect;
 export const buttonSchema = z.object({
   id: z.string(),
   text: z.string(),
-  action: z.enum(['goto', 'command', 'url']),
+  action: z.enum(['goto', 'command', 'url', 'contact', 'location']),
   target: z.string().optional(),
   url: z.string().optional(),
+  requestContact: z.boolean().optional(),
+  requestLocation: z.boolean().optional(),
 });
 
 export const nodeSchema = z.object({

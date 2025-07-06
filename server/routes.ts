@@ -563,7 +563,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
 
-      const pythonCode = generatePythonCode(project.data);
+      // Import the correct code generator from client lib
+      const { generatePythonCode } = await import("../client/src/lib/bot-generator.js");
+      const pythonCode = generatePythonCode(project.data as any, project.name);
       res.json({ code: pythonCode });
     } catch (error) {
       res.status(500).json({ message: "Failed to generate code" });
