@@ -179,8 +179,6 @@ export function PropertiesPanel({
       target: '',
       rowPosition: 0,
       style: 'default',
-      requiresAuth: false,
-      adminOnly: false,
       width: 'auto',
       icon: undefined,
       url: undefined
@@ -197,8 +195,6 @@ export function PropertiesPanel({
       target: '',
       rowPosition: 0,
       style: 'default',
-      requiresAuth: false,
-      adminOnly: false,
       width: 'auto',
       icon: undefined,
       url: undefined
@@ -824,43 +820,7 @@ export function PropertiesPanel({
                     </div>
                   </div>
                   
-                  {/* Requires Auth Setting */}
-                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-info/30 hover:bg-card/80 transition-all duration-200">
-                    <div className="flex-1">
-                      <Label className="text-xs font-medium text-foreground group-hover:text-info transition-colors duration-200">
-                        Требует авторизации
-                      </Label>
-                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Пользователь должен быть зарегистрирован
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <Switch
-                        checked={selectedNode.data.requiresAuth ?? false}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { requiresAuth: checked })}
-                        className="data-[state=checked]:bg-info"
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Admin Only Setting */}
-                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-destructive/30 hover:bg-card/80 transition-all duration-200">
-                    <div className="flex-1">
-                      <Label className="text-xs font-medium text-foreground group-hover:text-destructive transition-colors duration-200">
-                        Только для администраторов
-                      </Label>
-                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Команда доступна только админам
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <Switch
-                        checked={selectedNode.data.adminOnly ?? false}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
-                        className="data-[state=checked]:bg-destructive"
-                      />
-                    </div>
-                  </div>
+
                 </div>
               </AccordionContent>
             </AccordionItem>

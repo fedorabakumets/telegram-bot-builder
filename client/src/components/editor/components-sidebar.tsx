@@ -139,9 +139,7 @@ const components: ComponentDefinition[] = [
       oneTimeKeyboard: false,
       resizeKeyboard: true,
       showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
+      isPrivateOnly: false
     }
   },
   {
@@ -161,9 +159,7 @@ const components: ComponentDefinition[] = [
       oneTimeKeyboard: false,
       resizeKeyboard: true,
       showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
+      isPrivateOnly: false
     }
   },
   {
@@ -186,9 +182,7 @@ const components: ComponentDefinition[] = [
       oneTimeKeyboard: false,
       resizeKeyboard: true,
       showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
+      isPrivateOnly: false
     }
   },
   {
@@ -213,9 +207,7 @@ const components: ComponentDefinition[] = [
       oneTimeKeyboard: false,
       resizeKeyboard: true,
       showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
+      isPrivateOnly: false
     }
   },
   {
@@ -235,9 +227,7 @@ const components: ComponentDefinition[] = [
       oneTimeKeyboard: false,
       resizeKeyboard: true,
       showInMenu: true,
-      isPrivateOnly: false,
-      requiresAuth: false,
-      adminOnly: false
+      isPrivateOnly: false
     }
   }
 ];

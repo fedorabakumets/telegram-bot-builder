@@ -332,18 +332,6 @@ function generateStartHandler(node: Node): string {
     code += '        return\n';
   }
 
-  if (node.data.adminOnly) {
-    code += '    if not await is_admin(message.from_user.id):\n';
-    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
-    code += '        return\n';
-  }
-
-  if (node.data.requiresAuth) {
-    code += '    if not await check_auth(message.from_user.id):\n';
-    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
-    code += '        return\n';
-  }
-
   // Регистрируем пользователя
   code += '\n    # Регистрируем пользователя в системе\n';
   code += '    user_data[message.from_user.id] = {\n';
@@ -385,18 +373,6 @@ function generateCommandHandler(node: Node): string {
   if (node.data.isPrivateOnly) {
     code += '    if not await is_private_chat(message):\n';
     code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-    code += '        return\n';
-  }
-
-  if (node.data.adminOnly) {
-    code += '    if not await is_admin(message.from_user.id):\n';
-    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
-    code += '        return\n';
-  }
-
-  if (node.data.requiresAuth) {
-    code += '    if not await check_auth(message.from_user.id):\n';
-    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
     code += '        return\n';
   }
 
@@ -478,18 +454,6 @@ function generatePhotoHandler(node: Node): string {
   if (node.data.isPrivateOnly) {
     code += '    if not await is_private_chat(message):\n';
     code += '        await message.answer("Эта команда доступна только в приватном чате")\n';
-    code += '        return\n\n';
-  }
-  
-  if (node.data.adminOnly) {
-    code += '    if not await is_admin(message.from_user.id):\n';
-    code += '        await message.answer("У вас нет прав для выполнения этой команды")\n';
-    code += '        return\n\n';
-  }
-  
-  if (node.data.requiresAuth) {
-    code += '    if not await check_auth(message.from_user.id):\n';
-    code += '        await message.answer("Сначала авторизуйтесь в системе")\n';
     code += '        return\n\n';
   }
   
@@ -698,14 +662,8 @@ export function generateReadme(botData: BotData, botName: string): string {
     const description = node.data.description || 'Описание отсутствует';
     readme += '- `' + command + '` - ' + description + '\n';
     
-    if (node.data.adminOnly) {
-      readme += '  - 🔒 Только для администраторов\n';
-    }
     if (node.data.isPrivateOnly) {
       readme += '  - 👤 Только в приватных чатах\n';
-    }
-    if (node.data.requiresAuth) {
-      readme += '  - 🔐 Требует авторизации\n';
     }
   });
 

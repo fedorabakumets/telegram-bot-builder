@@ -151,8 +151,7 @@ export const buttonSchema = z.object({
   rowPosition: z.number().optional().default(0), // Позиция строки для группировки кнопок
   style: z.enum(['default', 'primary', 'secondary', 'danger']).default('default'),
   icon: z.string().optional(), // Emoji или иконка для кнопки
-  requiresAuth: z.boolean().default(false),
-  adminOnly: z.boolean().default(false),
+
   width: z.enum(['auto', 'full', 'half', 'third']).default('auto'), // Ширина кнопки
 });
 
@@ -189,8 +188,6 @@ export const nodeSchema = z.object({
     synonyms: z.array(z.string()).default([]),
     // Дополнительные настройки безопасности
     isPrivateOnly: z.boolean().default(false),
-    adminOnly: z.boolean().default(false),
-    requiresAuth: z.boolean().default(false),
     showInMenu: z.boolean().default(true),
   }),
 });

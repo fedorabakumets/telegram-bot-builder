@@ -16,15 +16,6 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-@dp.message()
-async def message_DJk66HmxQlKpTQ9OEULOD_handler(message: types.Message):
-    text = "Новое сообщение"
-    
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="Новая_кнопка"))
-    keyboard = builder.as_markup()
-    await message.answer(text, reply_markup=keyboard)
-
 
 # Запуск бота
 async def main():

@@ -49,9 +49,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     commandsInMenu: botData.nodes.filter(node => 
       (node.type === 'start' || node.type === 'command') && node.data.showInMenu
     ).length,
-    adminOnlyCommands: botData.nodes.filter(node => 
-      (node.type === 'start' || node.type === 'command') && node.data.adminOnly
-    ).length,
+
     privateOnlyCommands: botData.nodes.filter(node => 
       (node.type === 'start' || node.type === 'command') && node.data.isPrivateOnly
     ).length
@@ -214,10 +212,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                     <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-indigo-600 dark:text-indigo-400`}>{botStats.commandsInMenu}</div>
                     <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-indigo-700 dark:text-indigo-300`}>В меню</div>
                   </div>
-                  <div className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-red-600 dark:text-red-400`}>{botStats.adminOnlyCommands}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-red-700 dark:text-red-300`}>Только админ</div>
-                  </div>
+
                 </div>
                 
                 <Separator className="my-4" />

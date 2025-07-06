@@ -66,9 +66,7 @@ export function EnhancedInlineKeyboard({
       action: 'goto',
       rowPosition: rowIndex ?? 0,
       style: 'default',
-      width: 'auto',
-      requiresAuth: false,
-      adminOnly: false
+      width: 'auto'
     };
 
     const currentButtons = selectedNode.data.inlineButtons || [];
@@ -317,23 +315,7 @@ export function EnhancedInlineKeyboard({
                           </div>
                         )}
 
-                        {/* Advanced settings */}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              checked={button.requiresAuth || false}
-                              onCheckedChange={(checked) => onInlineButtonUpdate?.(selectedNode.id, button.id, { requiresAuth: checked })}
-                            />
-                            <Label className="text-xs text-muted-foreground">Требует авторизацию</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              checked={button.adminOnly || false}
-                              onCheckedChange={(checked) => onInlineButtonUpdate?.(selectedNode.id, button.id, { adminOnly: checked })}
-                            />
-                            <Label className="text-xs text-muted-foreground">Только админ</Label>
-                          </div>
-                        </div>
+
                       </div>
                     </div>
                   ))}
