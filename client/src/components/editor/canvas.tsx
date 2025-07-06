@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import { CanvasNode } from '@/components/ui/canvas-node';
 import { Node, ComponentDefinition } from '@/types/bot';
 import { nanoid } from 'nanoid';
@@ -21,9 +21,11 @@ export function Canvas({
   onNodeMove 
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    setIsDragOver(false);
     
     const componentData = e.dataTransfer.getData('application/json');
     if (!componentData) return;
@@ -55,6 +57,12 @@ export function Canvas({
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
   }, []);
 
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
@@ -105,8 +113,10 @@ export function Canvas({
             minHeight: '100vh',
             minWidth: '100%'
           }}
+          data-drag-over={isDragOver}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
           onClick={handleCanvasClick}
         >
           {/* Nodes */}
@@ -123,12 +133,12 @@ export function Canvas({
           
           {/* Drop Zone Hint */}
           {nodes.length === 0 && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg border-2 border-dashed border-gray-300 p-8 w-80 text-center">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-plus text-gray-400 text-xl"></i>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-background/95 backdrop-blur-sm rounded-xl shadow-lg border-2 border-dashed border-border p-8 w-80 text-center transition-all duration-300 hover:bg-background hover:border-primary/30 canvas-drop-hint">
+              <div className="w-12 h-12 bg-muted/30 rounded-lg flex items-center justify-center mx-auto mb-4 transition-all duration-300 canvas-drop-icon">
+                <i className="fas fa-plus text-muted-foreground text-xl transition-all duration-300"></i>
               </div>
-              <h3 className="font-medium text-gray-900 mb-2">Перетащите элемент сюда</h3>
-              <p className="text-sm text-gray-500">Выберите компонент из левой панели и перетащите на холст</p>
+              <h3 className="font-medium text-foreground mb-2">Перетащите элемент сюда</h3>
+              <p className="text-sm text-muted-foreground">Выберите компонент из левой панели и перетащите на холст</p>
             </div>
           )}
         </div>

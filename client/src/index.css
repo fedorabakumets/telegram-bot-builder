@@ -403,11 +403,158 @@ body {
 .dark .bg-canvas-bg {
   background: linear-gradient(135deg, 
     hsl(var(--background)) 0%, 
-    hsl(var(--muted) / 0.2) 25%, 
-    hsl(var(--background)) 50%, 
-    hsl(var(--muted) / 0.3) 75%, 
+    hsl(var(--muted) / 0.15) 20%, 
+    hsl(var(--surface-1)) 40%, 
+    hsl(var(--muted) / 0.2) 60%, 
+    hsl(var(--surface-2)) 80%, 
     hsl(var(--background)) 100%
   );
+  position: relative;
+}
+
+/* Enhanced Canvas Drop Zone Hint for Dark Theme */
+.dark .canvas-drop-hint {
+  background: linear-gradient(135deg, 
+    hsl(var(--card) / 0.8) 0%, 
+    hsl(var(--surface-1) / 0.9) 100%
+  );
+  border: 2px dashed hsl(var(--border) / 0.6);
+  box-shadow: 
+    0 20px 25px -5px hsl(var(--background) / 0.1),
+    0 10px 10px -5px hsl(var(--background) / 0.04),
+    inset 0 1px 0 hsl(var(--muted) / 0.1);
+}
+
+.dark .canvas-drop-hint:hover {
+  background: linear-gradient(135deg, 
+    hsl(var(--card) / 0.9) 0%, 
+    hsl(var(--surface-2) / 0.95) 100%
+  );
+  border-color: hsl(var(--primary) / 0.4);
+  box-shadow: 
+    0 25px 30px -10px hsl(var(--background) / 0.15),
+    0 10px 15px -5px hsl(var(--background) / 0.08),
+    inset 0 1px 0 hsl(var(--muted) / 0.15),
+    0 0 0 1px hsl(var(--primary) / 0.1);
+}
+
+/* Canvas Drop Zone Icon Enhancement */
+.dark .canvas-drop-icon {
+  background: linear-gradient(135deg, 
+    hsl(var(--muted) / 0.3) 0%, 
+    hsl(var(--muted) / 0.15) 100%
+  );
+  border: 1px solid hsl(var(--border) / 0.3);
+  transition: all 0.3s ease;
+}
+
+.dark .canvas-drop-hint:hover .canvas-drop-icon {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary) / 0.2) 0%, 
+    hsl(var(--primary) / 0.1) 100%
+  );
+  border-color: hsl(var(--primary) / 0.3);
+  transform: scale(1.05);
+}
+
+.dark .canvas-drop-icon i {
+  transition: all 0.3s ease;
+}
+
+.dark .canvas-drop-hint:hover .canvas-drop-icon i {
+  color: hsl(var(--primary));
+  transform: scale(1.1);
+}
+
+/* Enhanced Canvas Grid Pattern for Dark Theme */
+.dark .canvas-grid {
+  background-image: 
+    radial-gradient(circle, hsl(var(--muted-foreground) / 0.2) 1px, transparent 1px),
+    linear-gradient(hsl(var(--muted-foreground) / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--muted-foreground) / 0.04) 1px, transparent 1px) !important;
+  position: relative;
+}
+
+.dark .canvas-grid::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, 
+    hsl(var(--primary) / 0.02) 0%, 
+    transparent 60%
+  );
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.dark .canvas-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%, 
+    hsl(var(--muted) / 0.01) 25%, 
+    transparent 50%, 
+    hsl(var(--muted) / 0.01) 75%, 
+    transparent 100%
+  );
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Dark Theme Drag Over State Enhancement */
+.dark .canvas-grid[data-drag-over="true"] {
+  background-color: hsl(var(--primary) / 0.08) !important;
+  background-image: 
+    radial-gradient(circle, hsl(var(--primary) / 0.4) 1px, transparent 1px),
+    linear-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--primary) / 0.15) 1px, transparent 1px) !important;
+  box-shadow: 
+    inset 0 0 30px hsl(var(--primary) / 0.2),
+    inset 0 0 60px hsl(var(--primary) / 0.1);
+  animation: pulse-grid-dark 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-grid-dark {
+  from {
+    opacity: 0.8;
+    box-shadow: 
+      inset 0 0 30px hsl(var(--primary) / 0.2),
+      inset 0 0 60px hsl(var(--primary) / 0.1);
+  }
+  to {
+    opacity: 1;
+    box-shadow: 
+      inset 0 0 40px hsl(var(--primary) / 0.25),
+      inset 0 0 80px hsl(var(--primary) / 0.15);
+  }
+}
+
+/* Canvas Controls Dark Theme Enhancement */
+.dark .canvas-controls button {
+  background: hsl(var(--card) / 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border) / 0.6);
+  box-shadow: 
+    0 4px 6px -1px hsl(var(--background) / 0.1),
+    0 2px 4px -1px hsl(var(--background) / 0.06),
+    inset 0 1px 0 hsl(var(--muted) / 0.1);
+}
+
+.dark .canvas-controls button:hover {
+  background: hsl(var(--muted) / 0.7);
+  border-color: hsl(var(--primary) / 0.4);
+  box-shadow: 
+    0 8px 10px -2px hsl(var(--background) / 0.15),
+    0 4px 6px -1px hsl(var(--background) / 0.1),
+    inset 0 1px 0 hsl(var(--muted) / 0.15),
+    0 0 0 1px hsl(var(--primary) / 0.2);
+}
+
+.dark .canvas-controls .zoom-indicator {
+  background: hsl(var(--muted) / 0.2);
+  border-color: hsl(var(--border) / 0.4);
+  color: hsl(var(--foreground));
 }
 
 /* Advanced Settings Enhanced Theme Support */
