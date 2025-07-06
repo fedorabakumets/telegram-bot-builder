@@ -89,11 +89,12 @@ function generateReplyKeyboard(node: any): string {
 function generateInlineKeyboard(node: any): string {
   let code = '';
   
-  if (node.data.buttons && node.data.buttons.length > 0) {
+  // Исправлено: используем inlineButtons вместо buttons для inline клавиатур
+  if (node.data.inlineButtons && node.data.inlineButtons.length > 0) {
     code += `    
     builder = InlineKeyboardBuilder()
 `;
-    node.data.buttons.forEach((button: any) => {
+    node.data.inlineButtons.forEach((button: any) => {
       if (button.action === 'url') {
         code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
       } else {

@@ -7,6 +7,8 @@ import { storage } from "./storage";
 import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { createTemplateExport, validateTemplateImport, createTemplateFileName } from "@shared/template-format";
+import { generateKeyboardCode } from './keyboard-generator';
+import { generateUnifiedKeyboardCode } from './unified-keyboard-generator';
 import { z } from "zod";
 
 // Глобальное хранилище активных процессов ботов
@@ -47,257 +49,178 @@ function createBotFile(botCode: string, projectId: number): string {
 // Функция для запуска бота
 async function startBot(projectId: number, token: string): Promise<{ success: boolean; error?: string; processId?: string }> {
   try {
-    // Проверяем, не запущен ли уже бот в базе данных
-    const currentInstance = await storage.getBotInstance(projectId);
-    if (currentInstance && currentInstance.status === 'running') {
-      return { success: false, error: "Бот уже запущен" };
-    }
-
-    // Проверяем, нет ли уже активного процесса в памяти
+    // Останавливаем существующий процесс, если есть
     if (botProcesses.has(projectId)) {
-      console.log(`Найден существующий процесс для бота ${projectId}, останавливаем его`);
-      const oldProcess = botProcesses.get(projectId);
-      if (oldProcess && !oldProcess.killed) {
-        oldProcess.kill('SIGTERM');
-      }
-      botProcesses.delete(projectId);
-      // Ждем немного для завершения старого процесса
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await stopBot(projectId);
     }
 
+    // Получаем данные проекта
     const project = await storage.getBotProject(projectId);
     if (!project) {
-      return { success: false, error: "Проект не найден" };
+      return { success: false, error: "Project not found" };
     }
 
     // Генерируем код бота
-    const botCode = generatePythonCode(project.data).replace('YOUR_BOT_TOKEN_HERE', token);
+    const botCode = generatePythonCode(project.botData);
     
-    // Создаем файл бота
-    const filePath = createBotFile(botCode, projectId);
+    // Заменяем токен в коде
+    const finalCode = botCode.replace("YOUR_BOT_TOKEN_HERE", token);
     
-    // Запускаем бота с правильной обработкой кодировки
-    const botProcess = spawn('python', [filePath], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      detached: false,
-      env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+    // Создаем файл с кодом бота
+    const filePath = createBotFile(finalCode, projectId);
+    
+    // Запускаем процесс
+    const process = spawn('python', [filePath], {
+      stdio: 'pipe',
+      env: { ...process.env, PYTHONUNBUFFERED: '1' }
     });
 
-    // Устанавливаем кодировку для предотвращения проблем с выводом
-    botProcess.stdout?.setEncoding('utf8');
-    botProcess.stderr?.setEncoding('utf8');
+    // Сохраняем процесс в памяти
+    botProcesses.set(projectId, process);
 
-    // Логируем вывод процесса с защитой от некорректных символов
-    botProcess.stdout?.on('data', (data) => {
-      try {
-        const output = data.toString().replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-        console.log(`Бот ${projectId} stdout:`, output);
-      } catch (err) {
-        console.log(`Бот ${projectId} stdout (binary):`, data);
-      }
-    });
-
-    botProcess.stderr?.on('data', (data) => {
-      try {
-        const output = data.toString().replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-        console.error(`Бот ${projectId} stderr:`, output);
-      } catch (err) {
-        console.error(`Бот ${projectId} stderr (binary):`, data);
-      }
-    });
-
-    const processId = botProcess.pid?.toString();
-    
-    // Сохраняем процесс
-    botProcesses.set(projectId, botProcess);
-    
     // Создаем или обновляем запись в базе данных
-    const existingBotInstance = await storage.getBotInstance(projectId);
-    if (existingBotInstance) {
-      await storage.updateBotInstance(existingBotInstance.id, {
+    const existingInstance = await storage.getBotInstance(projectId);
+    if (existingInstance) {
+      await storage.updateBotInstance(projectId, {
         status: 'running',
-        token,
-        processId,
-        errorMessage: null
+        startedAt: new Date(),
+        processId: process.pid?.toString()
       });
     } else {
       await storage.createBotInstance({
         projectId,
         status: 'running',
-        token,
-        processId,
+        startedAt: new Date(),
+        processId: process.pid?.toString()
       });
     }
 
-    // Обрабатываем события процесса
-    botProcess.on('error', async (error) => {
-      console.error(`Ошибка запуска бота ${projectId}:`, error);
-      const instance = await storage.getBotInstance(projectId);
-      if (instance) {
-        await storage.updateBotInstance(instance.id, { 
-          status: 'error', 
-          errorMessage: error.message 
-        });
-      }
+    // Обработка завершения процесса
+    process.on('close', async (code) => {
       botProcesses.delete(projectId);
-    });
-
-    botProcess.on('exit', async (code) => {
-      console.log(`Бот ${projectId} завершен с кодом ${code}`);
-      const instance = await storage.getBotInstance(projectId);
-      if (instance) {
-        await storage.updateBotInstance(instance.id, { 
+      try {
+        await storage.updateBotInstance(projectId, {
           status: 'stopped',
-          errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null
+          stoppedAt: new Date()
         });
+      } catch (error) {
+        console.error('Error updating bot instance status:', error);
       }
-      botProcesses.delete(projectId);
     });
 
-    return { success: true, processId };
+    return { success: true, processId: process.pid?.toString() };
   } catch (error) {
-    console.error('Ошибка запуска бота:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+    console.error('Error starting bot:', error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
 // Функция для остановки бота
 async function stopBot(projectId: number): Promise<{ success: boolean; error?: string }> {
   try {
-    const botProcess = botProcesses.get(projectId);
+    // Останавливаем процесс из памяти
+    const process = botProcesses.get(projectId);
+    if (process && !process.killed) {
+      process.kill('SIGTERM');
+      
+      // Ждем завершения процесса
+      await new Promise<void>((resolve) => {
+        const timeout = setTimeout(() => {
+          if (!process.killed) {
+            process.kill('SIGKILL'); // Принудительно убиваем если не завершился
+          }
+          resolve();
+        }, 5000);
+        
+        process.on('close', () => {
+          clearTimeout(timeout);
+          resolve();
+        });
+      });
+    }
     
-    // Если процесс не найден в памяти, но в базе есть запись - исправляем несоответствие
-    if (!botProcess) {
-      const instance = await storage.getBotInstance(projectId);
-      if (instance && instance.status === 'running') {
-        console.log(`Bot process ${projectId} not found in memory but marked as running in database. Fixing state.`);
-        await storage.stopBotInstance(projectId);
-        return { success: true };
-      }
-      return { success: false, error: "Bot process not found" };
+    // Удаляем из памяти
+    botProcesses.delete(projectId);
+    
+    // Обновляем статус в базе данных
+    try {
+      await storage.updateBotInstance(projectId, {
+        status: 'stopped',
+        stoppedAt: new Date()
+      });
+    } catch (dbError) {
+      console.error('Error updating bot instance status:', dbError);
+      // Не возвращаем ошибку, так как основная задача (остановка процесса) выполнена
     }
 
-    // Безопасно завершаем процесс бота
-    try {
-      // Проверяем, существует ли еще процесс
-      if (botProcess.exitCode === null && !botProcess.killed) {
-        // Пытаемся мягко завершить процесс
-        try {
-          botProcess.kill('SIGTERM');
-          console.log(`Sent SIGTERM to bot process ${projectId}`);
-        } catch (termError) {
-          console.warn(`Warning when sending SIGTERM to bot ${projectId}:`, termError);
-        }
-        
-        // Ждем некоторое время для мягкого завершения
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Если процесс все еще активен, принудительно завершаем
-        if (botProcess.exitCode === null && !botProcess.killed) {
-          try {
-            botProcess.kill('SIGKILL');
-            console.log(`Sent SIGKILL to bot process ${projectId}`);
-          } catch (killError) {
-            console.warn(`Warning when sending SIGKILL to bot ${projectId}:`, killError);
-          }
-        }
-      }
-    } catch (processError) {
-      console.warn(`Warning when stopping bot process ${projectId}:`, processError);
-    }
-    
-    // Удаляем из памяти и обновляем базу данных
-    botProcesses.delete(projectId);
-    await storage.stopBotInstance(projectId);
-    
-    console.log(`Bot ${projectId} stopped successfully`);
     return { success: true };
   } catch (error) {
     console.error('Error stopping bot:', error);
-    const errorResponse = createSafeErrorResponse(error, 'Failed to stop bot');
-    return { success: false, error: errorResponse.message };
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error"
+    };
   }
 }
 
-// Функция для очистки несоответствий состояний ботов при запуске сервера
+// Функция для очистки состояний ботов при запуске сервера
 async function cleanupBotStates(): Promise<void> {
   try {
-    console.log('Проверяем состояние ботов при запуске сервера...');
-    const allInstances = await storage.getAllBotInstances();
+    // Получаем все запущенные экземпляры из базы данных
+    const runningInstances = await storage.getAllBotInstances();
     
-    for (const instance of allInstances) {
+    for (const instance of runningInstances) {
       if (instance.status === 'running') {
-        // Если в базе бот помечен как запущенный, но процесса нет в памяти
-        if (!botProcesses.has(instance.projectId)) {
-          console.log(`Найден бот ${instance.projectId} в статусе "running" без активного процесса. Исправляем состояние.`);
-          await storage.updateBotInstance(instance.id, { status: 'stopped' });
+        // Проверяем, действительно ли процесс запущен
+        const process = botProcesses.get(instance.projectId);
+        if (!process || process.killed) {
+          // Процесс не найден или убит, обновляем статус
+          await storage.updateBotInstance(instance.projectId, {
+            status: 'stopped',
+            stoppedAt: new Date()
+          });
+          console.log(`Cleaned up stale bot instance for project ${instance.projectId}`);
         }
       }
     }
-    console.log('Проверка состояния ботов завершена.');
   } catch (error) {
-    console.error('Ошибка при проверке состояния ботов:', error);
+    console.error('Error cleaning up bot states:', error);
   }
 }
 
-// Функция для перезапуска бота (если он запущен)
+// Функция для перезапуска бота
 async function restartBotIfRunning(projectId: number): Promise<{ success: boolean; error?: string }> {
   try {
+    // Проверяем, запущен ли бот
     const instance = await storage.getBotInstance(projectId);
     if (!instance || instance.status !== 'running') {
-      return { success: true }; // Бот не запущен, ничего не делаем
+      return { success: true }; // Бот не запущен, перезапуск не требуется
     }
 
-    console.log(`Перезапускаем бота ${projectId} из-за обновления кода...`);
+    // Получаем сохраненный токен
+    const tokens = await storage.getBotTokens(projectId);
+    const defaultToken = tokens.find(t => t.isDefault);
     
-    // Останавливаем текущий бот
-    const stopResult = await stopBot(projectId);
-    if (!stopResult.success) {
-      console.error(`Ошибка перезапуска бота ${projectId}:`, stopResult.error);
-      return { success: true }; // Возвращаем true, чтобы не блокировать сохранение проекта
+    if (!defaultToken) {
+      return { success: false, error: "No default token found for restart" };
     }
 
-    // Ждем дольше для полного завершения процесса и избежания конфликтов Telegram
+    // Останавливаем текущий экземпляр
+    await stopBot(projectId);
+    
+    // Ждем 7 секунд для избежания конфликтов Telegram
     await new Promise(resolve => setTimeout(resolve, 7000));
-
-    // Проверяем, что процесс действительно завершен
-    const processExists = botProcesses.has(projectId);
-    if (processExists) {
-      console.log(`Процесс бота ${projectId} еще не завершен, принудительно удаляем из памяти`);
-      botProcesses.delete(projectId);
-    }
-
-    // Получаем актуальный токен (может измениться)
-    let tokenToUse = instance.token;
     
-    // Проверяем, есть ли токен по умолчанию
-    const defaultToken = await storage.getDefaultBotToken(projectId);
-    if (defaultToken) {
-      tokenToUse = defaultToken.token;
-      console.log(`Используем токен по умолчанию для перезапуска бота ${projectId}`);
-    } else {
-      // Если нет токена по умолчанию, используем токен из проекта
-      const project = await storage.getBotProject(projectId);
-      if (project?.botToken) {
-        tokenToUse = project.botToken;
-        console.log(`Используем сохраненный токен проекта для перезапуска бота ${projectId}`);
-      }
-    }
-
-    // Запускаем заново с актуальным токеном
-    const startResult = await startBot(projectId, tokenToUse);
-    if (startResult.success) {
-      console.log(`Бот ${projectId} успешно перезапущен после обновления структуры`);
-    } else {
-      console.error(`Ошибка при перезапуске бота ${projectId}:`, startResult.error);
-    }
-    return startResult;
+    // Запускаем заново
+    const result = await startBot(projectId, defaultToken.token);
+    return result;
   } catch (error) {
-    console.error('Ошибка перезапуска бота:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+    console.error('Error restarting bot:', error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
+// Исправленный генератор Python кода с унифицированными клавиатурами
 function generatePythonCode(botData: any): string {
   const { nodes } = botData;
   
@@ -329,118 +252,9 @@ async def start_handler(message: types.Message):
     text = "${node.data.messageText || "Привет! Добро пожаловать!"}"
 `;
       
-      if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
-        code += `    
-    builder = ReplyKeyboardBuilder()
-`;
-        node.data.buttons.forEach((button: any) => {
-          code += `    builder.add(KeyboardButton(text="${button.text}"))
-`;
-        });
-        
-        code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
-    await message.answer(text, reply_markup=keyboard)
-`;
-      } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-        code += `    
-    builder = InlineKeyboardBuilder()
-`;
-        node.data.buttons.forEach((button: any) => {
-          if (button.action === "url") {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
-`;
-          } else {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
-`;
-          }
-        });
-        
-        code += `    keyboard = builder.as_markup()
-    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-    await message.answer("Выберите действие:", reply_markup=keyboard)
-`;
-      } else if (node.data.keyboardType === "combined") {
-        // Combined type: both reply and inline buttons
-        const hasReplyButtons = node.data.buttons && node.data.buttons.length > 0;
-        const hasInlineButtons = node.data.inlineButtons && node.data.inlineButtons.length > 0;
-        
-        if (hasReplyButtons && hasInlineButtons) {
-          code += `    
-    # Создаем комбинированную клавиатуру (Reply + Inline)
-    
-    # Сначала создаем reply клавиатуру
-    reply_builder = ReplyKeyboardBuilder()
-`;
-          node.data.buttons.forEach((button: any) => {
-            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
-`;
-          });
-          
-          code += `    reply_keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
-    # Отправляем основное сообщение с reply клавиатурой
-    sent_message = await message.answer(text, reply_markup=reply_keyboard)
-    
-    # Затем создаем inline клавиатуру
-    inline_builder = InlineKeyboardBuilder()
-`;
-          node.data.inlineButtons.forEach((button: any) => {
-            if (button.action === "url") {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
-`;
-            } else {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
-`;
-            }
-          });
-          
-          code += `    inline_keyboard = inline_builder.as_markup()
-    # Прикрепляем inline кнопки к тому же сообщению
-    await message.answer(text, reply_markup=inline_keyboard)
-    # Устанавливаем reply клавиатуру отдельным минимальным сообщением
-    await message.answer("⚡", reply_markup=reply_keyboard)
-`;
-        } else if (hasReplyButtons) {
-          // Only reply buttons
-          code += `    
-    reply_builder = ReplyKeyboardBuilder()
-`;
-          node.data.buttons.forEach((button: any) => {
-            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
-`;
-          });
-          
-          code += `    keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
-    await message.answer(text, reply_markup=keyboard)
-`;
-        } else if (hasInlineButtons) {
-          // Only inline buttons
-          code += `    
-    inline_builder = InlineKeyboardBuilder()
-`;
-          node.data.inlineButtons.forEach((button: any) => {
-            if (button.action === "url") {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
-`;
-            } else {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
-`;
-            }
-          });
-          
-          code += `    keyboard = inline_builder.as_markup()
-    await message.answer(text, reply_markup=keyboard)
-`;
-        } else {
-          // No buttons at all
-          code += `    await message.answer(text)
-`;
-        }
-      } else {
-        code += `    # Удаляем предыдущие reply клавиатуры если они были
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-`;
-      }
+      // Используем унифицированный генератор клавиатур
+      code += generateUnifiedKeyboardCode(node);
+      
     } else if (node.type === "command") {
       const command = node.data.command || "/help";
       const functionName = command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
@@ -451,118 +265,9 @@ async def ${functionName}_handler(message: types.Message):
     text = "${node.data.messageText || "Команда выполнена"}"
 `;
       
-      if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
-        code += `    
-    builder = ReplyKeyboardBuilder()
-`;
-        node.data.buttons.forEach((button: any) => {
-          code += `    builder.add(KeyboardButton(text="${button.text}"))
-`;
-        });
-        
-        code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
-    await message.answer(text, reply_markup=keyboard)
-`;
-      } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-        code += `    
-    builder = InlineKeyboardBuilder()
-`;
-        node.data.buttons.forEach((button: any) => {
-          if (button.action === "url") {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
-`;
-          } else {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
-`;
-          }
-        });
-        
-        code += `    keyboard = builder.as_markup()
-    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-    await message.answer("Выберите действие:", reply_markup=keyboard)
-`;
-      } else if (node.data.keyboardType === "combined") {
-        // Combined type: both reply and inline buttons
-        const hasReplyButtons = node.data.buttons && node.data.buttons.length > 0;
-        const hasInlineButtons = node.data.inlineButtons && node.data.inlineButtons.length > 0;
-        
-        if (hasReplyButtons && hasInlineButtons) {
-          code += `    
-    # Создаем комбинированную клавиатуру (Reply + Inline)
-    
-    # Сначала создаем reply клавиатуру
-    reply_builder = ReplyKeyboardBuilder()
-`;
-          node.data.buttons.forEach((button: any) => {
-            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
-`;
-          });
-          
-          code += `    reply_keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
-    # Отправляем основное сообщение с reply клавиатурой
-    sent_message = await message.answer(text, reply_markup=reply_keyboard)
-    
-    # Затем создаем inline клавиатуру
-    inline_builder = InlineKeyboardBuilder()
-`;
-          node.data.inlineButtons.forEach((button: any) => {
-            if (button.action === "url") {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
-`;
-            } else {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
-`;
-            }
-          });
-          
-          code += `    inline_keyboard = inline_builder.as_markup()
-    # Прикрепляем inline кнопки к тому же сообщению
-    await message.answer(text, reply_markup=inline_keyboard)
-    # Устанавливаем reply клавиатуру отдельным минимальным сообщением
-    await message.answer("⚡", reply_markup=reply_keyboard)
-`;
-        } else if (hasReplyButtons) {
-          // Only reply buttons
-          code += `    
-    reply_builder = ReplyKeyboardBuilder()
-`;
-          node.data.buttons.forEach((button: any) => {
-            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
-`;
-          });
-          
-          code += `    keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
-    await message.answer(text, reply_markup=keyboard)
-`;
-        } else if (hasInlineButtons) {
-          // Only inline buttons
-          code += `    
-    inline_builder = InlineKeyboardBuilder()
-`;
-          node.data.inlineButtons.forEach((button: any) => {
-            if (button.action === "url") {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
-`;
-            } else {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
-`;
-            }
-          });
-          
-          code += `    keyboard = inline_builder.as_markup()
-    await message.answer(text, reply_markup=keyboard)
-`;
-        } else {
-          // No buttons at all
-          code += `    await message.answer(text)
-`;
-        }
-      } else {
-        code += `    # Удаляем предыдущие reply клавиатуры если они были
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-`;
-      }
+      // Используем унифицированный генератор клавиатур
+      code += generateUnifiedKeyboardCode(node);
+      
     } else if (node.type === "message") {
       const functionName = `message_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}`;
       
@@ -572,118 +277,8 @@ async def ${functionName}_handler(message: types.Message):
     text = "${node.data.messageText || "Сообщение получено"}"
 `;
       
-      if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
-        code += `    
-    builder = ReplyKeyboardBuilder()
-`;
-        node.data.buttons.forEach((button: any) => {
-          code += `    builder.add(KeyboardButton(text="${button.text}"))
-`;
-        });
-        
-        code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
-    await message.answer(text, reply_markup=keyboard)
-`;
-      } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-        code += `    
-    builder = InlineKeyboardBuilder()
-`;
-        node.data.buttons.forEach((button: any) => {
-          if (button.action === "url") {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
-`;
-          } else {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
-`;
-          }
-        });
-        
-        code += `    keyboard = builder.as_markup()
-    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-    await message.answer("Выберите действие:", reply_markup=keyboard)
-`;
-      } else if (node.data.keyboardType === "combined") {
-        // Combined type: both reply and inline buttons
-        const hasReplyButtons = node.data.buttons && node.data.buttons.length > 0;
-        const hasInlineButtons = node.data.inlineButtons && node.data.inlineButtons.length > 0;
-        
-        if (hasReplyButtons && hasInlineButtons) {
-          code += `    
-    # Создаем комбинированную клавиатуру (Reply + Inline)
-    
-    # Сначала создаем reply клавиатуру
-    reply_builder = ReplyKeyboardBuilder()
-`;
-          node.data.buttons.forEach((button: any) => {
-            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
-`;
-          });
-          
-          code += `    reply_keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
-    # Отправляем основное сообщение с reply клавиатурой
-    sent_message = await message.answer(text, reply_markup=reply_keyboard)
-    
-    # Затем создаем inline клавиатуру
-    inline_builder = InlineKeyboardBuilder()
-`;
-          node.data.inlineButtons.forEach((button: any) => {
-            if (button.action === "url") {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
-`;
-            } else {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
-`;
-            }
-          });
-          
-          code += `    inline_keyboard = inline_builder.as_markup()
-    # Прикрепляем inline кнопки к тому же сообщению
-    await message.answer(text, reply_markup=inline_keyboard)
-    # Устанавливаем reply клавиатуру отдельным минимальным сообщением
-    await message.answer("⚡", reply_markup=reply_keyboard)
-`;
-        } else if (hasReplyButtons) {
-          // Only reply buttons
-          code += `    
-    reply_builder = ReplyKeyboardBuilder()
-`;
-          node.data.buttons.forEach((button: any) => {
-            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
-`;
-          });
-          
-          code += `    keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
-    await message.answer(text, reply_markup=keyboard)
-`;
-        } else if (hasInlineButtons) {
-          // Only inline buttons
-          code += `    
-    inline_builder = InlineKeyboardBuilder()
-`;
-          node.data.inlineButtons.forEach((button: any) => {
-            if (button.action === "url") {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
-`;
-            } else {
-              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
-`;
-            }
-          });
-          
-          code += `    keyboard = inline_builder.as_markup()
-    await message.answer(text, reply_markup=keyboard)
-`;
-        } else {
-          // No buttons at all
-          code += `    await message.answer(text)
-`;
-        }
-      } else {
-        code += `    # Удаляем предыдущие reply клавиатуры если они были
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-`;
-      }
+      // Используем унифицированный генератор клавиатур
+      code += generateUnifiedKeyboardCode(node);
     }
   });
 
@@ -810,965 +405,733 @@ if __name__ == '__main__':
   return code;
 }
 
-// Function to ensure at least one default project exists
+// Функция для обеспечения наличия проекта по умолчанию
 async function ensureDefaultProject() {
   try {
     const projects = await storage.getAllBotProjects();
     if (projects.length === 0) {
-      // Create a default project if none exists
-      const defaultProject = {
+      await storage.createBotProject({
         name: "Мой первый бот",
-        description: "Базовый бот с приветствием",
-        data: {
+        description: "Описание моего первого бота",
+        botData: {
           nodes: [
             {
-              id: "start",
+              id: "start-node",
               type: "start",
               position: { x: 100, y: 100 },
               data: {
-                messageText: "Привет! Я ваш новый бот. Нажмите /help для получения помощи.",
+                messageText: "Привет! Добро пожаловать в мой бот!",
                 keyboardType: "none",
                 buttons: [],
-                resizeKeyboard: true,
-                oneTimeKeyboard: false
+                inlineButtons: []
               }
             }
           ],
-          connections: []
+          edges: []
         }
-      };
-      await storage.createBotProject(defaultProject);
-      console.log("✅ Создан проект по умолчанию");
+      });
+      console.log("Created default project");
     }
   } catch (error) {
-    console.error("❌ Ошибка создания проекта по умолчанию:", error);
+    console.error("Error ensuring default project:", error);
   }
 }
 
+// Основная функция для регистрации маршрутов
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize default templates on startup
-  await seedDefaultTemplates();
-  
-  // Ensure at least one default project exists
-  await ensureDefaultProject();
-  
-  // Clean up inconsistent bot states
+  // Очищаем состояния ботов при запуске сервера
   await cleanupBotStates();
-  
-  // Get all bot projects
+
+  // Заполняем базу данных шаблонами по умолчанию
+  await seedDefaultTemplates();
+
+  // Убеждаемся, что есть проект по умолчанию
+  await ensureDefaultProject();
+
+  // Получить все проекты
   app.get("/api/projects", async (req, res) => {
     try {
       const projects = await storage.getAllBotProjects();
       res.json(projects);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch projects" });
+      console.error("Error fetching projects:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to fetch projects"));
     }
   });
 
-  // Get single bot project
+  // Получить проект по ID
   app.get("/api/projects/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
       const project = await storage.getBotProject(id);
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
       res.json(project);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch project" });
+      console.error("Error fetching project:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to fetch project"));
     }
   });
 
-  // Create new bot project
+  // Создать новый проект
   app.post("/api/projects", async (req, res) => {
     try {
       const validatedData = insertBotProjectSchema.parse(req.body);
       const project = await storage.createBotProject(validatedData);
-      console.log(`Project created successfully: ${project.id}`);
       res.status(201).json(project);
     } catch (error) {
-      console.error('Error creating project:', error);
-      
+      console.error("Error creating project:", error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid project data", 
-          errors: error.errors.map(e => e.message).join(', ')
-        });
+        return res.status(400).json({ message: "Invalid project data", errors: error.errors });
       }
-      
-      const errorResponse = createSafeErrorResponse(error, 'Failed to create project');
-      res.status(500).json(errorResponse);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to create project"));
     }
   });
 
-  // Update bot project
+  // Обновить проект
   app.put("/api/projects/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
-      if (isNaN(id) || id <= 0) {
+      if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid project ID" });
       }
-      
-      const validatedData = insertBotProjectSchema.partial().parse(req.body);
+
+      const validatedData = insertBotProjectSchema.parse(req.body);
       const project = await storage.updateBotProject(id, validatedData);
+      
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
-      
-      // Если обновляется data (структура бота), перезапускаем бота если он запущен
-      if (validatedData.data) {
-        console.log(`Project ${id} updated, checking if bot restart is needed...`);
-        const restartResult = await restartBotIfRunning(id);
-        if (!restartResult.success) {
-          console.error(`Bot restart error for project ${id}:`, restartResult.error);
-        }
+
+      // Автоматически перезапускаем бот если он запущен
+      try {
+        await restartBotIfRunning(id);
+      } catch (restartError) {
+        console.error("Error restarting bot after update:", restartError);
+        // Не блокируем сохранение из-за ошибки перезапуска
       }
-      
-      console.log(`Project ${id} updated successfully`);
+
       res.json(project);
     } catch (error) {
-      console.error('Error updating project:', error);
-      
+      console.error("Error updating project:", error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid project data", 
-          errors: error.errors.map(e => e.message).join(', ')
-        });
+        return res.status(400).json({ message: "Invalid project data", errors: error.errors });
       }
-      
-      const errorResponse = createSafeErrorResponse(error, 'Failed to update project');
-      res.status(500).json(errorResponse);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to update project"));
     }
   });
 
-  // Delete bot project
+  // Удалить проект
   app.delete("/api/projects/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const deleted = await storage.deleteBotProject(id);
-      if (!deleted) {
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+
+      // Останавливаем бота если он запущен
+      await stopBot(id);
+
+      const success = await storage.deleteBotProject(id);
+      if (!success) {
         return res.status(404).json({ message: "Project not found" });
       }
       res.json({ message: "Project deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete project" });
+      console.error("Error deleting project:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to delete project"));
     }
   });
 
-  // Generate Python code
-  app.post("/api/projects/:id/export", async (req, res) => {
+  // Экспорт кода проекта
+  app.get("/api/projects/:id/export", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+
       const project = await storage.getBotProject(id);
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
 
-      const pythonCode = generatePythonCode(project.data);
-      res.json({ code: pythonCode });
+      const code = generatePythonCode(project.botData);
+      res.json({ code });
     } catch (error) {
-      res.status(500).json({ message: "Failed to generate code" });
+      console.error("Error exporting project:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to export project"));
     }
   });
 
-  // Bot management endpoints
-  
-  // Get bot instance status
-  app.get("/api/projects/:id/bot", async (req, res) => {
+  // Запустить бота
+  app.post("/api/projects/:id/start", async (req, res) => {
     try {
-      const projectId = parseInt(req.params.id);
-      const instance = await storage.getBotInstance(projectId);
-      if (!instance) {
-        return res.json({ status: 'stopped', instance: null });
-      }
-      
-      // Проверяем соответствие состояния в базе и в памяти
-      const hasActiveProcess = botProcesses.has(projectId);
-      const actualStatus = hasActiveProcess ? 'running' : 'stopped';
-      
-      // Если статус в базе не соответствует реальному состоянию - исправляем
-      if (instance.status !== actualStatus) {
-        console.log(`Обнаружено несоответствие состояния для бота ${projectId}. База: ${instance.status}, Реальность: ${actualStatus}. Исправляем.`);
-        await storage.updateBotInstance(instance.id, { 
-          status: actualStatus,
-          errorMessage: null
-        });
-        return res.json({ status: actualStatus, instance: { ...instance, status: actualStatus } });
-      }
-      
-      res.json({ status: instance.status, instance });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get bot status" });
-    }
-  });
-
-  // Start bot
-  app.post("/api/projects/:id/bot/start", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const { token, tokenId } = req.body;
-      
-      // Проверяем проект
-      const project = await storage.getBotProject(projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
       }
 
-      let botToken = token;
-      let tokenToMarkAsUsed = null;
-
-      // Если не передан токен напрямую, используем токен по ID или по умолчанию
-      if (!botToken) {
-        if (tokenId) {
-          const selectedToken = await storage.getBotToken(tokenId);
-          if (selectedToken && selectedToken.projectId === projectId) {
-            botToken = selectedToken.token;
-            tokenToMarkAsUsed = selectedToken.id;
-          }
-        } else {
-          // Используем токен по умолчанию
-          const defaultToken = await storage.getDefaultBotToken(projectId);
-          if (defaultToken) {
-            botToken = defaultToken.token;
-            tokenToMarkAsUsed = defaultToken.id;
-          } else {
-            // Fallback к старому способу - токен в проекте
-            botToken = project.botToken;
-          }
-        }
-      }
-
-      if (!botToken) {
+      const { token } = req.body;
+      if (!token) {
         return res.status(400).json({ message: "Bot token is required" });
       }
 
-      // Проверяем, не запущен ли уже бот
-      const existingInstance = await storage.getBotInstance(projectId);
-      if (existingInstance && existingInstance.status === 'running') {
-        return res.status(400).json({ message: "Bot is already running" });
-      }
-
-      const result = await startBot(projectId, botToken);
+      const result = await startBot(id, token);
+      
       if (result.success) {
-        // Отмечаем токен как использованный
-        if (tokenToMarkAsUsed) {
-          await storage.markTokenAsUsed(tokenToMarkAsUsed);
+        // Сохраняем токен как токен по умолчанию если это первый токен
+        const existingTokens = await storage.getBotTokens(id);
+        const isFirstToken = existingTokens.length === 0;
+        
+        try {
+          await storage.saveBotToken({
+            projectId: id,
+            token,
+            isDefault: isFirstToken
+          });
+        } catch (tokenError) {
+          console.error("Error saving token:", tokenError);
+          // Не блокируем запуск бота из-за ошибки сохранения токена
         }
         
-        res.json({ 
-          message: "Bot started successfully", 
-          processId: result.processId,
-          tokenUsed: tokenToMarkAsUsed ? true : false
-        });
+        res.json({ message: "Bot started successfully", processId: result.processId });
       } else {
         res.status(500).json({ message: result.error || "Failed to start bot" });
       }
     } catch (error) {
-      res.status(500).json({ message: "Failed to start bot" });
+      console.error("Error starting bot:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to start bot"));
     }
   });
 
-  // Stop bot
-  app.post("/api/projects/:id/bot/stop", async (req, res) => {
+  // Остановить бота
+  app.post("/api/projects/:id/stop", async (req, res) => {
     try {
-      const projectId = parseInt(req.params.id);
-      
-      if (isNaN(projectId) || projectId <= 0) {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid project ID" });
       }
+
+      const result = await stopBot(id);
       
-      const result = await stopBot(projectId);
       if (result.success) {
         res.json({ message: "Bot stopped successfully" });
       } else {
         res.status(500).json({ message: result.error || "Failed to stop bot" });
       }
     } catch (error) {
-      console.error('Error in stop bot endpoint:', error);
-      const errorResponse = createSafeErrorResponse(error, 'Failed to stop bot');
-      res.status(500).json(errorResponse);
+      console.error("Error stopping bot:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to stop bot"));
     }
   });
 
-  // Get saved bot token
-  app.get("/api/projects/:id/token", async (req, res) => {
+  // Получить статус бота
+  app.get("/api/projects/:id/status", async (req, res) => {
     try {
-      const projectId = parseInt(req.params.id);
-      const project = await storage.getBotProject(projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
       }
-      res.json({ 
-        hasToken: !!project.botToken, 
-        tokenPreview: project.botToken ? `${project.botToken.substring(0, 10)}...` : null 
+
+      const instance = await storage.getBotInstance(id);
+      if (!instance) {
+        return res.json({ status: "stopped", startedAt: null });
+      }
+
+      // Проверяем, действительно ли процесс запущен
+      const process = botProcesses.get(id);
+      const isActuallyRunning = process && !process.killed;
+      
+      if (instance.status === 'running' && !isActuallyRunning) {
+        // Обновляем статус если процесс больше не запущен
+        await storage.updateBotInstance(id, {
+          status: 'stopped',
+          stoppedAt: new Date()
+        });
+        return res.json({ status: "stopped", startedAt: instance.startedAt });
+      }
+
+      res.json({
+        status: instance.status,
+        startedAt: instance.startedAt,
+        stoppedAt: instance.stoppedAt,
+        processId: instance.processId
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to get token info" });
+      console.error("Error getting bot status:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to get bot status"));
     }
   });
 
-  // Clear saved bot token
-  app.delete("/api/projects/:id/token", async (req, res) => {
+  // Получить сохраненные токены
+  app.get("/api/projects/:id/tokens", async (req, res) => {
     try {
-      const projectId = parseInt(req.params.id);
-      const project = await storage.updateBotProject(projectId, { botToken: null });
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid project ID" });
       }
-      res.json({ message: "Token cleared successfully" });
+
+      const tokens = await storage.getBotTokens(id);
+      // Маскируем токены для безопасности
+      const maskedTokens = tokens.map(token => ({
+        ...token,
+        token: `${token.token.substring(0, 10)}...${token.token.substring(token.token.length - 10)}`
+      }));
+      res.json(maskedTokens);
     } catch (error) {
-      res.status(500).json({ message: "Failed to clear token" });
+      console.error("Error getting bot tokens:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to get bot tokens"));
     }
   });
 
-  // Get all bot instances
-  app.get("/api/bots", async (req, res) => {
+  // Удалить токен
+  app.delete("/api/projects/:id/tokens/:tokenId", async (req, res) => {
     try {
-      const instances = await storage.getAllBotInstances();
-      res.json(instances);
+      const id = parseInt(req.params.id);
+      const tokenId = parseInt(req.params.tokenId);
+      if (isNaN(id) || isNaN(tokenId)) {
+        return res.status(400).json({ message: "Invalid project or token ID" });
+      }
+
+      const success = await storage.deleteBotToken(tokenId);
+      if (!success) {
+        return res.status(404).json({ message: "Token not found" });
+      }
+      res.json({ message: "Token deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch bot instances" });
+      console.error("Error deleting token:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to delete token"));
     }
   });
 
-  // Template management endpoints
-  
-  // Get all templates
+  // Установить токен по умолчанию
+  app.post("/api/projects/:id/tokens/:tokenId/set-default", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const tokenId = parseInt(req.params.tokenId);
+      if (isNaN(id) || isNaN(tokenId)) {
+        return res.status(400).json({ message: "Invalid project or token ID" });
+      }
+
+      const success = await storage.setDefaultBotToken(id, tokenId);
+      if (!success) {
+        return res.status(404).json({ message: "Token not found" });
+      }
+      res.json({ message: "Default token set successfully" });
+    } catch (error) {
+      console.error("Error setting default token:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to set default token"));
+    }
+  });
+
+  // Получить все шаблоны
   app.get("/api/templates", async (req, res) => {
     try {
-      const templates = await storage.getAllBotTemplates();
+      const { category, search, sort } = req.query;
+      
+      let templates = await storage.getAllBotTemplates();
+      
+      // Фильтрация по категории
+      if (category && category !== 'all') {
+        templates = templates.filter(template => 
+          template.category === category || 
+          (category === 'custom' && template.category === 'user')
+        );
+      }
+      
+      // Поиск
+      if (search) {
+        const searchLower = (search as string).toLowerCase();
+        templates = templates.filter(template => 
+          template.name.toLowerCase().includes(searchLower) ||
+          template.description.toLowerCase().includes(searchLower) ||
+          template.tags.some(tag => tag.toLowerCase().includes(searchLower))
+        );
+      }
+      
+      // Сортировка
+      if (sort === 'popular') {
+        templates.sort((a, b) => (b.useCount || 0) - (a.useCount || 0));
+      } else if (sort === 'rating') {
+        templates.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      } else if (sort === 'recent') {
+        templates.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      } else if (sort === 'alphabetical') {
+        templates.sort((a, b) => a.name.localeCompare(b.name));
+      }
+      
       res.json(templates);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch templates" });
+      console.error("Error fetching templates:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to fetch templates"));
     }
   });
 
-  // Get featured templates (must be before /api/templates/:id)
+  // Получить рекомендуемые шаблоны
   app.get("/api/templates/featured", async (req, res) => {
     try {
-      const templates = await storage.getFeaturedTemplates();
-      res.json(templates);
+      const templates = await storage.getAllBotTemplates();
+      const featured = templates.filter(template => template.featured);
+      res.json(featured);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch featured templates" });
+      console.error("Error fetching featured templates:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to fetch featured templates"));
     }
   });
 
-  // Get templates by category (must be before /api/templates/:id)
+  // Получить шаблоны по категории
   app.get("/api/templates/category/:category", async (req, res) => {
     try {
       const { category } = req.params;
-      const templates = await storage.getTemplatesByCategory(category);
-      res.json(templates);
+      const templates = await storage.getAllBotTemplates();
+      const filtered = templates.filter(template => template.category === category);
+      res.json(filtered);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch templates by category" });
+      console.error("Error fetching templates by category:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to fetch templates by category"));
     }
   });
 
-  // Search templates (must be before /api/templates/:id)
+  // Поиск шаблонов
   app.get("/api/templates/search", async (req, res) => {
     try {
       const { q } = req.query;
-      if (!q || typeof q !== 'string') {
+      if (!q) {
         return res.status(400).json({ message: "Search query is required" });
       }
-      const templates = await storage.searchTemplates(q);
-      res.json(templates);
+      
+      const templates = await storage.getAllBotTemplates();
+      const searchLower = (q as string).toLowerCase();
+      const filtered = templates.filter(template => 
+        template.name.toLowerCase().includes(searchLower) ||
+        template.description.toLowerCase().includes(searchLower) ||
+        template.tags.some(tag => tag.toLowerCase().includes(searchLower))
+      );
+      res.json(filtered);
     } catch (error) {
-      res.status(500).json({ message: "Failed to search templates" });
+      console.error("Error searching templates:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to search templates"));
     }
   });
 
-  // Get single template
+  // Получить шаблон по ID
   app.get("/api/templates/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
       const template = await storage.getBotTemplate(id);
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
       res.json(template);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch template" });
+      console.error("Error fetching template:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to fetch template"));
     }
   });
 
-  // Create new template
+  // Создать новый шаблон
   app.post("/api/templates", async (req, res) => {
     try {
-      console.log('Получены данные для создания шаблона:', JSON.stringify(req.body, null, 2));
       const validatedData = insertBotTemplateSchema.parse(req.body);
-      console.log('Данные прошли валидацию:', JSON.stringify(validatedData, null, 2));
       const template = await storage.createBotTemplate(validatedData);
-      console.log('Шаблон создан:', template);
       res.status(201).json(template);
     } catch (error) {
-      console.error('Ошибка создания шаблона:', error);
+      console.error("Error creating template:", error);
       if (error instanceof z.ZodError) {
-        console.error('Ошибки валидации:', error.errors);
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid template data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create template", error: error instanceof Error ? error.message : 'Unknown error' });
+      res.status(500).json(createSafeErrorResponse(error, "Failed to create template"));
     }
   });
 
-  // Update template
+  // Обновить шаблон
   app.put("/api/templates/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const validatedData = insertBotTemplateSchema.partial().parse(req.body);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+
+      const validatedData = insertBotTemplateSchema.parse(req.body);
       const template = await storage.updateBotTemplate(id, validatedData);
+      
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
+
       res.json(template);
     } catch (error) {
+      console.error("Error updating template:", error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res.status(400).json({ message: "Invalid template data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to update template" });
+      res.status(500).json(createSafeErrorResponse(error, "Failed to update template"));
     }
   });
 
-  // Delete template
+  // Удалить шаблон
   app.delete("/api/templates/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+
       const success = await storage.deleteBotTemplate(id);
       if (!success) {
         return res.status(404).json({ message: "Template not found" });
       }
       res.json({ message: "Template deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete template" });
+      console.error("Error deleting template:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to delete template"));
     }
   });
 
-  // Use template (increment use count)
-  app.post("/api/templates/:id/use", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const success = await storage.incrementTemplateUseCount(id);
-      if (!success) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      res.json({ message: "Template use count incremented" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to increment use count" });
-    }
-  });
-
-  // Rate template
+  // Оценить шаблон
   app.post("/api/templates/:id/rate", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { rating } = req.body;
       
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+      
       if (!rating || rating < 1 || rating > 5) {
         return res.status(400).json({ message: "Rating must be between 1 and 5" });
       }
 
-      const success = await storage.rateTemplate(id, rating);
-      if (!success) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      res.json({ message: "Template rated successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to rate template" });
-    }
-  });
-
-  // Increment template view count
-  app.post("/api/templates/:id/view", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const success = await storage.incrementTemplateViewCount(id);
-      if (!success) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      res.json({ message: "View count incremented" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to increment view count" });
-    }
-  });
-
-  // Increment template download count
-  app.post("/api/templates/:id/download", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const success = await storage.incrementTemplateDownloadCount(id);
-      if (!success) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      res.json({ message: "Download count incremented" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to increment download count" });
-    }
-  });
-
-  // Toggle template like
-  app.post("/api/templates/:id/like", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { liked } = req.body;
-      
-      if (typeof liked !== 'boolean') {
-        return res.status(400).json({ message: "liked must be a boolean" });
-      }
-      
-      const success = await storage.toggleTemplateLike(id, liked);
-      if (!success) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      
-      res.json({ message: liked ? "Template liked" : "Template unliked" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to toggle like" });
-    }
-  });
-
-  // Toggle template bookmark
-  app.post("/api/templates/:id/bookmark", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { bookmarked } = req.body;
-      
-      if (typeof bookmarked !== 'boolean') {
-        return res.status(400).json({ message: "bookmarked must be a boolean" });
-      }
-      
-      const success = await storage.toggleTemplateBookmark(id, bookmarked);
-      if (!success) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      
-      res.json({ message: bookmarked ? "Template bookmarked" : "Template unbookmarked" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to toggle bookmark" });
-    }
-  });
-
-  // Token management endpoints
-  
-  // Get all tokens for a project
-  app.get("/api/projects/:id/tokens", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const tokens = await storage.getBotTokensByProject(projectId);
-      
-      // Hide actual token values for security
-      const safeTokens = tokens.map(token => ({
-        ...token,
-        token: `${token.token.substring(0, 10)}...`
-      }));
-      
-      res.json(safeTokens);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch tokens" });
-    }
-  });
-
-  // Create a new token
-  app.post("/api/projects/:id/tokens", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      
-      // Проверяем существование проекта
-      const project = await storage.getBotProject(projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      
-      const tokenData = insertBotTokenSchema.parse({
-        ...req.body,
-        projectId
-      });
-      
-      const token = await storage.createBotToken(tokenData);
-      
-      // Hide actual token value for security
-      const safeToken = {
-        ...token,
-        token: `${token.token.substring(0, 10)}...`
-      };
-      
-      console.log(`Token created successfully for project ${projectId}`);
-      res.status(201).json(safeToken);
-    } catch (error) {
-      console.error('Error creating token:', error);
-      
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid token data", 
-          errors: error.errors.map(e => e.message).join(', ')
-        });
-      }
-      
-      const errorResponse = createSafeErrorResponse(error, 'Failed to create token');
-      res.status(500).json(errorResponse);
-    }
-  });
-
-  // Update a token
-  app.put("/api/tokens/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updateData = insertBotTokenSchema.partial().parse(req.body);
-      
-      const token = await storage.updateBotToken(id, updateData);
-      if (!token) {
-        return res.status(404).json({ message: "Token not found" });
-      }
-      
-      // Hide actual token value for security
-      const safeToken = {
-        ...token,
-        token: `${token.token.substring(0, 10)}...`
-      };
-      
-      res.json(safeToken);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update token" });
-    }
-  });
-
-  // Delete a token
-  app.delete("/api/tokens/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      
-      // Проверяем валидность ID
-      if (isNaN(id) || id <= 0) {
-        return res.status(400).json({ message: "Invalid token ID" });
-      }
-      
-      // Проверяем существование токена перед удалением
-      const existingToken = await storage.getBotToken(id);
-      if (!existingToken) {
-        return res.status(404).json({ message: "Token not found" });
-      }
-      
-      const success = await storage.deleteBotToken(id);
-      
-      if (!success) {
-        return res.status(500).json({ message: "Failed to delete token from storage" });
-      }
-      
-      console.log(`Token ${id} deleted successfully`);
-      res.json({ message: "Token deleted successfully" });
-    } catch (error) {
-      console.error('Error deleting token:', error);
-      const errorResponse = createSafeErrorResponse(error, 'Failed to delete token');
-      res.status(500).json(errorResponse);
-    }
-  });
-
-  // Set default token
-  app.post("/api/projects/:projectId/tokens/:tokenId/set-default", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.projectId);
-      const tokenId = parseInt(req.params.tokenId);
-      
-      if (isNaN(projectId) || projectId <= 0) {
-        return res.status(400).json({ message: "Invalid project ID" });
-      }
-      
-      if (isNaN(tokenId) || tokenId <= 0) {
-        return res.status(400).json({ message: "Invalid token ID" });
-      }
-      
-      // Проверяем существование токена
-      const token = await storage.getBotToken(tokenId);
-      if (!token) {
-        return res.status(404).json({ message: "Token not found" });
-      }
-      
-      // Проверяем, что токен принадлежит указанному проекту
-      if (token.projectId !== projectId) {
-        return res.status(400).json({ message: "Token does not belong to this project" });
-      }
-      
-      const success = await storage.setDefaultBotToken(projectId, tokenId);
-      if (!success) {
-        return res.status(500).json({ message: "Failed to set default token" });
-      }
-      
-      console.log(`Default token set successfully for project ${projectId}`);
-      res.json({ message: "Default token set successfully" });
-    } catch (error) {
-      console.error('Error setting default token:', error);
-      const errorResponse = createSafeErrorResponse(error, 'Failed to set default token');
-      res.status(500).json(errorResponse);
-    }
-  });
-
-  // Get default token for a project
-  app.get("/api/projects/:id/tokens/default", async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      const token = await storage.getDefaultBotToken(projectId);
-      
-      if (!token) {
-        return res.json({ hasDefault: false, token: null });
-      }
-      
-      // Hide actual token value for security
-      const safeToken = {
-        ...token,
-        token: `${token.token.substring(0, 10)}...`
-      };
-      
-      res.json({ hasDefault: true, token: safeToken });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch default token" });
-    }
-  });
-
-  // Template Import/Export Endpoints
-  
-  // Export template as file
-  app.get("/api/templates/:id/export", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
       const template = await storage.getBotTemplate(id);
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
 
-      // Получаем параметры экспорта
-      const includeDocumentation = req.query.includeDocumentation === 'true';
-      const generateChecksum = req.query.generateChecksum === 'true';
-      const includeScreenshots = req.query.includeScreenshots === 'true';
+      // Простое обновление рейтинга (в реальном приложении здесь была бы более сложная логика)
+      const newRatingCount = (template.ratingCount || 0) + 1;
+      const newRating = ((template.rating || 0) * (template.ratingCount || 0) + rating) / newRatingCount;
 
-      // Create export data
-      const exportData = createTemplateExport(
-        template.name,
-        template.description || "",
-        template.data,
-        {
-          version: template.version || "1.0.0",
-          author: template.authorName || "Unknown",
-          category: template.category as any,
-          difficulty: template.difficulty as any,
-          language: template.language as any,
-          tags: template.tags || [],
-          complexity: template.complexity || 1,
-          estimatedTime: template.estimatedTime || 5,
-          requiresToken: Boolean(template.requiresToken),
-          createdAt: template.createdAt?.toISOString(),
-        },
-        template.authorName || "Unknown",
-        {
-          includeDocumentation,
-          generateChecksum,
-          includeScreenshots,
-        }
-      );
-
-      // Generate filename
-      const fileName = createTemplateFileName(template.name);
-
-      // Return export data with filename
-      res.json({
-        filename: fileName,
-        data: exportData
+      await storage.updateBotTemplate(id, {
+        ...template,
+        rating: newRating,
+        ratingCount: newRatingCount
       });
+
+      res.json({ message: "Rating updated successfully" });
     } catch (error) {
-      console.error('Template export error:', error);
-      res.status(500).json({ message: "Failed to export template" });
+      console.error("Error rating template:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to rate template"));
     }
   });
 
-  // Export project as template file
-  app.get("/api/projects/:id/export", async (req, res) => {
+  // Увеличить счетчик использования шаблона
+  app.post("/api/templates/:id/use", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const project = await storage.getBotProject(id);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid template ID" });
       }
 
-      // Получаем параметры экспорта
-      const includeDocumentation = req.query.includeDocumentation === 'true';
-      const generateChecksum = req.query.generateChecksum === 'true';
-      const includeScreenshots = req.query.includeScreenshots === 'true';
+      const template = await storage.getBotTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
 
-      // Create export data from project
-      const exportData = createTemplateExport(
-        project.name,
-        project.description || "",
-        project.data,
-        {
-          category: "custom",
-          difficulty: "easy",
-          language: "ru",
-          tags: ["custom", "export"],
-          complexity: 1,
-          estimatedTime: 5,
-          requiresToken: true,
-        },
-        "User",
-        {
-          includeDocumentation,
-          generateChecksum,
-          includeScreenshots,
-        }
-      );
-
-      // Generate filename
-      const fileName = createTemplateFileName(project.name);
-
-      // Return export data with filename
-      res.json({
-        filename: fileName,
-        data: exportData
+      await storage.updateBotTemplate(id, {
+        ...template,
+        useCount: (template.useCount || 0) + 1
       });
+
+      res.json({ message: "Use count updated successfully" });
     } catch (error) {
-      console.error('Project export error:', error);
-      res.status(500).json({ message: "Failed to export project" });
+      console.error("Error updating use count:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to update use count"));
     }
   });
 
-  // Import template from file
-  app.post("/api/templates/import", async (req, res) => {
+  // Экспорт шаблонов
+  app.post("/api/templates/export", async (req, res) => {
     try {
-      let importData = req.body;
+      const { templateIds, options } = req.body;
       
-      // Handle exported file format that wraps template data in a "data" field
-      if (importData.filename && importData.data) {
-        importData = importData.data;
+      if (!Array.isArray(templateIds) || templateIds.length === 0) {
+        return res.status(400).json({ message: "Template IDs are required" });
       }
+
+      const templates = [];
+      for (const id of templateIds) {
+        const template = await storage.getBotTemplate(id);
+        if (template) {
+          templates.push(template);
+        }
+      }
+
+      if (templates.length === 0) {
+        return res.status(404).json({ message: "No templates found" });
+      }
+
+      const exportData = templates.map(template => createTemplateExport(template, options));
       
-      // Validate the imported data using new validation function
-      const validationResult = validateTemplateImport(importData);
-      
-      if (!validationResult.isValid) {
-        return res.status(400).json({ 
-          message: "Invalid template format", 
-          errors: validationResult.errors,
-          warnings: validationResult.warnings,
-          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
+      // Если экспортируем один шаблон, возвращаем его напрямую
+      if (exportData.length === 1) {
+        const template = exportData[0];
+        const filename = createTemplateFileName(template.name);
+        const dataToEncode = JSON.stringify(template, null, 2);
+        
+        // Используем Buffer для правильного кодирования Unicode
+        const base64Data = Buffer.from(dataToEncode, 'utf8').toString('base64');
+        
+        res.json({
+          filename: filename,
+          data: base64Data,
+          mimeType: 'application/json'
+        });
+      } else {
+        // Для множественного экспорта создаем пакет
+        const batchExport = {
+          version: "1.1",
+          type: "batch",
+          exportedAt: new Date().toISOString(),
+          templates: exportData,
+          count: exportData.length
+        };
+        
+        const filename = `templates_batch_${new Date().toISOString().split('T')[0]}.tbb.json`;
+        const dataToEncode = JSON.stringify(batchExport, null, 2);
+        
+        // Используем Buffer для правильного кодирования Unicode
+        const base64Data = Buffer.from(dataToEncode, 'utf8').toString('base64');
+        
+        res.json({
+          filename: filename,
+          data: base64Data,
+          mimeType: 'application/json'
         });
       }
-
-      const templateData = validationResult.template!;
-
-      // Create template in database
-      const newTemplate = await storage.createBotTemplate({
-        name: templateData.name,
-        description: templateData.description || "",
-        data: templateData.botData,
-        category: templateData.metadata.category,
-        tags: templateData.metadata.tags,
-        isPublic: 0, // Imported templates are private by default
-        difficulty: templateData.metadata.difficulty,
-        authorId: null,
-        authorName: templateData.metadata.author || "Imported",
-        version: templateData.metadata.version,
-        previewImage: templateData.metadata.previewImage || null,
-        featured: 0,
-        language: templateData.metadata.language,
-        requiresToken: templateData.metadata.requiresToken ? 1 : 0,
-        complexity: templateData.metadata.complexity,
-        estimatedTime: templateData.metadata.estimatedTime,
-      });
-
-      res.status(201).json({
-        message: "Template imported successfully",
-        template: newTemplate,
-        warnings: validationResult.warnings,
-        importInfo: {
-          originalAuthor: templateData.metadata.author,
-          exportedAt: templateData.metadata.exportedAt,
-          formatVersion: templateData.exportInfo.formatVersion,
-          fileSize: templateData.exportInfo.fileSize,
-          hasAdvancedFeatures: templateData.metadata.hasAdvancedFeatures,
-          nodeCount: templateData.metadata.nodeCount,
-          connectionCount: templateData.metadata.connectionCount,
-        }
-      });
     } catch (error) {
-      console.error('Template import error:', error);
-      res.status(500).json({ message: "Failed to import template" });
+      console.error("Error exporting templates:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to export templates"));
     }
   });
 
-  // Validate template file before import
+  // Валидация шаблона
   app.post("/api/templates/validate", async (req, res) => {
     try {
-      let validationData = req.body;
+      const { templateData } = req.body;
       
-      // Handle exported file format that wraps template data in a "data" field
-      if (validationData.filename && validationData.data) {
-        validationData = validationData.data;
+      if (!templateData) {
+        return res.status(400).json({ message: "Template data is required" });
       }
-      
-      const validationResult = validateTemplateImport(validationData);
-      res.json(validationResult);
+
+      const validation = validateTemplateImport(templateData);
+      res.json(validation);
     } catch (error) {
-      console.error('Template validation error:', error);
-      res.status(500).json({
-        isValid: false,
-        errors: ["Ошибка валидации на сервере"],
-        warnings: []
-      });
+      console.error("Error validating template:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to validate template"));
     }
   });
 
-  // Import template as new project
-  app.post("/api/projects/import", async (req, res) => {
+  // Импорт шаблонов
+  app.post("/api/templates/import", async (req, res) => {
     try {
-      let importData = req.body;
+      const { templateData, options } = req.body;
       
-      // Handle exported file format that wraps template data in a "data" field
-      if (importData.filename && importData.data) {
-        importData = importData.data;
+      if (!templateData) {
+        return res.status(400).json({ message: "Template data is required" });
       }
+
+      // Проверяем, является ли это экспортированным файлом с оберткой
+      let dataToImport = templateData;
       
-      // Validate the imported data using new validation function
-      const validationResult = validateTemplateImport(importData);
+      // Если это экспортированный файл с оберткой {filename, data}
+      if (templateData.filename && templateData.data) {
+        try {
+          const decodedData = Buffer.from(templateData.data, 'base64').toString('utf8');
+          dataToImport = JSON.parse(decodedData);
+        } catch (decodeError) {
+          return res.status(400).json({ message: "Invalid export file format" });
+        }
+      }
+
+      // Валидируем данные
+      const validation = validateTemplateImport(dataToImport);
       
-      if (!validationResult.isValid) {
+      if (!validation.isValid) {
         return res.status(400).json({ 
-          message: "Invalid template format", 
-          errors: validationResult.errors,
-          warnings: validationResult.warnings,
-          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
+          message: "Invalid template data", 
+          errors: validation.errors,
+          warnings: validation.warnings
         });
       }
 
-      const templateData = validationResult.template!;
-
-      // Create new project from template
-      const newProject = await storage.createBotProject({
-        name: `${templateData.name} (Imported)`,
-        description: templateData.description || "",
-        data: templateData.botData,
-      });
-
-      res.status(201).json({
-        message: "Project imported successfully",
-        project: newProject,
-        warnings: validationResult.warnings,
-        importInfo: {
-          originalName: templateData.name,
-          originalAuthor: templateData.metadata.author,
-          exportedAt: templateData.metadata.exportedAt,
-          nodeCount: templateData.metadata.nodeCount,
-          connectionCount: templateData.metadata.connectionCount,
-          hasAdvancedFeatures: templateData.metadata.hasAdvancedFeatures,
+      const results = [];
+      
+      // Обрабатываем пакетный импорт
+      if (dataToImport.type === 'batch' && Array.isArray(dataToImport.templates)) {
+        for (const template of dataToImport.templates) {
+          try {
+            const created = await storage.createBotTemplate({
+              name: template.name + (options?.addSuffix ? ' (импорт)' : ''),
+              description: template.description,
+              category: 'user',
+              tags: template.tags || [],
+              difficulty: template.difficulty || 'easy',
+              featured: false,
+              botData: template.botData,
+              useCount: 0,
+              rating: 0,
+              ratingCount: 0
+            });
+            results.push({ success: true, template: created });
+          } catch (error) {
+            results.push({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+          }
         }
+      } else {
+        // Обрабатываем одиночный импорт
+        try {
+          const created = await storage.createBotTemplate({
+            name: dataToImport.name + (options?.addSuffix ? ' (импорт)' : ''),
+            description: dataToImport.description,
+            category: 'user',
+            tags: dataToImport.tags || [],
+            difficulty: dataToImport.difficulty || 'easy',
+            featured: false,
+            botData: dataToImport.botData,
+            useCount: 0,
+            rating: 0,
+            ratingCount: 0
+          });
+          results.push({ success: true, template: created });
+        } catch (error) {
+          results.push({ success: false, error: error instanceof Error ? error.message : 'Unknown error' });
+        }
+      }
+
+      const successful = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+
+      res.json({
+        message: `Import completed: ${successful.length} successful, ${failed.length} failed`,
+        successful: successful.length,
+        failed: failed.length,
+        results: results
       });
     } catch (error) {
-      console.error('Project import error:', error);
-      res.status(500).json({ message: "Failed to import project" });
+      console.error("Error importing templates:", error);
+      res.status(500).json(createSafeErrorResponse(error, "Failed to import templates"));
     }
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  return createServer(app);
 }
-
