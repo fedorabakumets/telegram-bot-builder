@@ -33,17 +33,17 @@ export function ButtonConnectionsLayer({
     nodes.forEach(sourceNode => {
       if (!sourceNode.data.buttons || sourceNode.data.buttons.length === 0) return;
       
-      // Calculate node dimensions for button positioning
-      const baseHeight = 200;
-      const buttonHeight = sourceNode.data.keyboardType === 'inline' ? 
-        Math.ceil(sourceNode.data.buttons.length / 2) * 50 : 
-        sourceNode.data.buttons.length * 40;
-      
-      const nodeHeight = baseHeight + buttonHeight;
+      // Calculate node dimensions matching CanvasNode layout
       const nodeWidth = 320;
+      const headerHeight = 80; // Header with title and description
+      const messageHeight = sourceNode.data.messageText ? 80 : 0; // Message preview area
+      const imageHeight = sourceNode.type === 'photo' ? 120 : 0; // Image preview area
       
-      // Calculate button start position (beginning of buttons section)
-      const buttonsStartY = sourceNode.position.y + baseHeight;
+      // Base content height before buttons
+      const baseContentHeight = headerHeight + messageHeight + imageHeight;
+      
+      // Calculate buttons section start
+      const buttonsStartY = sourceNode.position.y + baseContentHeight + 16; // 16px for spacing
       
       sourceNode.data.buttons.forEach((button, buttonIndex) => {
         // Only show connections for goto buttons that have valid targets
@@ -57,25 +57,26 @@ export function ButtonConnectionsLayer({
         let buttonY: number;
         
         if (sourceNode.data.keyboardType === 'inline') {
-          // Inline buttons: 2 columns grid with proper spacing
+          // Inline buttons: 2 columns grid layout
           const row = Math.floor(buttonIndex / 2);
           const col = buttonIndex % 2;
-          const buttonAreaStartX = sourceNode.position.x + 16; // Account for padding
-          const buttonAreaStartY = buttonsStartY + 16; // Account for section header
+          const buttonAreaPadding = 16;
+          const sectionHeaderHeight = 24; // "Inline кнопки" header
           const buttonWidth = 140;
-          const buttonSpacing = 8;
+          const buttonHeight = 48;
+          const gridGap = 8;
           
-          buttonX = buttonAreaStartX + (col * (buttonWidth + buttonSpacing)) + (buttonWidth / 2);
-          buttonY = buttonAreaStartY + (row * 50) + 24; // Center of button height
+          buttonX = sourceNode.position.x + buttonAreaPadding + (col * (buttonWidth + gridGap)) + (buttonWidth / 2);
+          buttonY = buttonsStartY + sectionHeaderHeight + (row * (buttonHeight + gridGap)) + (buttonHeight / 2);
         } else {
-          // Reply buttons: single column with proper spacing
-          const buttonAreaStartX = sourceNode.position.x + 16; // Account for padding
-          const buttonAreaStartY = buttonsStartY + 16; // Account for section header
-          const buttonHeight = 40;
+          // Reply buttons: single column layout
+          const buttonAreaPadding = 16;
+          const sectionHeaderHeight = 24; // "Reply кнопки" header
+          const buttonHeight = 48;
           const buttonSpacing = 8;
           
-          buttonX = buttonAreaStartX + 20; // Small offset from left edge
-          buttonY = buttonAreaStartY + (buttonIndex * (buttonHeight + buttonSpacing)) + (buttonHeight / 2);
+          buttonX = sourceNode.position.x + buttonAreaPadding + 24; // Small right offset from start
+          buttonY = buttonsStartY + sectionHeaderHeight + (buttonIndex * (buttonHeight + buttonSpacing)) + (buttonHeight / 2);
         }
         
         // Calculate target position (left edge, middle of node)
@@ -89,25 +90,35 @@ export function ButtonConnectionsLayer({
         const targetX = targetNode.position.x - 8;
         const targetY = targetNode.position.y + targetNodeHeight / 2;
         
-        // Calculate path for smooth curve
+        // Create hierarchical straight lines like organizational chart
         const deltaX = targetX - buttonX;
         const deltaY = targetY - buttonY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         
-        // Adaptive curve based on distance
-        const controlPointOffset = Math.min(Math.abs(deltaX) / 2, Math.max(60, distance * 0.25));
+        // Calculate intermediate point for hierarchical routing
+        const horizontalDistance = Math.abs(deltaX);
+        const verticalDistance = Math.abs(deltaY);
         
-        const controlPoint1X = buttonX + controlPointOffset;
-        const controlPoint1Y = buttonY;
-        const controlPoint2X = targetX - controlPointOffset;
-        const controlPoint2Y = targetY;
+        let path: string;
+        let midX: number;
+        let midY: number;
         
-        const path = `M ${buttonX} ${buttonY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${targetX} ${targetY}`;
-        
-        // Calculate midpoint for labels
-        const t = 0.5;
-        const midX = Math.pow(1-t, 3) * buttonX + 3 * Math.pow(1-t, 2) * t * controlPoint1X + 3 * (1-t) * Math.pow(t, 2) * controlPoint2X + Math.pow(t, 3) * targetX;
-        const midY = Math.pow(1-t, 3) * buttonY + 3 * Math.pow(1-t, 2) * t * controlPoint1Y + 3 * (1-t) * Math.pow(t, 2) * controlPoint2Y + Math.pow(t, 3) * targetY;
+        if (horizontalDistance > verticalDistance) {
+          // Horizontal-first routing (like org chart)
+          const intermediateX = buttonX + (deltaX * 0.7);
+          const intermediateY = buttonY;
+          
+          path = `M ${buttonX} ${buttonY} L ${intermediateX} ${intermediateY} L ${intermediateX} ${targetY} L ${targetX} ${targetY}`;
+          midX = intermediateX;
+          midY = (buttonY + targetY) / 2;
+        } else {
+          // Vertical-first routing
+          const intermediateX = buttonX;
+          const intermediateY = buttonY + (deltaY * 0.7);
+          
+          path = `M ${buttonX} ${buttonY} L ${intermediateX} ${intermediateY} L ${targetX} ${intermediateY} L ${targetX} ${targetY}`;
+          midX = (buttonX + targetX) / 2;
+          midY = intermediateY;
+        }
         
         buttonConnections.push({
           id: `${sourceNode.id}-${button.id}-${targetNode.id}`,
@@ -138,46 +149,57 @@ export function ButtonConnectionsLayer({
     >
       {buttonConnections.map((connection) => (
         <g key={connection.id} className="button-connection">
-          {/* Connection line */}
+          {/* Arrow marker definition */}
+          <defs>
+            <marker
+              id={`arrow-${connection.id}`}
+              markerWidth="10"
+              markerHeight="10"
+              refX="8"
+              refY="3"
+              orient="auto"
+            >
+              <polygon
+                points="0 0, 10 3, 0 6"
+                fill="hsl(var(--muted-foreground))"
+                className="opacity-70"
+              />
+            </marker>
+          </defs>
+          
+          {/* Hierarchical connection line with arrow */}
           <path
             d={connection.path}
-            stroke="hsl(var(--primary))"
+            stroke="hsl(var(--muted-foreground))"
             strokeWidth="2"
             fill="none"
-            className="opacity-60 hover:opacity-80 transition-opacity duration-200"
-            strokeDasharray="5,3"
+            markerEnd={`url(#arrow-${connection.id})`}
+            className="opacity-70 hover:opacity-100 transition-opacity duration-200"
             style={{
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
             }}
           />
           
-          {/* Arrow marker at target */}
-          <circle
-            cx={connection.targetPosition.x}
-            cy={connection.targetPosition.y}
-            r="3"
-            fill="hsl(var(--primary))"
-            className="opacity-80"
-          />
-          
-          {/* Button indicator at source */}
+          {/* Source point indicator */}
           <circle
             cx={connection.buttonPosition.x}
             cy={connection.buttonPosition.y}
-            r="4"
+            r="3"
             fill="hsl(var(--primary))"
-            className="opacity-70"
+            stroke="white"
+            strokeWidth="1"
+            className="opacity-80"
           />
           
-          {/* Button text label */}
+          {/* Minimal button label */}
           <foreignObject
-            x={connection.midPoint.x - 40}
-            y={connection.midPoint.y - 12}
-            width="80"
-            height="24"
+            x={connection.midPoint.x - 50}
+            y={connection.midPoint.y - 10}
+            width="100"
+            height="20"
             className="pointer-events-none"
           >
-            <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 shadow-sm text-center truncate">
+            <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50 rounded px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 text-center truncate shadow-sm">
               {connection.buttonText}
             </div>
           </foreignObject>
