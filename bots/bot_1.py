@@ -16,12 +16,27 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+    text = "Привет! Добро пожаловать!"
+    
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="Новая кнопка"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    await message.answer(text, reply_markup=keyboard)
+
 @dp.message()
-async def message_DAoHIC4l0szO303gumgrv_handler(message: types.Message):
+async def message_86zmlb2YQHDg8l1Z7s6pO_handler(message: types.Message):
     text = "Новое сообщение"
     # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
+
+# Обработчики синонимов команд
+@dp.message(lambda message: message.text and message.text.lower() == "")
+async def start_synonym__handler(message: types.Message):
+    # Синоним для команды /start
+    await start_handler(message)
 
 # Запуск бота
 async def main():
