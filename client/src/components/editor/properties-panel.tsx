@@ -470,40 +470,6 @@ export function PropertiesPanel({
                             </UIButton>
                           </div>
                           
-                          {/* Advanced Button Settings */}
-                          <div className="grid grid-cols-2 gap-2 mb-2">
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Строка</Label>
-                              <Input
-                                type="number"
-                                min="0"
-                                max="10"
-                                value={button.rowPosition || 0}
-                                onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { rowPosition: parseInt(e.target.value) || 0 })}
-                                className="text-xs mt-1"
-                                placeholder="0"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-xs text-muted-foreground">Ширина</Label>
-                              <Select
-                                value={button.width || 'auto'}
-                                onValueChange={(value: 'auto' | 'full' | 'half' | 'third') =>
-                                  onButtonUpdate(selectedNode.id, button.id, { width: value })
-                                }
-                              >
-                                <SelectTrigger className="text-xs mt-1">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="auto">Авто</SelectItem>
-                                  <SelectItem value="full">Полная</SelectItem>
-                                  <SelectItem value="half">Половина</SelectItem>
-                                  <SelectItem value="third">Треть</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
                           <Select
                             value={button.action}
                             onValueChange={(value: 'goto' | 'command' | 'url') =>
@@ -516,6 +482,7 @@ export function PropertiesPanel({
                             <SelectContent>
                               <SelectItem value="goto">Перейти к экрану</SelectItem>
                               <SelectItem value="command">Выполнить команду</SelectItem>
+                              <SelectItem value="url">Открыть ссылку</SelectItem>
                             </SelectContent>
                           </Select>
                           
@@ -575,6 +542,15 @@ export function PropertiesPanel({
                                   ))}
                               </SelectContent>
                             </Select>
+                          )}
+                          
+                          {button.action === 'url' && (
+                            <Input
+                              value={button.url || ''}
+                              onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { url: e.target.value })}
+                              className="mt-2 text-xs"
+                              placeholder="https://example.com"
+                            />
                           )}
                         </div>
                       ))}
