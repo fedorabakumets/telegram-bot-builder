@@ -73,7 +73,7 @@ export function Canvas({
 
   return (
     <main className="w-full h-full bg-canvas-bg relative overflow-hidden">
-      <div className="absolute inset-0 overflow-auto p-8">
+      <div className="absolute inset-0 overflow-auto p-8 bg-[#2b3245]">
         {/* Enhanced Canvas Controls */}
         <div className="absolute top-4 left-4 flex items-center space-x-2 z-10 canvas-controls">
           <div className="bg-background/95 backdrop-blur-sm rounded-lg shadow-lg border border-border/60 flex items-center overflow-hidden">
