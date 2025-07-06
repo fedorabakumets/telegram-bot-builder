@@ -17,15 +17,14 @@ dp = Dispatcher()
 
 
 @dp.message()
-async def message_tNVmlaRAdVKjUlM_it5Pl_handler(message: types.Message):
+async def message_acxU5jzaotAmzbuy2Gm_H_handler(message: types.Message):
     text = "Новое сообщение"
     
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="Новая кнопка"))
     keyboard = builder.as_markup()
-    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-    await message.answer("Выберите действие:", reply_markup=keyboard)
+    # Отправляем сообщение с inline кнопками
+    await message.answer(text, reply_markup=keyboard)
 
 
 # Запуск бота

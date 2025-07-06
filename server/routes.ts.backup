@@ -268,8 +268,9 @@ async def start_handler(message: types.Message):
         });
         
         code += `    keyboard = builder.as_markup()
-    # Отправляем сообщение с inline кнопками
-    await message.answer(text, reply_markup=keyboard)
+    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
       } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
@@ -313,8 +314,9 @@ async def ${functionName}_handler(message: types.Message):
         });
         
         code += `    keyboard = builder.as_markup()
-    # Отправляем сообщение с inline кнопками
-    await message.answer(text, reply_markup=keyboard)
+    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
       } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
@@ -357,8 +359,9 @@ async def ${functionName}_handler(message: types.Message):
         });
         
         code += `    keyboard = builder.as_markup()
-    # Отправляем сообщение с inline кнопками
-    await message.answer(text, reply_markup=keyboard)
+    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
       } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
