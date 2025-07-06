@@ -138,17 +138,7 @@ export function Header({
           />
         )}
         
-        {/* Templates Page Link */}
-        <Link href="/templates">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex items-center space-x-2"
-          >
-            <Library className="h-4 w-4 text-muted-foreground" />
-            <span>Библиотека</span>
-          </Button>
-        </Link>
+        
         
         
         
