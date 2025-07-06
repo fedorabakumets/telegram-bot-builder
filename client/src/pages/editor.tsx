@@ -150,7 +150,7 @@ export default function Editor() {
     setLocation('/templates');
   }, [setLocation]);
 
-  const handleSelectTemplate = useCallback((template: any) => {
+  const handleSelectTemplate = useCallback(async (template: any) => {
     // Применяем шаблон к текущему проекту
     try {
       console.log('Обработка выбора шаблона:', template.name);
@@ -175,10 +175,33 @@ export default function Editor() {
       updateProjectMutation.mutate({
         data: templateData
       });
+
+      // Если это системный шаблон (не пользовательский), сохраняем его как пользовательский
+      if (template.category !== 'custom') {
+        try {
+          await apiRequest('POST', '/api/templates', {
+            name: template.name,
+            description: template.description || `Сохранен из библиотеки: ${template.name}`,
+            category: 'custom',
+            data: templateData,
+            difficulty: template.difficulty || 'easy',
+            tags: template.tags || [],
+            isPublic: false
+          });
+          
+          // Инвалидируем кэш пользовательских шаблонов
+          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+          
+          console.log('Шаблон сохранен в пользовательских');
+        } catch (saveError) {
+          console.error('Ошибка сохранения шаблона в пользовательских:', saveError);
+          // Не показываем ошибку пользователю, это не критично
+        }
+      }
       
       toast({
         title: 'Шаблон применен',
-        description: `Шаблон "${template.name}" успешно загружен на холст`,
+        description: `Шаблон "${template.name}" успешно загружен и сохранен в ваших шаблонах`,
       });
     } catch (error) {
       console.error('Ошибка применения шаблона:', error);
@@ -188,7 +211,7 @@ export default function Editor() {
         variant: 'destructive',
       });
     }
-  }, [setBotData, updateProjectMutation, toast, nodes.length, connections.length]);
+  }, [setBotData, updateProjectMutation, toast, nodes.length, connections.length, queryClient]);
 
   // Обработчики для управления связями
   const handleConnectionsChange = useCallback((newConnections: Connection[]) => {

@@ -162,9 +162,32 @@ export default function TemplatesPage() {
     try {
       await useTemplateMutation.mutateAsync(template.id);
       
+      // Если это системный шаблон (не пользовательский), сохраняем его как пользовательский
+      if (template.category !== 'custom') {
+        try {
+          await apiRequest('POST', '/api/templates', {
+            name: template.name,
+            description: template.description || `Сохранен из библиотеки: ${template.name}`,
+            category: 'custom',
+            data: template.data,
+            difficulty: template.difficulty || 'easy',
+            tags: template.tags || [],
+            isPublic: false
+          });
+          
+          // Инвалидируем кэш пользовательских шаблонов
+          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+          
+          console.log('Шаблон сохранен в пользовательских');
+        } catch (saveError) {
+          console.error('Ошибка сохранения шаблона в пользовательских:', saveError);
+          // Не показываем ошибку пользователю, это не критично
+        }
+      }
+      
       toast({
-        title: 'Шаблон отмечен как использованный',
-        description: `Шаблон "${template.name}" готов к работе`,
+        title: 'Шаблон готов к использованию',
+        description: `Шаблон "${template.name}" сохранен в ваших шаблонах`,
       });
     } catch (error) {
       console.error('Ошибка применения шаблона:', error);
