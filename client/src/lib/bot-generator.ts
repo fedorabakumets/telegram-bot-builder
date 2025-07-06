@@ -342,6 +342,7 @@ function generateKeyboard(node: Node): string {
     code += '    await message.answer(text, reply_markup=keyboard)\n';
   } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
     code += '    \n';
+    code += '    # Создаем inline клавиатуру с кнопками\n';
     code += '    builder = InlineKeyboardBuilder()\n';
     node.data.buttons.forEach(button => {
       if (button.action === "url") {
@@ -352,7 +353,11 @@ function generateKeyboard(node: Node): string {
     });
     
     code += '    keyboard = builder.as_markup()\n';
+    code += '    # Отправляем сообщение с inline кнопками\n';
     code += '    await message.answer(text, reply_markup=keyboard)\n';
+  } else if (node.data.keyboardType === "none" || !node.data.keyboardType) {
+    code += '    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)\n';
+    code += '    await message.answer(text, reply_markup=ReplyKeyboardRemove())\n';
   } else {
     code += '    await message.answer(text)\n';
   }
