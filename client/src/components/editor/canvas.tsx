@@ -575,17 +575,7 @@ export function Canvas({
               disabled={isPreviewMode}
             />
 
-            {/* Button Connections Toggle */}
-            <button 
-              onClick={() => setShowButtonConnections(!showButtonConnections)}
-              className={`p-2.5 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 transition-all duration-200 group ${
-                showButtonConnections 
-                  ? 'bg-blue-100/80 dark:bg-blue-900/80 hover:bg-blue-200/80 dark:hover:bg-blue-800/80' 
-                  : 'bg-white/80 dark:bg-slate-900/80 hover:bg-gray-50 dark:hover:bg-slate-800'
-              }`}
-              title={showButtonConnections ? "Скрыть линии от кнопок" : "Показать линии от кнопок"}
-            >
-            </button>
+            
 
 
 
