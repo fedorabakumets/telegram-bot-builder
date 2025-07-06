@@ -129,7 +129,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Generate response for target node
             const targetText = targetNode.data.messageText || "Сообщение";
-            code += `    text = "${targetText}"\n`;
+            const escapedTargetText = targetText.replace(/\n/g, '\\n').replace(/"/g, '\\"');
+            code += `    text = "${escapedTargetText}"\n`;
             
             // Handle keyboard for target node
             if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
@@ -185,7 +186,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Generate response for target node
             const targetText = targetNode.data.messageText || "Сообщение";
-            code += `    text = "${targetText}"\n`;
+            const escapedTargetText = targetText.replace(/\n/g, '\\n').replace(/"/g, '\\"');
+            code += `    text = "${escapedTargetText}"\n`;
             
             // Handle keyboard for target node
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
@@ -296,7 +298,8 @@ function generateStartHandler(node: Node): string {
   code += '    }\n\n';
   
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
-  code += `    text = "${messageText}"\n`;
+  const escapedText = messageText.replace(/\n/g, '\\n').replace(/"/g, '\\"');
+  code += `    text = "${escapedText}"\n`;
   
   return code + generateKeyboard(node);
 }
@@ -328,7 +331,8 @@ function generateCommandHandler(node: Node): string {
   }
 
   const messageText = node.data.messageText || "Команда выполнена";
-  code += `\n    text = "${messageText}"\n`;
+  const escapedText = messageText.replace(/\n/g, '\\n').replace(/"/g, '\\"');
+  code += `\n    text = "${escapedText}"\n`;
   
   return code + generateKeyboard(node);
 }
