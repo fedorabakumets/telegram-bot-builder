@@ -16,12 +16,6 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-@dp.message(CommandStart())
-async def start_handler(message: types.Message):
-    text = "Привет! Добро пожаловать!"
-    # Удаляем предыдущие reply клавиатуры если они были
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-
 
 # Запуск бота
 async def main():
