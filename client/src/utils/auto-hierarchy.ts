@@ -175,6 +175,189 @@ export function calculateAutoHierarchy(
 }
 
 /**
+ * Генерирует автоматические соединения между узлами на основе их типов и расположения
+ */
+export function generateAutoConnections(
+  nodes: Node[], 
+  existingConnections: Connection[]
+): Connection[] {
+  const newConnections: Connection[] = [];
+  const existingConnectionMap = new Map<string, Set<string>>();
+  
+  // Создаем карту существующих соединений для быстрого поиска
+  existingConnections.forEach(conn => {
+    if (!existingConnectionMap.has(conn.source)) {
+      existingConnectionMap.set(conn.source, new Set());
+    }
+    existingConnectionMap.get(conn.source)!.add(conn.target);
+  });
+  
+  // Функция для проверки, существует ли уже соединение
+  const connectionExists = (source: string, target: string): boolean => {
+    return existingConnectionMap.has(source) && existingConnectionMap.get(source)!.has(target);
+  };
+  
+  // Функция для создания соединения
+  const createConnection = (source: Node, target: Node, buttonText?: string): Connection => {
+    const connectionId = `auto-${source.id}-${target.id}`;
+    return {
+      id: connectionId,
+      source: source.id,
+      target: target.id,
+      buttonText: buttonText || getDefaultButtonText(source, target),
+      sourceHandle: 'right',
+      targetHandle: 'left'
+    };
+  };
+  
+  // Сортируем узлы по позиции для логичной последовательности
+  const sortedNodes = [...nodes].sort((a, b) => {
+    if (Math.abs(a.position.y - b.position.y) < 50) {
+      return a.position.x - b.position.x; // Сортировка по X если Y примерно равны
+    }
+    return a.position.y - b.position.y; // Сортировка по Y
+  });
+  
+  // 1. Соединяем стартовые узлы с первыми логическими узлами
+  const startNodes = sortedNodes.filter(node => node.type === 'start');
+  const messageNodes = sortedNodes.filter(node => node.type === 'message');
+  const commandNodes = sortedNodes.filter(node => node.type === 'command');
+  
+  startNodes.forEach(startNode => {
+    // Находим ближайший узел-сообщение или команду
+    const nearestMessage = findNearestNode(startNode, messageNodes);
+    const nearestCommand = findNearestNode(startNode, commandNodes);
+    
+    if (nearestMessage && !connectionExists(startNode.id, nearestMessage.id)) {
+      newConnections.push(createConnection(startNode, nearestMessage, 'Начать'));
+    }
+    
+    if (nearestCommand && !connectionExists(startNode.id, nearestCommand.id)) {
+      newConnections.push(createConnection(startNode, nearestCommand));
+    }
+  });
+  
+  // 2. Создаем логические цепочки сообщений
+  messageNodes.forEach((messageNode, index) => {
+    const nextMessage = messageNodes[index + 1];
+    if (nextMessage && !connectionExists(messageNode.id, nextMessage.id)) {
+      // Проверяем, что узлы достаточно близко друг к другу
+      const distance = calculateDistance(messageNode.position, nextMessage.position);
+      if (distance < 400) { // Максимальное расстояние для автосоединения
+        newConnections.push(createConnection(messageNode, nextMessage, 'Далее'));
+      }
+    }
+  });
+  
+  // 3. Соединяем узлы клавиатуры с сообщениями
+  const keyboardNodes = sortedNodes.filter(node => node.type === 'keyboard');
+  keyboardNodes.forEach(keyboardNode => {
+    const nearbyMessages = messageNodes.filter(msg => {
+      const distance = calculateDistance(keyboardNode.position, msg.position);
+      return distance < 300 && msg.position.y > keyboardNode.position.y;
+    });
+    
+    nearbyMessages.forEach((messageNode, index) => {
+      if (!connectionExists(keyboardNode.id, messageNode.id)) {
+        const buttonText = keyboardNode.data?.buttons?.[index]?.text || `Кнопка ${index + 1}`;
+        newConnections.push(createConnection(keyboardNode, messageNode, buttonText));
+      }
+    });
+  });
+  
+  // 4. Соединяем узлы условий с соответствующими ветками
+  const conditionNodes = sortedNodes.filter(node => node.type === 'condition');
+  conditionNodes.forEach(conditionNode => {
+    const nearbyNodes = sortedNodes.filter(node => {
+      const distance = calculateDistance(conditionNode.position, node.position);
+      return distance < 350 && node.position.y > conditionNode.position.y && node.id !== conditionNode.id;
+    });
+    
+    if (nearbyNodes.length >= 2) {
+      // Создаем соединения "Да" и "Нет"
+      const leftNode = nearbyNodes.reduce((prev, curr) => 
+        prev.position.x < curr.position.x ? prev : curr
+      );
+      const rightNode = nearbyNodes.reduce((prev, curr) => 
+        prev.position.x > curr.position.x ? prev : curr
+      );
+      
+      if (!connectionExists(conditionNode.id, leftNode.id)) {
+        newConnections.push(createConnection(conditionNode, leftNode, 'Да'));
+      }
+      if (!connectionExists(conditionNode.id, rightNode.id)) {
+        newConnections.push(createConnection(conditionNode, rightNode, 'Нет'));
+      }
+    }
+  });
+  
+  // 5. Соединяем узлы ввода с обработчиками
+  const inputNodes = sortedNodes.filter(node => node.type === 'input');
+  inputNodes.forEach(inputNode => {
+    const nearbyProcessors = sortedNodes.filter(node => {
+      const distance = calculateDistance(inputNode.position, node.position);
+      return distance < 300 && node.position.y > inputNode.position.y && 
+             ['message', 'condition'].includes(node.type);
+    });
+    
+    if (nearbyProcessors.length > 0) {
+      const closestProcessor = nearbyProcessors[0];
+      if (!connectionExists(inputNode.id, closestProcessor.id)) {
+        newConnections.push(createConnection(inputNode, closestProcessor, 'Обработать'));
+      }
+    }
+  });
+  
+  return newConnections;
+}
+
+/**
+ * Находит ближайший узел из списка к заданному узлу
+ */
+function findNearestNode(targetNode: Node, nodeList: Node[]): Node | null {
+  if (nodeList.length === 0) return null;
+  
+  return nodeList.reduce((nearest, current) => {
+    const nearestDistance = calculateDistance(targetNode.position, nearest.position);
+    const currentDistance = calculateDistance(targetNode.position, current.position);
+    return currentDistance < nearestDistance ? current : nearest;
+  });
+}
+
+/**
+ * Вычисляет расстояние между двумя точками
+ */
+function calculateDistance(pos1: { x: number; y: number }, pos2: { x: number; y: number }): number {
+  const dx = pos1.x - pos2.x;
+  const dy = pos1.y - pos2.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * Генерирует текст кнопки по умолчанию на основе типов узлов
+ */
+function getDefaultButtonText(source: Node, target: Node): string {
+  switch (source.type) {
+    case 'start':
+      return 'Начать';
+    case 'message':
+      if (target.type === 'keyboard') return 'Показать меню';
+      if (target.type === 'condition') return 'Проверить';
+      return 'Далее';
+    case 'keyboard':
+      return 'Выбрать';
+    case 'condition':
+      return 'Если да';
+    case 'input':
+      return 'Ввести';
+    case 'command':
+      return 'Выполнить';
+    default:
+      return 'Продолжить';
+  }
+}
+
+/**
  * Создает иерархическую компоновку (улучшенная версия)
  */
 function createHierarchicalLayout(nodes: Node[], connections: Connection[], config: LayoutConfig): Node[] {
@@ -805,6 +988,77 @@ export function animatedAdaptiveLayout(
     });
     
     onNodeUpdate(interpolatedNodes);
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  }
+  
+  animate();
+}
+
+/**
+ * Автоматически расставляет узлы и генерирует соединения между ними
+ */
+export function calculateAutoHierarchyWithConnections(
+  nodes: Node[], 
+  connections: Connection[], 
+  config?: Partial<LayoutConfig>
+): { nodes: Node[]; connections: Connection[] } {
+  if (nodes.length === 0) return { nodes, connections };
+  
+  // Сначала расставляем узлы
+  const arrangedNodes = calculateAutoHierarchy(nodes, connections, config);
+  
+  // Затем генерируем автоматические соединения на основе новых позиций
+  const autoConnections = generateAutoConnections(arrangedNodes, connections);
+  
+  // Объединяем существующие и новые соединения
+  const allConnections = [...connections, ...autoConnections];
+  
+  return {
+    nodes: arrangedNodes,
+    connections: allConnections
+  };
+}
+
+/**
+ * Анимированная функция для расстановки узлов с автогенерацией соединений
+ */
+export function animatedAutoHierarchyWithConnections(
+  nodes: Node[],
+  connections: Connection[],
+  onUpdate: (nodes: Node[], connections: Connection[]) => void,
+  duration: number = 1000,
+  config?: Partial<LayoutConfig>
+): void {
+  const result = calculateAutoHierarchyWithConnections(nodes, connections, config);
+  const startTime = Date.now();
+  
+  function animate() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Функция сглаживания
+    const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+    
+    const interpolatedNodes = nodes.map((node, index) => {
+      const target = result.nodes.find(t => t.id === node.id);
+      if (!target) return node;
+      
+      return {
+        ...node,
+        position: {
+          x: node.position.x + (target.position.x - node.position.x) * easeProgress,
+          y: node.position.y + (target.position.y - node.position.y) * easeProgress
+        }
+      };
+    });
+    
+    // Показываем соединения только в конце анимации
+    const currentConnections = progress > 0.8 ? result.connections : connections;
+    
+    onUpdate(interpolatedNodes, currentConnections);
     
     if (progress < 1) {
       requestAnimationFrame(animate);

@@ -6,6 +6,7 @@ import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
 import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
 import { SimpleAutoHierarchyButton } from '@/components/ui/simple-auto-hierarchy-button';
 import { AutoHierarchySettings } from '@/components/ui/auto-hierarchy-settings';
+import { AutoConnectionButton } from '@/components/ui/auto-connection-button';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Node, ComponentDefinition, Connection } from '@shared/schema';
@@ -433,6 +434,38 @@ export function Canvas({
     setIsPreviewMode(false);
   }, [onNodesUpdate]);
 
+  const handleApplyLayoutWithConnections = useCallback((layoutNodes: Node[], newConnections: Connection[]) => {
+    if (onNodesUpdate) {
+      onNodesUpdate(layoutNodes);
+    }
+    
+    // Добавляем новые соединения
+    newConnections.forEach(connection => {
+      // Проверяем, что соединение еще не существует
+      const existingConnection = connections.find(c => 
+        c.source === connection.source && c.target === connection.target
+      );
+      if (!existingConnection && onConnectionAdd) {
+        onConnectionAdd(connection);
+      }
+    });
+    
+    setPreviewNodes(null);
+    setIsPreviewMode(false);
+  }, [onNodesUpdate, onConnectionAdd, connections]);
+
+  const handleConnectionsAdd = useCallback((newConnections: Connection[]) => {
+    newConnections.forEach(connection => {
+      // Проверяем, что соединение еще не существует
+      const existingConnection = connections.find(c => 
+        c.source === connection.source && c.target === connection.target
+      );
+      if (!existingConnection && onConnectionAdd) {
+        onConnectionAdd(connection);
+      }
+    });
+  }, [onConnectionAdd, connections]);
+
   // Use preview nodes if in preview mode, otherwise use actual nodes
   const displayNodes = isPreviewMode && previewNodes ? previewNodes : nodes;
 
@@ -528,11 +561,19 @@ export function Canvas({
               nodes={displayNodes}
               connections={connections}
               onApplyLayout={handleApplyLayout}
+              onApplyLayoutWithConnections={handleApplyLayoutWithConnections}
               zoom={zoom}
               viewportWidth={canvasRef.current?.clientWidth || 1200}
               viewportHeight={canvasRef.current?.clientHeight || 800}
               viewportCenterX={canvasRef.current ? canvasRef.current.clientWidth / 2 : 600}
               viewportCenterY={canvasRef.current ? canvasRef.current.clientHeight / 2 : 400}
+            />
+
+            <AutoConnectionButton
+              nodes={displayNodes}
+              connections={connections}
+              onConnectionsAdd={handleConnectionsAdd}
+              disabled={isPreviewMode}
             />
 
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50">
