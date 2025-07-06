@@ -1077,22 +1077,29 @@ function createSimpleGrid(nodes: Node[]): Node[] {
   // Используем размеры узлов по умолчанию для расчета отступов
   const nodeWidth = 160;
   const nodeHeight = 100;
-  const padding = 40; // Отступ между узлами
+  const padding = 60; // Увеличенный отступ между узлами для гарантии отсутствия перекрытий
   
   const spacingX = nodeWidth + padding;
   const spacingY = nodeHeight + padding;
   const startX = 100;
   const startY = 100;
   
+  console.log('createSimpleGrid: nodes count:', nodes.length, 'cols:', cols, 'spacingX:', spacingX, 'spacingY:', spacingY);
+  
   return nodes.map((node, index) => {
     const col = index % cols;
     const row = Math.floor(index / cols);
     
+    const x = startX + col * spacingX;
+    const y = startY + row * spacingY;
+    
+    console.log(`Node ${index} (${node.id}): col=${col}, row=${row}, x=${x}, y=${y}`);
+    
     return {
       ...node,
       position: {
-        x: startX + col * spacingX,
-        y: startY + row * spacingY
+        x: x,
+        y: y
       }
     };
   });
