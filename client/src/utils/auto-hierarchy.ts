@@ -538,8 +538,8 @@ function positionNodesByLevel(levels: HierarchyLevel[], config: LayoutConfig): N
             break; // Позиция найдена
           }
           
-          // Сдвигаем узел вправо с учетом расширенных границ
-          const shiftAmount = config.nodeWidth + 40; // Увеличен сдвиг
+          // Сдвигаем узел вправо с минимальным шагом для компактности
+          const shiftAmount = config.nodeWidth + 25; // Минимальный сдвиг
           x += shiftAmount;
           attempts++;
         }
@@ -547,7 +547,7 @@ function positionNodesByLevel(levels: HierarchyLevel[], config: LayoutConfig): N
         // Если все еще есть перекрытие, сдвигаем вниз и возвращаем X
         if (attempts >= maxAttempts) {
           x = startX + nodeIndex * adjustedNodeSpacing;
-          y = baseY + config.nodeHeight + 60; // Увеличен вертикальный сдвиг
+          y = baseY + config.nodeHeight + 40; // Минимальный вертикальный сдвиг
           
           // Пытаемся найти позицию на новом уровне
           let verticalAttempts = 0;
@@ -561,7 +561,7 @@ function positionNodesByLevel(levels: HierarchyLevel[], config: LayoutConfig): N
               break;
             }
             
-            y += config.nodeHeight + 40;
+            y += config.nodeHeight + 30; // Минимальный вертикальный шаг
             verticalAttempts++;
           }
         }
@@ -969,27 +969,25 @@ export function doNodesOverlap(node1: Node, node2: Node, config: LayoutConfig): 
   const bounds1 = calculateNodeBounds(node1, config);
   const bounds2 = calculateNodeBounds(node2, config);
   
-  // Адаптивный отступ в зависимости от типов узлов
-  let padding = 25; // Базовый отступ
+  // Минимальный отступ для компактного размещения
+  let padding = 15; // Базовый минимальный отступ
   
-  // Увеличиваем отступ для узлов с клавиатурой
+  // Небольшие дополнительные отступы для разных типов узлов
   if (node1.type === 'keyboard' || node2.type === 'keyboard') {
-    padding = Math.max(padding, 35);
+    padding = Math.max(padding, 20);
   }
   
-  // Увеличиваем отступ для условий
   if (node1.type === 'condition' || node2.type === 'condition') {
-    padding = Math.max(padding, 30);
+    padding = Math.max(padding, 18);
   }
   
-  // Увеличиваем отступ для стартовых узлов
   if (node1.type === 'start' || node2.type === 'start') {
-    padding = Math.max(padding, 30);
+    padding = Math.max(padding, 18);
   }
   
-  // Дополнительный отступ если узлы на одном уровне (по Y)
-  if (Math.abs(bounds1.top - bounds2.top) < 50) {
-    padding = Math.max(padding, 40);
+  // Минимальный дополнительный отступ если узлы на одном уровне
+  if (Math.abs(bounds1.top - bounds2.top) < 30) {
+    padding = Math.max(padding, 25);
   }
   
   return !(bounds1.right + padding < bounds2.left || 
@@ -1016,15 +1014,15 @@ export function createAdaptiveLayout(nodes: Node[], connections: Connection[]): 
   
   const config: LayoutConfig = {
     algorithm: analysis.recommendedAlgorithm,
-    levelSpacing: analysis.maxDepth > 5 ? 280 : 320, // Увеличен для учета новых границ
-    nodeSpacing: analysis.totalNodes > 10 ? 260 : 280, // Увеличен отступ для предотвращения перекрытий
-    startX: 120, // Увеличен стартовый отступ
-    startY: 120, // Увеличен стартовый отступ
+    levelSpacing: analysis.maxDepth > 5 ? 180 : 200, // Минимальные расстояния
+    nodeSpacing: analysis.totalNodes > 10 ? 160 : 180, // Минимальные расстояния
+    startX: 100,
+    startY: 100,
     nodeWidth: 160,
     nodeHeight: 100,
     preventOverlaps: true,
     centerAlign: true,
-    compactLayout: analysis.totalNodes > 15,
+    compactLayout: true, // Включено по умолчанию
     respectNodeTypes: true
   };
   
@@ -1166,16 +1164,16 @@ function createSimpleGrid(nodes: Node[]): Node[] {
   else if (nodes.length <= 12) cols = 4;
   else cols = Math.ceil(Math.sqrt(nodes.length));
   
-  // Размеры узлов и отступы с учетом всех визуальных элементов
+  // Размеры узлов и отступы - минимальные для компактного размещения
   const nodeWidth = 160;
   const nodeHeight = 100;
-  const paddingX = 120; // Увеличен для учета границ элементов
-  const paddingY = 80; // Увеличен для учета границ элементов
+  const paddingX = 80; // Минимальное расстояние для предотвращения наложений
+  const paddingY = 60; // Минимальное расстояние для предотвращения наложений
   
   const spacingX = nodeWidth + paddingX;
   const spacingY = nodeHeight + paddingY;
-  const startX = 200; // Увеличен отступ от края
-  const startY = 200;
+  const startX = 150; // Уменьшен отступ от края
+  const startY = 150;
   
   console.log('createSimpleGrid: nodes count:', nodes.length, 'cols:', cols, 'spacingX:', spacingX, 'spacingY:', spacingY);
   
