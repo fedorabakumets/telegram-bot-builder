@@ -417,13 +417,16 @@ export function PropertiesPanel({
                 {/* Превью изображения */}
                 {selectedNode.data.imageUrl && (
                   <div className="relative">
-                    <Label className="text-xs font-medium text-muted-foreground">Превью</Label>
-                    <div className="mt-2 border border-border rounded-lg p-3 bg-muted/30">
-                      <div className="aspect-video bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg flex items-center justify-center relative overflow-hidden">
+                    <div className="flex items-center mb-3">
+                      <div className="w-1 h-4 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full mr-2"></div>
+                      <Label className="text-xs font-medium text-foreground">Превью изображения</Label>
+                    </div>
+                    <div className="mt-2 p-1 rounded-xl bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-indigo-500/10 dark:from-purple-500/20 dark:via-pink-500/20 dark:to-indigo-500/20">
+                      <div className="aspect-video bg-gradient-to-br from-purple-50/80 to-pink-50/80 dark:from-gray-900/80 dark:to-gray-800/80 rounded-lg flex items-center justify-center relative overflow-hidden border border-purple-200/30 dark:border-purple-700/30 backdrop-blur-sm">
                         <img 
                           src={selectedNode.data.imageUrl} 
                           alt="Превью фото" 
-                          className="max-h-full max-w-full object-contain rounded transition-all duration-200"
+                          className="max-h-full max-w-full object-contain rounded transition-all duration-300 hover:scale-105 filter drop-shadow-lg"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
@@ -434,9 +437,17 @@ export function PropertiesPanel({
                           }}
                         />
                         <div className="fallback-icon hidden w-full h-full flex flex-col items-center justify-center text-muted-foreground">
-                          <i className="fas fa-exclamation-triangle text-red-500 text-xl mb-2"></i>
-                          <span className="text-xs text-center">Ошибка загрузки изображения</span>
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50 flex items-center justify-center mb-4">
+                            <i className="fas fa-exclamation-triangle text-red-500 dark:text-red-400 text-2xl"></i>
+                          </div>
+                          <span className="text-sm font-medium text-center">Ошибка загрузки изображения</span>
+                          <span className="text-xs text-center mt-1 opacity-70">Проверьте корректность URL</span>
                         </div>
+                        
+                        {/* Декоративные элементы */}
+                        <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-purple-400/50 dark:bg-purple-500/50 animate-pulse"></div>
+                        <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-pink-400/50 dark:bg-pink-500/50 animate-pulse delay-75"></div>
+                        <div className="absolute top-2 right-2 w-1 h-1 rounded-full bg-indigo-400/50 dark:bg-indigo-500/50 animate-pulse delay-150"></div>
                       </div>
                     </div>
                   </div>
@@ -444,51 +455,78 @@ export function PropertiesPanel({
                 
                 {/* Дополнительные настройки фото */}
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground">Дополнительные настройки</Label>
+                  <div className="flex items-center mb-3">
+                    <div className="w-1 h-4 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full mr-2"></div>
+                    <Label className="text-xs font-medium text-foreground">Дополнительные настройки</Label>
+                  </div>
                   <div className="mt-2 space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
-                      <div className="flex-1">
-                        <Label className="text-xs font-medium text-foreground">
-                          Отправлять без сжатия
-                        </Label>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Сохранить оригинальное качество
+                    <div className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-card/60 to-card/40 dark:from-gray-800/60 dark:to-gray-900/40 border border-border/50 dark:border-gray-700/50 hover:border-purple-500/30 dark:hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg dark:hover:shadow-purple-500/10">
+                      <div className="flex items-start space-x-3 flex-1">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+                          <i className="fas fa-file-image text-blue-600 dark:text-blue-400 text-sm"></i>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Label className="text-sm font-medium text-foreground group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-200">
+                            Отправлять без сжатия
+                          </Label>
+                          <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                            Сохранить оригинальное качество изображения
+                          </div>
                         </div>
                       </div>
-                      <Switch
-                        checked={selectedNode.data.sendAsDocument ?? false}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { sendAsDocument: checked })}
-                      />
+                      <div className="ml-4">
+                        <Switch
+                          checked={selectedNode.data.sendAsDocument ?? false}
+                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { sendAsDocument: checked })}
+                          className="photo-settings-switch blue-variant"
+                        />
+                      </div>
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
-                      <div className="flex-1">
-                        <Label className="text-xs font-medium text-foreground">
-                          Защитить от пересылки
-                        </Label>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Запретить сохранение и пересылку
+                    <div className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-card/60 to-card/40 dark:from-gray-800/60 dark:to-gray-900/40 border border-border/50 dark:border-gray-700/50 hover:border-green-500/30 dark:hover:border-green-400/30 transition-all duration-300 hover:shadow-lg dark:hover:shadow-green-500/10">
+                      <div className="flex items-start space-x-3 flex-1">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+                          <i className="fas fa-shield-alt text-green-600 dark:text-green-400 text-sm"></i>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Label className="text-sm font-medium text-foreground group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-200">
+                            Защитить от пересылки
+                          </Label>
+                          <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                            Запретить сохранение и пересылку изображения
+                          </div>
                         </div>
                       </div>
-                      <Switch
-                        checked={selectedNode.data.hasContentProtection ?? true}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { hasContentProtection: checked })}
-                      />
+                      <div className="ml-4">
+                        <Switch
+                          checked={selectedNode.data.hasContentProtection ?? true}
+                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { hasContentProtection: checked })}
+                          className="photo-settings-switch green-variant"
+                        />
+                      </div>
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
-                      <div className="flex-1">
-                        <Label className="text-xs font-medium text-foreground">
-                          Показывать превью ссылки
-                        </Label>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Отображать превью при отправке URL
+                    <div className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-card/60 to-card/40 dark:from-gray-800/60 dark:to-gray-900/40 border border-border/50 dark:border-gray-700/50 hover:border-orange-500/30 dark:hover:border-orange-400/30 transition-all duration-300 hover:shadow-lg dark:hover:shadow-orange-500/10">
+                      <div className="flex items-start space-x-3 flex-1">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+                          <i className="fas fa-link text-orange-600 dark:text-orange-400 text-sm"></i>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Label className="text-sm font-medium text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200">
+                            Показывать превью ссылки
+                          </Label>
+                          <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                            Отображать превью при отправке URL-адресов
+                          </div>
                         </div>
                       </div>
-                      <Switch
-                        checked={!(selectedNode.data.disableWebPagePreview ?? false)}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { disableWebPagePreview: !checked })}
-                      />
+                      <div className="ml-4">
+                        <Switch
+                          checked={!(selectedNode.data.disableWebPagePreview ?? false)}
+                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { disableWebPagePreview: !checked })}
+                          className="photo-settings-switch orange-variant"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
