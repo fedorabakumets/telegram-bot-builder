@@ -922,13 +922,8 @@ export function doNodesOverlap(node1: Node, node2: Node, config: LayoutConfig): 
 export function createOptimalTreeLayout(nodes: Node[], connections: Connection[]): Node[] {
   if (nodes.length === 0) return nodes;
   
-  // Для небольшого количества узлов используем простую сетку
-  if (nodes.length <= 4) {
-    return createSimpleGrid(nodes);
-  }
-  
-  // Для большего количества используем иерархический алгоритм
-  return calculateAutoHierarchy(nodes, connections);
+  // Всегда используем улучшенную сетку с правильными отступами
+  return createSimpleGrid(nodes);
 }
 
 /**
@@ -1069,31 +1064,47 @@ export function animatedAutoHierarchyWithConnections(
 }
 
 /**
- * Создает простую сетку для небольшого количества узлов с правильными отступами
+ * Создает простую сетку для узлов с правильными отступами и логичной компоновкой
  */
 function createSimpleGrid(nodes: Node[]): Node[] {
-  const cols = Math.ceil(Math.sqrt(nodes.length));
+  if (nodes.length === 0) return nodes;
   
-  // Используем размеры узлов по умолчанию для расчета отступов
+  // Сортируем узлы по типу для логичного расположения
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const typeOrder = { 'start': 0, 'message': 1, 'keyboard': 2, 'photo': 3, 'condition': 4, 'input': 5, 'command': 6 };
+    const aOrder = typeOrder[a.type as keyof typeof typeOrder] ?? 999;
+    const bOrder = typeOrder[b.type as keyof typeof typeOrder] ?? 999;
+    return aOrder - bOrder;
+  });
+  
+  // Адаптивное количество колонок в зависимости от количества элементов
+  let cols: number;
+  if (nodes.length <= 2) cols = 2;
+  else if (nodes.length <= 6) cols = 3;
+  else if (nodes.length <= 12) cols = 4;
+  else cols = Math.ceil(Math.sqrt(nodes.length));
+  
+  // Размеры узлов и отступы
   const nodeWidth = 160;
   const nodeHeight = 100;
-  const padding = 60; // Увеличенный отступ между узлами для гарантии отсутствия перекрытий
+  const paddingX = 80; // Больший горизонтальный отступ
+  const paddingY = 60; // Вертикальный отступ
   
-  const spacingX = nodeWidth + padding;
-  const spacingY = nodeHeight + padding;
-  const startX = 100;
-  const startY = 100;
+  const spacingX = nodeWidth + paddingX;
+  const spacingY = nodeHeight + paddingY;
+  const startX = 150; // Больший отступ от края
+  const startY = 150;
   
   console.log('createSimpleGrid: nodes count:', nodes.length, 'cols:', cols, 'spacingX:', spacingX, 'spacingY:', spacingY);
   
-  return nodes.map((node, index) => {
+  return sortedNodes.map((node, index) => {
     const col = index % cols;
     const row = Math.floor(index / cols);
     
     const x = startX + col * spacingX;
     const y = startY + row * spacingY;
     
-    console.log(`Node ${index} (${node.id}): col=${col}, row=${row}, x=${x}, y=${y}`);
+    console.log(`Node ${index} (${node.type}): col=${col}, row=${row}, x=${x}, y=${y}`);
     
     return {
       ...node,
