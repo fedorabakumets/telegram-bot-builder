@@ -7,6 +7,7 @@ import { BotData, BotProject } from '@shared/schema';
 interface AutoSaveOptions {
   enabled?: boolean;
   delay?: number; // Задержка в миллисекундах перед сохранением
+  instantSave?: boolean; // Мгновенное сохранение без задержки
   showToasts?: boolean; // Показывать ли уведомления о сохранении
   onSaveSuccess?: () => void;
   onSaveError?: (error: any) => void;
@@ -26,6 +27,7 @@ export function useAutoSave(
   const {
     enabled = true,
     delay = 1000,
+    instantSave = false,
     showToasts = false,
     onSaveSuccess,
     onSaveError
@@ -113,13 +115,18 @@ export function useAutoSave(
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Устанавливаем новый таймер для отложенного сохранения
-    saveTimeoutRef.current = setTimeout(() => {
-      if (!isSaving && hasUnsavedChanges) {
-        saveProjectMutation.mutate(currentData);
-      }
-    }, delay);
-  }, [enabled, project, getBotData, hasDataChanged, delay, saveProjectMutation, isSaving, hasUnsavedChanges]);
+    if (instantSave) {
+      // Мгновенное сохранение
+      saveProjectMutation.mutate(currentData);
+    } else {
+      // Устанавливаем новый таймер для отложенного сохранения
+      saveTimeoutRef.current = setTimeout(() => {
+        if (!isSaving && hasUnsavedChanges) {
+          saveProjectMutation.mutate(currentData);
+        }
+      }, delay);
+    }
+  }, [enabled, project, getBotData, hasDataChanged, delay, instantSave, saveProjectMutation, isSaving, hasUnsavedChanges]);
 
   // Функция для принудительного сохранения
   const forceSave = useCallback(() => {

@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { HistoryIndicator } from './history-indicator';
 import { AutoSaveIndicator } from './auto-save-indicator';
+import { FloatingTemplateManager } from '@/components/ui/floating-template-manager';
 import { FolderOpen, Bookmark, Save, Download, User, Send } from 'lucide-react';
 import { useState } from 'react';
 
@@ -14,6 +15,9 @@ interface HeaderProps {
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
   isSaving?: boolean;
+  // Bot data for template creation
+  botData?: any;
+  onTemplateSaved?: (templateId: number) => void;
   // История изменений
   canUndo?: boolean;
   canRedo?: boolean;
@@ -37,6 +41,8 @@ export function Header({
   onSaveAsTemplate, 
   onLoadTemplate, 
   isSaving,
+  botData,
+  onTemplateSaved,
   canUndo = false,
   canRedo = false,
   onUndo,
@@ -113,7 +119,18 @@ export function Header({
       </div>
       
       <div className="flex items-center space-x-3">
-        {onLoadTemplate && (
+        {/* Enhanced Template Manager */}
+        {botData && (
+          <FloatingTemplateManager
+            botData={botData}
+            projectName={projectName}
+            onTemplateSaved={onTemplateSaved}
+            onLoadTemplate={onLoadTemplate}
+          />
+        )}
+        
+        {/* Fallback for legacy template buttons when botData is not available */}
+        {!botData && onLoadTemplate && (
           <Button 
             variant="outline" 
             size="sm"
@@ -128,7 +145,7 @@ export function Header({
           </Button>
         )}
         
-        {onSaveAsTemplate && (
+        {!botData && onSaveAsTemplate && (
           <Button 
             variant="outline" 
             size="sm"
