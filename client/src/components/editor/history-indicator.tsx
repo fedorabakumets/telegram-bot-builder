@@ -19,7 +19,6 @@ export function HistoryIndicator({ canUndo, canRedo, onUndo, onRedo }: HistoryIn
             className="h-7 w-7 p-0 text-xs"
             disabled={!canUndo && !canRedo}
           >
-            <i className="fas fa-history text-gray-500"></i>
           </Button>
         </PopoverTrigger>
         <PopoverContent side="bottom" className="w-48 p-3">
