@@ -17,23 +17,34 @@ dp = Dispatcher()
 
 
 @dp.message()
-async def message_2mpSTHjy7JRIfiUMO2bT5_handler(message: types.Message):
+async def message_FHx_Ak9Bzix5XDS_gGVhP_handler(message: types.Message):
     text = "Новое сообщение"
     
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="Новая кнопка"))
-    keyboard = builder.as_markup()
+    # Создаем комбинированную клавиатуру (Reply + Inline)
     
-    # Отправляем сообщение с inline кнопками
-    await message.answer(text, reply_markup=keyboard)
+    # Сначала создаем reply клавиатуру
+    reply_builder = ReplyKeyboardBuilder()
+    reply_builder.add(KeyboardButton(text="Новая кнопка"))
+    reply_builder.add(KeyboardButton(text="Новая кнопка"))
+    reply_keyboard = reply_builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    # Отправляем основное сообщение с reply клавиатурой
+    sent_message = await message.answer(text, reply_markup=reply_keyboard)
+    
+    # Затем создаем inline клавиатуру
+    inline_builder = InlineKeyboardBuilder()
+    inline_builder.add(InlineKeyboardButton(text="Новая inline кнопка", callback_data="Новая inline кнопка"))
+    inline_keyboard = inline_builder.as_markup()
+    # Прикрепляем inline кнопки к тому же сообщению
+    await message.answer(text, reply_markup=inline_keyboard)
+    # Устанавливаем reply клавиатуру отдельным минимальным сообщением
+    await message.answer("⚡", reply_markup=reply_keyboard)
 
 
-# Обработчик для inline кнопки
-@dp.callback_query(lambda c: c.data == "Новая кнопка")
-async def handle_new_button(callback_query: types.CallbackQuery):
-    await callback_query.answer("Кнопка нажата!")
-    await callback_query.message.answer("Вы нажали на новую кнопку!")
-
+# Обработчики inline кнопок
+@dp.callback_query(lambda c: c.data == "Новая inline кнопка")
+async def handle_inline_CK5AyUaUHfUkeoEXBOEuT(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    await callback_query.message.answer("Переход к: Новая inline кнопка")
 
 # Запуск бота
 async def main():
