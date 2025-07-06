@@ -30,12 +30,12 @@ async def start_handler(message: types.Message):
     
     # Затем создаем inline клавиатуру
     inline_builder = InlineKeyboardBuilder()
-    inline_builder.add(InlineKeyboardButton(text="Новая inline кнопка", callback_data="hPpcY9U6tXzQUtlnglr6j"))
+    inline_builder.add(InlineKeyboardButton(text="Новая inline кнопка", callback_data="W_-cjO_9uVsz2Cyu951_l"))
     inline_keyboard = inline_builder.as_markup()
     await message.answer("Дополнительные действия:", reply_markup=inline_keyboard)
 
 @dp.message()
-async def message_hPpcY9U6tXzQUtlnglr6j_handler(message: types.Message):
+async def message_W__cjO_9uVsz2Cyu951_l_handler(message: types.Message):
     text = "Новое сообщение"
     # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
@@ -52,7 +52,7 @@ async def start_synonym_начать_handler(message: types.Message):
     await start_handler(message)
 
 # Обработчики inline кнопок
-@dp.callback_query(lambda c: c.data == "hPpcY9U6tXzQUtlnglr6j")
+@dp.callback_query(lambda c: c.data == "W_-cjO_9uVsz2Cyu951_l")
 async def handle_inline_LcTYPO2_HJ0FkRRNJkpgF(callback_query: types.CallbackQuery):
     await callback_query.answer()
     text = "Новое сообщение"
