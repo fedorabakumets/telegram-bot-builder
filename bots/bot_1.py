@@ -35,8 +35,6 @@ async def message_u4FAdbwCN_ytYmzQ8RVaU_handler(message: types.Message):
     inline_keyboard = inline_builder.as_markup()
     # Прикрепляем inline кнопки к тому же сообщению
     await message.answer(text, reply_markup=inline_keyboard)
-    # Устанавливаем reply клавиатуру отдельным минимальным сообщением
-    await message.answer("⚡", reply_markup=reply_keyboard)
 
 
 # Обработчики inline кнопок
