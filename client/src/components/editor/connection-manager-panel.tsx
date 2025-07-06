@@ -28,9 +28,11 @@ import {
   EyeOff,
   RefreshCw,
   Filter,
-  Search
+  Search,
+  Workflow
 } from 'lucide-react';
 import { ConnectionManager, ConnectionSuggestion } from '@/utils/connection-manager';
+import { HierarchicalDiagram } from '@/components/ui/hierarchical-diagram';
 import { cn } from '@/lib/utils';
 
 interface ConnectionManagerPanelProps {
@@ -203,8 +205,9 @@ export function ConnectionManagerPanel({
   return (
     <div className="w-full h-full bg-background">
       <Tabs defaultValue="connections" className="w-full h-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="connections">Связи</TabsTrigger>
+          <TabsTrigger value="hierarchy">Иерархия</TabsTrigger>
           <TabsTrigger value="suggestions">Предложения</TabsTrigger>
           <TabsTrigger value="settings">Настройки</TabsTrigger>
         </TabsList>
@@ -313,6 +316,72 @@ export function ConnectionManagerPanel({
                     Очистить лишние кнопки
                   </UIButton>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="hierarchy" className="flex-1 mt-4">
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Workflow className="h-5 w-5" />
+                Иерархическая диаграмма
+              </CardTitle>
+              <CardDescription>
+                Визуализация структуры бота в виде иерархической схемы с соединительными линиями
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="h-[calc(100%-80px)]">
+              <div className="space-y-4 h-full">
+                {/* Настройки отображения */}
+                <div className="flex items-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="layout-select" className="text-sm">Стиль:</Label>
+                    <Select defaultValue="org-chart">
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="org-chart">Органиграмма</SelectItem>
+                        <SelectItem value="tree">Дерево</SelectItem>
+                        <SelectItem value="network">Сеть</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="show-labels" className="text-sm">Подписи:</Label>
+                    <Switch id="show-labels" defaultChecked />
+                  </div>
+                </div>
+
+                {/* Диаграмма */}
+                <div className="flex-1 min-h-0 border rounded-lg">
+                  <HierarchicalDiagram
+                    nodes={nodes}
+                    connections={connections}
+                    selectedNodeId={selectedConnectionId ? connections.find(c => c.id === selectedConnectionId)?.source : undefined}
+                    onNodeClick={(nodeId) => {
+                      // Найти связь с этим узлом
+                      const connection = connections.find(c => c.source === nodeId || c.target === nodeId);
+                      if (connection) {
+                        onConnectionSelect?.(connection.id);
+                      }
+                    }}
+                    className="w-full h-full"
+                    showLabels={true}
+                    layout="org-chart"
+                  />
+                </div>
+
+                {nodes.length === 0 && (
+                  <div className="flex items-center justify-center h-32 text-muted-foreground">
+                    <div className="text-center">
+                      <Workflow className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Добавьте узлы для отображения иерархии</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

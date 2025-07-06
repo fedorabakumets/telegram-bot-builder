@@ -4,7 +4,7 @@ import { HistoryIndicator } from './history-indicator';
 import { AutoSaveIndicator } from './auto-save-indicator';
 import { FloatingTemplateManager } from '@/components/ui/floating-template-manager';
 import { ImportExportControls } from '@/components/import-export';
-import { FolderOpen, Bookmark, Save, Download, User, Send, Library } from 'lucide-react';
+import { FolderOpen, Bookmark, Save, Download, User, Send, Library, Workflow } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'wouter';
 
@@ -147,6 +147,18 @@ export function Header({
           >
             <Library className="h-4 w-4 text-muted-foreground" />
             <span>Библиотека</span>
+          </Button>
+        </Link>
+        
+        {/* Hierarchical Diagram Link */}
+        <Link href="/hierarchy">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            <Workflow className="h-4 w-4 text-muted-foreground" />
+            <span>Иерархия</span>
           </Button>
         </Link>
         

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import Editor from "@/pages/editor";
 import TemplatesPage from "@/pages/templates";
+import HierarchyDemo from "@/pages/hierarchy-demo";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -13,6 +14,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Editor} />
       <Route path="/templates" component={TemplatesPage} />
+      <Route path="/hierarchy" component={HierarchyDemo} />
       <Route component={NotFound} />
     </Switch>
   );
