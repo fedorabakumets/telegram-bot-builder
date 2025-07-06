@@ -135,36 +135,53 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
         </button>
       )}
       {/* Node header */}
-      <div className="flex items-center mb-4 relative">
-        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center mr-3", nodeColors[node.type])}>
-          <i className={nodeIcons[node.type]}></i>
+      <div className="flex items-start mb-6 relative">
+        <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mr-4 shadow-sm", nodeColors[node.type])}>
+          <i className={cn(nodeIcons[node.type], "text-lg")}></i>
         </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-foreground flex items-center">
-            {node.type === 'start' && node.data.command}
-            {node.type === 'command' && node.data.command}
-            {node.type === 'message' && 'Сообщение'}
-            {node.type === 'photo' && 'Фото с текстом'}
-            {node.type === 'keyboard' && 'Клавиатура'}
-            {node.type === 'condition' && 'Условие'}
-            {node.type === 'input' && 'Ввод данных'}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-base flex items-center truncate">
+              {node.type === 'start' && (
+                <span className="inline-flex items-center">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-mono text-sm bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                    {node.data.command || '/start'}
+                  </span>
+                </span>
+              )}
+              {node.type === 'command' && (
+                <span className="inline-flex items-center">
+                  <span className="text-indigo-600 dark:text-indigo-400 font-mono text-sm bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                    {node.data.command}
+                  </span>
+                </span>
+              )}
+              {node.type === 'message' && 'Сообщение'}
+              {node.type === 'photo' && 'Фото с текстом'}
+              {node.type === 'keyboard' && 'Клавиатура'}
+              {node.type === 'condition' && 'Условие'}
+              {node.type === 'input' && 'Ввод данных'}
+            </h3>
             {onMove && (
-              <div className="ml-2 opacity-30 hover:opacity-60 transition-opacity">
-                <i className="fas fa-arrows-alt text-xs"></i>
+              <div className="ml-2 opacity-40 hover:opacity-70 transition-all duration-200 cursor-grab">
+                <i className="fas fa-grip-vertical text-xs text-gray-400 dark:text-gray-500"></i>
               </div>
             )}
-          </h3>
-          <p className="text-xs text-muted-foreground">
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
             {node.data.description || 'Элемент бота'}
           </p>
         </div>
       </div>
       {/* Message preview */}
       {node.data.messageText && (
-        <div className="rounded-lg p-3 mb-4 bg-[transparent]">
-          <p className="text-sm line-clamp-3 text-[#3da2f5]">
-            {node.data.messageText}
-          </p>
+        <div className="rounded-xl p-4 mb-4 bg-gradient-to-br from-blue-50/80 to-sky-50/80 dark:from-blue-900/20 dark:to-sky-900/20 border border-blue-100 dark:border-blue-800/30">
+          <div className="flex items-start space-x-2">
+            <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 mt-1.5 flex-shrink-0"></div>
+            <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed line-clamp-3 font-medium">
+              {node.data.messageText}
+            </p>
+          </div>
         </div>
       )}
       {/* Image preview */}
@@ -179,47 +196,59 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
       )}
       {/* Buttons preview */}
       {node.data.buttons.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2 mb-3">
+            <div className="w-1 h-4 bg-amber-500 dark:bg-amber-400 rounded-full"></div>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+              {node.data.keyboardType === 'inline' ? 'Inline кнопки' : 'Reply кнопки'}
+            </span>
+          </div>
           {node.data.keyboardType === 'inline' ? (
             <div className="grid grid-cols-2 gap-2">
               {node.data.buttons.slice(0, 4).map((button) => (
-                <div key={button.id} className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg text-xs font-medium text-primary text-center border border-primary/30 relative">
-                  <div className="flex items-center justify-center space-x-1">
-                    <span>{button.text}</span>
-                    {button.action === 'command' && (
-                      <i className="fas fa-terminal text-green-600 text-xs" title="Команда"></i>
-                    )}
-                    {button.action === 'url' && (
-                      <i className="fas fa-external-link-alt text-purple-600 text-xs" title="Ссылка"></i>
-                    )}
-                    {button.action === 'goto' && (
-                      <i className="fas fa-arrow-right text-primary text-xs" title="Переход"></i>
-                    )}
+                <div key={button.id} className="group relative">
+                  <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm">
+                    <div className="flex items-center justify-center space-x-1">
+                      <span className="truncate">{button.text}</span>
+                      {button.action === 'command' && (
+                        <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
+                      )}
+                      {button.action === 'url' && (
+                        <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
+                      )}
+                      {button.action === 'goto' && (
+                        <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            node.data.buttons.slice(0, 2).map((button) => (
-              <div key={button.id} className="flex items-center justify-between p-2 bg-primary/10 dark:bg-primary/20 rounded-lg border border-primary/30">
-                <span className="text-sm font-medium text-primary">{button.text}</span>
-                <div className="flex items-center space-x-1">
-                  {button.action === 'command' && (
-                    <i className="fas fa-terminal text-green-600 text-xs" title="Команда"></i>
-                  )}
-                  {button.action === 'url' && (
-                    <i className="fas fa-external-link-alt text-purple-600 text-xs" title="Ссылка"></i>
-                  )}
-                  {button.action === 'goto' && (
-                    <i className="fas fa-arrow-right text-primary text-xs" title="Переход"></i>
-                  )}
+            <div className="space-y-2">
+              {node.data.buttons.slice(0, 2).map((button) => (
+                <div key={button.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
+                  <div className="flex items-center space-x-1 ml-2">
+                    {button.action === 'command' && (
+                      <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
+                    )}
+                    {button.action === 'url' && (
+                      <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
+                    )}
+                    {button.action === 'goto' && (
+                      <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
           {node.data.buttons.length > (node.data.keyboardType === 'inline' ? 4 : 2) && (
-            <div className="text-xs text-muted-foreground text-center">
-              +{node.data.buttons.length - (node.data.keyboardType === 'inline' ? 4 : 2)} еще
+            <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-2 font-medium">
+              <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+                +{node.data.buttons.length - (node.data.keyboardType === 'inline' ? 4 : 2)} еще
+              </span>
             </div>
           )}
         </div>
