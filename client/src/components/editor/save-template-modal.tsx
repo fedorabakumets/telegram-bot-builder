@@ -68,6 +68,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
       toast({
         title: 'Шаблон сохранен',
         description: 'Ваш шаблон бота успешно сохранен',

@@ -48,7 +48,8 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
 
   const { data: myTemplates = [], isLoading: isLoadingMy } = useQuery<BotTemplate[]>({
     queryKey: ['/api/templates/category/custom'],
-    enabled: isOpen && currentTab === 'my',
+    enabled: isOpen,
+    staleTime: 0, // Always refetch when needed
   });
 
   // Мутация для увеличения счетчика использования
