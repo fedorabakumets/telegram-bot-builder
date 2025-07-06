@@ -625,41 +625,93 @@ export function Canvas({
               </div>
             )}
             
-            {/* Zoom Help */}
+            {/* Canvas Management Help */}
             <Popover>
               <PopoverTrigger asChild>
                 <button className="p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group">
                   <i className="fas fa-question-circle text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-500 transition-colors"></i>
                 </button>
               </PopoverTrigger>
-              <PopoverContent side="bottom" className="w-64 p-3">
-                <div className="space-y-3">
-                  <h4 className="font-medium text-sm">Управление масштабом</h4>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Увеличить:</span>
-                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + +</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Уменьшить:</span>
-                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + -</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Сбросить:</span>
-                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 0</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Уместить всё:</span>
-                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 1</code>
-                    </div>
-                    <div className="border-t border-gray-200 dark:border-slate-600 pt-2 mt-2">
+              <PopoverContent side="bottom" className="w-80 p-3">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100">Управление холстом</h4>
+                  
+                  {/* Масштабирование */}
+                  <div className="space-y-2">
+                    <h5 className="font-medium text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wide">Масштабирование</h5>
+                    <div className="space-y-1.5 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Масштабирование:</span>
+                        <span className="text-gray-600 dark:text-gray-400">Увеличить:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + +</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Уменьшить:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + -</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Сбросить масштаб:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 0</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Уместить всё:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 1</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Колесом мыши:</span>
                         <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + колесо</code>
                       </div>
-                      <div className="flex justify-between mt-1">
+                    </div>
+                  </div>
+
+                  {/* Навигация */}
+                  <div className="space-y-2">
+                    <h5 className="font-medium text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wide">Навигация</h5>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between">
                         <span className="text-gray-600 dark:text-gray-400">Панорамирование:</span>
                         <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Alt + ЛКМ</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Перемещение узла:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Перетаскивание</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Выделение узла:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">ЛКМ</code>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Редактирование */}
+                  <div className="space-y-2">
+                    <h5 className="font-medium text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wide">Редактирование</h5>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Отменить:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + Z</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Повторить:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + Y</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Создать связь:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Точки на узлах</code>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Дополнительные возможности */}
+                  <div className="space-y-2">
+                    <h5 className="font-medium text-xs text-gray-700 dark:text-gray-300 uppercase tracking-wide">Дополнительно</h5>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Добавить узел:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Перетащить из боковой панели</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Авто-иерархия:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Кнопка в панели</code>
                       </div>
                     </div>
                   </div>
