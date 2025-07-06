@@ -1,5 +1,5 @@
 import { Connection, Node } from '@/types/bot';
-import { ConnectionLine } from './connection-line';
+import { EnhancedConnectionLine } from './enhanced-connection-line';
 
 interface ConnectionsLayerProps {
   connections: Connection[];
@@ -27,13 +27,14 @@ export function ConnectionsLayer({
       }}
     >
       {connections.map((connection) => (
-        <ConnectionLine
+        <EnhancedConnectionLine
           key={connection.id}
           connection={connection}
           nodes={nodes}
           isSelected={selectedConnectionId === connection.id}
           onClick={() => onConnectionSelect?.(connection.id)}
           onDelete={() => onConnectionDelete?.(connection.id)}
+          showButtonInfo={true}
         />
       ))}
     </svg>

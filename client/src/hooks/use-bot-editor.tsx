@@ -88,6 +88,10 @@ export function useBotEditor(initialData?: BotData) {
     ));
   }, []);
 
+  const updateNodes = useCallback((newNodes: Node[]) => {
+    setNodes(newNodes);
+  }, []);
+
   const getBotData = useCallback((): BotData => ({
     nodes,
     connections
@@ -108,6 +112,7 @@ export function useBotEditor(initialData?: BotData) {
     addButton,
     updateButton,
     deleteButton,
+    updateNodes,
     getBotData
   };
 }

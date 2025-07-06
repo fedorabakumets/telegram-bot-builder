@@ -3,10 +3,12 @@ import { CanvasNode } from '@/components/ui/canvas-node';
 import { ConnectionsLayer } from '@/components/ui/connections-layer';
 import { TemporaryConnection } from '@/components/ui/temporary-connection';
 import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
+import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Node, ComponentDefinition, Connection } from '@/types/bot';
 import { generateAutoConnections } from '@/utils/auto-connection';
+import { ConnectionManager } from '@/utils/connection-manager';
 import { nanoid } from 'nanoid';
 
 interface CanvasProps {
@@ -21,6 +23,7 @@ interface CanvasProps {
   onConnectionSelect?: (connectionId: string) => void;
   onConnectionDelete?: (connectionId: string) => void;
   onConnectionAdd?: (connection: Connection) => void;
+  onNodesUpdate?: (nodes: Node[]) => void;
 }
 
 export function Canvas({ 
@@ -34,7 +37,8 @@ export function Canvas({
   onNodeMove,
   onConnectionSelect,
   onConnectionDelete,
-  onConnectionAdd
+  onConnectionAdd,
+  onNodesUpdate
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -44,6 +48,8 @@ export function Canvas({
   } | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [autoButtonCreation, setAutoButtonCreation] = useState(true);
+  const [showAutoPanel, setShowAutoPanel] = useState(false);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -128,19 +134,35 @@ export function Canvas({
     if (connectionStart) {
       // Если уже есть начало соединения, пытаемся завершить его
       if (connectionStart.nodeId !== nodeId) {
-        const newConnection: Connection = {
-          id: nanoid(),
-          source: connectionStart.handle === 'source' ? connectionStart.nodeId : nodeId,
-          target: connectionStart.handle === 'source' ? nodeId : connectionStart.nodeId,
-        };
-        onConnectionAdd?.(newConnection);
+        const sourceId = connectionStart.handle === 'source' ? connectionStart.nodeId : nodeId;
+        const targetId = connectionStart.handle === 'source' ? nodeId : connectionStart.nodeId;
+        
+        // Используем ConnectionManager для создания соединения
+        const connectionManager = new ConnectionManager({
+          nodes,
+          connections,
+          autoButtonCreation
+        });
+        
+        try {
+          const { connection, updatedNodes } = connectionManager.createConnection(sourceId, targetId, {
+            autoCreateButton: autoButtonCreation
+          });
+          
+          onConnectionAdd?.(connection);
+          if (onNodesUpdate) {
+            onNodesUpdate(updatedNodes);
+          }
+        } catch (error) {
+          console.error('Ошибка при создании соединения:', error);
+        }
       }
       setConnectionStart(null);
     } else {
       // Начинаем новое соединение
       setConnectionStart({ nodeId, handle });
     }
-  }, [connectionStart, onConnectionAdd]);
+  }, [connectionStart, onConnectionAdd, onNodesUpdate, nodes, connections, autoButtonCreation]);
 
   const handleCreateSuggestedConnection = useCallback((source: string, target: string) => {
     const newConnection: Connection = {
@@ -259,13 +281,35 @@ export function Canvas({
           {/* Smart Connection Tools */}
           {nodes.length > 1 && (
             <div className="absolute bottom-6 right-6 flex flex-col space-y-3 z-10">
+              {/* Auto Connection Panel */}
+              <Popover open={showAutoPanel} onOpenChange={setShowAutoPanel}>
+                <PopoverTrigger asChild>
+                  <Button
+                    className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    title="Управление автосоединениями"
+                  >
+                    <i className="fas fa-magic text-white" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="left" className="w-auto p-0">
+                  <AutoConnectionPanel
+                    nodes={nodes}
+                    connections={connections}
+                    onConnectionAdd={(connection) => onConnectionAdd?.(connection)}
+                    onNodesUpdate={(updatedNodes) => onNodesUpdate?.(updatedNodes)}
+                    autoButtonCreation={autoButtonCreation}
+                    onAutoButtonCreationChange={setAutoButtonCreation}
+                  />
+                </PopoverContent>
+              </Popover>
+
               {/* Auto-connect button */}
               <Button
                 onClick={handleAutoConnect}
                 className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
-                title="Автоматическое соединение"
+                title="Быстрое автосоединение"
               >
-                <i className="fas fa-magic text-white" />
+                <i className="fas fa-bolt text-white" />
               </Button>
 
               {/* Connection suggestions */}

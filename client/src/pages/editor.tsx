@@ -49,6 +49,7 @@ export default function Editor() {
     addButton,
     updateButton,
     deleteButton,
+    updateNodes,
     getBotData
   } = useBotEditor(currentProject?.data);
 
@@ -185,6 +186,7 @@ export default function Editor() {
                 onConnectionSelect={setSelectedConnectionId}
                 onConnectionDelete={deleteConnection}
                 onConnectionAdd={addConnection}
+                onNodesUpdate={updateNodes}
               />
             </ResizablePanel>
             
