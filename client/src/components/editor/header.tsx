@@ -94,16 +94,7 @@ export function Header({
           >
             Превью
           </button>
-          <button 
-            onClick={() => onTabChange('export')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              currentTab === 'export' 
-                ? 'text-primary bg-primary/10' 
-                : 'text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            Экспорт
-          </button>
+          
           <button 
             onClick={() => onTabChange('bot')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
