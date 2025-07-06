@@ -12,6 +12,26 @@ import { z } from "zod";
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
 
+// Функция для безопасной обработки ошибок
+function createSafeErrorResponse(error: unknown, defaultMessage: string): { message: string } {
+  let errorMessage = defaultMessage;
+  
+  if (error instanceof Error) {
+    // Очищаем сообщение от потенциально проблемных символов
+    errorMessage = error.message
+      .replace(/[^\w\s\-.,!?():/]/g, '') // Удаляем специальные символы
+      .substring(0, 200) // Ограничиваем длину
+      .trim();
+    
+    // Если после очистки сообщение пустое, используем дефолтное
+    if (!errorMessage) {
+      errorMessage = defaultMessage;
+    }
+  }
+  
+  return { message: errorMessage };
+}
+
 // Функция для создания Python файла бота
 function createBotFile(botCode: string, projectId: number): string {
   const botsDir = join(process.cwd(), 'bots');
@@ -150,36 +170,52 @@ async function stopBot(projectId: number): Promise<{ success: boolean; error?: s
     if (!botProcess) {
       const instance = await storage.getBotInstance(projectId);
       if (instance && instance.status === 'running') {
-        console.log(`Процесс бота ${projectId} не найден в памяти, но помечен как запущенный в базе. Исправляем состояние.`);
+        console.log(`Bot process ${projectId} not found in memory but marked as running in database. Fixing state.`);
         await storage.stopBotInstance(projectId);
         return { success: true };
       }
-      return { success: false, error: "Процесс бота не найден" };
+      return { success: false, error: "Bot process not found" };
     }
 
-    // Корректно завершаем процесс бота с дополнительной обработкой
+    // Безопасно завершаем процесс бота
     try {
-      // Пытаемся мягко завершить процесс
-      botProcess.kill('SIGTERM');
-      
-      // Ждем некоторое время для мягкого завершения
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Если процесс все еще активен, принудительно завершаем
-      if (!botProcess.killed) {
-        botProcess.kill('SIGKILL');
+      // Проверяем, существует ли еще процесс
+      if (botProcess.exitCode === null && !botProcess.killed) {
+        // Пытаемся мягко завершить процесс
+        try {
+          botProcess.kill('SIGTERM');
+          console.log(`Sent SIGTERM to bot process ${projectId}`);
+        } catch (termError) {
+          console.warn(`Warning when sending SIGTERM to bot ${projectId}:`, termError);
+        }
+        
+        // Ждем некоторое время для мягкого завершения
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Если процесс все еще активен, принудительно завершаем
+        if (botProcess.exitCode === null && !botProcess.killed) {
+          try {
+            botProcess.kill('SIGKILL');
+            console.log(`Sent SIGKILL to bot process ${projectId}`);
+          } catch (killError) {
+            console.warn(`Warning when sending SIGKILL to bot ${projectId}:`, killError);
+          }
+        }
       }
-    } catch (killError) {
-      console.warn(`Предупреждение при завершении процесса бота ${projectId}:`, killError);
+    } catch (processError) {
+      console.warn(`Warning when stopping bot process ${projectId}:`, processError);
     }
     
+    // Удаляем из памяти и обновляем базу данных
     botProcesses.delete(projectId);
     await storage.stopBotInstance(projectId);
     
+    console.log(`Bot ${projectId} stopped successfully`);
     return { success: true };
   } catch (error) {
-    console.error('Ошибка остановки бота:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+    console.error('Error stopping bot:', error);
+    const errorResponse = createSafeErrorResponse(error, 'Failed to stop bot');
+    return { success: false, error: errorResponse.message };
   }
 }
 
@@ -845,12 +881,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertBotProjectSchema.parse(req.body);
       const project = await storage.createBotProject(validatedData);
+      console.log(`Project created successfully: ${project.id}`);
       res.status(201).json(project);
     } catch (error) {
+      console.error('Error creating project:', error);
+      
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res.status(400).json({ 
+          message: "Invalid project data", 
+          errors: error.errors.map(e => e.message).join(', ')
+        });
       }
-      res.status(500).json({ message: "Failed to create project" });
+      
+      const errorResponse = createSafeErrorResponse(error, 'Failed to create project');
+      res.status(500).json(errorResponse);
     }
   });
 
@@ -858,6 +902,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/projects/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
       const validatedData = insertBotProjectSchema.partial().parse(req.body);
       const project = await storage.updateBotProject(id, validatedData);
       if (!project) {
@@ -866,19 +915,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Если обновляется data (структура бота), перезапускаем бота если он запущен
       if (validatedData.data) {
-        console.log(`Проект ${id} обновлен, проверяем необходимость перезапуска бота...`);
+        console.log(`Project ${id} updated, checking if bot restart is needed...`);
         const restartResult = await restartBotIfRunning(id);
         if (!restartResult.success) {
-          console.error(`Ошибка перезапуска бота ${id}:`, restartResult.error);
+          console.error(`Bot restart error for project ${id}:`, restartResult.error);
         }
       }
       
+      console.log(`Project ${id} updated successfully`);
       res.json(project);
     } catch (error) {
+      console.error('Error updating project:', error);
+      
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res.status(400).json({ 
+          message: "Invalid project data", 
+          errors: error.errors.map(e => e.message).join(', ')
+        });
       }
-      res.status(500).json({ message: "Failed to update project" });
+      
+      const errorResponse = createSafeErrorResponse(error, 'Failed to update project');
+      res.status(500).json(errorResponse);
     }
   });
 
@@ -1014,6 +1071,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.id);
       
+      if (isNaN(projectId) || projectId <= 0) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
       const result = await stopBot(projectId);
       if (result.success) {
         res.json({ message: "Bot stopped successfully" });
@@ -1021,7 +1082,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(500).json({ message: result.error || "Failed to stop bot" });
       }
     } catch (error) {
-      res.status(500).json({ message: "Failed to stop bot" });
+      console.error('Error in stop bot endpoint:', error);
+      const errorResponse = createSafeErrorResponse(error, 'Failed to stop bot');
+      res.status(500).json(errorResponse);
     }
   });
 
@@ -1306,6 +1369,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:id/tokens", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      
+      // Проверяем существование проекта
+      const project = await storage.getBotProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
       const tokenData = insertBotTokenSchema.parse({
         ...req.body,
         projectId
@@ -1319,12 +1389,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         token: `${token.token.substring(0, 10)}...`
       };
       
+      console.log(`Token created successfully for project ${projectId}`);
       res.status(201).json(safeToken);
     } catch (error) {
+      console.error('Error creating token:', error);
+      
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res.status(400).json({ 
+          message: "Invalid token data", 
+          errors: error.errors.map(e => e.message).join(', ')
+        });
       }
-      res.status(500).json({ message: "Failed to create token" });
+      
+      const errorResponse = createSafeErrorResponse(error, 'Failed to create token');
+      res.status(500).json(errorResponse);
     }
   });
 
@@ -1358,15 +1436,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/tokens/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await storage.deleteBotToken(id);
       
-      if (!success) {
+      // Проверяем валидность ID
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "Invalid token ID" });
+      }
+      
+      // Проверяем существование токена перед удалением
+      const existingToken = await storage.getBotToken(id);
+      if (!existingToken) {
         return res.status(404).json({ message: "Token not found" });
       }
       
+      const success = await storage.deleteBotToken(id);
+      
+      if (!success) {
+        return res.status(500).json({ message: "Failed to delete token from storage" });
+      }
+      
+      console.log(`Token ${id} deleted successfully`);
       res.json({ message: "Token deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete token" });
+      console.error('Error deleting token:', error);
+      const errorResponse = createSafeErrorResponse(error, 'Failed to delete token');
+      res.status(500).json(errorResponse);
     }
   });
 
@@ -1376,14 +1469,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.projectId);
       const tokenId = parseInt(req.params.tokenId);
       
-      const success = await storage.setDefaultBotToken(projectId, tokenId);
-      if (!success) {
+      if (isNaN(projectId) || projectId <= 0) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      if (isNaN(tokenId) || tokenId <= 0) {
+        return res.status(400).json({ message: "Invalid token ID" });
+      }
+      
+      // Проверяем существование токена
+      const token = await storage.getBotToken(tokenId);
+      if (!token) {
         return res.status(404).json({ message: "Token not found" });
       }
       
+      // Проверяем, что токен принадлежит указанному проекту
+      if (token.projectId !== projectId) {
+        return res.status(400).json({ message: "Token does not belong to this project" });
+      }
+      
+      const success = await storage.setDefaultBotToken(projectId, tokenId);
+      if (!success) {
+        return res.status(500).json({ message: "Failed to set default token" });
+      }
+      
+      console.log(`Default token set successfully for project ${projectId}`);
       res.json({ message: "Default token set successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to set default token" });
+      console.error('Error setting default token:', error);
+      const errorResponse = createSafeErrorResponse(error, 'Failed to set default token');
+      res.status(500).json(errorResponse);
     }
   });
 

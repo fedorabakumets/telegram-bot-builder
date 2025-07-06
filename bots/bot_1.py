@@ -16,31 +16,6 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-@dp.message()
-async def message_gAYXeIRJo2RqxUJj74MMZ_handler(message: types.Message):
-    text = "Новое сообщение"
-    
-    # Создаем комбинированную клавиатуру (Reply + Inline)
-    
-    # Сначала создаем reply клавиатуру
-    reply_builder = ReplyKeyboardBuilder()
-    reply_builder.add(KeyboardButton(text="Новая кнопка"))
-    reply_keyboard = reply_builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=reply_keyboard)
-    
-    # Затем создаем inline клавиатуру
-    inline_builder = InlineKeyboardBuilder()
-    inline_builder.add(InlineKeyboardButton(text="Новая inline кнопка", callback_data="Новая inline кнопка"))
-    inline_keyboard = inline_builder.as_markup()
-    # Отправляем inline кнопки минимальным сообщением для прикрепления к основному тексту
-    await message.answer("⚡", reply_markup=inline_keyboard, parse_mode="HTML")
-
-
-# Обработчики inline кнопок
-@dp.callback_query(lambda c: c.data == "Новая inline кнопка")
-async def handle_inline_t_q6nuT4Eb3Kl1YNkwXCa(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    await callback_query.message.answer("Переход к: Новая inline кнопка")
 
 # Запуск бота
 async def main():
