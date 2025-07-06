@@ -28,11 +28,9 @@ import {
   EyeOff,
   RefreshCw,
   Filter,
-  Search,
-  Workflow
+  Search
 } from 'lucide-react';
 import { ConnectionManager, ConnectionSuggestion } from '@/utils/connection-manager';
-import { HierarchicalDiagram } from '@/components/ui/hierarchical-diagram';
 import { cn } from '@/lib/utils';
 
 interface ConnectionManagerPanelProps {
@@ -61,8 +59,6 @@ export function ConnectionManagerPanel({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'button' | 'direct'>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [hierarchyLayout, setHierarchyLayout] = useState<'org-chart' | 'tree' | 'network'>('org-chart');
-  const [showHierarchyLabels, setShowHierarchyLabels] = useState(true);
 
   const connectionManager = useMemo(() => 
     new ConnectionManager({
@@ -87,47 +83,6 @@ export function ConnectionManagerPanel({
 
     return { total, withButtons, direct: total - withButtons, orphaned };
   }, [connections, nodes]);
-
-  const hierarchyStats = useMemo(() => {
-    if (!nodes.length) return { levels: 0, branches: 0, connected: 0, isolated: 0, roots: 0, leaves: 0 };
-    
-    // Build connection maps
-    const childrenMap = new Map<string, string[]>();
-    const parentMap = new Map<string, string>();
-    
-    connections.forEach(conn => {
-      const children = childrenMap.get(conn.source) || [];
-      children.push(conn.target);
-      childrenMap.set(conn.source, children);
-      parentMap.set(conn.target, conn.source);
-    });
-
-    // Calculate levels
-    const levelMap = new Map<string, number>();
-    const visited = new Set<string>();
-    
-    function calculateLevels(nodeId: string, level: number = 0) {
-      if (visited.has(nodeId)) return;
-      visited.add(nodeId);
-      levelMap.set(nodeId, level);
-      const children = childrenMap.get(nodeId) || [];
-      children.forEach(childId => calculateLevels(childId, level + 1));
-    }
-
-    // Find root nodes and calculate levels
-    const rootNodes = nodes.filter(node => !parentMap.has(node.id));
-    rootNodes.forEach(rootNode => calculateLevels(rootNode.id));
-    
-    // Calculate statistics
-    const levels = levelMap.size > 0 ? Math.max(...Array.from(levelMap.values())) + 1 : 0;
-    const branches = Array.from(childrenMap.values()).reduce((acc, children) => acc + children.length, 0);
-    const connected = new Set([...Array.from(childrenMap.keys()), ...Array.from(parentMap.keys())]).size;
-    const isolated = nodes.length - connected;
-    const roots = rootNodes.length;
-    const leaves = nodes.filter(node => !childrenMap.has(node.id)).length;
-
-    return { levels, branches, connected, isolated, roots, leaves };
-  }, [nodes, connections]);
 
   const filteredConnections = useMemo(() => {
     return connections.filter(conn => {
@@ -248,9 +203,8 @@ export function ConnectionManagerPanel({
   return (
     <div className="w-full h-full bg-background">
       <Tabs defaultValue="connections" className="w-full h-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="connections">Связи</TabsTrigger>
-          <TabsTrigger value="hierarchy">Иерархия</TabsTrigger>
           <TabsTrigger value="suggestions">Предложения</TabsTrigger>
           <TabsTrigger value="settings">Настройки</TabsTrigger>
         </TabsList>
@@ -359,153 +313,6 @@ export function ConnectionManagerPanel({
                     Очистить лишние кнопки
                   </UIButton>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="hierarchy" className="flex-1 mt-4">
-          <Card className="h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Workflow className="h-5 w-5" />
-                Иерархическая диаграмма
-              </CardTitle>
-              <CardDescription>
-                Визуализация структуры бота в виде иерархической схемы с соединительными линиями
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-[calc(100%-80px)]">
-              <div className="space-y-4 h-full">
-                {/* Настройки отображения */}
-                <div className="flex items-center gap-4 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="layout-select" className="text-sm">Стиль:</Label>
-                    <Select value={hierarchyLayout} onValueChange={setHierarchyLayout}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="org-chart">Органиграмма</SelectItem>
-                        <SelectItem value="tree">Дерево</SelectItem>
-                        <SelectItem value="network">Сеть</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="show-labels" className="text-sm">Подписи:</Label>
-                    <Switch
-                      id="show-labels"
-                      checked={showHierarchyLabels}
-                      onCheckedChange={setShowHierarchyLabels}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <UIButton
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        // Подгонка диаграммы под размер контейнера
-                        const diagramContainer = document.querySelector('[data-hierarchy-container="true"]');
-                        if (diagramContainer) {
-                          const svg = diagramContainer.querySelector('svg');
-                          if (svg) {
-                            svg.style.transform = 'scale(0.8)';
-                            svg.style.transformOrigin = 'center';
-                          }
-                        }
-                      }}
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      Подогнать
-                    </UIButton>
-                  </div>
-                </div>
-
-                {/* Статистика структуры */}
-                <div className="grid grid-cols-4 gap-2 p-3 bg-muted/50 rounded-lg">
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-primary">{nodes.length}</div>
-                    <div className="text-xs text-muted-foreground">Узлов</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-green-600">{connections.length}</div>
-                    <div className="text-xs text-muted-foreground">Связей</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-blue-600">
-                      {hierarchyStats.levels}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Уровней</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-purple-600">
-                      {hierarchyStats.branches}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Веток</div>
-                  </div>
-                </div>
-
-                {/* Диаграмма */}
-                <div className="flex-1 min-h-0 border rounded-lg relative" data-hierarchy-container="true">
-                  {nodes.length > 0 ? (
-                    <HierarchicalDiagram
-                      nodes={nodes}
-                      connections={connections}
-                      selectedNodeId={selectedConnectionId ? connections.find(c => c.id === selectedConnectionId)?.source : undefined}
-                      onNodeClick={(nodeId) => {
-                        // Найти связь с этим узлом
-                        const connection = connections.find(c => c.source === nodeId || c.target === nodeId);
-                        if (connection) {
-                          onConnectionSelect?.(connection.id);
-                        }
-                      }}
-                      className="w-full h-full"
-                      showLabels={showHierarchyLabels}
-                      layout={hierarchyLayout}
-                      spacing={{
-                        horizontal: hierarchyLayout === 'org-chart' ? 220 : 180,
-                        vertical: hierarchyLayout === 'tree' ? 100 : 140
-                      }}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-64 text-muted-foreground">
-                      <div className="text-center space-y-2">
-                        <Workflow className="h-12 w-12 mx-auto opacity-50" />
-                        <p className="font-medium">Нет узлов для отображения</p>
-                        <p className="text-sm">Добавьте компоненты на холст для создания иерархии</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Дополнительная информация */}
-                {nodes.length > 0 && (
-                  <div className="space-y-2 p-3 bg-accent/50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Анализ структуры:</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span>Связанных узлов: {hierarchyStats.connected}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        <span>Изолированных: {hierarchyStats.isolated}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span>Корневых узлов: {hierarchyStats.roots}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        <span>Конечных узлов: {hierarchyStats.leaves}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>

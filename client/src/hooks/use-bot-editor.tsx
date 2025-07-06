@@ -205,71 +205,6 @@ export function useBotEditor(initialData?: BotData, options?: BotEditorOptions) 
     );
   }, [updateBotData, nodes]);
 
-  // Inline button functions
-  const addInlineButton = useCallback((nodeId: string, button: Button) => {
-    updateBotData(
-      (prevData) => ({
-        ...prevData,
-        nodes: prevData.nodes.map(node => 
-          node.id === nodeId 
-            ? { 
-                ...node, 
-                data: { 
-                  ...node.data, 
-                  inlineButtons: [...(node.data.inlineButtons || []), button] 
-                } 
-              }
-            : node
-        )
-      }),
-      `Добавлена inline кнопка: ${button.text}`
-    );
-  }, [updateBotData]);
-
-  const updateInlineButton = useCallback((nodeId: string, buttonId: string, updates: Partial<Button>) => {
-    updateBotData(
-      (prevData) => ({
-        ...prevData,
-        nodes: prevData.nodes.map(node => 
-          node.id === nodeId 
-            ? { 
-                ...node, 
-                data: { 
-                  ...node.data, 
-                  inlineButtons: (node.data.inlineButtons || []).map(btn => 
-                    btn.id === buttonId ? { ...btn, ...updates } : btn
-                  )
-                } 
-              }
-            : node
-        )
-      }),
-      `Обновлена inline кнопка`
-    );
-  }, [updateBotData]);
-
-  const deleteInlineButton = useCallback((nodeId: string, buttonId: string) => {
-    const node = nodes.find(n => n.id === nodeId);
-    const button = node?.data.inlineButtons?.find(b => b.id === buttonId);
-    updateBotData(
-      (prevData) => ({
-        ...prevData,
-        nodes: prevData.nodes.map(node => 
-          node.id === nodeId 
-            ? { 
-                ...node, 
-                data: { 
-                  ...node.data, 
-                  inlineButtons: (node.data.inlineButtons || []).filter(btn => btn.id !== buttonId)
-                } 
-              }
-            : node
-        )
-      }),
-      `Удалена inline кнопка: ${button?.text || 'unknown'}`
-    );
-  }, [updateBotData, nodes]);
-
   const updateNodes = useCallback((newNodes: Node[]) => {
     updateBotData(
       (prevData) => ({
@@ -318,9 +253,6 @@ export function useBotEditor(initialData?: BotData, options?: BotEditorOptions) 
     addButton,
     updateButton,
     deleteButton,
-    addInlineButton,
-    updateInlineButton,
-    deleteInlineButton,
     updateNodes,
     setBotData,
     getBotData,

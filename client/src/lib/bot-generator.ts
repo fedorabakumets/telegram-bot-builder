@@ -18,14 +18,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   code += 'import asyncio\n';
   code += 'import logging\n';
-  code += 'import aiohttp\n';
-  code += 'import aiofiles\n';
-  code += 'import tempfile\n';
-  code += 'import os\n';
-  code += 'from pathlib import Path\n';
   code += 'from aiogram import Bot, Dispatcher, types\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
-  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, FSInputFile, URLInputFile, BufferedInputFile\n';
+  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from aiogram.enums import ParseMode\n\n';
   
@@ -57,104 +52,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    # Здесь можно добавить логику проверки авторизации\n';
   code += '    return user_id in user_data\n\n';
 
-  code += 'async def validate_url(url: str) -> bool:\n';
-  code += '    """Проверяет, является ли URL действительным изображением"""\n';
-  code += '    if not url:\n';
-  code += '        return False\n';
-  code += '    \n';
-  code += '    # Проверяем схему URL\n';
-  code += '    if not url.startswith(("http://", "https://")):\n';
-  code += '        return False\n';
-  code += '    \n';
-  code += '    # Проверяем расширение файла\n';
-  code += '    allowed_extensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"]\n';
-  code += '    url_lower = url.lower()\n';
-  code += '    return any(url_lower.endswith(ext) for ext in allowed_extensions)\n\n';
-
-  code += 'async def download_image(url: str) -> BufferedInputFile:\n';
-  code += '    """Скачивает изображение по URL и возвращает BufferedInputFile"""\n';
-  code += '    try:\n';
-  code += '        async with aiohttp.ClientSession() as session:\n';
-  code += '            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:\n';
-  code += '                if response.status == 200:\n';
-  code += '                    content = await response.read()\n';
-  code += '                    # Определяем имя файла из URL или используем дефолтное\n';
-  code += '                    filename = url.split("/")[-1] if "/" in url else "image.jpg"\n';
-  code += '                    if "." not in filename:\n';
-  code += '                        filename += ".jpg"\n';
-  code += '                    return BufferedInputFile(content, filename=filename)\n';
-  code += '                else:\n';
-  code += '                    logging.error(f"Ошибка загрузки изображения: HTTP {response.status}")\n';
-  code += '                    return None\n';
-  code += '    except Exception as e:\n';
-  code += '        logging.error(f"Ошибка при скачивании изображения: {e}")\n';
-  code += '        return None\n\n';
-
-  code += 'async def send_photo_safe(message: types.Message, photo_url: str, caption: str = None, reply_markup=None, send_as_document: bool = False, has_content_protection: bool = False, disable_web_page_preview: bool = False):\n';
-  code += '    """Безопасная отправка фото с обработкой различных форматов URL и дополнительными опциями"""\n';
-  code += '    try:\n';
-  code += '        # Проверяем валидность URL\n';
-  code += '        if not await validate_url(photo_url):\n';
-  code += '            raise ValueError("Недопустимый URL изображения")\n';
-  code += '        \n';
-  code += '        # Параметры отправки\n';
-  code += '        send_params = {\n';
-  code += '            "caption": caption,\n';
-  code += '            "parse_mode": ParseMode.HTML,\n';
-  code += '            "reply_markup": reply_markup,\n';
-  code += '            "has_spoiler": False,  # Можно добавить как опцию\n';
-  code += '            "protect_content": has_content_protection\n';
-  code += '        }\n';
-  code += '        \n';
-  code += '        # Если URL начинается с file_id (для Telegram файлов)\n';
-  code += '        if photo_url.startswith(("AgAC", "BAACAgIA", "BAADBAAD")):\n';
-  code += '            if send_as_document:\n';
-  code += '                await message.answer_document(\n';
-  code += '                    document=photo_url,\n';
-  code += '                    **send_params\n';
-  code += '                )\n';
-  code += '            else:\n';
-  code += '                await message.answer_photo(\n';
-  code += '                    photo=photo_url,\n';
-  code += '                    **send_params\n';
-  code += '                )\n';
-  code += '        else:\n';
-  code += '            # Для внешних URL\n';
-  code += '            if send_as_document:\n';
-  code += '                # Скачиваем файл для отправки как документ\n';
-  code += '                photo_file = await download_image(photo_url)\n';
-  code += '                if photo_file:\n';
-  code += '                    await message.answer_document(\n';
-  code += '                        document=photo_file,\n';
-  code += '                        **send_params\n';
-  code += '                    )\n';
-  code += '                else:\n';
-  code += '                    raise ValueError("Не удалось скачать изображение")\n';
-  code += '            else:\n';
-  code += '                # Обычная отправка фото\n';
-  code += '                photo_file = URLInputFile(photo_url)\n';
-  code += '                await message.answer_photo(\n';
-  code += '                    photo=photo_file,\n';
-  code += '                    **send_params\n';
-  code += '                )\n';
-  code += '        \n';
-  code += '        logging.info(f"Фото успешно отправлено: {photo_url[:50]}... (документ: {send_as_document}, защита: {has_content_protection})")\n';
-  code += '        return True\n';
-  code += '        \n';
-  code += '    except Exception as e:\n';
-  code += '        logging.error(f"Ошибка при отправке фото {photo_url}: {e}")\n';
-  code += '        \n';
-  code += '        # Fallback: отправляем только текст\n';
-  code += '        fallback_text = caption if caption else "❌ Не удалось загрузить изображение"\n';
-  code += '        await message.answer(\n';
-  code += '            text=fallback_text,\n';
-  code += '            parse_mode=ParseMode.HTML,\n';
-  code += '            reply_markup=reply_markup,\n';
-  code += '            disable_web_page_preview=disable_web_page_preview,\n';
-  code += '            protect_content=has_content_protection\n';
-  code += '        )\n';
-  code += '        return False\n\n';
-
   // Настройка меню команд для BotFather
   const menuCommands = nodes.filter(node => 
     (node.type === 'start' || node.type === 'command') && 
@@ -185,8 +82,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += generateCommandHandler(node);
     } else if (node.type === "message") {
       code += generateMessageHandler(node);
-    } else if (node.type === "photo") {
-      code += generatePhotoHandler(node);
     }
   });
 
@@ -210,98 +105,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
 
   // Generate callback handlers for inline buttons
   const inlineNodes = nodes.filter(node => 
-    node.data.keyboardType === 'inline' && 
-    ((node.data.inlineButtons && node.data.inlineButtons.length > 0) || 
-     (node.data.buttons && node.data.buttons.length > 0))
+    node.data.keyboardType === 'inline' && node.data.buttons.length > 0
   );
 
   if (inlineNodes.length > 0) {
     code += '\n# Обработчики inline кнопок\n';
     inlineNodes.forEach(node => {
-      const inlineButtons = node.data.inlineButtons || node.data.buttons || [];
-      inlineButtons.forEach((button: any) => {
-        // Skip URL buttons as they don't need callback handlers
-        if (button.action === 'url') {
-          return;
-        }
-        
-        const callbackData = button.target || button.text.replace(/[^a-zA-Z0-9а-яА-Я_]/g, '_');
-        const handlerId = (button.id || `btn_${Date.now()}`).replace(/[^a-zA-Z0-9_]/g, '_');
-        
+      node.data.buttons.forEach(button => {
         if (button.action === 'goto') {
-          // Find target node
-          const targetNode = nodes.find(n => n.id === button.target);
-          
-          code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
-          code += `async def handle_inline_${handlerId}(callback_query: types.CallbackQuery):\n`;
+          code += `\n@dp.callback_query(lambda c: c.data == "${button.target || button.text}")\n`;
+          code += `async def handle_${button.id}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
-          
-          if (targetNode) {
-            // Navigate to target node and generate its content
-            if (targetNode.type === 'message') {
-              const messageText = targetNode.data.messageText || 'Сообщение';
-              code += `    text = "${messageText}"\n`;
-              
-              // Generate keyboard for target node if it has one
-              if (targetNode.data.keyboardType === 'inline' && (targetNode.data.inlineButtons || targetNode.data.buttons)) {
-                const targetButtons = targetNode.data.inlineButtons || targetNode.data.buttons || [];
-                if (targetButtons.length > 0) {
-                  code += '    builder = InlineKeyboardBuilder()\n';
-                  targetButtons.forEach((btn: any) => {
-                    const btnText = btn.icon ? `${btn.icon} ${btn.text}` : btn.text;
-                    if (btn.action === "url") {
-                      code += `    builder.add(InlineKeyboardButton(text="${btnText}", url="${btn.url || '#'}"))\n`;
-                    } else {
-                      const btnCallbackData = btn.target || btn.text.replace(/[^a-zA-Z0-9а-яА-Я_]/g, '_');
-                      code += `    builder.add(InlineKeyboardButton(text="${btnText}", callback_data="${btnCallbackData}"))\n`;
-                    }
-                  });
-                  code += '    keyboard = builder.as_markup()\n';
-                  code += '    await callback_query.message.answer(text, reply_markup=keyboard)\n';
-                } else {
-                  code += '    await callback_query.message.answer(text)\n';
-                }
-              } else {
-                code += '    await callback_query.message.answer(text)\n';
-              }
-            } else if (targetNode.type === 'photo') {
-              const messageText = targetNode.data.messageText || '';
-              const imageUrl = targetNode.data.imageUrl || '';
-              code += `    text = "${messageText}"\n`;
-              code += `    photo_url = "${imageUrl}"\n`;
-              code += '    if photo_url:\n';
-              code += '        await send_photo_safe(callback_query.message, photo_url, text)\n';
-              code += '    else:\n';
-              code += '        await callback_query.message.answer(text or "Фото недоступно")\n';
-            } else if (targetNode.type === 'start') {
-              code += '    # Вызываем start handler\n';
-              code += '    await start_handler(callback_query.message)\n';
-            } else if (targetNode.type === 'command') {
-              const funcName = (targetNode.data.command || 'help').replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
-              code += `    # Вызываем команду ${targetNode.data.command}\n`;
-              code += `    await ${funcName}_handler(callback_query.message)\n`;
-            } else {
-              code += `    await callback_query.message.answer("Переход к: ${button.text}")\n`;
-            }
-          } else {
-            code += `    await callback_query.message.answer("Переход к: ${button.text}")\n`;
-          }
-        } else if (button.action === 'command') {
-          code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
-          code += `async def handle_inline_${handlerId}(callback_query: types.CallbackQuery):\n`;
-          code += '    await callback_query.answer()\n';
-          code += `    # Выполняем команду: ${button.target}\n`;
-          
-          // Find command handler
-          const commandNode = nodes.find(n => n.data.command === button.target);
-          if (commandNode && commandNode.type === 'start') {
-            code += '    await start_handler(callback_query.message)\n';
-          } else if (commandNode) {
-            const funcName = (button.target || '').replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
-            code += `    await ${funcName}_handler(callback_query.message)\n`;
-          } else {
-            code += `    await callback_query.message.answer("Команда: ${button.target}")\n`;
-          }
+          code += `    # TODO: Implement navigation to ${button.target}\n`;
+          code += `    await callback_query.message.answer("Переход к: ${button.text}")\n`;
         }
       });
     });
@@ -332,6 +148,18 @@ function generateStartHandler(node: Node): string {
     code += '        return\n';
   }
 
+  if (node.data.adminOnly) {
+    code += '    if not await is_admin(message.from_user.id):\n';
+    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+    code += '        return\n';
+  }
+
+  if (node.data.requiresAuth) {
+    code += '    if not await check_auth(message.from_user.id):\n';
+    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
+    code += '        return\n';
+  }
+
   // Регистрируем пользователя
   code += '\n    # Регистрируем пользователя в системе\n';
   code += '    user_data[message.from_user.id] = {\n';
@@ -342,24 +170,9 @@ function generateStartHandler(node: Node): string {
   code += '    }\n\n';
   
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
+  code += `    text = "${messageText}"\n`;
   
-  // Проверяем, есть ли изображение в стартовом узле
-  if (node.data.imageUrl) {
-    code += `    # Отправляем стартовое сообщение с фото\n`;
-    code += `    photo_url = "${node.data.imageUrl}"\n`;
-    code += `    caption = "${messageText}"\n`;
-    code += `    \n`;
-    code += `    # Используем безопасную отправку фото\n`;
-    const keyboardCode = node.data.keyboardType !== 'none' ? 'keyboard' : 'None';
-    const sendAsDocument = node.data.sendAsDocument ? 'True' : 'False';
-    const hasContentProtection = node.data.hasContentProtection ? 'True' : 'False';
-    const disableWebPagePreview = node.data.disableWebPagePreview ? 'True' : 'False';
-    code += `    await send_photo_safe(message, photo_url, caption, ${keyboardCode}, ${sendAsDocument}, ${hasContentProtection}, ${disableWebPagePreview})\n`;
-    return code + generateKeyboard(node);
-  } else {
-    code += `    text = "${messageText}"\n`;
-    return code + generateKeyboard(node);
-  }
+  return code + generateKeyboard(node);
 }
 
 function generateCommandHandler(node: Node): string {
@@ -376,105 +189,31 @@ function generateCommandHandler(node: Node): string {
     code += '        return\n';
   }
 
-  const messageText = node.data.messageText || "Команда выполнена";
-  
-  // Проверяем, есть ли изображение в команде
-  if (node.data.imageUrl) {
-    code += `    # Отправляем ответ команды с фото\n`;
-    code += `    photo_url = "${node.data.imageUrl}"\n`;
-    code += `    caption = "${messageText}"\n`;
-    code += `    \n`;
-    code += `    # Используем безопасную отправку фото\n`;
-    const keyboardCode = node.data.keyboardType !== 'none' ? 'keyboard' : 'None';
-    const sendAsDocument = node.data.sendAsDocument ? 'True' : 'False';
-    const hasContentProtection = node.data.hasContentProtection ? 'True' : 'False';
-    const disableWebPagePreview = node.data.disableWebPagePreview ? 'True' : 'False';
-    code += `    await send_photo_safe(message, photo_url, caption, ${keyboardCode}, ${sendAsDocument}, ${hasContentProtection}, ${disableWebPagePreview})\n`;
-  } else {
-    code += `\n    text = "${messageText}"\n`;
-    code += `    await message.answer(text)\n`;
+  if (node.data.adminOnly) {
+    code += '    if not await is_admin(message.from_user.id):\n';
+    code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+    code += '        return\n';
   }
+
+  if (node.data.requiresAuth) {
+    code += '    if not await check_auth(message.from_user.id):\n';
+    code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
+    code += '        return\n';
+  }
+
+  const messageText = node.data.messageText || "Команда выполнена";
+  code += `\n    text = "${messageText}"\n`;
   
-  return code;
+  return code + generateKeyboard(node);
 }
 
 function generateMessageHandler(node: Node): string {
   const messageText = node.data.messageText || "Сообщение";
-  let code = `\n@dp.message()\n`;
-  code += `async def message_${node.id}_handler(message: types.Message):\n`;
+  let code = `\n# Обработчик для сообщения: ${node.id}\n`;
+  code += `async def handle_${node.id}(message: types.Message):\n`;
   code += `    text = "${messageText}"\n`;
   
-  // Генерируем клавиатуру или отправляем простое сообщение
-  if (node.data.keyboardType === "inline" && 
-      ((node.data.inlineButtons && node.data.inlineButtons.length > 0) || 
-       (node.data.buttons && node.data.buttons.length > 0))) {
-    
-    code += '    \n';
-    code += '    builder = InlineKeyboardBuilder()\n';
-    
-    // Use inlineButtons first, fallback to buttons for compatibility
-    const inlineButtons = node.data.inlineButtons || node.data.buttons || [];
-    
-    // Group inline buttons by row position for better layout
-    const inlineButtonsByRow = groupButtonsByRow(inlineButtons);
-    Object.entries(inlineButtonsByRow).forEach(([row, buttons]) => {
-      (buttons as any[]).forEach((button: any) => {
-        const buttonText = button.icon ? `${button.icon} ${button.text}` : button.text;
-        if (button.action === "url") {
-          code += `    builder.add(InlineKeyboardButton(text="${buttonText}", url="${button.url || '#'}"))\n`;
-        } else {
-          const callbackData = button.target || button.text.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
-          code += `    builder.add(InlineKeyboardButton(text="${buttonText}", callback_data="${callbackData}"))\n`;
-        }
-      });
-      
-      // Add row adjustments for better layout
-      if ((buttons as any[]).length > 1) {
-        code += `    builder.adjust(${(buttons as any[]).length})\n`;
-      }
-    });
-    
-    code += '    keyboard = builder.as_markup()\n';
-    code += '    await message.answer(text, reply_markup=keyboard)\n';
-  } else {
-    // Удаляем предыдущие reply клавиатуры если они были
-    code += '    await message.answer(text, reply_markup=ReplyKeyboardRemove())\n';
-  }
-  
-  return code;
-}
-
-function generatePhotoHandler(node: Node): string {
-  const messageText = node.data.messageText || "";
-  const imageUrl = node.data.imageUrl || "";
-  let code = `\n# Обработчик для фото: ${node.id}\n`;
-  code += `async def handle_photo_${node.id}(message: types.Message):\n`;
-  
-  // Добавляем проверки безопасности
-  if (node.data.isPrivateOnly) {
-    code += '    if not await is_private_chat(message):\n';
-    code += '        await message.answer("Эта команда доступна только в приватном чате")\n';
-    code += '        return\n\n';
-  }
-  
-  if (imageUrl) {
-    code += `    # Отправляем фото с улучшенной обработкой\n`;
-    code += `    photo_url = "${imageUrl}"\n`;
-    code += `    caption = "${messageText}" if "${messageText}" else None\n`;
-    code += `    \n`;
-    code += `    # Используем безопасную отправку фото\n`;
-    const keyboardCode = node.data.keyboardType !== 'none' ? 'keyboard' : 'None';
-    const sendAsDocument = node.data.sendAsDocument ? 'True' : 'False';
-    const hasContentProtection = node.data.hasContentProtection ? 'True' : 'False';
-    const disableWebPagePreview = node.data.disableWebPagePreview ? 'True' : 'False';
-    code += `    await send_photo_safe(message, photo_url, caption, ${keyboardCode}, ${sendAsDocument}, ${hasContentProtection}, ${disableWebPagePreview})\n`;
-  } else {
-    // Нет URL изображения
-    code += `    # URL изображения не указан\n`;
-    code += `    await message.answer("❌ Изображение не настроено")\n`;
-  }
-  
-  return code;
+  return code + generateKeyboard(node);
 }
 
 function generateSynonymHandler(node: Node, synonym: string): string {
@@ -496,50 +235,32 @@ function generateSynonymHandler(node: Node, synonym: string): string {
 }
 
 function generateKeyboard(node: Node): string {
-  // Эта функция оставлена для совместимости, но теперь генерация клавиатур
-  // встроена непосредственно в обработчики сообщений для лучшего контроля
-  return '';
-}
-
-// Helper function to group buttons by row position
-function groupButtonsByRow(buttons: any[]): { [key: string]: any[] } {
-  const grouped: { [key: string]: any[] } = {};
-  
-  buttons.forEach((button: any) => {
-    const row = button.rowPosition || 0;
-    if (!grouped[row]) {
-      grouped[row] = [];
-    }
-    grouped[row].push(button);
-  });
-  
-  return grouped;
-}
-
-// Helper function to generate keyboard layout based on settings
-function generateKeyboardLayout(buttons: any[], layout: string, maxRowSize: number): string {
   let code = '';
   
-  switch (layout) {
-    case 'compact':
-      // Compact layout: try to fit more buttons per row
-      code += `    builder.adjust(${Math.min(buttons.length, maxRowSize)})\n`;
-      break;
-    case 'wide':
-      // Wide layout: fewer buttons per row for better readability
-      code += `    builder.adjust(${Math.min(buttons.length, Math.max(1, maxRowSize - 1))})\n`;
-      break;
-    case 'grid':
-      // Grid layout: equal distribution
-      const cols = Math.ceil(Math.sqrt(buttons.length));
-      code += `    builder.adjust(${cols})\n`;
-      break;
-    default:
-      // Default layout
-      if (buttons.length > maxRowSize) {
-        code += `    builder.adjust(${maxRowSize})\n`;
+  if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
+    code += '    \n';
+    code += '    builder = ReplyKeyboardBuilder()\n';
+    node.data.buttons.forEach(button => {
+      code += `    builder.add(KeyboardButton(text="${button.text}"))\n`;
+    });
+    
+    code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard}, one_time_keyboard=${node.data.oneTimeKeyboard})\n`;
+    code += '    await message.answer(text, reply_markup=keyboard)\n';
+  } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+    code += '    \n';
+    code += '    builder = InlineKeyboardBuilder()\n';
+    node.data.buttons.forEach(button => {
+      if (button.action === "url") {
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+      } else {
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))\n`;
       }
-      break;
+    });
+    
+    code += '    keyboard = builder.as_markup()\n';
+    code += '    await message.answer(text, reply_markup=keyboard)\n';
+  } else {
+    code += '    await message.answer(text)\n';
   }
   
   return code;
@@ -662,8 +383,14 @@ export function generateReadme(botData: BotData, botName: string): string {
     const description = node.data.description || 'Описание отсутствует';
     readme += '- `' + command + '` - ' + description + '\n';
     
+    if (node.data.adminOnly) {
+      readme += '  - 🔒 Только для администраторов\n';
+    }
     if (node.data.isPrivateOnly) {
       readme += '  - 👤 Только в приватных чатах\n';
+    }
+    if (node.data.requiresAuth) {
+      readme += '  - 🔐 Требует авторизации\n';
     }
   });
 

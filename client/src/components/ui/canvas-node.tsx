@@ -234,59 +234,32 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
           </div>
         </div>
       )}
-      {/* Enhanced Image preview */}
+      {/* Image preview */}
       {node.type === 'photo' && (
-        <div className="bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-3 mb-4 h-32 flex items-center justify-center relative overflow-hidden">
+        <div className="bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
           {node.data.imageUrl ? (
-            <div className="relative w-full h-full group">
-              <img 
-                src={node.data.imageUrl} 
-                alt="Превью фото" 
-                className="max-h-full max-w-full object-contain rounded transition-all duration-200 group-hover:scale-105"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const fallback = target.parentElement?.querySelector('.fallback-icon') as HTMLElement;
-                  if (fallback) {
-                    fallback.style.display = 'flex';
-                  }
-                }}
-              />
-              <div className="fallback-icon hidden w-full h-full flex-col items-center justify-center text-center">
-                <i className="fas fa-exclamation-triangle text-red-400 text-xl mb-1"></i>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Ошибка загрузки</p>
-              </div>
-              {/* Image indicator */}
-              <div className="absolute bottom-1 right-1 bg-purple-500/80 text-white text-xs px-1.5 py-0.5 rounded backdrop-blur-sm">
-                <i className="fas fa-image mr-1"></i>
-                IMG
-              </div>
-            </div>
+            <img src={node.data.imageUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
           ) : (
-            <div className="text-center">
-              <i className="fas fa-image text-purple-400 dark:text-purple-300 text-2xl mb-2"></i>
-              <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">Добавьте изображение</p>
-            </div>
+            <i className="fas fa-image text-purple-400 dark:text-purple-300 text-3xl"></i>
           )}
         </div>
       )}
       {/* Buttons preview */}
-      {(node.data.buttons?.length > 0 || node.data.inlineButtons?.length > 0) && (
+      {node.data.buttons.length > 0 && (
         <div className="space-y-3">
-          {/* Reply buttons section */}
-          {node.data.buttons?.length > 0 && (node.data.keyboardType === 'reply' || node.data.keyboardType === 'combined') && (
-            <div>
-              <div className="flex items-center space-x-2 mb-3">
-                <div className="w-1 h-4 bg-amber-500 dark:bg-amber-400 rounded-full"></div>
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                  Reply кнопки
-                </span>
-              </div>
-              <div className="space-y-2">
-                {node.data.buttons.slice(0, 2).map((button) => (
-                  <div key={button.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
-                    <div className="flex items-center space-x-1 ml-2">
+          <div className="flex items-center space-x-2 mb-3">
+            <div className="w-1 h-4 bg-amber-500 dark:bg-amber-400 rounded-full"></div>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+              {node.data.keyboardType === 'inline' ? 'Inline кнопки' : 'Reply кнопки'}
+            </span>
+          </div>
+          {node.data.keyboardType === 'inline' ? (
+            <div className="grid grid-cols-2 gap-2">
+              {node.data.buttons.slice(0, 4).map((button) => (
+                <div key={button.id} className="group relative">
+                  <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm">
+                    <div className="flex items-center justify-center space-x-1">
+                      <span className="truncate">{button.text}</span>
                       {button.action === 'command' && (
                         <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
                       )}
@@ -298,93 +271,34 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
-              {node.data.buttons.length > 2 && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-2 font-medium">
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
-                    +{node.data.buttons.length - 2} еще
-                  </span>
                 </div>
-              )}
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {node.data.buttons.slice(0, 2).map((button) => (
+                <div key={button.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
+                  <div className="flex items-center space-x-1 ml-2">
+                    {button.action === 'command' && (
+                      <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
+                    )}
+                    {button.action === 'url' && (
+                      <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
+                    )}
+                    {button.action === 'goto' && (
+                      <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-          
-          {/* Inline buttons section */}
-          {node.data.inlineButtons?.length > 0 && (node.data.keyboardType === 'inline' || node.data.keyboardType === 'combined') && (
-            <div>
-              <div className="flex items-center space-x-2 mb-3">
-                <div className="w-1 h-4 bg-blue-500 dark:bg-blue-400 rounded-full"></div>
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                  Inline кнопки
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {node.data.inlineButtons.slice(0, 4).map((button) => (
-                  <div key={button.id} className="group relative">
-                    <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm">
-                      <div className="flex items-center justify-center space-x-1">
-                        <span className="truncate">{button.text}</span>
-                        {button.action === 'command' && (
-                          <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
-                        )}
-                        {button.action === 'url' && (
-                          <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
-                        )}
-                        {button.action === 'goto' && (
-                          <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {node.data.inlineButtons.length > 4 && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-2 font-medium">
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
-                    +{node.data.inlineButtons.length - 4} еще
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* For inline-only keyboard type, show buttons as inline */}
-          {node.data.buttons?.length > 0 && node.data.keyboardType === 'inline' && (
-            <div>
-              <div className="flex items-center space-x-2 mb-3">
-                <div className="w-1 h-4 bg-blue-500 dark:bg-blue-400 rounded-full"></div>
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-                  Inline кнопки
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {node.data.buttons.slice(0, 4).map((button) => (
-                  <div key={button.id} className="group relative">
-                    <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm">
-                      <div className="flex items-center justify-center space-x-1">
-                        <span className="truncate">{button.text}</span>
-                        {button.action === 'command' && (
-                          <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
-                        )}
-                        {button.action === 'url' && (
-                          <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
-                        )}
-                        {button.action === 'goto' && (
-                          <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {node.data.buttons.length > 4 && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-2 font-medium">
-                  <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
-                    +{node.data.buttons.length - 4} еще
-                  </span>
-                </div>
-              )}
+          {node.data.buttons.length > (node.data.keyboardType === 'inline' ? 4 : 2) && (
+            <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-2 font-medium">
+              <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+                +{node.data.buttons.length - (node.data.keyboardType === 'inline' ? 4 : 2)} еще
+              </span>
             </div>
           )}
         </div>

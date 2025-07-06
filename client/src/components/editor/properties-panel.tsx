@@ -11,8 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
-import { EnhancedInlineKeyboard } from './enhanced-inline-keyboard';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
@@ -21,9 +20,6 @@ interface PropertiesPanelProps {
   onButtonAdd: (nodeId: string, button: Button) => void;
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
   onButtonDelete: (nodeId: string, buttonId: string) => void;
-  onInlineButtonAdd?: (nodeId: string, button: Button) => void;
-  onInlineButtonUpdate?: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
-  onInlineButtonDelete?: (nodeId: string, buttonId: string) => void;
 }
 
 export function PropertiesPanel({ 
@@ -32,36 +28,11 @@ export function PropertiesPanel({
   onNodeUpdate, 
   onButtonAdd, 
   onButtonUpdate, 
-  onButtonDelete,
-  onInlineButtonAdd,
-  onInlineButtonUpdate,
-  onInlineButtonDelete
+  onButtonDelete 
 }: PropertiesPanelProps) {
   const { toast } = useToast();
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
-
-  // Автоматическая инициализация дефолтных значений для фото узлов
-  useEffect(() => {
-    if (selectedNode && selectedNode.type === 'photo') {
-      const missingDefaults: Partial<Node['data']> = {};
-      
-      if (selectedNode.data.sendAsDocument === undefined) {
-        missingDefaults.sendAsDocument = false;
-      }
-      if (selectedNode.data.hasContentProtection === undefined) {
-        missingDefaults.hasContentProtection = true;
-      }
-      if (selectedNode.data.disableWebPagePreview === undefined) {
-        missingDefaults.disableWebPagePreview = false;
-      }
-      
-      // Обновляем узел только если есть отсутствующие значения
-      if (Object.keys(missingDefaults).length > 0) {
-        onNodeUpdate(selectedNode.id, missingDefaults);
-      }
-    }
-  }, [selectedNode?.id, selectedNode?.type]);
 
   // Валидация команды
   const commandValidation = useMemo(() => {
@@ -176,54 +147,9 @@ export function PropertiesPanel({
       id: nanoid(),
       text: 'Новая кнопка',
       action: 'goto',
-      target: '',
-      rowPosition: 0,
-      style: 'default',
-      width: 'auto',
-      icon: undefined,
-      url: undefined
+      target: ''
     };
     onButtonAdd(selectedNode.id, newButton);
-  };
-
-  const handleAddInlineButton = () => {
-    console.log('Adding inline button, current inlineButtons:', selectedNode.data.inlineButtons);
-    const newButton: Button = {
-      id: nanoid(),
-      text: 'Новая inline кнопка',
-      action: 'goto',
-      target: '',
-      rowPosition: 0,
-      style: 'default',
-      width: 'auto',
-      icon: undefined,
-      url: undefined
-    };
-    if (onInlineButtonAdd) {
-      console.log('Calling onInlineButtonAdd with:', newButton);
-      onInlineButtonAdd(selectedNode.id, newButton);
-    } else {
-      console.log('onInlineButtonAdd is not defined');
-    }
-  };
-
-  const getNodeIcon = (type: string) => {
-    const icons: Record<string, string> = {
-      start: 'fas fa-play',
-      message: 'fas fa-comment',
-      photo: 'fas fa-image',
-      keyboard: 'fas fa-keyboard',
-      condition: 'fas fa-code-branch',
-      input: 'fas fa-edit',
-      command: 'fas fa-terminal'
-    };
-    return icons[type] || 'fas fa-circle';
-  };
-
-  const getNodeTitle = (node: Node) => {
-    if (node.data.command) return node.data.command;
-    if (node.data.messageText) return node.data.messageText.slice(0, 30) + (node.data.messageText.length > 30 ? '...' : '');
-    return `${nodeTypeNames[node.type]} #${node.id.slice(0, 8)}`;
   };
 
   return (
@@ -380,153 +306,14 @@ export function PropertiesPanel({
             )}
 
             {selectedNode.type === 'photo' && (
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">URL изображения</Label>
-                  <div className="relative">
-                    <Input
-                      value={selectedNode.data.imageUrl || ''}
-                      onChange={(e) => onNodeUpdate(selectedNode.id, { imageUrl: e.target.value })}
-                      className="mt-2 pr-10"
-                      placeholder="https://example.com/image.jpg"
-                    />
-                    {selectedNode.data.imageUrl && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 mt-1">
-                        {selectedNode.data.imageUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i) ? (
-                          <i className="fas fa-check-circle text-green-500 text-sm"></i>
-                        ) : (
-                          <i className="fas fa-exclamation-triangle text-yellow-500 text-sm"></i>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Поддерживаются: JPG, PNG, GIF, WebP, BMP. Максимум 20 МБ
-                  </div>
-                  {selectedNode.data.imageUrl && !selectedNode.data.imageUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i) && (
-                    <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1 flex items-center">
-                      <i className="fas fa-info-circle mr-1"></i>
-                      Убедитесь, что URL заканчивается расширением изображения
-                    </div>
-                  )}
-                </div>
-                
-                {/* Превью изображения */}
-                {selectedNode.data.imageUrl && (
-                  <div className="relative">
-                    <div className="flex items-center mb-3">
-                      <div className="w-1 h-4 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full mr-2"></div>
-                      <Label className="text-xs font-medium text-foreground">Превью изображения</Label>
-                    </div>
-                    <div className="mt-2 p-1 rounded-xl bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-indigo-500/10 dark:from-purple-500/20 dark:via-pink-500/20 dark:to-indigo-500/20">
-                      <div className="aspect-video bg-gradient-to-br from-purple-50/80 to-pink-50/80 dark:from-gray-900/80 dark:to-gray-800/80 rounded-lg flex items-center justify-center relative overflow-hidden border border-purple-200/30 dark:border-purple-700/30 backdrop-blur-sm">
-                        <img 
-                          src={selectedNode.data.imageUrl} 
-                          alt="Превью фото" 
-                          className="max-h-full max-w-full object-contain rounded transition-all duration-300 hover:scale-105 filter drop-shadow-lg"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const fallback = target.parentElement?.querySelector('.fallback-icon') as HTMLElement;
-                            if (fallback) {
-                              fallback.style.display = 'flex';
-                            }
-                          }}
-                        />
-                        <div className="fallback-icon hidden w-full h-full flex flex-col items-center justify-center text-muted-foreground">
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50 flex items-center justify-center mb-4">
-                            <i className="fas fa-exclamation-triangle text-red-500 dark:text-red-400 text-2xl"></i>
-                          </div>
-                          <span className="text-sm font-medium text-center">Ошибка загрузки изображения</span>
-                          <span className="text-xs text-center mt-1 opacity-70">Проверьте корректность URL</span>
-                        </div>
-                        
-                        {/* Декоративные элементы */}
-                        <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-purple-400/50 dark:bg-purple-500/50 animate-pulse"></div>
-                        <div className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-pink-400/50 dark:bg-pink-500/50 animate-pulse delay-75"></div>
-                        <div className="absolute top-2 right-2 w-1 h-1 rounded-full bg-indigo-400/50 dark:bg-indigo-500/50 animate-pulse delay-150"></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Дополнительные настройки фото */}
-                <div>
-                  <div className="flex items-center mb-3">
-                    <div className="w-1 h-4 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full mr-2"></div>
-                    <Label className="text-xs font-medium text-foreground">Дополнительные настройки</Label>
-                  </div>
-                  <div className="mt-2 space-y-3">
-                    <div className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-card/60 to-card/40 dark:from-gray-800/60 dark:to-gray-900/40 border border-border/50 dark:border-gray-700/50 hover:border-purple-500/30 dark:hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg dark:hover:shadow-purple-500/10">
-                      <div className="flex items-start space-x-3 flex-1">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
-                          <i className="fas fa-file-image text-blue-600 dark:text-blue-400 text-sm"></i>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Label className="text-sm font-medium text-foreground group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-200">
-                            Отправлять без сжатия
-                          </Label>
-                          <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                            Сохранить оригинальное качество изображения
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <Switch
-                          checked={selectedNode.data.sendAsDocument ?? false}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { sendAsDocument: checked })}
-                          className="photo-settings-switch blue-variant"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-card/60 to-card/40 dark:from-gray-800/60 dark:to-gray-900/40 border border-border/50 dark:border-gray-700/50 hover:border-green-500/30 dark:hover:border-green-400/30 transition-all duration-300 hover:shadow-lg dark:hover:shadow-green-500/10">
-                      <div className="flex items-start space-x-3 flex-1">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
-                          <i className="fas fa-shield-alt text-green-600 dark:text-green-400 text-sm"></i>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Label className="text-sm font-medium text-foreground group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-200">
-                            Защитить от пересылки
-                          </Label>
-                          <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                            Запретить сохранение и пересылку изображения
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <Switch
-                          checked={selectedNode.data.hasContentProtection ?? true}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { hasContentProtection: checked })}
-                          className="photo-settings-switch green-variant"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-card/60 to-card/40 dark:from-gray-800/60 dark:to-gray-900/40 border border-border/50 dark:border-gray-700/50 hover:border-orange-500/30 dark:hover:border-orange-400/30 transition-all duration-300 hover:shadow-lg dark:hover:shadow-orange-500/10">
-                      <div className="flex items-start space-x-3 flex-1">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
-                          <i className="fas fa-link text-orange-600 dark:text-orange-400 text-sm"></i>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Label className="text-sm font-medium text-foreground group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200">
-                            Показывать превью ссылки
-                          </Label>
-                          <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                            Отображать превью при отправке URL-адресов
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <Switch
-                          checked={!(selectedNode.data.disableWebPagePreview ?? false)}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { disableWebPagePreview: !checked })}
-                          className="photo-settings-switch orange-variant"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground">URL изображения</Label>
+                <Input
+                  value={selectedNode.data.imageUrl || ''}
+                  onChange={(e) => onNodeUpdate(selectedNode.id, { imageUrl: e.target.value })}
+                  className="mt-2"
+                  placeholder="https://example.com/image.jpg"
+                />
               </div>
             )}
           </div>
@@ -582,37 +369,20 @@ export function PropertiesPanel({
             {/* Buttons List */}
             {selectedNode.data.keyboardType !== 'none' && (
               <div>
-
-
-                {/* Enhanced Inline Keyboard */}
-                {selectedNode.data.keyboardType === 'inline' && (
-                  <EnhancedInlineKeyboard
-                    selectedNode={selectedNode}
-                    allNodes={allNodes || []}
-                    onNodeUpdate={onNodeUpdate}
-                    onInlineButtonUpdate={onInlineButtonUpdate}
-                    onInlineButtonDelete={onInlineButtonDelete}
-                  />
-                )}
-
-                {/* Reply buttons for reply mode */}
-                {selectedNode.data.keyboardType === 'reply' && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-xs font-medium text-muted-foreground">
-                        {selectedNode.data.keyboardType === 'reply' ? 'Reply кнопки' : 'Кнопки'}
-                      </Label>
-                      <UIButton
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleAddButton}
-                        className="text-xs text-primary hover:text-primary/80 font-medium h-auto p-1"
-                      >
-                        + Добавить
-                      </UIButton>
-                    </div>
-                    <div className="space-y-2">
-                      {selectedNode.data.buttons.map((button) => (
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Кнопки</Label>
+                  <UIButton
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleAddButton}
+                    className="text-xs text-primary hover:text-primary/80 font-medium h-auto p-1"
+                  >
+                    + Добавить
+                  </UIButton>
+                </div>
+                
+                <div className="space-y-2">
+                  {selectedNode.data.buttons.map((button) => (
                     <div key={button.id} className="bg-muted/50 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
                         <Input
@@ -755,10 +525,8 @@ export function PropertiesPanel({
                         </div>
                       )}
                     </div>
-                    ))}
-                    </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -820,7 +588,43 @@ export function PropertiesPanel({
                     </div>
                   </div>
                   
-
+                  {/* Requires Auth Setting */}
+                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-info/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-foreground group-hover:text-info transition-colors duration-200">
+                        Требует авторизации
+                      </Label>
+                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Пользователь должен быть зарегистрирован
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.requiresAuth ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { requiresAuth: checked })}
+                        className="data-[state=checked]:bg-info"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Admin Only Setting */}
+                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-destructive/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-foreground group-hover:text-destructive transition-colors duration-200">
+                        Только для администраторов
+                      </Label>
+                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Команда доступна только админам
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.adminOnly ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { adminOnly: checked })}
+                        className="data-[state=checked]:bg-destructive"
+                      />
+                    </div>
+                  </div>
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -882,8 +686,6 @@ export function PropertiesPanel({
             </div>
           </div>
         )}
-
-
       </div>
 
       {/* Properties Footer */}

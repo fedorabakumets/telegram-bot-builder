@@ -190,7 +190,7 @@ export function AutoHierarchySettings({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <i className="fas fa-cog text-primary"></i>
+            <i className="fas fa-cog text-blue-600 dark:text-blue-400"></i>
             Настройки автоматической иерархии
             {getComplexityBadge()}
           </DialogTitle>
@@ -205,7 +205,7 @@ export function AutoHierarchySettings({
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div className="text-center">
-                  <div className="text-xl font-bold text-primary">
+                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
                     {zoom}%
                   </div>
                   <div className="text-muted-foreground">Масштаб</div>
@@ -241,7 +241,7 @@ export function AutoHierarchySettings({
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                       {analysis.totalNodes}
                     </div>
                     <div className="text-muted-foreground">Узлов</div>
@@ -267,7 +267,7 @@ export function AutoHierarchySettings({
                 </div>
                 
                 {analysis.hasCircularReferences && (
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg p-3">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
                     <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
                       <i className="fas fa-exclamation-triangle"></i>
                       <span className="text-sm font-medium">
@@ -278,8 +278,8 @@ export function AutoHierarchySettings({
                 )}
                 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <i className="fas fa-lightbulb text-primary"></i>
-                  <span>Рекомендуется: <strong className="text-foreground">{config.algorithm}</strong></span>
+                  <i className="fas fa-lightbulb text-blue-500"></i>
+                  <span>Рекомендуется: <strong>{config.algorithm}</strong></span>
                 </div>
               </CardContent>
             </Card>

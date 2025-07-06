@@ -1,14 +1,12 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { CanvasNode } from '@/components/ui/canvas-node';
 import { ConnectionsLayer } from '@/components/ui/connections-layer';
-import { ButtonConnectionsLayer } from '@/components/ui/button-connections-layer';
 import { TemporaryConnection } from '@/components/ui/temporary-connection';
 import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
 import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
 import { SimpleAutoHierarchyButton } from '@/components/ui/simple-auto-hierarchy-button';
 import { AutoHierarchySettings } from '@/components/ui/auto-hierarchy-settings';
 import { AutoConnectionButton } from '@/components/ui/auto-connection-button';
-import { HierarchyPageButton } from '@/components/ui/hierarchy-page-button';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Node, ComponentDefinition, Connection } from '@shared/schema';
@@ -72,7 +70,6 @@ export function Canvas({
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
   const [previewNodes, setPreviewNodes] = useState<Node[] | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [showButtonConnections, setShowButtonConnections] = useState(true);
 
   // Zoom utility functions
   const zoomIn = useCallback(() => {
@@ -560,12 +557,16 @@ export function Canvas({
               <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
 
-            <HierarchyPageButton
+            <SimpleAutoHierarchyButton
               nodes={displayNodes}
               connections={connections}
               onApplyLayout={handleApplyLayout}
               onApplyLayoutWithConnections={handleApplyLayoutWithConnections}
-              disabled={isPreviewMode}
+              zoom={zoom}
+              viewportWidth={canvasRef.current?.clientWidth || 1200}
+              viewportHeight={canvasRef.current?.clientHeight || 800}
+              viewportCenterX={canvasRef.current ? canvasRef.current.clientWidth / 2 : 600}
+              viewportCenterY={canvasRef.current ? canvasRef.current.clientHeight / 2 : 400}
             />
 
             <AutoConnectionButton
@@ -575,9 +576,20 @@ export function Canvas({
               disabled={isPreviewMode}
             />
 
-            
-
-
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50">
+              <AutoHierarchySettings
+                nodes={displayNodes}
+                connections={connections}
+                onApplyLayout={handleApplyLayout}
+                onPreviewLayout={handlePreviewLayout}
+                onCancelPreview={handleCancelPreview}
+                zoom={zoom}
+                viewportWidth={canvasRef.current?.clientWidth || 1200}
+                viewportHeight={canvasRef.current?.clientHeight || 800}
+                viewportCenterX={canvasRef.current ? canvasRef.current.clientWidth / 2 : 600}
+                viewportCenterY={canvasRef.current ? canvasRef.current.clientHeight / 2 : 400}
+              />
+            </div>
 
             <button 
               onClick={onUndo}
@@ -752,13 +764,6 @@ export function Canvas({
               onConnectionDelete={onConnectionDelete}
             />
 
-            {/* Button Connections Layer */}
-            <ButtonConnectionsLayer
-              nodes={nodes}
-              connections={connections}
-              showButtonConnections={showButtonConnections}
-            />
-
             {/* Temporary connection preview */}
             {connectionStart && (
               <TemporaryConnection
@@ -851,7 +856,25 @@ export function Canvas({
                 <i className="fas fa-bolt text-white" />
               </Button>
 
-              
+              {/* Connection suggestions */}
+              <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm"
+                    title="Рекомендации соединений"
+                  >
+                    <i className="fas fa-lightbulb text-yellow-500" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="left" className="w-80 p-0">
+                  <ConnectionSuggestions
+                    nodes={nodes}
+                    connections={connections}
+                    onCreateConnection={handleCreateSuggestedConnection}
+                  />
+                </PopoverContent>
+              </Popover>
 
               {/* Clear connections button */}
               {connections.length > 0 && (

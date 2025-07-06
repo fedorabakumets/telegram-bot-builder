@@ -9,7 +9,7 @@ import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
-// import { TemplatesModal } from '@/components/editor/templates-modal'; // Заменено на отдельную страницу
+import { TemplatesModal } from '@/components/editor/templates-modal';
 import { ConnectionManagerPanel } from '@/components/editor/connection-manager-panel';
 import { EnhancedConnectionControls } from '@/components/editor/enhanced-connection-controls';
 import { ConnectionVisualization } from '@/components/editor/connection-visualization';
@@ -27,7 +27,7 @@ export default function Editor() {
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-  // const [showTemplates, setShowTemplates] = useState(false); // Заменено на переход к странице
+  const [showTemplates, setShowTemplates] = useState(false);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
@@ -60,9 +60,6 @@ export default function Editor() {
     addButton,
     updateButton,
     deleteButton,
-    addInlineButton,
-    updateInlineButton,
-    deleteInlineButton,
     updateNodes,
     setBotData,
     getBotData,
@@ -148,7 +145,12 @@ export default function Editor() {
     setShowSaveTemplate(true);
   }, []);
 
-  const handleSelectTemplate = useCallback(async (template: any) => {
+  const handleLoadTemplate = useCallback(() => {
+    console.log('Template button clicked, opening modal...');
+    setShowTemplates(true);
+  }, []);
+
+  const handleSelectTemplate = useCallback((template: any) => {
     // Применяем шаблон к текущему проекту
     try {
       console.log('Обработка выбора шаблона:', template.name);
@@ -173,42 +175,10 @@ export default function Editor() {
       updateProjectMutation.mutate({
         data: templateData
       });
-
-      // Если это системный шаблон (не пользовательский), сохраняем его как пользовательский
-      if (template.category !== 'custom') {
-        try {
-          const saveData = {
-            name: template.name,
-            description: template.description || `Сохранен из библиотеки: ${template.name}`,
-            category: 'custom',
-            data: templateData,
-            difficulty: template.difficulty || 'easy',
-            tags: template.tags || [],
-            isPublic: 0,
-            requiresToken: 1,
-            language: 'ru',
-            complexity: template.complexity || 1,
-            estimatedTime: template.estimatedTime || 5,
-            version: template.version || '1.0.0'
-          };
-          
-          console.log('Отправляем данные для сохранения шаблона:', JSON.stringify(saveData, null, 2));
-          
-          await apiRequest('POST', '/api/templates', saveData);
-          
-          // Инвалидируем кэш пользовательских шаблонов
-          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
-          
-          console.log('Шаблон сохранен в пользовательских');
-        } catch (saveError) {
-          console.error('Ошибка сохранения шаблона в пользовательских:', saveError);
-          // Не показываем ошибку пользователю, это не критично
-        }
-      }
       
       toast({
         title: 'Шаблон применен',
-        description: `Шаблон "${template.name}" успешно загружен и сохранен в ваших шаблонах`,
+        description: `Шаблон "${template.name}" успешно загружен на холст`,
       });
     } catch (error) {
       console.error('Ошибка применения шаблона:', error);
@@ -218,32 +188,7 @@ export default function Editor() {
         variant: 'destructive',
       });
     }
-  }, [setBotData, updateProjectMutation, toast, nodes.length, connections.length, queryClient]);
-
-  const handleLoadTemplate = useCallback(() => {
-    console.log('Template button clicked, redirecting to templates page...');
-    setLocation('/templates');
-  }, [setLocation]);
-
-  // Проверяем, есть ли ожидающий шаблон в localStorage
-  useEffect(() => {
-    const pendingTemplate = localStorage.getItem('pendingTemplate');
-    if (pendingTemplate && currentProject) {
-      try {
-        const template = JSON.parse(pendingTemplate);
-        console.log('Найден ожидающий шаблон:', template.name);
-        
-        // Очищаем localStorage
-        localStorage.removeItem('pendingTemplate');
-        
-        // Применяем шаблон
-        handleSelectTemplate(template);
-      } catch (error) {
-        console.error('Ошибка загрузки ожидающего шаблона:', error);
-        localStorage.removeItem('pendingTemplate');
-      }
-    }
-  }, [currentProject, handleSelectTemplate]);
+  }, [setBotData, updateProjectMutation, toast, nodes.length, connections.length]);
 
   // Обработчики для управления связями
   const handleConnectionsChange = useCallback((newConnections: Connection[]) => {
@@ -333,11 +278,7 @@ export default function Editor() {
         {currentTab === 'editor' ? (
           <ResizablePanelGroup direction="horizontal" className="h-full">
             <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-              <ComponentsSidebar 
-                onComponentDrag={handleComponentDrag} 
-                onLoadTemplate={handleLoadTemplate}
-                onSelectTemplate={handleSelectTemplate}
-              />
+              <ComponentsSidebar onComponentDrag={handleComponentDrag} onLoadTemplate={handleLoadTemplate} />
             </ResizablePanel>
             
             <ResizableHandle withHandle />
@@ -373,9 +314,6 @@ export default function Editor() {
                 onButtonAdd={addButton}
                 onButtonUpdate={updateButton}
                 onButtonDelete={deleteButton}
-                onInlineButtonAdd={addInlineButton}
-                onInlineButtonUpdate={updateInlineButton}
-                onInlineButtonDelete={deleteInlineButton}
               />
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -464,7 +402,11 @@ export default function Editor() {
         projectName={currentProject.name}
       />
 
-      {/* TemplatesModal заменено на отдельную страницу /templates */}
+      <TemplatesModal
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
     </div>
   );
 }

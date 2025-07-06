@@ -1,5 +1,6 @@
 import React from 'react';
 import { Save, Clock, Check, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AutoSaveIndicatorProps {
@@ -85,7 +86,17 @@ export function AutoSaveIndicator({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <StatusIcon size={12} className={isSaving ? 'opacity-60' : ''} />
+          <Badge 
+            variant={status.variant}
+            className={`
+              flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium
+              transition-all duration-200 cursor-default
+              ${status.className}
+            `}
+          >
+            <StatusIcon size={12} className={isSaving ? 'opacity-60' : ''} />
+            <span className="hidden sm:inline">{status.text}</span>
+          </Badge>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">
           <div className="space-y-1">

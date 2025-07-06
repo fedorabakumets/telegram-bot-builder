@@ -4,7 +4,7 @@ import { HistoryIndicator } from './history-indicator';
 import { AutoSaveIndicator } from './auto-save-indicator';
 import { FloatingTemplateManager } from '@/components/ui/floating-template-manager';
 import { ImportExportControls } from '@/components/import-export';
-import { FolderOpen, Bookmark, Save, Download, User, Send, Library, Workflow } from 'lucide-react';
+import { FolderOpen, Bookmark, Save, Download, User, Send, Library } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'wouter';
 
@@ -94,7 +94,16 @@ export function Header({
           >
             Превью
           </button>
-          
+          <button 
+            onClick={() => onTabChange('export')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              currentTab === 'export' 
+                ? 'text-primary bg-primary/10' 
+                : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            Экспорт
+          </button>
           <button 
             onClick={() => onTabChange('bot')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
@@ -129,11 +138,45 @@ export function Header({
           />
         )}
         
+        {/* Templates Page Link */}
+        <Link href="/templates">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            <Library className="h-4 w-4 text-muted-foreground" />
+            <span>Библиотека</span>
+          </Button>
+        </Link>
         
+        {/* Fallback for legacy template buttons when botData is not available */}
+        {!botData && onLoadTemplate && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              console.log('Templates button clicked in header');
+              onLoadTemplate();
+            }}
+            className="flex items-center space-x-2"
+          >
+            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+            <span>Шаблоны</span>
+          </Button>
+        )}
         
-        
-        
-        
+        {!botData && onSaveAsTemplate && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onSaveAsTemplate}
+            className="flex items-center space-x-2"
+          >
+            <Bookmark className="h-4 w-4 text-muted-foreground" />
+            <span>Сохранить шаблон</span>
+          </Button>
+        )}
         
         {/* Import/Export Controls */}
         <ImportExportControls
@@ -170,7 +213,7 @@ export function Header({
 
         {/* Индикатор истории - только в режиме редактора */}
         {currentTab === 'editor' && onUndo && onRedo && (
-          <>
+          <div className="flex items-center">
             <div className="h-4 w-px bg-border mx-1"></div>
             <HistoryIndicator
               canUndo={canUndo}
@@ -178,7 +221,7 @@ export function Header({
               onUndo={onUndo}
               onRedo={onRedo}
             />
-          </>
+          </div>
         )}
         
         <Button 

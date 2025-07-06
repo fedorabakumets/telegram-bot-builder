@@ -51,7 +51,7 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
     }
 
     // Генерируем код бота
-    const botCode = generatePythonCodeFixed(project.data).replace('YOUR_BOT_TOKEN_HERE', token);
+    const botCode = generatePythonCode(project.data).replace('YOUR_BOT_TOKEN_HERE', token);
     
     // Создаем файл бота
     const filePath = createBotFile(botCode, projectId);
@@ -452,95 +452,6 @@ if __name__ == '__main__':
   return code;
 }
 
-// Fixed function to properly handle inlineButtons
-function generatePythonCodeFixed(botData: any): string {
-  const { nodes } = botData;
-  
-  let code = `import asyncio
-import logging
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import CommandStart, Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
-
-# Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
-
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
-
-# Создание бота и диспетчера
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
-
-`;
-
-  // Generate handlers for each node
-  nodes.forEach((node: any) => {
-    if (node.type === "message") {
-      const functionName = `message_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}`;
-      
-      code += `
-@dp.message()
-async def ${functionName}_handler(message: types.Message):
-    text = "${node.data.messageText || "Сообщение получено"}"
-`;
-      
-      if (node.data.keyboardType === "inline" && 
-          ((node.data.inlineButtons && node.data.inlineButtons.length > 0) || 
-           (node.data.buttons && node.data.buttons.length > 0))) {
-        code += `    
-    builder = InlineKeyboardBuilder()
-`;
-        const inlineButtons = node.data.inlineButtons || node.data.buttons || [];
-        
-        inlineButtons.forEach((button: any) => {
-          const buttonText = button.icon ? `${button.icon} ${button.text}` : button.text;
-          if (button.action === "url") {
-            code += `    builder.add(InlineKeyboardButton(text="${buttonText}", url="${button.url || '#'}"))
-`;
-          } else {
-            const callbackData = button.target || button.text.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
-            code += `    builder.add(InlineKeyboardButton(text="${buttonText}", callback_data="${callbackData}"))
-`;
-          }
-        });
-        
-        code += `    keyboard = builder.as_markup()
-    await message.answer(text, reply_markup=keyboard)
-`;
-      } else {
-        code += `    # Удаляем предыдущие reply клавиатуры если они были
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-`;
-      }
-    }
-  });
-
-  code += `
-
-# Запуск бота
-async def main():
-    try:
-        print("Запускаем бота...")
-        await dp.start_polling(bot)
-    except Exception as e:
-        print(f"Ошибка запуска бота: {e}")
-        raise
-
-if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Бот остановлен")
-    except Exception as e:
-        print(f"Критическая ошибка: {e}")
-        exit(1)
-`;
-
-  return code;
-}
-
 // Function to ensure at least one default project exists
 async function ensureDefaultProject() {
   try {
@@ -675,7 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
 
-      const pythonCode = generatePythonCodeFixed(project.data);
+      const pythonCode = generatePythonCode(project.data);
       res.json({ code: pythonCode });
     } catch (error) {
       res.status(500).json({ message: "Failed to generate code" });
@@ -900,19 +811,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new template
   app.post("/api/templates", async (req, res) => {
     try {
-      console.log('Получены данные для создания шаблона:', JSON.stringify(req.body, null, 2));
       const validatedData = insertBotTemplateSchema.parse(req.body);
-      console.log('Данные прошли валидацию:', JSON.stringify(validatedData, null, 2));
       const template = await storage.createBotTemplate(validatedData);
-      console.log('Шаблон создан:', template);
       res.status(201).json(template);
     } catch (error) {
-      console.error('Ошибка создания шаблона:', error);
       if (error instanceof z.ZodError) {
-        console.error('Ошибки валидации:', error.errors);
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create template", error: error instanceof Error ? error.message : 'Unknown error' });
+      res.status(500).json({ message: "Failed to create template" });
     }
   });
 
