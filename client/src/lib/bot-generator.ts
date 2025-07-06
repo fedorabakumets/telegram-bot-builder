@@ -114,7 +114,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     inlineNodes.forEach(node => {
       node.data.buttons.forEach(button => {
         if (button.action === 'goto' && button.target) {
-          const callbackData = button.target || button.text;
+          const callbackData = button.target; // Используем ID узла как callback_data
           
           // Avoid duplicate handlers
           if (processedCallbacks.has(callbackData)) return;
@@ -129,8 +129,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Generate response for target node
             const targetText = targetNode.data.messageText || "Сообщение";
-            const escapedTargetText = targetText.replace(/\n/g, '\\n').replace(/"/g, '\\"');
-            code += `    text = "${escapedTargetText}"\n`;
+            // Используем тройные кавычки для многострочного текста
+            if (targetText.includes('\n')) {
+              code += `    text = """${targetText}"""\n`;
+            } else {
+              const escapedTargetText = targetText.replace(/"/g, '\\"');
+              code += `    text = "${escapedTargetText}"\n`;
+            }
             
             // Handle keyboard for target node
             if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
@@ -139,7 +144,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 if (btn.action === "url") {
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                 } else {
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btn.target || btn.text}"))\n`;
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btn.target}"))\n`;
                 }
               });
               code += '    keyboard = builder.as_markup()\n';
@@ -149,7 +154,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               targetNode.data.buttons.forEach(btn => {
                 code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
               });
-              code += `    keyboard = builder.as_markup(resize_keyboard=${targetNode.data.resizeKeyboard}, one_time_keyboard=${targetNode.data.oneTimeKeyboard})\n`;
+              code += `    keyboard = builder.as_markup(resize_keyboard=${targetNode.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${targetNode.data.oneTimeKeyboard ? 'True' : 'False'})\n`;
               code += '    await callback_query.message.answer(text, reply_markup=keyboard)\n';
             } else {
               code += '    await callback_query.message.edit_text(text)\n';
@@ -393,7 +398,7 @@ function generateKeyboard(node: Node): string {
       if (button.action === "url") {
         code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
       } else {
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))\n`;
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))\n`;
       }
     });
     
