@@ -166,6 +166,7 @@ export function PropertiesPanel({
   };
 
   const handleAddInlineButton = () => {
+    console.log('Adding inline button, current inlineButtons:', selectedNode.data.inlineButtons);
     const newButton: Button = {
       id: nanoid(),
       text: 'Новая inline кнопка',
@@ -180,7 +181,10 @@ export function PropertiesPanel({
       url: undefined
     };
     if (onInlineButtonAdd) {
+      console.log('Calling onInlineButtonAdd with:', newButton);
       onInlineButtonAdd(selectedNode.id, newButton);
+    } else {
+      console.log('onInlineButtonAdd is not defined');
     }
   };
 
@@ -578,11 +582,13 @@ export function PropertiesPanel({
                   </div>
                 )}
 
-                {/* Inline Buttons for combined mode */}
-                {selectedNode.data.keyboardType === 'combined' && (
+                {/* Inline Buttons for inline and combined modes */}
+                {(selectedNode.data.keyboardType === 'inline' || selectedNode.data.keyboardType === 'combined') && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="text-xs font-medium text-muted-foreground">Inline кнопки</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">
+                        Inline кнопки ({(selectedNode.data.inlineButtons || []).length})
+                      </Label>
                       <UIButton
                         size="sm"
                         variant="ghost"
