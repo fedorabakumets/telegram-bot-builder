@@ -200,7 +200,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               targetNode.data.buttons.forEach(btn => {
                 code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
               });
-              code += `    keyboard = builder.as_markup(resize_keyboard=${targetNode.data.resizeKeyboard}, one_time_keyboard=${targetNode.data.oneTimeKeyboard})\n`;
+              code += `    keyboard = builder.as_markup(resize_keyboard=${targetNode.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${targetNode.data.oneTimeKeyboard ? 'True' : 'False'})\n`;
               code += '    await message.answer(text, reply_markup=keyboard)\n';
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
