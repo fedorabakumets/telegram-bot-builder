@@ -50,10 +50,10 @@ export function AutoHierarchySettings({
   // Layout configuration state
   const [config, setConfig] = useState<LayoutConfig>({
     algorithm: 'hierarchical',
-    levelSpacing: 300,
-    nodeSpacing: 240, // Увеличенный отступ для предотвращения перекрытий
-    startX: 100,
-    startY: 100,
+    levelSpacing: 320, // Увеличен для учета новых границ элементов
+    nodeSpacing: 280, // Увеличенный отступ для предотвращения перекрытий
+    startX: 120, // Увеличен стартовый отступ
+    startY: 120, // Увеличен стартовый отступ
     nodeWidth: 160, // Стандартный размер узла
     nodeHeight: 100, // Стандартный размер узла
     preventOverlaps: true,

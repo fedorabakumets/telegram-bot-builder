@@ -522,11 +522,11 @@ function positionNodesByLevel(levels: HierarchyLevel[], config: LayoutConfig): N
       
       // Предотвращение перекрытий
       if (config.preventOverlaps) {
-        x = Math.max(50, x);
+        x = Math.max(80, x); // Увеличен минимальный отступ от края
         
         // Проверяем конфликты с уже размещенными узлами
         let attempts = 0;
-        const maxAttempts = 10;
+        const maxAttempts = 15; // Увеличено количество попыток
         
         while (attempts < maxAttempts) {
           const tempNode = { ...node, position: { x: x, y: y } };
@@ -538,15 +538,32 @@ function positionNodesByLevel(levels: HierarchyLevel[], config: LayoutConfig): N
             break; // Позиция найдена
           }
           
-          // Сдвигаем узел вправо с учетом минимального отступа
-          x += config.nodeWidth + 30;
+          // Сдвигаем узел вправо с учетом расширенных границ
+          const shiftAmount = config.nodeWidth + 40; // Увеличен сдвиг
+          x += shiftAmount;
           attempts++;
         }
         
-        // Если все еще есть перекрытие, сдвигаем вниз
+        // Если все еще есть перекрытие, сдвигаем вниз и возвращаем X
         if (attempts >= maxAttempts) {
           x = startX + nodeIndex * adjustedNodeSpacing;
-          y = baseY + config.nodeHeight + 30;
+          y = baseY + config.nodeHeight + 60; // Увеличен вертикальный сдвиг
+          
+          // Пытаемся найти позицию на новом уровне
+          let verticalAttempts = 0;
+          while (verticalAttempts < 5) {
+            const tempNode = { ...node, position: { x: x, y: y } };
+            const hasOverlap = positionedNodes.some(existing => 
+              doNodesOverlap(tempNode, existing, config)
+            );
+            
+            if (!hasOverlap) {
+              break;
+            }
+            
+            y += config.nodeHeight + 40;
+            verticalAttempts++;
+          }
         }
       }
       
@@ -882,13 +899,58 @@ function detectCircularReferences(nodes: Node[], graph: Map<string, Set<string>>
 }
 
 /**
- * Вычисляет границы узла
+ * Вычисляет границы узла с учетом всех визуальных элементов
  */
 export function calculateNodeBounds(node: Node, config: LayoutConfig): NodeBounds {
-  const left = node.position.x;
-  const top = node.position.y;
-  const width = config.nodeWidth;
-  const height = config.nodeHeight;
+  const baseLeft = node.position.x;
+  const baseTop = node.position.y;
+  const baseWidth = config.nodeWidth;
+  const baseHeight = config.nodeHeight;
+  
+  // Базовые отступы для различных элементов интерфейса
+  const connectionPointOffset = 6; // Connection points (-2px + 4px radius)
+  const closeButtonOffset = 11; // Close button (-3px + 8px size)
+  const selectedRingOffset = 4; // Selection ring
+  const hoverShadowOffset = 8; // Hover shadow and scale effects
+  
+  // Общий отступ для всех элементов
+  const totalOffset = Math.max(
+    connectionPointOffset,
+    closeButtonOffset,
+    selectedRingOffset,
+    hoverShadowOffset
+  );
+  
+  // Учитываем дополнительные отступы для разных типов узлов
+  let extraWidth = 0;
+  let extraHeight = 0;
+  
+  // Узлы с клавиатурой могут быть визуально шире
+  if (node.type === 'keyboard' && node.data?.buttons?.length > 0) {
+    extraWidth = 20; // Дополнительное пространство для отображения кнопок
+    extraHeight = Math.min(node.data.buttons.length * 8, 40); // Высота зависит от количества кнопок
+  }
+  
+  // Узлы с условиями могут быть шире из-за текста
+  if (node.type === 'condition') {
+    extraWidth = 10;
+    extraHeight = 10;
+  }
+  
+  // Узлы с длинными сообщениями
+  if (node.type === 'message' && node.data?.messageText && node.data.messageText.length > 50) {
+    extraHeight = 20;
+  }
+  
+  // Команды могут быть шире
+  if (node.type === 'command') {
+    extraWidth = 15;
+  }
+  
+  const left = baseLeft - totalOffset;
+  const top = baseTop - totalOffset;
+  const width = baseWidth + (totalOffset * 2) + extraWidth;
+  const height = baseHeight + (totalOffset * 2) + extraHeight;
   
   return {
     left,
@@ -907,8 +969,28 @@ export function doNodesOverlap(node1: Node, node2: Node, config: LayoutConfig): 
   const bounds1 = calculateNodeBounds(node1, config);
   const bounds2 = calculateNodeBounds(node2, config);
   
-  // Увеличиваем отступ между узлами до 40px для предотвращения перекрытий
-  const padding = 40;
+  // Адаптивный отступ в зависимости от типов узлов
+  let padding = 25; // Базовый отступ
+  
+  // Увеличиваем отступ для узлов с клавиатурой
+  if (node1.type === 'keyboard' || node2.type === 'keyboard') {
+    padding = Math.max(padding, 35);
+  }
+  
+  // Увеличиваем отступ для условий
+  if (node1.type === 'condition' || node2.type === 'condition') {
+    padding = Math.max(padding, 30);
+  }
+  
+  // Увеличиваем отступ для стартовых узлов
+  if (node1.type === 'start' || node2.type === 'start') {
+    padding = Math.max(padding, 30);
+  }
+  
+  // Дополнительный отступ если узлы на одном уровне (по Y)
+  if (Math.abs(bounds1.top - bounds2.top) < 50) {
+    padding = Math.max(padding, 40);
+  }
   
   return !(bounds1.right + padding < bounds2.left || 
            bounds2.right + padding < bounds1.left || 
@@ -934,10 +1016,10 @@ export function createAdaptiveLayout(nodes: Node[], connections: Connection[]): 
   
   const config: LayoutConfig = {
     algorithm: analysis.recommendedAlgorithm,
-    levelSpacing: analysis.maxDepth > 5 ? 250 : 300,
-    nodeSpacing: analysis.totalNodes > 10 ? 220 : 240, // Увеличен отступ для предотвращения перекрытий
-    startX: 100,
-    startY: 100,
+    levelSpacing: analysis.maxDepth > 5 ? 280 : 320, // Увеличен для учета новых границ
+    nodeSpacing: analysis.totalNodes > 10 ? 260 : 280, // Увеличен отступ для предотвращения перекрытий
+    startX: 120, // Увеличен стартовый отступ
+    startY: 120, // Увеличен стартовый отступ
     nodeWidth: 160,
     nodeHeight: 100,
     preventOverlaps: true,
@@ -1084,16 +1166,16 @@ function createSimpleGrid(nodes: Node[]): Node[] {
   else if (nodes.length <= 12) cols = 4;
   else cols = Math.ceil(Math.sqrt(nodes.length));
   
-  // Размеры узлов и отступы
+  // Размеры узлов и отступы с учетом всех визуальных элементов
   const nodeWidth = 160;
   const nodeHeight = 100;
-  const paddingX = 80; // Больший горизонтальный отступ
-  const paddingY = 60; // Вертикальный отступ
+  const paddingX = 120; // Увеличен для учета границ элементов
+  const paddingY = 80; // Увеличен для учета границ элементов
   
   const spacingX = nodeWidth + paddingX;
   const spacingY = nodeHeight + paddingY;
-  const startX = 150; // Больший отступ от края
-  const startY = 150;
+  const startX = 200; // Увеличен отступ от края
+  const startY = 200;
   
   console.log('createSimpleGrid: nodes count:', nodes.length, 'cols:', cols, 'spacingX:', spacingX, 'spacingY:', spacingY);
   
