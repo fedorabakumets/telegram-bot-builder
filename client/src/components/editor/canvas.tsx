@@ -568,18 +568,6 @@ export function Canvas({
               disabled={isPreviewMode}
             />
 
-            <SimpleAutoHierarchyButton
-              nodes={displayNodes}
-              connections={connections}
-              onApplyLayout={handleApplyLayout}
-              onApplyLayoutWithConnections={handleApplyLayoutWithConnections}
-              zoom={zoom}
-              viewportWidth={canvasRef.current?.clientWidth || 1200}
-              viewportHeight={canvasRef.current?.clientHeight || 800}
-              viewportCenterX={canvasRef.current ? canvasRef.current.clientWidth / 2 : 600}
-              viewportCenterY={canvasRef.current ? canvasRef.current.clientHeight / 2 : 400}
-            />
-
             <AutoConnectionButton
               nodes={displayNodes}
               connections={connections}
@@ -597,27 +585,9 @@ export function Canvas({
               }`}
               title={showButtonConnections ? "Скрыть линии от кнопок" : "Показать линии от кнопок"}
             >
-              <i className={`fas fa-link text-sm transition-colors ${
-                showButtonConnections 
-                  ? 'text-blue-600 dark:text-blue-400' 
-                  : 'text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
-              }`}></i>
             </button>
 
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50">
-              <AutoHierarchySettings
-                nodes={displayNodes}
-                connections={connections}
-                onApplyLayout={handleApplyLayout}
-                onPreviewLayout={handlePreviewLayout}
-                onCancelPreview={handleCancelPreview}
-                zoom={zoom}
-                viewportWidth={canvasRef.current?.clientWidth || 1200}
-                viewportHeight={canvasRef.current?.clientHeight || 800}
-                viewportCenterX={canvasRef.current ? canvasRef.current.clientWidth / 2 : 600}
-                viewportCenterY={canvasRef.current ? canvasRef.current.clientHeight / 2 : 400}
-              />
-            </div>
+
 
             <button 
               onClick={onUndo}
