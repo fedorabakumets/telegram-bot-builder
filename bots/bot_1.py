@@ -19,8 +19,20 @@ dp = Dispatcher()
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
     text = "Привет! Добро пожаловать!"
-    # Удаляем предыдущие reply клавиатуры если они были
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    
+    # Создаем комбинированную клавиатуру (Reply + Inline)
+    
+    # Сначала создаем reply клавиатуру
+    reply_builder = ReplyKeyboardBuilder()
+    reply_builder.add(KeyboardButton(text="Новая кнопка"))
+    reply_keyboard = reply_builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    await message.answer(text, reply_markup=reply_keyboard)
+    
+    # Затем создаем inline клавиатуру
+    inline_builder = InlineKeyboardBuilder()
+    inline_builder.add(InlineKeyboardButton(text="Новая inline кнопка", callback_data="hPpcY9U6tXzQUtlnglr6j"))
+    inline_keyboard = inline_builder.as_markup()
+    await message.answer("Дополнительные действия:", reply_markup=inline_keyboard)
 
 @dp.message()
 async def message_hPpcY9U6tXzQUtlnglr6j_handler(message: types.Message):
@@ -38,6 +50,13 @@ async def start_synonym_старт_handler(message: types.Message):
 async def start_synonym_начать_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
+
+# Обработчики inline кнопок
+@dp.callback_query(lambda c: c.data == "hPpcY9U6tXzQUtlnglr6j")
+async def handle_inline_LcTYPO2_HJ0FkRRNJkpgF(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    text = "Новое сообщение"
+    await callback_query.message.answer(text)
 
 # Запуск бота
 async def main():

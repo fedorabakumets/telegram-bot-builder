@@ -295,6 +295,78 @@ async def start_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
+      } else if (node.data.keyboardType === "combined") {
+        // Combined type: both reply and inline buttons
+        const hasReplyButtons = node.data.buttons && node.data.buttons.length > 0;
+        const hasInlineButtons = node.data.inlineButtons && node.data.inlineButtons.length > 0;
+        
+        if (hasReplyButtons && hasInlineButtons) {
+          code += `    
+    # Создаем комбинированную клавиатуру (Reply + Inline)
+    
+    # Сначала создаем reply клавиатуру
+    reply_builder = ReplyKeyboardBuilder()
+`;
+          node.data.buttons.forEach((button: any) => {
+            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
+`;
+          });
+          
+          code += `    reply_keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
+    await message.answer(text, reply_markup=reply_keyboard)
+    
+    # Затем создаем inline клавиатуру
+    inline_builder = InlineKeyboardBuilder()
+`;
+          node.data.inlineButtons.forEach((button: any) => {
+            if (button.action === "url") {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
+`;
+            } else {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
+`;
+            }
+          });
+          
+          code += `    inline_keyboard = inline_builder.as_markup()
+    await message.answer("Дополнительные действия:", reply_markup=inline_keyboard)
+`;
+        } else if (hasReplyButtons) {
+          // Only reply buttons
+          code += `    
+    reply_builder = ReplyKeyboardBuilder()
+`;
+          node.data.buttons.forEach((button: any) => {
+            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
+`;
+          });
+          
+          code += `    keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
+    await message.answer(text, reply_markup=keyboard)
+`;
+        } else if (hasInlineButtons) {
+          // Only inline buttons
+          code += `    
+    inline_builder = InlineKeyboardBuilder()
+`;
+          node.data.inlineButtons.forEach((button: any) => {
+            if (button.action === "url") {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
+`;
+            } else {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
+`;
+            }
+          });
+          
+          code += `    keyboard = inline_builder.as_markup()
+    await message.answer(text, reply_markup=keyboard)
+`;
+        } else {
+          // No buttons at all
+          code += `    await message.answer(text)
+`;
+        }
       } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
@@ -341,6 +413,78 @@ async def ${functionName}_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
+      } else if (node.data.keyboardType === "combined") {
+        // Combined type: both reply and inline buttons
+        const hasReplyButtons = node.data.buttons && node.data.buttons.length > 0;
+        const hasInlineButtons = node.data.inlineButtons && node.data.inlineButtons.length > 0;
+        
+        if (hasReplyButtons && hasInlineButtons) {
+          code += `    
+    # Создаем комбинированную клавиатуру (Reply + Inline)
+    
+    # Сначала создаем reply клавиатуру
+    reply_builder = ReplyKeyboardBuilder()
+`;
+          node.data.buttons.forEach((button: any) => {
+            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
+`;
+          });
+          
+          code += `    reply_keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
+    await message.answer(text, reply_markup=reply_keyboard)
+    
+    # Затем создаем inline клавиатуру
+    inline_builder = InlineKeyboardBuilder()
+`;
+          node.data.inlineButtons.forEach((button: any) => {
+            if (button.action === "url") {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
+`;
+            } else {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
+`;
+            }
+          });
+          
+          code += `    inline_keyboard = inline_builder.as_markup()
+    await message.answer("Дополнительные действия:", reply_markup=inline_keyboard)
+`;
+        } else if (hasReplyButtons) {
+          // Only reply buttons
+          code += `    
+    reply_builder = ReplyKeyboardBuilder()
+`;
+          node.data.buttons.forEach((button: any) => {
+            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
+`;
+          });
+          
+          code += `    keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
+    await message.answer(text, reply_markup=keyboard)
+`;
+        } else if (hasInlineButtons) {
+          // Only inline buttons
+          code += `    
+    inline_builder = InlineKeyboardBuilder()
+`;
+          node.data.inlineButtons.forEach((button: any) => {
+            if (button.action === "url") {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
+`;
+            } else {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
+`;
+            }
+          });
+          
+          code += `    keyboard = inline_builder.as_markup()
+    await message.answer(text, reply_markup=keyboard)
+`;
+        } else {
+          // No buttons at all
+          code += `    await message.answer(text)
+`;
+        }
       } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
@@ -386,6 +530,78 @@ async def ${functionName}_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
+      } else if (node.data.keyboardType === "combined") {
+        // Combined type: both reply and inline buttons
+        const hasReplyButtons = node.data.buttons && node.data.buttons.length > 0;
+        const hasInlineButtons = node.data.inlineButtons && node.data.inlineButtons.length > 0;
+        
+        if (hasReplyButtons && hasInlineButtons) {
+          code += `    
+    # Создаем комбинированную клавиатуру (Reply + Inline)
+    
+    # Сначала создаем reply клавиатуру
+    reply_builder = ReplyKeyboardBuilder()
+`;
+          node.data.buttons.forEach((button: any) => {
+            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
+`;
+          });
+          
+          code += `    reply_keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
+    await message.answer(text, reply_markup=reply_keyboard)
+    
+    # Затем создаем inline клавиатуру
+    inline_builder = InlineKeyboardBuilder()
+`;
+          node.data.inlineButtons.forEach((button: any) => {
+            if (button.action === "url") {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
+`;
+            } else {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
+`;
+            }
+          });
+          
+          code += `    inline_keyboard = inline_builder.as_markup()
+    await message.answer("Дополнительные действия:", reply_markup=inline_keyboard)
+`;
+        } else if (hasReplyButtons) {
+          // Only reply buttons
+          code += `    
+    reply_builder = ReplyKeyboardBuilder()
+`;
+          node.data.buttons.forEach((button: any) => {
+            code += `    reply_builder.add(KeyboardButton(text="${button.text}"))
+`;
+          });
+          
+          code += `    keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})
+    await message.answer(text, reply_markup=keyboard)
+`;
+        } else if (hasInlineButtons) {
+          // Only inline buttons
+          code += `    
+    inline_builder = InlineKeyboardBuilder()
+`;
+          node.data.inlineButtons.forEach((button: any) => {
+            if (button.action === "url") {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
+`;
+            } else {
+              code += `    inline_builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
+`;
+            }
+          });
+          
+          code += `    keyboard = inline_builder.as_markup()
+    await message.answer(text, reply_markup=keyboard)
+`;
+        } else {
+          // No buttons at all
+          code += `    await message.answer(text)
+`;
+        }
       } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
@@ -425,6 +641,71 @@ async def ${functionName}_synonym_${sanitizedSynonym}_handler(message: types.Mes
           }
         });
       }
+    });
+  }
+
+  // Generate callback handlers for inline buttons
+  const inlineNodes = nodes.filter((node: any) => 
+    (node.data.keyboardType === 'inline' || node.data.keyboardType === 'combined') && 
+    node.data.inlineButtons && node.data.inlineButtons.length > 0
+  );
+
+  if (inlineNodes.length > 0) {
+    code += `
+
+# Обработчики inline кнопок`;
+    inlineNodes.forEach((node: any) => {
+      node.data.inlineButtons.forEach((button: any) => {
+        if (button.action === 'goto') {
+          const callbackData = button.target || button.text;
+          const handlerId = button.id.replace(/[^a-zA-Z0-9_]/g, '_');
+          
+          // Find target node
+          const targetNode = nodes.find((n: any) => n.id === button.target);
+          
+          code += `
+@dp.callback_query(lambda c: c.data == "${callbackData}")
+async def handle_inline_${handlerId}(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+`;
+          
+          if (targetNode) {
+            // Navigate to target node
+            if (targetNode.type === 'message') {
+              code += `    text = "${targetNode.data.messageText || 'Сообщение'}"
+    await callback_query.message.answer(text)`;
+            } else if (targetNode.type === 'start') {
+              code += `    await start_handler(callback_query.message)`;
+            } else {
+              code += `    await callback_query.message.answer("Переход к: ${button.text}")`;
+            }
+          } else {
+            code += `    await callback_query.message.answer("Переход к: ${button.text}")`;
+          }
+        } else if (button.action === 'command') {
+          const callbackData = button.target || button.text;
+          const handlerId = button.id.replace(/[^a-zA-Z0-9_]/g, '_');
+          
+          code += `
+@dp.callback_query(lambda c: c.data == "${callbackData}")
+async def handle_inline_${handlerId}(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Выполняем команду: ${button.target}
+`;
+          
+          // Find command handler
+          const commandNode = nodes.find((n: any) => n.data.command === button.target);
+          if (commandNode && commandNode.type === 'start') {
+            code += '    await start_handler(callback_query.message)';
+          } else if (commandNode) {
+            const funcName = (button.target || '').replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
+            code += `    await ${funcName}_handler(callback_query.message)`;
+          } else {
+            code += `    await callback_query.message.answer("Команда: ${button.target}")`;
+          }
+        }
+        // URL buttons don't need callback handlers as they open directly
+      });
     });
   }
 
