@@ -153,7 +153,8 @@ export function createTemplateExport(
   // Генерация контрольной суммы если нужно
   let checksum: string | undefined;
   if (options.generateChecksum) {
-    checksum = btoa(jsonString).slice(0, 16); // Простая контрольная сумма
+    // Используем Buffer для безопасного кодирования Unicode символов
+    checksum = Buffer.from(jsonString, 'utf8').toString('base64').slice(0, 16); // Простая контрольная сумма
   }
   
   const baseTemplate: TemplateExport = {
@@ -263,7 +264,7 @@ export function validateTemplateImport(data: unknown): {
     
     // Проверка контрольной суммы
     if (template.exportInfo.checksum) {
-      const currentChecksum = btoa(JSON.stringify(template.botData)).slice(0, 16);
+      const currentChecksum = Buffer.from(JSON.stringify(template.botData), 'utf8').toString('base64').slice(0, 16);
       if (currentChecksum !== template.exportInfo.checksum) {
         warnings.push("Контрольная сумма не совпадает, файл мог быть поврежден");
       }
