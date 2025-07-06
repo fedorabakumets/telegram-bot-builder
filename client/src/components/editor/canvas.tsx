@@ -50,6 +50,183 @@ export function Canvas({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [showAutoPanel, setShowAutoPanel] = useState(false);
+  const [zoom, setZoom] = useState(100);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
+
+  // Zoom utility functions
+  const zoomIn = useCallback(() => {
+    setZoom(prev => Math.min(prev + 25, 200));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setZoom(prev => Math.max(prev - 25, 25));
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    setZoom(100);
+    setPan({ x: 0, y: 0 });
+  }, []);
+
+  const setZoomLevel = useCallback((level: number) => {
+    setZoom(Math.max(Math.min(level, 200), 25));
+  }, []);
+
+  const fitToContent = useCallback(() => {
+    if (nodes.length === 0) return;
+    
+    const nodeBounds = nodes.reduce((bounds, node) => {
+      const left = node.position.x;
+      const right = node.position.x + 320; // Approximate node width
+      const top = node.position.y;
+      const bottom = node.position.y + 100; // Approximate node height
+      
+      return {
+        left: Math.min(bounds.left, left),
+        right: Math.max(bounds.right, right),
+        top: Math.min(bounds.top, top),
+        bottom: Math.max(bounds.bottom, bottom)
+      };
+    }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
+    
+    const contentWidth = nodeBounds.right - nodeBounds.left;
+    const contentHeight = nodeBounds.bottom - nodeBounds.top;
+    
+    if (canvasRef.current) {
+      const containerWidth = canvasRef.current.clientWidth;
+      const containerHeight = canvasRef.current.clientHeight;
+      
+      const scaleX = (containerWidth * 0.8) / contentWidth;
+      const scaleY = (containerHeight * 0.8) / contentHeight;
+      const scale = Math.min(scaleX, scaleY, 2); // Max 200% zoom
+      
+      const newZoom = Math.max(Math.min(scale * 100, 200), 25);
+      setZoom(newZoom);
+      
+      // Center the content
+      const centerX = (nodeBounds.left + nodeBounds.right) / 2;
+      const centerY = (nodeBounds.top + nodeBounds.bottom) / 2;
+      const containerCenterX = containerWidth / 2;
+      const containerCenterY = containerHeight / 2;
+      
+      setPan({
+        x: containerCenterX - centerX * (newZoom / 100),
+        y: containerCenterY - centerY * (newZoom / 100)
+      });
+    }
+  }, [nodes]);
+
+  // Handle wheel zoom
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY;
+      const zoomFactor = delta > 0 ? 0.9 : 1.1;
+      
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect) {
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        const newZoom = Math.max(Math.min(zoom * zoomFactor, 200), 25);
+        const zoomRatio = newZoom / zoom;
+        
+        setPan(prev => ({
+          x: mouseX - (mouseX - prev.x) * zoomRatio,
+          y: mouseY - (mouseY - prev.y) * zoomRatio
+        }));
+        
+        setZoom(newZoom);
+      }
+    }
+  }, [zoom]);
+
+  // Handle panning
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button === 1 || (e.button === 0 && e.altKey)) { // Middle mouse or Alt+click
+      e.preventDefault();
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      setLastPanPosition(pan);
+    }
+  }, [pan]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isPanning) {
+      const deltaX = e.clientX - panStart.x;
+      const deltaY = e.clientY - panStart.y;
+      
+      setPan({
+        x: lastPanPosition.x + deltaX,
+        y: lastPanPosition.y + deltaY
+      });
+    }
+  }, [isPanning, panStart, lastPanPosition]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case '=':
+          case '+':
+            e.preventDefault();
+            zoomIn();
+            break;
+          case '-':
+            e.preventDefault();
+            zoomOut();
+            break;
+          case '0':
+            e.preventDefault();
+            resetZoom();
+            break;
+          case '1':
+            e.preventDefault();
+            fitToContent();
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent]);
+
+  // Handle mouse events for panning
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isPanning) {
+        const deltaX = e.clientX - panStart.x;
+        const deltaY = e.clientY - panStart.y;
+        
+        setPan({
+          x: lastPanPosition.x + deltaX,
+          y: lastPanPosition.y + deltaY
+        });
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      setIsPanning(false);
+    };
+
+    if (isPanning) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isPanning, panStart, lastPanPosition]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -62,13 +239,18 @@ export function Canvas({
     const rect = canvasRef.current?.getBoundingClientRect();
     
     if (rect) {
-      const x = e.clientX - rect.left - 160; // Adjust for node width
-      const y = e.clientY - rect.top - 50;   // Adjust for node height
+      // Transform screen coordinates to canvas coordinates
+      const screenX = e.clientX - rect.left - 160; // Adjust for node width
+      const screenY = e.clientY - rect.top - 50;   // Adjust for node height
+      
+      // Apply inverse transformation to get canvas coordinates
+      const canvasX = (screenX - pan.x) / (zoom / 100);
+      const canvasY = (screenY - pan.y) / (zoom / 100);
       
       const newNode: Node = {
         id: nanoid(),
         type: component.type,
-        position: { x: Math.max(0, x), y: Math.max(0, y) },
+        position: { x: Math.max(0, canvasX), y: Math.max(0, canvasY) },
         data: {
           keyboardType: 'none',
           buttons: [],
@@ -81,7 +263,7 @@ export function Canvas({
       
       onNodeAdd(newNode);
     }
-  }, [onNodeAdd]);
+  }, [onNodeAdd, pan, zoom]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -190,28 +372,160 @@ export function Canvas({
       <div className="absolute inset-0 overflow-auto p-8">
         {/* Enhanced Canvas Controls */}
         <div className="absolute top-6 left-6 flex items-center space-x-3 z-10 canvas-controls">
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 flex items-center overflow-hidden">
-            <button className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all duration-200 group">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 flex items-center overflow-hidden zoom-controls">
+            <button 
+              onClick={zoomOut}
+              disabled={zoom <= 25}
+              className="px-3 py-2 zoom-button disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Уменьшить масштаб (Ctrl + -)"
+            >
               <i className="fas fa-search-minus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
-            <span className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-x border-gray-200 dark:border-slate-700 font-mono min-w-[4rem] text-center bg-gray-50 dark:bg-slate-800/50">100%</span>
-            <button className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all duration-200 group">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-x border-gray-200 dark:border-slate-700 font-mono min-w-[4rem] text-center bg-gray-50 dark:bg-slate-800/50 zoom-indicator group"
+                  title="Выбрать масштаб"
+                >
+                  <span className="flex items-center space-x-1">
+                    <span>{Math.round(zoom)}%</span>
+                    <i className="fas fa-chevron-down text-xs opacity-50 group-hover:opacity-100 transition-opacity"></i>
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" className="w-40 p-2">
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-gray-600 dark:text-gray-400 px-2 py-1">Быстрый масштаб</div>
+                  {[25, 50, 75, 100, 125, 150, 200].map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setZoomLevel(level)}
+                      className={`w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
+                        Math.abs(zoom - level) < 1 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{level}%</span>
+                        {level === 100 && <span className="text-xs opacity-60">По умолчанию</span>}
+                        {level === 200 && <span className="text-xs opacity-60">Максимум</span>}
+                        {level === 25 && <span className="text-xs opacity-60">Минимум</span>}
+                      </div>
+                    </button>
+                  ))}
+                  <div className="border-t border-gray-200 dark:border-slate-600 my-1"></div>
+                  <button
+                    onClick={resetZoom}
+                    className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-blue-600 dark:text-blue-400"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <i className="fas fa-home text-xs"></i>
+                      <span>Сбросить вид</span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={fitToContent}
+                    disabled={nodes.length === 0}
+                    className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-green-600 dark:text-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <i className="fas fa-expand-arrows-alt text-xs"></i>
+                      <span>Уместить всё</span>
+                    </div>
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <button 
+              onClick={zoomIn}
+              disabled={zoom >= 200}
+              className="px-3 py-2 zoom-button disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Увеличить масштаб (Ctrl + +)"
+            >
               <i className="fas fa-search-plus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
           </div>
           
           <div className="flex items-center space-x-2">
-            <button className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group">
+            <button 
+              onClick={fitToContent}
+              disabled={nodes.length === 0}
+              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Уместить в экран (Ctrl + 1)"
+            >
               <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
 
-            <button className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group">
+            <button 
+              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+              title="Отменить действие (Ctrl + Z)"
+            >
               <i className="fas fa-undo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
 
-            <button className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group">
+            <button 
+              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+              title="Повторить действие (Ctrl + Y)"
+            >
               <i className="fas fa-redo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
+          </div>
+          
+          {/* Zoom Info and Help */}
+          <div className="flex items-center space-x-2">
+            {zoom !== 100 && (
+              <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-center space-x-2">
+                  <i className="fas fa-info-circle text-blue-500"></i>
+                  <span>
+                    {zoom > 100 ? 'Увеличено' : 'Уменьшено'} до {Math.round(zoom)}%
+                  </span>
+                  <span className="text-gray-400 dark:text-gray-500">•</span>
+                  <span>Ctrl+0 для сброса</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Zoom Help */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group">
+                  <i className="fas fa-question-circle text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-500 transition-colors"></i>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" className="w-64 p-3">
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">Управление масштабом</h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Увеличить:</span>
+                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + +</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Уменьшить:</span>
+                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + -</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Сбросить:</span>
+                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 0</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Уместить всё:</span>
+                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 1</code>
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-slate-600 pt-2 mt-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Масштабирование:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + колесо</code>
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-gray-600 dark:text-gray-400">Панорамирование:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Alt + ЛКМ</code>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
         
@@ -225,47 +539,67 @@ export function Canvas({
               linear-gradient(90deg, rgba(148, 163, 184, 0.1) 1px, transparent 1px),
               linear-gradient(rgba(148, 163, 184, 0.1) 1px, transparent 1px)
             `,
-            backgroundSize: '24px 24px, 24px 24px, 24px 24px',
+            backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px, ${24 * zoom / 100}px ${24 * zoom / 100}px, ${24 * zoom / 100}px ${24 * zoom / 100}px`,
+            backgroundPosition: `${pan.x}px ${pan.y}px`,
             minHeight: '100vh',
-            minWidth: '100%'
+            minWidth: '100%',
+            cursor: isPanning ? 'grabbing' : 'grab'
           }}
           data-drag-over={isDragOver}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onClick={handleCanvasClick}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
         >
-          {/* Connections Layer */}
-          <ConnectionsLayer
-            connections={connections}
-            nodes={nodes}
-            selectedConnectionId={selectedConnectionId}
-            onConnectionSelect={onConnectionSelect}
-            onConnectionDelete={onConnectionDelete}
-          />
+          {/* Transformable Canvas Content */}
+          <div 
+            className="relative origin-top-left transition-transform duration-200 ease-out"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
+              transformOrigin: '0 0'
+            }}
+          >
+            {/* Connections Layer */}
+            <ConnectionsLayer
+              connections={connections}
+              nodes={nodes}
+              selectedConnectionId={selectedConnectionId}
+              onConnectionSelect={onConnectionSelect}
+              onConnectionDelete={onConnectionDelete}
+            />
 
-          {/* Temporary connection preview */}
-          {connectionStart && (
-            <TemporaryConnection
-              startNode={nodes.find(n => n.id === connectionStart.nodeId)!}
-              endPosition={mousePosition}
-              handle={connectionStart.handle}
-            />
-          )}
-          
-          {/* Nodes */}
-          {nodes.map((node) => (
-            <CanvasNode
-              key={node.id}
-              node={node}
-              isSelected={selectedNodeId === node.id}
-              onClick={() => onNodeSelect(node.id)}
-              onDelete={() => onNodeDelete(node.id)}
-              onMove={(position) => onNodeMove(node.id, position)}
-              onConnectionStart={handleConnectionStart}
-              connectionStart={connectionStart}
-            />
-          ))}
+            {/* Temporary connection preview */}
+            {connectionStart && (
+              <TemporaryConnection
+                startNode={nodes.find(n => n.id === connectionStart.nodeId)!}
+                endPosition={{
+                  x: (mousePosition.x - pan.x) / (zoom / 100),
+                  y: (mousePosition.y - pan.y) / (zoom / 100)
+                }}
+                handle={connectionStart.handle}
+              />
+            )}
+            
+            {/* Nodes */}
+            {nodes.map((node) => (
+              <CanvasNode
+                key={node.id}
+                node={node}
+                isSelected={selectedNodeId === node.id}
+                onClick={() => onNodeSelect(node.id)}
+                onDelete={() => onNodeDelete(node.id)}
+                onMove={(position) => onNodeMove(node.id, position)}
+                onConnectionStart={handleConnectionStart}
+                connectionStart={connectionStart}
+                zoom={zoom}
+                pan={pan}
+              />
+            ))}
+          </div>
           
           {/* Drop Zone Hint */}
           {nodes.length === 0 && (

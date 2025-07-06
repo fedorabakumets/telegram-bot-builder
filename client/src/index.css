@@ -1122,6 +1122,195 @@ body {
   animation: dash-border 1s linear infinite;
 }
 
+/* Enhanced Zoom Controls */
+.zoom-controls {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.zoom-controls:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.25);
+}
+
+.zoom-indicator {
+  position: relative;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  transition: all 0.3s ease;
+}
+
+.zoom-indicator:hover {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary) / 0.1) 0%, 
+    hsl(var(--primary) / 0.05) 100%
+  );
+  color: hsl(var(--primary));
+}
+
+.zoom-indicator::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    hsl(var(--primary) / 0.1) 50%, 
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.4s ease;
+}
+
+.zoom-indicator:hover::before {
+  transform: translateX(100%);
+}
+
+/* Zoom Button States */
+.zoom-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.zoom-button:hover {
+  background: linear-gradient(135deg, 
+    hsl(var(--primary) / 0.1) 0%, 
+    hsl(var(--primary) / 0.05) 100%
+  );
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px hsl(var(--primary) / 0.3);
+}
+
+.zoom-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px -2px hsl(var(--primary) / 0.3);
+}
+
+.zoom-button:disabled {
+  opacity: 0.4;
+  transform: none;
+  box-shadow: none;
+}
+
+.zoom-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%, 
+    hsl(var(--primary) / 0.1) 50%, 
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.zoom-button:hover::before {
+  transform: translateX(100%);
+}
+
+/* Canvas Cursor States */
+.canvas-panning {
+  cursor: grabbing !important;
+}
+
+.canvas-panning * {
+  cursor: grabbing !important;
+}
+
+.canvas-zoom-cursor {
+  cursor: zoom-in;
+}
+
+.canvas-zoom-cursor.zoomed-in {
+  cursor: zoom-out;
+}
+
+/* Smooth Zoom Animation */
+.canvas-transform {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.canvas-transform.fast {
+  transition: transform 0.1s ease-out;
+}
+
+/* Fit to Content Animation */
+@keyframes fit-content {
+  0% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.canvas-fit-animation {
+  animation: fit-content 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Grid Background Zoom Effects */
+.canvas-grid-zoomed {
+  background-attachment: fixed;
+  background-repeat: repeat;
+}
+
+.canvas-grid-zoomed::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, 
+    hsl(var(--primary) / 0.03) 0%, 
+    transparent 50%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.canvas-grid-zoomed:hover::before {
+  opacity: 1;
+}
+
+/* Minimap Styles */
+.canvas-minimap {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 200px;
+  height: 150px;
+  background: hsl(var(--card) / 0.9);
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.canvas-minimap:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.15);
+}
+
+.canvas-minimap-viewport {
+  position: absolute;
+  border: 2px solid hsl(var(--primary));
+  background: hsl(var(--primary) / 0.1);
+  cursor: move;
+  transition: all 0.2s ease;
+}
+
+.canvas-minimap-viewport:hover {
+  background: hsl(var(--primary) / 0.2);
+  border-color: hsl(var(--primary) / 0.8);
+}
+
 @keyframes dash-border {
   to {
     stroke-dashoffset: 20;

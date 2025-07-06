@@ -13,6 +13,8 @@ interface CanvasNodeProps {
     nodeId: string;
     handle: 'source' | 'target';
   } | null;
+  zoom?: number;
+  pan?: { x: number; y: number };
 }
 
 const nodeIcons = {
@@ -35,7 +37,7 @@ const nodeColors = {
   command: 'bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
 };
 
-export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConnectionStart, connectionStart }: CanvasNodeProps) {
+export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 } }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -46,11 +48,24 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
     // Не запускать драг если кликнули по кнопке удаления
     if ((e.target as HTMLElement).closest('button')) return;
     
-    const rect = nodeRef.current?.getBoundingClientRect();
-    if (rect) {
+    // Находим канвас (родительский элемент трансформируемого контейнера)
+    const transformedContainer = nodeRef.current?.parentElement;
+    const canvas = transformedContainer?.parentElement;
+    
+    if (canvas) {
+      const canvasRect = canvas.getBoundingClientRect();
+      const zoomFactor = zoom / 100;
+      
+      // Рассчитываем смещение в канвасных координатах
+      const screenX = e.clientX - canvasRect.left;
+      const screenY = e.clientY - canvasRect.top;
+      
+      const canvasX = (screenX - pan.x) / zoomFactor;
+      const canvasY = (screenY - pan.y) / zoomFactor;
+      
       setDragOffset({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: canvasX - node.position.x,
+        y: canvasY - node.position.y
       });
       setIsDragging(true);
     }
@@ -62,22 +77,32 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging || !onMove) return;
     
-    const canvas = nodeRef.current?.parentElement;
-    if (canvas) {
+    // Находим канвас (родительский элемент трансформируемого контейнера)
+    const transformedContainer = nodeRef.current?.parentElement;
+    const canvas = transformedContainer?.parentElement;
+    
+    if (canvas && transformedContainer) {
       const canvasRect = canvas.getBoundingClientRect();
-      const newX = e.clientX - canvasRect.left - dragOffset.x;
-      const newY = e.clientY - canvasRect.top - dragOffset.y;
       
-      // Привязка к сетке (20px grid)
+      // Получаем экранные координаты мыши относительно канваса
+      const screenX = e.clientX - canvasRect.left;
+      const screenY = e.clientY - canvasRect.top;
+      
+      // Преобразуем экранные координаты в координаты канваса с учетом зума и панорамирования
+      const zoomFactor = zoom / 100;
+      const canvasX = (screenX - pan.x) / zoomFactor - dragOffset.x;
+      const canvasY = (screenY - pan.y) / zoomFactor - dragOffset.y;
+      
+      // Привязка к сетке (20px grid в канвасных координатах)
       const gridSize = 20;
-      const snappedX = Math.round(newX / gridSize) * gridSize;
-      const snappedY = Math.round(newY / gridSize) * gridSize;
+      const snappedX = Math.round(canvasX / gridSize) * gridSize;
+      const snappedY = Math.round(canvasY / gridSize) * gridSize;
       
-      // Ограничиваем позицию в пределах canvas с отступами
+      // Ограничиваем позицию в пределах canvas с отступами (в канвасных координатах)
       const minX = 20;
       const minY = 20;
-      const maxX = Math.max(minX, canvas.clientWidth - 340);
-      const maxY = Math.max(minY, canvas.clientHeight - 220);
+      const maxX = Math.max(minX, (canvas.clientWidth / zoomFactor) - 340);
+      const maxY = Math.max(minY, (canvas.clientHeight / zoomFactor) - 220);
       
       const boundedX = Math.max(minX, Math.min(snappedX, maxX));
       const boundedY = Math.max(minY, Math.min(snappedY, maxY));
