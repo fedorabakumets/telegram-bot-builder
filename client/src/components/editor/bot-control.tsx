@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,13 +62,16 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const [useNewToken, setUseNewToken] = useState(false);
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
   const [startMode, setStartMode] = useState<'token' | 'new' | 'saved'>('token'); // token management, new token, or legacy saved token
+  const [currentUptime, setCurrentUptime] = useState<string>('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Получаем статус бота
-  const { data: botStatus, isLoading: isLoadingStatus } = useQuery<BotStatusResponse>({
+  // Получаем статус бота с улучшенным обновлением
+  const { data: botStatus, isLoading: isLoadingStatus, isError: isStatusError } = useQuery<BotStatusResponse>({
     queryKey: [`/api/projects/${projectId}/bot`],
     refetchInterval: 2000, // Обновляем каждые 2 секунды
+    refetchOnWindowFocus: true, // Обновляем при возврате к окну
+    retry: 3, // Повторяем запросы при ошибках
   });
 
   // Получаем информацию о сохраненном токене (legacy)
@@ -86,6 +89,16 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     queryKey: [`/api/projects/${projectId}/tokens/default`],
   });
 
+  // Автоматически выбираем токен по умолчанию при загрузке
+  useEffect(() => {
+    if (defaultTokenData?.hasDefault && defaultTokenData.token && !selectedTokenId) {
+      setSelectedTokenId(defaultTokenData.token.id);
+    } else if (tokens.length === 1 && !selectedTokenId) {
+      // Если есть только один токен, выбираем его автоматически
+      setSelectedTokenId(tokens[0].id);
+    }
+  }, [defaultTokenData, tokens, selectedTokenId]);
+
   // Запуск бота
   const startBotMutation = useMutation({
     mutationFn: async ({ token, tokenId }: { token?: string; tokenId?: number }) => {
@@ -94,18 +107,22 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       if (tokenId) payload.tokenId = tokenId;
       return apiRequest('POST', `/api/projects/${projectId}/bot/start`, payload);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Бот запущен",
-        description: "Бот успешно запущен и готов к работе.",
+        description: "Бот успешно запущен и готов к работе. Структура бота автоматически применена.",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens/default`] });
+      // Сбрасываем состояние формы после успешного запуска
+      setToken('');
+      setSelectedTokenId(null);
     },
     onError: (error: any) => {
       toast({
         title: "Ошибка запуска",
-        description: error.message || "Не удалось запустить бота. Проверьте токен.",
+        description: error.message || "Не удалось запустить бота. Проверьте токен и убедитесь, что он не используется в другом месте.",
         variant: "destructive",
       });
     },
@@ -119,14 +136,14 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     onSuccess: () => {
       toast({
         title: "Бот остановлен",
-        description: "Бот успешно остановлен.",
+        description: "Бот успешно остановлен. Для перезапуска используйте актуальные настройки.",
       });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
     },
     onError: (error: any) => {
       toast({
         title: "Ошибка остановки",
-        description: error.message || "Не удалось остановить бота.",
+        description: error.message || "Не удалось остановить бота. Попробуйте еще раз или перезагрузите страницу.",
         variant: "destructive",
       });
     },
@@ -158,6 +175,37 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const isError = botStatus?.status === 'error';
   const isStopped = botStatus?.status === 'stopped' || !botStatus?.instance;
 
+  // Обновляем время работы каждую секунду для запущенных ботов
+  useEffect(() => {
+    if (!isRunning || !botStatus?.instance?.startedAt) {
+      setCurrentUptime('');
+      return;
+    }
+
+    const updateUptime = () => {
+      const startTime = new Date(botStatus.instance!.startedAt).getTime();
+      const now = new Date().getTime();
+      const uptime = now - startTime;
+      
+      const days = Math.floor(uptime / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((uptime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((uptime % (1000 * 60)) / 1000);
+      
+      let uptimeString = '';
+      if (days > 0) uptimeString += `${days}д `;
+      if (hours > 0) uptimeString += `${hours}ч `;
+      if (minutes > 0) uptimeString += `${minutes}м `;
+      uptimeString += `${seconds}с`;
+      
+      setCurrentUptime(uptimeString);
+    };
+
+    updateUptime();
+    const interval = setInterval(updateUptime, 1000);
+    return () => clearInterval(interval);
+  }, [isRunning, botStatus?.instance?.startedAt]);
+
   const handleStart = () => {
     if (startMode === 'new') {
       // Используем новый токен
@@ -176,7 +224,13 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       if (selectedTokenId) {
         startBotMutation.mutate({ tokenId: selectedTokenId });
       } else if (defaultTokenData?.hasDefault && defaultTokenData.token) {
+        // Автоматически используем токен по умолчанию
+        setSelectedTokenId(defaultTokenData.token.id);
         startBotMutation.mutate({ tokenId: defaultTokenData.token.id });
+      } else if (tokens.length === 1) {
+        // Если есть только один токен, используем его автоматически
+        setSelectedTokenId(tokens[0].id);
+        startBotMutation.mutate({ tokenId: tokens[0].id });
       } else {
         toast({
           title: "Требуется токен",
@@ -217,15 +271,35 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   };
 
   const getStatusIcon = () => {
+    if (isLoadingStatus) return <Clock className="w-4 h-4 text-yellow-500 animate-spin" />;
     if (isRunning) return <CheckCircle className="w-4 h-4 text-green-500" />;
     if (isError) return <AlertCircle className="w-4 h-4 text-red-500" />;
+    if (isStatusError) return <AlertCircle className="w-4 h-4 text-orange-500" />;
     return <Clock className="w-4 h-4 text-gray-500" />;
   };
 
   const getStatusBadge = () => {
+    if (isLoadingStatus) return <Badge variant="secondary" className="animate-pulse">Проверка...</Badge>;
     if (isRunning) return <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">Работает</Badge>;
     if (isError) return <Badge variant="destructive">Ошибка</Badge>;
+    if (isStatusError) return <Badge variant="outline" className="text-orange-600 border-orange-300">Соединение</Badge>;
     return <Badge variant="secondary">Остановлен</Badge>;
+  };
+
+  const getStatusDetails = () => {
+    if (isRunning && currentUptime) {
+      return `Работает ${currentUptime}`;
+    }
+    if (isError && botStatus?.instance?.errorMessage) {
+      return `Ошибка: ${botStatus.instance.errorMessage}`;
+    }
+    if (isStatusError) {
+      return "Проблема с подключением к серверу";
+    }
+    if (isLoadingStatus) {
+      return "Проверяем состояние бота...";
+    }
+    return null;
   };
 
   return (
@@ -240,15 +314,31 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Статус:</span>
-            {getStatusBadge()}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Статус:</span>
+              {getStatusBadge()}
+            </div>
+            {botStatus?.instance?.processId && (
+              <span className="text-xs text-muted-foreground">
+                PID: {botStatus.instance.processId}
+              </span>
+            )}
           </div>
-          {botStatus?.instance?.processId && (
-            <span className="text-xs text-muted-foreground">
-              PID: {botStatus.instance.processId}
-            </span>
+          
+          {getStatusDetails() && (
+            <div className="text-sm text-muted-foreground">
+              {getStatusDetails()}
+            </div>
+          )}
+          
+          {isRunning && (
+            <div className="p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+              <p className="text-xs text-green-700 dark:text-green-300">
+                ✅ Бот работает с текущими настройками. При изменении структуры в редакторе бот автоматически перезапустится с новыми параметрами.
+              </p>
+            </div>
           )}
         </div>
 
@@ -279,16 +369,26 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                     onValueChange={(value) => setSelectedTokenId(value ? parseInt(value) : null)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Выберите токен" />
+                      <SelectValue placeholder="Выберите токен для запуска" />
                     </SelectTrigger>
                     <SelectContent>
                       {tokens.map((token) => (
                         <SelectItem key={token.id} value={token.id.toString()}>
                           <div className="flex items-center justify-between w-full">
-                            <span>{token.name}</span>
-                            {token.isDefault === 1 && (
-                              <Badge variant="secondary" className="ml-2">По умолчанию</Badge>
-                            )}
+                            <div className="flex flex-col">
+                              <span className="font-medium">{token.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {token.token.substring(0, 10)}...
+                              </span>
+                            </div>
+                            <div className="flex gap-1">
+                              {token.isDefault === 1 && (
+                                <Badge variant="default" className="text-xs">По умолчанию</Badge>
+                              )}
+                              {token.lastUsedAt && (
+                                <Badge variant="outline" className="text-xs">Использовался</Badge>
+                              )}
+                            </div>
                           </div>
                         </SelectItem>
                       ))}
@@ -296,9 +396,14 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                   </Select>
                   
                   {defaultTokenData?.hasDefault && (
-                    <p className="text-xs text-muted-foreground">
-                      Токен по умолчанию: {defaultTokenData.token?.name}
-                    </p>
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        🔧 Токен по умолчанию: <strong>{defaultTokenData.token?.name}</strong>
+                      </p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        При изменении структуры бота он автоматически перезапустится с этим токеном.
+                      </p>
+                    </div>
                   )}
                 </div>
               ) : (

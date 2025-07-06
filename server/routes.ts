@@ -191,8 +191,8 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
       return { success: true }; // Возвращаем true, чтобы не блокировать сохранение проекта
     }
 
-    // Ждем дольше для полного завершения процесса и избежания конфликтов
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Ждем дольше для полного завершения процесса и избежания конфликтов Telegram
+    await new Promise(resolve => setTimeout(resolve, 7000));
 
     // Проверяем, что процесс действительно завершен
     const processExists = botProcesses.has(projectId);
@@ -201,8 +201,30 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
       botProcesses.delete(projectId);
     }
 
-    // Запускаем заново с тем же токеном
-    const startResult = await startBot(projectId, instance.token);
+    // Получаем актуальный токен (может измениться)
+    let tokenToUse = instance.token;
+    
+    // Проверяем, есть ли токен по умолчанию
+    const defaultToken = await storage.getDefaultBotToken(projectId);
+    if (defaultToken) {
+      tokenToUse = defaultToken.token;
+      console.log(`Используем токен по умолчанию для перезапуска бота ${projectId}`);
+    } else {
+      // Если нет токена по умолчанию, используем токен из проекта
+      const project = await storage.getBotProject(projectId);
+      if (project?.botToken) {
+        tokenToUse = project.botToken;
+        console.log(`Используем сохраненный токен проекта для перезапуска бота ${projectId}`);
+      }
+    }
+
+    // Запускаем заново с актуальным токеном
+    const startResult = await startBot(projectId, tokenToUse);
+    if (startResult.success) {
+      console.log(`Бот ${projectId} успешно перезапущен после обновления структуры`);
+    } else {
+      console.error(`Ошибка при перезапуске бота ${projectId}:`, startResult.error);
+    }
     return startResult;
   } catch (error) {
     console.error('Ошибка перезапуска бота:', error);
