@@ -278,7 +278,11 @@ export default function Editor() {
         {currentTab === 'editor' ? (
           <ResizablePanelGroup direction="horizontal" className="h-full">
             <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-              <ComponentsSidebar onComponentDrag={handleComponentDrag} onLoadTemplate={handleLoadTemplate} />
+              <ComponentsSidebar 
+                onComponentDrag={handleComponentDrag} 
+                onLoadTemplate={handleLoadTemplate}
+                onSelectTemplate={handleSelectTemplate}
+              />
             </ResizablePanel>
             
             <ResizableHandle withHandle />

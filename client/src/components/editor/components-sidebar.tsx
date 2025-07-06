@@ -1,11 +1,17 @@
-import { ComponentDefinition } from '@shared/schema';
+import { ComponentDefinition, BotTemplate, BotData } from '@shared/schema';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Link } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Crown, Star, User, ExternalLink } from 'lucide-react';
 
 interface ComponentsSidebarProps {
   onComponentDrag: (component: ComponentDefinition) => void;
   onLoadTemplate?: () => void;
+  onSelectTemplate?: (template: BotTemplate) => void;
 }
 
 const components: ComponentDefinition[] = [
@@ -251,15 +257,25 @@ const componentCategories = [
   }
 ];
 
-export function ComponentsSidebar({ onComponentDrag, onLoadTemplate }: ComponentsSidebarProps) {
-  const [currentTab, setCurrentTab] = useState<'elements' | 'templates'>('elements');
+export function ComponentsSidebar({ onComponentDrag, onLoadTemplate, onSelectTemplate }: ComponentsSidebarProps) {
+  const [currentTab, setCurrentTab] = useState<'elements' | 'my-templates' | 'templates'>('elements');
   
+  // Получаем пользовательские шаблоны
+  const { data: myTemplates = [], isLoading: isMyTemplatesLoading } = useQuery<BotTemplate[]>({
+    queryKey: ['/api/templates/category/custom'],
+    enabled: currentTab === 'my-templates'
+  });
+
   const handleDragStart = (e: React.DragEvent, component: ComponentDefinition) => {
     e.dataTransfer.setData('application/json', JSON.stringify(component));
     onComponentDrag(component);
   };
 
-  // handleTemplatesClick заменен на прямую ссылку к /templates
+  const handleSelectTemplate = (template: BotTemplate) => {
+    if (onSelectTemplate) {
+      onSelectTemplate(template);
+    }
+  };
 
   return (
     <aside className="w-full h-full bg-background border-r border-border flex flex-col">
@@ -269,7 +285,7 @@ export function ComponentsSidebar({ onComponentDrag, onLoadTemplate }: Component
         <div className="flex space-x-1 bg-muted rounded-lg p-1">
           <button 
             onClick={() => setCurrentTab('elements')}
-            className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
               currentTab === 'elements' 
                 ? 'bg-background text-foreground shadow-sm' 
                 : 'text-muted-foreground hover:text-foreground'
@@ -277,43 +293,157 @@ export function ComponentsSidebar({ onComponentDrag, onLoadTemplate }: Component
           >
             Элементы
           </button>
+          <button 
+            onClick={() => setCurrentTab('my-templates')}
+            className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              currentTab === 'my-templates' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Мои
+          </button>
           <Link href="/templates">
             <button 
-              className="w-full flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
+              className="flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-background"
             >
-              Шаблоны
+              Все
             </button>
           </Link>
         </div>
       </div>
       
-      {/* Components List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {componentCategories.map((category) => (
-          <div key={category.title}>
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              {category.title}
-            </h3>
-            <div className="space-y-2">
-              {category.components.map((component) => (
-                <div
-                  key={component.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, component)}
-                  className="flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors"
-                >
-                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mr-3", component.color)}>
-                    <i className={`${component.icon} text-sm`}></i>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{component.name}</p>
-                    <p className="text-xs text-muted-foreground">{component.description}</p>
-                  </div>
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto">
+        {currentTab === 'elements' && (
+          <div className="p-4 space-y-4">
+            {componentCategories.map((category) => (
+              <div key={category.title}>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                  {category.title}
+                </h3>
+                <div className="space-y-2">
+                  {category.components.map((component) => (
+                    <div
+                      key={component.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, component)}
+                      className="flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors"
+                    >
+                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mr-3", component.color)}>
+                        <i className={`${component.icon} text-sm`}></i>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{component.name}</p>
+                        <p className="text-xs text-muted-foreground">{component.description}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {currentTab === 'my-templates' && (
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-foreground">Мои шаблоны</h3>
+              <Badge variant="secondary" className="text-xs">
+                {myTemplates.length}
+              </Badge>
+            </div>
+            
+            {isMyTemplatesLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-16 bg-muted rounded-lg"></div>
+                  </div>
+                ))}
+              </div>
+            ) : myTemplates.length === 0 ? (
+              <div className="text-center py-8">
+                <User className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground mb-2">У вас пока нет шаблонов</p>
+                <p className="text-xs text-muted-foreground">Создайте бота и сохраните его как шаблон</p>
+              </div>
+            ) : (
+              <ScrollArea className="h-full">
+                <div className="space-y-2">
+                  {myTemplates.map((template) => (
+                    <div
+                      key={template.id}
+                      onClick={() => handleSelectTemplate(template)}
+                      className="group p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-pointer transition-colors border border-transparent hover:border-border"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                          {template.name}
+                        </h4>
+                        <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                          {template.featured && (
+                            <Crown className="h-3 w-3 text-yellow-500" />
+                          )}
+                          {template.rating && template.rating > 0 && (
+                            <div className="flex items-center gap-1">
+                              <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                              <span className="text-xs text-muted-foreground">
+                                {template.rating.toFixed(1)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {template.description && (
+                        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                          {template.description}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {template.difficulty && (
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                "text-xs",
+                                template.difficulty === 'easy' && "border-green-200 text-green-700 dark:border-green-800 dark:text-green-300",
+                                template.difficulty === 'medium' && "border-yellow-200 text-yellow-700 dark:border-yellow-800 dark:text-yellow-300",
+                                template.difficulty === 'hard' && "border-red-200 text-red-700 dark:border-red-800 dark:text-red-300"
+                              )}
+                            >
+                              {template.difficulty === 'easy' && 'Легкий'}
+                              {template.difficulty === 'medium' && 'Средний'}
+                              {template.difficulty === 'hard' && 'Сложный'}
+                            </Badge>
+                          )}
+                          {template.useCount && template.useCount > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              {template.useCount} исп.
+                            </span>
+                          )}
+                        </div>
+                        
+                        <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+            
+            <div className="mt-4 pt-4 border-t border-border">
+              <Link href="/templates?tab=my-templates">
+                <Button variant="outline" size="sm" className="w-full text-xs">
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Открыть в библиотеке
+                </Button>
+              </Link>
             </div>
           </div>
-        ))}
+        )}
       </div>
     </aside>
   );
