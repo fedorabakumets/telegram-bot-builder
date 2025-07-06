@@ -116,8 +116,8 @@ export function calculateAutoHierarchy(
     nodeSpacing: 180,
     startX: 100,
     startY: 100,
-    nodeWidth: 160,
-    nodeHeight: 100,
+    nodeWidth: 320,
+    nodeHeight: 120,
     preventOverlaps: true,
     centerAlign: true,
     compactLayout: false,
@@ -306,7 +306,7 @@ function positionNodesByLevel(levels: HierarchyLevel[], config: LayoutConfig): N
   const positionedNodes: Node[] = [];
   
   levels.forEach((level, levelIndex) => {
-    const y = config.startY + levelIndex * config.levelSpacing;
+    let baseY = config.startY + levelIndex * config.levelSpacing;
     
     // Учитываем тип узлов для адаптивного размещения
     let adjustedNodeSpacing = config.nodeSpacing;
@@ -335,25 +335,41 @@ function positionNodesByLevel(levels: HierarchyLevel[], config: LayoutConfig): N
     
     level.nodes.forEach((node, nodeIndex) => {
       let x = startX + nodeIndex * adjustedNodeSpacing;
+      let y = baseY;
       
       // Предотвращение перекрытий
       if (config.preventOverlaps) {
         x = Math.max(50, x);
         
         // Проверяем конфликты с уже размещенными узлами
-        const existingNode = positionedNodes.find(existing => 
-          Math.abs(existing.position.x - x) < config.nodeWidth * 0.8 &&
-          Math.abs(existing.position.y - y) < config.nodeHeight * 0.8
-        );
+        let attempts = 0;
+        const maxAttempts = 10;
         
-        if (existingNode) {
-          x = existingNode.position.x + config.nodeWidth + 20;
+        while (attempts < maxAttempts) {
+          const tempNode = { ...node, position: { x: x, y: y } };
+          const hasOverlap = positionedNodes.some(existing => 
+            doNodesOverlap(tempNode, existing, config)
+          );
+          
+          if (!hasOverlap) {
+            break; // Позиция найдена
+          }
+          
+          // Сдвигаем узел вправо с учетом минимального отступа
+          x += config.nodeWidth + 30;
+          attempts++;
+        }
+        
+        // Если все еще есть перекрытие, сдвигаем вниз
+        if (attempts >= maxAttempts) {
+          x = startX + nodeIndex * adjustedNodeSpacing;
+          y = baseY + config.nodeHeight + 30;
         }
       }
       
       positionedNodes.push({
         ...node,
-        position: { x, y }
+        position: { x: x, y: y }
       });
     });
   });
@@ -476,7 +492,11 @@ function createCircularLayout(nodes: Node[], connections: Connection[], config: 
   const result: Node[] = [];
   const centerX = config.startX + 400;
   const centerY = config.startY + 300;
-  const radius = Math.max(200, nodes.length * 15);
+  
+  // Вычисляем радиус на основе размеров узлов и их количества
+  const nodeCircumference = Math.max(config.nodeWidth, config.nodeHeight) + 60; // отступ между узлами
+  const totalCircumference = nodes.length * nodeCircumference;
+  const radius = Math.max(250, totalCircumference / (2 * Math.PI));
   
   // Сортируем узлы по важности (стартовые узлы в начале)
   const graph = createConnectionGraph(nodes, connections);
@@ -572,7 +592,11 @@ function createGridLayout(nodes: Node[], config: LayoutConfig): Node[] {
   const cols = Math.ceil(Math.sqrt(nodes.length));
   const rows = Math.ceil(nodes.length / cols);
   
-  const spacing = config.compactLayout ? 150 : config.nodeSpacing;
+  // Учитываем реальные размеры узлов для расчета расстояния
+  const minSpacingX = config.nodeWidth + 40; // минимальный отступ 40px
+  const minSpacingY = config.nodeHeight + 40;
+  const spacingX = Math.max(minSpacingX, config.nodeSpacing);
+  const spacingY = Math.max(minSpacingY, config.levelSpacing * 0.6);
   
   return nodes.map((node, index) => {
     const col = index % cols;
@@ -581,8 +605,8 @@ function createGridLayout(nodes: Node[], config: LayoutConfig): Node[] {
     return {
       ...node,
       position: {
-        x: config.startX + col * spacing,
-        y: config.startY + row * spacing
+        x: config.startX + col * spacingX,
+        y: config.startY + row * spacingY
       }
     };
   });
@@ -694,16 +718,19 @@ export function calculateNodeBounds(node: Node, config: LayoutConfig): NodeBound
 }
 
 /**
- * Проверяет пересечение между двумя узлами
+ * Проверяет пересечение между двумя узлами с учетом отступов
  */
 export function doNodesOverlap(node1: Node, node2: Node, config: LayoutConfig): boolean {
   const bounds1 = calculateNodeBounds(node1, config);
   const bounds2 = calculateNodeBounds(node2, config);
   
-  return !(bounds1.right < bounds2.left || 
-           bounds2.right < bounds1.left || 
-           bounds1.bottom < bounds2.top || 
-           bounds2.bottom < bounds1.top);
+  // Добавляем отступ между узлами (20px)
+  const padding = 20;
+  
+  return !(bounds1.right + padding < bounds2.left || 
+           bounds2.right + padding < bounds1.left || 
+           bounds1.bottom + padding < bounds2.top || 
+           bounds2.bottom + padding < bounds1.top);
 }
 
 /**
