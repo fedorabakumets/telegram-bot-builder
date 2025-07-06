@@ -37,8 +37,15 @@ export default function Hierarchy() {
   const nodes = botData?.nodes || [];
   const connections = botData?.connections || [];
 
-  // Analyze structure
-  const structureAnalysis = analyzeLayoutStructure(nodes, connections);
+  // Analyze structure only if we have nodes
+  const structureAnalysis = nodes.length > 0 ? analyzeLayoutStructure(nodes, connections) : {
+    depth: 0,
+    branchingFactor: 0,
+    hasCycles: false,
+    complexity: 0,
+    isolatedNodes: 0,
+    connectedComponents: 0
+  };
 
   // Calculate statistics
   const stats = {
@@ -52,14 +59,14 @@ export default function Hierarchy() {
   };
 
   const handleExport = () => {
-    if (!currentProject) return;
+    if (!currentProject || !botData) return;
     
     const exportData = {
       project: currentProject.name,
       structure: {
         nodes: nodes.length,
         connections: connections.length,
-        levels: stats.levels
+        levels: structureAnalysis.depth
       },
       data: botData
     };
