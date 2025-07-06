@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { HistoryIndicator } from './history-indicator';
+import { AutoSaveIndicator } from './auto-save-indicator';
 import { FolderOpen, Bookmark, Save, Download, User, Send } from 'lucide-react';
 import { useState } from 'react';
 
@@ -18,6 +19,13 @@ interface HeaderProps {
   canRedo?: boolean;
   onUndo?: () => void;
   onRedo?: () => void;
+  // Автосохранение
+  autoSaveStatus?: {
+    isSaving: boolean;
+    lastSaved: Date | null;
+    hasUnsavedChanges: boolean;
+    isEnabled: boolean;
+  };
 }
 
 export function Header({ 
@@ -32,7 +40,8 @@ export function Header({
   canUndo = false,
   canRedo = false,
   onUndo,
-  onRedo
+  onRedo,
+  autoSaveStatus
 }: HeaderProps) {
   return (
     <header className="bg-background border-b border-border h-16 flex items-center justify-between px-6 relative z-50">
@@ -142,6 +151,16 @@ export function Header({
           <span>{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
         </Button>
         
+        {/* Индикатор автосохранения */}
+        {autoSaveStatus && (
+          <AutoSaveIndicator
+            isSaving={autoSaveStatus.isSaving}
+            lastSaved={autoSaveStatus.lastSaved}
+            hasUnsavedChanges={autoSaveStatus.hasUnsavedChanges}
+            isEnabled={autoSaveStatus.isEnabled}
+          />
+        )}
+
         {/* Индикатор истории - только в режиме редактора */}
         {currentTab === 'editor' && onUndo && onRedo && (
           <div className="flex items-center">

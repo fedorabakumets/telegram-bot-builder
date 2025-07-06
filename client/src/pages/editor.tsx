@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { Header } from '@/components/editor/header';
@@ -16,6 +16,7 @@ import { ConnectionVisualization } from '@/components/editor/connection-visualiz
 import { SmartConnectionCreator } from '@/components/editor/smart-connection-creator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
+import { useAutoSave } from '@/hooks/use-auto-save-simple';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotProject, Connection, ComponentDefinition, BotData } from '@shared/schema';
@@ -39,6 +40,9 @@ export default function Editor() {
   });
 
   const currentProject = projects?.[0];
+
+  // Создаем ref для автосохранения
+  const autoSaveRef = useRef<((data: BotData) => void) | null>(null);
 
   const {
     nodes,
@@ -65,7 +69,25 @@ export default function Editor() {
     undo,
     redo,
     resetHistory
-  } = useBotEditor(currentProject?.data as BotData);
+  } = useBotEditor(currentProject?.data as BotData, {
+    onChange: (data) => autoSaveRef.current?.(data) // Подключаем автосохранение к изменениям
+  });
+
+  // Инициализируем auto-save hook после получения getBotData
+  const autoSave = useAutoSave(
+    currentProject,
+    getBotData,
+    {
+      enabled: true,
+      delay: 800, // Автосохранение через 800мс после изменений
+      showToasts: false, // Не показываем уведомления чтобы не отвлекать
+    }
+  );
+
+  // Обновляем ref для автосохранения
+  useEffect(() => {
+    autoSaveRef.current = autoSave.triggerAutoSave;
+  }, [autoSave.triggerAutoSave]);
 
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -227,6 +249,12 @@ export default function Editor() {
         canRedo={canRedo}
         onUndo={undo}
         onRedo={redo}
+        autoSaveStatus={{
+          isSaving: autoSave.isSaving,
+          lastSaved: null, // Можно добавить отслеживание времени последнего сохранения позже
+          hasUnsavedChanges: false, // Простая реализация для начала
+          isEnabled: autoSave.isEnabled
+        }}
       />
 
       <div className="h-[calc(100vh-4rem)]">

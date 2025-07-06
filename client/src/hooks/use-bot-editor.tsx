@@ -2,14 +2,26 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Connection, Button, BotData } from '@shared/schema';
 import { useHistory } from './use-history';
 
-export function useBotEditor(initialData?: BotData) {
+interface BotEditorOptions {
+  onChange?: (data: BotData) => void;
+}
+
+export function useBotEditor(initialData?: BotData, options?: BotEditorOptions) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const { onChange } = options || {};
   
   // Используем систему истории для узлов и связей
   const [historyState, pushToHistory, undo, redo, resetHistory] = useHistory<BotData>(
     { nodes: initialData?.nodes || [], connections: initialData?.connections || [] },
     { maxHistorySize: 50, debounceMs: 150 }
   );
+
+  // Триггер для автосохранения при изменении данных
+  useEffect(() => {
+    if (onChange) {
+      onChange(historyState.current);
+    }
+  }, [historyState.current, onChange]);
 
   const { nodes, connections } = historyState.current;
   
@@ -68,15 +80,14 @@ export function useBotEditor(initialData?: BotData) {
     }
     
     moveThrottleRef.current = setTimeout(() => {
-      updateBotData(
-        (prevData) => ({
-          ...prevData,
-          nodes: prevData.nodes.map(node => 
-            node.id === nodeId ? { ...node, position } : node
-          )
-        }),
-        `Перемещен узел`
-      );
+      const newData = {
+        ...historyState.current,
+        nodes: historyState.current.nodes.map(node => 
+          node.id === nodeId ? { ...node, position } : node
+        )
+      };
+      
+      updateBotData(() => newData, `Перемещен узел`);
     }, 100); // Сохраняем в историю через 100мс после окончания движения
   }, [updateBotData]);
 
