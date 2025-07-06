@@ -17,7 +17,7 @@ dp = Dispatcher()
 
 
 @dp.message()
-async def message_OBeIsmJa0Xu6TophEBwOk_handler(message: types.Message):
+async def message_VROEcUC_6_zYjorz2ObFZ_handler(message: types.Message):
     text = "Новое сообщение"
     # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())

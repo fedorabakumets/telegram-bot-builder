@@ -77,18 +77,18 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
     const filePath = createBotFile(botCode, projectId);
     
     // Запускаем бота с правильной обработкой кодировки
-    const process = spawn('python', [filePath], {
+    const botProcess = spawn('python', [filePath], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
       env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
     });
 
     // Устанавливаем кодировку для предотвращения проблем с выводом
-    process.stdout?.setEncoding('utf8');
-    process.stderr?.setEncoding('utf8');
+    botProcess.stdout?.setEncoding('utf8');
+    botProcess.stderr?.setEncoding('utf8');
 
     // Логируем вывод процесса с защитой от некорректных символов
-    process.stdout?.on('data', (data) => {
+    botProcess.stdout?.on('data', (data) => {
       try {
         const output = data.toString().replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
         console.log(`Бот ${projectId} stdout:`, output);
@@ -97,7 +97,7 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
       }
     });
 
-    process.stderr?.on('data', (data) => {
+    botProcess.stderr?.on('data', (data) => {
       try {
         const output = data.toString().replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
         console.error(`Бот ${projectId} stderr:`, output);
@@ -106,10 +106,10 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
       }
     });
 
-    const processId = process.pid?.toString();
+    const processId = botProcess.pid?.toString();
     
     // Сохраняем процесс
-    botProcesses.set(projectId, process);
+    botProcesses.set(projectId, botProcess);
     
     // Создаем или обновляем запись в базе данных
     const existingBotInstance = await storage.getBotInstance(projectId);
@@ -130,7 +130,7 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
     }
 
     // Обрабатываем события процесса
-    process.on('error', async (error) => {
+    botProcess.on('error', async (error) => {
       console.error(`Ошибка запуска бота ${projectId}:`, error);
       const instance = await storage.getBotInstance(projectId);
       if (instance) {
@@ -142,7 +142,7 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
       botProcesses.delete(projectId);
     });
 
-    process.on('exit', async (code) => {
+    botProcess.on('exit', async (code) => {
       console.log(`Бот ${projectId} завершен с кодом ${code}`);
       const instance = await storage.getBotInstance(projectId);
       if (instance) {
