@@ -1,9 +1,15 @@
+"""
+Мой первый бот - Telegram Bot
+Сгенерировано с помощью TelegramBot Builder
+"""
+
 import asyncio
 import logging
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.enums import ParseMode
 
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = "7552080497:AAEJFmsxmY8PnDzgoUpM5NDg5E1ehNYAHYU"
@@ -15,37 +21,89 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+# Список администраторов (добавьте свой Telegram ID)
+ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов
 
-@dp.message(Command("help"))
-async def help_handler(message: types.Message):
-    text = """🤖 Доступные команды:
+# Хранилище пользователей (в реальном боте используйте базу данных)
+user_data = {}
 
-/start - Начать работу
-/help - Эта справка
-/settings - Настройки"""
+
+# Утилитарные функции
+async def is_admin(user_id: int) -> bool:
+    return user_id in ADMIN_IDS
+
+async def is_private_chat(message: types.Message) -> bool:
+    return message.chat.type == "private"
+
+async def check_auth(user_id: int) -> bool:
+    # Здесь можно добавить логику проверки авторизации
+    return user_id in user_data
+
+
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+
+    # Регистрируем пользователя в системе
+    user_data[message.from_user.id] = {
+        "username": message.from_user.username,
+        "first_name": message.from_user.first_name,
+        "last_name": message.from_user.last_name,
+        "registered_at": message.date
+    }
+
+    text = """🚀 Привет! Я твой первый бот!
+
+Ты можешь написать:
+• /start - чтобы запустить меня
+• старт - это тоже работает!
+
+Выбери действие:"""
     
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="Новая кнопка"))
-    keyboard = builder.as_markup()
-    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-    await message.answer("Выберите действие:", reply_markup=keyboard)
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="ℹ️ Информация"))
+    builder.add(KeyboardButton(text="❓ Помощь"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    await message.answer(text, reply_markup=keyboard)
+
+# Обработчики синонимов команд
+
+@dp.message(lambda message: message.text and message.text.lower() == "старт")
+async def start_synonym_старт_handler(message: types.Message):
+    # Синоним для команды /start
+    await start_handler(message)
+
+# Обработчики reply кнопок
+
+@dp.message(lambda message: message.text == "ℹ️ Информация")
+async def handle_reply_btn_info(message: types.Message):
+    text = "📋 **Информация о боте:**\n\nЭто простой бот-пример, который показывает:\n• Как работают команды\n• Как использовать синонимы\n• Базовую навигацию\n\nТеперь ты можешь создать своего!"
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="◀️ Назад"))
+    keyboard = builder.as_markup(resize_keyboard=true, one_time_keyboard=false)
+    await message.answer(text, reply_markup=keyboard)
+
+@dp.message(lambda message: message.text == "❓ Помощь")
+async def handle_reply_btn_help(message: types.Message):
+    text = "❓ **Справка:**\n\n🔤 **Команды:**\n• /start или старт - запуск бота\n\n🎯 **Советы:**\n• Используй кнопки для навигации\n• Синонимы делают бота удобнее\n• Экспериментируй с настройками!"
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="◀️ Назад"))
+    keyboard = builder.as_markup(resize_keyboard=true, one_time_keyboard=false)
+    await message.answer(text, reply_markup=keyboard)
+
+@dp.message(lambda message: message.text == "◀️ Назад")
+async def handle_reply_btn_back_info(message: types.Message):
+    text = "🚀 Привет! Я твой первый бот!\n\nТы можешь написать:\n• /start - чтобы запустить меня\n• старт - это тоже работает!\n\nВыбери действие:"
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="ℹ️ Информация"))
+    builder.add(KeyboardButton(text="❓ Помощь"))
+    keyboard = builder.as_markup(resize_keyboard=true, one_time_keyboard=false)
+    await message.answer(text, reply_markup=keyboard)
 
 
 # Запуск бота
 async def main():
-    try:
-        print("Запускаем бота...")
-        await dp.start_polling(bot)
-    except Exception as e:
-        print(f"Ошибка запуска бота: {e}")
-        raise
+    print("Бот запущен!")
+    await dp.start_polling(bot)
 
-if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("Бот остановлен")
-    except Exception as e:
-        print(f"Критическая ошибка: {e}")
-        exit(1)
+if __name__ == "__main__":
+    asyncio.run(main())
