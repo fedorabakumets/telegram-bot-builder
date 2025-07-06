@@ -10,7 +10,7 @@ interface HistoryIndicatorProps {
 
 export function HistoryIndicator({ canUndo, canRedo, onUndo, onRedo }: HistoryIndicatorProps) {
   return (
-    <div className="flex items-center space-x-1">
+    <>
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -57,28 +57,26 @@ export function HistoryIndicator({ canUndo, canRedo, onUndo, onRedo }: HistoryIn
         </PopoverContent>
       </Popover>
       
-      <div className="flex items-center space-x-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onUndo}
-          disabled={!canUndo}
-          className="h-7 w-7 p-0"
-          title="Отменить (Ctrl+Z)"
-        >
-          <i className="fas fa-undo text-xs"></i>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onRedo}
-          disabled={!canRedo}
-          className="h-7 w-7 p-0"
-          title="Повторить (Ctrl+Y)"
-        >
-          <i className="fas fa-redo text-xs"></i>
-        </Button>
-      </div>
-    </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onUndo}
+        disabled={!canUndo}
+        className="h-7 w-7 p-0"
+        title="Отменить (Ctrl+Z)"
+      >
+        <i className="fas fa-undo text-xs"></i>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onRedo}
+        disabled={!canRedo}
+        className="h-7 w-7 p-0"
+        title="Повторить (Ctrl+Y)"
+      >
+        <i className="fas fa-redo text-xs"></i>
+      </Button>
+    </>
   );
 }
