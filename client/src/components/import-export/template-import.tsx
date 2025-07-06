@@ -33,11 +33,40 @@ interface ParsedTemplateData {
     estimatedTime: number;
     requiresToken: boolean;
     exportedAt?: string;
+    nodeCount?: number;
+    connectionCount?: number;
+    hasAdvancedFeatures?: boolean;
+    supportedCommands?: string[];
+    license?: string;
+    minAppVersion?: string;
+    previewImage?: string;
   };
   botData: {
     nodes: any[];
     connections: any[];
   };
+  exportInfo?: {
+    formatVersion?: string;
+    exportedBy?: string;
+    fileSize?: number;
+    checksum?: string;
+  };
+  additionalData?: {
+    documentation?: string;
+    screenshots?: string[];
+    changelog?: Array<{
+      version: string;
+      date: string;
+      changes: string[];
+    }>;
+  };
+}
+
+interface ValidationResult {
+  isValid: boolean;
+  template?: ParsedTemplateData;
+  errors: string[];
+  warnings: string[];
 }
 
 export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImportProps) {
@@ -45,6 +74,8 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
   const [parsedData, setParsedData] = useState<ParsedTemplateData | null>(null);
   const [fileName, setFileName] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -96,7 +127,9 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
 
     setFileName(file.name);
     setError('');
+    setWarnings([]);
     setParsedData(null);
+    setValidationResult(null);
 
     // Check file extension
     const { isTemplate } = parseTemplateFileName(file.name);
@@ -106,17 +139,37 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
         const jsonData = JSON.parse(content);
         
-        // Basic validation
-        if (!jsonData.name || !jsonData.botData || !jsonData.metadata) {
-          throw new Error('Неверный формат файла шаблона');
+        // Perform client-side validation using the same validation as server
+        const response = await fetch('/api/templates/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(jsonData),
+        });
+        
+        if (response.ok) {
+          const result: ValidationResult = await response.json();
+          setValidationResult(result);
+          
+          if (result.isValid && result.template) {
+            setParsedData(result.template);
+            if (result.warnings.length > 0) {
+              setWarnings(result.warnings);
+            }
+          } else {
+            setError(result.errors.join('\n'));
+          }
+        } else {
+          // Fallback to basic validation if server validation fails
+          if (!jsonData.name || !jsonData.botData || !jsonData.metadata) {
+            throw new Error('Неверный формат файла шаблона');
+          }
+          setParsedData(jsonData);
         }
-
-        setParsedData(jsonData);
       } catch (err) {
         setError('Ошибка чтения файла. Убедитесь, что это правильный файл шаблона.');
         console.error('File parsing error:', err);
@@ -135,6 +188,8 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
     setParsedData(null);
     setFileName('');
     setError('');
+    setWarnings([]);
+    setValidationResult(null);
     setImportMode('template');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -203,6 +258,20 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {warnings.length > 0 && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="space-y-1">
+                    <p className="font-medium">Предупреждения:</p>
+                    {warnings.map((warning, index) => (
+                      <p key={index} className="text-sm">• {warning}</p>
+                    ))}
+                  </div>
+                </AlertDescription>
               </Alert>
             )}
           </div>
@@ -276,6 +345,18 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
                     <Label className="text-xs text-muted-foreground">Время создания</Label>
                     <p className="text-sm">{parsedData.metadata.estimatedTime} мин</p>
                   </div>
+                  {parsedData.metadata.license && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Лицензия</Label>
+                      <p className="text-sm">{parsedData.metadata.license}</p>
+                    </div>
+                  )}
+                  {parsedData.exportInfo?.formatVersion && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Версия формата</Label>
+                      <p className="text-sm">{parsedData.exportInfo.formatVersion}</p>
+                    </div>
+                  )}
                 </div>
 
                 <Separator />
@@ -284,13 +365,46 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs text-muted-foreground">Узлов</Label>
-                    <p className="text-sm font-medium">{parsedData.botData.nodes?.length || 0}</p>
+                    <p className="text-sm font-medium">
+                      {parsedData.metadata.nodeCount ?? parsedData.botData.nodes?.length ?? 0}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">Связей</Label>
-                    <p className="text-sm font-medium">{parsedData.botData.connections?.length || 0}</p>
+                    <p className="text-sm font-medium">
+                      {parsedData.metadata.connectionCount ?? parsedData.botData.connections?.length ?? 0}
+                    </p>
                   </div>
+                  {parsedData.exportInfo?.fileSize && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Размер файла</Label>
+                      <p className="text-sm">{(parsedData.exportInfo.fileSize / 1024).toFixed(1)} КБ</p>
+                    </div>
+                  )}
+                  {parsedData.metadata.hasAdvancedFeatures && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Продвинутые функции</Label>
+                      <Badge variant="secondary" className="text-xs">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Есть
+                      </Badge>
+                    </div>
+                  )}
                 </div>
+
+                {/* Commands */}
+                {parsedData.metadata.supportedCommands && parsedData.metadata.supportedCommands.length > 0 && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Поддерживаемые команды</Label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {parsedData.metadata.supportedCommands.map((command, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          /{command}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Tags */}
                 {parsedData.metadata.tags && parsedData.metadata.tags.length > 0 && (
@@ -306,12 +420,52 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
                   </div>
                 )}
 
+                {/* Documentation */}
+                {parsedData.additionalData?.documentation && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Документация</Label>
+                    <div className="text-xs text-muted-foreground mt-1 p-2 bg-muted rounded-md max-h-32 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-xs">
+                        {parsedData.additionalData.documentation.slice(0, 300)}
+                        {parsedData.additionalData.documentation.length > 300 && '...'}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+
+                {/* Changelog */}
+                {parsedData.additionalData?.changelog && parsedData.additionalData.changelog.length > 0 && (
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Последние изменения</Label>
+                    <div className="text-xs space-y-1 mt-1">
+                      {parsedData.additionalData.changelog.slice(0, 2).map((change, index) => (
+                        <div key={index} className="text-muted-foreground">
+                          <span className="font-medium">v{change.version}</span> - {change.date}
+                          {change.changes.length > 0 && (
+                            <div className="ml-2 text-xs">• {change.changes[0]}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Requirements */}
                 {parsedData.metadata.requiresToken && (
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription className="text-xs">
                       Для работы этого бота потребуется токен Telegram Bot API
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Compatibility warning */}
+                {parsedData.metadata.minAppVersion && parsedData.metadata.minAppVersion > "1.0.0" && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      Требуется версия приложения {parsedData.metadata.minAppVersion} или выше
                     </AlertDescription>
                   </Alert>
                 )}

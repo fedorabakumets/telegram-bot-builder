@@ -1096,6 +1096,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Template not found" });
       }
 
+      // Получаем параметры экспорта
+      const includeDocumentation = req.query.includeDocumentation === 'true';
+      const generateChecksum = req.query.generateChecksum === 'true';
+      const includeScreenshots = req.query.includeScreenshots === 'true';
+
       // Create export data
       const exportData = createTemplateExport(
         template.name,
@@ -1113,7 +1118,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           requiresToken: Boolean(template.requiresToken),
           createdAt: template.createdAt?.toISOString(),
         },
-        template.authorName || "Unknown"
+        template.authorName || "Unknown",
+        {
+          includeDocumentation,
+          generateChecksum,
+          includeScreenshots,
+        }
       );
 
       // Generate filename
@@ -1139,6 +1149,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
 
+      // Получаем параметры экспорта
+      const includeDocumentation = req.query.includeDocumentation === 'true';
+      const generateChecksum = req.query.generateChecksum === 'true';
+      const includeScreenshots = req.query.includeScreenshots === 'true';
+
       // Create export data from project
       const exportData = createTemplateExport(
         project.name,
@@ -1153,7 +1168,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           estimatedTime: 5,
           requiresToken: true,
         },
-        "User"
+        "User",
+        {
+          includeDocumentation,
+          generateChecksum,
+          includeScreenshots,
+        }
       );
 
       // Generate filename
@@ -1173,8 +1193,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Import template from file
   app.post("/api/templates/import", async (req, res) => {
     try {
-      // Validate the imported data
-      const templateData = validateTemplateImport(req.body);
+      // Validate the imported data using new validation function
+      const validationResult = validateTemplateImport(req.body);
+      
+      if (!validationResult.isValid) {
+        return res.status(400).json({ 
+          message: "Invalid template format", 
+          errors: validationResult.errors,
+          warnings: validationResult.warnings,
+          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
+        });
+      }
+
+      const templateData = validationResult.template!;
 
       // Create template in database
       const newTemplate = await storage.createBotTemplate({
@@ -1188,7 +1219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         authorId: null,
         authorName: templateData.metadata.author || "Imported",
         version: templateData.metadata.version,
-        previewImage: null,
+        previewImage: templateData.metadata.previewImage || null,
         featured: 0,
         language: templateData.metadata.language,
         requiresToken: templateData.metadata.requiresToken ? 1 : 0,
@@ -1199,30 +1230,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json({
         message: "Template imported successfully",
         template: newTemplate,
+        warnings: validationResult.warnings,
         importInfo: {
           originalAuthor: templateData.metadata.author,
           exportedAt: templateData.metadata.exportedAt,
           formatVersion: templateData.exportInfo.formatVersion,
+          fileSize: templateData.exportInfo.fileSize,
+          hasAdvancedFeatures: templateData.metadata.hasAdvancedFeatures,
+          nodeCount: templateData.metadata.nodeCount,
+          connectionCount: templateData.metadata.connectionCount,
         }
       });
     } catch (error) {
       console.error('Template import error:', error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid template format", 
-          errors: error.errors,
-          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
-        });
-      }
       res.status(500).json({ message: "Failed to import template" });
+    }
+  });
+
+  // Validate template file before import
+  app.post("/api/templates/validate", async (req, res) => {
+    try {
+      const validationResult = validateTemplateImport(req.body);
+      res.json(validationResult);
+    } catch (error) {
+      console.error('Template validation error:', error);
+      res.status(500).json({
+        isValid: false,
+        errors: ["Ошибка валидации на сервере"],
+        warnings: []
+      });
     }
   });
 
   // Import template as new project
   app.post("/api/projects/import", async (req, res) => {
     try {
-      // Validate the imported data
-      const templateData = validateTemplateImport(req.body);
+      // Validate the imported data using new validation function
+      const validationResult = validateTemplateImport(req.body);
+      
+      if (!validationResult.isValid) {
+        return res.status(400).json({ 
+          message: "Invalid template format", 
+          errors: validationResult.errors,
+          warnings: validationResult.warnings,
+          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
+        });
+      }
+
+      const templateData = validationResult.template!;
 
       // Create new project from template
       const newProject = await storage.createBotProject({
@@ -1234,21 +1289,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json({
         message: "Project imported successfully",
         project: newProject,
+        warnings: validationResult.warnings,
         importInfo: {
           originalName: templateData.name,
           originalAuthor: templateData.metadata.author,
           exportedAt: templateData.metadata.exportedAt,
+          nodeCount: templateData.metadata.nodeCount,
+          connectionCount: templateData.metadata.connectionCount,
+          hasAdvancedFeatures: templateData.metadata.hasAdvancedFeatures,
         }
       });
     } catch (error) {
       console.error('Project import error:', error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid template format", 
-          errors: error.errors,
-          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
-        });
-      }
       res.status(500).json({ message: "Failed to import project" });
     }
   });

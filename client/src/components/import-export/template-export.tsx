@@ -11,6 +11,7 @@ import { Download, Package, FileText, Info, CheckCircle, Copy } from 'lucide-rea
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { createTemplateFileName } from '@shared/template-format';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface TemplateExportProps {
   open: boolean;
@@ -33,6 +34,9 @@ export function TemplateExport({
 }: TemplateExportProps) {
   const [exportFormat, setExportFormat] = useState<ExportFormat>('download');
   const [exportedData, setExportedData] = useState<any>(null);
+  const [includeDocumentation, setIncludeDocumentation] = useState(true);
+  const [generateChecksum, setGenerateChecksum] = useState(true);
+  const [includeScreenshots, setIncludeScreenshots] = useState(false);
   const { toast } = useToast();
 
   const exportMutation = useMutation({
@@ -41,7 +45,13 @@ export function TemplateExport({
         ? `/api/templates/${sourceId}/export`
         : `/api/projects/${sourceId}/export`;
       
-      const response = await fetch(endpoint);
+      // Добавляем параметры экспорта
+      const url = new URL(endpoint, window.location.origin);
+      url.searchParams.append('includeDocumentation', includeDocumentation.toString());
+      url.searchParams.append('generateChecksum', generateChecksum.toString());
+      url.searchParams.append('includeScreenshots', includeScreenshots.toString());
+      
+      const response = await fetch(url.toString());
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -225,6 +235,58 @@ export function TemplateExport({
                   </AlertDescription>
                 </Alert>
               </div>
+
+              {/* Export Options */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Параметры экспорта</CardTitle>
+                  <CardDescription>
+                    Настройте дополнительные данные для включения в экспорт
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="include-documentation"
+                      checked={includeDocumentation}
+                      onCheckedChange={(checked) => setIncludeDocumentation(checked === true)}
+                    />
+                    <Label htmlFor="include-documentation" className="text-sm">
+                      Включить автоматически сгенерированную документацию
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="generate-checksum"
+                      checked={generateChecksum}
+                      onCheckedChange={(checked) => setGenerateChecksum(checked === true)}
+                    />
+                    <Label htmlFor="generate-checksum" className="text-sm">
+                      Генерировать контрольную сумму для проверки целостности
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="include-screenshots"
+                      checked={includeScreenshots}
+                      onCheckedChange={(checked) => setIncludeScreenshots(checked === true)}
+                      disabled
+                    />
+                    <Label htmlFor="include-screenshots" className="text-sm text-muted-foreground">
+                      Включить скриншоты (пока недоступно)
+                    </Label>
+                  </div>
+
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      Дополнительные данные увеличивают размер файла, но предоставляют больше информации при импорте.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
 
               {/* File Info */}
               <Card className="bg-muted/50">

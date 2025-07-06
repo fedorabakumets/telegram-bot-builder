@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Download, Upload, Package, FileText, ChevronDown } from 'lucide-react';
+import { Download, Upload, Package, FileText, ChevronDown, Archive } from 'lucide-react';
 import { TemplateImport } from './template-import';
 import { TemplateExport } from './template-export';
+import { BatchOperations } from './batch-operations';
 
 interface ImportExportControlsProps {
   // For export
@@ -35,6 +36,7 @@ export function ImportExportControls({
 }: ImportExportControlsProps) {
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [batchOpen, setBatchOpen] = useState(false);
 
   const handleImportSuccess = (result: any) => {
     onImportSuccess?.(result);
@@ -167,6 +169,11 @@ export function ImportExportControls({
             Импорт шаблона
           </DropdownMenuItem>
           
+          <DropdownMenuItem onClick={() => setBatchOpen(true)}>
+            <Archive className="h-4 w-4 mr-2" />
+            Пакетные операции
+          </DropdownMenuItem>
+          
           {sourceType && sourceId && sourceName && (
             <>
               <DropdownMenuSeparator />
@@ -183,6 +190,11 @@ export function ImportExportControls({
         open={importOpen}
         onOpenChange={setImportOpen}
         onSuccess={handleImportSuccess}
+      />
+
+      <BatchOperations
+        open={batchOpen}
+        onOpenChange={setBatchOpen}
       />
 
       {sourceType && sourceId && sourceName && (
