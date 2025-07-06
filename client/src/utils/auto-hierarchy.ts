@@ -113,11 +113,11 @@ export function calculateAutoHierarchy(
   const defaultConfig: LayoutConfig = {
     algorithm: analysis.recommendedAlgorithm,
     levelSpacing: 300,
-    nodeSpacing: 180,
+    nodeSpacing: 240, // Увеличен отступ для предотвращения перекрытий
     startX: 100,
     startY: 100,
-    nodeWidth: 320,
-    nodeHeight: 120,
+    nodeWidth: 160, // Стандартный размер узла
+    nodeHeight: 100, // Стандартный размер узла
     preventOverlaps: true,
     centerAlign: true,
     compactLayout: false,
@@ -907,8 +907,8 @@ export function doNodesOverlap(node1: Node, node2: Node, config: LayoutConfig): 
   const bounds1 = calculateNodeBounds(node1, config);
   const bounds2 = calculateNodeBounds(node2, config);
   
-  // Добавляем отступ между узлами (20px)
-  const padding = 20;
+  // Увеличиваем отступ между узлами до 40px для предотвращения перекрытий
+  const padding = 40;
   
   return !(bounds1.right + padding < bounds2.left || 
            bounds2.right + padding < bounds1.left || 
@@ -940,7 +940,7 @@ export function createAdaptiveLayout(nodes: Node[], connections: Connection[]): 
   const config: LayoutConfig = {
     algorithm: analysis.recommendedAlgorithm,
     levelSpacing: analysis.maxDepth > 5 ? 250 : 300,
-    nodeSpacing: analysis.totalNodes > 10 ? 160 : 180,
+    nodeSpacing: analysis.totalNodes > 10 ? 220 : 240, // Увеличен отступ для предотвращения перекрытий
     startX: 100,
     startY: 100,
     nodeWidth: 160,
@@ -1069,11 +1069,18 @@ export function animatedAutoHierarchyWithConnections(
 }
 
 /**
- * Создает простую сетку для небольшого количества узлов
+ * Создает простую сетку для небольшого количества узлов с правильными отступами
  */
 function createSimpleGrid(nodes: Node[]): Node[] {
   const cols = Math.ceil(Math.sqrt(nodes.length));
-  const spacing = 200;
+  
+  // Используем размеры узлов по умолчанию для расчета отступов
+  const nodeWidth = 160;
+  const nodeHeight = 100;
+  const padding = 40; // Отступ между узлами
+  
+  const spacingX = nodeWidth + padding;
+  const spacingY = nodeHeight + padding;
   const startX = 100;
   const startY = 100;
   
@@ -1084,8 +1091,8 @@ function createSimpleGrid(nodes: Node[]): Node[] {
     return {
       ...node,
       position: {
-        x: startX + col * spacing,
-        y: startY + row * spacing
+        x: startX + col * spacingX,
+        y: startY + row * spacingY
       }
     };
   });
