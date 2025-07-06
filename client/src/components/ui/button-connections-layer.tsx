@@ -29,9 +29,11 @@ export function ButtonConnectionsLayer({
     if (!showButtonConnections) return [];
     
     const buttonConnections: ButtonConnection[] = [];
+    console.log('ButtonConnectionsLayer: Обрабатываем узлы:', nodes.length);
     
     nodes.forEach(sourceNode => {
       if (!sourceNode.data.buttons || sourceNode.data.buttons.length === 0) return;
+      console.log(`Узел ${sourceNode.id} имеет ${sourceNode.data.buttons.length} кнопок:`, sourceNode.data.buttons);
       
       // Calculate node dimensions matching CanvasNode layout
       const nodeWidth = 320;
@@ -46,11 +48,21 @@ export function ButtonConnectionsLayer({
       const buttonsStartY = sourceNode.position.y + baseContentHeight + 16; // 16px for spacing
       
       sourceNode.data.buttons.forEach((button, buttonIndex) => {
+        console.log(`Кнопка ${buttonIndex}: ${button.text}, action: ${button.action}, target: ${button.target}`);
+        
         // Only show connections for goto buttons that have valid targets
-        if (button.action !== 'goto' || !button.target) return;
+        if (button.action !== 'goto' || !button.target) {
+          console.log(`Пропускаем кнопку: action=${button.action}, target=${button.target}`);
+          return;
+        }
         
         const targetNode = nodes.find(n => n.id === button.target);
-        if (!targetNode) return;
+        if (!targetNode) {
+          console.log(`Целевой узел не найден для target: ${button.target}`);
+          return;
+        }
+        
+        console.log(`Создаем соединение от ${sourceNode.id} к ${targetNode.id}`);
         
         // Calculate button position based on actual layout
         let buttonX: number;
@@ -134,6 +146,7 @@ export function ButtonConnectionsLayer({
       });
     });
     
+    console.log('ButtonConnectionsLayer: Найдено соединений:', buttonConnections.length);
     return buttonConnections;
   }, [nodes, connections, showButtonConnections]);
   

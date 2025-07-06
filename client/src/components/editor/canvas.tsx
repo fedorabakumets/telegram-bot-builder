@@ -785,7 +785,7 @@ export function Canvas({
 
             {/* Button Connections Layer */}
             <ButtonConnectionsLayer
-              nodes={displayNodes}
+              nodes={nodes}
               connections={connections}
               showButtonConnections={showButtonConnections}
             />
