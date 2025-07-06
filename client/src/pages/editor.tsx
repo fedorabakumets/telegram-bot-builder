@@ -145,11 +145,6 @@ export default function Editor() {
     setShowSaveTemplate(true);
   }, []);
 
-  const handleLoadTemplate = useCallback(() => {
-    console.log('Template button clicked, redirecting to templates page...');
-    setLocation('/templates');
-  }, [setLocation]);
-
   const handleSelectTemplate = useCallback(async (template: any) => {
     // Применяем шаблон к текущему проекту
     try {
@@ -186,7 +181,11 @@ export default function Editor() {
             data: templateData,
             difficulty: template.difficulty || 'easy',
             tags: template.tags || [],
-            isPublic: false
+            isPublic: 0,
+            requiresToken: 1,
+            language: 'ru',
+            complexity: template.complexity || 1,
+            estimatedTime: template.estimatedTime || 5
           });
           
           // Инвалидируем кэш пользовательских шаблонов
@@ -212,6 +211,11 @@ export default function Editor() {
       });
     }
   }, [setBotData, updateProjectMutation, toast, nodes.length, connections.length, queryClient]);
+
+  const handleLoadTemplate = useCallback(() => {
+    console.log('Template button clicked, redirecting to templates page...');
+    setLocation('/templates');
+  }, [setLocation]);
 
   // Проверяем, есть ли ожидающий шаблон в localStorage
   useEffect(() => {
