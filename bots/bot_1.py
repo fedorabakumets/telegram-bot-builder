@@ -6,7 +6,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "7552080497:AAEJFmsxmY8PnDzgoUpM5NDg5E1ehNYAHYU"
+BOT_TOKEN = "6389600794:AAE6C0h7ykvO3rYBd7rG7Qz5r12wRSyD-Ls"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -15,6 +15,12 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+
+@dp.message()
+async def message_OBeIsmJa0Xu6TophEBwOk_handler(message: types.Message):
+    text = "Новое сообщение"
+    # Удаляем предыдущие reply клавиатуры если они были
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 
 # Запуск бота
