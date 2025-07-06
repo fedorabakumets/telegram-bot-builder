@@ -131,6 +131,13 @@ export const nodeSchema = z.object({
     oneTimeKeyboard: z.boolean().default(false),
     resizeKeyboard: z.boolean().default(true),
     markdown: z.boolean().default(false),
+    // Синонимы для команд - текстовые сообщения, которые будут вызывать ту же функцию
+    synonyms: z.array(z.string()).default([]),
+    // Дополнительные настройки безопасности
+    isPrivateOnly: z.boolean().default(false),
+    adminOnly: z.boolean().default(false),
+    requiresAuth: z.boolean().default(false),
+    showInMenu: z.boolean().default(true),
   }),
 });
 

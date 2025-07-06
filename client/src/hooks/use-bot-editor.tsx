@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Node, Connection, Button, BotData } from '@/types/bot';
+import { Node, Connection, Button, BotData } from '@shared/schema';
 
 export function useBotEditor(initialData?: BotData) {
   const [nodes, setNodes] = useState<Node[]>(initialData?.nodes || []);

@@ -1,4 +1,4 @@
-import { Node, Button } from '@/types/bot';
+import { Node, Button } from '@shared/schema';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -252,6 +252,54 @@ export function PropertiesPanel({
                   />
                   <div className="text-xs text-muted-foreground mt-1">
                     Используется для меню команд в @BotFather
+                  </div>
+                </div>
+                
+                {/* Синонимы команд */}
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground">Синонимы команды</Label>
+                  <div className="mt-2 space-y-2">
+                    {(selectedNode.data.synonyms || []).map((synonym, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          value={synonym}
+                          onChange={(e) => {
+                            const newSynonyms = [...(selectedNode.data.synonyms || [])];
+                            newSynonyms[index] = e.target.value;
+                            onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
+                          }}
+                          placeholder="Например: старт, привет, начать"
+                          className="flex-1"
+                        />
+                        <UIButton
+                          onClick={() => {
+                            const newSynonyms = [...(selectedNode.data.synonyms || [])];
+                            newSynonyms.splice(index, 1);
+                            onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="px-2 py-1"
+                        >
+                          <i className="fas fa-trash text-xs"></i>
+                        </UIButton>
+                      </div>
+                    ))}
+                    <UIButton
+                      onClick={() => {
+                        const newSynonyms = [...(selectedNode.data.synonyms || []), ''];
+                        onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <i className="fas fa-plus mr-2 text-xs"></i>
+                      Добавить синоним
+                    </UIButton>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Текстовые сообщения, которые будут вызывать эту команду. Например: "старт" вместо "/start"
                   </div>
                 </div>
               </>
