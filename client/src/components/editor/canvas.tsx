@@ -1,7 +1,12 @@
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { CanvasNode } from '@/components/ui/canvas-node';
 import { ConnectionsLayer } from '@/components/ui/connections-layer';
+import { TemporaryConnection } from '@/components/ui/temporary-connection';
+import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Node, ComponentDefinition, Connection } from '@/types/bot';
+import { generateAutoConnections } from '@/utils/auto-connection';
 import { nanoid } from 'nanoid';
 
 interface CanvasProps {
@@ -37,6 +42,8 @@ export function Canvas({
     nodeId: string;
     handle: 'source' | 'target';
   } | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -88,6 +95,35 @@ export function Canvas({
     }
   }, [onNodeSelect, onConnectionSelect]);
 
+  // Отслеживание движения мыши для предварительного просмотра соединения
+  useEffect(() => {
+    if (!connectionStart) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        setMousePosition({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        });
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setConnectionStart(null);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [connectionStart]);
+
   const handleConnectionStart = useCallback((nodeId: string, handle: 'source' | 'target') => {
     if (connectionStart) {
       // Если уже есть начало соединения, пытаемся завершить его
@@ -105,6 +141,27 @@ export function Canvas({
       setConnectionStart({ nodeId, handle });
     }
   }, [connectionStart, onConnectionAdd]);
+
+  const handleCreateSuggestedConnection = useCallback((source: string, target: string) => {
+    const newConnection: Connection = {
+      id: nanoid(),
+      source,
+      target,
+    };
+    onConnectionAdd?.(newConnection);
+    setShowSuggestions(false);
+  }, [onConnectionAdd]);
+
+  const handleAutoConnect = useCallback(() => {
+    const suggestions = generateAutoConnections(nodes, connections);
+    const bestSuggestion = suggestions.find(s => s.confidence > 0.8);
+    
+    if (bestSuggestion) {
+      handleCreateSuggestedConnection(bestSuggestion.source, bestSuggestion.target);
+    } else {
+      setShowSuggestions(true);
+    }
+  }, [nodes, connections, handleCreateSuggestedConnection]);
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
@@ -164,6 +221,15 @@ export function Canvas({
             onConnectionSelect={onConnectionSelect}
             onConnectionDelete={onConnectionDelete}
           />
+
+          {/* Temporary connection preview */}
+          {connectionStart && (
+            <TemporaryConnection
+              startNode={nodes.find(n => n.id === connectionStart.nodeId)!}
+              endPosition={mousePosition}
+              handle={connectionStart.handle}
+            />
+          )}
           
           {/* Nodes */}
           {nodes.map((node) => (
@@ -187,6 +253,54 @@ export function Canvas({
               </div>
               <h3 className="text-gray-800 dark:text-gray-200 mb-3 font-semibold text-lg">Перетащите элемент сюда</h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Выберите компонент из левой панели и перетащите на холст для создания бота</p>
+            </div>
+          )}
+
+          {/* Smart Connection Tools */}
+          {nodes.length > 1 && (
+            <div className="absolute bottom-6 right-6 flex flex-col space-y-3 z-10">
+              {/* Auto-connect button */}
+              <Button
+                onClick={handleAutoConnect}
+                className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                title="Автоматическое соединение"
+              >
+                <i className="fas fa-magic text-white" />
+              </Button>
+
+              {/* Connection suggestions */}
+              <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm"
+                    title="Рекомендации соединений"
+                  >
+                    <i className="fas fa-lightbulb text-yellow-500" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent side="left" className="w-80 p-0">
+                  <ConnectionSuggestions
+                    nodes={nodes}
+                    connections={connections}
+                    onCreateConnection={handleCreateSuggestedConnection}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              {/* Clear connections button */}
+              {connections.length > 0 && (
+                <Button
+                  onClick={() => {
+                    connections.forEach(conn => onConnectionDelete?.(conn.id));
+                  }}
+                  variant="outline"
+                  className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-900/20"
+                  title="Очистить все соединения"
+                >
+                  <i className="fas fa-eraser text-red-500" />
+                </Button>
+              )}
             </div>
           )}
         </div>

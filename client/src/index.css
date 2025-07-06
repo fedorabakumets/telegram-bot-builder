@@ -249,6 +249,23 @@
   }
 }
 
+/* Connection line animations */
+@keyframes dash {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -20; }
+}
+
+@keyframes connection-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes connection-glow {
+  0% { filter: drop-shadow(0 0 2px hsl(var(--primary) / 0.3)); }
+  50% { filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.6)); }
+  100% { filter: drop-shadow(0 0 2px hsl(var(--primary) / 0.3)); }
+}
+
 /* Glow effect for dark theme */
 .dark [data-panel-resize-handle-enabled="true"][data-panel-resize-handle-active="true"] {
   box-shadow: 

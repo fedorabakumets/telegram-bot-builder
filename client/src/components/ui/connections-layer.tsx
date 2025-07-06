@@ -16,7 +16,7 @@ export function ConnectionsLayer({
   onConnectionSelect,
   onConnectionDelete
 }: ConnectionsLayerProps) {
-  if (connections.length === 0) return null;
+  if (!connections || connections.length === 0) return null;
 
   return (
     <svg 

@@ -261,9 +261,11 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
       {/* Connection points */}
       <button
         className={cn(
-          "absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-md hover:scale-110 transition-all duration-200",
+          "absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-md hover:scale-125 transition-all duration-300 group",
           connectionStart?.nodeId === node.id && connectionStart?.handle === 'target'
-            ? "bg-green-500 hover:bg-green-600 animate-pulse"
+            ? "bg-green-500 hover:bg-green-600 animate-pulse shadow-lg shadow-green-500/50"
+            : connectionStart && connectionStart.nodeId !== node.id && connectionStart.handle === 'source'
+            ? "bg-green-400 hover:bg-green-500 animate-bounce shadow-lg shadow-green-400/50"
             : "bg-muted-foreground hover:bg-muted-foreground/80"
         )}
         onClick={(e) => {
@@ -271,12 +273,16 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
           onConnectionStart?.(node.id, 'target');
         }}
         title="Входящее соединение"
-      />
+      >
+        <div className="absolute inset-0 rounded-full bg-current opacity-0 group-hover:opacity-20 transition-opacity duration-300 animate-ping" />
+      </button>
       <button
         className={cn(
-          "absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-md hover:scale-110 transition-all duration-200",
+          "absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-md hover:scale-125 transition-all duration-300 group",
           connectionStart?.nodeId === node.id && connectionStart?.handle === 'source'
-            ? "bg-green-500 hover:bg-green-600 animate-pulse"
+            ? "bg-green-500 hover:bg-green-600 animate-pulse shadow-lg shadow-green-500/50"
+            : connectionStart && connectionStart.nodeId !== node.id && connectionStart.handle === 'target'
+            ? "bg-green-400 hover:bg-green-500 animate-bounce shadow-lg shadow-green-400/50"
             : "bg-primary hover:bg-primary/80"
         )}
         onClick={(e) => {
@@ -284,7 +290,9 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
           onConnectionStart?.(node.id, 'source');
         }}
         title="Исходящее соединение"
-      />
+      >
+        <div className="absolute inset-0 rounded-full bg-current opacity-0 group-hover:opacity-20 transition-opacity duration-300 animate-ping" />
+      </button>
     </div>
   );
 }

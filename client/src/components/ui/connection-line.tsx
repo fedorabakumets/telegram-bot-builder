@@ -11,26 +11,51 @@ interface ConnectionLineProps {
 }
 
 export function ConnectionLine({ connection, nodes, isSelected, onClick, onDelete }: ConnectionLineProps) {
-  const { path, midPoint } = useMemo(() => {
+  const { path, midPoint, distance } = useMemo(() => {
     const sourceNode = nodes.find(n => n.id === connection.source);
     const targetNode = nodes.find(n => n.id === connection.target);
     
     if (!sourceNode || !targetNode) {
-      return { path: '', midPoint: { x: 0, y: 0 } };
+      return { path: '', midPoint: { x: 0, y: 0 }, distance: 0 };
     }
 
-    // Размеры узла (из CanvasNode)
-    const nodeWidth = 320; // 80 * 4 = 320px (w-80)
-    const nodeHeight = 200; // примерная высота узла
+    // Динамические размеры узла на основе содержимого
+    const baseWidth = 320; // Базовая ширина
+    const baseHeight = 200; // Базовая высота
+    
+    // Добавляем высоту для кнопок
+    const sourceButtonHeight = sourceNode.data.buttons.length > 0 ? 
+      (sourceNode.data.keyboardType === 'inline' ? 
+        Math.ceil(sourceNode.data.buttons.length / 2) * 50 : 
+        sourceNode.data.buttons.length * 40) : 0;
+    
+    const targetButtonHeight = targetNode.data.buttons.length > 0 ? 
+      (targetNode.data.keyboardType === 'inline' ? 
+        Math.ceil(targetNode.data.buttons.length / 2) * 50 : 
+        targetNode.data.buttons.length * 40) : 0;
 
-    // Позиции точек соединения
-    const sourceX = sourceNode.position.x + nodeWidth + 8; // правая точка (8px offset)
-    const sourceY = sourceNode.position.y + nodeHeight / 2;
-    const targetX = targetNode.position.x - 8; // левая точка (8px offset)
-    const targetY = targetNode.position.y + nodeHeight / 2;
+    const sourceHeight = baseHeight + sourceButtonHeight;
+    const targetHeight = baseHeight + targetButtonHeight;
 
-    // Создаем curved path (Безье кривая)
-    const controlPointOffset = Math.min(Math.abs(targetX - sourceX) / 2, 100);
+    // Умное позиционирование точек соединения
+    const sourceX = sourceNode.position.x + baseWidth + 8;
+    const sourceY = sourceNode.position.y + sourceHeight / 2;
+    const targetX = targetNode.position.x - 8;
+    const targetY = targetNode.position.y + targetHeight / 2;
+
+    // Расчет расстояния для адаптивной кривой
+    const deltaX = targetX - sourceX;
+    const deltaY = targetY - sourceY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    // Адаптивная кривая Безье в зависимости от расстояния и направления
+    let controlPointOffset = Math.min(Math.abs(deltaX) / 2, Math.max(80, distance * 0.3));
+    
+    // Если узлы расположены один под другим, увеличиваем кривизну
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      controlPointOffset = Math.max(controlPointOffset, 120);
+    }
+
     const controlPoint1X = sourceX + controlPointOffset;
     const controlPoint1Y = sourceY;
     const controlPoint2X = targetX - controlPointOffset;
@@ -38,13 +63,14 @@ export function ConnectionLine({ connection, nodes, isSelected, onClick, onDelet
 
     const path = `M ${sourceX} ${sourceY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${targetX} ${targetY}`;
     
-    // Средняя точка для кнопки удаления
-    const midPoint = {
-      x: (sourceX + targetX) / 2,
-      y: (sourceY + targetY) / 2
-    };
+    // Более точная средняя точка с учетом кривой
+    const t = 0.5;
+    const midX = Math.pow(1-t, 3) * sourceX + 3 * Math.pow(1-t, 2) * t * controlPoint1X + 3 * (1-t) * Math.pow(t, 2) * controlPoint2X + Math.pow(t, 3) * targetX;
+    const midY = Math.pow(1-t, 3) * sourceY + 3 * Math.pow(1-t, 2) * t * controlPoint1Y + 3 * (1-t) * Math.pow(t, 2) * controlPoint2Y + Math.pow(t, 3) * targetY;
 
-    return { path, midPoint };
+    const midPoint = { x: midX, y: midY };
+
+    return { path, midPoint, distance };
   }, [connection, nodes]);
 
   if (!path) return null;
@@ -68,14 +94,30 @@ export function ConnectionLine({ connection, nodes, isSelected, onClick, onDelet
         strokeWidth={isSelected ? "3" : "2"}
         fill="none"
         className={cn(
-          "transition-all duration-200",
+          "transition-all duration-300",
           isSelected ? "drop-shadow-lg" : "hover:stroke-primary/70"
         )}
         style={{
-          strokeDasharray: isSelected ? "none" : "none"
+          strokeDasharray: isSelected ? "none" : "none",
+          filter: isSelected ? "drop-shadow(0 0 8px hsl(var(--primary) / 0.3))" : "none"
         }}
         onClick={onClick}
       />
+
+      {/* Анимированная линия для визуального эффекта */}
+      {isSelected && (
+        <path
+          d={path}
+          stroke="hsl(var(--primary))"
+          strokeWidth="1"
+          fill="none"
+          className="animate-pulse opacity-60"
+          style={{
+            strokeDasharray: "8 4",
+            animation: "dash 2s linear infinite"
+          }}
+        />
+      )}
 
       {/* Стрелка */}
       <defs>
