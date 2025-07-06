@@ -164,8 +164,9 @@ export interface ComponentDefinition {
   id: string;
   type: Node['type'];
   name: string;
-  label: string;
   description: string;
   icon: string;
   color: string;
+  defaultData?: any;
+  [key: string]: any; // Allow additional properties for compatibility
 }

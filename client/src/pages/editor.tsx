@@ -18,7 +18,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { BotProject, Connection, ComponentDefinition } from '@shared/schema';
+import { BotProject, Connection, ComponentDefinition, BotData } from '@shared/schema';
 
 export default function Editor() {
   const [, setLocation] = useLocation();
@@ -58,7 +58,7 @@ export default function Editor() {
     updateNodes,
     setBotData,
     getBotData
-  } = useBotEditor(currentProject?.data);
+  } = useBotEditor(currentProject?.data as BotData);
 
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
