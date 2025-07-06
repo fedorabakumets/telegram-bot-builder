@@ -25,6 +25,11 @@ interface TemplateFormData {
   category: string;
   tags: string[];
   isPublic: boolean;
+  difficulty: 'easy' | 'medium' | 'hard';
+  language: string;
+  requiresToken: boolean;
+  complexity: number;
+  estimatedTime: number;
 }
 
 export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: SaveTemplateModalProps) {
@@ -34,6 +39,11 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     category: 'custom',
     tags: [],
     isPublic: false,
+    difficulty: 'easy',
+    language: 'ru',
+    requiresToken: true,
+    complexity: 1,
+    estimatedTime: 5,
   });
   const [newTag, setNewTag] = useState('');
   
@@ -48,6 +58,11 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
         category: data.category,
         tags: data.tags,
         isPublic: data.isPublic ? 1 : 0,
+        difficulty: data.difficulty,
+        language: data.language,
+        requiresToken: data.requiresToken ? 1 : 0,
+        complexity: data.complexity,
+        estimatedTime: data.estimatedTime,
         data: botData,
       });
     },
@@ -76,6 +91,11 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
       category: 'custom',
       tags: [],
       isPublic: false,
+      difficulty: 'easy',
+      language: 'ru',
+      requiresToken: true,
+      complexity: 1,
+      estimatedTime: 5,
     });
     setNewTag('');
   };
@@ -217,18 +237,105 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
             )}
           </div>
 
-          {/* Публичность */}
-          <div className="flex items-center space-x-2">
-            <input
-              id="isPublic"
-              type="checkbox"
-              checked={formData.isPublic}
-              onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))}
-              className="h-4 w-4"
-            />
-            <Label htmlFor="isPublic">
-              Сделать шаблон публичным (другие пользователи смогут его использовать)
-            </Label>
+          {/* Расширенные настройки */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Сложность */}
+            <div className="space-y-2">
+              <Label>Сложность</Label>
+              <Select
+                value={formData.difficulty}
+                onValueChange={(value: 'easy' | 'medium' | 'hard') => setFormData(prev => ({ ...prev, difficulty: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите сложность" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="easy">Легкий</SelectItem>
+                  <SelectItem value="medium">Средний</SelectItem>
+                  <SelectItem value="hard">Сложный</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Язык */}
+            <div className="space-y-2">
+              <Label>Язык</Label>
+              <Select
+                value={formData.language}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите язык" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ru">Русский</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="it">Italiano</SelectItem>
+                  <SelectItem value="pt">Português</SelectItem>
+                  <SelectItem value="zh">中文</SelectItem>
+                  <SelectItem value="ja">日本語</SelectItem>
+                  <SelectItem value="ko">한국어</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Сложность (1-10) */}
+            <div className="space-y-2">
+              <Label>Сложность (1-10)</Label>
+              <Input
+                type="number"
+                min="1"
+                max="10"
+                value={formData.complexity}
+                onChange={(e) => setFormData(prev => ({ ...prev, complexity: parseInt(e.target.value) || 1 }))}
+                placeholder="1"
+              />
+            </div>
+
+            {/* Время настройки */}
+            <div className="space-y-2">
+              <Label>Время настройки (минут)</Label>
+              <Input
+                type="number"
+                min="1"
+                max="120"
+                value={formData.estimatedTime}
+                onChange={(e) => setFormData(prev => ({ ...prev, estimatedTime: parseInt(e.target.value) || 5 }))}
+                placeholder="5"
+              />
+            </div>
+          </div>
+
+          {/* Публичность и токен */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input
+                id="isPublic"
+                type="checkbox"
+                checked={formData.isPublic}
+                onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="isPublic">
+                Сделать шаблон публичным (другие пользователи смогут его использовать)
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                id="requiresToken"
+                type="checkbox"
+                checked={formData.requiresToken}
+                onChange={(e) => setFormData(prev => ({ ...prev, requiresToken: e.target.checked }))}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="requiresToken">
+                Требует токен бота (пользователю нужно будет указать токен)
+              </Label>
+            </div>
           </div>
 
           {/* Статистика бота */}

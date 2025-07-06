@@ -32,6 +32,10 @@ export interface IStorage {
   updateBotTemplate(id: number, template: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined>;
   deleteBotTemplate(id: number): Promise<boolean>;
   incrementTemplateUseCount(id: number): Promise<boolean>;
+  incrementTemplateViewCount(id: number): Promise<boolean>;
+  incrementTemplateDownloadCount(id: number): Promise<boolean>;
+  toggleTemplateLike(id: number, liked: boolean): Promise<boolean>;
+  toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean>;
   rateTemplate(id: number, rating: number): Promise<boolean>;
   getFeaturedTemplates(): Promise<BotTemplate[]>;
   getTemplatesByCategory(category: string): Promise<BotTemplate[]>;
@@ -225,6 +229,15 @@ export class MemStorage implements IStorage {
       featured: 0,
       version: insertTemplate.version || "1.0.0",
       previewImage: insertTemplate.previewImage || null,
+      lastUsedAt: null,
+      downloadCount: 0,
+      likeCount: 0,
+      bookmarkCount: 0,
+      viewCount: 0,
+      language: insertTemplate.language || "ru",
+      requiresToken: insertTemplate.requiresToken || 0,
+      complexity: insertTemplate.complexity || 1,
+      estimatedTime: insertTemplate.estimatedTime || 5,
     };
     this.templates.set(id, template);
     return template;
@@ -255,6 +268,63 @@ export class MemStorage implements IStorage {
     const updatedTemplate = {
       ...template,
       useCount: (template.useCount || 0) + 1,
+      lastUsedAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.templates.set(id, updatedTemplate);
+    return true;
+  }
+
+  async incrementTemplateViewCount(id: number): Promise<boolean> {
+    const template = this.templates.get(id);
+    if (!template) return false;
+
+    const updatedTemplate = {
+      ...template,
+      viewCount: (template.viewCount || 0) + 1,
+      updatedAt: new Date(),
+    };
+    
+    this.templates.set(id, updatedTemplate);
+    return true;
+  }
+
+  async incrementTemplateDownloadCount(id: number): Promise<boolean> {
+    const template = this.templates.get(id);
+    if (!template) return false;
+
+    const updatedTemplate = {
+      ...template,
+      downloadCount: (template.downloadCount || 0) + 1,
+      updatedAt: new Date(),
+    };
+    
+    this.templates.set(id, updatedTemplate);
+    return true;
+  }
+
+  async toggleTemplateLike(id: number, liked: boolean): Promise<boolean> {
+    const template = this.templates.get(id);
+    if (!template) return false;
+
+    const updatedTemplate = {
+      ...template,
+      likeCount: Math.max(0, (template.likeCount || 0) + (liked ? 1 : -1)),
+      updatedAt: new Date(),
+    };
+    
+    this.templates.set(id, updatedTemplate);
+    return true;
+  }
+
+  async toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean> {
+    const template = this.templates.get(id);
+    if (!template) return false;
+
+    const updatedTemplate = {
+      ...template,
+      bookmarkCount: Math.max(0, (template.bookmarkCount || 0) + (bookmarked ? 1 : -1)),
       updatedAt: new Date(),
     };
     

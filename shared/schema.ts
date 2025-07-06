@@ -39,6 +39,15 @@ export const botTemplates = pgTable("bot_templates", {
   featured: integer("featured").notNull().default(0), // 0 = не рекомендуемый, 1 = рекомендуемый
   version: text("version").default("1.0.0"), // Версия шаблона
   previewImage: text("preview_image"), // URL изображения для предварительного просмотра
+  lastUsedAt: timestamp("last_used_at"), // Время последнего использования
+  downloadCount: integer("download_count").notNull().default(0), // Количество скачиваний
+  likeCount: integer("like_count").notNull().default(0), // Количество лайков
+  bookmarkCount: integer("bookmark_count").notNull().default(0), // Количество закладок
+  viewCount: integer("view_count").notNull().default(0), // Количество просмотров
+  language: text("language").default("ru"), // Язык шаблона
+  requiresToken: integer("requires_token").notNull().default(0), // Требует ли бот токен
+  complexity: integer("complexity").notNull().default(1), // Сложность от 1 до 10
+  estimatedTime: integer("estimated_time").notNull().default(5), // Примерное время настройки в минутах
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -70,9 +79,16 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   version: true,
   previewImage: true,
   featured: true,
+  language: true,
+  requiresToken: true,
+  complexity: true,
+  estimatedTime: true,
 }).extend({
   category: z.enum(["custom", "business", "entertainment", "education", "utility", "games", "official", "community"]).default("custom"),
   difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
+  language: z.enum(["ru", "en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko"]).default("ru"),
+  complexity: z.number().min(1).max(10).default(1),
+  estimatedTime: z.number().min(1).max(120).default(5),
   rating: z.number().min(1).max(5).optional(),
 });
 

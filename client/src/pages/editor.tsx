@@ -56,6 +56,7 @@ export default function Editor() {
     updateButton,
     deleteButton,
     updateNodes,
+    setBotData,
     getBotData
   } = useBotEditor(currentProject?.data);
 
@@ -123,29 +124,42 @@ export default function Editor() {
   const handleSelectTemplate = useCallback((template: any) => {
     // Применяем шаблон к текущему проекту
     try {
+      console.log('Обработка выбора шаблона:', template.name);
+      console.log('Данные шаблона:', template.data);
+      console.log('Текущие узлы до применения:', nodes.length);
+      console.log('Текущие связи до применения:', connections.length);
+      
       // Получаем данные шаблона
       const templateData = template.data;
       
-      // Обновляем данные проекта с данными шаблона
+      if (!templateData || !templateData.nodes) {
+        throw new Error('Некорректные данные шаблона');
+      }
+      
+      // Немедленно обновляем локальное состояние редактора
+      setBotData(templateData);
+      
+      console.log('Применили данные шаблона, узлов:', templateData.nodes.length);
+      console.log('Применили данные шаблона, связей:', templateData.connections?.length || 0);
+      
+      // Сохраняем изменения в базе данных
       updateProjectMutation.mutate({
         data: templateData
       });
       
-      // Закрываем модальное окно шаблонов
-      setShowTemplates(false);
-      
       toast({
         title: 'Шаблон применен',
-        description: `Шаблон "${template.name}" успешно загружен`,
+        description: `Шаблон "${template.name}" успешно загружен на холст`,
       });
     } catch (error) {
+      console.error('Ошибка применения шаблона:', error);
       toast({
         title: 'Ошибка',
         description: 'Не удалось применить шаблон',
         variant: 'destructive',
       });
     }
-  }, [updateProjectMutation, toast]);
+  }, [setBotData, updateProjectMutation, toast, nodes.length, connections.length]);
 
   // Обработчики для управления связями
   const handleConnectionsChange = useCallback((newConnections: Connection[]) => {

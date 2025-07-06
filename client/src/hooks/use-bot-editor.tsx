@@ -92,6 +92,18 @@ export function useBotEditor(initialData?: BotData) {
     setNodes(newNodes);
   }, []);
 
+  const setBotData = useCallback((botData: BotData) => {
+    console.log('setBotData вызван с данными:', botData);
+    console.log('Устанавливаем узлы:', botData.nodes?.length || 0);
+    console.log('Устанавливаем связи:', botData.connections?.length || 0);
+    
+    setNodes(botData.nodes || []);
+    setConnections(botData.connections || []);
+    setSelectedNodeId(null); // Сбрасываем выбранный узел
+    
+    console.log('setBotData завершен');
+  }, []);
+
   const getBotData = useCallback((): BotData => ({
     nodes,
     connections
@@ -113,6 +125,7 @@ export function useBotEditor(initialData?: BotData) {
     updateButton,
     deleteButton,
     updateNodes,
+    setBotData,
     getBotData
   };
 }

@@ -665,6 +665,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Increment template view count
+  app.post("/api/templates/:id/view", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.incrementTemplateViewCount(id);
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json({ message: "View count incremented" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to increment view count" });
+    }
+  });
+
+  // Increment template download count
+  app.post("/api/templates/:id/download", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.incrementTemplateDownloadCount(id);
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json({ message: "Download count incremented" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to increment download count" });
+    }
+  });
+
+  // Toggle template like
+  app.post("/api/templates/:id/like", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { liked } = req.body;
+      
+      if (typeof liked !== 'boolean') {
+        return res.status(400).json({ message: "liked must be a boolean" });
+      }
+      
+      const success = await storage.toggleTemplateLike(id, liked);
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      res.json({ message: liked ? "Template liked" : "Template unliked" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to toggle like" });
+    }
+  });
+
+  // Toggle template bookmark
+  app.post("/api/templates/:id/bookmark", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { bookmarked } = req.body;
+      
+      if (typeof bookmarked !== 'boolean') {
+        return res.status(400).json({ message: "bookmarked must be a boolean" });
+      }
+      
+      const success = await storage.toggleTemplateBookmark(id, bookmarked);
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      res.json({ message: bookmarked ? "Template bookmarked" : "Template unbookmarked" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to toggle bookmark" });
+    }
+  });
+
 
 
   const httpServer = createServer(app);

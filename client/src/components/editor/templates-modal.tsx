@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2 } from 'lucide-react';
+import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -111,6 +111,74 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     },
   });
 
+  // Мутация для просмотра шаблона
+  const viewTemplateMutation = useMutation({
+    mutationFn: async (templateId: number) => {
+      const response = await fetch(`/api/templates/${templateId}/view`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to increment view count');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+    },
+  });
+
+  // Мутация для лайка шаблона
+  const likeTemplateMutation = useMutation({
+    mutationFn: async ({ templateId, liked }: { templateId: number; liked: boolean }) => {
+      const response = await fetch(`/api/templates/${templateId}/like`, {
+        method: 'POST',
+        body: JSON.stringify({ liked }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Failed to toggle like');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      toast({
+        title: 'Готово!',
+        description: 'Ваша оценка учтена',
+      });
+    },
+  });
+
+  // Мутация для закладки шаблона
+  const bookmarkTemplateMutation = useMutation({
+    mutationFn: async ({ templateId, bookmarked }: { templateId: number; bookmarked: boolean }) => {
+      const response = await fetch(`/api/templates/${templateId}/bookmark`, {
+        method: 'POST',
+        body: JSON.stringify({ bookmarked }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error('Failed to toggle bookmark');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      toast({
+        title: 'Готово!',
+        description: 'Закладка обновлена',
+      });
+    },
+  });
+
+  // Мутация для скачивания шаблона
+  const downloadTemplateMutation = useMutation({
+    mutationFn: async (templateId: number) => {
+      const response = await fetch(`/api/templates/${templateId}/download`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to increment download count');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+    },
+  });
+
   const categories = [
     { value: 'all', label: 'Все категории' },
     { value: 'custom', label: 'Пользовательские' },
@@ -170,14 +238,21 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
 
   const handleUseTemplate = async (template: BotTemplate) => {
     try {
-      await useTemplateMutation.mutateAsync(template.id);
+      console.log('Применяем шаблон:', template.name, template.data);
+      
+      // Сначала применяем шаблон к редактору
       onSelectTemplate(template);
+      
+      // Затем обновляем счетчик использования
+      await useTemplateMutation.mutateAsync(template.id);
+      
       toast({
         title: 'Шаблон применен',
-        description: `Шаблон "${template.name}" успешно загружен`,
+        description: `Шаблон "${template.name}" загружен на холст`,
       });
       onClose();
     } catch (error) {
+      console.error('Ошибка применения шаблона:', error);
       toast({
         title: 'Ошибка',
         description: 'Не удалось применить шаблон',
@@ -390,6 +465,50 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                     <div className="text-muted-foreground">кнопок</div>
                   </div>
                 </div>
+
+                {/* Расширенная статистика */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded">
+                    <Eye className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{template.viewCount || 0}</span>
+                    <span className="text-muted-foreground">просмотров</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded">
+                    <Download className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{template.downloadCount || 0}</span>
+                    <span className="text-muted-foreground">скачиваний</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded">
+                    <Heart className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{template.likeCount || 0}</span>
+                    <span className="text-muted-foreground">лайков</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 dark:bg-muted/20 rounded">
+                    <Clock className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{template.estimatedTime || 5}</span>
+                    <span className="text-muted-foreground">мин.</span>
+                  </div>
+                </div>
+
+                {/* Дополнительные индикаторы */}
+                <div className="flex items-center gap-2 text-xs">
+                  {template.requiresToken === 1 && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Shield className="h-3 w-3" />
+                      Токен
+                    </Badge>
+                  )}
+                  {template.language && template.language !== 'ru' && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Globe className="h-3 w-3" />
+                      {template.language.toUpperCase()}
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3" />
+                    {template.complexity || 1}/10
+                  </Badge>
+                </div>
                 
                 {template.tags && template.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
@@ -446,17 +565,47 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 pt-2 border-t">
-                  <span className="text-xs text-muted-foreground mr-2">Оценить:</span>
-                  {[1, 2, 3, 4, 5].map((rating) => (
-                    <button
-                      key={rating}
-                      onClick={() => onRate(template, rating)}
-                      className="text-muted-foreground hover:text-yellow-500 transition-colors"
+                {/* Интерактивные действия */}
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => likeTemplateMutation.mutate({ 
+                        templateId: template.id, 
+                        liked: true 
+                      })}
+                      className="h-7 px-2"
                     >
-                      <Star className="h-3 w-3" />
-                    </button>
-                  ))}
+                      <Heart className="h-3 w-3 mr-1" />
+                      <span className="text-xs">{template.likeCount || 0}</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => bookmarkTemplateMutation.mutate({ 
+                        templateId: template.id, 
+                        bookmarked: true 
+                      })}
+                      className="h-7 px-2"
+                    >
+                      <Bookmark className="h-3 w-3 mr-1" />
+                      <span className="text-xs">{template.bookmarkCount || 0}</span>
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground mr-1">Оценить:</span>
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <button
+                        key={rating}
+                        onClick={() => onRate(template, rating)}
+                        className="text-muted-foreground hover:text-yellow-500 transition-colors"
+                      >
+                        <Star className="h-3 w-3" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
