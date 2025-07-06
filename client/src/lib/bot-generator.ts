@@ -298,8 +298,13 @@ function generateStartHandler(node: Node): string {
   code += '    }\n\n';
   
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
-  const escapedText = messageText.replace(/\n/g, '\\n').replace(/"/g, '\\"');
-  code += `    text = "${escapedText}"\n`;
+  // Используем тройные кавычки для многострочного текста
+  if (messageText.includes('\n')) {
+    code += `    text = """${messageText}"""\n`;
+  } else {
+    const escapedText = messageText.replace(/"/g, '\\"');
+    code += `    text = "${escapedText}"\n`;
+  }
   
   return code + generateKeyboard(node);
 }
@@ -331,8 +336,13 @@ function generateCommandHandler(node: Node): string {
   }
 
   const messageText = node.data.messageText || "Команда выполнена";
-  const escapedText = messageText.replace(/\n/g, '\\n').replace(/"/g, '\\"');
-  code += `\n    text = "${escapedText}"\n`;
+  // Используем тройные кавычки для многострочного текста
+  if (messageText.includes('\n')) {
+    code += `\n    text = """${messageText}"""\n`;
+  } else {
+    const escapedText = messageText.replace(/"/g, '\\"');
+    code += `\n    text = "${escapedText}"\n`;
+  }
   
   return code + generateKeyboard(node);
 }
@@ -373,7 +383,7 @@ function generateKeyboard(node: Node): string {
       }
     });
     
-    code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard}, one_time_keyboard=${node.data.oneTimeKeyboard})\n`;
+    code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})\n`;
     code += '    await message.answer(text, reply_markup=keyboard)\n';
   } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
     code += '    \n';
