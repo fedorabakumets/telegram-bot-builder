@@ -69,6 +69,7 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   authorName: true,
   version: true,
   previewImage: true,
+  featured: true,
 }).extend({
   category: z.enum(["custom", "business", "entertainment", "education", "utility", "games", "official", "community"]).default("custom"),
   difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),

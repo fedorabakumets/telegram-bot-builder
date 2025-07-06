@@ -536,6 +536,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get featured templates (must be before /api/templates/:id)
+  app.get("/api/templates/featured", async (req, res) => {
+    try {
+      const templates = await storage.getFeaturedTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch featured templates" });
+    }
+  });
+
+  // Get templates by category (must be before /api/templates/:id)
+  app.get("/api/templates/category/:category", async (req, res) => {
+    try {
+      const { category } = req.params;
+      const templates = await storage.getTemplatesByCategory(category);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch templates by category" });
+    }
+  });
+
+  // Search templates (must be before /api/templates/:id)
+  app.get("/api/templates/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+      const templates = await storage.searchTemplates(q);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search templates" });
+    }
+  });
+
   // Get single template
   app.get("/api/templates/:id", async (req, res) => {
     try {
@@ -630,40 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get featured templates
-  app.get("/api/templates/featured", async (req, res) => {
-    try {
-      const templates = await storage.getFeaturedTemplates();
-      res.json(templates);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch featured templates" });
-    }
-  });
 
-  // Get templates by category
-  app.get("/api/templates/category/:category", async (req, res) => {
-    try {
-      const { category } = req.params;
-      const templates = await storage.getTemplatesByCategory(category);
-      res.json(templates);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch templates by category" });
-    }
-  });
-
-  // Search templates
-  app.get("/api/templates/search", async (req, res) => {
-    try {
-      const { q } = req.query;
-      if (!q || typeof q !== 'string') {
-        return res.status(400).json({ message: "Search query is required" });
-      }
-      const templates = await storage.searchTemplates(q);
-      res.json(templates);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to search templates" });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;

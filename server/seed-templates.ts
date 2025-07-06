@@ -5,9 +5,10 @@ export async function seedDefaultTemplates() {
   try {
     const existingTemplates = await storage.getAllBotTemplates();
     
-    // Проверяем, есть ли уже шаблоны
-    if (existingTemplates.length > 0) {
-      console.log('Шаблоны уже существуют, пропускаем инициализацию');
+    // Проверяем, есть ли уже системные шаблоны
+    const systemTemplates = existingTemplates.filter(t => t.authorName === 'Система');
+    if (systemTemplates.length >= 3) {
+      console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
 
@@ -21,6 +22,7 @@ export async function seedDefaultTemplates() {
       difficulty: "easy",
       authorName: "Система",
       version: "1.0.0",
+      featured: 1,
       data: {
         nodes: [
           {
@@ -150,6 +152,7 @@ export async function seedDefaultTemplates() {
       difficulty: "medium",
       authorName: "Система",
       version: "1.0.0",
+      featured: 1,
       data: {
         nodes: [
           {
