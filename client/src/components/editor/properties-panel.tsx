@@ -709,21 +709,22 @@ export function PropertiesPanel({
 
                 {/* Original buttons for non-combined modes */}
                 {selectedNode.data.keyboardType !== 'combined' && (
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-xs font-medium text-muted-foreground">Кнопки</Label>
-                    <UIButton
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleAddButton}
-                      className="text-xs text-primary hover:text-primary/80 font-medium h-auto p-1"
-                    >
-                      + Добавить
-                    </UIButton>
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  {selectedNode.data.buttons.map((button) => (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-xs font-medium text-muted-foreground">
+                        {selectedNode.data.keyboardType === 'reply' ? 'Reply кнопки' : 'Кнопки'}
+                      </Label>
+                      <UIButton
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleAddButton}
+                        className="text-xs text-primary hover:text-primary/80 font-medium h-auto p-1"
+                      >
+                        + Добавить
+                      </UIButton>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedNode.data.buttons.map((button) => (
                     <div key={button.id} className="bg-muted/50 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
                         <Input
@@ -866,8 +867,10 @@ export function PropertiesPanel({
                         </div>
                       )}
                     </div>
-                  ))}
-                </div>
+                    ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
