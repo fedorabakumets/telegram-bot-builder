@@ -540,13 +540,11 @@ function generateKeyboard(node: Node): string {
       code += '    inline_keyboard = inline_builder.as_markup()\n';
       code += '    \n';
       
-      // Send message with reply keyboard
-      code += '    # Отправляем основное сообщение с reply клавиатурой\n';
-      code += '    await message.answer(text, reply_markup=reply_keyboard)\n';
-      
-      // Attach inline buttons to the same message with minimal indicator
-      code += '    # Прикрепляем inline кнопки к сообщению с минимальным индикатором\n';
-      code += `    await message.answer("⚡", reply_markup=inline_keyboard)\n`;
+      // Send main message with inline buttons attached to it
+      code += '    # Отправляем основное сообщение с inline кнопками\n';
+      code += '    await message.answer(text, reply_markup=inline_keyboard)\n';
+      code += '    # Устанавливаем reply клавиатуру отдельным минимальным сообщением\n';
+      code += '    await message.answer("⚡", reply_markup=reply_keyboard)\n';
       
     } else if (hasReplyButtons) {
       // Only reply buttons with enhanced layout
