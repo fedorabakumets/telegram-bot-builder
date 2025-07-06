@@ -4,12 +4,13 @@ import { ConnectionsLayer } from '@/components/ui/connections-layer';
 import { TemporaryConnection } from '@/components/ui/temporary-connection';
 import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
 import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
+import { EnhancedAutoHierarchyPanel } from '@/components/ui/enhanced-auto-hierarchy-panel';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Node, ComponentDefinition, Connection } from '@shared/schema';
 import { generateAutoConnections } from '@/utils/auto-connection';
 import { ConnectionManager } from '@/utils/connection-manager';
-import { animatedHierarchyLayout } from '@/utils/auto-hierarchy';
+import { animatedHierarchyLayout, animatedAdaptiveLayout } from '@/utils/auto-hierarchy';
 import { nanoid } from 'nanoid';
 
 interface CanvasProps {
@@ -65,6 +66,8 @@ export function Canvas({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
+  const [previewNodes, setPreviewNodes] = useState<Node[] | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   // Zoom utility functions
   const zoomIn = useCallback(() => {
@@ -85,9 +88,9 @@ export function Canvas({
   }, []);
 
   const fitToContent = useCallback(() => {
-    if (nodes.length === 0) return;
+    if (displayNodes.length === 0) return;
     
-    const nodeBounds = nodes.reduce((bounds, node) => {
+    const nodeBounds = displayNodes.reduce((bounds, node) => {
       const left = node.position.x;
       const right = node.position.x + 320; // Approximate node width
       const top = node.position.y;
@@ -411,6 +414,27 @@ export function Canvas({
     );
   }, [nodes, connections, onNodesUpdate]);
 
+  const handlePreviewLayout = useCallback((previewedNodes: Node[]) => {
+    setPreviewNodes(previewedNodes);
+    setIsPreviewMode(true);
+  }, []);
+
+  const handleCancelPreview = useCallback(() => {
+    setPreviewNodes(null);
+    setIsPreviewMode(false);
+  }, []);
+
+  const handleApplyLayout = useCallback((layoutNodes: Node[]) => {
+    if (onNodesUpdate) {
+      onNodesUpdate(layoutNodes);
+    }
+    setPreviewNodes(null);
+    setIsPreviewMode(false);
+  }, [onNodesUpdate]);
+
+  // Use preview nodes if in preview mode, otherwise use actual nodes
+  const displayNodes = isPreviewMode && previewNodes ? previewNodes : nodes;
+
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
       <div className="absolute inset-0 overflow-auto p-8">
@@ -499,14 +523,15 @@ export function Canvas({
               <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
 
-            <button 
-              onClick={handleAutoHierarchy}
-              disabled={nodes.length === 0}
-              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Автоматическая иерархия узлов"
-            >
-              <i className="fas fa-sitemap text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
-            </button>
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50">
+              <EnhancedAutoHierarchyPanel
+                nodes={nodes}
+                connections={connections}
+                onApplyLayout={handleApplyLayout}
+                onPreviewLayout={handlePreviewLayout}
+                onCancelPreview={handleCancelPreview}
+              />
+            </div>
 
             <button 
               onClick={onUndo}
@@ -642,22 +667,41 @@ export function Canvas({
             )}
             
             {/* Nodes */}
-            {nodes.map((node) => (
+            {displayNodes.map((node) => (
               <CanvasNode
                 key={node.id}
                 node={node}
                 isSelected={selectedNodeId === node.id}
                 onClick={() => onNodeSelect(node.id)}
                 onDelete={() => onNodeDelete(node.id)}
-                onMove={(position) => onNodeMove(node.id, position)}
-                onConnectionStart={handleConnectionStart}
+                onMove={(position) => isPreviewMode ? undefined : onNodeMove(node.id, position)}
+                onConnectionStart={isPreviewMode ? undefined : handleConnectionStart}
                 connectionStart={connectionStart}
                 zoom={zoom}
                 pan={pan}
+                className={isPreviewMode ? 'pointer-events-none opacity-75' : ''}
               />
             ))}
           </div>
           
+          {/* Preview Mode Indicator */}
+          {isPreviewMode && (
+            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-20">
+              <div className="bg-blue-600/90 dark:bg-blue-500/90 backdrop-blur-md text-white px-4 py-2 rounded-full shadow-lg border border-blue-400/50 flex items-center gap-2">
+                <i className="fas fa-eye text-sm"></i>
+                <span className="text-sm font-medium">Режим предпросмотра</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 text-white hover:bg-white/20"
+                  onClick={handleCancelPreview}
+                >
+                  <i className="fas fa-times text-xs"></i>
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Drop Zone Hint */}
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg rounded-2xl shadow-2xl border-2 border-dashed border-gray-300 dark:border-slate-600 p-10 w-96 text-center">
