@@ -137,7 +137,7 @@ export function Canvas({
               <div className="w-12 h-12 bg-muted/30 rounded-lg flex items-center justify-center mx-auto mb-4 transition-all duration-300 canvas-drop-icon">
                 <i className="fas fa-plus text-muted-foreground text-xl transition-all duration-300"></i>
               </div>
-              <h3 className="font-medium text-foreground mb-2">Перетащите элемент сюда</h3>
+              <h3 className="text-foreground mb-2 font-normal">Перетащите элемент сюда</h3>
               <p className="text-sm text-muted-foreground">Выберите компонент из левой панели и перетащите на холст</p>
             </div>
           )}
