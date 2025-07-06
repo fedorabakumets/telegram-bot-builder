@@ -851,25 +851,7 @@ export function Canvas({
                 <i className="fas fa-bolt text-white" />
               </Button>
 
-              {/* Connection suggestions */}
-              <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm"
-                    title="Рекомендации соединений"
-                  >
-                    <i className="fas fa-lightbulb text-yellow-500" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent side="left" className="w-80 p-0">
-                  <ConnectionSuggestions
-                    nodes={nodes}
-                    connections={connections}
-                    onCreateConnection={handleCreateSuggestedConnection}
-                  />
-                </PopoverContent>
-              </Popover>
+              
 
               {/* Clear connections button */}
               {connections.length > 0 && (
