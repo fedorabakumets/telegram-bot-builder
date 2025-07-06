@@ -6,7 +6,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
+BOT_TOKEN = "7552080497:AAEJFmsxmY8PnDzgoUpM5NDg5E1ehNYAHYU"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -17,33 +17,20 @@ dp = Dispatcher()
 
 
 @dp.message()
-async def message_UQbVsCXQLeHApg_EgZU6a_handler(message: types.Message):
+async def message___HwJQRzWZX0MA6A3pkJN_handler(message: types.Message):
     text = "Новое сообщение"
     
-    # Создаем комбинированную клавиатуру (Reply + Inline)
-    
-    # Сначала создаем reply клавиатуру
-    reply_builder = ReplyKeyboardBuilder()
-    reply_builder.add(KeyboardButton(text="Новая кнопка"))
-    reply_keyboard = reply_builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    # Отправляем основное сообщение с reply клавиатурой
-    sent_message = await message.answer(text, reply_markup=reply_keyboard)
-    
-    # Затем создаем inline клавиатуру
-    inline_builder = InlineKeyboardBuilder()
-    inline_builder.add(InlineKeyboardButton(text="Новая inline кнопка", callback_data="Новая inline кнопка"))
-    inline_keyboard = inline_builder.as_trigger
-
-    inline_keyboard = inline_builder.as_markup()
-    # Прикрепляем inline кнопки к тому же сообщению
-    await message.answer(text, reply_markup=inline_keyboard)
-    # Устанавливаем reply клавиатуру отдельным минимальным сообщением
-    await message.answer("⚡", reply_markup=reply_keyboard)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="oIfC5qbiBxJhFu0mNd3Kq"))
+    keyboard = builder.as_markup()
+    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer("Выберите действие:", reply_markup=keyboard)
 
 
 # Обработчики inline кнопок
-@dp.callback_query(lambda c: c.data == "Новая inline кнопка")
-async def handle_inline_JcC7YVx5j4XnvLSqIi5rC(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "oIfC5qbiBxJhFu0mNd3Kq")
+async def handle_inline_krIgtlMpkWNeC884P640z(callback_query: types.CallbackQuery):
     await callback_query.answer()
     await callback_query.message.answer("Переход к: Новая inline кнопка")
 
