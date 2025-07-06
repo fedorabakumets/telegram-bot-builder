@@ -161,7 +161,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
       </div>
       {/* Message preview */}
       {node.data.messageText && (
-        <div className="bg-muted rounded-lg p-3 mb-4">
+        <div className="rounded-lg p-3 mb-4 bg-[transparent]">
           <p className="text-sm line-clamp-3 text-[#3da2f5]">
             {node.data.messageText}
           </p>
