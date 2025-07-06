@@ -7,7 +7,7 @@ export async function seedDefaultTemplates() {
     
     // Проверяем, есть ли уже системные шаблоны
     const systemTemplates = existingTemplates.filter(t => t.authorName === 'Система');
-    if (systemTemplates.length >= 3) {
+    if (systemTemplates.length >= 4) {
       console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
@@ -23,6 +23,9 @@ export async function seedDefaultTemplates() {
       authorName: "Система",
       version: "1.0.0",
       featured: 1,
+      language: "ru",
+      complexity: 3,
+      estimatedTime: 10,
       data: {
         nodes: [
           {
@@ -153,6 +156,9 @@ export async function seedDefaultTemplates() {
       authorName: "Система",
       version: "1.0.0",
       featured: 1,
+      language: "ru",
+      complexity: 5,
+      estimatedTime: 15,
       data: {
         nodes: [
           {
@@ -298,6 +304,9 @@ export async function seedDefaultTemplates() {
       difficulty: "medium",
       authorName: "Система", 
       version: "1.0.0",
+      language: "ru",
+      complexity: 6,
+      estimatedTime: 20,
       data: {
         nodes: [
           {
@@ -434,6 +443,107 @@ export async function seedDefaultTemplates() {
             id: "conn-3",
             source: "start-1",
             target: "delivery-1"
+          }
+        ]
+      }
+    });
+
+    // Простой бот с командой старт и синонимом
+    await storage.createBotTemplate({
+      name: "Базовый стартовый бот",
+      description: "Простой бот с командой /start и синонимом 'старт' для начинающих",
+      category: "education",
+      tags: ["старт", "базовый", "обучение"],
+      isPublic: 1,
+      difficulty: "easy",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 2,
+      estimatedTime: 5,
+      data: {
+        nodes: [
+          {
+            id: "start-1",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              synonyms: ["старт"],
+              description: "Команда запуска бота",
+              messageText: "🚀 Привет! Я твой первый бот!\n\nТы можешь написать:\n• /start - чтобы запустить меня\n• старт - это тоже работает!\n\nВыбери действие:",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn-info",
+                  text: "ℹ️ Информация",
+                  action: "goto",
+                  target: "info-1"
+                },
+                {
+                  id: "btn-help",
+                  text: "❓ Помощь",
+                  action: "goto",
+                  target: "help-1"
+                }
+              ],
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "info-1",
+            type: "message",
+            position: { x: 350, y: 100 },
+            data: {
+              messageText: "📋 **Информация о боте:**\n\nЭто простой бот-пример, который показывает:\n• Как работают команды\n• Как использовать синонимы\n• Базовую навигацию\n\nТеперь ты можешь создать своего!",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn-back-info",
+                  text: "◀️ Назад",
+                  action: "goto",
+                  target: "start-1"
+                }
+              ],
+              markdown: true,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "help-1",
+            type: "message",
+            position: { x: 350, y: 250 },
+            data: {
+              messageText: "❓ **Справка:**\n\n🔤 **Команды:**\n• /start или старт - запуск бота\n\n🎯 **Советы:**\n• Используй кнопки для навигации\n• Синонимы делают бота удобнее\n• Экспериментируй с настройками!",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn-back-help",
+                  text: "◀️ Назад",
+                  action: "goto",
+                  target: "start-1"
+                }
+              ],
+              markdown: true,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn-1",
+            source: "start-1",
+            target: "info-1"
+          },
+          {
+            id: "conn-2",
+            source: "start-1",
+            target: "help-1"
           }
         ]
       }
