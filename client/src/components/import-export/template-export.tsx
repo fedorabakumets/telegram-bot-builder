@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -7,7 +7,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Download, Package, FileText, Info, CheckCircle, Copy } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Download, Package, FileText, Info, CheckCircle, Copy, 
+  FileDown, Settings, Eye, Sparkles, ArrowRight, Clock, 
+  Star, Users, Zap, Shield
+} from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { createTemplateFileName } from '@shared/template-format';
@@ -32,20 +38,33 @@ export function TemplateExport({
   sourceName, 
   sourceDescription 
 }: TemplateExportProps) {
+  const [currentTab, setCurrentTab] = useState<'settings' | 'preview' | 'export'>('settings');
   const [exportFormat, setExportFormat] = useState<ExportFormat>('download');
   const [exportedData, setExportedData] = useState<any>(null);
   const [includeDocumentation, setIncludeDocumentation] = useState(true);
   const [generateChecksum, setGenerateChecksum] = useState(true);
   const [includeScreenshots, setIncludeScreenshots] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
   const { toast } = useToast();
 
   const exportMutation = useMutation({
     mutationFn: async () => {
+      setIsProcessing(true);
+      setExportProgress(0);
+      
+      // Simulate progress steps
+      const progressSteps = [20, 40, 60, 80, 100];
+      
+      for (const step of progressSteps) {
+        setExportProgress(step);
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+      
       const endpoint = sourceType === 'template' 
         ? `/api/templates/${sourceId}/export`
         : `/api/projects/${sourceId}/export`;
       
-      // Добавляем параметры экспорта
       const url = new URL(endpoint, window.location.origin);
       url.searchParams.append('includeDocumentation', includeDocumentation.toString());
       url.searchParams.append('generateChecksum', generateChecksum.toString());
@@ -61,43 +80,20 @@ export function TemplateExport({
       return response.json();
     },
     onSuccess: (response) => {
-      // Handle new API response format with filename and data
       const data = response.data || response;
       const fileName = response.filename || createTemplateFileName(sourceName);
       
-      setExportedData(data);
+      setExportedData({ data, fileName });
+      setCurrentTab('export');
       
       if (exportFormat === 'download') {
-        // Create download link
-        const blob = new Blob([JSON.stringify(data, null, 2)], { 
-          type: 'application/json' 
-        });
-        const url = URL.createObjectURL(blob);
-        
-        // Create temporary download link
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        toast({
-          title: "Экспорт завершен",
-          description: `Файл ${fileName} скачан`,
-        });
-        
-        onOpenChange(false);
+        downloadFile(data, fileName);
       } else {
-        // Copy to clipboard
-        navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
-          toast({
-            title: "Скопировано",
-            description: "Данные шаблона скопированы в буфер обмена",
-          });
-        });
+        copyToClipboard(data);
       }
+      
+      setIsProcessing(false);
+      setExportProgress(0);
     },
     onError: (error: Error) => {
       toast({
@@ -105,49 +101,50 @@ export function TemplateExport({
         description: error.message,
         variant: "destructive",
       });
+      setIsProcessing(false);
+      setExportProgress(0);
     },
   });
+
+  const downloadFile = (data: any, fileName: string) => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { 
+      type: 'application/json' 
+    });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Файл скачан",
+      description: `${fileName} успешно сохранен`,
+    });
+  };
+
+  const copyToClipboard = (data: any) => {
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+      toast({
+        title: "Скопировано",
+        description: "Данные шаблона скопированы в буфер обмена",
+      });
+    });
+  };
 
   const handleExport = () => {
     exportMutation.mutate();
   };
 
-  const handleCopyAgain = () => {
-    if (exportedData) {
-      const data = exportedData.data || exportedData;
-      navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
-        toast({
-          title: "Скопировано",
-          description: "Данные шаблона скопированы в буфер обмена",
-        });
-      });
-    }
-  };
-
-  const handleDownloadAgain = () => {
-    if (exportedData) {
-      // Use stored filename or generate one
-      const fileName = exportedData.filename || createTemplateFileName(sourceName);
-      const data = exportedData.data || exportedData;
-      
-      const blob = new Blob([JSON.stringify(data, null, 2)], { 
-        type: 'application/json' 
-      });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-  };
-
   const handleClose = () => {
     setExportedData(null);
     setExportFormat('download');
+    setCurrentTab('settings');
+    setIsProcessing(false);
+    setExportProgress(0);
     onOpenChange(false);
   };
 
@@ -161,235 +158,440 @@ export function TemplateExport({
     return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
   };
 
+  const getExportStatistics = () => {
+    if (!exportedData?.data) return null;
+    
+    const data = exportedData.data;
+    const stats = {
+      nodes: data.botData?.nodes?.length || 0,
+      connections: data.botData?.connections?.length || 0,
+      fileSize: getFileSize(data),
+      formatVersion: data.exportInfo?.formatVersion || '1.1',
+      hasDocumentation: !!data.additionalData?.documentation,
+      hasChecksum: !!data.exportInfo?.checksum
+    };
+    
+    return stats;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader className="border-b border-border/50 pb-6">
+          <DialogTitle className="flex items-center gap-3 text-xl">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-blue-600 text-white">
+              <FileDown className="h-5 w-5" />
+            </div>
             Экспорт {sourceType === 'template' ? 'шаблона' : 'проекта'}
           </DialogTitle>
+          <DialogDescription className="text-muted-foreground">
+            Настройте параметры экспорта для "{sourceName}"
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Source Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                {sourceType === 'template' ? (
-                  <Package className="h-5 w-5" />
-                ) : (
-                  <FileText className="h-5 w-5" />
-                )}
-                {sourceName}
-              </CardTitle>
-              {sourceDescription && (
-                <CardDescription>{sourceDescription}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm text-muted-foreground">
-                {sourceType === 'template' 
-                  ? 'Шаблон будет экспортирован как файл .tbb.json'
-                  : 'Проект будет экспортирован как шаблон в формате .tbb.json'
-                }
-              </div>
-            </CardContent>
-          </Card>
+        <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as any)} className="flex-1 flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Настройки
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              Предпросмотр
+            </TabsTrigger>
+            <TabsTrigger value="export" disabled={!exportedData} className="flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Экспорт
+            </TabsTrigger>
+          </TabsList>
 
-          {!exportedData && (
-            <>
+          <div className="flex-1 overflow-y-auto">
+            <TabsContent value="settings" className="space-y-6 mt-0">
               {/* Export Format Selection */}
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium">Способ экспорта</Label>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    Формат экспорта
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <RadioGroup
                     value={exportFormat}
                     onValueChange={(value) => setExportFormat(value as ExportFormat)}
-                    className="mt-2"
+                    className="space-y-3"
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="download" id="export-download" />
-                      <Label htmlFor="export-download" className="flex items-center gap-2">
-                        <Download className="h-4 w-4" />
-                        Скачать файл
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="copy" id="export-copy" />
-                      <Label htmlFor="export-copy" className="flex items-center gap-2">
-                        <Copy className="h-4 w-4" />
-                        Скопировать в буфер обмена
-                      </Label>
-                    </div>
+                    <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <RadioGroupItem value="download" id="format-download" />
+                        <div className="flex-1">
+                          <Label htmlFor="format-download" className="flex items-center gap-2 font-medium cursor-pointer">
+                            <Download className="h-4 w-4 text-blue-500" />
+                            Скачать файл
+                          </Label>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Сохранить как .tbb.json файл на ваше устройство
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                    
+                    <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <RadioGroupItem value="copy" id="format-copy" />
+                        <div className="flex-1">
+                          <Label htmlFor="format-copy" className="flex items-center gap-2 font-medium cursor-pointer">
+                            <Copy className="h-4 w-4 text-green-500" />
+                            Копировать в буфер
+                          </Label>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Скопировать JSON данные в буфер обмена
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
                   </RadioGroup>
-                </div>
-
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    {exportFormat === 'download' 
-                      ? 'Файл будет сохранен в формате .tbb.json и может быть импортирован в любую копию Telegram Bot Builder.'
-                      : 'Данные будут скопированы в JSON формате. Вы сможете сохранить их в файл вручную.'
-                    }
-                  </AlertDescription>
-                </Alert>
-              </div>
+                </CardContent>
+              </Card>
 
               {/* Export Options */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Параметры экспорта</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Дополнительные параметры
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label className="font-medium">Включить документацию</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Добавить описания и комментарии к шаблону
+                      </p>
+                    </div>
+                    <Checkbox
+                      checked={includeDocumentation}
+                      onCheckedChange={setIncludeDocumentation}
+                    />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label className="font-medium">Генерировать контрольную сумму</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Добавить проверку целостности файла
+                      </p>
+                    </div>
+                    <Checkbox
+                      checked={generateChecksum}
+                      onCheckedChange={setGenerateChecksum}
+                    />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label className="font-medium">Включить скриншоты</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Добавить изображения предпросмотра (экспериментально)
+                      </p>
+                    </div>
+                    <Checkbox
+                      checked={includeScreenshots}
+                      onCheckedChange={setIncludeScreenshots}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Source Information */}
+              <Card className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-0">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Info className="h-4 w-4" />
+                    Информация об источнике
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Тип:</span>
+                    <Badge variant="outline">
+                      {sourceType === 'template' ? 'Шаблон' : 'Проект'}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Название:</span>
+                    <span className="font-medium">{sourceName}</span>
+                  </div>
+                  {sourceDescription && (
+                    <div className="space-y-2">
+                      <span className="text-muted-foreground">Описание:</span>
+                      <p className="text-sm bg-white/50 dark:bg-black/20 p-2 rounded">
+                        {sourceDescription}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="preview" className="space-y-6 mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Eye className="h-5 w-5" />
+                    Предпросмотр экспорта
+                  </CardTitle>
                   <CardDescription>
-                    Настройте дополнительные данные для включения в экспорт
+                    Ваш {sourceType === 'template' ? 'шаблон' : 'проект'} будет экспортирован с следующими настройками
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include-documentation"
-                      checked={includeDocumentation}
-                      onCheckedChange={(checked) => setIncludeDocumentation(checked === true)}
-                    />
-                    <Label htmlFor="include-documentation" className="text-sm">
-                      Включить автоматически сгенерированную документацию
-                    </Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <h4 className="font-medium flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        Формат и настройки
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Формат экспорта:</span>
+                          <Badge variant="outline">
+                            {exportFormat === 'download' ? 'Файл' : 'Буфер обмена'}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Документация:</span>
+                          <Badge variant={includeDocumentation ? "default" : "secondary"}>
+                            {includeDocumentation ? 'Включена' : 'Отключена'}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Контр. сумма:</span>
+                          <Badge variant={generateChecksum ? "default" : "secondary"}>
+                            {generateChecksum ? 'Включена' : 'Отключена'}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Скриншоты:</span>
+                          <Badge variant={includeScreenshots ? "default" : "secondary"}>
+                            {includeScreenshots ? 'Включены' : 'Отключены'}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <h4 className="font-medium flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Структура файла
+                      </h4>
+                      <div className="space-y-2 text-sm font-mono bg-muted/50 p-3 rounded">
+                        <div>📁 {createTemplateFileName(sourceName)}</div>
+                        <div className="ml-4">├── metadata</div>
+                        <div className="ml-4">├── botData</div>
+                        <div className="ml-4">├── exportInfo</div>
+                        {includeDocumentation && <div className="ml-4">├── documentation</div>}
+                        {includeScreenshots && <div className="ml-4">└── screenshots</div>}
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="generate-checksum"
-                      checked={generateChecksum}
-                      onCheckedChange={(checked) => setGenerateChecksum(checked === true)}
-                    />
-                    <Label htmlFor="generate-checksum" className="text-sm">
-                      Генерировать контрольную сумму для проверки целостности
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="include-screenshots"
-                      checked={includeScreenshots}
-                      onCheckedChange={(checked) => setIncludeScreenshots(checked === true)}
-                      disabled
-                    />
-                    <Label htmlFor="include-screenshots" className="text-sm text-muted-foreground">
-                      Включить скриншоты (пока недоступно)
-                    </Label>
-                  </div>
-
+                  
                   <Alert>
                     <Info className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Дополнительные данные увеличивают размер файла, но предоставляют больше информации при импорте.
+                    <AlertDescription>
+                      Экспортированный файл будет совместим с системой импорта шаблонов
+                      и может быть легко импортирован в другие проекты.
                     </AlertDescription>
                   </Alert>
                 </CardContent>
               </Card>
+            </TabsContent>
 
-              {/* File Info */}
-              <Card className="bg-muted/50">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Имя файла</p>
-                      <p className="text-sm text-muted-foreground">
-                        {createTemplateFileName(sourceName)}
-                      </p>
-                    </div>
-                    <Badge variant="secondary">JSON</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-
-          {/* Success State */}
-          {exportedData && (
-            <Card className="border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="font-medium text-green-800 dark:text-green-200">
-                      Экспорт завершен успешно
-                    </p>
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                      {exportFormat === 'download' 
-                        ? 'Файл скачан на ваш компьютер'
-                        : 'Данные скопированы в буфер обмена'
-                      }
-                    </p>
-                    
-                    <div className="mt-3 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-green-600 dark:text-green-400">Размер файла:</span>
-                        <span className="font-medium text-green-800 dark:text-green-200">
-                          {getFileSize(exportedData)}
-                        </span>
+            <TabsContent value="export" className="space-y-6 mt-0">
+              {exportedData && (
+                <div className="space-y-6">
+                  {/* Success Card */}
+                  <Card className="border-0 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 dark:bg-green-900">
+                          <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-xl text-green-800 dark:text-green-200">
+                            Экспорт завершен успешно!
+                          </CardTitle>
+                          <CardDescription className="text-green-700 dark:text-green-300">
+                            Ваш {sourceType === 'template' ? 'шаблон' : 'проект'} готов к использованию
+                          </CardDescription>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-green-600 dark:text-green-400">Формат:</span>
-                        <span className="font-medium text-green-800 dark:text-green-200">
-                          Telegram Bot Builder v1.0
-                        </span>
+                    </CardHeader>
+                    <CardContent>
+                      {(() => {
+                        const stats = getExportStatistics();
+                        return stats ? (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                {stats.nodes}
+                              </div>
+                              <div className="text-sm text-muted-foreground">Узлов</div>
+                            </div>
+                            <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                                {stats.connections}
+                              </div>
+                              <div className="text-sm text-muted-foreground">Связей</div>
+                            </div>
+                            <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                              <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                                {stats.fileSize}
+                              </div>
+                              <div className="text-sm text-muted-foreground">Размер</div>
+                            </div>
+                            <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                              <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                                v{stats.formatVersion}
+                              </div>
+                              <div className="text-sm text-muted-foreground">Формат</div>
+                            </div>
+                          </div>
+                        ) : null;
+                      })()}
+                    </CardContent>
+                  </Card>
+
+                  {/* File Actions */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Zap className="h-4 w-4" />
+                        Дополнительные действия
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => downloadFile(exportedData.data, exportedData.fileName)}
+                          className="h-20 flex flex-col items-center gap-2"
+                        >
+                          <Download className="h-6 w-6" />
+                          <span>Скачать снова</span>
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          onClick={() => copyToClipboard(exportedData.data)}
+                          className="h-20 flex flex-col items-center gap-2"
+                        >
+                          <Copy className="h-6 w-6" />
+                          <span>Копировать в буфер</span>
+                        </Button>
                       </div>
-                    </div>
+                    </CardContent>
+                  </Card>
 
-                    <div className="flex gap-2 mt-4">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleDownloadAgain}
-                        className="text-green-700 border-green-300 hover:bg-green-100 dark:text-green-200 dark:border-green-700 dark:hover:bg-green-900"
-                      >
-                        <Download className="h-3 w-3 mr-1" />
-                        Скачать еще раз
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleCopyAgain}
-                        className="text-green-700 border-green-300 hover:bg-green-100 dark:text-green-200 dark:border-green-700 dark:hover:bg-green-900"
-                      >
-                        <Copy className="h-3 w-3 mr-1" />
-                        Скопировать
-                      </Button>
-                    </div>
-                  </div>
+                  {/* File Information */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Информация о файле
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Имя файла:</span>
+                        <code className="text-sm bg-muted px-2 py-1 rounded">
+                          {exportedData.fileName}
+                        </code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Размер:</span>
+                        <span>{getFileSize(exportedData.data)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Формат:</span>
+                        <Badge variant="outline">TBB v1.1</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            {exportedData ? 'Закрыть' : 'Отмена'}
-          </Button>
-          {!exportedData && (
-            <Button 
-              onClick={handleExport} 
-              disabled={exportMutation.isPending}
-            >
-              {exportMutation.isPending ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Экспортируем...
-                </div>
-              ) : (
-                <>
-                  {exportFormat === 'download' ? (
-                    <Download className="h-4 w-4 mr-2" />
-                  ) : (
-                    <Copy className="h-4 w-4 mr-2" />
-                  )}
-                  {exportFormat === 'download' ? 'Скачать' : 'Копировать'}
-                </>
               )}
+
+              {/* Processing State */}
+              {isProcessing && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center space-y-4">
+                      <div className="flex items-center justify-center w-16 h-16 mx-auto rounded-full bg-primary/10">
+                        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold">Подготовка экспорта...</h3>
+                        <p className="text-muted-foreground">
+                          Пожалуйста, подождите, пока мы обрабатываем ваш {sourceType === 'template' ? 'шаблон' : 'проект'}
+                        </p>
+                      </div>
+                      <div className="w-full max-w-md mx-auto">
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span>Прогресс</span>
+                          <span>{exportProgress}%</span>
+                        </div>
+                        <Progress value={exportProgress} className="h-2" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </div>
+        </Tabs>
+
+        <DialogFooter className="border-t border-border/50 pt-6 mt-6">
+          <div className="flex items-center justify-between w-full">
+            <Button variant="outline" onClick={handleClose} disabled={isProcessing}>
+              {exportedData ? 'Закрыть' : 'Отмена'}
             </Button>
-          )}
+            <div className="flex items-center gap-3">
+              {!exportedData && currentTab !== 'preview' && (
+                <Button 
+                  variant="outline"
+                  onClick={() => setCurrentTab('preview')}
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  Предпросмотр
+                </Button>
+              )}
+              {!exportedData && (
+                <Button 
+                  onClick={handleExport} 
+                  disabled={isProcessing}
+                  className="flex items-center gap-2"
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Экспортируем...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      Экспортировать
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -7,7 +7,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Upload, FileText, Package, AlertCircle, CheckCircle, Info, Download } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Upload, FileText, Package, AlertCircle, CheckCircle, Info, Download, 
+  FileUp, Sparkles, Eye, Settings, ArrowRight, ShieldCheck, Zap 
+} from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { parseTemplateFileName } from '@shared/template-format';
@@ -70,12 +75,15 @@ interface ValidationResult {
 }
 
 export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImportProps) {
+  const [currentTab, setCurrentTab] = useState<'upload' | 'preview' | 'settings'>('upload');
   const [importMode, setImportMode] = useState<ImportMode>('template');
   const [parsedData, setParsedData] = useState<ParsedTemplateData | null>(null);
   const [fileName, setFileName] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [warnings, setWarnings] = useState<string[]>([]);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -102,7 +110,6 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
         description: result.message,
       });
       
-      // Invalidate relevant queries
       if (importMode === 'template') {
         queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
       } else {
@@ -121,8 +128,7 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
     },
   });
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const processFile = async (file: File) => {
     if (!file) return;
 
     setFileName(file.name);
@@ -130,13 +136,23 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
     setWarnings([]);
     setParsedData(null);
     setValidationResult(null);
+    setUploadProgress(0);
 
-    // Check file extension
     const { isTemplate } = parseTemplateFileName(file.name);
     if (!isTemplate) {
       setError('Выберите файл шаблона с расширением .tbb.json или .json');
       return;
     }
+
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 100);
 
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -144,12 +160,12 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
         const content = e.target?.result as string;
         let jsonData = JSON.parse(content);
         
-        // Handle exported file format that wraps template data in a "data" field
         if (jsonData.filename && jsonData.data) {
           jsonData = jsonData.data;
         }
         
-        // Perform client-side validation using the same validation as server
+        setUploadProgress(95);
+        
         const response = await fetch('/api/templates/validate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -165,23 +181,59 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
             if (result.warnings.length > 0) {
               setWarnings(result.warnings);
             }
+            setCurrentTab('preview');
           } else {
             setError(result.errors.join('\n'));
           }
         } else {
-          // Fallback to basic validation if server validation fails
           if (!jsonData.name || !jsonData.botData || !jsonData.metadata) {
             throw new Error('Неверный формат файла шаблона');
           }
           setParsedData(jsonData);
+          setCurrentTab('preview');
         }
+        
+        setUploadProgress(100);
+        setTimeout(() => setUploadProgress(0), 1000);
       } catch (err) {
         setError('Ошибка чтения файла. Убедитесь, что это правильный файл шаблона.');
         console.error('File parsing error:', err);
+        setUploadProgress(0);
       }
     };
     
     reader.readAsText(file);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(event.dataTransfer.files);
+    const file = files.find(f => f.name.endsWith('.json') || f.name.endsWith('.tbb.json'));
+    
+    if (file) {
+      processFile(file);
+    } else {
+      setError('Пожалуйста, выберите файл шаблона (.json или .tbb.json)');
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragOver(false);
   };
 
   const handleImport = () => {
@@ -196,6 +248,9 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
     setWarnings([]);
     setValidationResult(null);
     setImportMode('template');
+    setCurrentTab('upload');
+    setIsDragOver(false);
+    setUploadProgress(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -219,22 +274,38 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader className="border-b border-border/50 pb-6">
+          <DialogTitle className="flex items-center gap-3 text-xl">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+              <FileUp className="h-5 w-5" />
+            </div>
             Импорт шаблона
           </DialogTitle>
+          <DialogDescription className="text-muted-foreground">
+            Загрузите файл шаблона и настройте параметры импорта
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* File Upload */}
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="template-file" className="text-sm font-medium">
-                Выберите файл шаблона (.tbb.json или .json)
-              </Label>
-              <div className="mt-2">
+        <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as any)} className="flex-1 flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="upload" className="flex items-center gap-2">
+              <Upload className="h-4 w-4" />
+              Загрузка
+            </TabsTrigger>
+            <TabsTrigger value="preview" disabled={!parsedData} className="flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              Предпросмотр
+            </TabsTrigger>
+            <TabsTrigger value="settings" disabled={!parsedData} className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Настройки
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="flex-1 overflow-y-auto">
+            <TabsContent value="upload" className="space-y-6 mt-0">
+              <div className="space-y-4">
                 <input
                   ref={fileInputRef}
                   id="template-file"
@@ -243,259 +314,349 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-                <Button
-                  variant="outline"
+                
+                <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-20 border-2 border-dashed hover:border-primary/50 transition-colors"
-                  disabled={importMutation.isPending}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  className={`
+                    relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer
+                    transition-all duration-300 hover:border-primary/50 hover:bg-primary/5
+                    ${isDragOver 
+                      ? 'border-primary bg-primary/10 scale-[1.02]' 
+                      : 'border-border/50'
+                    }
+                    ${error ? 'border-destructive/50 bg-destructive/5' : ''}
+                  `}
                 >
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload className="h-6 w-6 text-muted-foreground" />
-                    <span className="text-sm">
-                      {fileName || 'Нажмите для выбора файла'}
-                    </span>
-                  </div>
-                </Button>
-              </div>
-            </div>
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {warnings.length > 0 && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="space-y-1">
-                    <p className="font-medium">Предупреждения:</p>
-                    {warnings.map((warning, index) => (
-                      <p key={index} className="text-sm">• {warning}</p>
-                    ))}
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-
-          {/* Import Mode Selection */}
-          {parsedData && (
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium">Режим импорта</Label>
-                <RadioGroup
-                  value={importMode}
-                  onValueChange={(value) => setImportMode(value as ImportMode)}
-                  className="mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="template" id="import-template" />
-                    <Label htmlFor="import-template" className="flex items-center gap-2">
-                      <Package className="h-4 w-4" />
-                      Сохранить как шаблон
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="project" id="import-project" />
-                    <Label htmlFor="import-project" className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Создать новый проект
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertDescription>
-                  {importMode === 'template' 
-                    ? 'Шаблон будет добавлен в вашу библиотеку и станет доступен для создания новых проектов.'
-                    : 'Будет создан новый проект, готовый к редактированию.'
-                  }
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-
-          {/* Template Preview */}
-          {parsedData && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{parsedData.name}</CardTitle>
-                {parsedData.description && (
-                  <CardDescription>{parsedData.description}</CardDescription>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Metadata */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Автор</Label>
-                    <p className="text-sm">{parsedData.metadata.author || 'Неизвестно'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Категория</Label>
-                    <p className="text-sm capitalize">{parsedData.metadata.category}</p>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Сложность</Label>
-                    <Badge className={getDifficultyColor(parsedData.metadata.difficulty)}>
-                      {getComplexityDescription(parsedData.metadata.complexity)}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Время создания</Label>
-                    <p className="text-sm">{parsedData.metadata.estimatedTime} мин</p>
-                  </div>
-                  {parsedData.metadata.license && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Лицензия</Label>
-                      <p className="text-sm">{parsedData.metadata.license}</p>
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className={`
+                      flex items-center justify-center w-16 h-16 rounded-full
+                      transition-all duration-300
+                      ${isDragOver 
+                        ? 'bg-primary text-primary-foreground scale-110' 
+                        : 'bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 text-primary'
+                      }
+                    `}>
+                      <FileUp className="h-8 w-8" />
                     </div>
-                  )}
-                  {parsedData.exportInfo?.formatVersion && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Версия формата</Label>
-                      <p className="text-sm">{parsedData.exportInfo.formatVersion}</p>
+                    
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold">
+                        {isDragOver ? 'Отпустите файл для загрузки' : 'Выберите файл шаблона'}
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Поддерживаются файлы .json и .tbb.json
+                      </p>
+                    </div>
+                    
+                    <Button variant="outline" size="lg" className="mt-4">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Выбрать файл
+                    </Button>
+                  </div>
+                  
+                  {uploadProgress > 0 && (
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span>Загрузка...</span>
+                        <span>{uploadProgress}%</span>
+                      </div>
+                      <Progress value={uploadProgress} className="h-2" />
                     </div>
                   )}
                 </div>
 
-                <Separator />
-
-                {/* Bot Structure */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Узлов</Label>
-                    <p className="text-sm font-medium">
-                      {parsedData.metadata.nodeCount ?? parsedData.botData.nodes?.length ?? 0}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Связей</Label>
-                    <p className="text-sm font-medium">
-                      {parsedData.metadata.connectionCount ?? parsedData.botData.connections?.length ?? 0}
-                    </p>
-                  </div>
-                  {parsedData.exportInfo?.fileSize && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Размер файла</Label>
-                      <p className="text-sm">{(parsedData.exportInfo.fileSize / 1024).toFixed(1)} КБ</p>
-                    </div>
-                  )}
-                  {parsedData.metadata.hasAdvancedFeatures && (
-                    <div>
-                      <Label className="text-xs text-muted-foreground">Продвинутые функции</Label>
-                      <Badge variant="secondary" className="text-xs">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Есть
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                {/* Commands */}
-                {parsedData.metadata.supportedCommands && parsedData.metadata.supportedCommands.length > 0 && (
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Поддерживаемые команды</Label>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {parsedData.metadata.supportedCommands.map((command, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          /{command}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Tags */}
-                {parsedData.metadata.tags && parsedData.metadata.tags.length > 0 && (
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Теги</Label>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {parsedData.metadata.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Documentation */}
-                {parsedData.additionalData?.documentation && (
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Документация</Label>
-                    <div className="text-xs text-muted-foreground mt-1 p-2 bg-muted rounded-md max-h-32 overflow-y-auto">
-                      <pre className="whitespace-pre-wrap text-xs">
-                        {parsedData.additionalData.documentation.slice(0, 300)}
-                        {parsedData.additionalData.documentation.length > 300 && '...'}
-                      </pre>
-                    </div>
-                  </div>
-                )}
-
-                {/* Changelog */}
-                {parsedData.additionalData?.changelog && parsedData.additionalData.changelog.length > 0 && (
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Последние изменения</Label>
-                    <div className="text-xs space-y-1 mt-1">
-                      {parsedData.additionalData.changelog.slice(0, 2).map((change, index) => (
-                        <div key={index} className="text-muted-foreground">
-                          <span className="font-medium">v{change.version}</span> - {change.date}
-                          {change.changes.length > 0 && (
-                            <div className="ml-2 text-xs">• {change.changes[0]}</div>
-                          )}
+                {fileName && (
+                  <Card className="border-dashed">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
+                            <FileText className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{fileName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {parsedData ? 'Готов к импорту' : 'Обработка...'}
+                            </p>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        {parsedData && (
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Проверено
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
 
-                {/* Requirements */}
-                {parsedData.metadata.requiresToken && (
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                {warnings.length > 0 && (
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Для работы этого бота потребуется токен Telegram Bot API
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        <p className="font-medium">Предупреждения:</p>
+                        {warnings.map((warning, index) => (
+                          <p key={index} className="text-sm">• {warning}</p>
+                        ))}
+                      </div>
                     </AlertDescription>
                   </Alert>
                 )}
-
-                {/* Compatibility warning */}
-                {parsedData.metadata.minAppVersion && parsedData.metadata.minAppVersion > "1.0.0" && (
-                  <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertDescription className="text-xs">
-                      Требуется версия приложения {parsedData.metadata.minAppVersion} или выше
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={importMutation.isPending}>
-            Отмена
-          </Button>
-          <Button 
-            onClick={handleImport} 
-            disabled={!parsedData || importMutation.isPending}
-          >
-            {importMutation.isPending ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Импортируем...
               </div>
-            ) : (
-              'Импортировать'
-            )}
-          </Button>
+            </TabsContent>
+
+            <TabsContent value="preview" className="space-y-6 mt-0">
+              {parsedData && (
+                <div className="space-y-6">
+                  <Card className="border-0 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <CardTitle className="text-xl flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                            {parsedData.name}
+                          </CardTitle>
+                          {parsedData.description && (
+                            <CardDescription className="text-base">
+                              {parsedData.description}
+                            </CardDescription>
+                          )}
+                        </div>
+                        <Badge className={getDifficultyColor(parsedData.metadata.difficulty)}>
+                          {getComplexityDescription(parsedData.metadata.complexity)}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                            {parsedData.botData.nodes.length}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Узлов</div>
+                        </div>
+                        <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                            {parsedData.botData.connections.length}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Связей</div>
+                        </div>
+                        <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                            {parsedData.metadata.estimatedTime}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Минут</div>
+                        </div>
+                        <div className="text-center p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                          <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                            {parsedData.metadata.complexity}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Сложность</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Info className="h-4 w-4" />
+                          Информация о шаблоне
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Автор:</span>
+                          <span>{parsedData.metadata.author || 'Неизвестно'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Категория:</span>
+                          <Badge variant="outline">{parsedData.metadata.category}</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Язык:</span>
+                          <span className="uppercase">{parsedData.metadata.language}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          Технические детали
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Требует токен:</span>
+                          <Badge variant={parsedData.metadata.requiresToken ? "destructive" : "secondary"}>
+                            {parsedData.metadata.requiresToken ? 'Да' : 'Нет'}
+                          </Badge>
+                        </div>
+                        {parsedData.exportInfo?.formatVersion && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Формат:</span>
+                            <span>{parsedData.exportInfo.formatVersion}</span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {parsedData.metadata.tags && parsedData.metadata.tags.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base">Теги</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {parsedData.metadata.tags.map((tag, index) => (
+                            <Badge key={index} variant="secondary">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6 mt-0">
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Режим импорта
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <RadioGroup
+                      value={importMode}
+                      onValueChange={(value) => setImportMode(value as ImportMode)}
+                      className="space-y-3"
+                    >
+                      <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <RadioGroupItem value="template" id="import-template" />
+                          <div className="flex-1">
+                            <Label htmlFor="import-template" className="flex items-center gap-2 font-medium cursor-pointer">
+                              <Package className="h-4 w-4 text-blue-500" />
+                              Сохранить как шаблон
+                            </Label>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Шаблон будет добавлен в вашу библиотеку
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                      
+                      <Card className="p-4 cursor-pointer hover:bg-accent/50 transition-colors">
+                        <div className="flex items-center space-x-3">
+                          <RadioGroupItem value="project" id="import-project" />
+                          <div className="flex-1">
+                            <Label htmlFor="import-project" className="flex items-center gap-2 font-medium cursor-pointer">
+                              <FileText className="h-4 w-4 text-green-500" />
+                              Создать новый проект
+                            </Label>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Будет создан новый проект для редактирования
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    </RadioGroup>
+                  </CardContent>
+                </Card>
+
+                {validationResult && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4" />
+                        Результат проверки
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <span className="text-sm font-medium">Шаблон прошел проверку</span>
+                        </div>
+                        
+                        {validationResult.warnings.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-orange-500">
+                              <AlertCircle className="h-4 w-4" />
+                              <span className="text-sm font-medium">Предупреждения</span>
+                            </div>
+                            <ul className="space-y-1 text-sm text-muted-foreground ml-6">
+                              {validationResult.warnings.map((warning, index) => (
+                                <li key={index}>• {warning}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          </div>
+        </Tabs>
+
+        <DialogFooter className="border-t border-border/50 pt-6 mt-6">
+          <div className="flex items-center justify-between w-full">
+            <Button variant="outline" onClick={handleClose} disabled={importMutation.isPending}>
+              Отмена
+            </Button>
+            <div className="flex items-center gap-3">
+              {parsedData && currentTab !== 'settings' && (
+                <Button 
+                  variant="outline"
+                  onClick={() => setCurrentTab('settings')}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                  Настройки
+                </Button>
+              )}
+              <Button 
+                onClick={handleImport} 
+                disabled={!parsedData || importMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                {importMutation.isPending ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Импортируем...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" />
+                    Импортировать
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
