@@ -50,12 +50,15 @@ export function TemplateExport({
       
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (response) => {
+      // Handle new API response format with filename and data
+      const data = response.data || response;
+      const fileName = response.filename || createTemplateFileName(sourceName);
+      
       setExportedData(data);
       
       if (exportFormat === 'download') {
         // Create download link
-        const fileName = createTemplateFileName(sourceName);
         const blob = new Blob([JSON.stringify(data, null, 2)], { 
           type: 'application/json' 
         });
@@ -101,7 +104,8 @@ export function TemplateExport({
 
   const handleCopyAgain = () => {
     if (exportedData) {
-      navigator.clipboard.writeText(JSON.stringify(exportedData, null, 2)).then(() => {
+      const data = exportedData.data || exportedData;
+      navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
         toast({
           title: "Скопировано",
           description: "Данные шаблона скопированы в буфер обмена",
@@ -112,8 +116,11 @@ export function TemplateExport({
 
   const handleDownloadAgain = () => {
     if (exportedData) {
-      const fileName = createTemplateFileName(sourceName);
-      const blob = new Blob([JSON.stringify(exportedData, null, 2)], { 
+      // Use stored filename or generate one
+      const fileName = exportedData.filename || createTemplateFileName(sourceName);
+      const data = exportedData.data || exportedData;
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { 
         type: 'application/json' 
       });
       const url = URL.createObjectURL(blob);
@@ -135,7 +142,8 @@ export function TemplateExport({
   };
 
   const getFileSize = (data: any) => {
-    const jsonString = JSON.stringify(data, null, 2);
+    const actualData = data.data || data;
+    const jsonString = JSON.stringify(actualData, null, 2);
     const bytes = new Blob([jsonString]).size;
     
     if (bytes < 1024) return `${bytes} байт`;

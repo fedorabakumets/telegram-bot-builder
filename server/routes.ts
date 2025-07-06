@@ -1119,12 +1119,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate filename
       const fileName = createTemplateFileName(template.name);
 
-      // Set headers for file download
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      res.setHeader('Content-Length', JSON.stringify(exportData, null, 2).length);
-
-      res.json(exportData);
+      // Return export data with filename
+      res.json({
+        filename: fileName,
+        data: exportData
+      });
     } catch (error) {
       console.error('Template export error:', error);
       res.status(500).json({ message: "Failed to export template" });
@@ -1160,12 +1159,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate filename
       const fileName = createTemplateFileName(project.name);
 
-      // Set headers for file download
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      res.setHeader('Content-Length', JSON.stringify(exportData, null, 2).length);
-
-      res.json(exportData);
+      // Return export data with filename
+      res.json({
+        filename: fileName,
+        data: exportData
+      });
     } catch (error) {
       console.error('Project export error:', error);
       res.status(500).json({ message: "Failed to export project" });

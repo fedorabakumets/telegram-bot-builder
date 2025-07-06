@@ -75,14 +75,16 @@ export function validateTemplateImport(data: unknown): TemplateExport {
 
 // Функция для создания имени файла
 export function createTemplateFileName(templateName: string): string {
-  // Заменяем небезопасные символы и добавляем расширение
+  // Заменяем все символы, кроме латинских букв, цифр и дефисов
   const safeName = templateName
-    .replace(/[^a-zA-Zа-яА-Я0-9\s-_]/g, '')
-    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9-]/g, '_') // Только латинские буквы, цифры и дефисы
+    .replace(/_{2,}/g, '_') // Множественные подчеркивания в одно
+    .replace(/^_+|_+$/g, '') // Убираем подчеркивания в начале и конце
+    .substring(0, 30) // Ограничиваем длину
     .toLowerCase();
   
-  const timestamp = new Date().toISOString().split('T')[0];
-  return `${safeName}_${timestamp}.tbb.json`;
+  const timestamp = new Date().toISOString().split('T')[0].replace(/-/g, '');
+  return `${safeName || 'template'}_${timestamp}.tbb.json`;
 }
 
 // Функция для парсинга имени файла шаблона
