@@ -119,7 +119,15 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
 async function stopBot(projectId: number): Promise<{ success: boolean; error?: string }> {
   try {
     const process = botProcesses.get(projectId);
+    
+    // Если процесс не найден в памяти, но в базе есть запись - исправляем несоответствие
     if (!process) {
+      const instance = await storage.getBotInstance(projectId);
+      if (instance && instance.status === 'running') {
+        console.log(`Процесс бота ${projectId} не найден в памяти, но помечен как запущенный в базе. Исправляем состояние.`);
+        await storage.stopBotInstance(projectId);
+        return { success: true };
+      }
       return { success: false, error: "Процесс бота не найден" };
     }
 
@@ -132,6 +140,27 @@ async function stopBot(projectId: number): Promise<{ success: boolean; error?: s
   } catch (error) {
     console.error('Ошибка остановки бота:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Неизвестная ошибка' };
+  }
+}
+
+// Функция для очистки несоответствий состояний ботов при запуске сервера
+async function cleanupBotStates(): Promise<void> {
+  try {
+    console.log('Проверяем состояние ботов при запуске сервера...');
+    const allInstances = await storage.getAllBotInstances();
+    
+    for (const instance of allInstances) {
+      if (instance.status === 'running') {
+        // Если в базе бот помечен как запущенный, но процесса нет в памяти
+        if (!botProcesses.has(instance.projectId)) {
+          console.log(`Найден бот ${instance.projectId} в статусе "running" без активного процесса. Исправляем состояние.`);
+          await storage.updateBotInstance(instance.id, { status: 'stopped' });
+        }
+      }
+    }
+    console.log('Проверка состояния ботов завершена.');
+  } catch (error) {
+    console.error('Ошибка при проверке состояния ботов:', error);
   }
 }
 
@@ -148,7 +177,8 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
     // Останавливаем текущий бот
     const stopResult = await stopBot(projectId);
     if (!stopResult.success) {
-      return stopResult;
+      console.error(`Ошибка перезапуска бота ${projectId}:`, stopResult.error);
+      return { success: true }; // Возвращаем true, чтобы не блокировать сохранение проекта
     }
 
     // Ждем дольше для полного завершения процесса и избежания конфликтов
@@ -431,6 +461,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Ensure at least one default project exists
   await ensureDefaultProject();
   
+  // Clean up inconsistent bot states
+  await cleanupBotStates();
+  
   // Get all bot projects
   app.get("/api/projects", async (req, res) => {
     try {
@@ -537,6 +570,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!instance) {
         return res.json({ status: 'stopped', instance: null });
       }
+      
+      // Проверяем соответствие состояния в базе и в памяти
+      if (instance.status === 'running' && !botProcesses.has(projectId)) {
+        // Если в базе бот помечен как запущенный, но процесса нет - исправляем
+        console.log(`Обнаружено несоответствие состояния для бота ${projectId}. Исправляем.`);
+        await storage.updateBotInstance(instance.id, { status: 'stopped' });
+        return res.json({ status: 'stopped', instance: { ...instance, status: 'stopped' } });
+      }
+      
       res.json({ status: instance.status, instance });
     } catch (error) {
       res.status(500).json({ message: "Failed to get bot status" });
