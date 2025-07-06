@@ -8,6 +8,7 @@ import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
 import { SimpleAutoHierarchyButton } from '@/components/ui/simple-auto-hierarchy-button';
 import { AutoHierarchySettings } from '@/components/ui/auto-hierarchy-settings';
 import { AutoConnectionButton } from '@/components/ui/auto-connection-button';
+import { HierarchyPageButton } from '@/components/ui/hierarchy-page-button';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Node, ComponentDefinition, Connection } from '@shared/schema';
@@ -558,6 +559,14 @@ export function Canvas({
             >
               <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
+
+            <HierarchyPageButton
+              nodes={displayNodes}
+              connections={connections}
+              onApplyLayout={handleApplyLayout}
+              onApplyLayoutWithConnections={handleApplyLayoutWithConnections}
+              disabled={isPreviewMode}
+            />
 
             <SimpleAutoHierarchyButton
               nodes={displayNodes}

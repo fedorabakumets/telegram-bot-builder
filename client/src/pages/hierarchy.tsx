@@ -12,30 +12,45 @@ import { Node, Connection, BotProject, BotData } from '@shared/schema';
 import { ArrowLeft, Workflow, Download, Share2, AlertCircle, RefreshCw } from 'lucide-react';
 import { analyzeLayoutStructure } from '@/utils/auto-hierarchy';
 
-export default function Hierarchy() {
+interface HierarchyPageProps {
+  nodes?: Node[];
+  connections?: Connection[];
+  onApplyLayout?: (nodes: Node[]) => void;
+  onApplyLayoutWithConnections?: (nodes: Node[], connections: Connection[]) => void;
+  embedded?: boolean;
+}
+
+export function HierarchyPage({
+  nodes: propNodes,
+  connections: propConnections,
+  onApplyLayout,
+  onApplyLayoutWithConnections,
+  embedded = false
+}: HierarchyPageProps) {
   const [, setLocation] = useLocation();
   const [layout, setLayout] = useState<'tree' | 'org-chart' | 'network'>('org-chart');
   const [showLabels, setShowLabels] = useState(true);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
-  // Load all projects
+  // Load all projects only if not embedded
   const { data: projects, isLoading, error } = useQuery<BotProject[]>({
     queryKey: ['/api/projects'],
+    enabled: !embedded,
   });
 
-  // Auto-select first project if available
+  // Auto-select first project if available and not embedded
   useEffect(() => {
-    if (projects && projects.length > 0 && selectedProjectId === null) {
+    if (!embedded && projects && projects.length > 0 && selectedProjectId === null) {
       setSelectedProjectId(projects[0].id);
     }
-  }, [projects, selectedProjectId]);
+  }, [projects, selectedProjectId, embedded]);
 
-  // Get current project data
+  // Get current project data or use props
   const currentProject = projects?.find(p => p.id === selectedProjectId);
   const botData = currentProject?.data as BotData;
-  const nodes = botData?.nodes || [];
-  const connections = botData?.connections || [];
+  const nodes = propNodes || botData?.nodes || [];
+  const connections = propConnections || botData?.connections || [];
 
   // Analyze structure only if we have nodes
   const structureAnalysis = nodes.length > 0 ? analyzeLayoutStructure(nodes, connections) : {
@@ -403,4 +418,8 @@ export default function Hierarchy() {
       </div>
     </div>
   );
+}
+
+export default function Hierarchy() {
+  return <HierarchyPage />;
 }
