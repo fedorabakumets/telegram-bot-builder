@@ -45,7 +45,11 @@ const components: ComponentDefinition[] = [
       buttons: [],
       markdown: false,
       oneTimeKeyboard: false,
-      resizeKeyboard: true
+      resizeKeyboard: true,
+      // Дополнительные настройки фото
+      sendAsDocument: false,
+      hasContentProtection: true,
+      disableWebPagePreview: false
     }
   },
   {

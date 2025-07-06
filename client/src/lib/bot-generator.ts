@@ -18,9 +18,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   code += 'import asyncio\n';
   code += 'import logging\n';
+  code += 'import aiohttp\n';
+  code += 'import aiofiles\n';
+  code += 'import tempfile\n';
+  code += 'import os\n';
+  code += 'from pathlib import Path\n';
   code += 'from aiogram import Bot, Dispatcher, types\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
-  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove\n';
+  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, FSInputFile, URLInputFile, BufferedInputFile\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from aiogram.enums import ParseMode\n\n';
   
@@ -51,6 +56,104 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'async def check_auth(user_id: int) -> bool:\n';
   code += '    # Здесь можно добавить логику проверки авторизации\n';
   code += '    return user_id in user_data\n\n';
+
+  code += 'async def validate_url(url: str) -> bool:\n';
+  code += '    """Проверяет, является ли URL действительным изображением"""\n';
+  code += '    if not url:\n';
+  code += '        return False\n';
+  code += '    \n';
+  code += '    # Проверяем схему URL\n';
+  code += '    if not url.startswith(("http://", "https://")):\n';
+  code += '        return False\n';
+  code += '    \n';
+  code += '    # Проверяем расширение файла\n';
+  code += '    allowed_extensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"]\n';
+  code += '    url_lower = url.lower()\n';
+  code += '    return any(url_lower.endswith(ext) for ext in allowed_extensions)\n\n';
+
+  code += 'async def download_image(url: str) -> BufferedInputFile:\n';
+  code += '    """Скачивает изображение по URL и возвращает BufferedInputFile"""\n';
+  code += '    try:\n';
+  code += '        async with aiohttp.ClientSession() as session:\n';
+  code += '            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:\n';
+  code += '                if response.status == 200:\n';
+  code += '                    content = await response.read()\n';
+  code += '                    # Определяем имя файла из URL или используем дефолтное\n';
+  code += '                    filename = url.split("/")[-1] if "/" in url else "image.jpg"\n';
+  code += '                    if "." not in filename:\n';
+  code += '                        filename += ".jpg"\n';
+  code += '                    return BufferedInputFile(content, filename=filename)\n';
+  code += '                else:\n';
+  code += '                    logging.error(f"Ошибка загрузки изображения: HTTP {response.status}")\n';
+  code += '                    return None\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка при скачивании изображения: {e}")\n';
+  code += '        return None\n\n';
+
+  code += 'async def send_photo_safe(message: types.Message, photo_url: str, caption: str = None, reply_markup=None, send_as_document: bool = False, has_content_protection: bool = False, disable_web_page_preview: bool = False):\n';
+  code += '    """Безопасная отправка фото с обработкой различных форматов URL и дополнительными опциями"""\n';
+  code += '    try:\n';
+  code += '        # Проверяем валидность URL\n';
+  code += '        if not await validate_url(photo_url):\n';
+  code += '            raise ValueError("Недопустимый URL изображения")\n';
+  code += '        \n';
+  code += '        # Параметры отправки\n';
+  code += '        send_params = {\n';
+  code += '            "caption": caption,\n';
+  code += '            "parse_mode": ParseMode.HTML,\n';
+  code += '            "reply_markup": reply_markup,\n';
+  code += '            "has_spoiler": False,  # Можно добавить как опцию\n';
+  code += '            "protect_content": has_content_protection\n';
+  code += '        }\n';
+  code += '        \n';
+  code += '        # Если URL начинается с file_id (для Telegram файлов)\n';
+  code += '        if photo_url.startswith(("AgAC", "BAACAgIA", "BAADBAAD")):\n';
+  code += '            if send_as_document:\n';
+  code += '                await message.answer_document(\n';
+  code += '                    document=photo_url,\n';
+  code += '                    **send_params\n';
+  code += '                )\n';
+  code += '            else:\n';
+  code += '                await message.answer_photo(\n';
+  code += '                    photo=photo_url,\n';
+  code += '                    **send_params\n';
+  code += '                )\n';
+  code += '        else:\n';
+  code += '            # Для внешних URL\n';
+  code += '            if send_as_document:\n';
+  code += '                # Скачиваем файл для отправки как документ\n';
+  code += '                photo_file = await download_image(photo_url)\n';
+  code += '                if photo_file:\n';
+  code += '                    await message.answer_document(\n';
+  code += '                        document=photo_file,\n';
+  code += '                        **send_params\n';
+  code += '                    )\n';
+  code += '                else:\n';
+  code += '                    raise ValueError("Не удалось скачать изображение")\n';
+  code += '            else:\n';
+  code += '                # Обычная отправка фото\n';
+  code += '                photo_file = URLInputFile(photo_url)\n';
+  code += '                await message.answer_photo(\n';
+  code += '                    photo=photo_file,\n';
+  code += '                    **send_params\n';
+  code += '                )\n';
+  code += '        \n';
+  code += '        logging.info(f"Фото успешно отправлено: {photo_url[:50]}... (документ: {send_as_document}, защита: {has_content_protection})")\n';
+  code += '        return True\n';
+  code += '        \n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка при отправке фото {photo_url}: {e}")\n';
+  code += '        \n';
+  code += '        # Fallback: отправляем только текст\n';
+  code += '        fallback_text = caption if caption else "❌ Не удалось загрузить изображение"\n';
+  code += '        await message.answer(\n';
+  code += '            text=fallback_text,\n';
+  code += '            parse_mode=ParseMode.HTML,\n';
+  code += '            reply_markup=reply_markup,\n';
+  code += '            disable_web_page_preview=disable_web_page_preview,\n';
+  code += '            protect_content=has_content_protection\n';
+  code += '        )\n';
+  code += '        return False\n\n';
 
   // Настройка меню команд для BotFather
   const menuCommands = nodes.filter(node => 
@@ -179,18 +282,12 @@ function generateStartHandler(node: Node): string {
     code += `    photo_url = "${node.data.imageUrl}"\n`;
     code += `    caption = "${messageText}"\n`;
     code += `    \n`;
-    code += `    try:\n`;
-    code += `        await message.answer_photo(\n`;
-    code += `            photo=photo_url,\n`;
-    code += `            caption=caption,\n`;
-    code += `            parse_mode=ParseMode.HTML\n`;
-    if (node.data.keyboardType !== 'none') {
-      code += `,\n            reply_markup=keyboard`;
-    }
-    code += `\n        )\n`;
-    code += `    except Exception as e:\n`;
-    code += `        logging.error(f"Ошибка при отправке стартового фото: {e}")\n`;
-    code += `        await message.answer(caption)\n`;
+    code += `    # Используем безопасную отправку фото\n`;
+    const keyboardCode = node.data.keyboardType !== 'none' ? 'keyboard' : 'None';
+    const sendAsDocument = node.data.sendAsDocument ? 'True' : 'False';
+    const hasContentProtection = node.data.hasContentProtection ? 'True' : 'False';
+    const disableWebPagePreview = node.data.disableWebPagePreview ? 'True' : 'False';
+    code += `    await send_photo_safe(message, photo_url, caption, ${keyboardCode}, ${sendAsDocument}, ${hasContentProtection}, ${disableWebPagePreview})\n`;
     return code + generateKeyboard(node);
   } else {
     code += `    text = "${messageText}"\n`;
@@ -232,18 +329,12 @@ function generateCommandHandler(node: Node): string {
     code += `    photo_url = "${node.data.imageUrl}"\n`;
     code += `    caption = "${messageText}"\n`;
     code += `    \n`;
-    code += `    try:\n`;
-    code += `        await message.answer_photo(\n`;
-    code += `            photo=photo_url,\n`;
-    code += `            caption=caption,\n`;
-    code += `            parse_mode=ParseMode.HTML\n`;
-    if (node.data.keyboardType !== 'none') {
-      code += `,\n            reply_markup=keyboard`;
-    }
-    code += `\n        )\n`;
-    code += `    except Exception as e:\n`;
-    code += `        logging.error(f"Ошибка при отправке фото команды: {e}")\n`;
-    code += `        await message.answer(caption)\n`;
+    code += `    # Используем безопасную отправку фото\n`;
+    const keyboardCode = node.data.keyboardType !== 'none' ? 'keyboard' : 'None';
+    const sendAsDocument = node.data.sendAsDocument ? 'True' : 'False';
+    const hasContentProtection = node.data.hasContentProtection ? 'True' : 'False';
+    const disableWebPagePreview = node.data.disableWebPagePreview ? 'True' : 'False';
+    code += `    await send_photo_safe(message, photo_url, caption, ${keyboardCode}, ${sendAsDocument}, ${hasContentProtection}, ${disableWebPagePreview})\n`;
     return code + generateKeyboard(node);
   } else {
     code += `\n    text = "${messageText}"\n`;
@@ -286,40 +377,16 @@ function generatePhotoHandler(node: Node): string {
   }
   
   if (imageUrl) {
-    if (messageText) {
-      // Фото с подписью
-      code += `    # Отправляем фото с подписью\n`;
-      code += `    photo_url = "${imageUrl}"\n`;
-      code += `    caption = "${messageText}"\n`;
-      code += `    \n`;
-      code += `    try:\n`;
-      code += `        await message.answer_photo(\n`;
-      code += `            photo=photo_url,\n`;
-      code += `            caption=caption,\n`;
-      code += `            parse_mode=ParseMode.HTML\n`;
-      if (node.data.keyboardType !== 'none') {
-        code += `,\n            reply_markup=keyboard`;
-      }
-      code += `\n        )\n`;
-      code += `    except Exception as e:\n`;
-      code += `        logging.error(f"Ошибка при отправке фото: {e}")\n`;
-      code += `        await message.answer("❌ Не удалось загрузить изображение. Проверьте URL.")\n`;
-    } else {
-      // Просто фото без подписи
-      code += `    # Отправляем фото без подписи\n`;
-      code += `    photo_url = "${imageUrl}"\n`;
-      code += `    \n`;
-      code += `    try:\n`;
-      code += `        await message.answer_photo(\n`;
-      code += `            photo=photo_url\n`;
-      if (node.data.keyboardType !== 'none') {
-        code += `,\n            reply_markup=keyboard`;
-      }
-      code += `\n        )\n`;
-      code += `    except Exception as e:\n`;
-      code += `        logging.error(f"Ошибка при отправке фото: {e}")\n`;
-      code += `        await message.answer("❌ Не удалось загрузить изображение. Проверьте URL.")\n`;
-    }
+    code += `    # Отправляем фото с улучшенной обработкой\n`;
+    code += `    photo_url = "${imageUrl}"\n`;
+    code += `    caption = "${messageText}" if "${messageText}" else None\n`;
+    code += `    \n`;
+    code += `    # Используем безопасную отправку фото\n`;
+    const keyboardCode = node.data.keyboardType !== 'none' ? 'keyboard' : 'None';
+    const sendAsDocument = node.data.sendAsDocument ? 'True' : 'False';
+    const hasContentProtection = node.data.hasContentProtection ? 'True' : 'False';
+    const disableWebPagePreview = node.data.disableWebPagePreview ? 'True' : 'False';
+    code += `    await send_photo_safe(message, photo_url, caption, ${keyboardCode}, ${sendAsDocument}, ${hasContentProtection}, ${disableWebPagePreview})\n`;
   } else {
     // Нет URL изображения
     code += `    # URL изображения не указан\n`;

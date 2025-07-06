@@ -11,7 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 interface PropertiesPanelProps {
   selectedNode: Node | null;
@@ -39,6 +39,28 @@ export function PropertiesPanel({
   const { toast } = useToast();
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
+
+  // Автоматическая инициализация дефолтных значений для фото узлов
+  useEffect(() => {
+    if (selectedNode && selectedNode.type === 'photo') {
+      const missingDefaults: Partial<Node['data']> = {};
+      
+      if (selectedNode.data.sendAsDocument === undefined) {
+        missingDefaults.sendAsDocument = false;
+      }
+      if (selectedNode.data.hasContentProtection === undefined) {
+        missingDefaults.hasContentProtection = true;
+      }
+      if (selectedNode.data.disableWebPagePreview === undefined) {
+        missingDefaults.disableWebPagePreview = false;
+      }
+      
+      // Обновляем узел только если есть отсутствующие значения
+      if (Object.keys(missingDefaults).length > 0) {
+        onNodeUpdate(selectedNode.id, missingDefaults);
+      }
+    }
+  }, [selectedNode?.id, selectedNode?.type]);
 
   // Валидация команды
   const commandValidation = useMemo(() => {
@@ -361,14 +383,115 @@ export function PropertiesPanel({
             )}
 
             {selectedNode.type === 'photo' && (
-              <div>
-                <Label className="text-xs font-medium text-muted-foreground">URL изображения</Label>
-                <Input
-                  value={selectedNode.data.imageUrl || ''}
-                  onChange={(e) => onNodeUpdate(selectedNode.id, { imageUrl: e.target.value })}
-                  className="mt-2"
-                  placeholder="https://example.com/image.jpg"
-                />
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground">URL изображения</Label>
+                  <div className="relative">
+                    <Input
+                      value={selectedNode.data.imageUrl || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { imageUrl: e.target.value })}
+                      className="mt-2 pr-10"
+                      placeholder="https://example.com/image.jpg"
+                    />
+                    {selectedNode.data.imageUrl && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 mt-1">
+                        {selectedNode.data.imageUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i) ? (
+                          <i className="fas fa-check-circle text-green-500 text-sm"></i>
+                        ) : (
+                          <i className="fas fa-exclamation-triangle text-yellow-500 text-sm"></i>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Поддерживаются: JPG, PNG, GIF, WebP, BMP. Максимум 20 МБ
+                  </div>
+                  {selectedNode.data.imageUrl && !selectedNode.data.imageUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i) && (
+                    <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1 flex items-center">
+                      <i className="fas fa-info-circle mr-1"></i>
+                      Убедитесь, что URL заканчивается расширением изображения
+                    </div>
+                  )}
+                </div>
+                
+                {/* Превью изображения */}
+                {selectedNode.data.imageUrl && (
+                  <div className="relative">
+                    <Label className="text-xs font-medium text-muted-foreground">Превью</Label>
+                    <div className="mt-2 border border-border rounded-lg p-3 bg-muted/30">
+                      <div className="aspect-video bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg flex items-center justify-center relative overflow-hidden">
+                        <img 
+                          src={selectedNode.data.imageUrl} 
+                          alt="Превью фото" 
+                          className="max-h-full max-w-full object-contain rounded transition-all duration-200"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.parentElement?.querySelector('.fallback-icon') as HTMLElement;
+                            if (fallback) {
+                              fallback.style.display = 'flex';
+                            }
+                          }}
+                        />
+                        <div className="fallback-icon hidden w-full h-full flex flex-col items-center justify-center text-muted-foreground">
+                          <i className="fas fa-exclamation-triangle text-red-500 text-xl mb-2"></i>
+                          <span className="text-xs text-center">Ошибка загрузки изображения</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Дополнительные настройки фото */}
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground">Дополнительные настройки</Label>
+                  <div className="mt-2 space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
+                      <div className="flex-1">
+                        <Label className="text-xs font-medium text-foreground">
+                          Отправлять без сжатия
+                        </Label>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Сохранить оригинальное качество
+                        </div>
+                      </div>
+                      <Switch
+                        checked={selectedNode.data.sendAsDocument ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { sendAsDocument: checked })}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
+                      <div className="flex-1">
+                        <Label className="text-xs font-medium text-foreground">
+                          Защитить от пересылки
+                        </Label>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Запретить сохранение и пересылку
+                        </div>
+                      </div>
+                      <Switch
+                        checked={selectedNode.data.hasContentProtection ?? true}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { hasContentProtection: checked })}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
+                      <div className="flex-1">
+                        <Label className="text-xs font-medium text-foreground">
+                          Показывать превью ссылки
+                        </Label>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Отображать превью при отправке URL
+                        </div>
+                      </div>
+                      <Switch
+                        checked={!(selectedNode.data.disableWebPagePreview ?? false)}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { disableWebPagePreview: !checked })}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

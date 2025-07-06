@@ -168,6 +168,10 @@ export const nodeSchema = z.object({
     description: z.string().optional(),
     messageText: z.string().optional(),
     imageUrl: z.string().optional(),
+    // Дополнительные настройки для фото
+    sendAsDocument: z.boolean().default(false), // Отправлять как документ без сжатия
+    hasContentProtection: z.boolean().default(true), // Защита от пересылки (включена по умолчанию)
+    disableWebPagePreview: z.boolean().default(false), // Отключить превью ссылок
     keyboardType: z.enum(['reply', 'inline', 'none', 'combined']).default('none'),
     buttons: z.array(buttonSchema).default([]),
     inlineButtons: z.array(buttonSchema).default([]),
