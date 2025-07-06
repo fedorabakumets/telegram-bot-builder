@@ -176,7 +176,7 @@ export function HierarchicalDiagram({
 
   if (!hierarchicalNodes.length) {
     return (
-      <div className={cn("flex items-center justify-center h-64 text-gray-500", className)}>
+      <div className={cn("flex items-center justify-center h-64 text-muted-foreground", className)}>
         <div className="text-center">
           <i className="fas fa-sitemap text-4xl mb-4 opacity-50"></i>
           <p>Нет данных для отображения диаграммы</p>
@@ -186,7 +186,7 @@ export function HierarchicalDiagram({
   }
 
   return (
-    <div className={cn("w-full h-full relative bg-gray-50 dark:bg-gray-900 rounded-lg overflow-auto", className)}>
+    <div className={cn("w-full h-full relative hierarchy-diagram rounded-lg overflow-auto", className)}>
       <svg 
         width={bounds.width} 
         height={bounds.height}
@@ -205,7 +205,8 @@ export function HierarchicalDiagram({
           >
             <polygon
               points="0 0, 10 3.5, 0 7"
-              fill="hsl(var(--muted-foreground))"
+              fill="hsl(var(--border))"
+              className="transition-colors"
             />
           </marker>
         </defs>
@@ -215,11 +216,9 @@ export function HierarchicalDiagram({
           <path
             key={connection.id}
             d={connection.path}
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth="2"
+            className="hierarchy-connection"
             fill="none"
             markerEnd="url(#arrowhead)"
-            className="opacity-70"
           />
         ))}
 
@@ -250,7 +249,7 @@ export function HierarchicalDiagram({
               x={node.x + node.width / 2}
               y={node.y + 22}
               textAnchor="middle"
-              className="text-sm font-medium fill-current"
+              className={cn("hierarchy-label", selectedNodeId === node.id && "fill-white")}
               fill={selectedNodeId === node.id ? "white" : "hsl(var(--foreground))"}
             >
               {node.title.length > 18 ? node.title.substring(0, 18) + '...' : node.title}
@@ -262,7 +261,7 @@ export function HierarchicalDiagram({
                 x={node.x + node.width / 2}
                 y={node.y + 40}
                 textAnchor="middle"
-                className="text-xs opacity-70 fill-current"
+                className={cn("hierarchy-subtitle", selectedNodeId === node.id && "fill-white opacity-80")}
                 fill={selectedNodeId === node.id ? "white" : "hsl(var(--muted-foreground))"}
               >
                 {node.subtitle.length > 22 ? node.subtitle.substring(0, 22) + '...' : node.subtitle}

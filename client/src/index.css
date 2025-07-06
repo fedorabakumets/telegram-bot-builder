@@ -417,6 +417,95 @@ body {
   );
 }
 
+/* Hierarchy Diagram Light Theme Enhancements */
+.hierarchy-diagram {
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+}
+
+.hierarchy-node {
+  background: hsl(var(--card));
+  border: 2px solid hsl(var(--border));
+  color: hsl(var(--card-foreground));
+}
+
+.hierarchy-node:hover {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 4px 12px hsl(var(--shadow-medium));
+}
+
+.hierarchy-node.selected {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+
+.hierarchy-connection {
+  stroke: hsl(var(--border));
+  stroke-width: 2;
+  opacity: 0.8;
+}
+
+.hierarchy-label {
+  fill: hsl(var(--foreground));
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.hierarchy-subtitle {
+  fill: hsl(var(--muted-foreground));
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Light theme specific enhancements */
+:root .hierarchy-diagram {
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+}
+
+:root .hierarchy-node {
+  background: hsl(var(--card));
+  border: 2px solid hsl(var(--border));
+  filter: drop-shadow(0 2px 4px hsl(var(--shadow-light)));
+}
+
+:root .hierarchy-label {
+  fill: hsl(var(--foreground));
+  text-shadow: 0 1px 2px hsl(var(--background));
+}
+
+:root .hierarchy-subtitle {
+  fill: hsl(var(--muted-foreground));
+  opacity: 0.9;
+}
+
+:root .hierarchy-connection {
+  stroke: hsl(var(--muted-foreground));
+  stroke-width: 2.5;
+  opacity: 0.7;
+}
+
+/* Enhanced contrast for light theme */
+@media (prefers-color-scheme: light) {
+  .hierarchy-label {
+    font-weight: 700;
+    fill: hsl(var(--foreground));
+  }
+  
+  .hierarchy-subtitle {
+    font-weight: 600;
+    fill: hsl(var(--muted-foreground));
+    opacity: 1;
+  }
+  
+  .hierarchy-connection {
+    stroke: hsl(var(--muted-foreground));
+    stroke-width: 3;
+    opacity: 0.8;
+  }
+}
+
 .dark .bg-canvas-bg {
   background: 
     radial-gradient(ellipse at top left, hsl(var(--primary) / 0.03) 0%, transparent 50%),
