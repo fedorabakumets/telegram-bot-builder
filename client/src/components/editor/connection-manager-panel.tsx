@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Node, Connection, Button } from '@/types/bot';
+import { Node, Connection, Button } from '@shared/schema';
 import { Badge } from '@/components/ui/badge';
 import { Button as UIButton } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

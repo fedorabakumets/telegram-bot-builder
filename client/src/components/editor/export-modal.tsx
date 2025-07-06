@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { generatePythonCode, validateBotStructure, generateRequirementsTxt, generateReadme, generateDockerfile, generateConfigYaml } from '@/lib/bot-generator';
 import { generateBotFatherCommands } from '@/lib/commands';
-import { BotData } from '@/types/bot';
+import { BotData } from '@shared/schema';
 import { useState, useEffect } from 'react';
 
 interface ExportModalProps {

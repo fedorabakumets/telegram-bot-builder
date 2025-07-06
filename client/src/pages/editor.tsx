@@ -18,7 +18,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { BotProject, Connection } from '@shared/schema';
+import { BotProject, Connection, ComponentDefinition } from '@shared/schema';
 
 export default function Editor() {
   const [, setLocation] = useLocation();

@@ -158,3 +158,14 @@ export type Button = z.infer<typeof buttonSchema>;
 export type Node = z.infer<typeof nodeSchema>;
 export type Connection = z.infer<typeof connectionSchema>;
 export type BotData = z.infer<typeof botDataSchema>;
+
+// Component definition for drag and drop
+export interface ComponentDefinition {
+  id: string;
+  type: Node['type'];
+  name: string;
+  label: string;
+  description: string;
+  icon: string;
+  color: string;
+}

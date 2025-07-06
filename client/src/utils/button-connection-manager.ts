@@ -1,4 +1,4 @@
-import { Node, Connection, Button } from '@/types/bot';
+import { Node, Connection, Button } from '@shared/schema';
 import { nanoid } from 'nanoid';
 
 export interface РекомендацияКнопки {

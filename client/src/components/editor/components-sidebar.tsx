@@ -1,4 +1,4 @@
-import { ComponentDefinition } from '@/types/bot';
+import { ComponentDefinition } from '@shared/schema';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 

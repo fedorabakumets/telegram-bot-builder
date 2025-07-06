@@ -1,4 +1,4 @@
-import { Node, Connection } from '@/types/bot';
+import { Node, Connection } from '@shared/schema';
 
 export interface ConnectionSuggestion {
   source: string;
