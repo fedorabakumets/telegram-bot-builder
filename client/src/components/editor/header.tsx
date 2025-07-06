@@ -79,7 +79,10 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
           <Button 
             variant="outline" 
             size="sm"
-            onClick={onLoadTemplate}
+            onClick={() => {
+              console.log('Templates button clicked in header');
+              onLoadTemplate();
+            }}
             className="flex items-center space-x-2"
           >
             <FolderOpen className="h-4 w-4 text-muted-foreground" />

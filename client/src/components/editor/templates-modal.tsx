@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -31,6 +31,11 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
 
   const { toast } = useToast();
 
+  // Отладка для проверки открытия модального окна
+  if (isOpen) {
+    console.log('Templates modal is open');
+  }
+
   const { data: templates = [], isLoading } = useQuery<BotTemplate[]>({
     queryKey: ['/api/templates'],
     enabled: isOpen,
@@ -41,7 +46,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     enabled: isOpen && currentTab === 'featured',
   });
 
-  // Запрос для пользовательских шаблонов (в данном случае используем фильтрацию по категории custom)
   const { data: myTemplates = [], isLoading: isLoadingMy } = useQuery<BotTemplate[]>({
     queryKey: ['/api/templates/category/custom'],
     enabled: isOpen && currentTab === 'my',
@@ -166,9 +170,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
 
   const handleUseTemplate = async (template: BotTemplate) => {
     try {
-      // Увеличиваем счетчик использования
       await useTemplateMutation.mutateAsync(template.id);
-      
       onSelectTemplate(template);
       toast({
         title: 'Шаблон применен',
@@ -295,7 +297,17 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     showDeleteButton?: boolean;
   }
 
-  const TemplateGrid = ({ templates, isLoading, onPreview, onUse, onRate, onDelete, searchTerm, selectedCategory, showDeleteButton = false }: TemplateGridProps) => {
+  const TemplateGrid = ({ 
+    templates, 
+    isLoading, 
+    onPreview, 
+    onUse, 
+    onRate, 
+    onDelete, 
+    searchTerm, 
+    selectedCategory, 
+    showDeleteButton = false 
+  }: TemplateGridProps) => {
     if (isLoading) {
       return (
         <div className="flex items-center justify-center py-8">
@@ -343,7 +355,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   </Badge>
                 </div>
                 
-                {/* Рейтинг и использования */}
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Star className="h-3 w-3 fill-current" />
@@ -361,7 +372,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
               </CardHeader>
               
               <CardContent className="space-y-3">
-                {/* Статистика */}
                 <div className="grid grid-cols-4 gap-2 text-xs">
                   <div className="text-center p-2 bg-muted dark:bg-muted/30 rounded">
                     <div className="font-medium">{stats.nodes}</div>
@@ -381,7 +391,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   </div>
                 </div>
                 
-                {/* Теги */}
                 {template.tags && template.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {template.tags.slice(0, 3).map((tag) => (
@@ -397,7 +406,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   </div>
                 )}
                 
-                {/* Метаинформация */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
@@ -408,7 +416,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   </Badge>
                 </div>
                 
-                {/* Кнопки действий */}
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -439,7 +446,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                   )}
                 </div>
 
-                {/* Рейтинг */}
                 <div className="flex items-center gap-1 pt-2 border-t">
                   <span className="text-xs text-muted-foreground mr-2">Оценить:</span>
                   {[1, 2, 3, 4, 5].map((rating) => (
@@ -495,7 +501,6 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
               </TabsTrigger>
             </TabsList>
 
-            {/* Фильтры и сортировка */}
             <div className="space-y-4 py-4 border-b">
               <div className="flex gap-4">
                 <div className="flex-1">

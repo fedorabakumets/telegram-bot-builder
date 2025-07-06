@@ -103,6 +103,7 @@ export default function Editor() {
   }, []);
 
   const handleLoadTemplate = useCallback(() => {
+    console.log('Template button clicked, opening modal...');
     setShowTemplates(true);
   }, []);
 
