@@ -18,13 +18,18 @@ dp = Dispatcher()
 
 @dp.message(Command("help"))
 async def help_handler(message: types.Message):
-    text = "🤖 Доступные команды:
+    text = """🤖 Доступные команды:
 
 /start - Начать работу
 /help - Эта справка
-/settings - Настройки"
-    # Удаляем предыдущие reply клавиатуры если они были
+/settings - Настройки"""
+    
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="Новая кнопка"))
+    keyboard = builder.as_markup()
+    # Удаляем предыдущие reply клавиатуры перед показом inline кнопок
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer("Выберите действие:", reply_markup=keyboard)
 
 
 # Запуск бота

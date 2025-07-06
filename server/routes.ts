@@ -49,8 +49,9 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
       return { success: false, error: "Проект не найден" };
     }
 
-    // Генерируем код бота
-    const botCode = generatePythonCode(project.data).replace('YOUR_BOT_TOKEN_HERE', token);
+    // Генерируем код бота через клиентский генератор
+    const { generatePythonCode } = await import("../client/src/lib/bot-generator.js");
+    const botCode = generatePythonCode(project.data as any, project.name).replace('YOUR_BOT_TOKEN_HERE', token);
     
     // Создаем файл бота
     const filePath = createBotFile(botCode, projectId);
@@ -210,7 +211,7 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
   }
 }
 
-function generatePythonCode(botData: any): string {
+async function generatePythonCodeOld(botData: any): Promise<string> {
   const { nodes } = botData;
   
   let code = `import asyncio
@@ -235,10 +236,15 @@ dp = Dispatcher()
   // Generate handlers for each node
   nodes.forEach((node: any) => {
     if (node.type === "start") {
+      const messageText = node.data.messageText || "Привет! Добро пожаловать!";
+      const textAssignment = messageText.includes('\n') 
+        ? `text = """${messageText}"""`
+        : `text = "${messageText.replace(/"/g, '\\"')}"`;
+      
       code += `
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
-    text = "${node.data.messageText || "Привет! Добро пожаловать!"}"
+    ${textAssignment}
 `;
       
       if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
@@ -280,11 +286,15 @@ async def start_handler(message: types.Message):
     } else if (node.type === "command") {
       const command = node.data.command || "/help";
       const functionName = command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
+      const messageText = node.data.messageText || "Команда выполнена";
+      const textAssignment = messageText.includes('\n') 
+        ? `text = """${messageText}"""`
+        : `text = "${messageText.replace(/"/g, '\\"')}"`;
       
       code += `
 @dp.message(Command("${command.replace('/', '')}"))
 async def ${functionName}_handler(message: types.Message):
-    text = "${node.data.messageText || "Команда выполнена"}"
+    ${textAssignment}
 `;
       
       if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
@@ -325,11 +335,15 @@ async def ${functionName}_handler(message: types.Message):
       }
     } else if (node.type === "message") {
       const functionName = `message_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+      const messageText = node.data.messageText || "Сообщение получено";
+      const textAssignment = messageText.includes('\n') 
+        ? `text = """${messageText}"""`
+        : `text = "${messageText.replace(/"/g, '\\"')}"`;
       
       code += `
 @dp.message()
 async def ${functionName}_handler(message: types.Message):
-    text = "${node.data.messageText || "Сообщение получено"}"
+    ${textAssignment}
 `;
       
       if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
