@@ -23,6 +23,7 @@ export default function Editor() {
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -42,6 +43,8 @@ export default function Editor() {
     addNode,
     updateNode,
     deleteNode,
+    addConnection,
+    deleteConnection,
     updateNodeData,
     addButton,
     updateButton,
@@ -172,11 +175,16 @@ export default function Editor() {
             <ResizablePanel defaultSize={60} minSize={30}>
               <Canvas
                 nodes={nodes}
+                connections={connections}
                 selectedNodeId={selectedNodeId}
+                selectedConnectionId={selectedConnectionId}
                 onNodeSelect={setSelectedNodeId}
                 onNodeAdd={addNode}
                 onNodeDelete={deleteNode}
                 onNodeMove={handleNodeMove}
+                onConnectionSelect={setSelectedConnectionId}
+                onConnectionDelete={deleteConnection}
+                onConnectionAdd={addConnection}
               />
             </ResizablePanel>
             

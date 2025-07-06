@@ -1,27 +1,42 @@
 import { useRef, useCallback, useState } from 'react';
 import { CanvasNode } from '@/components/ui/canvas-node';
-import { Node, ComponentDefinition } from '@/types/bot';
+import { ConnectionsLayer } from '@/components/ui/connections-layer';
+import { Node, ComponentDefinition, Connection } from '@/types/bot';
 import { nanoid } from 'nanoid';
 
 interface CanvasProps {
   nodes: Node[];
+  connections: Connection[];
   selectedNodeId: string | null;
+  selectedConnectionId?: string;
   onNodeSelect: (nodeId: string) => void;
   onNodeAdd: (node: Node) => void;
   onNodeDelete: (nodeId: string) => void;
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
+  onConnectionSelect?: (connectionId: string) => void;
+  onConnectionDelete?: (connectionId: string) => void;
+  onConnectionAdd?: (connection: Connection) => void;
 }
 
 export function Canvas({ 
   nodes, 
-  selectedNodeId, 
+  connections,
+  selectedNodeId,
+  selectedConnectionId,
   onNodeSelect, 
   onNodeAdd, 
   onNodeDelete,
-  onNodeMove 
+  onNodeMove,
+  onConnectionSelect,
+  onConnectionDelete,
+  onConnectionAdd
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [connectionStart, setConnectionStart] = useState<{
+    nodeId: string;
+    handle: 'source' | 'target';
+  } | null>(null);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -68,8 +83,28 @@ export function Canvas({
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onNodeSelect('');
+      onConnectionSelect?.('');
+      setConnectionStart(null);
     }
-  }, [onNodeSelect]);
+  }, [onNodeSelect, onConnectionSelect]);
+
+  const handleConnectionStart = useCallback((nodeId: string, handle: 'source' | 'target') => {
+    if (connectionStart) {
+      // Если уже есть начало соединения, пытаемся завершить его
+      if (connectionStart.nodeId !== nodeId) {
+        const newConnection: Connection = {
+          id: nanoid(),
+          source: connectionStart.handle === 'source' ? connectionStart.nodeId : nodeId,
+          target: connectionStart.handle === 'source' ? nodeId : connectionStart.nodeId,
+        };
+        onConnectionAdd?.(newConnection);
+      }
+      setConnectionStart(null);
+    } else {
+      // Начинаем новое соединение
+      setConnectionStart({ nodeId, handle });
+    }
+  }, [connectionStart, onConnectionAdd]);
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
@@ -121,6 +156,15 @@ export function Canvas({
           onDragLeave={handleDragLeave}
           onClick={handleCanvasClick}
         >
+          {/* Connections Layer */}
+          <ConnectionsLayer
+            connections={connections}
+            nodes={nodes}
+            selectedConnectionId={selectedConnectionId}
+            onConnectionSelect={onConnectionSelect}
+            onConnectionDelete={onConnectionDelete}
+          />
+          
           {/* Nodes */}
           {nodes.map((node) => (
             <CanvasNode
@@ -130,6 +174,8 @@ export function Canvas({
               onClick={() => onNodeSelect(node.id)}
               onDelete={() => onNodeDelete(node.id)}
               onMove={(position) => onNodeMove(node.id, position)}
+              onConnectionStart={handleConnectionStart}
+              connectionStart={connectionStart}
             />
           ))}
           

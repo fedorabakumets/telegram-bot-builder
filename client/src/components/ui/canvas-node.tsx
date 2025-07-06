@@ -8,6 +8,11 @@ interface CanvasNodeProps {
   onClick?: () => void;
   onDelete?: () => void;
   onMove?: (position: { x: number; y: number }) => void;
+  onConnectionStart?: (nodeId: string, handle: 'source' | 'target') => void;
+  connectionStart?: {
+    nodeId: string;
+    handle: 'source' | 'target';
+  } | null;
 }
 
 const nodeIcons = {
@@ -30,7 +35,7 @@ const nodeColors = {
   command: 'bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
 };
 
-export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: CanvasNodeProps) {
+export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConnectionStart, connectionStart }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -254,8 +259,32 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
         </div>
       )}
       {/* Connection points */}
-      <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-muted-foreground rounded-full border-2 border-background shadow-md"></div>
-      <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-primary rounded-full border-2 border-background shadow-md"></div>
+      <button
+        className={cn(
+          "absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-md hover:scale-110 transition-all duration-200",
+          connectionStart?.nodeId === node.id && connectionStart?.handle === 'target'
+            ? "bg-green-500 hover:bg-green-600 animate-pulse"
+            : "bg-muted-foreground hover:bg-muted-foreground/80"
+        )}
+        onClick={(e) => {
+          e.stopPropagation();
+          onConnectionStart?.(node.id, 'target');
+        }}
+        title="Входящее соединение"
+      />
+      <button
+        className={cn(
+          "absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-md hover:scale-110 transition-all duration-200",
+          connectionStart?.nodeId === node.id && connectionStart?.handle === 'source'
+            ? "bg-green-500 hover:bg-green-600 animate-pulse"
+            : "bg-primary hover:bg-primary/80"
+        )}
+        onClick={(e) => {
+          e.stopPropagation();
+          onConnectionStart?.(node.id, 'source');
+        }}
+        title="Исходящее соединение"
+      />
     </div>
   );
 }
