@@ -210,7 +210,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
 
   // Generate callback handlers for inline buttons
   const inlineNodes = nodes.filter(node => 
-    (node.data.keyboardType === 'inline' || node.data.keyboardType === 'combined') && 
+    node.data.keyboardType === 'inline' && 
     node.data.inlineButtons && node.data.inlineButtons.length > 0
   );
 
@@ -469,126 +469,31 @@ function generateKeyboard(node: Node): string {
     
     code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard}, one_time_keyboard=${node.data.oneTimeKeyboard})\n`;
     code += '    await message.answer(text, reply_markup=keyboard)\n';
-  } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+  } else if (node.data.keyboardType === "inline" && node.data.inlineButtons && node.data.inlineButtons.length > 0) {
     code += '    \n';
     code += '    builder = InlineKeyboardBuilder()\n';
-    node.data.buttons.forEach(button => {
-      if (button.action === "url") {
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-      } else {
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))\n`;
+    
+    // Group inline buttons by row position for better layout
+    const inlineButtonsByRow = groupButtonsByRow(node.data.inlineButtons);
+    Object.entries(inlineButtonsByRow).forEach(([row, buttons]) => {
+      (buttons as any[]).forEach((button: any) => {
+        const buttonText = button.icon ? `${button.icon} ${button.text}` : button.text;
+        if (button.action === "url") {
+          code += `    builder.add(InlineKeyboardButton(text="${buttonText}", url="${button.url || '#'}"))\n`;
+        } else {
+          const callbackData = button.target || button.text.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+          code += `    builder.add(InlineKeyboardButton(text="${buttonText}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      
+      // Add row adjustments for better layout
+      if ((buttons as any[]).length > 1) {
+        code += `    builder.adjust(${(buttons as any[]).length})\n`;
       }
     });
     
     code += '    keyboard = builder.as_markup()\n';
     code += '    await message.answer(text, reply_markup=keyboard)\n';
-  } else if (node.data.keyboardType === "combined") {
-    // Combined type: both reply and inline buttons
-    const hasReplyButtons = node.data.buttons && node.data.buttons.length > 0;
-    const hasInlineButtons = node.data.inlineButtons && node.data.inlineButtons.length > 0;
-    
-    if (hasReplyButtons && hasInlineButtons) {
-      // Enhanced combined keyboard with advanced settings
-      code += '    \n';
-      code += '    # Создаем комбинированную клавиатуру (Reply + Inline)\n';
-      
-      // Build reply keyboard with advanced layout
-      code += '    reply_builder = ReplyKeyboardBuilder()\n';
-      
-      // Group buttons by row position for better layout
-      const replyButtonsByRow = groupButtonsByRow(node.data.buttons);
-      Object.entries(replyButtonsByRow).forEach(([row, buttons]) => {
-        code += `    # Строка ${row}\n`;
-        (buttons as any[]).forEach((button: any, index: number) => {
-          const buttonText = button.icon ? `${button.icon} ${button.text}` : button.text;
-          code += `    reply_builder.add(KeyboardButton(text="${buttonText}"))\n`;
-        });
-        if ((buttons as any[]).length > 1) {
-          code += `    reply_builder.adjust(${(buttons as any[]).length})\n`;
-        }
-      });
-      
-      // Apply keyboard settings
-      const persistent = node.data.persistentKeyboard ? 'False' : node.data.oneTimeKeyboard ? 'True' : 'False';
-      code += `    reply_keyboard = reply_builder.as_markup(\n`;
-      code += `        resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'},\n`;
-      code += `        one_time_keyboard=${persistent},\n`;
-      code += `        persistent=${node.data.persistentKeyboard ? 'True' : 'False'}\n`;
-      code += `    )\n`;
-      
-      // Send message with reply keyboard
-      code += '    await message.answer(text, reply_markup=reply_keyboard)\n';
-      
-      // Create inline keyboard
-      code += '    \n';
-      code += '    # Создаем inline клавиатуру\n';
-      code += '    inline_builder = InlineKeyboardBuilder()\n';
-      
-      // Group inline buttons by row position
-      const inlineButtonsByRow = groupButtonsByRow(node.data.inlineButtons);
-      Object.entries(inlineButtonsByRow).forEach(([row, buttons]) => {
-        (buttons as any[]).forEach((button: any, index: number) => {
-          const buttonText = button.icon ? `${button.icon} ${button.text}` : button.text;
-          if (button.action === "url") {
-            code += `    inline_builder.add(InlineKeyboardButton(text="${buttonText}", url="${button.url || '#'}"))\n`;
-          } else {
-            code += `    inline_builder.add(InlineKeyboardButton(text="${buttonText}", callback_data="${button.target || button.text}"))\n`;
-          }
-        });
-        if ((buttons as any[]).length > 1) {
-          code += `    inline_builder.adjust(${(buttons as any[]).length})\n`;
-        }
-      });
-      
-      code += '    inline_keyboard = inline_builder.as_markup()\n';
-      
-      // Send inline keyboard message
-      const keyboardTitle = node.data.keyboardTitle || "Дополнительные действия:";
-      const shouldSeparateMessages = node.data.separateMessages;
-      
-      if (shouldSeparateMessages) {
-        code += `    await message.answer("${keyboardTitle}", reply_markup=inline_keyboard)\n`;
-      } else {
-        code += '    # Отправляем inline кнопки отдельным сообщением\n';
-        code += `    await message.answer("${keyboardTitle}", reply_markup=inline_keyboard)\n`;
-      }
-      
-    } else if (hasReplyButtons) {
-      // Only reply buttons with enhanced layout
-      code += '    \n';
-      code += '    # Создаем reply клавиатуру\n';
-      code += '    reply_builder = ReplyKeyboardBuilder()\n';
-      
-      const replyButtonsByRow = groupButtonsByRow(node.data.buttons);
-      Object.entries(replyButtonsByRow).forEach(([row, buttons]) => {
-        (buttons as any[]).forEach((button: any, index: number) => {
-          const buttonText = button.icon ? `${button.icon} ${button.text}` : button.text;
-          code += `    reply_builder.add(KeyboardButton(text="${buttonText}"))\n`;
-        });
-        if ((buttons as any[]).length > 1) {
-          code += `    reply_builder.adjust(${(buttons as any[]).length})\n`;
-        }
-      });
-      
-      code += `    keyboard = reply_builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})\n`;
-      code += '    await message.answer(text, reply_markup=keyboard)\n';
-    } else if (hasInlineButtons) {
-      // Only inline buttons
-      code += '    \n';
-      code += '    builder = InlineKeyboardBuilder()\n';
-      node.data.inlineButtons.forEach(button => {
-        if (button.action === "url") {
-          code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-        } else {
-          code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))\n`;
-        }
-      });
-      code += '    keyboard = builder.as_markup()\n';
-      code += '    await message.answer(text, reply_markup=keyboard)\n';
-    } else {
-      // No buttons at all
-      code += '    await message.answer(text)\n';
-    }
   } else {
     code += '    await message.answer(text)\n';
   }

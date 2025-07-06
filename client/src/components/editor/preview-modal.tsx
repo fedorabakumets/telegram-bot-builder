@@ -284,7 +284,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
             responseText = 'Сообщение';
           }
           
-          const buttons = targetNode.data.keyboardType === 'reply' || targetNode.data.keyboardType === 'combined' 
+          const buttons = targetNode.data.keyboardType === 'reply' && targetNode.data.buttons
             ? targetNode.data.buttons.map(btn => ({
                 text: btn.text,
                 target: btn.target,
@@ -292,12 +292,13 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                 icon: btn.icon
               })) : undefined;
 
-          const inlineButtons = targetNode.data.keyboardType === 'inline' || targetNode.data.keyboardType === 'combined'
-            ? (targetNode.data.inlineButtons || targetNode.data.buttons).map(btn => ({
+          const inlineButtons = targetNode.data.keyboardType === 'inline' && targetNode.data.inlineButtons
+            ? targetNode.data.inlineButtons.map(btn => ({
                 text: btn.text,
                 target: btn.target,
                 action: btn.action,
-                icon: btn.icon
+                icon: btn.icon,
+                url: btn.url
               })) : undefined;
 
           // Create bot response from target node
@@ -320,9 +321,9 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
           setMessageHistory(prev => [...prev, botResponse]);
           
           // Update reply keyboard based on target node
-          if ((targetNode.data.keyboardType === 'reply' || targetNode.data.keyboardType === 'combined') && buttons) {
+          if (targetNode.data.keyboardType === 'reply' && buttons) {
             setCurrentReplyKeyboard(buttons);
-          } else if (targetNode.data.keyboardType === 'none' || targetNode.data.keyboardType === 'inline') {
+          } else {
             setCurrentReplyKeyboard(null);
           }
           
@@ -423,19 +424,30 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[85vh] p-0 flex flex-col">
         <DialogHeader className="p-4 border-b border-border">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <i className="fab fa-telegram-plane text-primary-foreground text-sm"></i>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <i className="fab fa-telegram-plane text-primary-foreground text-sm"></i>
+              </div>
+              <div>
+                <DialogTitle className="font-semibold text-foreground">Превью бота</DialogTitle>
+                <p className="text-xs text-muted-foreground">{projectName}</p>
+              </div>
             </div>
-            <div>
-              <DialogTitle className="font-semibold text-foreground">Превью бота</DialogTitle>
-              <p className="text-xs text-muted-foreground">{projectName}</p>
-            </div>
+            <Button
+              onClick={reset}
+              variant="outline"
+              size="sm"
+              className="ml-4"
+            >
+              <i className="fas fa-redo-alt mr-2"></i>
+              Сброс
+            </Button>
           </div>
         </DialogHeader>
 
         {/* Chat Area */}
-        <div ref={chatAreaRef} className="flex-1 bg-muted/30 overflow-y-auto p-4 space-y-3 min-h-[300px] max-h-[400px]">
+        <div ref={chatAreaRef} className="flex-1 bg-muted/30 overflow-y-auto p-4 space-y-3 min-h-[300px] max-h-[50vh] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
           {messageHistory.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
@@ -488,16 +500,13 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                 )}
 
                 {/* Inline Buttons */}
-                {message.type === 'bot' && (
-                  (message.keyboardType === 'inline' && message.buttons) ||
-                  (message.keyboardType === 'combined' && message.inlineButtons)
-                ) && (
+                {message.type === 'bot' && message.keyboardType === 'inline' && message.inlineButtons && message.inlineButtons.length > 0 && (
                   <div className="ml-10 mt-2">
                     {message.keyboardTitle && (
-                      <p className="text-xs text-gray-600 mb-2">{message.keyboardTitle}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{message.keyboardTitle}</p>
                     )}
                     <InlineButtonsDisplay 
-                      buttons={message.keyboardType === 'combined' ? message.inlineButtons! : message.buttons!}
+                      buttons={message.inlineButtons}
                       onButtonClick={handleButtonClick}
                     />
                   </div>
@@ -549,15 +558,8 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
           </div>
           
           {/* Controls */}
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={reset}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              Сбросить
-            </button>
-            <div className="flex-1"></div>
-            <span className="text-xs text-gray-500">
+          <div className="flex items-center justify-end">
+            <span className="text-xs text-muted-foreground">
               {messageHistory.length} сообщений
             </span>
           </div>
