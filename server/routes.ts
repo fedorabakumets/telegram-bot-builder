@@ -1193,8 +1193,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Import template from file
   app.post("/api/templates/import", async (req, res) => {
     try {
+      let importData = req.body;
+      
+      // Handle exported file format that wraps template data in a "data" field
+      if (importData.filename && importData.data) {
+        importData = importData.data;
+      }
+      
       // Validate the imported data using new validation function
-      const validationResult = validateTemplateImport(req.body);
+      const validationResult = validateTemplateImport(importData);
       
       if (!validationResult.isValid) {
         return res.status(400).json({ 
@@ -1250,7 +1257,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Validate template file before import
   app.post("/api/templates/validate", async (req, res) => {
     try {
-      const validationResult = validateTemplateImport(req.body);
+      let validationData = req.body;
+      
+      // Handle exported file format that wraps template data in a "data" field
+      if (validationData.filename && validationData.data) {
+        validationData = validationData.data;
+      }
+      
+      const validationResult = validateTemplateImport(validationData);
       res.json(validationResult);
     } catch (error) {
       console.error('Template validation error:', error);
@@ -1265,8 +1279,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Import template as new project
   app.post("/api/projects/import", async (req, res) => {
     try {
+      let importData = req.body;
+      
+      // Handle exported file format that wraps template data in a "data" field
+      if (importData.filename && importData.data) {
+        importData = importData.data;
+      }
+      
       // Validate the imported data using new validation function
-      const validationResult = validateTemplateImport(req.body);
+      const validationResult = validateTemplateImport(importData);
       
       if (!validationResult.isValid) {
         return res.status(400).json({ 

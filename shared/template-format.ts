@@ -332,13 +332,16 @@ export function createTemplateFileName(templateName: string): string {
 
 // Функция для парсинга имени файла шаблона
 export function parseTemplateFileName(fileName: string): { name: string; isTemplate: boolean } {
-  const isTemplate = fileName.endsWith('.tbb.json');
+  // Принимаем как .tbb.json, так и обычные .json файлы
+  const isTemplate = fileName.endsWith('.tbb.json') || fileName.endsWith('.json');
   let name = fileName;
   
   if (isTemplate) {
-    name = fileName.replace('.tbb.json', '');
+    // Убираем расширение
+    name = fileName.replace(/\.(tbb\.)?json$/, '');
     // Убираем дату если есть
-    name = name.replace(/_\d{4}-\d{2}-\d{2}$/, '');
+    name = name.replace(/_\d{8}$/, ''); // Формат YYYYMMDD
+    name = name.replace(/_\d{4}-\d{2}-\d{2}$/, ''); // Формат YYYY-MM-DD
     // Заменяем подчеркивания на пробелы
     name = name.replace(/_/g, ' ');
   }

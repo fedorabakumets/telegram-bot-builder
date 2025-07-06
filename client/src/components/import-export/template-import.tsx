@@ -134,7 +134,7 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
     // Check file extension
     const { isTemplate } = parseTemplateFileName(file.name);
     if (!isTemplate) {
-      setError('Выберите файл шаблона с расширением .tbb.json');
+      setError('Выберите файл шаблона с расширением .tbb.json или .json');
       return;
     }
 
@@ -142,7 +142,12 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
     reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
-        const jsonData = JSON.parse(content);
+        let jsonData = JSON.parse(content);
+        
+        // Handle exported file format that wraps template data in a "data" field
+        if (jsonData.filename && jsonData.data) {
+          jsonData = jsonData.data;
+        }
         
         // Perform client-side validation using the same validation as server
         const response = await fetch('/api/templates/validate', {
@@ -227,7 +232,7 @@ export function TemplateImport({ open, onOpenChange, onSuccess }: TemplateImport
           <div className="space-y-4">
             <div>
               <Label htmlFor="template-file" className="text-sm font-medium">
-                Выберите файл шаблона (.tbb.json)
+                Выберите файл шаблона (.tbb.json или .json)
               </Label>
               <div className="mt-2">
                 <input
