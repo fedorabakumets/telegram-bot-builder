@@ -134,7 +134,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
           <i className="fas fa-times text-xs"></i>
         </button>
       )}
-
       {/* Node header */}
       <div className="flex items-center mb-4 relative">
         <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center mr-3", nodeColors[node.type])}>
@@ -160,16 +159,14 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
           </p>
         </div>
       </div>
-
       {/* Message preview */}
       {node.data.messageText && (
         <div className="bg-muted rounded-lg p-3 mb-4">
-          <p className="text-sm text-foreground line-clamp-3">
+          <p className="text-sm line-clamp-3 text-[#3da2f5]">
             {node.data.messageText}
           </p>
         </div>
       )}
-
       {/* Image preview */}
       {node.type === 'photo' && (
         <div className="bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
@@ -180,7 +177,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
           )}
         </div>
       )}
-
       {/* Buttons preview */}
       {node.data.buttons.length > 0 && (
         <div className="space-y-2">
@@ -228,7 +224,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
           )}
         </div>
       )}
-
       {/* Connection points */}
       <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-muted-foreground rounded-full border-2 border-background shadow-md"></div>
       <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-primary rounded-full border-2 border-background shadow-md"></div>
