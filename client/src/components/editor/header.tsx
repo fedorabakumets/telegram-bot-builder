@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { HistoryIndicator } from './history-indicator';
 import { FolderOpen, Bookmark, Save, Download, User, Send } from 'lucide-react';
 import { useState } from 'react';
 
@@ -12,9 +13,27 @@ interface HeaderProps {
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
   isSaving?: boolean;
+  // История изменений
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
-export function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSaveAsTemplate, onLoadTemplate, isSaving }: HeaderProps) {
+export function Header({ 
+  projectName, 
+  currentTab, 
+  onTabChange, 
+  onSave, 
+  onExport, 
+  onSaveAsTemplate, 
+  onLoadTemplate, 
+  isSaving,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo
+}: HeaderProps) {
   return (
     <header className="bg-background border-b border-border h-16 flex items-center justify-between px-6 relative z-50">
       <div className="flex items-center space-x-4">
@@ -122,6 +141,19 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
           <Save className={`h-4 w-4 text-muted-foreground ${isSaving ? 'animate-spin' : ''}`} />
           <span>{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
         </Button>
+        
+        {/* Индикатор истории - только в режиме редактора */}
+        {currentTab === 'editor' && onUndo && onRedo && (
+          <div className="flex items-center">
+            <div className="h-4 w-px bg-border mx-1"></div>
+            <HistoryIndicator
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={onUndo}
+              onRedo={onRedo}
+            />
+          </div>
+        )}
         
         <Button 
           size="sm"

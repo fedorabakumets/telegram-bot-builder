@@ -24,6 +24,11 @@ interface CanvasProps {
   onConnectionDelete?: (connectionId: string) => void;
   onConnectionAdd?: (connection: Connection) => void;
   onNodesUpdate?: (nodes: Node[]) => void;
+  // История изменений
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
 export function Canvas({ 
@@ -38,7 +43,11 @@ export function Canvas({
   onConnectionSelect,
   onConnectionDelete,
   onConnectionAdd,
-  onNodesUpdate
+  onNodesUpdate,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -191,13 +200,36 @@ export function Canvas({
             e.preventDefault();
             fitToContent();
             break;
+          case 'z':
+          case 'Z':
+            e.preventDefault();
+            if (e.shiftKey) {
+              // Ctrl+Shift+Z для redo (альтернативный способ)
+              if (canRedo && onRedo) {
+                onRedo();
+              }
+            } else {
+              // Ctrl+Z для undo
+              if (canUndo && onUndo) {
+                onUndo();
+              }
+            }
+            break;
+          case 'y':
+          case 'Y':
+            e.preventDefault();
+            // Ctrl+Y для redo
+            if (canRedo && onRedo) {
+              onRedo();
+            }
+            break;
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [zoomIn, zoomOut, resetZoom, fitToContent]);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent, canUndo, canRedo, onUndo, onRedo]);
 
   // Handle mouse events for panning
   useEffect(() => {
@@ -456,15 +488,19 @@ export function Canvas({
             </button>
 
             <button 
-              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
-              title="Отменить действие (Ctrl + Z)"
+              onClick={onUndo}
+              disabled={!canUndo}
+              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+              title={`Отменить действие (Ctrl + Z)${!canUndo ? ' - нет действий для отмены' : ''}`}
             >
               <i className="fas fa-undo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
 
             <button 
-              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
-              title="Повторить действие (Ctrl + Y)"
+              onClick={onRedo}
+              disabled={!canRedo}
+              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+              title={`Повторить действие (Ctrl + Y)${!canRedo ? ' - нет действий для повтора' : ''}`}
             >
               <i className="fas fa-redo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>

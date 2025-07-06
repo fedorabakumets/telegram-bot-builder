@@ -57,7 +57,13 @@ export default function Editor() {
     deleteButton,
     updateNodes,
     setBotData,
-    getBotData
+    getBotData,
+    // История изменений
+    canUndo,
+    canRedo,
+    undo,
+    redo,
+    resetHistory
   } = useBotEditor(currentProject?.data as BotData);
 
   const updateProjectMutation = useMutation({
@@ -216,6 +222,10 @@ export default function Editor() {
         onSaveAsTemplate={handleSaveAsTemplate}
         onLoadTemplate={handleLoadTemplate}
         isSaving={updateProjectMutation.isPending}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
       />
 
       <div className="h-[calc(100vh-4rem)]">
@@ -241,6 +251,10 @@ export default function Editor() {
                 onConnectionDelete={deleteConnection}
                 onConnectionAdd={addConnection}
                 onNodesUpdate={updateNodes}
+                canUndo={canUndo}
+                canRedo={canRedo}
+                onUndo={undo}
+                onRedo={redo}
               />
             </ResizablePanel>
             
