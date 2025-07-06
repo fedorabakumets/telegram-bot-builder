@@ -110,14 +110,108 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
 
   if (inlineNodes.length > 0) {
     code += '\n# Обработчики inline кнопок\n';
+    const processedCallbacks = new Set<string>();
+    
     inlineNodes.forEach(node => {
       node.data.buttons.forEach(button => {
-        if (button.action === 'goto') {
-          code += `\n@dp.callback_query(lambda c: c.data == "${button.target || button.text}")\n`;
-          code += `async def handle_${button.id}(callback_query: types.CallbackQuery):\n`;
-          code += '    await callback_query.answer()\n';
-          code += `    # TODO: Implement navigation to ${button.target}\n`;
-          code += `    await callback_query.message.answer("Переход к: ${button.text}")\n`;
+        if (button.action === 'goto' && button.target) {
+          const callbackData = button.target || button.text;
+          
+          // Avoid duplicate handlers
+          if (processedCallbacks.has(callbackData)) return;
+          processedCallbacks.add(callbackData);
+          
+          // Find target node
+          const targetNode = nodes.find(n => n.id === button.target);
+          if (targetNode) {
+            code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
+            code += `async def handle_callback_${button.id.replace(/-/g, '_')}(callback_query: types.CallbackQuery):\n`;
+            code += '    await callback_query.answer()\n';
+            
+            // Generate response for target node
+            const targetText = targetNode.data.messageText || "Сообщение";
+            code += `    text = "${targetText}"\n`;
+            
+            // Handle keyboard for target node
+            if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+              code += '    builder = InlineKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach(btn => {
+                if (btn.action === "url") {
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                } else {
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btn.target || btn.text}"))\n`;
+                }
+              });
+              code += '    keyboard = builder.as_markup()\n';
+              code += '    await callback_query.message.edit_text(text, reply_markup=keyboard)\n';
+            } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
+              code += '    builder = ReplyKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach(btn => {
+                code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
+              });
+              code += `    keyboard = builder.as_markup(resize_keyboard=${targetNode.data.resizeKeyboard}, one_time_keyboard=${targetNode.data.oneTimeKeyboard})\n`;
+              code += '    await callback_query.message.answer(text, reply_markup=keyboard)\n';
+            } else {
+              code += '    await callback_query.message.edit_text(text)\n';
+            }
+          }
+        }
+      });
+    });
+  }
+  
+  // Generate handlers for reply keyboard buttons
+  const replyNodes = nodes.filter(node => 
+    node.data.keyboardType === 'reply' && node.data.buttons.length > 0
+  );
+  
+  if (replyNodes.length > 0) {
+    code += '\n# Обработчики reply кнопок\n';
+    const processedReplyButtons = new Set<string>();
+    
+    replyNodes.forEach(node => {
+      node.data.buttons.forEach(button => {
+        if (button.action === 'goto' && button.target) {
+          const buttonText = button.text;
+          
+          // Avoid duplicate handlers
+          if (processedReplyButtons.has(buttonText)) return;
+          processedReplyButtons.add(buttonText);
+          
+          // Find target node
+          const targetNode = nodes.find(n => n.id === button.target);
+          if (targetNode) {
+            code += `\n@dp.message(lambda message: message.text == "${buttonText}")\n`;
+            code += `async def handle_reply_${button.id.replace(/-/g, '_')}(message: types.Message):\n`;
+            
+            // Generate response for target node
+            const targetText = targetNode.data.messageText || "Сообщение";
+            code += `    text = "${targetText}"\n`;
+            
+            // Handle keyboard for target node
+            if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
+              code += '    builder = ReplyKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach(btn => {
+                code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
+              });
+              code += `    keyboard = builder.as_markup(resize_keyboard=${targetNode.data.resizeKeyboard}, one_time_keyboard=${targetNode.data.oneTimeKeyboard})\n`;
+              code += '    await message.answer(text, reply_markup=keyboard)\n';
+            } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+              code += '    builder = InlineKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach(btn => {
+                if (btn.action === "url") {
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                } else {
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btn.target || btn.text}"))\n`;
+                }
+              });
+              code += '    keyboard = builder.as_markup()\n';
+              code += '    await message.answer(text, reply_markup=keyboard)\n';
+            } else {
+              code += '    # Удаляем предыдущие reply клавиатуры если они были\n';
+              code += '    await message.answer(text, reply_markup=ReplyKeyboardRemove())\n';
+            }
+          }
         }
       });
     });
