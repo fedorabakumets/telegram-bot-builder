@@ -355,9 +355,47 @@ if __name__ == '__main__':
   return code;
 }
 
+// Function to ensure at least one default project exists
+async function ensureDefaultProject() {
+  try {
+    const projects = await storage.getAllBotProjects();
+    if (projects.length === 0) {
+      // Create a default project if none exists
+      const defaultProject = {
+        name: "Мой первый бот",
+        description: "Базовый бот с приветствием",
+        data: {
+          nodes: [
+            {
+              id: "start",
+              type: "start",
+              position: { x: 100, y: 100 },
+              data: {
+                messageText: "Привет! Я ваш новый бот. Нажмите /help для получения помощи.",
+                keyboardType: "none",
+                buttons: [],
+                resizeKeyboard: true,
+                oneTimeKeyboard: false
+              }
+            }
+          ],
+          connections: []
+        }
+      };
+      await storage.createBotProject(defaultProject);
+      console.log("✅ Создан проект по умолчанию");
+    }
+  } catch (error) {
+    console.error("❌ Ошибка создания проекта по умолчанию:", error);
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize default templates on startup
   await seedDefaultTemplates();
+  
+  // Ensure at least one default project exists
+  await ensureDefaultProject();
   
   // Get all bot projects
   app.get("/api/projects", async (req, res) => {
