@@ -461,6 +461,36 @@ body {
   }
 }
 
+/* Performance optimizations */
+.canvas-grid-zoomed::before,
+.dark .bg-canvas-bg::before {
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* Reduce animation complexity on low-end devices */
+@media (prefers-reduced-motion: reduce) {
+  .canvas-ambient,
+  .canvas-fit-animation,
+  .canvas-transform {
+    animation-duration: 0.1s !important;
+    transition-duration: 0.1s !important;
+  }
+  
+  .dark .bg-canvas-bg::before {
+    animation: none !important;
+  }
+}
+
+/* GPU acceleration for performance-critical elements */
+.canvas-transform,
+.canvas-minimap,
+.canvas-grid-zoomed::before {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
 /* Enhanced Canvas Drop Zone Hint for Dark Theme */
 .dark .canvas-drop-hint {
   background: 
