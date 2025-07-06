@@ -64,6 +64,8 @@ export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
   token: true,
   processId: true,
   errorMessage: true,
+  startedAt: true,
+  stoppedAt: true,
 });
 
 export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({

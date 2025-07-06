@@ -27,8 +27,8 @@ function createBotFile(botCode: string, projectId: number): string {
 async function startBot(projectId: number, token: string): Promise<{ success: boolean; error?: string; processId?: string }> {
   try {
     // Проверяем, не запущен ли уже бот в базе данных
-    const existingInstance = await storage.getBotInstance(projectId);
-    if (existingInstance && existingInstance.status === 'running') {
+    const currentInstance = await storage.getBotInstance(projectId);
+    if (currentInstance && currentInstance.status === 'running') {
       return { success: false, error: "Бот уже запущен" };
     }
 
@@ -75,13 +75,23 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
     // Сохраняем процесс
     botProcesses.set(projectId, process);
     
-    // Создаем запись в базе данных
-    await storage.createBotInstance({
-      projectId,
-      status: 'running',
-      token,
-      processId,
-    });
+    // Создаем или обновляем запись в базе данных
+    const existingBotInstance = await storage.getBotInstance(projectId);
+    if (existingBotInstance) {
+      await storage.updateBotInstance(existingBotInstance.id, {
+        status: 'running',
+        token,
+        processId,
+        errorMessage: null
+      });
+    } else {
+      await storage.createBotInstance({
+        projectId,
+        status: 'running',
+        token,
+        processId,
+      });
+    }
 
     // Обрабатываем события процесса
     process.on('error', async (error) => {
@@ -572,11 +582,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Проверяем соответствие состояния в базе и в памяти
-      if (instance.status === 'running' && !botProcesses.has(projectId)) {
-        // Если в базе бот помечен как запущенный, но процесса нет - исправляем
-        console.log(`Обнаружено несоответствие состояния для бота ${projectId}. Исправляем.`);
-        await storage.updateBotInstance(instance.id, { status: 'stopped' });
-        return res.json({ status: 'stopped', instance: { ...instance, status: 'stopped' } });
+      const hasActiveProcess = botProcesses.has(projectId);
+      const actualStatus = hasActiveProcess ? 'running' : 'stopped';
+      
+      // Если статус в базе не соответствует реальному состоянию - исправляем
+      if (instance.status !== actualStatus) {
+        console.log(`Обнаружено несоответствие состояния для бота ${projectId}. База: ${instance.status}, Реальность: ${actualStatus}. Исправляем.`);
+        await storage.updateBotInstance(instance.id, { 
+          status: actualStatus,
+          errorMessage: null
+        });
+        return res.json({ status: actualStatus, instance: { ...instance, status: actualStatus } });
       }
       
       res.json({ status: instance.status, instance });
