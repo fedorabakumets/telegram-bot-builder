@@ -6,9 +6,10 @@ import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
 import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Node, ComponentDefinition, Connection } from '@/types/bot';
+import { Node, ComponentDefinition, Connection } from '@shared/schema';
 import { generateAutoConnections } from '@/utils/auto-connection';
 import { ConnectionManager } from '@/utils/connection-manager';
+import { animatedHierarchyLayout } from '@/utils/auto-hierarchy';
 import { nanoid } from 'nanoid';
 
 interface CanvasProps {
@@ -399,6 +400,17 @@ export function Canvas({
     }
   }, [nodes, connections, handleCreateSuggestedConnection]);
 
+  const handleAutoHierarchy = useCallback(() => {
+    if (nodes.length === 0 || !onNodesUpdate) return;
+    
+    animatedHierarchyLayout(
+      nodes,
+      connections,
+      onNodesUpdate,
+      800 // Продолжительность анимации 800ms
+    );
+  }, [nodes, connections, onNodesUpdate]);
+
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
       <div className="absolute inset-0 overflow-auto p-8">
@@ -485,6 +497,15 @@ export function Canvas({
               title="Уместить в экран (Ctrl + 1)"
             >
               <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+            </button>
+
+            <button 
+              onClick={handleAutoHierarchy}
+              disabled={nodes.length === 0}
+              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Автоматическая иерархия узлов"
+            >
+              <i className="fas fa-sitemap text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
             </button>
 
             <button 
