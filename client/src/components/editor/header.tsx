@@ -4,8 +4,9 @@ import { HistoryIndicator } from './history-indicator';
 import { AutoSaveIndicator } from './auto-save-indicator';
 import { FloatingTemplateManager } from '@/components/ui/floating-template-manager';
 import { ImportExportControls } from '@/components/import-export';
-import { FolderOpen, Bookmark, Save, Download, User, Send } from 'lucide-react';
+import { FolderOpen, Bookmark, Save, Download, User, Send, Library } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'wouter';
 
 interface HeaderProps {
   projectName: string;
@@ -136,6 +137,18 @@ export function Header({
             onLoadTemplate={onLoadTemplate}
           />
         )}
+        
+        {/* Templates Page Link */}
+        <Link href="/templates">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            <Library className="h-4 w-4 text-muted-foreground" />
+            <span>Библиотека</span>
+          </Button>
+        </Link>
         
         {/* Fallback for legacy template buttons when botData is not available */}
         {!botData && onLoadTemplate && (

@@ -412,7 +412,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 py-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 py-4">
         {templates.map((template: BotTemplate) => {
           const stats = getTemplateStats(template.data as BotData);
           
@@ -660,7 +660,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="flex items-center gap-2">
