@@ -16,35 +16,24 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+    text = "Привет! Добро пожаловать!"
+    # Удаляем предыдущие reply клавиатуры если они были
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+
 @dp.message()
-async def message_FHx_Ak9Bzix5XDS_gGVhP_handler(message: types.Message):
+async def message_hPpcY9U6tXzQUtlnglr6j_handler(message: types.Message):
     text = "Новое сообщение"
-    
-    # Создаем комбинированную клавиатуру (Reply + Inline)
-    
-    # Сначала создаем reply клавиатуру
-    reply_builder = ReplyKeyboardBuilder()
-    reply_builder.add(KeyboardButton(text="Новая кнопка"))
-    reply_builder.add(KeyboardButton(text="Новая кнопка"))
-    reply_keyboard = reply_builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    # Отправляем основное сообщение с reply клавиатурой
-    sent_message = await message.answer(text, reply_markup=reply_keyboard)
-    
-    # Затем создаем inline клавиатуру
-    inline_builder = InlineKeyboardBuilder()
-    inline_builder.add(InlineKeyboardButton(text="Новая inline кнопка", callback_data="Новая inline кнопка"))
-    inline_keyboard = inline_builder.as_markup()
-    # Прикрепляем inline кнопки к тому же сообщению
-    await message.answer(text, reply_markup=inline_keyboard)
-    # Устанавливаем reply клавиатуру отдельным минимальным сообщением
-    await message.answer("⚡", reply_markup=reply_keyboard)
+    # Удаляем предыдущие reply клавиатуры если они были
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 
-# Обработчики inline кнопок
-@dp.callback_query(lambda c: c.data == "Новая inline кнопка")
-async def handle_inline_CK5AyUaUHfUkeoEXBOEuT(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    await callback_query.message.answer("Переход к: Новая inline кнопка")
+# Обработчики синонимов команд
+@dp.message(lambda message: message.text and message.text.lower() == "старт")
+async def start_synonym_старт_handler(message: types.Message):
+    # Синоним для команды /start
+    await start_handler(message)
 
 # Запуск бота
 async def main():
