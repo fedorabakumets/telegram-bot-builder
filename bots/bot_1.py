@@ -23,6 +23,12 @@ async def start_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 
+# Обработчики синонимов команд
+@dp.message(lambda message: message.text and message.text.lower() == "старт")
+async def start_synonym_старт_handler(message: types.Message):
+    # Синоним для команды /start
+    await start_handler(message)
+
 # Запуск бота
 async def main():
     try:
