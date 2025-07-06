@@ -5,8 +5,8 @@ import { useState } from 'react';
 
 interface HeaderProps {
   projectName: string;
-  currentTab: 'editor' | 'preview' | 'export' | 'bot';
-  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot') => void;
+  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'connections';
+  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections') => void;
   onSave: () => void;
   onExport: () => void;
   onSaveAsTemplate?: () => void;
@@ -70,6 +70,16 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             }`}
           >
             Бот
+          </button>
+          <button 
+            onClick={() => onTabChange('connections')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              currentTab === 'connections' 
+                ? 'text-primary bg-primary/10' 
+                : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            Связи
           </button>
         </nav>
       </div>

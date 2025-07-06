@@ -10,20 +10,26 @@ import { ExportModal } from '@/components/editor/export-modal';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
 import { TemplatesModal } from '@/components/editor/templates-modal';
+import { ConnectionManagerPanel } from '@/components/editor/connection-manager-panel';
+import { EnhancedConnectionControls } from '@/components/editor/enhanced-connection-controls';
+import { ConnectionVisualization } from '@/components/editor/connection-visualization';
+import { SmartConnectionCreator } from '@/components/editor/smart-connection-creator';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { BotProject, ComponentDefinition } from '@/types/bot';
+import { BotProject, ComponentDefinition, Connection } from '@/types/bot';
 
 export default function Editor() {
   const [, setLocation] = useLocation();
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot'>('editor');
+  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'connections'>('editor');
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
+  const [autoButtonCreation, setAutoButtonCreation] = useState(true);
+  const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -80,7 +86,7 @@ export default function Editor() {
     updateProjectMutation.mutate({});
   }, [updateProjectMutation]);
 
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot') => {
+  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
@@ -90,6 +96,9 @@ export default function Editor() {
       setShowExport(true);
     } else if (tab === 'bot') {
       // Auto-save before showing bot controls
+      updateProjectMutation.mutate({});
+    } else if (tab === 'connections') {
+      // Auto-save before showing connections
       updateProjectMutation.mutate({});
     }
   }, [updateProjectMutation]);
@@ -137,6 +146,37 @@ export default function Editor() {
       });
     }
   }, [updateProjectMutation, toast]);
+
+  // Обработчики для управления связями
+  const handleConnectionsChange = useCallback((newConnections: Connection[]) => {
+    // Обновляем связи через существующий механизм
+    const currentData = getBotData();
+    updateProjectMutation.mutate({
+      data: {
+        ...currentData,
+        connections: newConnections
+      }
+    });
+  }, [getBotData, updateProjectMutation]);
+
+  const handleConnectionSelect = useCallback((connection: Connection | null) => {
+    setSelectedConnection(connection);
+    setSelectedConnectionId(connection?.id || null);
+  }, []);
+
+  const handleConnectionEdit = useCallback((connection: Connection) => {
+    setSelectedConnection(connection);
+    setSelectedConnectionId(connection.id);
+    // Можно добавить логику редактирования
+  }, []);
+
+  const handleConnectionDelete = useCallback((connectionId: string) => {
+    deleteConnection(connectionId);
+    if (selectedConnectionId === connectionId) {
+      setSelectedConnectionId(null);
+      setSelectedConnection(null);
+    }
+  }, [deleteConnection, selectedConnectionId]);
 
   if (!currentProject) {
     return (
@@ -211,6 +251,52 @@ export default function Editor() {
                 projectName={currentProject.name}
               />
             </div>
+          </div>
+        ) : currentTab === 'connections' ? (
+          <div className="h-full bg-background">
+            <ResizablePanelGroup direction="horizontal" className="h-full">
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <div className="h-full p-4 space-y-4 overflow-auto">
+                  <SmartConnectionCreator
+                    nodes={nodes}
+                    connections={connections}
+                    onConnectionAdd={addConnection}
+                    onNodesChange={updateNodes}
+                    autoButtonCreation={autoButtonCreation}
+                    selectedNodeId={selectedNodeId}
+                  />
+                  
+                  <EnhancedConnectionControls
+                    nodes={nodes}
+                    connections={connections}
+                    onConnectionsChange={handleConnectionsChange}
+                    onNodesChange={updateNodes}
+                    selectedConnection={selectedConnection}
+                    onConnectionSelect={handleConnectionSelect}
+                    autoButtonCreation={autoButtonCreation}
+                    onAutoButtonCreationChange={setAutoButtonCreation}
+                  />
+                </div>
+              </ResizablePanel>
+              
+              <ResizableHandle withHandle />
+              
+              <ResizablePanel defaultSize={50} minSize={30}>
+                <div className="h-full p-4 overflow-auto">
+                  <ConnectionVisualization
+                    nodes={nodes}
+                    connections={connections}
+                    onConnectionSelect={handleConnectionSelect}
+                    onConnectionDelete={handleConnectionDelete}
+                    onConnectionEdit={handleConnectionEdit}
+                    selectedConnectionId={selectedConnectionId}
+                    showLabels={true}
+                    showMetrics={true}
+                    interactive={true}
+                  />
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </div>
         ) : null}
       </div>
