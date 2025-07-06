@@ -238,6 +238,8 @@ export default function Editor() {
     <div className="h-screen overflow-hidden bg-gray-50">
       <Header
         projectName={currentProject.name}
+        projectId={currentProject.id}
+        projectDescription={currentProject.description ?? undefined}
         currentTab={currentTab}
         onTabChange={handleTabChange}
         onSave={handleSave}
@@ -249,6 +251,21 @@ export default function Editor() {
         canRedo={canRedo}
         onUndo={undo}
         onRedo={redo}
+        botData={{ nodes, connections }}
+        onTemplateSaved={(templateId) => {
+          toast({
+            title: "Шаблон сохранен",
+            description: "Шаблон успешно добавлен в библиотеку",
+          });
+        }}
+        onImportSuccess={(result) => {
+          toast({
+            title: "Импорт завершен",
+            description: result.message,
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+        }}
         autoSaveStatus={{
           isSaving: autoSave.isSaving,
           lastSaved: null, // Можно добавить отслеживание времени последнего сохранения позже

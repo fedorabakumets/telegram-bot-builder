@@ -6,6 +6,7 @@ import { join } from "path";
 import { storage } from "./storage";
 import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
+import { createTemplateExport, validateTemplateImport, createTemplateFileName } from "@shared/template-format";
 import { z } from "zod";
 
 // Глобальное хранилище активных процессов ботов
@@ -1081,6 +1082,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ hasDefault: true, token: safeToken });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch default token" });
+    }
+  });
+
+  // Template Import/Export Endpoints
+  
+  // Export template as file
+  app.get("/api/templates/:id/export", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getBotTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      // Create export data
+      const exportData = createTemplateExport(
+        template.name,
+        template.description || "",
+        template.data,
+        {
+          version: template.version || "1.0.0",
+          author: template.authorName || "Unknown",
+          category: template.category as any,
+          difficulty: template.difficulty as any,
+          language: template.language as any,
+          tags: template.tags || [],
+          complexity: template.complexity || 1,
+          estimatedTime: template.estimatedTime || 5,
+          requiresToken: Boolean(template.requiresToken),
+          createdAt: template.createdAt?.toISOString(),
+        },
+        template.authorName || "Unknown"
+      );
+
+      // Generate filename
+      const fileName = createTemplateFileName(template.name);
+
+      // Set headers for file download
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Length', JSON.stringify(exportData, null, 2).length);
+
+      res.json(exportData);
+    } catch (error) {
+      console.error('Template export error:', error);
+      res.status(500).json({ message: "Failed to export template" });
+    }
+  });
+
+  // Export project as template file
+  app.get("/api/projects/:id/export", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const project = await storage.getBotProject(id);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+
+      // Create export data from project
+      const exportData = createTemplateExport(
+        project.name,
+        project.description || "",
+        project.data,
+        {
+          category: "custom",
+          difficulty: "easy",
+          language: "ru",
+          tags: ["custom", "export"],
+          complexity: 1,
+          estimatedTime: 5,
+          requiresToken: true,
+        },
+        "User"
+      );
+
+      // Generate filename
+      const fileName = createTemplateFileName(project.name);
+
+      // Set headers for file download
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Length', JSON.stringify(exportData, null, 2).length);
+
+      res.json(exportData);
+    } catch (error) {
+      console.error('Project export error:', error);
+      res.status(500).json({ message: "Failed to export project" });
+    }
+  });
+
+  // Import template from file
+  app.post("/api/templates/import", async (req, res) => {
+    try {
+      // Validate the imported data
+      const templateData = validateTemplateImport(req.body);
+
+      // Create template in database
+      const newTemplate = await storage.createBotTemplate({
+        name: templateData.name,
+        description: templateData.description || "",
+        data: templateData.botData,
+        category: templateData.metadata.category,
+        tags: templateData.metadata.tags,
+        isPublic: 0, // Imported templates are private by default
+        difficulty: templateData.metadata.difficulty,
+        authorId: null,
+        authorName: templateData.metadata.author || "Imported",
+        version: templateData.metadata.version,
+        previewImage: null,
+        featured: 0,
+        language: templateData.metadata.language,
+        requiresToken: templateData.metadata.requiresToken ? 1 : 0,
+        complexity: templateData.metadata.complexity,
+        estimatedTime: templateData.metadata.estimatedTime,
+      });
+
+      res.status(201).json({
+        message: "Template imported successfully",
+        template: newTemplate,
+        importInfo: {
+          originalAuthor: templateData.metadata.author,
+          exportedAt: templateData.metadata.exportedAt,
+          formatVersion: templateData.exportInfo.formatVersion,
+        }
+      });
+    } catch (error) {
+      console.error('Template import error:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid template format", 
+          errors: error.errors,
+          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
+        });
+      }
+      res.status(500).json({ message: "Failed to import template" });
+    }
+  });
+
+  // Import template as new project
+  app.post("/api/projects/import", async (req, res) => {
+    try {
+      // Validate the imported data
+      const templateData = validateTemplateImport(req.body);
+
+      // Create new project from template
+      const newProject = await storage.createBotProject({
+        name: `${templateData.name} (Imported)`,
+        description: templateData.description || "",
+        data: templateData.botData,
+      });
+
+      res.status(201).json({
+        message: "Project imported successfully",
+        project: newProject,
+        importInfo: {
+          originalName: templateData.name,
+          originalAuthor: templateData.metadata.author,
+          exportedAt: templateData.metadata.exportedAt,
+        }
+      });
+    } catch (error) {
+      console.error('Project import error:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid template format", 
+          errors: error.errors,
+          hint: "Please make sure the file is a valid Telegram Bot Builder template file (.tbb.json)"
+        });
+      }
+      res.status(500).json({ message: "Failed to import project" });
     }
   });
 

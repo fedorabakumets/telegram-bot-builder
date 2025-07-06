@@ -3,11 +3,14 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { HistoryIndicator } from './history-indicator';
 import { AutoSaveIndicator } from './auto-save-indicator';
 import { FloatingTemplateManager } from '@/components/ui/floating-template-manager';
+import { ImportExportControls } from '@/components/import-export';
 import { FolderOpen, Bookmark, Save, Download, User, Send } from 'lucide-react';
 import { useState } from 'react';
 
 interface HeaderProps {
   projectName: string;
+  projectId?: number;
+  projectDescription?: string;
   currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'connections';
   onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections') => void;
   onSave: () => void;
@@ -18,6 +21,8 @@ interface HeaderProps {
   // Bot data for template creation
   botData?: any;
   onTemplateSaved?: (templateId: number) => void;
+  // Import/Export callbacks
+  onImportSuccess?: (result: any) => void;
   // История изменений
   canUndo?: boolean;
   canRedo?: boolean;
@@ -34,6 +39,8 @@ interface HeaderProps {
 
 export function Header({ 
   projectName, 
+  projectId,
+  projectDescription,
   currentTab, 
   onTabChange, 
   onSave, 
@@ -43,6 +50,7 @@ export function Header({
   isSaving,
   botData,
   onTemplateSaved,
+  onImportSuccess,
   canUndo = false,
   canRedo = false,
   onUndo,
@@ -156,6 +164,18 @@ export function Header({
             <span>Сохранить шаблон</span>
           </Button>
         )}
+        
+        {/* Import/Export Controls */}
+        <ImportExportControls
+          sourceType={projectId ? 'project' : undefined}
+          sourceId={projectId}
+          sourceName={projectName}
+          sourceDescription={projectDescription}
+          onImportSuccess={onImportSuccess}
+          variant="split"
+          size="sm"
+          showLabels={false}
+        />
         
         <Button 
           variant="outline" 

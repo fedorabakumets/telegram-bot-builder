@@ -6,12 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield } from 'lucide-react';
+import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { TemplateImport } from '@/components/import-export';
 import type { BotTemplate } from '@shared/schema';
 import type { BotData } from '@/types/bot';
 
@@ -28,6 +29,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
   const [showPreview, setShowPreview] = useState(false);
   const [currentTab, setCurrentTab] = useState('all');
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'recent' | 'name'>('popular');
+  const [showImport, setShowImport] = useState(false);
 
   const { toast } = useToast();
 
@@ -620,10 +622,21 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            Шаблоны ботов
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              Шаблоны ботов
+            </DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowImport(true)}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Импорт
+            </Button>
+          </div>
         </DialogHeader>
 
         {showPreview && selectedTemplate ? (
@@ -746,6 +759,20 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
           </Tabs>
         )}
       </DialogContent>
+      
+      <TemplateImport
+        open={showImport}
+        onOpenChange={setShowImport}
+        onSuccess={(result) => {
+          toast({
+            title: "Импорт завершен",
+            description: result.message,
+          });
+          // Обновляем список шаблонов
+          queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+        }}
+      />
     </Dialog>
   );
 }
