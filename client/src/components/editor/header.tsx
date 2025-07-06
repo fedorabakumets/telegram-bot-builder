@@ -150,45 +150,9 @@ export function Header({
           </Button>
         </Link>
         
-        {/* Hierarchical Diagram Link */}
-        <Link href="/hierarchy">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex items-center space-x-2"
-          >
-            <Workflow className="h-4 w-4 text-muted-foreground" />
-            <span>Иерархия</span>
-          </Button>
-        </Link>
         
-        {/* Fallback for legacy template buttons when botData is not available */}
-        {!botData && onLoadTemplate && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              console.log('Templates button clicked in header');
-              onLoadTemplate();
-            }}
-            className="flex items-center space-x-2"
-          >
-            <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            <span>Шаблоны</span>
-          </Button>
-        )}
         
-        {!botData && onSaveAsTemplate && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={onSaveAsTemplate}
-            className="flex items-center space-x-2"
-          >
-            <Bookmark className="h-4 w-4 text-muted-foreground" />
-            <span>Сохранить шаблон</span>
-          </Button>
-        )}
+        
         
         {/* Import/Export Controls */}
         <ImportExportControls
