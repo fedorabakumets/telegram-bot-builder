@@ -18,6 +18,9 @@ export async function seedDefaultTemplates() {
       category: "business",
       tags: ["информация", "меню", "базовый"],
       isPublic: 1,
+      difficulty: "easy",
+      authorName: "Система",
+      version: "1.0.0",
       data: {
         nodes: [
           {
@@ -144,6 +147,9 @@ export async function seedDefaultTemplates() {
       category: "utility",
       tags: ["faq", "вопросы", "поддержка"],
       isPublic: 1,
+      difficulty: "medium",
+      authorName: "Система",
+      version: "1.0.0",
       data: {
         nodes: [
           {
@@ -286,6 +292,9 @@ export async function seedDefaultTemplates() {
       category: "business",
       tags: ["магазин", "товары", "продажи"],
       isPublic: 1,
+      difficulty: "medium",
+      authorName: "Система", 
+      version: "1.0.0",
       data: {
         nodes: [
           {

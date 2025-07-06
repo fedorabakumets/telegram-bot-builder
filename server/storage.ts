@@ -31,6 +31,11 @@ export interface IStorage {
   createBotTemplate(template: InsertBotTemplate): Promise<BotTemplate>;
   updateBotTemplate(id: number, template: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined>;
   deleteBotTemplate(id: number): Promise<boolean>;
+  incrementTemplateUseCount(id: number): Promise<boolean>;
+  rateTemplate(id: number, rating: number): Promise<boolean>;
+  getFeaturedTemplates(): Promise<BotTemplate[]>;
+  getTemplatesByCategory(category: string): Promise<BotTemplate[]>;
+  searchTemplates(query: string): Promise<BotTemplate[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -211,6 +216,15 @@ export class MemStorage implements IStorage {
       tags: insertTemplate.tags || [],
       isPublic: insertTemplate.isPublic || 0,
       description: insertTemplate.description || null,
+      difficulty: insertTemplate.difficulty || "easy",
+      authorId: insertTemplate.authorId || null,
+      authorName: insertTemplate.authorName || null,
+      useCount: 0,
+      rating: 0,
+      ratingCount: 0,
+      featured: 0,
+      version: insertTemplate.version || "1.0.0",
+      previewImage: insertTemplate.previewImage || null,
     };
     this.templates.set(id, template);
     return template;
@@ -232,6 +246,58 @@ export class MemStorage implements IStorage {
 
   async deleteBotTemplate(id: number): Promise<boolean> {
     return this.templates.delete(id);
+  }
+
+  async incrementTemplateUseCount(id: number): Promise<boolean> {
+    const template = this.templates.get(id);
+    if (!template) return false;
+
+    const updatedTemplate = {
+      ...template,
+      useCount: (template.useCount || 0) + 1,
+      updatedAt: new Date(),
+    };
+    
+    this.templates.set(id, updatedTemplate);
+    return true;
+  }
+
+  async rateTemplate(id: number, rating: number): Promise<boolean> {
+    const template = this.templates.get(id);
+    if (!template) return false;
+
+    // Обновляем рейтинг
+    const currentRatingCount = template.ratingCount || 0;
+    const currentRating = template.rating || 0;
+    const newRatingCount = currentRatingCount + 1;
+    const newRating = Math.round(((currentRating * currentRatingCount) + rating) / newRatingCount);
+
+    const updatedTemplate = {
+      ...template,
+      rating: newRating,
+      ratingCount: newRatingCount,
+      updatedAt: new Date(),
+    };
+    
+    this.templates.set(id, updatedTemplate);
+    return true;
+  }
+
+  async getFeaturedTemplates(): Promise<BotTemplate[]> {
+    return Array.from(this.templates.values()).filter(template => template.featured === 1);
+  }
+
+  async getTemplatesByCategory(category: string): Promise<BotTemplate[]> {
+    return Array.from(this.templates.values()).filter(template => template.category === category);
+  }
+
+  async searchTemplates(query: string): Promise<BotTemplate[]> {
+    const searchTerm = query.toLowerCase();
+    return Array.from(this.templates.values()).filter(template => 
+      template.name.toLowerCase().includes(searchTerm) ||
+      (template.description && template.description.toLowerCase().includes(searchTerm)) ||
+      (template.tags && template.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+    );
   }
 }
 

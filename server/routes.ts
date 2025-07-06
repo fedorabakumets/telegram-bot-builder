@@ -596,6 +596,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Use template (increment use count)
+  app.post("/api/templates/:id/use", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.incrementTemplateUseCount(id);
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json({ message: "Template use count incremented" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to increment use count" });
+    }
+  });
+
+  // Rate template
+  app.post("/api/templates/:id/rate", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { rating } = req.body;
+      
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+
+      const success = await storage.rateTemplate(id, rating);
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json({ message: "Template rated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to rate template" });
+    }
+  });
+
+  // Get featured templates
+  app.get("/api/templates/featured", async (req, res) => {
+    try {
+      const templates = await storage.getFeaturedTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch featured templates" });
+    }
+  });
+
+  // Get templates by category
+  app.get("/api/templates/category/:category", async (req, res) => {
+    try {
+      const { category } = req.params;
+      const templates = await storage.getTemplatesByCategory(category);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch templates by category" });
+    }
+  });
+
+  // Search templates
+  app.get("/api/templates/search", async (req, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+      const templates = await storage.searchTemplates(q);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search templates" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

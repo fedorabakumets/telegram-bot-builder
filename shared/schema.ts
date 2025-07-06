@@ -27,9 +27,18 @@ export const botTemplates = pgTable("bot_templates", {
   name: text("name").notNull(),
   description: text("description"),
   data: jsonb("data").notNull(),
-  category: text("category").default("custom"), // "official", "community", "custom"
+  category: text("category").default("custom"), // "official", "community", "custom", "business", "entertainment", "education", "utility", "games"
   tags: text("tags").array(),
   isPublic: integer("is_public").default(0), // 0 = private, 1 = public
+  difficulty: text("difficulty").default("easy"), // "easy", "medium", "hard"
+  authorId: text("author_id"), // ID автора шаблона
+  authorName: text("author_name"), // Имя автора
+  useCount: integer("use_count").notNull().default(0), // Количество использований
+  rating: integer("rating").notNull().default(0), // Рейтинг от 1 до 5
+  ratingCount: integer("rating_count").notNull().default(0), // Количество оценок
+  featured: integer("featured").notNull().default(0), // 0 = не рекомендуемый, 1 = рекомендуемый
+  version: text("version").default("1.0.0"), // Версия шаблона
+  previewImage: text("preview_image"), // URL изображения для предварительного просмотра
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -55,6 +64,21 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   category: true,
   tags: true,
   isPublic: true,
+  difficulty: true,
+  authorId: true,
+  authorName: true,
+  version: true,
+  previewImage: true,
+}).extend({
+  category: z.enum(["custom", "business", "entertainment", "education", "utility", "games", "official", "community"]).default("custom"),
+  difficulty: z.enum(["easy", "medium", "hard"]).default("easy"),
+  rating: z.number().min(1).max(5).optional(),
+});
+
+// Схема для оценки шаблона
+export const rateTemplateSchema = z.object({
+  templateId: z.number(),
+  rating: z.number().min(1).max(5),
 });
 
 export type InsertBotProject = z.infer<typeof insertBotProjectSchema>;
