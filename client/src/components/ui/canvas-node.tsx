@@ -21,13 +21,13 @@ const nodeIcons = {
 };
 
 const nodeColors = {
-  start: 'bg-green-100 text-green-600',
-  message: 'bg-blue-100 text-blue-600',
-  photo: 'bg-purple-100 text-purple-600',
-  keyboard: 'bg-amber-100 text-amber-600',
-  condition: 'bg-red-100 text-red-600',
-  input: 'bg-cyan-100 text-cyan-600',
-  command: 'bg-indigo-100 text-indigo-600'
+  start: 'bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
+  message: 'bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800',
+  photo: 'bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800',
+  keyboard: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
+  condition: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
+  input: 'bg-gradient-to-br from-cyan-50 to-teal-100 dark:from-cyan-900/30 dark:to-teal-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800',
+  command: 'bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800'
 };
 
 export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: CanvasNodeProps) {
@@ -106,10 +106,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
     <div
       ref={nodeRef}
       className={cn(
-        "bg-background rounded-xl shadow-lg border p-6 w-80 transition-all duration-200 relative select-none",
-        isSelected ? "border-2 border-primary ring-2 ring-primary ring-opacity-20" : "border border-border",
-        isDragging ? "shadow-2xl scale-105 cursor-grabbing z-50 border-primary bg-primary/10" : "hover:shadow-xl",
-        onMove ? "cursor-grab hover:cursor-grab hover:border-primary/50" : "cursor-pointer"
+        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 transition-all duration-300 relative select-none",
+        isSelected ? "border-blue-500 ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10" : "border-gray-200 dark:border-slate-700",
+        isDragging ? "shadow-3xl scale-105 cursor-grabbing z-50 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "hover:shadow-2xl hover:border-gray-300 dark:hover:border-slate-600",
+        onMove ? "cursor-grab hover:cursor-grab" : "cursor-pointer"
       )}
       onClick={!isDragging ? onClick : undefined}
       onMouseDown={handleMouseDown}
@@ -129,9 +129,9 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove }: Canv
             e.stopPropagation();
             onDelete();
           }}
-          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+          className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl border-2 border-white dark:border-slate-900"
         >
-          <i className="fas fa-times text-xs"></i>
+          <i className="fas fa-times text-sm"></i>
         </button>
       )}
       {/* Node header */}
