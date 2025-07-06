@@ -11,6 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
+import { EnhancedInlineKeyboard } from './enhanced-inline-keyboard';
 import { useState, useMemo, useEffect } from 'react';
 
 interface PropertiesPanelProps {
@@ -587,129 +588,15 @@ export function PropertiesPanel({
               <div>
 
 
-                {/* Inline Buttons for inline mode */}
+                {/* Enhanced Inline Keyboard */}
                 {selectedNode.data.keyboardType === 'inline' && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-xs font-medium text-muted-foreground">
-                        Inline кнопки ({(selectedNode.data.inlineButtons || []).length})
-                      </Label>
-                      <UIButton
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleAddInlineButton}
-                        className="text-xs text-primary hover:text-primary/80 font-medium h-auto p-1"
-                      >
-                        + Добавить
-                      </UIButton>
-                    </div>
-                    <div className="space-y-2">
-                      {(selectedNode.data.inlineButtons || []).map((button) => (
-                        <div key={button.id} className="bg-muted/50 rounded-lg p-3 border-l-4 border-l-blue-500">
-                          <div className="flex items-center justify-between mb-2">
-                            <Input
-                              value={button.text}
-                              onChange={(e) => onInlineButtonUpdate?.(selectedNode.id, button.id, { text: e.target.value })}
-                              className="flex-1 text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary"
-                              placeholder="Текст Inline кнопки"
-                            />
-                            <UIButton
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => onInlineButtonDelete?.(selectedNode.id, button.id)}
-                              className="text-muted-foreground hover:text-destructive dark:text-muted-foreground dark:hover:text-destructive h-auto p-1 transition-colors duration-200"
-                            >
-                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </UIButton>
-                          </div>
-                          <Select
-                            value={button.action}
-                            onValueChange={(value: 'goto' | 'command' | 'url') =>
-                              onInlineButtonUpdate?.(selectedNode.id, button.id, { action: value })
-                            }
-                          >
-                            <SelectTrigger className="w-full text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="goto">Перейти к экрану</SelectItem>
-                              <SelectItem value="command">Выполнить команду</SelectItem>
-                              <SelectItem value="url">Открыть ссылку</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          
-                          {button.action === 'url' && (
-                            <Input
-                              value={button.url || ''}
-                              onChange={(e) => onInlineButtonUpdate?.(selectedNode.id, button.id, { url: e.target.value })}
-                              className="mt-2 text-xs"
-                              placeholder="https://example.com"
-                            />
-                          )}
-                          
-                          {button.action === 'command' && (
-                            <div className="mt-2 space-y-2">
-                              <Select
-                                value={button.target || ''}
-                                onValueChange={(value) => onInlineButtonUpdate?.(selectedNode.id, button.id, { target: value })}
-                              >
-                                <SelectTrigger className="text-xs">
-                                  <SelectValue placeholder="Выберите команду" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {allNodes
-                                    .filter(node => (node.type === 'start' || node.type === 'command') && node.data.command)
-                                    .map((node) => (
-                                      <SelectItem key={node.id} value={node.data.command!}>
-                                        <div className="flex items-center space-x-2">
-                                          <i className={`${node.type === 'start' ? 'fas fa-play' : 'fas fa-terminal'} text-xs`}></i>
-                                          <span>{node.data.command}</span>
-                                          {node.data.description && (
-                                            <span className="text-gray-500">- {node.data.description}</span>
-                                          )}
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                              
-                              <Input
-                                value={button.target || ''}
-                                onChange={(e) => onInlineButtonUpdate?.(selectedNode.id, button.id, { target: e.target.value })}
-                                className="text-xs"
-                                placeholder="Или введите команду вручную (например: /help)"
-                              />
-                            </div>
-                          )}
-                          
-                          {button.action === 'goto' && (
-                            <Select
-                              value={button.target || ''}
-                              onValueChange={(value) => onInlineButtonUpdate?.(selectedNode.id, button.id, { target: value })}
-                            >
-                              <SelectTrigger className="mt-2 text-xs">
-                                <SelectValue placeholder="Выберите целевой экран" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {allNodes
-                                  .filter(node => node.id !== selectedNode.id)
-                                  .map((node) => (
-                                    <SelectItem key={node.id} value={node.id}>
-                                      <div className="flex items-center space-x-2">
-                                        <i className={`${getNodeIcon(node.type)} text-xs`}></i>
-                                        <span>{getNodeTitle(node)}</span>
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <EnhancedInlineKeyboard
+                    selectedNode={selectedNode}
+                    allNodes={allNodes || []}
+                    onNodeUpdate={onNodeUpdate}
+                    onInlineButtonUpdate={onInlineButtonUpdate}
+                    onInlineButtonDelete={onInlineButtonDelete}
+                  />
                 )}
 
                 {/* Reply buttons for reply mode */}

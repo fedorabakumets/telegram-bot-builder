@@ -211,15 +211,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   // Generate callback handlers for inline buttons
   const inlineNodes = nodes.filter(node => 
     node.data.keyboardType === 'inline' && 
-    node.data.inlineButtons && node.data.inlineButtons.length > 0
+    ((node.data.inlineButtons && node.data.inlineButtons.length > 0) || 
+     (node.data.buttons && node.data.buttons.length > 0))
   );
 
   if (inlineNodes.length > 0) {
     code += '\n# Обработчики inline кнопок\n';
     inlineNodes.forEach(node => {
-      node.data.inlineButtons.forEach(button => {
-        const callbackData = button.target || button.text;
-        const handlerId = button.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      const inlineButtons = node.data.inlineButtons || node.data.buttons || [];
+      inlineButtons.forEach((button: any) => {
+        // Skip URL buttons as they don't need callback handlers
+        if (button.action === 'url') {
+          return;
+        }
+        
+        const callbackData = button.target || button.text.replace(/[^a-zA-Z0-9а-яА-Я_]/g, '_');
+        const handlerId = (button.id || `btn_${Date.now()}`).replace(/[^a-zA-Z0-9_]/g, '_');
         
         if (button.action === 'goto') {
           // Find target node
@@ -230,17 +237,49 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    await callback_query.answer()\n';
           
           if (targetNode) {
-            // Navigate to target node
+            // Navigate to target node and generate its content
             if (targetNode.type === 'message') {
-              code += `    text = "${targetNode.data.messageText || 'Сообщение'}"\n`;
-              code += '    await callback_query.message.answer(text)\n';
+              const messageText = targetNode.data.messageText || 'Сообщение';
+              code += `    text = "${messageText}"\n`;
+              
+              // Generate keyboard for target node if it has one
+              if (targetNode.data.keyboardType === 'inline' && (targetNode.data.inlineButtons || targetNode.data.buttons)) {
+                const targetButtons = targetNode.data.inlineButtons || targetNode.data.buttons || [];
+                if (targetButtons.length > 0) {
+                  code += '    builder = InlineKeyboardBuilder()\n';
+                  targetButtons.forEach((btn: any) => {
+                    const btnText = btn.icon ? `${btn.icon} ${btn.text}` : btn.text;
+                    if (btn.action === "url") {
+                      code += `    builder.add(InlineKeyboardButton(text="${btnText}", url="${btn.url || '#'}"))\n`;
+                    } else {
+                      const btnCallbackData = btn.target || btn.text.replace(/[^a-zA-Z0-9а-яА-Я_]/g, '_');
+                      code += `    builder.add(InlineKeyboardButton(text="${btnText}", callback_data="${btnCallbackData}"))\n`;
+                    }
+                  });
+                  code += '    keyboard = builder.as_markup()\n';
+                  code += '    await callback_query.message.answer(text, reply_markup=keyboard)\n';
+                } else {
+                  code += '    await callback_query.message.answer(text)\n';
+                }
+              } else {
+                code += '    await callback_query.message.answer(text)\n';
+              }
             } else if (targetNode.type === 'photo') {
-              code += `    text = "${targetNode.data.messageText || ''}"\n`;
-              code += `    photo_url = "${targetNode.data.imageUrl || ''}"\n`;
+              const messageText = targetNode.data.messageText || '';
+              const imageUrl = targetNode.data.imageUrl || '';
+              code += `    text = "${messageText}"\n`;
+              code += `    photo_url = "${imageUrl}"\n`;
               code += '    if photo_url:\n';
               code += '        await send_photo_safe(callback_query.message, photo_url, text)\n';
               code += '    else:\n';
               code += '        await callback_query.message.answer(text or "Фото недоступно")\n';
+            } else if (targetNode.type === 'start') {
+              code += '    # Вызываем start handler\n';
+              code += '    await start_handler(callback_query.message)\n';
+            } else if (targetNode.type === 'command') {
+              const funcName = (targetNode.data.command || 'help').replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
+              code += `    # Вызываем команду ${targetNode.data.command}\n`;
+              code += `    await ${funcName}_handler(callback_query.message)\n`;
             } else {
               code += `    await callback_query.message.answer("Переход к: ${button.text}")\n`;
             }
@@ -263,9 +302,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           } else {
             code += `    await callback_query.message.answer("Команда: ${button.target}")\n`;
           }
-        } else if (button.action === 'url') {
-          // URL buttons don't need callback handlers as they open directly
-          return;
         }
       });
     });
@@ -378,20 +414,58 @@ function generateCommandHandler(node: Node): string {
     const hasContentProtection = node.data.hasContentProtection ? 'True' : 'False';
     const disableWebPagePreview = node.data.disableWebPagePreview ? 'True' : 'False';
     code += `    await send_photo_safe(message, photo_url, caption, ${keyboardCode}, ${sendAsDocument}, ${hasContentProtection}, ${disableWebPagePreview})\n`;
-    return code + generateKeyboard(node);
   } else {
     code += `\n    text = "${messageText}"\n`;
-    return code + generateKeyboard(node);
+    code += `    await message.answer(text)\n`;
   }
+  
+  return code;
 }
 
 function generateMessageHandler(node: Node): string {
   const messageText = node.data.messageText || "Сообщение";
-  let code = `\n# Обработчик для сообщения: ${node.id}\n`;
-  code += `async def handle_${node.id}(message: types.Message):\n`;
+  let code = `\n@dp.message()\n`;
+  code += `async def message_${node.id}_handler(message: types.Message):\n`;
   code += `    text = "${messageText}"\n`;
   
-  return code + generateKeyboard(node);
+  // Генерируем клавиатуру или отправляем простое сообщение
+  if (node.data.keyboardType === "inline" && 
+      ((node.data.inlineButtons && node.data.inlineButtons.length > 0) || 
+       (node.data.buttons && node.data.buttons.length > 0))) {
+    
+    code += '    \n';
+    code += '    builder = InlineKeyboardBuilder()\n';
+    
+    // Use inlineButtons first, fallback to buttons for compatibility
+    const inlineButtons = node.data.inlineButtons || node.data.buttons || [];
+    
+    // Group inline buttons by row position for better layout
+    const inlineButtonsByRow = groupButtonsByRow(inlineButtons);
+    Object.entries(inlineButtonsByRow).forEach(([row, buttons]) => {
+      (buttons as any[]).forEach((button: any) => {
+        const buttonText = button.icon ? `${button.icon} ${button.text}` : button.text;
+        if (button.action === "url") {
+          code += `    builder.add(InlineKeyboardButton(text="${buttonText}", url="${button.url || '#'}"))\n`;
+        } else {
+          const callbackData = button.target || button.text.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+          code += `    builder.add(InlineKeyboardButton(text="${buttonText}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      
+      // Add row adjustments for better layout
+      if ((buttons as any[]).length > 1) {
+        code += `    builder.adjust(${(buttons as any[]).length})\n`;
+      }
+    });
+    
+    code += '    keyboard = builder.as_markup()\n';
+    code += '    await message.answer(text, reply_markup=keyboard)\n';
+  } else {
+    // Удаляем предыдущие reply клавиатуры если они были
+    code += '    await message.answer(text, reply_markup=ReplyKeyboardRemove())\n';
+  }
+  
+  return code;
 }
 
 function generatePhotoHandler(node: Node): string {
@@ -436,7 +510,7 @@ function generatePhotoHandler(node: Node): string {
     code += `    await message.answer("❌ Изображение не настроено")\n`;
   }
   
-  return code + generateKeyboard(node);
+  return code;
 }
 
 function generateSynonymHandler(node: Node, synonym: string): string {
@@ -458,47 +532,9 @@ function generateSynonymHandler(node: Node, synonym: string): string {
 }
 
 function generateKeyboard(node: Node): string {
-  let code = '';
-  
-  if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
-    code += '    \n';
-    code += '    builder = ReplyKeyboardBuilder()\n';
-    node.data.buttons.forEach(button => {
-      code += `    builder.add(KeyboardButton(text="${button.text}"))\n`;
-    });
-    
-    code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard}, one_time_keyboard=${node.data.oneTimeKeyboard})\n`;
-    code += '    await message.answer(text, reply_markup=keyboard)\n';
-  } else if (node.data.keyboardType === "inline" && node.data.inlineButtons && node.data.inlineButtons.length > 0) {
-    code += '    \n';
-    code += '    builder = InlineKeyboardBuilder()\n';
-    
-    // Group inline buttons by row position for better layout
-    const inlineButtonsByRow = groupButtonsByRow(node.data.inlineButtons);
-    Object.entries(inlineButtonsByRow).forEach(([row, buttons]) => {
-      (buttons as any[]).forEach((button: any) => {
-        const buttonText = button.icon ? `${button.icon} ${button.text}` : button.text;
-        if (button.action === "url") {
-          code += `    builder.add(InlineKeyboardButton(text="${buttonText}", url="${button.url || '#'}"))\n`;
-        } else {
-          const callbackData = button.target || button.text.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
-          code += `    builder.add(InlineKeyboardButton(text="${buttonText}", callback_data="${callbackData}"))\n`;
-        }
-      });
-      
-      // Add row adjustments for better layout
-      if ((buttons as any[]).length > 1) {
-        code += `    builder.adjust(${(buttons as any[]).length})\n`;
-      }
-    });
-    
-    code += '    keyboard = builder.as_markup()\n';
-    code += '    await message.answer(text, reply_markup=keyboard)\n';
-  } else {
-    code += '    await message.answer(text)\n';
-  }
-  
-  return code;
+  // Эта функция оставлена для совместимости, но теперь генерация клавиатур
+  // встроена непосредственно в обработчики сообщений для лучшего контроля
+  return '';
 }
 
 // Helper function to group buttons by row position
