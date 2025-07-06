@@ -786,5 +786,5 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 }
 
-// Используем MemStorage для быстрой работы, но с возможностью переключения
-export const storage = new MemStorage();
+// Используем DatabaseStorage для постоянного хранения шаблонов
+export const storage = new DatabaseStorage();
