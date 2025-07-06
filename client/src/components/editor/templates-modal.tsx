@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles } from 'lucide-react';
+import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -39,6 +39,12 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
   const { data: featuredTemplates = [], isLoading: isLoadingFeatured } = useQuery<BotTemplate[]>({
     queryKey: ['/api/templates/featured'],
     enabled: isOpen && currentTab === 'featured',
+  });
+
+  // Запрос для пользовательских шаблонов (в данном случае используем фильтрацию по категории custom)
+  const { data: myTemplates = [], isLoading: isLoadingMy } = useQuery<BotTemplate[]>({
+    queryKey: ['/api/templates/category/custom'],
+    enabled: isOpen && currentTab === 'my',
   });
 
   // Мутация для увеличения счетчика использования
@@ -75,6 +81,32 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     },
   });
 
+  // Мутация для удаления шаблона
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (templateId: number) => {
+      const response = await fetch(`/api/templates/${templateId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete template');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+      toast({
+        title: 'Шаблон удален',
+        description: 'Шаблон успешно удален',
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось удалить шаблон',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const categories = [
     { value: 'all', label: 'Все категории' },
     { value: 'custom', label: 'Пользовательские' },
@@ -93,8 +125,9 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     hard: 'Сложный',
   };
 
-  const sortedAndFilteredTemplates = useMemo(() => {
-    let templatesData = currentTab === 'featured' ? featuredTemplates : templates;
+  const filteredAndSortedTemplates = useMemo(() => {
+    let templatesData = currentTab === 'featured' ? featuredTemplates : 
+                       currentTab === 'my' ? myTemplates : templates;
     
     // Фильтрация
     let filtered = templatesData.filter((template: BotTemplate) => {
@@ -104,6 +137,11 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
       const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
+
+    // Дополнительная фильтрация для вкладки "Популярные"
+    if (currentTab === 'popular') {
+      filtered = filtered.filter(t => (t.useCount || 0) > 0);
+    }
 
     // Сортировка
     filtered.sort((a, b) => {
@@ -124,7 +162,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     });
 
     return filtered;
-  }, [templates, featuredTemplates, currentTab, searchTerm, selectedCategory, sortBy]);
+  }, [templates, featuredTemplates, myTemplates, currentTab, searchTerm, selectedCategory, sortBy]);
 
   const handleUseTemplate = async (template: BotTemplate) => {
     try {
@@ -155,6 +193,20 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
         description: 'Не удалось поставить оценку',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleDeleteTemplate = async (template: BotTemplate) => {
+    if (window.confirm(`Вы уверены, что хотите удалить шаблон "${template.name}"?`)) {
+      try {
+        await deleteTemplateMutation.mutateAsync(template.id);
+      } catch (error) {
+        toast({
+          title: 'Ошибка',
+          description: 'Не удалось удалить шаблон',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -192,21 +244,21 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
         )}
         
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="p-3 bg-muted rounded-lg">
+          <div className="p-3 bg-muted dark:bg-muted/50 rounded-lg">
             <div className="font-medium">Узлов</div>
             <div className="text-2xl font-bold text-primary">{stats.nodes}</div>
           </div>
-          <div className="p-3 bg-muted rounded-lg">
+          <div className="p-3 bg-muted dark:bg-muted/50 rounded-lg">
             <div className="font-medium">Связей</div>
-            <div className="text-2xl font-bold text-blue-600">{stats.connections}</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.connections}</div>
           </div>
-          <div className="p-3 bg-muted rounded-lg">
+          <div className="p-3 bg-muted dark:bg-muted/50 rounded-lg">
             <div className="font-medium">Команд</div>
-            <div className="text-2xl font-bold text-green-600">{stats.commands}</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.commands}</div>
           </div>
-          <div className="p-3 bg-muted rounded-lg">
+          <div className="p-3 bg-muted dark:bg-muted/50 rounded-lg">
             <div className="font-medium">Кнопок</div>
-            <div className="text-2xl font-bold text-purple-600">{stats.buttons}</div>
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.buttons}</div>
           </div>
         </div>
         
@@ -237,11 +289,13 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     onPreview: (template: BotTemplate) => void;
     onUse: (template: BotTemplate) => void;
     onRate: (template: BotTemplate, rating: number) => void;
+    onDelete?: (template: BotTemplate) => void;
     searchTerm: string;
     selectedCategory: string;
+    showDeleteButton?: boolean;
   }
 
-  const TemplateGrid = ({ templates, isLoading, onPreview, onUse, onRate, searchTerm, selectedCategory }: TemplateGridProps) => {
+  const TemplateGrid = ({ templates, isLoading, onPreview, onUse, onRate, onDelete, searchTerm, selectedCategory, showDeleteButton = false }: TemplateGridProps) => {
     if (isLoading) {
       return (
         <div className="flex items-center justify-center py-8">
@@ -268,7 +322,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
           const stats = getTemplateStats(template.data as BotData);
           
           return (
-            <Card key={template.id} className="hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20">
+            <Card key={template.id} className="hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 dark:bg-card/50 dark:hover:bg-card/80">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -309,19 +363,19 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
               <CardContent className="space-y-3">
                 {/* Статистика */}
                 <div className="grid grid-cols-4 gap-2 text-xs">
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted dark:bg-muted/30 rounded">
                     <div className="font-medium">{stats.nodes}</div>
                     <div className="text-muted-foreground">узлов</div>
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted dark:bg-muted/30 rounded">
                     <div className="font-medium">{stats.connections}</div>
                     <div className="text-muted-foreground">связей</div>
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted dark:bg-muted/30 rounded">
                     <div className="font-medium">{stats.commands}</div>
                     <div className="text-muted-foreground">команд</div>
                   </div>
-                  <div className="text-center p-2 bg-muted rounded">
+                  <div className="text-center p-2 bg-muted dark:bg-muted/30 rounded">
                     <div className="font-medium">{stats.buttons}</div>
                     <div className="text-muted-foreground">кнопок</div>
                   </div>
@@ -373,6 +427,16 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
                     <Download className="h-4 w-4 mr-1" />
                     Использовать
                   </Button>
+                  {showDeleteButton && onDelete && template.category === 'custom' && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => onDelete(template)}
+                      className="px-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
 
                 {/* Рейтинг */}
@@ -412,7 +476,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
           </div>
         ) : (
           <Tabs value={currentTab} onValueChange={setCurrentTab} className="flex flex-col h-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="all" className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
                 Все шаблоны
@@ -424,6 +488,10 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
               <TabsTrigger value="popular" className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
                 Популярные
+              </TabsTrigger>
+              <TabsTrigger value="my" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Мои шаблоны
               </TabsTrigger>
             </TabsList>
 
@@ -473,7 +541,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
 
             <TabsContent value="all" className="flex-1 overflow-y-auto">
               <TemplateGrid 
-                templates={sortedAndFilteredTemplates} 
+                templates={filteredAndSortedTemplates} 
                 isLoading={isLoading}
                 onPreview={handlePreview}
                 onUse={handleUseTemplate}
@@ -485,7 +553,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
             
             <TabsContent value="featured" className="flex-1 overflow-y-auto">
               <TemplateGrid 
-                templates={sortedAndFilteredTemplates} 
+                templates={filteredAndSortedTemplates} 
                 isLoading={isLoadingFeatured}
                 onPreview={handlePreview}
                 onUse={handleUseTemplate}
@@ -497,13 +565,27 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
             
             <TabsContent value="popular" className="flex-1 overflow-y-auto">
               <TemplateGrid 
-                templates={sortedAndFilteredTemplates.filter(t => (t.useCount || 0) > 0)} 
+                templates={filteredAndSortedTemplates} 
                 isLoading={isLoading}
                 onPreview={handlePreview}
                 onUse={handleUseTemplate}
                 onRate={handleRateTemplate}
                 searchTerm={searchTerm}
                 selectedCategory={selectedCategory}
+              />
+            </TabsContent>
+            
+            <TabsContent value="my" className="flex-1 overflow-y-auto">
+              <TemplateGrid 
+                templates={filteredAndSortedTemplates} 
+                isLoading={isLoadingMy}
+                onPreview={handlePreview}
+                onUse={handleUseTemplate}
+                onRate={handleRateTemplate}
+                onDelete={handleDeleteTemplate}
+                searchTerm={searchTerm}
+                selectedCategory={selectedCategory}
+                showDeleteButton={true}
               />
             </TabsContent>
           </Tabs>

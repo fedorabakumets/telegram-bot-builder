@@ -117,6 +117,9 @@ export default function Editor() {
         data: templateData
       });
       
+      // Закрываем модальное окно шаблонов
+      setShowTemplates(false);
+      
       toast({
         title: 'Шаблон применен',
         description: `Шаблон "${template.name}" успешно загружен`,

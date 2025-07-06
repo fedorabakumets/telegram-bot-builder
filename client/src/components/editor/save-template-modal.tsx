@@ -42,7 +42,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
 
   const saveTemplateMutation = useMutation({
     mutationFn: async (data: TemplateFormData) => {
-      return await apiRequest('/api/templates', 'POST', {
+      return await apiRequest('POST', '/api/templates', {
         name: data.name,
         description: data.description,
         category: data.category,
