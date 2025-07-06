@@ -16,12 +16,6 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
-@dp.message()
-async def message_3gLoqditle_ahJ8yxvfMs_handler(message: types.Message):
-    text = "Новое сообщение"
-    # Удаляем предыдущие reply клавиатуры если они были
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-
 
 # Запуск бота
 async def main():
