@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Connection, Button, BotData } from '@shared/schema';
 import { useHistory } from './use-history';
 
@@ -8,11 +8,20 @@ export function useBotEditor(initialData?: BotData) {
   // Используем систему истории для узлов и связей
   const [historyState, pushToHistory, undo, redo, resetHistory] = useHistory<BotData>(
     { nodes: initialData?.nodes || [], connections: initialData?.connections || [] },
-    { maxHistorySize: 50, debounceMs: 300 }
+    { maxHistorySize: 50, debounceMs: 150 }
   );
 
   const { nodes, connections } = historyState.current;
-  const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
+  
+  // Ref для временного хранения позиций узлов во время перетаскивания
+  const [liveNodes, setLiveNodes] = useState<Node[]>(nodes);
+  const moveThrottleRef = useRef<NodeJS.Timeout>();
+  const selectedNode = liveNodes.find(node => node.id === selectedNodeId) || null;
+  
+  // Синхронизируем liveNodes с основными nodes при их изменении
+  useEffect(() => {
+    setLiveNodes(nodes);
+  }, [nodes]);
 
   // Функция для обновления состояния с историей
   const updateBotData = useCallback((
@@ -43,6 +52,32 @@ export function useBotEditor(initialData?: BotData) {
       }),
       `Обновлен узел`
     );
+  }, [updateBotData]);
+
+  // Быстрое обновление позиции узла без истории (для плавного перетаскивания)
+  const updateNodePositionLive = useCallback((nodeId: string, position: { x: number; y: number }) => {
+    setLiveNodes(prevNodes => 
+      prevNodes.map(node => 
+        node.id === nodeId ? { ...node, position } : node
+      )
+    );
+
+    // Throttled обновление с сохранением в историю (каждые 16мс = 60fps)
+    if (moveThrottleRef.current) {
+      clearTimeout(moveThrottleRef.current);
+    }
+    
+    moveThrottleRef.current = setTimeout(() => {
+      updateBotData(
+        (prevData) => ({
+          ...prevData,
+          nodes: prevData.nodes.map(node => 
+            node.id === nodeId ? { ...node, position } : node
+          )
+        }),
+        `Перемещен узел`
+      );
+    }, 100); // Сохраняем в историю через 100мс после окончания движения
   }, [updateBotData]);
 
   const deleteNode = useCallback((nodeId: string) => {
@@ -187,18 +222,19 @@ export function useBotEditor(initialData?: BotData) {
   }, [updateBotData, resetHistory, pushToHistory]);
 
   const getBotData = useCallback((): BotData => ({
-    nodes,
+    nodes: historyState.current.nodes, // Используем данные из истории для сохранения
     connections
-  }), [nodes, connections]);
+  }), [historyState.current.nodes, connections]);
 
   return {
-    nodes,
+    nodes: liveNodes, // Используем liveNodes для отображения
     connections,
     selectedNode,
     selectedNodeId,
     setSelectedNodeId,
     addNode,
     updateNode,
+    updateNodePositionLive, // Новая функция для быстрого перемещения
     deleteNode,
     addConnection,
     deleteConnection,

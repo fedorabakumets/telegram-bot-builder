@@ -48,6 +48,7 @@ export default function Editor() {
     setSelectedNodeId,
     addNode,
     updateNode,
+    updateNodePositionLive,
     deleteNode,
     addConnection,
     deleteConnection,
@@ -111,8 +112,8 @@ export default function Editor() {
   }, [updateProjectMutation]);
 
   const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
-    updateNode(nodeId, { position });
-  }, [updateNode]);
+    updateNodePositionLive(nodeId, position);
+  }, [updateNodePositionLive]);
 
   const handleComponentDrag = useCallback((component: ComponentDefinition) => {
     // Handle component drag start if needed
