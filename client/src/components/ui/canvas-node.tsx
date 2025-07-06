@@ -234,13 +234,39 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
           </div>
         </div>
       )}
-      {/* Image preview */}
+      {/* Enhanced Image preview */}
       {node.type === 'photo' && (
-        <div className="bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
+        <div className="bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-3 mb-4 h-32 flex items-center justify-center relative overflow-hidden">
           {node.data.imageUrl ? (
-            <img src={node.data.imageUrl} alt="Preview" className="max-h-full max-w-full object-contain" />
+            <div className="relative w-full h-full group">
+              <img 
+                src={node.data.imageUrl} 
+                alt="Превью фото" 
+                className="max-h-full max-w-full object-contain rounded transition-all duration-200 group-hover:scale-105"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const fallback = target.parentElement?.querySelector('.fallback-icon') as HTMLElement;
+                  if (fallback) {
+                    fallback.style.display = 'flex';
+                  }
+                }}
+              />
+              <div className="fallback-icon hidden w-full h-full flex-col items-center justify-center text-center">
+                <i className="fas fa-exclamation-triangle text-red-400 text-xl mb-1"></i>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Ошибка загрузки</p>
+              </div>
+              {/* Image indicator */}
+              <div className="absolute bottom-1 right-1 bg-purple-500/80 text-white text-xs px-1.5 py-0.5 rounded backdrop-blur-sm">
+                <i className="fas fa-image mr-1"></i>
+                IMG
+              </div>
+            </div>
           ) : (
-            <i className="fas fa-image text-purple-400 dark:text-purple-300 text-3xl"></i>
+            <div className="text-center">
+              <i className="fas fa-image text-purple-400 dark:text-purple-300 text-2xl mb-2"></i>
+              <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">Добавьте изображение</p>
+            </div>
           )}
         </div>
       )}

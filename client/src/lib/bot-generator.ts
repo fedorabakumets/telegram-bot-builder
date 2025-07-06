@@ -82,6 +82,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += generateCommandHandler(node);
     } else if (node.type === "message") {
       code += generateMessageHandler(node);
+    } else if (node.type === "photo") {
+      code += generatePhotoHandler(node);
     }
   });
 
@@ -170,9 +172,30 @@ function generateStartHandler(node: Node): string {
   code += '    }\n\n';
   
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
-  code += `    text = "${messageText}"\n`;
   
-  return code + generateKeyboard(node);
+  // Проверяем, есть ли изображение в стартовом узле
+  if (node.data.imageUrl) {
+    code += `    # Отправляем стартовое сообщение с фото\n`;
+    code += `    photo_url = "${node.data.imageUrl}"\n`;
+    code += `    caption = "${messageText}"\n`;
+    code += `    \n`;
+    code += `    try:\n`;
+    code += `        await message.answer_photo(\n`;
+    code += `            photo=photo_url,\n`;
+    code += `            caption=caption,\n`;
+    code += `            parse_mode=ParseMode.HTML\n`;
+    if (node.data.keyboardType !== 'none') {
+      code += `,\n            reply_markup=keyboard`;
+    }
+    code += `\n        )\n`;
+    code += `    except Exception as e:\n`;
+    code += `        logging.error(f"Ошибка при отправке стартового фото: {e}")\n`;
+    code += `        await message.answer(caption)\n`;
+    return code + generateKeyboard(node);
+  } else {
+    code += `    text = "${messageText}"\n`;
+    return code + generateKeyboard(node);
+  }
 }
 
 function generateCommandHandler(node: Node): string {
@@ -202,9 +225,30 @@ function generateCommandHandler(node: Node): string {
   }
 
   const messageText = node.data.messageText || "Команда выполнена";
-  code += `\n    text = "${messageText}"\n`;
   
-  return code + generateKeyboard(node);
+  // Проверяем, есть ли изображение в команде
+  if (node.data.imageUrl) {
+    code += `    # Отправляем ответ команды с фото\n`;
+    code += `    photo_url = "${node.data.imageUrl}"\n`;
+    code += `    caption = "${messageText}"\n`;
+    code += `    \n`;
+    code += `    try:\n`;
+    code += `        await message.answer_photo(\n`;
+    code += `            photo=photo_url,\n`;
+    code += `            caption=caption,\n`;
+    code += `            parse_mode=ParseMode.HTML\n`;
+    if (node.data.keyboardType !== 'none') {
+      code += `,\n            reply_markup=keyboard`;
+    }
+    code += `\n        )\n`;
+    code += `    except Exception as e:\n`;
+    code += `        logging.error(f"Ошибка при отправке фото команды: {e}")\n`;
+    code += `        await message.answer(caption)\n`;
+    return code + generateKeyboard(node);
+  } else {
+    code += `\n    text = "${messageText}"\n`;
+    return code + generateKeyboard(node);
+  }
 }
 
 function generateMessageHandler(node: Node): string {
@@ -212,6 +256,75 @@ function generateMessageHandler(node: Node): string {
   let code = `\n# Обработчик для сообщения: ${node.id}\n`;
   code += `async def handle_${node.id}(message: types.Message):\n`;
   code += `    text = "${messageText}"\n`;
+  
+  return code + generateKeyboard(node);
+}
+
+function generatePhotoHandler(node: Node): string {
+  const messageText = node.data.messageText || "";
+  const imageUrl = node.data.imageUrl || "";
+  let code = `\n# Обработчик для фото: ${node.id}\n`;
+  code += `async def handle_photo_${node.id}(message: types.Message):\n`;
+  
+  // Добавляем проверки безопасности
+  if (node.data.isPrivateOnly) {
+    code += '    if not await is_private_chat(message):\n';
+    code += '        await message.answer("Эта команда доступна только в приватном чате")\n';
+    code += '        return\n\n';
+  }
+  
+  if (node.data.adminOnly) {
+    code += '    if not await is_admin(message.from_user.id):\n';
+    code += '        await message.answer("У вас нет прав для выполнения этой команды")\n';
+    code += '        return\n\n';
+  }
+  
+  if (node.data.requiresAuth) {
+    code += '    if not await check_auth(message.from_user.id):\n';
+    code += '        await message.answer("Сначала авторизуйтесь в системе")\n';
+    code += '        return\n\n';
+  }
+  
+  if (imageUrl) {
+    if (messageText) {
+      // Фото с подписью
+      code += `    # Отправляем фото с подписью\n`;
+      code += `    photo_url = "${imageUrl}"\n`;
+      code += `    caption = "${messageText}"\n`;
+      code += `    \n`;
+      code += `    try:\n`;
+      code += `        await message.answer_photo(\n`;
+      code += `            photo=photo_url,\n`;
+      code += `            caption=caption,\n`;
+      code += `            parse_mode=ParseMode.HTML\n`;
+      if (node.data.keyboardType !== 'none') {
+        code += `,\n            reply_markup=keyboard`;
+      }
+      code += `\n        )\n`;
+      code += `    except Exception as e:\n`;
+      code += `        logging.error(f"Ошибка при отправке фото: {e}")\n`;
+      code += `        await message.answer("❌ Не удалось загрузить изображение. Проверьте URL.")\n`;
+    } else {
+      // Просто фото без подписи
+      code += `    # Отправляем фото без подписи\n`;
+      code += `    photo_url = "${imageUrl}"\n`;
+      code += `    \n`;
+      code += `    try:\n`;
+      code += `        await message.answer_photo(\n`;
+      code += `            photo=photo_url\n`;
+      if (node.data.keyboardType !== 'none') {
+        code += `,\n            reply_markup=keyboard`;
+      }
+      code += `\n        )\n`;
+      code += `    except Exception as e:\n`;
+      code += `        logging.error(f"Ошибка при отправке фото: {e}")\n`;
+      code += `        await message.answer("❌ Не удалось загрузить изображение. Проверьте URL.")\n`;
+    }
+  } else {
+    // Нет URL изображения
+    code += `    # URL изображения не указан\n`;
+    code += `    await message.answer("❌ Изображение не настроено")\n`;
+  }
   
   return code + generateKeyboard(node);
 }
