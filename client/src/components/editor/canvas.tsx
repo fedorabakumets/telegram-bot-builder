@@ -1,6 +1,7 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { CanvasNode } from '@/components/ui/canvas-node';
 import { ConnectionsLayer } from '@/components/ui/connections-layer';
+import { ButtonConnectionsLayer } from '@/components/ui/button-connections-layer';
 import { TemporaryConnection } from '@/components/ui/temporary-connection';
 import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
 import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
@@ -70,6 +71,7 @@ export function Canvas({
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
   const [previewNodes, setPreviewNodes] = useState<Node[] | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [showButtonConnections, setShowButtonConnections] = useState(true);
 
   // Zoom utility functions
   const zoomIn = useCallback(() => {
@@ -576,6 +578,23 @@ export function Canvas({
               disabled={isPreviewMode}
             />
 
+            {/* Button Connections Toggle */}
+            <button 
+              onClick={() => setShowButtonConnections(!showButtonConnections)}
+              className={`p-2.5 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 transition-all duration-200 group ${
+                showButtonConnections 
+                  ? 'bg-blue-100/80 dark:bg-blue-900/80 hover:bg-blue-200/80 dark:hover:bg-blue-800/80' 
+                  : 'bg-white/80 dark:bg-slate-900/80 hover:bg-gray-50 dark:hover:bg-slate-800'
+              }`}
+              title={showButtonConnections ? "Скрыть линии от кнопок" : "Показать линии от кнопок"}
+            >
+              <i className={`fas fa-link text-sm transition-colors ${
+                showButtonConnections 
+                  ? 'text-blue-600 dark:text-blue-400' 
+                  : 'text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+              }`}></i>
+            </button>
+
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50">
               <AutoHierarchySettings
                 nodes={displayNodes}
@@ -762,6 +781,13 @@ export function Canvas({
               selectedConnectionId={selectedConnectionId}
               onConnectionSelect={onConnectionSelect}
               onConnectionDelete={onConnectionDelete}
+            />
+
+            {/* Button Connections Layer */}
+            <ButtonConnectionsLayer
+              nodes={displayNodes}
+              connections={connections}
+              showButtonConnections={showButtonConnections}
             />
 
             {/* Temporary connection preview */}
