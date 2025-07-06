@@ -4,7 +4,7 @@ import { spawn, ChildProcess } from "child_process";
 import { writeFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { storage } from "./storage";
-import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema } from "@shared/schema";
+import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 
@@ -605,7 +605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:id/bot/start", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
-      const { token } = req.body;
+      const { token, tokenId } = req.body;
       
       // Проверяем проект
       const project = await storage.getBotProject(projectId);
@@ -613,8 +613,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
 
-      // Используем переданный токен или сохраненный в проекте
-      const botToken = token || project.botToken;
+      let botToken = token;
+      let tokenToMarkAsUsed = null;
+
+      // Если не передан токен напрямую, используем токен по ID или по умолчанию
+      if (!botToken) {
+        if (tokenId) {
+          const selectedToken = await storage.getBotToken(tokenId);
+          if (selectedToken && selectedToken.projectId === projectId) {
+            botToken = selectedToken.token;
+            tokenToMarkAsUsed = selectedToken.id;
+          }
+        } else {
+          // Используем токен по умолчанию
+          const defaultToken = await storage.getDefaultBotToken(projectId);
+          if (defaultToken) {
+            botToken = defaultToken.token;
+            tokenToMarkAsUsed = defaultToken.id;
+          } else {
+            // Fallback к старому способу - токен в проекте
+            botToken = project.botToken;
+          }
+        }
+      }
+
       if (!botToken) {
         return res.status(400).json({ message: "Bot token is required" });
       }
@@ -625,14 +647,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Bot is already running" });
       }
 
-      // Сохраняем токен в проекте если он был передан
-      if (token && token !== project.botToken) {
-        await storage.updateBotProject(projectId, { botToken: token });
-      }
-
       const result = await startBot(projectId, botToken);
       if (result.success) {
-        res.json({ message: "Bot started successfully", processId: result.processId, tokenSaved: token && token !== project.botToken });
+        // Отмечаем токен как использованный
+        if (tokenToMarkAsUsed) {
+          await storage.markTokenAsUsed(tokenToMarkAsUsed);
+        }
+        
+        res.json({ 
+          message: "Bot started successfully", 
+          processId: result.processId,
+          tokenUsed: tokenToMarkAsUsed ? true : false
+        });
       } else {
         res.status(500).json({ message: result.error || "Failed to start bot" });
       }
@@ -909,7 +935,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Token management endpoints
+  
+  // Get all tokens for a project
+  app.get("/api/projects/:id/tokens", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const tokens = await storage.getBotTokensByProject(projectId);
+      
+      // Hide actual token values for security
+      const safeTokens = tokens.map(token => ({
+        ...token,
+        token: `${token.token.substring(0, 10)}...`
+      }));
+      
+      res.json(safeTokens);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch tokens" });
+    }
+  });
 
+  // Create a new token
+  app.post("/api/projects/:id/tokens", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const tokenData = insertBotTokenSchema.parse({
+        ...req.body,
+        projectId
+      });
+      
+      const token = await storage.createBotToken(tokenData);
+      
+      // Hide actual token value for security
+      const safeToken = {
+        ...token,
+        token: `${token.token.substring(0, 10)}...`
+      };
+      
+      res.status(201).json(safeToken);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create token" });
+    }
+  });
+
+  // Update a token
+  app.put("/api/tokens/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = insertBotTokenSchema.partial().parse(req.body);
+      
+      const token = await storage.updateBotToken(id, updateData);
+      if (!token) {
+        return res.status(404).json({ message: "Token not found" });
+      }
+      
+      // Hide actual token value for security
+      const safeToken = {
+        ...token,
+        token: `${token.token.substring(0, 10)}...`
+      };
+      
+      res.json(safeToken);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update token" });
+    }
+  });
+
+  // Delete a token
+  app.delete("/api/tokens/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteBotToken(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Token not found" });
+      }
+      
+      res.json({ message: "Token deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete token" });
+    }
+  });
+
+  // Set default token
+  app.post("/api/projects/:projectId/tokens/:tokenId/set-default", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const tokenId = parseInt(req.params.tokenId);
+      
+      const success = await storage.setDefaultBotToken(projectId, tokenId);
+      if (!success) {
+        return res.status(404).json({ message: "Token not found" });
+      }
+      
+      res.json({ message: "Default token set successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to set default token" });
+    }
+  });
+
+  // Get default token for a project
+  app.get("/api/projects/:id/tokens/default", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const token = await storage.getDefaultBotToken(projectId);
+      
+      if (!token) {
+        return res.json({ hasDefault: false, token: null });
+      }
+      
+      // Hide actual token value for security
+      const safeToken = {
+        ...token,
+        token: `${token.token.substring(0, 10)}...`
+      };
+      
+      res.json({ hasDefault: true, token: safeToken });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch default token" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

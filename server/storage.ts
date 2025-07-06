@@ -2,12 +2,15 @@ import {
   botProjects, 
   botInstances,
   botTemplates,
+  botTokens,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
   type InsertBotInstance,
   type BotTemplate,
-  type InsertBotTemplate
+  type InsertBotTemplate,
+  type BotToken,
+  type InsertBotToken
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
@@ -42,6 +45,16 @@ export interface IStorage {
   getFeaturedTemplates(): Promise<BotTemplate[]>;
   getTemplatesByCategory(category: string): Promise<BotTemplate[]>;
   searchTemplates(query: string): Promise<BotTemplate[]>;
+  
+  // Bot tokens
+  getBotToken(id: number): Promise<BotToken | undefined>;
+  getBotTokensByProject(projectId: number): Promise<BotToken[]>;
+  getDefaultBotToken(projectId: number): Promise<BotToken | undefined>;
+  createBotToken(token: InsertBotToken): Promise<BotToken>;
+  updateBotToken(id: number, token: Partial<InsertBotToken>): Promise<BotToken | undefined>;
+  deleteBotToken(id: number): Promise<boolean>;
+  setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean>;
+  markTokenAsUsed(id: number): Promise<boolean>;
 }
 
 // Legacy Memory Storage - kept for reference
@@ -374,6 +387,55 @@ class MemStorage implements IStorage {
       (template.tags && template.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
     );
   }
+
+  // Bot Tokens (Memory implementation)
+  async getBotToken(id: number): Promise<BotToken | undefined> {
+    // In memory implementation - tokens are not stored
+    return undefined;
+  }
+
+  async getBotTokensByProject(projectId: number): Promise<BotToken[]> {
+    // In memory implementation - tokens are not stored
+    return [];
+  }
+
+  async getDefaultBotToken(projectId: number): Promise<BotToken | undefined> {
+    // In memory implementation - tokens are not stored
+    return undefined;
+  }
+
+  async createBotToken(insertToken: InsertBotToken): Promise<BotToken> {
+    // In memory implementation - create temporary token
+    const token: BotToken = {
+      ...insertToken,
+      id: this.currentTemplateId++, // Reuse template ID counter
+      description: insertToken.description || null,
+      lastUsedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    return token;
+  }
+
+  async updateBotToken(id: number, updateData: Partial<InsertBotToken>): Promise<BotToken | undefined> {
+    // In memory implementation - not supported
+    return undefined;
+  }
+
+  async deleteBotToken(id: number): Promise<boolean> {
+    // In memory implementation - not supported
+    return false;
+  }
+
+  async setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean> {
+    // In memory implementation - not supported
+    return false;
+  }
+
+  async markTokenAsUsed(id: number): Promise<boolean> {
+    // In memory implementation - not supported
+    return false;
+  }
 }
 
 // Database Storage Implementation
@@ -591,6 +653,82 @@ export class DatabaseStorage implements IStorage {
       )
     ).orderBy(desc(botTemplates.rating));
   }
+
+  // Bot Tokens
+  async getBotToken(id: number): Promise<BotToken | undefined> {
+    const [token] = await db.select().from(botTokens).where(eq(botTokens.id, id));
+    return token || undefined;
+  }
+
+  async getBotTokensByProject(projectId: number): Promise<BotToken[]> {
+    return await db.select().from(botTokens)
+      .where(eq(botTokens.projectId, projectId))
+      .orderBy(desc(botTokens.isDefault), desc(botTokens.createdAt));
+  }
+
+  async getDefaultBotToken(projectId: number): Promise<BotToken | undefined> {
+    const [token] = await db.select().from(botTokens)
+      .where(and(eq(botTokens.projectId, projectId), eq(botTokens.isDefault, 1)))
+      .orderBy(desc(botTokens.createdAt));
+    return token || undefined;
+  }
+
+  async createBotToken(insertToken: InsertBotToken): Promise<BotToken> {
+    if (insertToken.isDefault === 1) {
+      await db.update(botTokens)
+        .set({ isDefault: 0 })
+        .where(eq(botTokens.projectId, insertToken.projectId));
+    }
+
+    const [token] = await db
+      .insert(botTokens)
+      .values(insertToken)
+      .returning();
+    return token;
+  }
+
+  async updateBotToken(id: number, updateData: Partial<InsertBotToken>): Promise<BotToken | undefined> {
+    if (updateData.isDefault === 1) {
+      const [currentToken] = await db.select().from(botTokens).where(eq(botTokens.id, id));
+      if (currentToken) {
+        await db.update(botTokens)
+          .set({ isDefault: 0 })
+          .where(eq(botTokens.projectId, currentToken.projectId));
+      }
+    }
+
+    const [token] = await db
+      .update(botTokens)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(botTokens.id, id))
+      .returning();
+    return token || undefined;
+  }
+
+  async deleteBotToken(id: number): Promise<boolean> {
+    const result = await db.delete(botTokens).where(eq(botTokens.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean> {
+    await db.update(botTokens)
+      .set({ isDefault: 0 })
+      .where(eq(botTokens.projectId, projectId));
+
+    const result = await db.update(botTokens)
+      .set({ isDefault: 1 })
+      .where(eq(botTokens.id, tokenId));
+    
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async markTokenAsUsed(id: number): Promise<boolean> {
+    const result = await db.update(botTokens)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(botTokens.id, id));
+    
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
 }
 
 // Оптимизированная версия с кэшированием
@@ -785,6 +923,86 @@ export class OptimizedDatabaseStorage implements IStorage {
         ilike(botTemplates.description, searchTerm)
       )
     ).orderBy(desc(botTemplates.rating));
+  }
+
+  // Bot Tokens
+  async getBotToken(id: number): Promise<BotToken | undefined> {
+    const [token] = await db.select().from(botTokens).where(eq(botTokens.id, id));
+    return token || undefined;
+  }
+
+  async getBotTokensByProject(projectId: number): Promise<BotToken[]> {
+    return await db.select().from(botTokens)
+      .where(eq(botTokens.projectId, projectId))
+      .orderBy(desc(botTokens.isDefault), desc(botTokens.createdAt));
+  }
+
+  async getDefaultBotToken(projectId: number): Promise<BotToken | undefined> {
+    const [token] = await db.select().from(botTokens)
+      .where(and(eq(botTokens.projectId, projectId), eq(botTokens.isDefault, 1)))
+      .orderBy(desc(botTokens.createdAt));
+    return token || undefined;
+  }
+
+  async createBotToken(insertToken: InsertBotToken): Promise<BotToken> {
+    // Если создаем токен по умолчанию, убираем флаг с других токенов
+    if (insertToken.isDefault === 1) {
+      await db.update(botTokens)
+        .set({ isDefault: 0 })
+        .where(eq(botTokens.projectId, insertToken.projectId));
+    }
+
+    const [token] = await db
+      .insert(botTokens)
+      .values(insertToken)
+      .returning();
+    return token;
+  }
+
+  async updateBotToken(id: number, updateData: Partial<InsertBotToken>): Promise<BotToken | undefined> {
+    // Если делаем токен по умолчанию, убираем флаг с других токенов
+    if (updateData.isDefault === 1) {
+      const [currentToken] = await db.select().from(botTokens).where(eq(botTokens.id, id));
+      if (currentToken) {
+        await db.update(botTokens)
+          .set({ isDefault: 0 })
+          .where(eq(botTokens.projectId, currentToken.projectId));
+      }
+    }
+
+    const [token] = await db
+      .update(botTokens)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(botTokens.id, id))
+      .returning();
+    return token || undefined;
+  }
+
+  async deleteBotToken(id: number): Promise<boolean> {
+    const result = await db.delete(botTokens).where(eq(botTokens.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean> {
+    // Убираем флаг по умолчанию со всех токенов проекта
+    await db.update(botTokens)
+      .set({ isDefault: 0 })
+      .where(eq(botTokens.projectId, projectId));
+
+    // Устанавливаем флаг по умолчанию для указанного токена
+    const result = await db.update(botTokens)
+      .set({ isDefault: 1 })
+      .where(eq(botTokens.id, tokenId));
+    
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async markTokenAsUsed(id: number): Promise<boolean> {
+    const result = await db.update(botTokens)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(botTokens.id, id));
+    
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 }
 

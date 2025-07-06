@@ -53,6 +53,19 @@ export const botTemplates = pgTable("bot_templates", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const botTokens = pgTable("bot_tokens", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(), // Пользовательское имя для токена
+  token: text("token").notNull(), // Сам токен
+  isDefault: integer("is_default").default(0), // 0 = нет, 1 = да (токен по умолчанию)
+  isActive: integer("is_active").default(1), // 0 = неактивен, 1 = активен
+  description: text("description"), // Описание токена
+  lastUsedAt: timestamp("last_used_at"), // Время последнего использования
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
   name: true,
   description: true,
@@ -98,6 +111,20 @@ export const insertBotTemplateSchema = createInsertSchema(botTemplates).pick({
   rating: z.number().min(1).max(5).optional(),
 });
 
+export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
+  projectId: true,
+  name: true,
+  token: true,
+  isDefault: true,
+  isActive: true,
+  description: true,
+}).extend({
+  name: z.string().min(1, "Имя токена обязательно"),
+  token: z.string().min(1, "Токен обязателен"),
+  isDefault: z.number().min(0).max(1).default(0),
+  isActive: z.number().min(0).max(1).default(1),
+});
+
 // Схема для оценки шаблона
 export const rateTemplateSchema = z.object({
   templateId: z.number(),
@@ -110,6 +137,8 @@ export type InsertBotInstance = z.infer<typeof insertBotInstanceSchema>;
 export type BotInstance = typeof botInstances.$inferSelect;
 export type InsertBotTemplate = z.infer<typeof insertBotTemplateSchema>;
 export type BotTemplate = typeof botTemplates.$inferSelect;
+export type InsertBotToken = z.infer<typeof insertBotTokenSchema>;
+export type BotToken = typeof botTokens.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({
