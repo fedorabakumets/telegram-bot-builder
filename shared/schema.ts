@@ -147,6 +147,13 @@ export const buttonSchema = z.object({
   action: z.enum(['goto', 'command', 'url']),
   target: z.string().optional(),
   url: z.string().optional(),
+  // Дополнительные настройки для улучшенного управления клавиатурами
+  rowPosition: z.number().optional().default(0), // Позиция строки для группировки кнопок
+  style: z.enum(['default', 'primary', 'secondary', 'danger']).default('default'),
+  icon: z.string().optional(), // Emoji или иконка для кнопки
+  requiresAuth: z.boolean().default(false),
+  adminOnly: z.boolean().default(false),
+  width: z.enum(['auto', 'full', 'half', 'third']).default('auto'), // Ширина кнопки
 });
 
 export const nodeSchema = z.object({
@@ -166,6 +173,13 @@ export const nodeSchema = z.object({
     inlineButtons: z.array(buttonSchema).default([]),
     oneTimeKeyboard: z.boolean().default(false),
     resizeKeyboard: z.boolean().default(true),
+    // Расширенные настройки для комбинированных клавиатур
+    keyboardLayout: z.enum(['default', 'compact', 'wide', 'grid']).default('default'),
+    maxRowSize: z.number().min(1).max(8).default(2), // Максимальное количество кнопок в строке
+    separateMessages: z.boolean().default(false), // Отправлять inline кнопки отдельным сообщением
+    showKeyboardHint: z.boolean().default(true), // Показывать подсказку о клавиатуре
+    persistentKeyboard: z.boolean().default(false), // Сохранять reply клавиатуру после использования
+    keyboardTitle: z.string().optional(), // Заголовок для inline клавиатуры
     markdown: z.boolean().default(false),
     // Синонимы для команд - текстовые сообщения, которые будут вызывать ту же функцию
     synonyms: z.array(z.string()).default([]),

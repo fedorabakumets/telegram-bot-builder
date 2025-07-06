@@ -5,6 +5,41 @@ import { Node } from '@shared/schema';
 import { parseCommandFromText } from '@/lib/commands';
 import { useState, useRef, useEffect } from 'react';
 
+interface InlineButtonsDisplayProps {
+  buttons: Array<{ text: string; target?: string; action?: string; icon?: string; }>;
+  onButtonClick: (text: string, target?: string, action?: string) => void;
+}
+
+function InlineButtonsDisplay({ buttons, onButtonClick }: InlineButtonsDisplayProps) {
+  return buttons.length <= 2 ? (
+    <div className="space-y-1">
+      {buttons.map((button, index) => (
+        <button
+          key={index}
+          onClick={() => onButtonClick(button.text, button.target, button.action)}
+          className="w-full bg-blue-500 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          {button.icon && <span className="mr-1">{button.icon}</span>}
+          {button.text}
+        </button>
+      ))}
+    </div>
+  ) : (
+    <div className="grid grid-cols-2 gap-1">
+      {buttons.map((button, index) => (
+        <button
+          key={index}
+          onClick={() => onButtonClick(button.text, button.target, button.action)}
+          className="bg-blue-500 text-white text-xs font-medium py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          {button.icon && <span className="mr-1">{button.icon}</span>}
+          {button.text}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 interface PreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,10 +54,12 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
     type: 'bot' | 'user';
     text: string;
     time: string;
-    buttons?: Array<{ text: string; target?: string; action?: string; }>;
-    keyboardType?: 'reply' | 'inline' | 'none';
+    buttons?: Array<{ text: string; target?: string; action?: string; icon?: string; }>;
+    inlineButtons?: Array<{ text: string; target?: string; action?: string; icon?: string; }>;
+    keyboardType?: 'reply' | 'inline' | 'none' | 'combined';
+    keyboardTitle?: string;
   }>>([]);
-  const [currentReplyKeyboard, setCurrentReplyKeyboard] = useState<Array<{ text: string; target?: string; action?: string; }> | null>(null);
+  const [currentReplyKeyboard, setCurrentReplyKeyboard] = useState<Array<{ text: string; target?: string; action?: string; icon?: string; }> | null>(null);
   const [textInput, setTextInput] = useState('');
   const [waitingForInput, setWaitingForInput] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,11 +83,21 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
       minute: '2-digit' 
     });
 
-    const buttons = startNode.data.keyboardType !== 'none' ? startNode.data.buttons.map(btn => ({
-      text: btn.text,
-      target: btn.target,
-      action: btn.action
-    })) : undefined;
+    const buttons = startNode.data.keyboardType === 'reply' || startNode.data.keyboardType === 'combined' 
+      ? startNode.data.buttons.map(btn => ({
+          text: btn.text,
+          target: btn.target,
+          action: btn.action,
+          icon: btn.icon
+        })) : undefined;
+
+    const inlineButtons = startNode.data.keyboardType === 'inline' || startNode.data.keyboardType === 'combined'
+      ? (startNode.data.inlineButtons || startNode.data.buttons).map(btn => ({
+          text: btn.text,
+          target: btn.target,
+          action: btn.action,
+          icon: btn.icon
+        })) : undefined;
 
     const botMessage = {
       id: `msg-${Date.now()}`,
@@ -58,14 +105,16 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
       text: startNode.data.messageText || 'Привет!',
       time,
       buttons,
-      keyboardType: startNode.data.keyboardType
+      inlineButtons,
+      keyboardType: startNode.data.keyboardType,
+      keyboardTitle: startNode.data.keyboardTitle
     };
 
     setMessageHistory([botMessage]);
     setCurrentNodeId(startNode.id);
     
     // Set reply keyboard if applicable
-    if (startNode.data.keyboardType === 'reply' && buttons) {
+    if ((startNode.data.keyboardType === 'reply' || startNode.data.keyboardType === 'combined') && buttons) {
       setCurrentReplyKeyboard(buttons);
     } else {
       setCurrentReplyKeyboard(null);
@@ -131,11 +180,21 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
             responseText = 'Сообщение';
           }
           
-          const buttons = targetNode.data.keyboardType !== 'none' ? targetNode.data.buttons.map(btn => ({
-            text: btn.text,
-            target: btn.target,
-            action: btn.action
-          })) : undefined;
+          const buttons = targetNode.data.keyboardType === 'reply' || targetNode.data.keyboardType === 'combined' 
+            ? targetNode.data.buttons.map(btn => ({
+                text: btn.text,
+                target: btn.target,
+                action: btn.action,
+                icon: btn.icon
+              })) : undefined;
+
+          const inlineButtons = targetNode.data.keyboardType === 'inline' || targetNode.data.keyboardType === 'combined'
+            ? (targetNode.data.inlineButtons || targetNode.data.buttons).map(btn => ({
+                text: btn.text,
+                target: btn.target,
+                action: btn.action,
+                icon: btn.icon
+              })) : undefined;
 
           // Create bot response from target node
           const botResponse = {
@@ -147,15 +206,17 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
               minute: '2-digit' 
             }),
             buttons,
-            keyboardType: targetNode.data.keyboardType
+            inlineButtons,
+            keyboardType: targetNode.data.keyboardType,
+            keyboardTitle: targetNode.data.keyboardTitle
           };
 
           setMessageHistory(prev => [...prev, botResponse]);
           
           // Update reply keyboard based on target node
-          if (targetNode.data.keyboardType === 'reply' && buttons) {
+          if ((targetNode.data.keyboardType === 'reply' || targetNode.data.keyboardType === 'combined') && buttons) {
             setCurrentReplyKeyboard(buttons);
-          } else if (targetNode.data.keyboardType === 'none') {
+          } else if (targetNode.data.keyboardType === 'none' || targetNode.data.keyboardType === 'inline') {
             setCurrentReplyKeyboard(null);
           }
           
@@ -311,33 +372,18 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                 )}
 
                 {/* Inline Buttons */}
-                {message.type === 'bot' && message.buttons && message.keyboardType === 'inline' && (
+                {message.type === 'bot' && (
+                  (message.keyboardType === 'inline' && message.buttons) ||
+                  (message.keyboardType === 'combined' && message.inlineButtons)
+                ) && (
                   <div className="ml-10 mt-2">
-                    {message.buttons.length <= 2 ? (
-                      <div className="space-y-1">
-                        {message.buttons.map((button, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleButtonClick(button.text, button.target, button.action)}
-                            className="w-full bg-blue-500 text-white text-sm font-medium py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
-                          >
-                            {button.text}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-1">
-                        {message.buttons.map((button, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleButtonClick(button.text, button.target, button.action)}
-                            className="bg-blue-500 text-white text-xs font-medium py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors"
-                          >
-                            {button.text}
-                          </button>
-                        ))}
-                      </div>
+                    {message.keyboardTitle && (
+                      <p className="text-xs text-gray-600 mb-2">{message.keyboardTitle}</p>
                     )}
+                    <InlineButtonsDisplay 
+                      buttons={message.keyboardType === 'combined' ? message.inlineButtons! : message.buttons!}
+                      onButtonClick={handleButtonClick}
+                    />
                   </div>
                 )}
               </div>

@@ -153,7 +153,14 @@ export function PropertiesPanel({
       id: nanoid(),
       text: 'Новая кнопка',
       action: 'goto',
-      target: ''
+      target: '',
+      rowPosition: 0,
+      style: 'default',
+      requiresAuth: false,
+      adminOnly: false,
+      width: 'auto',
+      icon: undefined,
+      url: undefined
     };
     onButtonAdd(selectedNode.id, newButton);
   };
@@ -163,7 +170,14 @@ export function PropertiesPanel({
       id: nanoid(),
       text: 'Новая inline кнопка',
       action: 'goto',
-      target: ''
+      target: '',
+      rowPosition: 0,
+      style: 'default',
+      requiresAuth: false,
+      adminOnly: false,
+      width: 'auto',
+      icon: undefined,
+      url: undefined
     };
     if (onInlineButtonAdd) {
       onInlineButtonAdd(selectedNode.id, newButton);
@@ -424,13 +438,22 @@ export function PropertiesPanel({
                     <div className="space-y-2">
                       {selectedNode.data.buttons.map((button) => (
                         <div key={button.id} className="bg-muted/50 rounded-lg p-3 border-l-4 border-l-purple-500">
-                          <div className="flex items-center justify-between mb-2">
-                            <Input
-                              value={button.text}
-                              onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { text: e.target.value })}
-                              className="flex-1 text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary"
-                              placeholder="Текст Reply кнопки"
-                            />
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2 flex-1">
+                              <Input
+                                value={button.icon || ''}
+                                onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { icon: e.target.value })}
+                                className="w-12 text-sm text-center bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary"
+                                placeholder="🔘"
+                                maxLength={2}
+                              />
+                              <Input
+                                value={button.text}
+                                onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { text: e.target.value })}
+                                className="flex-1 text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary"
+                                placeholder="Текст Reply кнопки"
+                              />
+                            </div>
                             <UIButton
                               size="sm"
                               variant="ghost"
@@ -441,6 +464,41 @@ export function PropertiesPanel({
                                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                               </svg>
                             </UIButton>
+                          </div>
+                          
+                          {/* Advanced Button Settings */}
+                          <div className="grid grid-cols-2 gap-2 mb-2">
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Строка</Label>
+                              <Input
+                                type="number"
+                                min="0"
+                                max="10"
+                                value={button.rowPosition || 0}
+                                onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { rowPosition: parseInt(e.target.value) || 0 })}
+                                className="text-xs mt-1"
+                                placeholder="0"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground">Ширина</Label>
+                              <Select
+                                value={button.width || 'auto'}
+                                onValueChange={(value: 'auto' | 'full' | 'half' | 'third') =>
+                                  onButtonUpdate(selectedNode.id, button.id, { width: value })
+                                }
+                              >
+                                <SelectTrigger className="text-xs mt-1">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="auto">Авто</SelectItem>
+                                  <SelectItem value="full">Полная</SelectItem>
+                                  <SelectItem value="half">Половина</SelectItem>
+                                  <SelectItem value="third">Треть</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
                           <Select
                             value={button.action}
@@ -962,6 +1020,189 @@ export function PropertiesPanel({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Enhanced Combined Keyboard Settings */}
+        {selectedNode.data.keyboardType === 'combined' && (
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="combined-settings" className="border-border">
+              <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline hover:text-foreground/90 transition-colors duration-200">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                    Расширенные настройки комбинированной клавиатуры
+                  </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="bg-gradient-to-br from-background to-muted/20 dark:from-background dark:to-muted/10 border border-border/50 rounded-lg mt-2 overflow-hidden">
+                <div className="space-y-4 p-4">
+                  
+                  {/* Keyboard Layout */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-foreground">Макет клавиатуры</Label>
+                    <Select
+                      value={selectedNode.data.keyboardLayout || 'default'}
+                      onValueChange={(value: 'default' | 'compact' | 'wide' | 'grid') => 
+                        onNodeUpdate(selectedNode.id, { keyboardLayout: value })
+                      }
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="default">По умолчанию</SelectItem>
+                        <SelectItem value="compact">Компактный</SelectItem>
+                        <SelectItem value="wide">Широкий</SelectItem>
+                        <SelectItem value="grid">Сетка</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="text-xs text-muted-foreground">
+                      Влияет на расположение кнопок в строках
+                    </div>
+                  </div>
+
+                  {/* Max Row Size */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-foreground">Максимум кнопок в строке</Label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="range"
+                        min="1"
+                        max="8"
+                        value={selectedNode.data.maxRowSize || 2}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { maxRowSize: parseInt(e.target.value) })}
+                        className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                      />
+                      <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                        {selectedNode.data.maxRowSize || 2}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Количество кнопок в одной строке перед переносом
+                    </div>
+                  </div>
+
+                  {/* Keyboard Title */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-foreground">Заголовок inline клавиатуры</Label>
+                    <Input
+                      value={selectedNode.data.keyboardTitle || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { keyboardTitle: e.target.value })}
+                      className="mt-2"
+                      placeholder="Дополнительные действия:"
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      Текст, который будет показан с inline кнопками
+                    </div>
+                  </div>
+
+                  {/* Separate Messages */}
+                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-blue-500/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-foreground group-hover:text-blue-600 transition-colors duration-200">
+                        Отдельные сообщения
+                      </Label>
+                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Отправлять inline кнопки отдельным сообщением
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.separateMessages || false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { separateMessages: checked })}
+                        className="data-[state=checked]:bg-blue-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Show Keyboard Hint */}
+                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-green-500/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-foreground group-hover:text-green-600 transition-colors duration-200">
+                        Показывать подсказки
+                      </Label>
+                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Подсказки о назначении клавиатур
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.showKeyboardHint !== false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { showKeyboardHint: checked })}
+                        className="data-[state=checked]:bg-green-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Persistent Keyboard */}
+                  <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-orange-500/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-foreground group-hover:text-orange-600 transition-colors duration-200">
+                        Постоянная reply клавиатура
+                      </Label>
+                      <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Не убирать reply клавиатуру после использования
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.persistentKeyboard || false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { persistentKeyboard: checked })}
+                        className="data-[state=checked]:bg-orange-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Reply Keyboard Settings */}
+                  <div className="border-t border-border pt-4 mt-4">
+                    <h4 className="text-xs font-medium text-foreground mb-3">Настройки Reply клавиатуры</h4>
+                    <div className="space-y-3">
+                      <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-secondary/30 hover:bg-card/80 transition-all duration-200">
+                        <div className="flex-1">
+                          <Label className="text-xs font-medium text-foreground group-hover:text-secondary transition-colors duration-200">
+                            Одноразовая клавиатура
+                          </Label>
+                          <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                            Скрыть после нажатия
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <Switch
+                            checked={selectedNode.data.oneTimeKeyboard || false}
+                            onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { oneTimeKeyboard: checked })}
+                            className="data-[state=checked]:bg-secondary"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="group flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-secondary/30 hover:bg-card/80 transition-all duration-200">
+                        <div className="flex-1">
+                          <Label className="text-xs font-medium text-foreground group-hover:text-secondary transition-colors duration-200">
+                            Изменить размер клавиатуры
+                          </Label>
+                          <div className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                            Подогнать под содержимое
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <Switch
+                            checked={selectedNode.data.resizeKeyboard !== false}
+                            onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
+                            className="data-[state=checked]:bg-secondary"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         )}
       </div>
 
