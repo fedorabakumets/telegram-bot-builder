@@ -1,10 +1,13 @@
 import { 
   botProjects, 
   botInstances,
+  botTemplates,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
-  type InsertBotInstance 
+  type InsertBotInstance,
+  type BotTemplate,
+  type InsertBotTemplate
 } from "@shared/schema";
 
 export interface IStorage {
@@ -21,19 +24,30 @@ export interface IStorage {
   updateBotInstance(id: number, instance: Partial<InsertBotInstance>): Promise<BotInstance | undefined>;
   deleteBotInstance(id: number): Promise<boolean>;
   stopBotInstance(projectId: number): Promise<boolean>;
+  
+  // Bot templates
+  getBotTemplate(id: number): Promise<BotTemplate | undefined>;
+  getAllBotTemplates(): Promise<BotTemplate[]>;
+  createBotTemplate(template: InsertBotTemplate): Promise<BotTemplate>;
+  updateBotTemplate(id: number, template: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined>;
+  deleteBotTemplate(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private projects: Map<number, BotProject>;
   private instances: Map<number, BotInstance>;
+  private templates: Map<number, BotTemplate>;
   currentId: number;
   currentInstanceId: number;
+  currentTemplateId: number;
 
   constructor() {
     this.projects = new Map();
     this.instances = new Map();
+    this.templates = new Map();
     this.currentId = 1;
     this.currentInstanceId = 1;
+    this.currentTemplateId = 1;
     
     // Add a default project
     const defaultProject: BotProject = {
@@ -175,6 +189,49 @@ export class MemStorage implements IStorage {
       status: 'stopped'
     });
     return !!updated;
+  }
+
+  // Bot templates methods
+  async getBotTemplate(id: number): Promise<BotTemplate | undefined> {
+    return this.templates.get(id);
+  }
+
+  async getAllBotTemplates(): Promise<BotTemplate[]> {
+    return Array.from(this.templates.values());
+  }
+
+  async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
+    const id = this.currentTemplateId++;
+    const template: BotTemplate = {
+      ...insertTemplate,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      category: insertTemplate.category || "custom",
+      tags: insertTemplate.tags || [],
+      isPublic: insertTemplate.isPublic || 0,
+      description: insertTemplate.description || null,
+    };
+    this.templates.set(id, template);
+    return template;
+  }
+
+  async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
+    const template = this.templates.get(id);
+    if (!template) return undefined;
+
+    const updatedTemplate: BotTemplate = {
+      ...template,
+      ...updateData,
+      updatedAt: new Date(),
+    };
+    
+    this.templates.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+
+  async deleteBotTemplate(id: number): Promise<boolean> {
+    return this.templates.delete(id);
   }
 }
 

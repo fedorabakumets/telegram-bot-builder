@@ -4,7 +4,8 @@ import { spawn, ChildProcess } from "child_process";
 import { writeFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { storage } from "./storage";
-import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema } from "@shared/schema";
+import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema } from "@shared/schema";
+import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 
 // Глобальное хранилище активных процессов ботов
@@ -355,6 +356,9 @@ if __name__ == '__main__':
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize default templates on startup
+  await seedDefaultTemplates();
+  
   // Get all bot projects
   app.get("/api/projects", async (req, res) => {
     try {
@@ -517,6 +521,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(instances);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch bot instances" });
+    }
+  });
+
+  // Template management endpoints
+  
+  // Get all templates
+  app.get("/api/templates", async (req, res) => {
+    try {
+      const templates = await storage.getAllBotTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch templates" });
+    }
+  });
+
+  // Get single template
+  app.get("/api/templates/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getBotTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch template" });
+    }
+  });
+
+  // Create new template
+  app.post("/api/templates", async (req, res) => {
+    try {
+      const validatedData = insertBotTemplateSchema.parse(req.body);
+      const template = await storage.createBotTemplate(validatedData);
+      res.status(201).json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create template" });
+    }
+  });
+
+  // Update template
+  app.put("/api/templates/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertBotTemplateSchema.partial().parse(req.body);
+      const template = await storage.updateBotTemplate(id, validatedData);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update template" });
+    }
+  });
+
+  // Delete template
+  app.delete("/api/templates/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteBotTemplate(id);
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      res.json({ message: "Template deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete template" });
     }
   });
 

@@ -8,6 +8,8 @@ import { PropertiesPanel } from '@/components/editor/properties-panel';
 import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
 import { BotControl } from '@/components/editor/bot-control';
+import { SaveTemplateModal } from '@/components/editor/save-template-modal';
+import { TemplatesModal } from '@/components/editor/templates-modal';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +21,8 @@ export default function Editor() {
   const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot'>('editor');
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -94,6 +98,38 @@ export default function Editor() {
     // Handle component drag start if needed
   }, []);
 
+  const handleSaveAsTemplate = useCallback(() => {
+    setShowSaveTemplate(true);
+  }, []);
+
+  const handleLoadTemplate = useCallback(() => {
+    setShowTemplates(true);
+  }, []);
+
+  const handleSelectTemplate = useCallback((template: any) => {
+    // Применяем шаблон к текущему проекту
+    try {
+      // Получаем данные шаблона
+      const templateData = template.data;
+      
+      // Обновляем данные проекта с данными шаблона
+      updateProjectMutation.mutate({
+        data: templateData
+      });
+      
+      toast({
+        title: 'Шаблон применен',
+        description: `Шаблон "${template.name}" успешно загружен`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось применить шаблон',
+        variant: 'destructive',
+      });
+    }
+  }, [updateProjectMutation, toast]);
+
   if (!currentProject) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -115,6 +151,8 @@ export default function Editor() {
         onTabChange={handleTabChange}
         onSave={handleSave}
         onExport={() => setShowExport(true)}
+        onSaveAsTemplate={handleSaveAsTemplate}
+        onLoadTemplate={handleLoadTemplate}
         isSaving={updateProjectMutation.isPending}
       />
 
@@ -181,6 +219,19 @@ export default function Editor() {
         }}
         botData={getBotData()}
         projectName={currentProject.name}
+      />
+
+      <SaveTemplateModal
+        isOpen={showSaveTemplate}
+        onClose={() => setShowSaveTemplate(false)}
+        botData={getBotData()}
+        projectName={currentProject.name}
+      />
+
+      <TemplatesModal
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onSelectTemplate={handleSelectTemplate}
       />
     </div>
   );

@@ -8,10 +8,12 @@ interface HeaderProps {
   onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot') => void;
   onSave: () => void;
   onExport: () => void;
+  onSaveAsTemplate?: () => void;
+  onLoadTemplate?: () => void;
   isSaving?: boolean;
 }
 
-export function Header({ projectName, currentTab, onTabChange, onSave, onExport, isSaving }: HeaderProps) {
+export function Header({ projectName, currentTab, onTabChange, onSave, onExport, onSaveAsTemplate, onLoadTemplate, isSaving }: HeaderProps) {
   return (
     <header className="bg-background border-b border-border h-16 flex items-center justify-between px-6 relative z-50">
       <div className="flex items-center space-x-4">
@@ -72,6 +74,30 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
       </div>
       
       <div className="flex items-center space-x-3">
+        {onLoadTemplate && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onLoadTemplate}
+            className="flex items-center space-x-2"
+          >
+            <i className="fas fa-folder-open text-muted-foreground"></i>
+            <span>Шаблоны</span>
+          </Button>
+        )}
+        
+        {onSaveAsTemplate && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onSaveAsTemplate}
+            className="flex items-center space-x-2"
+          >
+            <i className="fas fa-bookmark text-muted-foreground"></i>
+            <span>Сохранить шаблон</span>
+          </Button>
+        )}
+        
         <Button 
           variant="outline" 
           size="sm"
