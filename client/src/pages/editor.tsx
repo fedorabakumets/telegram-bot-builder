@@ -213,6 +213,26 @@ export default function Editor() {
     }
   }, [setBotData, updateProjectMutation, toast, nodes.length, connections.length, queryClient]);
 
+  // Проверяем, есть ли ожидающий шаблон в localStorage
+  useEffect(() => {
+    const pendingTemplate = localStorage.getItem('pendingTemplate');
+    if (pendingTemplate && currentProject) {
+      try {
+        const template = JSON.parse(pendingTemplate);
+        console.log('Найден ожидающий шаблон:', template.name);
+        
+        // Очищаем localStorage
+        localStorage.removeItem('pendingTemplate');
+        
+        // Применяем шаблон
+        handleSelectTemplate(template);
+      } catch (error) {
+        console.error('Ошибка загрузки ожидающего шаблона:', error);
+        localStorage.removeItem('pendingTemplate');
+      }
+    }
+  }, [currentProject, handleSelectTemplate]);
+
   // Обработчики для управления связями
   const handleConnectionsChange = useCallback((newConnections: Connection[]) => {
     // Обновляем связи через существующий механизм

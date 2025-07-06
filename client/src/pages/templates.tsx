@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,7 @@ export default function TemplatesPage() {
   const [currentTab, setCurrentTab] = useState('all');
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'recent' | 'name'>('popular');
   const [showImport, setShowImport] = useState(false);
+  const [, setLocation] = useLocation();
 
   const { toast } = useToast();
 
@@ -185,9 +186,15 @@ export default function TemplatesPage() {
         }
       }
       
+      // Сохраняем шаблон в localStorage для загрузки в редактор
+      localStorage.setItem('pendingTemplate', JSON.stringify(template));
+      
+      // Перенаправляем на редактор
+      setLocation('/');
+      
       toast({
-        title: 'Шаблон готов к использованию',
-        description: `Шаблон "${template.name}" сохранен в ваших шаблонах`,
+        title: 'Шаблон применен',
+        description: `Шаблон "${template.name}" загружен в редактор`,
       });
     } catch (error) {
       console.error('Ошибка применения шаблона:', error);
