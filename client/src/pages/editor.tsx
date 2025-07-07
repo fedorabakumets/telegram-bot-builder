@@ -248,6 +248,7 @@ export default function Editor() {
             
             <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
               <PropertiesPanel
+                projectId={currentProject.id}
                 selectedNode={selectedNode}
                 allNodes={nodes}
                 onNodeUpdate={updateNodeData}

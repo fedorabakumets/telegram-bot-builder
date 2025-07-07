@@ -1,15 +1,68 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { spawn, ChildProcess } from "child_process";
-import { writeFileSync, existsSync, mkdirSync } from "fs";
+import { writeFileSync, existsSync, mkdirSync, unlinkSync } from "fs";
 import { join } from "path";
+import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema } from "@shared/schema";
+import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
+
+// Настройка multer для загрузки файлов
+const storage_multer = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = join(process.cwd(), 'uploads');
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    // Генерируем уникальное имя файла с временной меткой
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = file.originalname.split('.').pop();
+    cb(null, `${uniqueSuffix}.${extension}`);
+  }
+});
+
+// Фильтр для разрешенных типов файлов
+const fileFilter = (req: any, file: any, cb: any) => {
+  // Разрешенные MIME типы
+  const allowedTypes = [
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+    'video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov',
+    'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg', 'audio/webm',
+    'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain', 'application/zip', 'application/rar'
+  ];
+
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Неподдерживаемый тип файла'), false);
+  }
+};
+
+const upload = multer({ 
+  storage: storage_multer,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB максимальный размер файла
+  }
+});
+
+// Определение типа файла по MIME типу
+function getFileType(mimeType: string): 'photo' | 'video' | 'audio' | 'document' {
+  if (mimeType.startsWith('image/')) return 'photo';
+  if (mimeType.startsWith('video/')) return 'video';
+  if (mimeType.startsWith('audio/')) return 'audio';
+  return 'document';
+}
 
 // Функция для создания Python файла бота
 function createBotFile(botCode: string, projectId: number): string {
@@ -1210,6 +1263,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ hasDefault: true, token: safeToken });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch default token" });
+    }
+  });
+
+  // === МЕДИАФАЙЛЫ ===
+  
+  // Загрузка медиафайла
+  app.post("/api/media/upload/:projectId", upload.single('file'), async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const file = req.file;
+      const { description, tags } = req.body;
+      
+      if (!file) {
+        return res.status(400).json({ message: "Файл не выбран" });
+      }
+      
+      // Проверяем, что проект существует
+      const project = await storage.getBotProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Проект не найден" });
+      }
+      
+      // Создаем URL для доступа к файлу
+      const fileUrl = `/uploads/${file.filename}`;
+      
+      // Сохраняем информацию о файле в базе данных
+      const mediaFile = await storage.createMediaFile({
+        projectId,
+        fileName: file.originalname,
+        fileType: getFileType(file.mimetype),
+        filePath: file.path,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        url: fileUrl,
+        description: description || '',
+        tags: tags ? tags.split(',').map((tag: string) => tag.trim()) : [],
+        isPublic: 0
+      });
+      
+      res.json(mediaFile);
+    } catch (error) {
+      console.error("Ошибка при загрузке файла:", error);
+      res.status(500).json({ message: "Ошибка при загрузке файла" });
+    }
+  });
+  
+  // Получение всех медиафайлов проекта
+  app.get("/api/media/project/:projectId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const fileType = req.query.type as string;
+      
+      let mediaFiles;
+      if (fileType && ['photo', 'video', 'audio', 'document'].includes(fileType)) {
+        mediaFiles = await storage.getMediaFilesByType(projectId, fileType);
+      } else {
+        mediaFiles = await storage.getMediaFilesByProject(projectId);
+      }
+      
+      res.json(mediaFiles);
+    } catch (error) {
+      console.error("Ошибка при получении медиафайлов:", error);
+      res.status(500).json({ message: "Ошибка при получении медиафайлов" });
+    }
+  });
+  
+  // Получение конкретного медиафайла
+  app.get("/api/media/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const mediaFile = await storage.getMediaFile(id);
+      
+      if (!mediaFile) {
+        return res.status(404).json({ message: "Файл не найден" });
+      }
+      
+      res.json(mediaFile);
+    } catch (error) {
+      console.error("Ошибка при получении файла:", error);
+      res.status(500).json({ message: "Ошибка при получении файла" });
+    }
+  });
+  
+  // Обновление медиафайла
+  app.put("/api/media/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const mediaFile = await storage.updateMediaFile(id, updates);
+      
+      if (!mediaFile) {
+        return res.status(404).json({ message: "Файл не найден" });
+      }
+      
+      res.json(mediaFile);
+    } catch (error) {
+      console.error("Ошибка при обновлении файла:", error);
+      res.status(500).json({ message: "Ошибка при обновлении файла" });
+    }
+  });
+  
+  // Удаление медиафайла
+  app.delete("/api/media/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Получаем информацию о файле перед удалением
+      const mediaFile = await storage.getMediaFile(id);
+      if (!mediaFile) {
+        return res.status(404).json({ message: "Файл не найден" });
+      }
+      
+      // Удаляем файл с диска
+      try {
+        unlinkSync(mediaFile.filePath);
+      } catch (error) {
+        console.warn("Не удалось удалить файл с диска:", error);
+      }
+      
+      // Удаляем запись из базы данных
+      const success = await storage.deleteMediaFile(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Файл не найден в базе данных" });
+      }
+      
+      res.json({ message: "Файл успешно удален" });
+    } catch (error) {
+      console.error("Ошибка при удалении файла:", error);
+      res.status(500).json({ message: "Ошибка при удалении файла" });
+    }
+  });
+  
+  // Поиск медиафайлов
+  app.get("/api/media/search/:projectId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const query = req.query.q as string;
+      
+      if (!query) {
+        return res.status(400).json({ message: "Поисковый запрос не может быть пустым" });
+      }
+      
+      const mediaFiles = await storage.searchMediaFiles(projectId, query);
+      res.json(mediaFiles);
+    } catch (error) {
+      console.error("Ошибка при поиске файлов:", error);
+      res.status(500).json({ message: "Ошибка при поиске файлов" });
+    }
+  });
+  
+  // Увеличение счетчика использования файла
+  app.post("/api/media/:id/use", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.incrementMediaFileUsage(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Файл не найден" });
+      }
+      
+      res.json({ message: "Использование файла отмечено" });
+    } catch (error) {
+      console.error("Ошибка при обновлении использования файла:", error);
+      res.status(500).json({ message: "Ошибка при обновлении использования файла" });
     }
   });
 

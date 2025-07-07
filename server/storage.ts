@@ -3,6 +3,7 @@ import {
   botInstances,
   botTemplates,
   botTokens,
+  mediaFiles,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
@@ -10,7 +11,9 @@ import {
   type BotTemplate,
   type InsertBotTemplate,
   type BotToken,
-  type InsertBotToken
+  type InsertBotToken,
+  type MediaFile,
+  type InsertMediaFile
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
@@ -55,6 +58,16 @@ export interface IStorage {
   deleteBotToken(id: number): Promise<boolean>;
   setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean>;
   markTokenAsUsed(id: number): Promise<boolean>;
+  
+  // Media files
+  getMediaFile(id: number): Promise<MediaFile | undefined>;
+  getMediaFilesByProject(projectId: number): Promise<MediaFile[]>;
+  getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]>;
+  createMediaFile(file: InsertMediaFile): Promise<MediaFile>;
+  updateMediaFile(id: number, file: Partial<InsertMediaFile>): Promise<MediaFile | undefined>;
+  deleteMediaFile(id: number): Promise<boolean>;
+  incrementMediaFileUsage(id: number): Promise<boolean>;
+  searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]>;
 }
 
 // Legacy Memory Storage - kept for reference
@@ -728,6 +741,72 @@ export class DatabaseStorage implements IStorage {
       .where(eq(botTokens.id, id));
     
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Media Files
+  async getMediaFile(id: number): Promise<MediaFile | undefined> {
+    const [file] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    return file || undefined;
+  }
+
+  async getMediaFilesByProject(projectId: number): Promise<MediaFile[]> {
+    return await db.select().from(mediaFiles)
+      .where(eq(mediaFiles.projectId, projectId))
+      .orderBy(desc(mediaFiles.createdAt));
+  }
+
+  async getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]> {
+    return await db.select().from(mediaFiles)
+      .where(and(eq(mediaFiles.projectId, projectId), eq(mediaFiles.fileType, fileType)))
+      .orderBy(desc(mediaFiles.createdAt));
+  }
+
+  async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
+    const [file] = await db
+      .insert(mediaFiles)
+      .values(insertFile)
+      .returning();
+    return file;
+  }
+
+  async updateMediaFile(id: number, updateData: Partial<InsertMediaFile>): Promise<MediaFile | undefined> {
+    const [file] = await db
+      .update(mediaFiles)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(mediaFiles.id, id))
+      .returning();
+    return file || undefined;
+  }
+
+  async deleteMediaFile(id: number): Promise<boolean> {
+    const result = await db.delete(mediaFiles).where(eq(mediaFiles.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async incrementMediaFileUsage(id: number): Promise<boolean> {
+    const result = await db
+      .update(mediaFiles)
+      .set({ 
+        usageCount: db.raw('usage_count + 1'),
+        updatedAt: new Date()
+      })
+      .where(eq(mediaFiles.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    return await db.select().from(mediaFiles)
+      .where(
+        and(
+          eq(mediaFiles.projectId, projectId),
+          or(
+            ilike(mediaFiles.fileName, searchTerm),
+            ilike(mediaFiles.description, searchTerm)
+          )
+        )
+      )
+      .orderBy(desc(mediaFiles.usageCount), desc(mediaFiles.createdAt));
   }
 }
 

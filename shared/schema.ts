@@ -66,6 +66,23 @@ export const botTokens = pgTable("bot_tokens", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const mediaFiles = pgTable("media_files", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  fileName: text("file_name").notNull(), // Оригинальное имя файла
+  fileType: text("file_type").notNull(), // photo, video, audio, document
+  filePath: text("file_path").notNull(), // Путь к файлу на сервере
+  fileSize: integer("file_size").notNull(), // Размер файла в байтах
+  mimeType: text("mime_type").notNull(), // MIME тип файла
+  url: text("url").notNull(), // URL для доступа к файлу
+  description: text("description"), // Описание файла
+  tags: text("tags").array().default([]), // Теги для поиска
+  isPublic: integer("is_public").default(0), // 0 = приватный, 1 = публичный
+  usageCount: integer("usage_count").default(0), // Количество использований
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
   name: true,
   description: true,
@@ -125,6 +142,28 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   isActive: z.number().min(0).max(1).default(1),
 });
 
+export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({
+  projectId: true,
+  fileName: true,
+  fileType: true,
+  filePath: true,
+  fileSize: true,
+  mimeType: true,
+  url: true,
+  description: true,
+  tags: true,
+  isPublic: true,
+}).extend({
+  fileName: z.string().min(1, "Имя файла обязательно"),
+  fileType: z.enum(["photo", "video", "audio", "document"]),
+  filePath: z.string().min(1, "Путь к файлу обязателен"),
+  fileSize: z.number().min(1, "Размер файла должен быть больше 0"),
+  mimeType: z.string().min(1, "MIME тип обязателен"),
+  url: z.string().url("Некорректный URL"),
+  tags: z.array(z.string()).default([]),
+  isPublic: z.number().min(0).max(1).default(0),
+});
+
 // Схема для оценки шаблона
 export const rateTemplateSchema = z.object({
   templateId: z.number(),
@@ -139,6 +178,8 @@ export type InsertBotTemplate = z.infer<typeof insertBotTemplateSchema>;
 export type BotTemplate = typeof botTemplates.$inferSelect;
 export type InsertBotToken = z.infer<typeof insertBotTokenSchema>;
 export type BotToken = typeof botTokens.$inferSelect;
+export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
+export type MediaFile = typeof mediaFiles.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({

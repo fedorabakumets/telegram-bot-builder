@@ -8,12 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { MediaSelector } from '@/components/media/media-selector';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { useState, useMemo } from 'react';
 
 interface PropertiesPanelProps {
+  projectId: number;
   selectedNode: Node | null;
   allNodes?: Node[];
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
@@ -23,6 +25,7 @@ interface PropertiesPanelProps {
 }
 
 export function PropertiesPanel({ 
+  projectId,
   selectedNode,
   allNodes = [],
   onNodeUpdate, 
@@ -354,54 +357,18 @@ export function PropertiesPanel({
                     <Label className="text-sm font-semibold text-blue-900 dark:text-blue-100">Источник изображения</Label>
                   </div>
                   
-                  <div className="space-y-3">
-                    <Input
-                      value={selectedNode.data.imageUrl || ''}
-                      onChange={(e) => {
-                        const url = e.target.value;
-                        onNodeUpdate(selectedNode.id, { imageUrl: url });
-                        
-                        // Validate URL in real-time
-                        const validation = validateUrl(url, 'image');
-                        setUrlValidation(prev => ({ ...prev, imageUrl: validation }));
-                      }}
-                      className={`transition-all duration-200 ${
-                        urlValidation.imageUrl && !urlValidation.imageUrl.isValid 
-                          ? 'border-red-500 focus:border-red-600 focus:ring-red-200' 
-                          : 'border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200'
-                      }`}
-                      placeholder="https://example.com/beautiful-image.jpg"
-                    />
-                    
-                    {urlValidation.imageUrl && !urlValidation.imageUrl.isValid && (
-                      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-950/30 p-2 rounded-md border border-red-200 dark:border-red-800/50">
-                        <i className="fas fa-exclamation-triangle"></i>
-                        <span>{urlValidation.imageUrl.message}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400">
-                        <i className="fas fa-check-circle"></i>
-                        <span>JPG, PNG, GIF, WebP</span>
-                      </div>
-                      
-                      {selectedNode.data.imageUrl && urlValidation.imageUrl?.isValid !== false && (
-                        <UIButton
-                          onClick={() => {
-                            if (selectedNode.data.imageUrl) {
-                              window.open(selectedNode.data.imageUrl, '_blank');
-                            }
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs h-7 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-100 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
-                        >
-                          <i className="fas fa-external-link-alt mr-1.5"></i>
-                          Просмотр
-                        </UIButton>
-                      )}
-                    </div>
+                  <MediaSelector
+                    projectId={projectId}
+                    value={selectedNode.data.imageUrl || ''}
+                    onChange={(url) => onNodeUpdate(selectedNode.id, { imageUrl: url })}
+                    fileType="photo"
+                    placeholder="https://example.com/beautiful-image.jpg"
+                    label="Источник изображения"
+                  />
+                  
+                  <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400 mt-3">
+                    <i className="fas fa-check-circle"></i>
+                    <span>JPG, PNG, GIF, WebP • Макс. 20MB</span>
                   </div>
                 </div>
 
@@ -442,52 +409,18 @@ export function PropertiesPanel({
                   </div>
                   
                   <div className="space-y-3">
-                    <Input
+                    <MediaSelector
+                      projectId={projectId}
                       value={selectedNode.data.videoUrl || ''}
-                      onChange={(e) => {
-                        const url = e.target.value;
-                        onNodeUpdate(selectedNode.id, { videoUrl: url });
-                        
-                        // Validate URL in real-time
-                        const validation = validateUrl(url, 'video');
-                        setUrlValidation(prev => ({ ...prev, videoUrl: validation }));
-                      }}
-                      className={`transition-all duration-200 ${
-                        urlValidation.videoUrl && !urlValidation.videoUrl.isValid 
-                          ? 'border-red-500 focus:border-red-600 focus:ring-red-200' 
-                          : 'border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200'
-                      }`}
+                      onChange={(url) => onNodeUpdate(selectedNode.id, { videoUrl: url })}
+                      fileType="video"
                       placeholder="https://example.com/awesome-video.mp4"
+                      label="Источник видео"
                     />
                     
-                    {urlValidation.videoUrl && !urlValidation.videoUrl.isValid && (
-                      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-950/30 p-2 rounded-md border border-red-200 dark:border-red-800/50">
-                        <i className="fas fa-exclamation-triangle"></i>
-                        <span>{urlValidation.videoUrl.message}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 text-xs text-purple-600 dark:text-purple-400">
-                        <i className="fas fa-check-circle"></i>
-                        <span>MP4, AVI, MOV • Макс. 50MB</span>
-                      </div>
-                      
-                      {selectedNode.data.videoUrl && urlValidation.videoUrl?.isValid !== false && (
-                        <UIButton
-                          onClick={() => {
-                            if (selectedNode.data.videoUrl) {
-                              window.open(selectedNode.data.videoUrl, '_blank');
-                            }
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs h-7 px-3 text-purple-600 hover:text-purple-700 hover:bg-purple-100 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-900/30 transition-colors"
-                        >
-                          <i className="fas fa-play mr-1.5"></i>
-                          Воспроизвести
-                        </UIButton>
-                      )}
+                    <div className="flex items-center space-x-2 text-xs text-purple-600 dark:text-purple-400 mt-3">
+                      <i className="fas fa-check-circle"></i>
+                      <span>MP4, AVI, MOV, WebM • Макс. 50MB</span>
                     </div>
                   </div>
                 </div>
@@ -566,52 +499,18 @@ export function PropertiesPanel({
                   </div>
                   
                   <div className="space-y-3">
-                    <Input
+                    <MediaSelector
+                      projectId={projectId}
                       value={selectedNode.data.audioUrl || ''}
-                      onChange={(e) => {
-                        const url = e.target.value;
-                        onNodeUpdate(selectedNode.id, { audioUrl: url });
-                        
-                        // Validate URL in real-time
-                        const validation = validateUrl(url, 'audio');
-                        setUrlValidation(prev => ({ ...prev, audioUrl: validation }));
-                      }}
-                      className={`transition-all duration-200 ${
-                        urlValidation.audioUrl && !urlValidation.audioUrl.isValid 
-                          ? 'border-red-500 focus:border-red-600 focus:ring-red-200' 
-                          : 'border-rose-200 dark:border-rose-700 focus:border-rose-500 focus:ring-rose-200'
-                      }`}
+                      onChange={(url) => onNodeUpdate(selectedNode.id, { audioUrl: url })}
+                      fileType="audio"
                       placeholder="https://example.com/beautiful-music.mp3"
+                      label="Источник аудио"
                     />
                     
-                    {urlValidation.audioUrl && !urlValidation.audioUrl.isValid && (
-                      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-950/30 p-2 rounded-md border border-red-200 dark:border-red-800/50">
-                        <i className="fas fa-exclamation-triangle"></i>
-                        <span>{urlValidation.audioUrl.message}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 text-xs text-rose-600 dark:text-rose-400">
-                        <i className="fas fa-check-circle"></i>
-                        <span>MP3, WAV, OGG • Макс. 50MB</span>
-                      </div>
-                      
-                      {selectedNode.data.audioUrl && urlValidation.audioUrl?.isValid !== false && (
-                        <UIButton
-                          onClick={() => {
-                            if (selectedNode.data.audioUrl) {
-                              window.open(selectedNode.data.audioUrl, '_blank');
-                            }
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs h-7 px-3 text-rose-600 hover:text-rose-700 hover:bg-rose-100 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-900/30 transition-colors"
-                        >
-                          <i className="fas fa-volume-up mr-1.5"></i>
-                          Прослушать
-                        </UIButton>
-                      )}
+                    <div className="flex items-center space-x-2 text-xs text-rose-600 dark:text-rose-400 mt-3">
+                      <i className="fas fa-check-circle"></i>
+                      <span>MP3, WAV, OGG, AAC • Макс. 50MB</span>
                     </div>
                   </div>
                 </div>
@@ -702,60 +601,18 @@ export function PropertiesPanel({
                   </div>
                   
                   <div className="space-y-3">
-                    <Input
+                    <MediaSelector
+                      projectId={projectId}
                       value={selectedNode.data.documentUrl || ''}
-                      onChange={(e) => {
-                        const url = e.target.value;
-                        onNodeUpdate(selectedNode.id, { documentUrl: url });
-                        
-                        // Basic URL validation for documents (any file)
-                        if (url) {
-                          try {
-                            new URL(url);
-                            setUrlValidation(prev => ({ ...prev, documentUrl: { isValid: true } }));
-                          } catch {
-                            setUrlValidation(prev => ({ ...prev, documentUrl: { isValid: false, message: 'Неверный формат URL' } }));
-                          }
-                        } else {
-                          setUrlValidation(prev => ({ ...prev, documentUrl: { isValid: true } }));
-                        }
-                      }}
-                      className={`transition-all duration-200 ${
-                        urlValidation.documentUrl && !urlValidation.documentUrl.isValid 
-                          ? 'border-red-500 focus:border-red-600 focus:ring-red-200' 
-                          : 'border-teal-200 dark:border-teal-700 focus:border-teal-500 focus:ring-teal-200'
-                      }`}
+                      onChange={(url) => onNodeUpdate(selectedNode.id, { documentUrl: url })}
+                      fileType="document"
                       placeholder="https://example.com/important-document.pdf"
+                      label="Источник документа"
                     />
                     
-                    {urlValidation.documentUrl && !urlValidation.documentUrl.isValid && (
-                      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-950/30 p-2 rounded-md border border-red-200 dark:border-red-800/50">
-                        <i className="fas fa-exclamation-triangle"></i>
-                        <span>{urlValidation.documentUrl.message}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 text-xs text-teal-600 dark:text-teal-400">
-                        <i className="fas fa-check-circle"></i>
-                        <span>Любые файлы • Макс. 50MB</span>
-                      </div>
-                      
-                      {selectedNode.data.documentUrl && urlValidation.documentUrl?.isValid !== false && (
-                        <UIButton
-                          onClick={() => {
-                            if (selectedNode.data.documentUrl) {
-                              window.open(selectedNode.data.documentUrl, '_blank');
-                            }
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs h-7 px-3 text-teal-600 hover:text-teal-700 hover:bg-teal-100 dark:text-teal-400 dark:hover:text-teal-300 dark:hover:bg-teal-900/30 transition-colors"
-                        >
-                          <i className="fas fa-download mr-1.5"></i>
-                          Скачать
-                        </UIButton>
-                      )}
+                    <div className="flex items-center space-x-2 text-xs text-teal-600 dark:text-teal-400 mt-3">
+                      <i className="fas fa-check-circle"></i>
+                      <span>Любые файлы • Макс. 50MB</span>
                     </div>
                   </div>
                 </div>
