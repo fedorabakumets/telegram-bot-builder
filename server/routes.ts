@@ -218,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Роуты для проектов
   app.get("/api/projects", async (req, res) => {
     try {
-      const projects = await storage.getBotProjects();
+      const projects = await storage.getAllBotProjects();
       res.json(projects);
     } catch (error) {
       res.status(500).json({ error: "Ошибка получения проектов" });
@@ -348,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Роуты для шаблонов
   app.get("/api/templates", async (req, res) => {
     try {
-      const templates = await storage.getBotTemplates();
+      const templates = await storage.getAllBotTemplates();
       res.json(templates);
     } catch (error) {
       res.status(500).json({ error: "Ошибка получения шаблонов" });
@@ -387,7 +387,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Рейтинг должен быть от 1 до 5" });
       }
 
-      const template = await storage.rateBotTemplate(id, rating);
+      const template = await storage.rateTemplate(id, rating);
       if (!template) {
         return res.status(404).json({ error: "Шаблон не найден" });
       }
@@ -400,11 +400,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/templates/:id/use", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const template = await storage.incrementTemplateUsage(id);
-      if (!template) {
+      const success = await storage.incrementTemplateUseCount(id);
+      if (!success) {
         return res.status(404).json({ error: "Шаблон не найден" });
       }
-      res.json(template);
+      res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Ошибка увеличения счетчика использования" });
     }
@@ -412,7 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/templates/featured", async (req, res) => {
     try {
-      const templates = await storage.getFeaturedBotTemplates();
+      const templates = await storage.getFeaturedTemplates();
       res.json(templates);
     } catch (error) {
       res.status(500).json({ error: "Ошибка получения рекомендуемых шаблонов" });
@@ -422,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/templates/category/:category", async (req, res) => {
     try {
       const category = req.params.category;
-      const templates = await storage.getBotTemplatesByCategory(category);
+      const templates = await storage.getTemplatesByCategory(category);
       res.json(templates);
     } catch (error) {
       res.status(500).json({ error: "Ошибка получения шаблонов по категории" });
@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!query) {
         return res.status(400).json({ error: "Поисковый запрос обязателен" });
       }
-      const templates = await storage.searchBotTemplates(query);
+      const templates = await storage.searchTemplates(query);
       res.json(templates);
     } catch (error) {
       res.status(500).json({ error: "Ошибка поиска шаблонов" });
@@ -462,7 +462,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Токен обязателен" });
       }
 
-      const savedToken = await storage.saveBotToken(projectId, token);
+      const savedToken = await storage.createBotToken({
+        projectId,
+        name: "Default Token",
+        token,
+        isDefault: 1,
+        isActive: 1
+      });
       res.json({ token: savedToken.token });
     } catch (error) {
       res.status(500).json({ error: "Ошибка сохранения токена" });
