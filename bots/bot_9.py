@@ -12,7 +12,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.enums import ParseMode
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "7552080497:AAEJFmsxmY8PnDzgoUpM5NDg5E1ehNYAHYU"
+BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -51,56 +51,85 @@ async def start_handler(message: types.Message):
         "registered_at": message.date
     }
 
-    text = """Привет! Тест кнопок
+    text = """🛍️ Добро пожаловать в наш интернет-магазин!
 
-Выбери:"""
+Что вас интересует?"""
     
     builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="Шаблон"))
-    builder.add(KeyboardButton(text="Компонент"))
+    builder.add(KeyboardButton(text="📦 Каталог товаров"))
+    builder.add(KeyboardButton(text="🛒 Корзина"))
+    builder.add(KeyboardButton(text="ℹ️ О доставке"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
     await message.answer(text, reply_markup=keyboard)
 
-# Обработчики синонимов команд
+# Обработчики inline кнопок
 
-@dp.message(lambda message: message.text and message.text.lower() == "старт")
-async def start_synonym_старт_handler(message: types.Message):
-    # Синоним для команды /start
-    await start_handler(message)
+@dp.callback_query(lambda c: c.data == "start-1")
+async def handle_callback_start_1(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    text = """🛍️ Добро пожаловать в наш интернет-магазин!
+
+Что вас интересует?"""
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="📦 Каталог товаров"))
+    builder.add(KeyboardButton(text="🛒 Корзина"))
+    builder.add(KeyboardButton(text="ℹ️ О доставке"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    # Для reply клавиатуры отправляем новое сообщение и удаляем старое
+    try:
+        await callback_query.message.delete()
+    except:
+        pass  # Игнорируем ошибки удаления
+    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
 
 # Обработчики reply кнопок
 
-@dp.message(lambda message: message.text == "Шаблон")
-async def handle_reply_btn_template(message: types.Message):
-    text = "Это шаблонный узел"
+@dp.message(lambda message: message.text == "📦 Каталог товаров")
+async def handle_reply_btn_catalog(message: types.Message):
+    text = "📦 **Каталог товаров:**\n\n🏷️ Категории:"
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="📱 Электроника", callback_data="electronics-1"))
+    builder.add(InlineKeyboardButton(text="👕 Одежда", callback_data="clothes-1"))
+    builder.add(InlineKeyboardButton(text="🏠 Для дома", callback_data="home-1"))
+    builder.add(InlineKeyboardButton(text="◀️ Главное меню", callback_data="start-1"))
+    keyboard = builder.as_markup()
+    await message.answer(text, reply_markup=keyboard)
+
+@dp.message(lambda message: message.text == "🛒 Корзина")
+async def handle_reply_btn_cart(message: types.Message):
+    text = "🛒 **Ваша корзина пуста**\n\nДобавьте товары из каталога!"
     builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="Назад"))
+    builder.add(KeyboardButton(text="📦 Перейти к каталогу"))
+    builder.add(KeyboardButton(text="◀️ Главное меню"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
     await message.answer(text, reply_markup=keyboard)
 
-@dp.message(lambda message: message.text == "Компонент")
-async def handle_reply_new_btn_component(message: types.Message):
-    text = "Работает! Это пользовательский компонент!"
+@dp.message(lambda message: message.text == "ℹ️ О доставке")
+async def handle_reply_btn_info(message: types.Message):
+    text = "🚚 **Информация о доставке:**\n\n📦 Бесплатная доставка от 2000₽\n⏱️ Доставка 1-3 дня\n📍 Доставляем по всей России\n\n💳 Оплата при получении или картой"
     builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="Назад к старту"))
+    builder.add(KeyboardButton(text="◀️ Главное меню"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
     await message.answer(text, reply_markup=keyboard)
 
-@dp.message(lambda message: message.text == "Назад")
-async def handle_reply_btn_back(message: types.Message):
-    text = "Привет! Тест кнопок\n\nВыбери:"
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="Шаблон"))
-    builder.add(KeyboardButton(text="Компонент"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+@dp.message(lambda message: message.text == "📦 Перейти к каталогу")
+async def handle_reply_btn_to_catalog(message: types.Message):
+    text = "📦 **Каталог товаров:**\n\n🏷️ Категории:"
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="📱 Электроника", callback_data="electronics-1"))
+    builder.add(InlineKeyboardButton(text="👕 Одежда", callback_data="clothes-1"))
+    builder.add(InlineKeyboardButton(text="🏠 Для дома", callback_data="home-1"))
+    builder.add(InlineKeyboardButton(text="◀️ Главное меню", callback_data="start-1"))
+    keyboard = builder.as_markup()
     await message.answer(text, reply_markup=keyboard)
 
-@dp.message(lambda message: message.text == "Назад к старту")
-async def handle_reply_btn_back_component(message: types.Message):
-    text = "Привет! Тест кнопок\n\nВыбери:"
+@dp.message(lambda message: message.text == "◀️ Главное меню")
+async def handle_reply_btn_back_cart(message: types.Message):
+    text = "🛍️ Добро пожаловать в наш интернет-магазин!\n\nЧто вас интересует?"
     builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="Шаблон"))
-    builder.add(KeyboardButton(text="Компонент"))
+    builder.add(KeyboardButton(text="📦 Каталог товаров"))
+    builder.add(KeyboardButton(text="🛒 Корзина"))
+    builder.add(KeyboardButton(text="ℹ️ О доставке"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
     await message.answer(text, reply_markup=keyboard)
 
