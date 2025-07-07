@@ -42,6 +42,61 @@ const components: ComponentDefinition[] = [
     }
   },
   {
+    id: 'video-message',
+    name: 'Видео сообщение',
+    description: 'Видео файл с подписью',
+    icon: 'fas fa-video',
+    color: 'bg-red-100 text-red-600',
+    type: 'video',
+    defaultData: {
+      messageText: 'Описание видео',
+      videoUrl: '',
+      mediaCaption: '',
+      keyboardType: 'none',
+      buttons: [],
+      markdown: false,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true
+    }
+  },
+  {
+    id: 'audio-message',
+    name: 'Аудио сообщение',
+    description: 'Аудио файл с подписью',
+    icon: 'fas fa-music',
+    color: 'bg-yellow-100 text-yellow-600',
+    type: 'audio',
+    defaultData: {
+      messageText: 'Описание аудио',
+      audioUrl: '',
+      mediaCaption: '',
+      keyboardType: 'none',
+      buttons: [],
+      markdown: false,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true
+    }
+  },
+  {
+    id: 'document-message',
+    name: 'Документ',
+    description: 'Файл документа',
+    icon: 'fas fa-file',
+    color: 'bg-gray-100 text-gray-600',
+    type: 'document',
+    defaultData: {
+      messageText: 'Описание документа',
+      documentUrl: '',
+      documentName: 'document.pdf',
+      mediaCaption: '',
+      keyboardType: 'none',
+      buttons: [],
+      markdown: false,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true
+    }
+  },
+  {
     id: 'reply-keyboard',
     name: 'Reply клавиатура',
     description: 'Кнопки внизу экрана',
@@ -234,7 +289,7 @@ const components: ComponentDefinition[] = [
 const componentCategories = [
   {
     title: 'Сообщения',
-    components: components.filter(c => ['message', 'photo'].includes(c.type))
+    components: components.filter(c => ['message', 'photo', 'video', 'audio', 'document'].includes(c.type))
   },
   {
     title: 'Кнопки',

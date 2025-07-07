@@ -153,7 +153,7 @@ export const buttonSchema = z.object({
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'photo', 'keyboard', 'condition', 'input', 'command']),
+  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'condition', 'input', 'command']),
   position: z.object({
     x: z.number(),
     y: z.number(),
@@ -163,6 +163,11 @@ export const nodeSchema = z.object({
     description: z.string().optional(),
     messageText: z.string().optional(),
     imageUrl: z.string().optional(),
+    videoUrl: z.string().optional(),
+    audioUrl: z.string().optional(),
+    documentUrl: z.string().optional(),
+    documentName: z.string().optional(),
+    mediaCaption: z.string().optional(),
     keyboardType: z.enum(['reply', 'inline', 'none']).default('none'),
     buttons: z.array(buttonSchema).default([]),
     oneTimeKeyboard: z.boolean().default(false),
@@ -175,6 +180,12 @@ export const nodeSchema = z.object({
     adminOnly: z.boolean().default(false),
     requiresAuth: z.boolean().default(false),
     showInMenu: z.boolean().default(true),
+    // Настройки команд
+    commandTimeout: z.number().optional(), // Время ожидания выполнения команды в секундах
+    cooldownTime: z.number().optional(), // Время перезарядки команды в секундах
+    maxUsagesPerDay: z.number().optional(), // Максимальное количество использований в день
+    enableStatistics: z.boolean().default(true), // Включить сбор статистики
+    customParameters: z.array(z.string()).default([]), // Дополнительные параметры команды
   }),
 });
 

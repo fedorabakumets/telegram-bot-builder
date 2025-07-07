@@ -80,6 +80,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += generateStartHandler(node);
     } else if (node.type === "command") {
       code += generateCommandHandler(node);
+    } else if (node.type === "photo") {
+      code += generatePhotoHandler(node);
+    } else if (node.type === "video") {
+      code += generateVideoHandler(node);
+    } else if (node.type === "audio") {
+      code += generateAudioHandler(node);
+    } else if (node.type === "document") {
+      code += generateDocumentHandler(node);
     }
     // Note: Message nodes are handled via callback handlers, not as separate message handlers
   });
@@ -132,18 +140,113 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           if (targetNode) {
             
-            // Generate response for target node
-            const targetText = targetNode.data.messageText || "Сообщение";
-            // Используем тройные кавычки для многострочного текста
-            if (targetText.includes('\n')) {
-              code += `    text = """${targetText}"""\n`;
+            // Handle different target node types
+            if (targetNode.type === 'photo' && targetNode.data.imageUrl) {
+              const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📸 Фото";
+              const imageUrl = targetNode.data.imageUrl;
+              
+              if (caption.includes('\n')) {
+                code += `    caption = """${caption}"""\n`;
+              } else {
+                const escapedCaption = caption.replace(/"/g, '\\"');
+                code += `    caption = "${escapedCaption}"\n`;
+              }
+              
+              code += `    photo_url = "${imageUrl}"\n`;
+              code += '    try:\n';
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_photo(callback_query.from_user.id, photo_url, caption=caption, reply_markup=keyboard)\n';
+              } else {
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_photo(callback_query.from_user.id, photo_url, caption=caption)\n';
+              }
+              
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки фото: {e}")\n';
+              code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить фото\\n{caption}")\n';
+              
+            } else if (targetNode.type === 'video' && targetNode.data.videoUrl) {
+              const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎥 Видео";
+              const videoUrl = targetNode.data.videoUrl;
+              
+              if (caption.includes('\n')) {
+                code += `    caption = """${caption}"""\n`;
+              } else {
+                const escapedCaption = caption.replace(/"/g, '\\"');
+                code += `    caption = "${escapedCaption}"\n`;
+              }
+              
+              code += `    video_url = "${videoUrl}"\n`;
+              code += '    try:\n';
+              code += '        await callback_query.message.delete()\n';
+              code += '        await bot.send_video(callback_query.from_user.id, video_url, caption=caption)\n';
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки видео: {e}")\n';
+              code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить видео\\n{caption}")\n';
+              
+            } else if (targetNode.type === 'audio' && targetNode.data.audioUrl) {
+              const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎵 Аудио";
+              const audioUrl = targetNode.data.audioUrl;
+              
+              if (caption.includes('\n')) {
+                code += `    caption = """${caption}"""\n`;
+              } else {
+                const escapedCaption = caption.replace(/"/g, '\\"');
+                code += `    caption = "${escapedCaption}"\n`;
+              }
+              
+              code += `    audio_url = "${audioUrl}"\n`;
+              code += '    try:\n';
+              code += '        await callback_query.message.delete()\n';
+              code += '        await bot.send_audio(callback_query.from_user.id, audio_url, caption=caption)\n';
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки аудио: {e}")\n';
+              code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить аудио\\n{caption}")\n';
+              
+            } else if (targetNode.type === 'document' && targetNode.data.documentUrl) {
+              const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📄 Документ";
+              const documentUrl = targetNode.data.documentUrl;
+              
+              if (caption.includes('\n')) {
+                code += `    caption = """${caption}"""\n`;
+              } else {
+                const escapedCaption = caption.replace(/"/g, '\\"');
+                code += `    caption = "${escapedCaption}"\n`;
+              }
+              
+              code += `    document_url = "${documentUrl}"\n`;
+              code += '    try:\n';
+              code += '        await callback_query.message.delete()\n';
+              code += '        await bot.send_document(callback_query.from_user.id, document_url, caption=caption)\n';
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки документа: {e}")\n';
+              code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить документ\\n{caption}")\n';
+              
             } else {
-              const escapedTargetText = targetText.replace(/"/g, '\\"');
-              code += `    text = "${escapedTargetText}"\n`;
-            }
+              // Generate response for target node (default text message)
+              const targetText = targetNode.data.messageText || "Сообщение";
+              // Используем тройные кавычки для многострочного текста
+              if (targetText.includes('\n')) {
+                code += `    text = """${targetText}"""\n`;
+              } else {
+                const escapedTargetText = targetText.replace(/"/g, '\\"');
+                code += `    text = "${escapedTargetText}"\n`;
+              }
             
-            // Handle keyboard for target node
-            if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+              // Handle keyboard for target node
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
               targetNode.data.buttons.forEach(btn => {
                 if (btn.action === "url") {
@@ -172,6 +275,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
             } else {
               code += '    await callback_query.message.edit_text(text)\n';
+            }
             }
           } else {
             // Кнопка без цели - просто уведомляем пользователя
@@ -345,6 +449,9 @@ function generateCommandHandler(node: Node): string {
   let code = `\n@dp.message(Command("${command.replace('/', '')}"))\n`;
   code += `async def ${functionName}_handler(message: types.Message):\n`;
 
+  // Добавляем логирование для отладки
+  code += `    logging.info(f"Команда ${command} вызвана пользователем {message.from_user.id}")\n`;
+
   // Добавляем проверки безопасности
   if (node.data.isPrivateOnly) {
     code += '    if not await is_private_chat(message):\n';
@@ -364,6 +471,14 @@ function generateCommandHandler(node: Node): string {
     code += '        return\n';
   }
 
+  // Сохраняем информацию о команде в пользовательских данных
+  code += '    # Сохраняем статистику использования команд\n';
+  code += '    if message.from_user.id not in user_data:\n';
+  code += '        user_data[message.from_user.id] = {}\n';
+  code += '    if "commands_used" not in user_data[message.from_user.id]:\n';
+  code += '        user_data[message.from_user.id]["commands_used"] = {}\n';
+  code += `    user_data[message.from_user.id]["commands_used"]["${command}"] = user_data[message.from_user.id]["commands_used"].get("${command}", 0) + 1\n`;
+
   const messageText = node.data.messageText || "Команда выполнена";
   // Используем тройные кавычки для многострочного текста
   if (messageText.includes('\n')) {
@@ -377,6 +492,285 @@ function generateCommandHandler(node: Node): string {
 }
 
 // generateMessageHandler removed - message nodes are handled via callback handlers only
+
+function generatePhotoHandler(node: Node): string {
+  let code = `\n# Обработчик фото для узла ${node.id}\n`;
+  
+  // Если у узла есть команда, добавляем её как триггер
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `photo_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    // Добавляем логирование
+    code += `    logging.info(f"Команда фото ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
+    
+    // Добавляем проверки безопасности
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    const imageUrl = node.data.imageUrl || "https://via.placeholder.com/400x300?text=Photo";
+    const caption = node.data.messageText || "📸 Фото";
+    
+    // Используем тройные кавычки для многострочного caption
+    if (caption.includes('\n')) {
+      code += `    caption = """${caption}"""\n`;
+    } else {
+      const escapedCaption = caption.replace(/"/g, '\\"');
+      code += `    caption = "${escapedCaption}"\n`;
+    }
+    
+    code += `    photo_url = "${imageUrl}"\n`;
+    code += '    \n';
+    code += '    try:\n';
+    code += '        # Пытаемся отправить фото по URL\n';
+    
+    // Обрабатываем клавиатуру для фото
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      code += '        # Создаем inline клавиатуру с кнопками\n';
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      code += '        keyboard = builder.as_markup()\n';
+      code += '        # Отправляем фото с подписью и inline кнопками\n';
+      code += '        await message.answer_photo(photo_url, caption=caption, reply_markup=keyboard)\n';
+    } else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
+      code += '        # Создаем reply клавиатуру\n';
+      code += '        builder = ReplyKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "contact" && button.requestContact) {
+          code += `        builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+        } else if (button.action === "location" && button.requestLocation) {
+          code += `        builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+        } else {
+          code += `        builder.add(KeyboardButton(text="${button.text}"))\n`;
+        }
+      });
+      const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
+      const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
+      code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+      code += '        # Отправляем фото с подписью и reply клавиатурой\n';
+      code += '        await message.answer_photo(photo_url, caption=caption, reply_markup=keyboard)\n';
+    } else {
+      code += '        # Отправляем фото только с подписью\n';
+      code += '        await message.answer_photo(photo_url, caption=caption)\n';
+    }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки фото: {e}")\n';
+    code += '        await message.answer(f"❌ Не удалось загрузить фото\\n{caption}")\n';
+  }
+  
+  return code;
+}
+
+function generateVideoHandler(node: Node): string {
+  let code = `\n# Обработчик видео для узла ${node.id}\n`;
+  
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `video_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    code += `    logging.info(f"Команда видео ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
+    
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    const videoUrl = node.data.videoUrl || "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4";
+    const caption = node.data.mediaCaption || node.data.messageText || "🎥 Видео";
+    
+    if (caption.includes('\n')) {
+      code += `    caption = """${caption}"""\n`;
+    } else {
+      const escapedCaption = caption.replace(/"/g, '\\"');
+      code += `    caption = "${escapedCaption}"\n`;
+    }
+    
+    code += `    video_url = "${videoUrl}"\n`;
+    code += '    \n';
+    code += '    try:\n';
+    code += '        # Пытаемся отправить видео по URL\n';
+    
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      code += '        keyboard = builder.as_markup()\n';
+      code += '        await message.answer_video(video_url, caption=caption, reply_markup=keyboard)\n';
+    } else {
+      code += '        await message.answer_video(video_url, caption=caption)\n';
+    }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки видео: {e}")\n';
+    code += '        await message.answer(f"❌ Не удалось загрузить видео\\n{caption}")\n';
+  }
+  
+  return code;
+}
+
+function generateAudioHandler(node: Node): string {
+  let code = `\n# Обработчик аудио для узла ${node.id}\n`;
+  
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `audio_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    code += `    logging.info(f"Команда аудио ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
+    
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    const audioUrl = node.data.audioUrl || "https://www.soundjay.com/misc/beep-07a.wav";
+    const caption = node.data.mediaCaption || node.data.messageText || "🎵 Аудио";
+    
+    if (caption.includes('\n')) {
+      code += `    caption = """${caption}"""\n`;
+    } else {
+      const escapedCaption = caption.replace(/"/g, '\\"');
+      code += `    caption = "${escapedCaption}"\n`;
+    }
+    
+    code += `    audio_url = "${audioUrl}"\n`;
+    code += '    \n';
+    code += '    try:\n';
+    code += '        # Пытаемся отправить аудио по URL\n';
+    
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      code += '        keyboard = builder.as_markup()\n';
+      code += '        await message.answer_audio(audio_url, caption=caption, reply_markup=keyboard)\n';
+    } else {
+      code += '        await message.answer_audio(audio_url, caption=caption)\n';
+    }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки аудио: {e}")\n';
+    code += '        await message.answer(f"❌ Не удалось загрузить аудио\\n{caption}")\n';
+  }
+  
+  return code;
+}
+
+function generateDocumentHandler(node: Node): string {
+  let code = `\n# Обработчик документа для узла ${node.id}\n`;
+  
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `document_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    code += `    logging.info(f"Команда документа ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
+    
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    const documentUrl = node.data.documentUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+    const documentName = node.data.documentName || "document.pdf";
+    const caption = node.data.mediaCaption || node.data.messageText || "📄 Документ";
+    
+    if (caption.includes('\n')) {
+      code += `    caption = """${caption}"""\n`;
+    } else {
+      const escapedCaption = caption.replace(/"/g, '\\"');
+      code += `    caption = "${escapedCaption}"\n`;
+    }
+    
+    code += `    document_url = "${documentUrl}"\n`;
+    code += `    document_name = "${documentName}"\n`;
+    code += '    \n';
+    code += '    try:\n';
+    code += '        # Пытаемся отправить документ по URL\n';
+    
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      code += '        keyboard = builder.as_markup()\n';
+      code += '        await message.answer_document(document_url, caption=caption, reply_markup=keyboard)\n';
+    } else {
+      code += '        await message.answer_document(document_url, caption=caption)\n';
+    }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки документа: {e}")\n';
+    code += '        await message.answer(f"❌ Не удалось загрузить документ\\n{caption}")\n';
+  }
+  
+  return code;
+}
 
 function generateSynonymHandler(node: Node, synonym: string): string {
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
