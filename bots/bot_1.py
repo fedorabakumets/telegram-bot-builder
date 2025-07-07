@@ -62,13 +62,8 @@ async def start_handler(message: types.Message):
     }
 
     text = "Привет! Добро пожаловать!"
-    
-    # Создаем inline клавиатуру с кнопками
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data=""))
-    keyboard = builder.as_markup()
-    # Отправляем сообщение с прикрепленными inline кнопками
-    await message.answer(text, reply_markup=keyboard)
+    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 # Обработчики синонимов команд
 
@@ -76,8 +71,6 @@ async def start_handler(message: types.Message):
 async def start_synonym_старт_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
-
-# Обработчики inline кнопок
 
 
 # Запуск бота

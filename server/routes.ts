@@ -599,20 +599,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Проверяем соответствие состояния в базе и в памяти
       const hasActiveProcess = botProcesses.has(projectId);
-      const actualStatus = hasActiveProcess ? 'running' : 'stopped';
+      let actualStatus = 'stopped';
+      
+      // Если есть процесс в памяти, проверяем что он действительно активен
+      if (hasActiveProcess) {
+        const process = botProcesses.get(projectId);
+        if (process && !process.killed && process.exitCode === null) {
+          actualStatus = 'running';
+        } else {
+          // Процесс завершен, но не удален из памяти - очищаем
+          console.log(`Процесс бота ${projectId} завершен, удаляем из памяти`);
+          botProcesses.delete(projectId);
+          actualStatus = 'stopped';
+        }
+      } else {
+        // Процесса нет в памяти, проверяем PID независимо от статуса в базе
+        console.log(`Бот ${projectId} в базе показан как ${instance.status}, проверяем процесс по PID ${instance.processId}`);
+      }
+      
+      // Проверяем существует ли процесс по PID (независимо от статуса в базе)
+      if (!hasActiveProcess && instance.processId) {
+        try {
+          // Проверяем существование процесса (не убиваем, только проверяем)
+          process.kill(parseInt(instance.processId), 0);
+          console.log(`Процесс ${instance.processId} для бота ${projectId} найден в системе, восстанавливаем отслеживание`);
+          
+          // Создаем фиктивный объект процесса для отслеживания
+          const mockProcess = {
+            pid: parseInt(instance.processId),
+            killed: false,
+            exitCode: null,
+            kill: (signal: any) => {
+              try {
+                process.kill(parseInt(instance.processId), signal);
+                return true;
+              } catch {
+                return false;
+              }
+            }
+          } as any;
+          
+          // Восстанавливаем отслеживание процесса
+          botProcesses.set(projectId, mockProcess);
+          actualStatus = 'running';
+        } catch (error) {
+          console.log(`Процесс ${instance.processId} для бота ${projectId} не найден в системе`);
+          actualStatus = 'stopped';
+        }
+      }
       
       // Если статус в базе не соответствует реальному состоянию - исправляем
       if (instance.status !== actualStatus) {
         console.log(`Обнаружено несоответствие состояния для бота ${projectId}. База: ${instance.status}, Реальность: ${actualStatus}. Исправляем.`);
         await storage.updateBotInstance(instance.id, { 
           status: actualStatus,
-          errorMessage: null
+          errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null
         });
-        return res.json({ status: actualStatus, instance: { ...instance, status: actualStatus } });
+        const updatedInstance = { ...instance, status: actualStatus };
+        return res.json({ status: actualStatus, instance: updatedInstance });
       }
       
       res.json({ status: instance.status, instance });
     } catch (error) {
+      console.error('Ошибка получения статуса бота:', error);
       res.status(500).json({ message: "Failed to get bot status" });
     }
   });
