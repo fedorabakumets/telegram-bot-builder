@@ -648,6 +648,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Дополнительная проверка через ps для более точного определения
+      if (!hasActiveProcess && instance.processId && actualStatus === 'stopped') {
+        try {
+          const { execSync } = require('child_process');
+          const psOutput = execSync(`ps -p ${instance.processId} -o pid,ppid,cmd --no-headers`, { encoding: 'utf8' }).trim();
+          
+          if (psOutput && psOutput.includes('python')) {
+            console.log(`Процесс ${instance.processId} для бота ${projectId} найден через ps, восстанавливаем отслеживание`);
+            
+            // Создаем фиктивный объект процесса для отслеживания
+            const mockProcess = {
+              pid: parseInt(instance.processId),
+              killed: false,
+              exitCode: null,
+              kill: (signal: any) => {
+                try {
+                  process.kill(parseInt(instance.processId), signal);
+                  return true;
+                } catch {
+                  return false;
+                }
+              }
+            } as any;
+            
+            // Восстанавливаем отслеживание процесса
+            botProcesses.set(projectId, mockProcess);
+            actualStatus = 'running';
+          }
+        } catch (error) {
+          // ps команда не сработала, процесс точно не существует
+          console.log(`Процесс ${instance.processId} для бота ${projectId} не найден через ps`);
+        }
+      }
+      
+      // Дополнительная проверка через поиск процесса с нужным файлом бота
+      if (!hasActiveProcess && actualStatus === 'stopped') {
+        try {
+          const { execSync } = require('child_process');
+          // Ищем процесс который запускает файл этого бота
+          const botFileName = `bot_${projectId}.py`;
+          const allPythonProcesses = execSync(`ps aux | grep python | grep -v grep`, { encoding: 'utf8' }).trim();
+          
+          // Проверяем есть ли процесс с файлом этого бота
+          if (allPythonProcesses.includes(botFileName)) {
+            console.log(`Найден активный процесс для бота ${projectId} (файл: ${botFileName}), восстанавливаем отслеживание`);
+            
+            // Извлекаем PID из вывода ps
+            const lines = allPythonProcesses.split('\n');
+            for (const line of lines) {
+              if (line.includes(botFileName)) {
+                const parts = line.trim().split(/\s+/);
+                const realPid = parseInt(parts[1]);
+                
+                console.log(`Обнаружен реальный PID ${realPid} для бота ${projectId}, обновляем в базе`);
+                
+                // Обновляем PID в базе данных
+                await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
+                
+                // Создаем фиктивный объект процесса для отслеживания
+                const mockProcess = {
+                  pid: realPid,
+                  killed: false,
+                  exitCode: null,
+                  kill: (signal: any) => {
+                    try {
+                      process.kill(realPid, signal);
+                      return true;
+                    } catch {
+                      return false;
+                    }
+                  }
+                } as any;
+                
+                // Восстанавливаем отслеживание процесса
+                botProcesses.set(projectId, mockProcess);
+                actualStatus = 'running';
+                break;
+              }
+            }
+          }
+        } catch (error) {
+          // Команда не сработала, процесс не найден
+          console.log(`Процесс для бота ${projectId} не найден среди Python процессов`);
+        }
+      }
+      
       // Если статус в базе не соответствует реальному состоянию - исправляем
       if (instance.status !== actualStatus) {
         console.log(`Обнаружено несоответствие состояния для бота ${projectId}. База: ${instance.status}, Реальность: ${actualStatus}. Исправляем.`);
