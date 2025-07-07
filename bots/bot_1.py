@@ -3,7 +3,7 @@
 Сгенерировано с помощью TelegramBot Builder
 
 Команды для @BotFather:
-start - Запустить бота"""
+help - Справка по боту"""
 
 import asyncio
 import logging
@@ -45,32 +45,27 @@ async def check_auth(user_id: int) -> bool:
 # Настройка меню команд
 async def set_bot_commands():
     commands = [
-        BotCommand(command="start", description="Запустить бота"),
+        BotCommand(command="help", description="Справка по боту"),
     ]
     await bot.set_my_commands(commands)
 
 
-@dp.message(CommandStart())
-async def start_handler(message: types.Message):
+@dp.message(Command("help"))
+async def help_handler(message: types.Message):
 
-    # Регистрируем пользователя в системе
-    user_data[message.from_user.id] = {
-        "username": message.from_user.username,
-        "first_name": message.from_user.first_name,
-        "last_name": message.from_user.last_name,
-        "registered_at": message.date
-    }
+    text = """🤖 Доступные команды:
 
-    text = "Привет! Добро пожаловать!"
-    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+/start - Начать работу
+/help - Эта справка
+/settings - Настройки"""
+    
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="Новая кнопка"))
+    builder.add(KeyboardButton(text="Новая кнопка"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    await message.answer(text, reply_markup=keyboard)
 
-# Обработчики синонимов команд
-
-@dp.message(lambda message: message.text and message.text.lower() == "старт")
-async def start_synonym_старт_handler(message: types.Message):
-    # Синоним для команды /start
-    await start_handler(message)
+# Обработчики reply кнопок
 
 
 # Запуск бота
