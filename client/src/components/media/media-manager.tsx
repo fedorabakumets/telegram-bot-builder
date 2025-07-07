@@ -12,8 +12,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useMediaFiles, useUploadMedia, useDeleteMedia, useUpdateMedia, useIncrementUsage } from "@/hooks/use-media";
 import { CameraCapture } from "./camera-capture";
+import { EnhancedMediaUploader } from "./enhanced-media-uploader";
 import type { MediaFile } from "@shared/schema";
-import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Download, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap, Smartphone } from "lucide-react";
+import { Loader2, Upload, Search, X, Edit, Trash2, Eye, Download, Play, Volume2, FileText, Image, AlertCircle, CheckCircle2, Camera, FolderOpen, Zap, Smartphone, Plus } from "lucide-react";
 
 interface MediaManagerProps {
   projectId: number;
@@ -37,6 +38,7 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [showUploadDetails, setShowUploadDetails] = useState(false);
   const [showCameraCapture, setShowCameraCapture] = useState(false);
+  const [showEnhancedUploader, setShowEnhancedUploader] = useState(false);
   const [hasCamera, setHasCamera] = useState(false);
 
   const { data: allFiles, isLoading } = useMediaFiles(projectId);
@@ -500,6 +502,16 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
           <div className="mt-6 space-y-4">
             {/* Quick Upload Actions */}
             <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Button
+                onClick={() => setShowEnhancedUploader(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 border-purple-200 dark:border-purple-800 hover:from-purple-100 hover:to-pink-100 dark:hover:from-purple-900/30 dark:hover:to-pink-900/30"
+              >
+                <Plus className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                Расширенная загрузка
+              </Button>
+              
               {hasCamera && (
                 <Button
                   onClick={() => setShowCameraCapture(true)}
@@ -887,6 +899,28 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
           });
         }}
       />
+
+      {/* Enhanced Media Uploader Dialog */}
+      <Dialog open={showEnhancedUploader} onOpenChange={setShowEnhancedUploader}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Расширенная загрузка файлов</DialogTitle>
+          </DialogHeader>
+          <EnhancedMediaUploader
+            projectId={projectId}
+            onUploadComplete={(uploadedFiles) => {
+              toast({
+                title: "Файлы загружены",
+                description: `Успешно загружено ${uploadedFiles.length} файлов`,
+              });
+              setShowEnhancedUploader(false);
+            }}
+            onClose={() => setShowEnhancedUploader(false)}
+            maxFiles={20}
+            acceptedTypes={['image/*', 'video/*', 'audio/*', '.pdf', '.doc', '.docx', '.txt']}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

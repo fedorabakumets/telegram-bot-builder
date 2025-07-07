@@ -12,50 +12,118 @@ import { z } from "zod";
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
 
-// Настройка multer для загрузки файлов
+// Расширенная настройка multer для загрузки файлов
 const storage_multer = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = join(process.cwd(), 'uploads');
+    const projectId = req.params.projectId;
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const uploadDir = join(process.cwd(), 'uploads', projectId, date);
+    
     if (!existsSync(uploadDir)) {
       mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Генерируем уникальное имя файла с временной меткой
+    // Генерируем уникальное имя файла с временной меткой и безопасным именем
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const extension = file.originalname.split('.').pop();
-    cb(null, `${uniqueSuffix}.${extension}`);
+    const extension = file.originalname.split('.').pop()?.toLowerCase() || '';
+    const baseName = file.originalname
+      .split('.')[0] // Убираем расширение
+      .replace(/[^a-zA-Z0-9._-]/g, '_') // Заменяем небезопасные символы
+      .substring(0, 50); // Ограничиваем длину
+    
+    cb(null, `${uniqueSuffix}-${baseName}.${extension}`);
   }
 });
 
-// Фильтр для разрешенных типов файлов
-const fileFilter = (req: any, file: any, cb: any) => {
-  // Расширенные разрешенные MIME типы
-  const allowedTypes = [
+// Расширенная валидация файлов с детальными ограничениями
+const validateFileDetailed = (file: Express.Multer.File) => {
+  const fileValidation = new Map([
     // Изображения
-    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff',
+    ['image/jpeg', { maxSize: 25 * 1024 * 1024, category: 'photo', description: 'JPEG изображение' }],
+    ['image/jpg', { maxSize: 25 * 1024 * 1024, category: 'photo', description: 'JPG изображение' }],
+    ['image/png', { maxSize: 25 * 1024 * 1024, category: 'photo', description: 'PNG изображение' }],
+    ['image/gif', { maxSize: 15 * 1024 * 1024, category: 'photo', description: 'GIF анимация' }],
+    ['image/webp', { maxSize: 20 * 1024 * 1024, category: 'photo', description: 'WebP изображение' }],
+    ['image/svg+xml', { maxSize: 5 * 1024 * 1024, category: 'photo', description: 'SVG векторное изображение' }],
+    ['image/bmp', { maxSize: 30 * 1024 * 1024, category: 'photo', description: 'BMP изображение' }],
+    
     // Видео
-    'video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov', 'video/wmv', 'video/flv', 'video/mkv',
+    ['video/mp4', { maxSize: 200 * 1024 * 1024, category: 'video', description: 'MP4 видео' }],
+    ['video/webm', { maxSize: 200 * 1024 * 1024, category: 'video', description: 'WebM видео' }],
+    ['video/avi', { maxSize: 200 * 1024 * 1024, category: 'video', description: 'AVI видео' }],
+    ['video/mov', { maxSize: 200 * 1024 * 1024, category: 'video', description: 'QuickTime видео' }],
+    ['video/mkv', { maxSize: 200 * 1024 * 1024, category: 'video', description: 'MKV видео' }],
+    ['video/quicktime', { maxSize: 200 * 1024 * 1024, category: 'video', description: 'QuickTime видео' }],
+    
     // Аудио
-    'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg', 'audio/webm', 'audio/aac', 'audio/flac', 'audio/m4a',
+    ['audio/mp3', { maxSize: 50 * 1024 * 1024, category: 'audio', description: 'MP3 аудио' }],
+    ['audio/mpeg', { maxSize: 50 * 1024 * 1024, category: 'audio', description: 'MPEG аудио' }],
+    ['audio/wav', { maxSize: 100 * 1024 * 1024, category: 'audio', description: 'WAV аудио' }],
+    ['audio/ogg', { maxSize: 50 * 1024 * 1024, category: 'audio', description: 'OGG аудио' }],
+    ['audio/aac', { maxSize: 50 * 1024 * 1024, category: 'audio', description: 'AAC аудио' }],
+    ['audio/flac', { maxSize: 100 * 1024 * 1024, category: 'audio', description: 'FLAC аудио' }],
+    ['audio/m4a', { maxSize: 50 * 1024 * 1024, category: 'audio', description: 'M4A аудио' }],
+    ['audio/webm', { maxSize: 50 * 1024 * 1024, category: 'audio', description: 'WebM аудио' }],
+    
     // Документы
-    'application/pdf', 
-    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'text/plain', 'text/csv', 'text/rtf',
+    ['application/pdf', { maxSize: 50 * 1024 * 1024, category: 'document', description: 'PDF документ' }],
+    ['application/msword', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'Word документ' }],
+    ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'Word документ (DOCX)' }],
+    ['application/vnd.ms-excel', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'Excel таблица' }],
+    ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'Excel таблица (XLSX)' }],
+    ['text/plain', { maxSize: 10 * 1024 * 1024, category: 'document', description: 'Текстовый файл' }],
+    ['text/csv', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'CSV файл' }],
+    
     // Архивы
-    'application/zip', 'application/rar', 'application/x-7z-compressed', 'application/x-tar', 'application/gzip'
-  ];
-
-  // Проверяем размер файла (до 100MB для видео, 50MB для остальных)
-  const maxSize = file.mimetype.startsWith('video/') ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
+    ['application/zip', { maxSize: 100 * 1024 * 1024, category: 'document', description: 'ZIP архив' }],
+    ['application/x-rar-compressed', { maxSize: 100 * 1024 * 1024, category: 'document', description: 'RAR архив' }],
+  ]);
   
-  if (allowedTypes.includes(file.mimetype)) {
+  const validation = fileValidation.get(file.mimetype);
+  if (!validation) {
+    return { 
+      valid: false, 
+      error: `Неподдерживаемый тип файла: ${file.mimetype}. Поддерживаются изображения, видео, аудио и документы.` 
+    };
+  }
+  
+  if (file.size > validation.maxSize) {
+    const maxSizeMB = Math.round(validation.maxSize / (1024 * 1024));
+    return { 
+      valid: false, 
+      error: `Файл "${file.originalname}" слишком большой. Максимальный размер для ${validation.description}: ${maxSizeMB}МБ` 
+    };
+  }
+  
+  // Проверка имени файла
+  if (file.originalname.length > 255) {
+    return { 
+      valid: false, 
+      error: 'Имя файла слишком длинное (максимум 255 символов)' 
+    };
+  }
+  
+  // Проверка на безопасность имени файла
+  const dangerousPatterns = [/\.\./g, /[<>:"|?*]/g, /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i];
+  if (dangerousPatterns.some(pattern => pattern.test(file.originalname))) {
+    return { 
+      valid: false, 
+      error: 'Небезопасное имя файла' 
+    };
+  }
+  
+  return { valid: true, category: validation.category };
+};
+
+// Упрощенный фильтр для multer
+const fileFilter = (req: any, file: any, cb: any) => {
+  const validation = validateFileDetailed(file);
+  if (validation.valid) {
     cb(null, true);
   } else {
-    cb(new Error(`Неподдерживаемый тип файла: ${file.mimetype}`), false);
+    cb(new Error(validation.error), false);
   }
 };
 
@@ -63,9 +131,11 @@ const upload = multer({
   storage: storage_multer,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB максимальный размер файла (для видео)
-    files: 10, // Максимум 10 файлов за раз
-    fieldSize: 2 * 1024 * 1024 // 2MB для полей формы
+    fileSize: 200 * 1024 * 1024, // 200MB максимальный размер файла (для больших видео)
+    files: 20, // Максимум 20 файлов за раз
+    fieldSize: 10 * 1024 * 1024, // 10MB для полей формы
+    fieldNameSize: 300, // Максимальная длина имени поля
+    fields: 50 // Максимальное количество полей формы
   }
 });
 
@@ -1281,35 +1351,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === МЕДИАФАЙЛЫ ===
   
-  // Загрузка медиафайла (одиночная)
+  // Загрузка медиафайла (одиночная) с улучшенной обработкой
   app.post("/api/media/upload/:projectId", upload.single('file'), async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const file = req.file;
-      const { description, tags } = req.body;
+      const { description, tags, isPublic } = req.body;
       
       if (!file) {
-        return res.status(400).json({ message: "Файл не выбран" });
+        return res.status(400).json({ 
+          message: "Файл не выбран",
+          code: "NO_FILE"
+        });
       }
       
       // Проверяем, что проект существует
       const project = await storage.getBotProject(projectId);
       if (!project) {
-        return res.status(404).json({ message: "Проект не найден" });
-      }
-      
-      // Проверяем размер файла в зависимости от типа
-      const maxSize = file.mimetype.startsWith('video/') ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
-      if (file.size > maxSize) {
-        // Удаляем загруженный файл, если он превышает лимит
-        unlinkSync(file.path);
-        return res.status(400).json({ 
-          message: `Файл слишком большой. Максимальный размер: ${file.mimetype.startsWith('video/') ? '100' : '50'}МБ` 
+        // Удаляем загруженный файл если проект не найден
+        if (existsSync(file.path)) {
+          unlinkSync(file.path);
+        }
+        return res.status(404).json({ 
+          message: "Проект не найден",
+          code: "PROJECT_NOT_FOUND"
         });
       }
       
-      // Создаем URL для доступа к файлу
-      const fileUrl = `/uploads/${file.filename}`;
+      // Дополнительная валидация файла
+      const validation = validateFileDetailed(file);
+      if (!validation.valid) {
+        // Удаляем файл при ошибке валидации
+        if (existsSync(file.path)) {
+          unlinkSync(file.path);
+        }
+        return res.status(400).json({ 
+          message: validation.error,
+          code: "VALIDATION_ERROR"
+        });
+      }
+      
+      // Создаем URL для доступа к файлу относительно проекта
+      const relativePath = file.path.replace(process.cwd(), '').replace(/\\/g, '/');
+      const fileUrl = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+      
+      // Обрабатываем теги
+      const processedTags = tags ? 
+        (Array.isArray(tags) ? tags : tags.split(','))
+          .map((tag: string) => tag.trim().toLowerCase())
+          .filter((tag: string) => tag.length > 0 && tag.length <= 50)
+          .slice(0, 10) // Максимум 10 тегов
+        : [];
+      
+      // Автоматически добавляем теги на основе типа файла
+      const autoTags = [];
+      if (validation.category) {
+        autoTags.push(validation.category);
+      }
+      if (file.mimetype.includes('gif')) {
+        autoTags.push('анимация');
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        autoTags.push('большой_файл');
+      }
+      
+      const finalTags = [...new Set([...processedTags, ...autoTags])];
       
       // Сохраняем информацию о файле в базе данных
       const mediaFile = await storage.createMediaFile({
@@ -1320,12 +1426,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileSize: file.size,
         mimeType: file.mimetype,
         url: fileUrl,
-        description: description || '',
-        tags: tags ? tags.split(',').map((tag: string) => tag.trim()).filter(Boolean) : [],
-        isPublic: 0
+        description: description || `${validation.category || 'Файл'} - ${file.originalname}`,
+        tags: finalTags,
+        isPublic: isPublic === 'true' || isPublic === true ? 1 : 0
       });
       
-      res.json(mediaFile);
+      // Возвращаем подробную информацию о загруженном файле
+      res.json({
+        ...mediaFile,
+        uploadInfo: {
+          category: validation.category,
+          sizeMB: Math.round(file.size / (1024 * 1024) * 100) / 100,
+          autoTagsAdded: autoTags.length,
+          uploadDate: new Date().toISOString()
+        }
+      });
     } catch (error) {
       console.error("Ошибка при загрузке файла:", error);
       
@@ -1338,28 +1453,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.status(500).json({ message: "Ошибка при загрузке файла" });
+      const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
+      res.status(500).json({ 
+        message: "Ошибка при загрузке файла",
+        error: errorMessage,
+        code: "UPLOAD_ERROR"
+      });
     }
   });
 
-  // Загрузка множественных медиафайлов
-  app.post("/api/media/upload-multiple/:projectId", upload.array('files', 10), async (req, res) => {
+  // Загрузка множественных медиафайлов с улучшенной обработкой
+  app.post("/api/media/upload-multiple/:projectId", upload.array('files', 20), async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const files = req.files as Express.Multer.File[];
       
+      const { isPublic, defaultDescription } = req.body;
+      
       if (!files || files.length === 0) {
-        return res.status(400).json({ message: "Файлы не выбраны" });
+        return res.status(400).json({ 
+          message: "Файлы не выбраны",
+          code: "NO_FILES"
+        });
       }
       
       // Проверяем, что проект существует
       const project = await storage.getBotProject(projectId);
       if (!project) {
-        return res.status(404).json({ message: "Проект не найден" });
+        // Удаляем все файлы если проект не найден
+        files.forEach(file => {
+          if (existsSync(file.path)) {
+            unlinkSync(file.path);
+          }
+        });
+        return res.status(404).json({ 
+          message: "Проект не найден",
+          code: "PROJECT_NOT_FOUND"
+        });
       }
       
       const uploadedFiles = [];
       const errors = [];
+      const warnings = [];
+      
+      // Группируем файлы по типам для статистики
+      const fileStats = {
+        photo: 0,
+        video: 0,
+        audio: 0,
+        document: 0
+      };
       
       for (const file of files) {
         try {
@@ -1387,10 +1530,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileSize: file.size,
             mimeType: file.mimetype,
             url: fileUrl,
-            description: '',
+            description: defaultDescription || '',
             tags: [],
-            isPublic: 0
+            isPublic: isPublic ? 1 : 0
           });
+          
+          // Обновляем статистику по типам файлов
+          const fileType = getFileType(file.mimetype);
+          fileStats[fileType]++;
           
           uploadedFiles.push(mediaFile);
         } catch (fileError) {
@@ -1412,11 +1559,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Собираем дополнительную статистику
+      const totalSize = uploadedFiles.reduce((sum, file) => sum + file.fileSize, 0);
+      
       res.json({
         success: uploadedFiles.length,
         errors: errors.length,
         uploadedFiles,
-        fileErrors: errors
+        errorDetails: errors,
+        statistics: {
+          totalFiles: files.length,
+          totalSize,
+          fileTypes: fileStats,
+          averageSize: uploadedFiles.length > 0 ? Math.round(totalSize / uploadedFiles.length) : 0
+        },
+        warnings: warnings.length > 0 ? warnings : undefined
       });
     } catch (error) {
       console.error("Ошибка при загрузке файлов:", error);
