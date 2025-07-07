@@ -155,7 +155,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
               });
               code += `    keyboard = builder.as_markup(resize_keyboard=${targetNode.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${targetNode.data.oneTimeKeyboard ? 'True' : 'False'})\n`;
-              code += '    await callback_query.message.answer(text, reply_markup=keyboard)\n';
+              code += '    # Для reply клавиатуры отправляем новое сообщение и удаляем старое\n';
+              code += '    try:\n';
+              code += '        await callback_query.message.delete()\n';
+              code += '    except:\n';
+              code += '        pass  # Игнорируем ошибки удаления\n';
+              code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
             } else {
               code += '    await callback_query.message.edit_text(text)\n';
             }
