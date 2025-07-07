@@ -145,7 +145,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               targetNode.data.buttons.forEach(btn => {
                 if (btn.action === "url") {
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
-                } else {
+                } else if (btn.action === 'goto' && btn.target) {
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btn.target}"))\n`;
                 }
               });
@@ -220,8 +220,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               targetNode.data.buttons.forEach(btn => {
                 if (btn.action === "url") {
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
-                } else {
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btn.target || btn.text}"))\n`;
+                } else if (btn.action === 'goto' && btn.target) {
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btn.target}"))\n`;
                 }
               });
               code += '    keyboard = builder.as_markup()\n';
@@ -412,7 +412,7 @@ function generateKeyboard(node: Node): string {
     node.data.buttons.forEach(button => {
       if (button.action === "url") {
         code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-      } else {
+      } else if (button.action === 'goto' && button.target) {
         code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))\n`;
       }
     });
