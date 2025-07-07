@@ -3,7 +3,7 @@
 Сгенерировано с помощью TelegramBot Builder
 
 Команды для @BotFather:
-help - Справка по боту"""
+settings - Настройки бота"""
 
 import asyncio
 import logging
@@ -45,26 +45,32 @@ async def check_auth(user_id: int) -> bool:
 # Настройка меню команд
 async def set_bot_commands():
     commands = [
-        BotCommand(command="help", description="Справка по боту"),
+        BotCommand(command="settings", description="Настройки бота"),
     ]
     await bot.set_my_commands(commands)
 
 
-@dp.message(Command("help"))
-async def help_handler(message: types.Message):
+@dp.message(Command("settings"))
+async def settings_handler(message: types.Message):
 
-    text = """🤖 Доступные команды:
-
-/start - Начать работу
-/help - Эта справка
-/settings - Настройки"""
+    text = "⚙️ Настройки бота:"
     
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="Новая кнопка"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    # Создаем inline клавиатуру с кнопками
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="wWhVJaOpAcRAO7eHnbG8Q"))
+    keyboard = builder.as_markup()
+    # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-# Обработчики reply кнопок
+# Обработчики inline кнопок
+
+@dp.callback_query(lambda c: c.data == "wWhVJaOpAcRAO7eHnbG8Q")
+async def handle_callback_wWhVJaOpAcRAO7eHnbG8Q(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    text = "Новое сообщение"
+    builder = InlineKeyboardBuilder()
+    keyboard = builder.as_markup()
+    await callback_query.message.edit_text(text, reply_markup=keyboard)
 
 
 # Запуск бота
