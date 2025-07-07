@@ -3,7 +3,8 @@
 Сгенерировано с помощью TelegramBot Builder
 
 Команды для @BotFather:
-start - Запустить бота"""
+start - Запустить бота
+menu - Главное меню"""
 
 import asyncio
 import logging
@@ -46,6 +47,7 @@ async def check_auth(user_id: int) -> bool:
 async def set_bot_commands():
     commands = [
         BotCommand(command="start", description="Запустить бота"),
+        BotCommand(command="menu", description="Главное меню"),
     ]
     await bot.set_my_commands(commands)
 
@@ -65,18 +67,44 @@ async def start_handler(message: types.Message):
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="jXT7yNocl-BRwqicw1R_G"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="48HFWT_OuFJ0ARAMU4k-X"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
+@dp.message(Command("menu"))
+async def menu_handler(message: types.Message):
+
+    text = "📋 Главное меню:"
+    
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="📖 Информация"))
+    builder.add(KeyboardButton(text="⚙️ Настройки"))
+    builder.add(KeyboardButton(text="❓ Помощь"))
+    builder.add(KeyboardButton(text="📞 Поддержка"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    await message.answer(text, reply_markup=keyboard)
+
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "jXT7yNocl-BRwqicw1R_G")
-async def handle_callback_jXT7yNocl_BRwqicw1R_G(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "48HFWT_OuFJ0ARAMU4k-X")
+async def handle_callback_48HFWT_OuFJ0ARAMU4k_X(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = "Новое сообщение"
-    await callback_query.message.edit_text(text)
+    text = "📋 Главное меню:"
+    builder = ReplyKeyboardBuilder()
+    builder.add(KeyboardButton(text="📖 Информация"))
+    builder.add(KeyboardButton(text="⚙️ Настройки"))
+    builder.add(KeyboardButton(text="❓ Помощь"))
+    builder.add(KeyboardButton(text="📞 Поддержка"))
+    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    # Для reply клавиатуры отправляем новое сообщение и удаляем старое
+    try:
+        await callback_query.message.delete()
+    except:
+        pass  # Игнорируем ошибки удаления
+    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
+
+# Обработчики reply кнопок
 
 
 # Запуск бота
