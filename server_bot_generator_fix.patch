@@ -1,0 +1,15 @@
+#!/bin/bash
+# Патч для исправления проблемы с пустыми callback_data в серверном генераторе
+
+echo "Применяем исправления к server/routes.ts..."
+
+# Исправляем первое вхождение (строка 271)
+sed -i '271s/button\.target || button\.text/button.target/g' server/routes.ts
+
+# Исправляем второе вхождение (строка 321) 
+sed -i '321s/button\.target || button\.text/button.target/g' server/routes.ts
+
+# Исправляем третье вхождение (строка 370)
+sed -i '370s/button\.target || button\.text/button.target/g' server/routes.ts
+
+echo "Исправления применены!"
