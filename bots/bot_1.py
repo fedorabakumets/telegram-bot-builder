@@ -59,13 +59,15 @@ async def help_handler(message: types.Message):
 /help - Эта справка
 /settings - Настройки"""
     
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="Новая кнопка"))
-    builder.add(KeyboardButton(text="Новая кнопка"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    # Создаем inline клавиатуру с кнопками
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data=""))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data=""))
+    keyboard = builder.as_markup()
+    # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-# Обработчики reply кнопок
+# Обработчики inline кнопок
 
 
 # Запуск бота
