@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit, Settings } from 'lucide-react';
+import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit, Settings, AlertTriangle, Activity } from 'lucide-react';
 import { TokenManager } from './token-manager';
 
 interface BotControlProps {
@@ -68,7 +68,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   // Получаем статус бота
   const { data: botStatus, isLoading: isLoadingStatus } = useQuery<BotStatusResponse>({
     queryKey: [`/api/projects/${projectId}/bot`],
-    refetchInterval: 2000, // Обновляем каждые 2 секунды
+    refetchInterval: 1000, // Обновляем каждую секунду для лучшего отслеживания
   });
 
   // Получаем информацию о сохраненном токене (legacy)
@@ -217,15 +217,106 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   };
 
   const getStatusIcon = () => {
-    if (isRunning) return <CheckCircle className="w-4 h-4 text-green-500" />;
-    if (isError) return <AlertCircle className="w-4 h-4 text-red-500" />;
-    return <Clock className="w-4 h-4 text-gray-500" />;
+    if (isRunning) return <CheckCircle className="w-5 h-5 text-green-500 animate-pulse" />;
+    if (isError) return <AlertCircle className="w-5 h-5 text-red-500 animate-bounce" />;
+    return <Clock className="w-5 h-5 text-gray-500" />;
   };
 
   const getStatusBadge = () => {
-    if (isRunning) return <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">Работает</Badge>;
-    if (isError) return <Badge variant="destructive">Ошибка</Badge>;
-    return <Badge variant="secondary">Остановлен</Badge>;
+    if (isRunning) return (
+      <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800 animate-pulse">
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
+          Работает
+        </div>
+      </Badge>
+    );
+    if (isError) return (
+      <Badge variant="destructive" className="animate-pulse">
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" />
+          Ошибка
+        </div>
+      </Badge>
+    );
+    return (
+      <Badge variant="secondary">
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 bg-gray-500 rounded-full" />
+          Остановлен
+        </div>
+      </Badge>
+    );
+  };
+
+  const getStatusDetails = () => {
+    if (!botStatus?.instance) return null;
+    
+    const instance = botStatus.instance;
+    const now = new Date();
+    const startTime = new Date(instance.startedAt);
+    const stopTime = instance.stoppedAt ? new Date(instance.stoppedAt) : null;
+    
+    if (isRunning) {
+      const uptime = Math.floor((now.getTime() - startTime.getTime()) / 1000);
+      const hours = Math.floor(uptime / 3600);
+      const minutes = Math.floor((uptime % 3600) / 60);
+      const seconds = uptime % 60;
+      
+      return (
+        <div className="text-sm text-muted-foreground space-y-1">
+          <div className="flex items-center justify-between">
+            <span>Процесс ID:</span>
+            <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+              {instance.processId || 'N/A'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>Время работы:</span>
+            <span className="font-mono text-xs">
+              {hours > 0 ? `${hours}ч ` : ''}{minutes > 0 ? `${minutes}м ` : ''}{seconds}с
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>Запущен:</span>
+            <span className="text-xs">{startTime.toLocaleTimeString()}</span>
+          </div>
+        </div>
+      );
+    }
+    
+    if (isError && instance.errorMessage) {
+      return (
+        <div className="text-sm text-red-600 dark:text-red-400 space-y-1">
+          <div className="flex items-center justify-between">
+            <span>Ошибка:</span>
+            <span className="text-xs">{stopTime?.toLocaleTimeString()}</span>
+          </div>
+          <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded text-xs font-mono">
+            {instance.errorMessage}
+          </div>
+        </div>
+      );
+    }
+    
+    if (stopTime) {
+      return (
+        <div className="text-sm text-muted-foreground space-y-1">
+          <div className="flex items-center justify-between">
+            <span>Остановлен:</span>
+            <span className="text-xs">{stopTime.toLocaleTimeString()}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>Время работы:</span>
+            <span className="text-xs font-mono">
+              {Math.floor((stopTime.getTime() - startTime.getTime()) / 1000)}с
+            </span>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   return (
@@ -234,31 +325,90 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         <CardTitle className="flex items-center gap-2">
           {getStatusIcon()}
           Управление ботом
+          {isRunning && (
+            <div className="flex items-center gap-1 ml-auto">
+              <Activity className="w-4 h-4 text-green-500 animate-pulse" />
+              <span className="text-sm font-normal text-green-600 dark:text-green-400">
+                Активен
+              </span>
+            </div>
+          )}
         </CardTitle>
         <CardDescription>
           Запустите или остановите бота "{projectName}"
+          {isRunning && botStatus?.instance?.processId && (
+            <span className="block text-xs text-muted-foreground mt-1">
+              Процесс ID: {botStatus.instance.processId}
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Статус:</span>
-            {getStatusBadge()}
-          </div>
-          {botStatus?.instance?.processId && (
-            <span className="text-xs text-muted-foreground">
-              PID: {botStatus.instance.processId}
-            </span>
-          )}
-        </div>
-
-        {isError && botStatus?.instance?.errorMessage && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-sm text-red-700 dark:text-red-300">
-              <strong>Ошибка:</strong> {botStatus.instance.errorMessage}
+        {/* Предупреждение о множественных процессах */}
+        {isRunning && startBotMutation.isPending && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+              <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                Внимание: Запуск нового процесса
+              </span>
+            </div>
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+              Уже запущен процесс {botStatus?.instance?.processId}. Новый процесс может создать конфликт.
             </p>
           </div>
         )}
+        
+        {/* Предупреждение о частых перезапусках */}
+        {stopBotMutation.isPending && (
+          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400 animate-spin" />
+              <span className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                Остановка процесса...
+              </span>
+            </div>
+            <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+              Процесс {botStatus?.instance?.processId} завершается. Подождите завершения.
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Статус:</span>
+              {getStatusBadge()}
+            </div>
+            {isRunning && (
+              <Button 
+                onClick={handleStop} 
+                variant="outline" 
+                size="sm"
+                disabled={stopBotMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                <Square className="w-4 h-4" />
+                {stopBotMutation.isPending ? 'Остановка...' : 'Остановить'}
+              </Button>
+            )}
+          </div>
+          
+          {getStatusDetails() && (
+            <div className="bg-muted/50 dark:bg-muted/30 p-3 rounded-lg border">
+              {getStatusDetails()}
+            </div>
+          )}
+          
+          {/* Индикатор обновления статуса */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-2">
+            <span>Статус обновляется каждую секунду</span>
+            <div className="flex items-center gap-1">
+              <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+              <span>Онлайн</span>
+            </div>
+          </div>
+        </div>
 
         <Separator />
 

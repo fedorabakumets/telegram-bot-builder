@@ -1,7 +1,9 @@
 """
 Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
-"""
+
+Команды для @BotFather:
+start - Запустить бота"""
 
 import asyncio
 import logging
@@ -12,7 +14,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.enums import ParseMode
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "7552080497:AAEJFmsxmY8PnDzgoUpM5NDg5E1ehNYAHYU"
+BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -40,6 +42,14 @@ async def check_auth(user_id: int) -> bool:
     return user_id in user_data
 
 
+# Настройка меню команд
+async def set_bot_commands():
+    commands = [
+        BotCommand(command="start", description="Запустить бота"),
+    ]
+    await bot.set_my_commands(commands)
+
+
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
 
@@ -51,18 +61,13 @@ async def start_handler(message: types.Message):
         "registered_at": message.date
     }
 
-    text = """🚀 Привет! Я твой первый бот!
-
-Ты можешь написать:
-• /start - чтобы запустить меня
-• старт - это тоже работает!
-
-Выбери действие:"""
+    text = "Привет! Добро пожаловать!"
     
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="ℹ️ Информация"))
-    builder.add(KeyboardButton(text="❓ Помощь"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
+    # Создаем inline клавиатуру с кнопками
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data=""))
+    keyboard = builder.as_markup()
+    # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
 # Обработчики синонимов команд
@@ -72,36 +77,12 @@ async def start_synonym_старт_handler(message: types.Message):
     # Синоним для команды /start
     await start_handler(message)
 
-# Обработчики reply кнопок
-
-@dp.message(lambda message: message.text == "ℹ️ Информация")
-async def handle_reply_btn_info(message: types.Message):
-    text = "📋 **Информация о боте:**\n\nЭто простой бот-пример, который показывает:\n• Как работают команды\n• Как использовать синонимы\n• Базовую навигацию\n\nТеперь ты можешь создать своего!"
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="◀️ Назад"))
-    keyboard = builder.as_markup(resize_keyboard=true, one_time_keyboard=false)
-    await message.answer(text, reply_markup=keyboard)
-
-@dp.message(lambda message: message.text == "❓ Помощь")
-async def handle_reply_btn_help(message: types.Message):
-    text = "❓ **Справка:**\n\n🔤 **Команды:**\n• /start или старт - запуск бота\n\n🎯 **Советы:**\n• Используй кнопки для навигации\n• Синонимы делают бота удобнее\n• Экспериментируй с настройками!"
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="◀️ Назад"))
-    keyboard = builder.as_markup(resize_keyboard=true, one_time_keyboard=false)
-    await message.answer(text, reply_markup=keyboard)
-
-@dp.message(lambda message: message.text == "◀️ Назад")
-async def handle_reply_btn_back_info(message: types.Message):
-    text = "🚀 Привет! Я твой первый бот!\n\nТы можешь написать:\n• /start - чтобы запустить меня\n• старт - это тоже работает!\n\nВыбери действие:"
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="ℹ️ Информация"))
-    builder.add(KeyboardButton(text="❓ Помощь"))
-    keyboard = builder.as_markup(resize_keyboard=true, one_time_keyboard=false)
-    await message.answer(text, reply_markup=keyboard)
+# Обработчики inline кнопок
 
 
 # Запуск бота
 async def main():
+    await set_bot_commands()
     print("Бот запущен!")
     await dp.start_polling(bot)
 
