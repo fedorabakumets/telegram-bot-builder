@@ -31,20 +31,31 @@ const storage_multer = multer.diskStorage({
 
 // Фильтр для разрешенных типов файлов
 const fileFilter = (req: any, file: any, cb: any) => {
-  // Разрешенные MIME типы
+  // Расширенные разрешенные MIME типы
   const allowedTypes = [
-    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
-    'video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov',
-    'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg', 'audio/webm',
-    'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    // Изображения
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff',
+    // Видео
+    'video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov', 'video/wmv', 'video/flv', 'video/mkv',
+    // Аудио
+    'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/mpeg', 'audio/webm', 'audio/aac', 'audio/flac', 'audio/m4a',
+    // Документы
+    'application/pdf', 
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain', 'application/zip', 'application/rar'
+    'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain', 'text/csv', 'text/rtf',
+    // Архивы
+    'application/zip', 'application/rar', 'application/x-7z-compressed', 'application/x-tar', 'application/gzip'
   ];
 
+  // Проверяем размер файла (до 100MB для видео, 50MB для остальных)
+  const maxSize = file.mimetype.startsWith('video/') ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
+  
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Неподдерживаемый тип файла'), false);
+    cb(new Error(`Неподдерживаемый тип файла: ${file.mimetype}`), false);
   }
 };
 
@@ -52,7 +63,9 @@ const upload = multer({
   storage: storage_multer,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB максимальный размер файла
+    fileSize: 100 * 1024 * 1024, // 100MB максимальный размер файла (для видео)
+    files: 10, // Максимум 10 файлов за раз
+    fieldSize: 2 * 1024 * 1024 // 2MB для полей формы
   }
 });
 
@@ -1268,7 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // === МЕДИАФАЙЛЫ ===
   
-  // Загрузка медиафайла
+  // Загрузка медиафайла (одиночная)
   app.post("/api/media/upload/:projectId", upload.single('file'), async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
@@ -1285,6 +1298,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Проект не найден" });
       }
       
+      // Проверяем размер файла в зависимости от типа
+      const maxSize = file.mimetype.startsWith('video/') ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
+      if (file.size > maxSize) {
+        // Удаляем загруженный файл, если он превышает лимит
+        unlinkSync(file.path);
+        return res.status(400).json({ 
+          message: `Файл слишком большой. Максимальный размер: ${file.mimetype.startsWith('video/') ? '100' : '50'}МБ` 
+        });
+      }
+      
       // Создаем URL для доступа к файлу
       const fileUrl = `/uploads/${file.filename}`;
       
@@ -1298,14 +1321,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mimeType: file.mimetype,
         url: fileUrl,
         description: description || '',
-        tags: tags ? tags.split(',').map((tag: string) => tag.trim()) : [],
+        tags: tags ? tags.split(',').map((tag: string) => tag.trim()).filter(Boolean) : [],
         isPublic: 0
       });
       
       res.json(mediaFile);
     } catch (error) {
       console.error("Ошибка при загрузке файла:", error);
+      
+      // Удаляем файл в случае ошибки
+      if (req.file && existsSync(req.file.path)) {
+        try {
+          unlinkSync(req.file.path);
+        } catch (unlinkError) {
+          console.error("Ошибка при удалении файла:", unlinkError);
+        }
+      }
+      
       res.status(500).json({ message: "Ошибка при загрузке файла" });
+    }
+  });
+
+  // Загрузка множественных медиафайлов
+  app.post("/api/media/upload-multiple/:projectId", upload.array('files', 10), async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        return res.status(400).json({ message: "Файлы не выбраны" });
+      }
+      
+      // Проверяем, что проект существует
+      const project = await storage.getBotProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Проект не найден" });
+      }
+      
+      const uploadedFiles = [];
+      const errors = [];
+      
+      for (const file of files) {
+        try {
+          // Проверяем размер файла в зависимости от типа
+          const maxSize = file.mimetype.startsWith('video/') ? 100 * 1024 * 1024 : 50 * 1024 * 1024;
+          if (file.size > maxSize) {
+            // Удаляем файл, если он превышает лимит
+            unlinkSync(file.path);
+            errors.push({
+              fileName: file.originalname,
+              error: `Файл слишком большой. Максимальный размер: ${file.mimetype.startsWith('video/') ? '100' : '50'}МБ`
+            });
+            continue;
+          }
+          
+          // Создаем URL для доступа к файлу
+          const fileUrl = `/uploads/${file.filename}`;
+          
+          // Сохраняем информацию о файле в базе данных
+          const mediaFile = await storage.createMediaFile({
+            projectId,
+            fileName: file.originalname,
+            fileType: getFileType(file.mimetype),
+            filePath: file.path,
+            fileSize: file.size,
+            mimeType: file.mimetype,
+            url: fileUrl,
+            description: '',
+            tags: [],
+            isPublic: 0
+          });
+          
+          uploadedFiles.push(mediaFile);
+        } catch (fileError) {
+          console.error(`Ошибка при обработке файла ${file.originalname}:`, fileError);
+          
+          // Удаляем файл в случае ошибки
+          if (existsSync(file.path)) {
+            try {
+              unlinkSync(file.path);
+            } catch (unlinkError) {
+              console.error("Ошибка при удалении файла:", unlinkError);
+            }
+          }
+          
+          errors.push({
+            fileName: file.originalname,
+            error: "Ошибка при сохранении файла"
+          });
+        }
+      }
+      
+      res.json({
+        success: uploadedFiles.length,
+        errors: errors.length,
+        uploadedFiles,
+        fileErrors: errors
+      });
+    } catch (error) {
+      console.error("Ошибка при загрузке файлов:", error);
+      
+      // Удаляем все файлы в случае ошибки
+      if (req.files) {
+        (req.files as Express.Multer.File[]).forEach(file => {
+          if (existsSync(file.path)) {
+            try {
+              unlinkSync(file.path);
+            } catch (unlinkError) {
+              console.error("Ошибка при удалении файла:", unlinkError);
+            }
+          }
+        });
+      }
+      
+      res.status(500).json({ message: "Ошибка при загрузке файлов" });
     }
   });
   
