@@ -1,9 +1,7 @@
 """
 Тест inline кнопок - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
-
-Команды для @BotFather:
-start - Запустить бота"""
+"""
 
 import asyncio
 import logging
@@ -42,39 +40,16 @@ async def check_auth(user_id: int) -> bool:
     return user_id in user_data
 
 
-# Настройка меню команд
-async def set_bot_commands():
-    commands = [
-        BotCommand(command="start", description="Запустить бота"),
-    ]
-    await bot.set_my_commands(commands)
+@dp.message(Command("custom"))
+async def custom_handler(message: types.Message):
 
-
-@dp.message(CommandStart())
-async def start_handler(message: types.Message):
-
-    # Регистрируем пользователя в системе
-    user_data[message.from_user.id] = {
-        "username": message.from_user.username,
-        "first_name": message.from_user.first_name,
-        "last_name": message.from_user.last_name,
-        "registered_at": message.date
-    }
-
-    text = "Привет! Добро пожаловать!"
-    
-    # Создаем inline клавиатуру с кнопками
-    builder = InlineKeyboardBuilder()
-    keyboard = builder.as_markup()
-    # Отправляем сообщение с прикрепленными inline кнопками
-    await message.answer(text, reply_markup=keyboard)
-
-# Обработчики inline кнопок
+    text = "Команда выполнена"
+    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 
 # Запуск бота
 async def main():
-    await set_bot_commands()
     print("Бот запущен!")
     await dp.start_polling(bot)
 
