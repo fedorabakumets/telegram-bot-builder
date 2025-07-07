@@ -3,7 +3,7 @@
 Сгенерировано с помощью TelegramBot Builder
 
 Команды для @BotFather:
-settings - Настройки бота"""
+start - Запустить бота"""
 
 import asyncio
 import logging
@@ -45,32 +45,38 @@ async def check_auth(user_id: int) -> bool:
 # Настройка меню команд
 async def set_bot_commands():
     commands = [
-        BotCommand(command="settings", description="Настройки бота"),
+        BotCommand(command="start", description="Запустить бота"),
     ]
     await bot.set_my_commands(commands)
 
 
-@dp.message(Command("settings"))
-async def settings_handler(message: types.Message):
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
 
-    text = "⚙️ Настройки бота:"
+    # Регистрируем пользователя в системе
+    user_data[message.from_user.id] = {
+        "username": message.from_user.username,
+        "first_name": message.from_user.first_name,
+        "last_name": message.from_user.last_name,
+        "registered_at": message.date
+    }
+
+    text = "Привет! Добро пожаловать!"
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="wWhVJaOpAcRAO7eHnbG8Q"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="jXT7yNocl-BRwqicw1R_G"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "wWhVJaOpAcRAO7eHnbG8Q")
-async def handle_callback_wWhVJaOpAcRAO7eHnbG8Q(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "jXT7yNocl-BRwqicw1R_G")
+async def handle_callback_jXT7yNocl_BRwqicw1R_G(callback_query: types.CallbackQuery):
     await callback_query.answer()
     text = "Новое сообщение"
-    builder = InlineKeyboardBuilder()
-    keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard)
+    await callback_query.message.edit_text(text)
 
 
 # Запуск бота
