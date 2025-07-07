@@ -51,7 +51,7 @@ async def start_handler(message: types.Message):
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-@dp.message(Command(")help"))
+@dp.message(Command("help"))
 async def help_handler(message: types.Message):
 
     text = """❓ Справка:
