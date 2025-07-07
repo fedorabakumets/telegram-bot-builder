@@ -85,8 +85,7 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
         processId,
         errorMessage: null
       });
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+    } else {
       await storage.createBotInstance({
         projectId,
         status: 'running',
@@ -268,13 +267,8 @@ async def start_handler(message: types.Message):
           if (button.action === "url") {
             code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))
-            } else {
-              code += `    # Кнопка "${button.text}" пропущена - нет target
-`;
-            }
+          } else {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
 `;
           }
         });
@@ -284,8 +278,7 @@ async def start_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 `;
@@ -324,13 +317,8 @@ async def ${functionName}_handler(message: types.Message):
           if (button.action === "url") {
             code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))
-            } else {
-              code += `    # Кнопка "${button.text}" пропущена - нет target
-`;
-            }
+          } else {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
 `;
           }
         });
@@ -340,8 +328,7 @@ async def ${functionName}_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 `;
@@ -379,13 +366,8 @@ async def ${functionName}_handler(message: types.Message):
           if (button.action === "url") {
             code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))
-            } else {
-              code += `    # Кнопка "${button.text}" пропущена - нет target
-`;
-            }
+          } else {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
 `;
           }
         });
@@ -395,8 +377,7 @@ async def ${functionName}_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 `;
@@ -430,8 +411,7 @@ async def ${functionName}_synonym_${sanitizedSynonym}_handler(message: types.Mes
           
           if (node.type === 'start') {
             code += '    await start_handler(message)';
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+          } else {
             code += `    await ${functionName}_handler(message)`;
           }
         });
@@ -626,15 +606,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const process = botProcesses.get(projectId);
         if (process && !process.killed && process.exitCode === null) {
           actualStatus = 'running';
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+        } else {
           // Процесс завершен, но не удален из памяти - очищаем
           console.log(`Процесс бота ${projectId} завершен, удаляем из памяти`);
           botProcesses.delete(projectId);
           actualStatus = 'stopped';
         }
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         // Процесса нет в памяти, проверяем PID независимо от статуса в базе
         console.log(`Бот ${projectId} в базе показан как ${instance.status}, проверяем процесс по PID ${instance.processId}`);
       }
@@ -711,15 +689,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             botToken = selectedToken.token;
             tokenToMarkAsUsed = selectedToken.id;
           }
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+        } else {
           // Используем токен по умолчанию
           const defaultToken = await storage.getDefaultBotToken(projectId);
           if (defaultToken) {
             botToken = defaultToken.token;
             tokenToMarkAsUsed = defaultToken.id;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+          } else {
             // Fallback к старому способу - токен в проекте
             botToken = project.botToken;
           }
@@ -748,8 +724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           processId: result.processId,
           tokenUsed: tokenToMarkAsUsed ? true : false
         });
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         res.status(500).json({ message: result.error || "Failed to start bot" });
       }
     } catch (error) {
@@ -765,8 +740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await stopBot(projectId);
       if (result.success) {
         res.json({ message: "Bot stopped successfully" });
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         res.status(500).json({ message: result.error || "Failed to stop bot" });
       }
     } catch (error) {

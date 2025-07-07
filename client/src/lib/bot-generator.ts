@@ -412,11 +412,8 @@ function generateKeyboard(node: Node): string {
     node.data.buttons.forEach(button => {
       if (button.action === "url") {
         code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-      } else if (button.target && button.target.trim() !== "") {
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))\n`;
       } else {
-        // Пропускаем кнопки без target или создаем заглушку
-        code += `    # Кнопка "${button.text}" пропущена - нет target\n`;
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))\n`;
       }
     });
     
