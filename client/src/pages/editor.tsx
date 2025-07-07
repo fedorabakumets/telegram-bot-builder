@@ -33,60 +33,9 @@ export default function Editor() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Load projects
-  const { data: projects, isLoading: projectsLoading } = useQuery<BotProject[]>({
+  // Load the first project for demo
+  const { data: projects } = useQuery<BotProject[]>({
     queryKey: ['/api/projects'],
-  });
-
-  // Create default project mutation
-  const createDefaultProjectMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest('POST', '/api/projects', {
-        name: "Мой первый бот",
-        description: "Пример бота для знакомства с конструктором",
-        data: {
-          nodes: [
-            {
-              id: "start-1",
-              type: "start",
-              position: { x: 100, y: 100 },
-              data: {
-                command: "/start",
-                description: "Запустить бота",
-                messageText: "Привет! 👋 Добро пожаловать в наш бот!",
-                keyboardType: "reply",
-                buttons: [
-                  {
-                    id: "btn-1",
-                    text: "📋 Главное меню",
-                    action: "goto",
-                    target: "menu-1"
-                  },
-                  {
-                    id: "btn-2",
-                    text: "ℹ️ О нас",
-                    action: "goto",
-                    target: "about-1"
-                  }
-                ],
-                markdown: false,
-                oneTimeKeyboard: false,
-                resizeKeyboard: true,
-                synonyms: [],
-                isPrivateOnly: false,
-                adminOnly: false,
-                requiresAuth: false,
-                showInMenu: true
-              }
-            }
-          ],
-          connections: []
-        }
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-    }
   });
 
   const currentProject = projects?.[0];
@@ -243,39 +192,14 @@ export default function Editor() {
     }
   }, [deleteConnection, selectedConnectionId]);
 
-  if (projectsLoading) {
+  if (!currentProject) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
             <i className="fas fa-spinner fa-spin text-gray-400 text-xl"></i>
           </div>
-          <p className="text-gray-600">Загрузка проектов...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentProject) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-robot text-blue-600 text-2xl"></i>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Добро пожаловать в Telegram Bot Builder
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Создайте свой первый бот, чтобы начать работу
-          </p>
-          <button 
-            onClick={() => createDefaultProjectMutation.mutate()}
-            disabled={createDefaultProjectMutation.isPending}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium disabled:opacity-50"
-          >
-            {createDefaultProjectMutation.isPending ? "Создание..." : "Создать первый бот"}
-          </button>
+          <p className="text-gray-600">Загрузка проекта...</p>
         </div>
       </div>
     );

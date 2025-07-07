@@ -49,9 +49,8 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
       return { success: false, error: "Проект не найден" };
     }
 
-    // Генерируем код бота через клиентский генератор
-    const { generatePythonCode } = await import("../client/src/lib/bot-generator.js");
-    const botCode = generatePythonCode(project.data as any, project.name).replace('YOUR_BOT_TOKEN_HERE', token);
+    // Генерируем код бота
+    const botCode = generatePythonCode(project.data).replace('YOUR_BOT_TOKEN_HERE', token);
     
     // Создаем файл бота
     const filePath = createBotFile(botCode, projectId);
@@ -211,7 +210,7 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
   }
 }
 
-async function generatePythonCodeOld(botData: any): Promise<string> {
+function generatePythonCode(botData: any): string {
   const { nodes } = botData;
   
   let code = `import asyncio
@@ -236,15 +235,10 @@ dp = Dispatcher()
   // Generate handlers for each node
   nodes.forEach((node: any) => {
     if (node.type === "start") {
-      const messageText = node.data.messageText || "Привет! Добро пожаловать!";
-      const textAssignment = messageText.includes('\n') 
-        ? `text = """${messageText}"""`
-        : `text = "${messageText.replace(/"/g, '\\"')}"`;
-      
       code += `
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
-    ${textAssignment}
+    text = "${node.data.messageText || "Привет! Добро пожаловать!"}"
 `;
       
       if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
@@ -267,13 +261,8 @@ async def start_handler(message: types.Message):
           if (button.action === "url") {
             code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))
-            } else {
-              code += `    # Кнопка "${button.text}" пропущена - нет target
-`;
-            }
+          } else {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
 `;
           }
         });
@@ -283,8 +272,7 @@ async def start_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 `;
@@ -292,15 +280,11 @@ async def start_handler(message: types.Message):
     } else if (node.type === "command") {
       const command = node.data.command || "/help";
       const functionName = command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
-      const messageText = node.data.messageText || "Команда выполнена";
-      const textAssignment = messageText.includes('\n') 
-        ? `text = """${messageText}"""`
-        : `text = "${messageText.replace(/"/g, '\\"')}"`;
       
       code += `
 @dp.message(Command("${command.replace('/', '')}"))
 async def ${functionName}_handler(message: types.Message):
-    ${textAssignment}
+    text = "${node.data.messageText || "Команда выполнена"}"
 `;
       
       if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
@@ -323,13 +307,8 @@ async def ${functionName}_handler(message: types.Message):
           if (button.action === "url") {
             code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))
-            } else {
-              code += `    # Кнопка "${button.text}" пропущена - нет target
-`;
-            }
+          } else {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
 `;
           }
         });
@@ -339,23 +318,18 @@ async def ${functionName}_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 `;
       }
     } else if (node.type === "message") {
       const functionName = `message_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}`;
-      const messageText = node.data.messageText || "Сообщение получено";
-      const textAssignment = messageText.includes('\n') 
-        ? `text = """${messageText}"""`
-        : `text = "${messageText.replace(/"/g, '\\"')}"`;
       
       code += `
 @dp.message()
 async def ${functionName}_handler(message: types.Message):
-    ${textAssignment}
+    text = "${node.data.messageText || "Сообщение получено"}"
 `;
       
       if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
@@ -378,13 +352,8 @@ async def ${functionName}_handler(message: types.Message):
           if (button.action === "url") {
             code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
-            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))
-            } else {
-              code += `    # Кнопка "${button.text}" пропущена - нет target
-`;
-            }
+          } else {
+            code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target || button.text}"))
 `;
           }
         });
@@ -394,8 +363,7 @@ async def ${functionName}_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
     await message.answer("Выберите действие:", reply_markup=keyboard)
 `;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         code += `    # Удаляем предыдущие reply клавиатуры если они были
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 `;
@@ -429,8 +397,7 @@ async def ${functionName}_synonym_${sanitizedSynonym}_handler(message: types.Mes
           
           if (node.type === 'start') {
             code += '    await start_handler(message)';
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+          } else {
             code += `    await ${functionName}_handler(message)`;
           }
         });
@@ -596,9 +563,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
 
-      // Import the correct code generator from client lib
-      const { generatePythonCode } = await import("../client/src/lib/bot-generator.js");
-      const pythonCode = generatePythonCode(project.data as any, project.name);
+      const pythonCode = generatePythonCode(project.data);
       res.json({ code: pythonCode });
     } catch (error) {
       res.status(500).json({ message: "Failed to generate code" });
@@ -618,71 +583,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Проверяем соответствие состояния в базе и в памяти
       const hasActiveProcess = botProcesses.has(projectId);
-      let actualStatus = 'stopped';
-      
-      // Если есть процесс в памяти, проверяем что он действительно активен
-      if (hasActiveProcess) {
-        const process = botProcesses.get(projectId);
-        if (process && !process.killed && process.exitCode === null) {
-          actualStatus = 'running';
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
-          // Процесс завершен, но не удален из памяти - очищаем
-          console.log(`Процесс бота ${projectId} завершен, удаляем из памяти`);
-          botProcesses.delete(projectId);
-          actualStatus = 'stopped';
-        }
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
-        // Процесса нет в памяти, проверяем PID независимо от статуса в базе
-        console.log(`Бот ${projectId} в базе показан как ${instance.status}, проверяем процесс по PID ${instance.processId}`);
-      }
-      
-      // Проверяем существует ли процесс по PID (независимо от статуса в базе)
-      if (!hasActiveProcess && instance.processId) {
-        try {
-          // Проверяем существование процесса (не убиваем, только проверяем)
-          process.kill(parseInt(instance.processId), 0);
-          console.log(`Процесс ${instance.processId} для бота ${projectId} найден в системе, восстанавливаем отслеживание`);
-          
-          // Создаем фиктивный объект процесса для отслеживания
-          const mockProcess = {
-            pid: parseInt(instance.processId),
-            killed: false,
-            exitCode: null,
-            kill: (signal: any) => {
-              try {
-                process.kill(parseInt(instance.processId), signal);
-                return true;
-              } catch {
-                return false;
-              }
-            }
-          } as any;
-          
-          // Восстанавливаем отслеживание процесса
-          botProcesses.set(projectId, mockProcess);
-          actualStatus = 'running';
-        } catch (error) {
-          console.log(`Процесс ${instance.processId} для бота ${projectId} не найден в системе`);
-          actualStatus = 'stopped';
-        }
-      }
+      const actualStatus = hasActiveProcess ? 'running' : 'stopped';
       
       // Если статус в базе не соответствует реальному состоянию - исправляем
       if (instance.status !== actualStatus) {
         console.log(`Обнаружено несоответствие состояния для бота ${projectId}. База: ${instance.status}, Реальность: ${actualStatus}. Исправляем.`);
         await storage.updateBotInstance(instance.id, { 
           status: actualStatus,
-          errorMessage: actualStatus === 'stopped' ? 'Процесс завершен' : null
+          errorMessage: null
         });
-        const updatedInstance = { ...instance, status: actualStatus };
-        return res.json({ status: actualStatus, instance: updatedInstance });
+        return res.json({ status: actualStatus, instance: { ...instance, status: actualStatus } });
       }
       
       res.json({ status: instance.status, instance });
     } catch (error) {
-      console.error('Ошибка получения статуса бота:', error);
       res.status(500).json({ message: "Failed to get bot status" });
     }
   });
@@ -710,15 +624,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             botToken = selectedToken.token;
             tokenToMarkAsUsed = selectedToken.id;
           }
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+        } else {
           // Используем токен по умолчанию
           const defaultToken = await storage.getDefaultBotToken(projectId);
           if (defaultToken) {
             botToken = defaultToken.token;
             tokenToMarkAsUsed = defaultToken.id;
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+          } else {
             // Fallback к старому способу - токен в проекте
             botToken = project.botToken;
           }
@@ -747,8 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           processId: result.processId,
           tokenUsed: tokenToMarkAsUsed ? true : false
         });
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         res.status(500).json({ message: result.error || "Failed to start bot" });
       }
     } catch (error) {
@@ -764,8 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await stopBot(projectId);
       if (result.success) {
         res.json({ message: "Bot stopped successfully" });
-          } else if (button.target && button.target.trim() !== "") {
-            if (button.target && button.target.trim() !== "") {
+      } else {
         res.status(500).json({ message: result.error || "Failed to stop bot" });
       }
     } catch (error) {
