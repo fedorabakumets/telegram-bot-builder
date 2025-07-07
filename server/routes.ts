@@ -37,6 +37,11 @@ const storage_multer = multer.diskStorage({
   }
 });
 
+// Получение расширения файла
+const getFileExtension = (filename: string): string => {
+  return '.' + filename.split('.').pop()?.toLowerCase() || '';
+};
+
 // Расширенная валидация файлов с детальными ограничениями
 const validateFileDetailed = (file: Express.Multer.File) => {
   const fileValidation = new Map([
@@ -76,16 +81,33 @@ const validateFileDetailed = (file: Express.Multer.File) => {
     ['text/plain', { maxSize: 10 * 1024 * 1024, category: 'document', description: 'Текстовый файл' }],
     ['text/csv', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'CSV файл' }],
     
+    // Дополнительные форматы документов по расширению файла
+    ['.pdf', { maxSize: 50 * 1024 * 1024, category: 'document', description: 'PDF документ' }],
+    ['.doc', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'Word документ' }],
+    ['.docx', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'Word документ (DOCX)' }],
+    ['.txt', { maxSize: 10 * 1024 * 1024, category: 'document', description: 'Текстовый файл' }],
+    ['.xls', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'Excel таблица' }],
+    ['.xlsx', { maxSize: 25 * 1024 * 1024, category: 'document', description: 'Excel таблица (XLSX)' }],
+    
     // Архивы
     ['application/zip', { maxSize: 100 * 1024 * 1024, category: 'document', description: 'ZIP архив' }],
     ['application/x-rar-compressed', { maxSize: 100 * 1024 * 1024, category: 'document', description: 'RAR архив' }],
   ]);
   
-  const validation = fileValidation.get(file.mimetype);
+  // Сначала проверяем по MIME типу
+  let validation = fileValidation.get(file.mimetype);
+  
+  // Если не найдено по MIME типу, проверяем по расширению файла
   if (!validation) {
+    const extension = getFileExtension(file.originalname);
+    validation = fileValidation.get(extension);
+  }
+  
+  if (!validation) {
+    const extension = getFileExtension(file.originalname);
     return { 
       valid: false, 
-      error: `Неподдерживаемый тип файла: ${file.mimetype}. Поддерживаются изображения, видео, аудио и документы.` 
+      error: `Неподдерживаемый тип файла: ${file.mimetype} (${extension}). Поддерживаются изображения (jpg, png, gif), видео (mp4, webm), аудио (mp3, wav, ogg), документы (pdf, doc, txt).` 
     };
   }
   

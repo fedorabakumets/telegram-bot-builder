@@ -10,6 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useUploadMedia, useUploadMultipleMedia } from "@/hooks/use-media";
+import { FileOptimizer } from "./file-optimizer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Upload, 
   X, 
@@ -23,7 +25,8 @@ import {
   Eye,
   Trash2,
   Tag,
-  Settings
+  Settings,
+  Zap
 } from "lucide-react";
 import type { MediaFile } from "@shared/schema";
 
@@ -48,7 +51,23 @@ export function EnhancedMediaUploader({
   onUploadComplete, 
   onClose,
   maxFiles = 20,
-  acceptedTypes = ['image/*', 'video/*', 'audio/*', '.pdf', '.doc', '.docx']
+  acceptedTypes = [
+    'image/*', 
+    'video/*', 
+    'audio/*', 
+    '.pdf', 
+    '.doc', 
+    '.docx',
+    '.txt',
+    '.xls',
+    '.xlsx',
+    '.zip',
+    '.rar',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain'
+  ]
 }: EnhancedMediaUploaderProps) {
   const { toast } = useToast();
   const [files, setFiles] = useState<FileWithPreview[]>([]);
@@ -58,12 +77,15 @@ export function EnhancedMediaUploader({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showOptimizer, setShowOptimizer] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const uploadSingleMutation = useUploadMedia(projectId);
   const uploadMultipleMutation = useUploadMultipleMedia(projectId);
 
-  // Валидация файла
+  // Расширенная валидация файла
   const validateFile = useCallback((file: File): string | null => {
+    // Определяем максимальные размеры по типу файла
     const maxSizes = {
       'image': 25 * 1024 * 1024, // 25MB
       'video': 200 * 1024 * 1024, // 200MB
@@ -72,16 +94,36 @@ export function EnhancedMediaUploader({
       'text': 10 * 1024 * 1024 // 10MB
     };
 
+    // Определяем поддерживаемые расширения
+    const supportedExtensions = [
+      '.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', // Изображения
+      '.mp4', '.webm', '.avi', '.mov', '.mkv', // Видео
+      '.mp3', '.wav', '.ogg', '.aac', '.flac', '.m4a', // Аудио
+      '.pdf', '.doc', '.docx', '.txt', '.xls', '.xlsx', '.zip', '.rar' // Документы
+    ];
+
+    // Проверяем расширение файла
+    const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (!supportedExtensions.includes(extension)) {
+      return `Неподдерживаемое расширение файла: ${extension}. Поддерживаются: изображения, видео, аудио, документы`;
+    }
+
     const fileType = file.type.split('/')[0];
     const maxSize = maxSizes[fileType as keyof typeof maxSizes] || maxSizes.application;
 
     if (file.size > maxSize) {
       const maxSizeMB = Math.round(maxSize / (1024 * 1024));
-      return `Файл слишком большой. Максимальный размер: ${maxSizeMB}МБ`;
+      return `Файл "${file.name}" слишком большой. Максимальный размер для ${fileType}: ${maxSizeMB}МБ`;
     }
 
     if (file.name.length > 255) {
       return 'Имя файла слишком длинное (максимум 255 символов)';
+    }
+
+    // Проверяем на подозрительные символы в имени файла
+    const dangerousChars = /[<>:"|?*]/;
+    if (dangerousChars.test(file.name)) {
+      return 'Имя файла содержит недопустимые символы: < > : " | ? *';
     }
 
     return null;
@@ -112,10 +154,13 @@ export function EnhancedMediaUploader({
         return null;
       }
 
-      // Создаем превью для изображений
+      // Создаем превью для изображений и некоторых других типов файлов
       let preview = undefined;
       if (file.type.startsWith('image/')) {
         preview = URL.createObjectURL(file);
+      } else if (file.type.startsWith('video/')) {
+        // Для видео создаем thumbnail через canvas (будет реализовано позже)
+        preview = undefined; // TODO: Генерация thumbnail для видео
       }
 
       return {
@@ -330,8 +375,14 @@ export function EnhancedMediaUploader({
               Перетащите файлы сюда или нажмите для выбора
             </p>
             <p className="text-sm text-gray-500">
-              Максимум {maxFiles} файлов, до 200МБ для видео
+              Максимум {maxFiles} файлов, до 200МБ для видео, 25МБ для изображений
             </p>
+            <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
+              <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">📷 JPG, PNG, GIF</span>
+              <span className="bg-green-100 dark:bg-green-900 px-2 py-1 rounded">🎬 MP4, WebM</span>
+              <span className="bg-orange-100 dark:bg-orange-900 px-2 py-1 rounded">🎵 MP3, WAV</span>
+              <span className="bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">📄 PDF, DOC, TXT</span>
+            </div>
           </div>
         )}
       </div>
@@ -341,14 +392,34 @@ export function EnhancedMediaUploader({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Label className="text-base font-medium">Настройки загрузки</Label>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              {showAdvanced ? 'Скрыть' : 'Показать'} дополнительные
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPreview(true)}
+                className="flex items-center"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Предпросмотр
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowOptimizer(true)}
+                className="flex items-center"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Оптимизировать
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                {showAdvanced ? 'Скрыть' : 'Показать'} дополнительные
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -387,9 +458,9 @@ export function EnhancedMediaUploader({
         </div>
       )}
 
-      {/* Список файлов */}
+      {/* Сводка по файлам */}
       {files.length > 0 && (
-        <div className="space-y-3">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between">
             <Label className="text-base font-medium">
               Файлы для загрузки ({files.length})
@@ -404,6 +475,38 @@ export function EnhancedMediaUploader({
               Очистить все
             </Button>
           </div>
+          
+          {/* Статистика по типам файлов */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            {(() => {
+              const stats = files.reduce((acc, file) => {
+                const type = file.type.split('/')[0];
+                acc[type] = (acc[type] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>);
+              
+              return Object.entries(stats).map(([type, count]) => {
+                const icons = { image: '📷', video: '🎬', audio: '🎵', application: '📄', text: '📄' };
+                return (
+                  <div key={type} className="bg-white dark:bg-gray-700 rounded px-2 py-1 text-center">
+                    <span className="mr-1">{icons[type as keyof typeof icons] || '📄'}</span>
+                    {count} {type === 'image' ? 'изобр.' : type === 'video' ? 'видео' : type === 'audio' ? 'аудио' : 'док.'}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+          
+          {/* Общий размер */}
+          <div className="text-sm text-muted-foreground">
+            Общий размер: {formatFileSize(files.reduce((sum, file) => sum + file.size, 0))}
+          </div>
+        </div>
+      )}
+
+      {/* Список файлов */}
+      {files.length > 0 && (
+        <div className="space-y-3">
 
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {files.map((file) => (
@@ -411,17 +514,27 @@ export function EnhancedMediaUploader({
                 key={file.id}
                 className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
               >
-                {/* Превью или иконка */}
-                <div className="flex-shrink-0">
+                {/* Расширенное превью или иконка */}
+                <div className="flex-shrink-0 relative">
                   {file.preview ? (
-                    <img
-                      src={file.preview}
-                      alt={file.name}
-                      className="w-12 h-12 object-cover rounded"
-                    />
+                    <div className="relative">
+                      <img
+                        src={file.preview}
+                        alt={file.name}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                      {/* Индикатор типа файла */}
+                      <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded">
+                        {file.type.split('/')[1]?.toUpperCase().substring(0, 3) || 'IMG'}
+                      </div>
+                    </div>
                   ) : (
-                    <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center relative">
                       {getFileIcon(file)}
+                      {/* Индикатор размера файла */}
+                      <div className="absolute -bottom-1 -right-1 bg-gray-600 text-white text-xs px-1 rounded">
+                        {file.size > 1024 * 1024 ? `${Math.round(file.size / (1024 * 1024))}M` : `${Math.round(file.size / 1024)}K`}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -517,6 +630,94 @@ export function EnhancedMediaUploader({
           </Button>
         </div>
       )}
+
+      {/* Диалог оптимизации файлов */}
+      <Dialog open={showOptimizer} onOpenChange={setShowOptimizer}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="optimizer-description">
+          <DialogHeader>
+            <DialogTitle>Оптимизация файлов</DialogTitle>
+            <div id="optimizer-description" className="text-sm text-muted-foreground">
+              Сжатие и оптимизация файлов для ускорения загрузки и экономии места
+            </div>
+          </DialogHeader>
+          <FileOptimizer
+            files={files}
+            onOptimizedFiles={(optimizedFiles) => {
+              setFiles(optimizedFiles.map((file, index) => ({
+                ...file,
+                preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+                id: Math.random().toString(36).substr(2, 9),
+                uploadStatus: 'pending' as const,
+                uploadProgress: 0
+              })));
+              setShowOptimizer(false);
+              toast({
+                title: "Файлы оптимизированы",
+                description: `${optimizedFiles.length} файлов готовы к загрузке`,
+              });
+            }}
+            onClose={() => setShowOptimizer(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог предпросмотра файлов */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="preview-description">
+          <DialogHeader>
+            <DialogTitle>Предпросмотр файлов</DialogTitle>
+            <div id="preview-description" className="text-sm text-muted-foreground">
+              Просмотр всех выбранных файлов перед загрузкой
+            </div>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto">
+            {files.map((file) => (
+              <div key={file.id} className="border rounded-lg p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium truncate">{file.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveFile(file.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                {file.preview && (
+                  <div className="relative">
+                    <img
+                      src={file.preview}
+                      alt={file.name}
+                      className="w-full h-32 object-cover rounded"
+                    />
+                  </div>
+                )}
+                
+                {!file.preview && (
+                  <div className="flex items-center justify-center h-32 bg-muted rounded">
+                    {getFileIcon(file)}
+                  </div>
+                )}
+                
+                <div className="text-xs text-muted-foreground">
+                  {formatFileSize(file.size)} • {file.type}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowPreview(false)}>
+              Закрыть
+            </Button>
+            <Button onClick={() => setShowPreview(false)}>
+              Продолжить загрузку
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

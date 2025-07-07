@@ -791,9 +791,12 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
       {/* Edit Dialog */}
       {editingFile && (
         <Dialog open={!!editingFile} onOpenChange={() => setEditingFile(null)}>
-          <DialogContent>
+          <DialogContent aria-describedby="edit-file-description">
             <DialogHeader>
               <DialogTitle>Редактировать файл</DialogTitle>
+              <div id="edit-file-description" className="text-sm text-muted-foreground">
+                Измените описание и теги для этого медиа файла
+              </div>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -902,9 +905,12 @@ export function MediaManager({ projectId, onSelectFile, selectedType }: MediaMan
 
       {/* Enhanced Media Uploader Dialog */}
       <Dialog open={showEnhancedUploader} onOpenChange={setShowEnhancedUploader}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="enhanced-upload-description">
           <DialogHeader>
             <DialogTitle>Расширенная загрузка файлов</DialogTitle>
+            <div id="enhanced-upload-description" className="text-sm text-muted-foreground">
+              Загрузите медиа файлы с расширенными настройками: пакетная загрузка, теги, описания
+            </div>
           </DialogHeader>
           <EnhancedMediaUploader
             projectId={projectId}

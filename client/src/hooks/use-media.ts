@@ -60,14 +60,17 @@ export function useUploadMedia(projectId: number) {
               const result = JSON.parse(xhr.responseText);
               resolve(result);
             } catch (parseError) {
+              console.error('Parse error:', parseError, 'Response:', xhr.responseText);
               reject(new Error('Ошибка при обработке ответа сервера'));
             }
           } else {
             try {
               const error = JSON.parse(xhr.responseText);
-              reject(new Error(error.message || 'Ошибка при загрузке файла'));
+              console.error('Upload error:', error);
+              reject(new Error(error.message || `Ошибка при загрузке файла (${xhr.status})`));
             } catch (parseError) {
-              reject(new Error(`Ошибка сервера: ${xhr.status}`));
+              console.error('Error parsing error response:', parseError, 'Response:', xhr.responseText);
+              reject(new Error(`Ошибка сервера: ${xhr.status} - ${xhr.statusText}`));
             }
           }
         });
@@ -141,14 +144,17 @@ export function useUploadMultipleMedia(projectId: number) {
               const result = JSON.parse(xhr.responseText);
               resolve(result);
             } catch (parseError) {
+              console.error('Multiple upload parse error:', parseError, 'Response:', xhr.responseText);
               reject(new Error('Ошибка при обработке ответа сервера'));
             }
           } else {
             try {
               const error = JSON.parse(xhr.responseText);
-              reject(new Error(error.message || 'Ошибка при загрузке файлов'));
+              console.error('Multiple upload error:', error);
+              reject(new Error(error.message || `Ошибка при загрузке файлов (${xhr.status})`));
             } catch (parseError) {
-              reject(new Error(`Ошибка сервера: ${xhr.status}`));
+              console.error('Error parsing multiple upload error response:', parseError, 'Response:', xhr.responseText);
+              reject(new Error(`Ошибка сервера: ${xhr.status} - ${xhr.statusText}`));
             }
           }
         });
@@ -176,9 +182,7 @@ export function useDeleteMedia() {
   
   return useMutation({
     mutationFn: async (id: number): Promise<void> => {
-      const response = await apiRequest(`/api/media/${id}`, {
-        method: 'DELETE',
-      });
+      const response = await apiRequest('DELETE', `/api/media/${id}`);
       
       if (!response.ok) {
         const error = await response.json();
@@ -202,10 +206,7 @@ export function useUpdateMedia() {
       id: number; 
       updates: Partial<InsertMediaFile> 
     }): Promise<MediaFile> => {
-      const response = await apiRequest(`/api/media/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(updates),
-      });
+      const response = await apiRequest('PUT', `/api/media/${id}`, updates);
       
       if (!response.ok) {
         const error = await response.json();
@@ -225,9 +226,7 @@ export function useIncrementUsage() {
   
   return useMutation({
     mutationFn: async (id: number): Promise<void> => {
-      const response = await apiRequest(`/api/media/${id}/use`, {
-        method: 'POST',
-      });
+      const response = await apiRequest('POST', `/api/media/${id}/use`);
       
       if (!response.ok) {
         const error = await response.json();
