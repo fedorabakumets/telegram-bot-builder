@@ -156,7 +156,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               targetNode.data.buttons.forEach(btn => {
                 code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
               });
-              code += `    keyboard = builder.as_markup(resize_keyboard=${targetNode.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${targetNode.data.oneTimeKeyboard ? 'True' : 'False'})\n`;
+              const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
+              const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
+              code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
               code += '    # Для reply клавиатуры отправляем новое сообщение и удаляем старое\n';
               code += '    try:\n';
               code += '        await callback_query.message.delete()\n';
@@ -209,7 +211,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               targetNode.data.buttons.forEach(btn => {
                 code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
               });
-              code += `    keyboard = builder.as_markup(resize_keyboard=${targetNode.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${targetNode.data.oneTimeKeyboard ? 'True' : 'False'})\n`;
+              const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
+              const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
+              code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
               code += '    await message.answer(text, reply_markup=keyboard)\n';
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
@@ -397,7 +401,9 @@ function generateKeyboard(node: Node): string {
       }
     });
     
-    code += `    keyboard = builder.as_markup(resize_keyboard=${node.data.resizeKeyboard ? 'True' : 'False'}, one_time_keyboard=${node.data.oneTimeKeyboard ? 'True' : 'False'})\n`;
+    const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
+    const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
+    code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
     code += '    await message.answer(text, reply_markup=keyboard)\n';
   } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
     code += '    \n';
