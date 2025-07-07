@@ -33,6 +33,34 @@ export function PropertiesPanel({
   const { toast } = useToast();
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
+  const [urlValidation, setUrlValidation] = useState<{[key: string]: { isValid: boolean; message?: string }}>({});
+  
+  // URL validation function
+  const validateUrl = (url: string, type: string): { isValid: boolean; message?: string } => {
+    if (!url) return { isValid: true };
+    
+    try {
+      new URL(url);
+      
+      const validImageTypes = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+      const validVideoTypes = ['.mp4', '.avi', '.mov', '.mkv', '.webm'];
+      const validAudioTypes = ['.mp3', '.wav', '.ogg', '.m4a', '.aac'];
+      
+      if (type === 'image' && !validImageTypes.some(ext => url.toLowerCase().includes(ext))) {
+        return { isValid: false, message: 'URL должен содержать изображение (JPG, PNG, GIF, WebP)' };
+      }
+      if (type === 'video' && !validVideoTypes.some(ext => url.toLowerCase().includes(ext))) {
+        return { isValid: false, message: 'URL должен содержать видео (MP4, AVI, MOV, MKV, WebM)' };
+      }
+      if (type === 'audio' && !validAudioTypes.some(ext => url.toLowerCase().includes(ext))) {
+        return { isValid: false, message: 'URL должен содержать аудио (MP3, WAV, OGG, M4A, AAC)' };
+      }
+      
+      return { isValid: true };
+    } catch {
+      return { isValid: false, message: 'Неверный формат URL' };
+    }
+  };
 
   // Валидация команды
   const commandValidation = useMemo(() => {
@@ -117,6 +145,9 @@ export function PropertiesPanel({
     command: 'Пользовательская команда',
     message: 'Текстовое сообщение',
     photo: 'Фото с текстом',
+    video: 'Видео с текстом',
+    audio: 'Аудио сообщение',
+    document: 'Документ',
     keyboard: 'Клавиатура',
     condition: 'Условие',
     input: 'Ввод данных'
@@ -127,19 +158,25 @@ export function PropertiesPanel({
     command: 'fas fa-terminal',
     message: 'fas fa-comment',
     photo: 'fas fa-image',
+    video: 'fas fa-video',
+    audio: 'fas fa-music',
+    document: 'fas fa-file-alt',
     keyboard: 'fas fa-keyboard',
     condition: 'fas fa-code-branch',
     input: 'fas fa-edit'
   };
 
   const nodeColors = {
-    start: 'bg-green-100 text-green-600',
-    command: 'bg-indigo-100 text-indigo-600',
-    message: 'bg-blue-100 text-blue-600',
-    photo: 'bg-purple-100 text-purple-600',
-    keyboard: 'bg-amber-100 text-amber-600',
-    condition: 'bg-red-100 text-red-600',
-    input: 'bg-cyan-100 text-cyan-600'
+    start: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+    command: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+    message: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+    photo: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+    video: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
+    audio: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
+    document: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
+    keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+    condition: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+    input: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400'
   };
 
   const handleAddButton = () => {
@@ -305,15 +342,499 @@ export function PropertiesPanel({
               </>
             )}
 
+            {/* Enhanced Media Settings */}
             {selectedNode.type === 'photo' && (
-              <div>
-                <Label className="text-xs font-medium text-muted-foreground">URL изображения</Label>
-                <Input
-                  value={selectedNode.data.imageUrl || ''}
-                  onChange={(e) => onNodeUpdate(selectedNode.id, { imageUrl: e.target.value })}
-                  className="mt-2"
-                  placeholder="https://example.com/image.jpg"
-                />
+              <div className="space-y-6">
+                {/* Media URL Section */}
+                <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                      <i className="fas fa-image text-blue-600 dark:text-blue-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-blue-900 dark:text-blue-100">Источник изображения</Label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Input
+                      value={selectedNode.data.imageUrl || ''}
+                      onChange={(e) => {
+                        const url = e.target.value;
+                        onNodeUpdate(selectedNode.id, { imageUrl: url });
+                        
+                        // Validate URL in real-time
+                        const validation = validateUrl(url, 'image');
+                        setUrlValidation(prev => ({ ...prev, imageUrl: validation }));
+                      }}
+                      className={`transition-all duration-200 ${
+                        urlValidation.imageUrl && !urlValidation.imageUrl.isValid 
+                          ? 'border-red-500 focus:border-red-600 focus:ring-red-200' 
+                          : 'border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200'
+                      }`}
+                      placeholder="https://example.com/beautiful-image.jpg"
+                    />
+                    
+                    {urlValidation.imageUrl && !urlValidation.imageUrl.isValid && (
+                      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-950/30 p-2 rounded-md border border-red-200 dark:border-red-800/50">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <span>{urlValidation.imageUrl.message}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-xs text-blue-600 dark:text-blue-400">
+                        <i className="fas fa-check-circle"></i>
+                        <span>JPG, PNG, GIF, WebP</span>
+                      </div>
+                      
+                      {selectedNode.data.imageUrl && urlValidation.imageUrl?.isValid !== false && (
+                        <UIButton
+                          onClick={() => {
+                            if (selectedNode.data.imageUrl) {
+                              window.open(selectedNode.data.imageUrl, '_blank');
+                            }
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs h-7 px-3 text-blue-600 hover:text-blue-700 hover:bg-blue-100 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
+                        >
+                          <i className="fas fa-external-link-alt mr-1.5"></i>
+                          Просмотр
+                        </UIButton>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Caption Section */}
+                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <i className="fas fa-comment-alt text-green-600 dark:text-green-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Подпись к изображению</Label>
+                  </div>
+                  
+                  <Textarea
+                    value={selectedNode.data.mediaCaption || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { mediaCaption: e.target.value })}
+                    className="resize-none border-green-200 dark:border-green-700 focus:border-green-500 focus:ring-green-200 transition-all duration-200"
+                    rows={3}
+                    placeholder="Опишите изображение для пользователей..."
+                  />
+                  
+                  <div className="flex items-center space-x-2 text-xs text-green-600 dark:text-green-400 mt-2">
+                    <i className="fas fa-info-circle"></i>
+                    <span>Если не указана, будет использоваться основной текст сообщения</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedNode.type === 'video' && (
+              <div className="space-y-6">
+                {/* Video URL Section */}
+                <div className="bg-gradient-to-br from-purple-50/50 to-violet-50/30 dark:from-purple-950/20 dark:to-violet-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                      <i className="fas fa-video text-purple-600 dark:text-purple-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-purple-900 dark:text-purple-100">Источник видео</Label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Input
+                      value={selectedNode.data.videoUrl || ''}
+                      onChange={(e) => {
+                        const url = e.target.value;
+                        onNodeUpdate(selectedNode.id, { videoUrl: url });
+                        
+                        // Validate URL in real-time
+                        const validation = validateUrl(url, 'video');
+                        setUrlValidation(prev => ({ ...prev, videoUrl: validation }));
+                      }}
+                      className={`transition-all duration-200 ${
+                        urlValidation.videoUrl && !urlValidation.videoUrl.isValid 
+                          ? 'border-red-500 focus:border-red-600 focus:ring-red-200' 
+                          : 'border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200'
+                      }`}
+                      placeholder="https://example.com/awesome-video.mp4"
+                    />
+                    
+                    {urlValidation.videoUrl && !urlValidation.videoUrl.isValid && (
+                      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-950/30 p-2 rounded-md border border-red-200 dark:border-red-800/50">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <span>{urlValidation.videoUrl.message}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-xs text-purple-600 dark:text-purple-400">
+                        <i className="fas fa-check-circle"></i>
+                        <span>MP4, AVI, MOV • Макс. 50MB</span>
+                      </div>
+                      
+                      {selectedNode.data.videoUrl && urlValidation.videoUrl?.isValid !== false && (
+                        <UIButton
+                          onClick={() => {
+                            if (selectedNode.data.videoUrl) {
+                              window.open(selectedNode.data.videoUrl, '_blank');
+                            }
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs h-7 px-3 text-purple-600 hover:text-purple-700 hover:bg-purple-100 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-900/30 transition-colors"
+                        >
+                          <i className="fas fa-play mr-1.5"></i>
+                          Воспроизвести
+                        </UIButton>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Caption Section */}
+                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <i className="fas fa-comment-alt text-green-600 dark:text-green-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Подпись к видео</Label>
+                  </div>
+                  
+                  <Textarea
+                    value={selectedNode.data.mediaCaption || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { mediaCaption: e.target.value })}
+                    className="resize-none border-green-200 dark:border-green-700 focus:border-green-500 focus:ring-green-200 transition-all duration-200"
+                    rows={3}
+                    placeholder="Опишите видеоконтент для пользователей..."
+                  />
+                </div>
+
+                {/* Metadata Section */}
+                <div className="bg-gradient-to-br from-orange-50/50 to-amber-50/30 dark:from-orange-950/20 dark:to-amber-950/10 border border-orange-200/30 dark:border-orange-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                      <i className="fas fa-info-circle text-orange-600 dark:text-orange-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-orange-900 dark:text-orange-100">Метаданные видео</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                        <i className="fas fa-clock mr-1"></i>
+                        Длительность (сек)
+                      </Label>
+                      <Input
+                        type="number"
+                        value={selectedNode.data.duration || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { duration: parseInt(e.target.value) || 0 })}
+                        className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                        placeholder="120"
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                        <i className="fas fa-hdd mr-1"></i>
+                        Размер (МБ)
+                      </Label>
+                      <Input
+                        type="number"
+                        value={selectedNode.data.fileSize || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { fileSize: parseInt(e.target.value) || 0 })}
+                        className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                        placeholder="25"
+                        min="0"
+                        max="50"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedNode.type === 'audio' && (
+              <div className="space-y-6">
+                {/* Audio URL Section */}
+                <div className="bg-gradient-to-br from-rose-50/50 to-pink-50/30 dark:from-rose-950/20 dark:to-pink-950/10 border border-rose-200/30 dark:border-rose-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center">
+                      <i className="fas fa-music text-rose-600 dark:text-rose-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-rose-900 dark:text-rose-100">Источник аудио</Label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Input
+                      value={selectedNode.data.audioUrl || ''}
+                      onChange={(e) => {
+                        const url = e.target.value;
+                        onNodeUpdate(selectedNode.id, { audioUrl: url });
+                        
+                        // Validate URL in real-time
+                        const validation = validateUrl(url, 'audio');
+                        setUrlValidation(prev => ({ ...prev, audioUrl: validation }));
+                      }}
+                      className={`transition-all duration-200 ${
+                        urlValidation.audioUrl && !urlValidation.audioUrl.isValid 
+                          ? 'border-red-500 focus:border-red-600 focus:ring-red-200' 
+                          : 'border-rose-200 dark:border-rose-700 focus:border-rose-500 focus:ring-rose-200'
+                      }`}
+                      placeholder="https://example.com/beautiful-music.mp3"
+                    />
+                    
+                    {urlValidation.audioUrl && !urlValidation.audioUrl.isValid && (
+                      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-950/30 p-2 rounded-md border border-red-200 dark:border-red-800/50">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <span>{urlValidation.audioUrl.message}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-xs text-rose-600 dark:text-rose-400">
+                        <i className="fas fa-check-circle"></i>
+                        <span>MP3, WAV, OGG • Макс. 50MB</span>
+                      </div>
+                      
+                      {selectedNode.data.audioUrl && urlValidation.audioUrl?.isValid !== false && (
+                        <UIButton
+                          onClick={() => {
+                            if (selectedNode.data.audioUrl) {
+                              window.open(selectedNode.data.audioUrl, '_blank');
+                            }
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs h-7 px-3 text-rose-600 hover:text-rose-700 hover:bg-rose-100 dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-900/30 transition-colors"
+                        >
+                          <i className="fas fa-volume-up mr-1.5"></i>
+                          Прослушать
+                        </UIButton>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Caption Section */}
+                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <i className="fas fa-comment-alt text-green-600 dark:text-green-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Подпись к аудио</Label>
+                  </div>
+                  
+                  <Textarea
+                    value={selectedNode.data.mediaCaption || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { mediaCaption: e.target.value })}
+                    className="resize-none border-green-200 dark:border-green-700 focus:border-green-500 focus:ring-green-200 transition-all duration-200"
+                    rows={3}
+                    placeholder="Опишите аудиоконтент для пользователей..."
+                  />
+                </div>
+
+                {/* Audio Metadata Section */}
+                <div className="bg-gradient-to-br from-cyan-50/50 to-sky-50/30 dark:from-cyan-950/20 dark:to-sky-950/10 border border-cyan-200/30 dark:border-cyan-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">
+                      <i className="fas fa-compact-disc text-cyan-600 dark:text-cyan-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">Метаданные трека</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
+                          <i className="fas fa-clock mr-1"></i>
+                          Длительность (сек)
+                        </Label>
+                        <Input
+                          type="number"
+                          value={selectedNode.data.duration || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { duration: parseInt(e.target.value) || 0 })}
+                          className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
+                          placeholder="180"
+                          min="0"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
+                          <i className="fas fa-user mr-1"></i>
+                          Исполнитель
+                        </Label>
+                        <Input
+                          value={selectedNode.data.performer || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { performer: e.target.value })}
+                          className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
+                          placeholder="Имя артиста"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
+                        <i className="fas fa-heading mr-1"></i>
+                        Название трека
+                      </Label>
+                      <Input
+                        value={selectedNode.data.title || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { title: e.target.value })}
+                        className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
+                        placeholder="Название композиции"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedNode.type === 'document' && (
+              <div className="space-y-6">
+                {/* Document URL Section */}
+                <div className="bg-gradient-to-br from-teal-50/50 to-cyan-50/30 dark:from-teal-950/20 dark:to-cyan-950/10 border border-teal-200/30 dark:border-teal-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center">
+                      <i className="fas fa-file-alt text-teal-600 dark:text-teal-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-teal-900 dark:text-teal-100">Источник документа</Label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <Input
+                      value={selectedNode.data.documentUrl || ''}
+                      onChange={(e) => {
+                        const url = e.target.value;
+                        onNodeUpdate(selectedNode.id, { documentUrl: url });
+                        
+                        // Basic URL validation for documents (any file)
+                        if (url) {
+                          try {
+                            new URL(url);
+                            setUrlValidation(prev => ({ ...prev, documentUrl: { isValid: true } }));
+                          } catch {
+                            setUrlValidation(prev => ({ ...prev, documentUrl: { isValid: false, message: 'Неверный формат URL' } }));
+                          }
+                        } else {
+                          setUrlValidation(prev => ({ ...prev, documentUrl: { isValid: true } }));
+                        }
+                      }}
+                      className={`transition-all duration-200 ${
+                        urlValidation.documentUrl && !urlValidation.documentUrl.isValid 
+                          ? 'border-red-500 focus:border-red-600 focus:ring-red-200' 
+                          : 'border-teal-200 dark:border-teal-700 focus:border-teal-500 focus:ring-teal-200'
+                      }`}
+                      placeholder="https://example.com/important-document.pdf"
+                    />
+                    
+                    {urlValidation.documentUrl && !urlValidation.documentUrl.isValid && (
+                      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-950/30 p-2 rounded-md border border-red-200 dark:border-red-800/50">
+                        <i className="fas fa-exclamation-triangle"></i>
+                        <span>{urlValidation.documentUrl.message}</span>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-xs text-teal-600 dark:text-teal-400">
+                        <i className="fas fa-check-circle"></i>
+                        <span>Любые файлы • Макс. 50MB</span>
+                      </div>
+                      
+                      {selectedNode.data.documentUrl && urlValidation.documentUrl?.isValid !== false && (
+                        <UIButton
+                          onClick={() => {
+                            if (selectedNode.data.documentUrl) {
+                              window.open(selectedNode.data.documentUrl, '_blank');
+                            }
+                          }}
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs h-7 px-3 text-teal-600 hover:text-teal-700 hover:bg-teal-100 dark:text-teal-400 dark:hover:text-teal-300 dark:hover:bg-teal-900/30 transition-colors"
+                        >
+                          <i className="fas fa-download mr-1.5"></i>
+                          Скачать
+                        </UIButton>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Caption Section */}
+                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <i className="fas fa-comment-alt text-green-600 dark:text-green-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Подпись к документу</Label>
+                  </div>
+                  
+                  <Textarea
+                    value={selectedNode.data.mediaCaption || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { mediaCaption: e.target.value })}
+                    className="resize-none border-green-200 dark:border-green-700 focus:border-green-500 focus:ring-green-200 transition-all duration-200"
+                    rows={3}
+                    placeholder="Опишите документ для пользователей..."
+                  />
+                </div>
+
+                {/* Document Details Section */}
+                <div className="bg-gradient-to-br from-slate-50/50 to-gray-50/30 dark:from-slate-950/20 dark:to-gray-950/10 border border-slate-200/30 dark:border-slate-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-900/50 flex items-center justify-center">
+                      <i className="fas fa-tags text-slate-600 dark:text-slate-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-slate-900 dark:text-slate-100">Метаданные документа</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                        <i className="fas fa-file-signature mr-1"></i>
+                        Имя файла
+                      </Label>
+                      <Input
+                        value={selectedNode.data.documentName || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { documentName: e.target.value })}
+                        className="border-slate-200 dark:border-slate-700 focus:border-slate-500 focus:ring-slate-200"
+                        placeholder="important-document.pdf"
+                      />
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        Имя файла с расширением, которое увидит пользователь
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                          <i className="fas fa-hdd mr-1"></i>
+                          Размер (МБ)
+                        </Label>
+                        <Input
+                          type="number"
+                          value={selectedNode.data.fileSize || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { fileSize: parseInt(e.target.value) || 0 })}
+                          className="border-slate-200 dark:border-slate-700 focus:border-slate-500 focus:ring-slate-200"
+                          placeholder="5"
+                          min="0"
+                          max="50"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                          <i className="fas fa-file-code mr-1"></i>
+                          Тип файла
+                        </Label>
+                        <Input
+                          value={selectedNode.data.mimeType || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { mimeType: e.target.value })}
+                          className="border-slate-200 dark:border-slate-700 focus:border-slate-500 focus:ring-slate-200"
+                          placeholder="application/pdf"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

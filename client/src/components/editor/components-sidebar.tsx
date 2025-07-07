@@ -97,6 +97,106 @@ const components: ComponentDefinition[] = [
     }
   },
   {
+    id: 'sticker-message',
+    name: 'Стикер',
+    description: 'Анимированный стикер',
+    icon: 'fas fa-laugh',
+    color: 'bg-pink-100 text-pink-600',
+    type: 'sticker',
+    defaultData: {
+      messageText: 'Стикер',
+      stickerUrl: '',
+      stickerFileId: '',
+      keyboardType: 'none',
+      buttons: [],
+      markdown: false,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true
+    }
+  },
+  {
+    id: 'voice-message',
+    name: 'Голосовое сообщение',
+    description: 'Голосовое сообщение',
+    icon: 'fas fa-microphone',
+    color: 'bg-teal-100 text-teal-600',
+    type: 'voice',
+    defaultData: {
+      messageText: 'Голосовое сообщение',
+      voiceUrl: '',
+      duration: 0,
+      keyboardType: 'none',
+      buttons: [],
+      markdown: false,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true
+    }
+  },
+  {
+    id: 'animation-message',
+    name: 'GIF анимация',
+    description: 'Анимированное изображение',
+    icon: 'fas fa-film',
+    color: 'bg-orange-100 text-orange-600',
+    type: 'animation',
+    defaultData: {
+      messageText: 'GIF анимация',
+      animationUrl: '',
+      duration: 0,
+      width: 0,
+      height: 0,
+      mediaCaption: '',
+      keyboardType: 'none',
+      buttons: [],
+      markdown: false,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true
+    }
+  },
+  {
+    id: 'location-message',
+    name: 'Геолокация',
+    description: 'Отправка координат',
+    icon: 'fas fa-map-marker',
+    color: 'bg-green-100 text-green-600',
+    type: 'location',
+    defaultData: {
+      messageText: 'Местоположение',
+      latitude: 55.7558,
+      longitude: 37.6176,
+      title: 'Москва',
+      address: 'Москва, Россия',
+      foursquareId: '',
+      foursquareType: '',
+      keyboardType: 'none',
+      buttons: [],
+      markdown: false,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true
+    }
+  },
+  {
+    id: 'contact-message',
+    name: 'Контакт',
+    description: 'Поделиться контактом',
+    icon: 'fas fa-address-book',
+    color: 'bg-blue-100 text-blue-600',
+    type: 'contact',
+    defaultData: {
+      messageText: 'Контакт',
+      phoneNumber: '+7 (999) 123-45-67',
+      firstName: 'Имя',
+      lastName: 'Фамилия',
+      userId: 0,
+      vcard: '',
+      keyboardType: 'none',
+      buttons: [],
+      markdown: false,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true
+    }
+  },
+  {
     id: 'reply-keyboard',
     name: 'Reply клавиатура',
     description: 'Кнопки внизу экрана',
@@ -289,7 +389,7 @@ const components: ComponentDefinition[] = [
 const componentCategories = [
   {
     title: 'Сообщения',
-    components: components.filter(c => ['message', 'photo', 'video', 'audio', 'document'].includes(c.type))
+    components: components.filter(c => ['message', 'photo', 'video', 'audio', 'document', 'sticker', 'voice', 'animation', 'location', 'contact'].includes(c.type))
   },
   {
     title: 'Кнопки',

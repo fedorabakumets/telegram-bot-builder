@@ -3,7 +3,7 @@
 Сгенерировано с помощью TelegramBot Builder
 
 Команды для @BotFather:
-help - Справка по боту"""
+start - Запустить бота"""
 
 import asyncio
 import logging
@@ -45,29 +45,46 @@ async def check_auth(user_id: int) -> bool:
 # Настройка меню команд
 async def set_bot_commands():
     commands = [
-        BotCommand(command="help", description="Справка по боту"),
+        BotCommand(command="start", description="Запустить бота"),
     ]
     await bot.set_my_commands(commands)
 
 
-@dp.message(Command("help"))
-async def help_handler(message: types.Message):
+# Обработчик фото для узла MZ56SqrTSk0Otj7Ut7LEm
 
-    text = """🤖 Доступные команды:
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
 
-/start - Начать работу
-/help - Эта справка
-/settings - Настройки"""
+    # Регистрируем пользователя в системе
+    user_data[message.from_user.id] = {
+        "username": message.from_user.username,
+        "first_name": message.from_user.first_name,
+        "last_name": message.from_user.last_name,
+        "registered_at": message.date
+    }
+
+    text = "Привет! Добро пожаловать!"
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data=""))
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data=""))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="MZ56SqrTSk0Otj7Ut7LEm"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
 # Обработчики inline кнопок
+
+@dp.callback_query(lambda c: c.data == "MZ56SqrTSk0Otj7Ut7LEm")
+async def handle_callback_MZ56SqrTSk0Otj7Ut7LEm(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    caption = "Описание изображения"
+    photo_url = "https://i.pinimg.com/originals/b2/dc/9c/b2dc9c2cee44e45672ad6e3994563ac2.jpg"
+    try:
+        await callback_query.message.delete()
+        await bot.send_photo(callback_query.from_user.id, photo_url, caption=caption)
+    except Exception as e:
+        logging.error(f"Ошибка отправки фото: {e}")
+        await callback_query.message.edit_text(f"❌ Не удалось загрузить фото\n{caption}")
 
 
 # Запуск бота

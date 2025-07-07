@@ -20,7 +20,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'import logging\n';
   code += 'from aiogram import Bot, Dispatcher, types, F\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
-  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove\n';
+  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from aiogram.enums import ParseMode\n\n';
   
@@ -607,6 +607,8 @@ function generateVideoHandler(node: Node): string {
 
     const videoUrl = node.data.videoUrl || "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4";
     const caption = node.data.mediaCaption || node.data.messageText || "🎥 Видео";
+    const duration = node.data.duration || 0;
+    const fileSize = node.data.fileSize || 0;
     
     if (caption.includes('\n')) {
       code += `    caption = """${caption}"""\n`;
@@ -616,6 +618,8 @@ function generateVideoHandler(node: Node): string {
     }
     
     code += `    video_url = "${videoUrl}"\n`;
+    if (duration > 0) code += `    duration = ${duration}\n`;
+    if (fileSize > 0) code += `    file_size = ${fileSize * 1024 * 1024}\n`;  // Convert MB to bytes
     code += '    \n';
     code += '    try:\n';
     code += '        # Пытаемся отправить видео по URL\n';
@@ -631,9 +635,18 @@ function generateVideoHandler(node: Node): string {
         }
       });
       code += '        keyboard = builder.as_markup()\n';
-      code += '        await message.answer_video(video_url, caption=caption, reply_markup=keyboard)\n';
+      code += '        await message.answer_video(\n';
+      code += '            video_url,\n';
+      code += '            caption=caption';
+      if (duration > 0) code += ',\n            duration=duration';
+      code += ',\n            reply_markup=keyboard\n';
+      code += '        )\n';
     } else {
-      code += '        await message.answer_video(video_url, caption=caption)\n';
+      code += '        await message.answer_video(\n';
+      code += '            video_url,\n';
+      code += '            caption=caption';
+      if (duration > 0) code += ',\n            duration=duration';
+      code += '\n        )\n';
     }
     
     code += '    except Exception as e:\n';
@@ -670,6 +683,9 @@ function generateAudioHandler(node: Node): string {
 
     const audioUrl = node.data.audioUrl || "https://www.soundjay.com/misc/beep-07a.wav";
     const caption = node.data.mediaCaption || node.data.messageText || "🎵 Аудио";
+    const duration = node.data.duration || 0;
+    const performer = node.data.performer || "";
+    const title = node.data.title || "";
     
     if (caption.includes('\n')) {
       code += `    caption = """${caption}"""\n`;
@@ -679,6 +695,9 @@ function generateAudioHandler(node: Node): string {
     }
     
     code += `    audio_url = "${audioUrl}"\n`;
+    if (duration > 0) code += `    duration = ${duration}\n`;
+    if (performer) code += `    performer = "${performer}"\n`;
+    if (title) code += `    title = "${title}"\n`;
     code += '    \n';
     code += '    try:\n';
     code += '        # Пытаемся отправить аудио по URL\n';
@@ -694,9 +713,22 @@ function generateAudioHandler(node: Node): string {
         }
       });
       code += '        keyboard = builder.as_markup()\n';
-      code += '        await message.answer_audio(audio_url, caption=caption, reply_markup=keyboard)\n';
+      code += '        await message.answer_audio(\n';
+      code += '            audio_url,\n';
+      code += '            caption=caption';
+      if (duration > 0) code += ',\n            duration=duration';
+      if (performer) code += ',\n            performer=performer';
+      if (title) code += ',\n            title=title';
+      code += ',\n            reply_markup=keyboard\n';
+      code += '        )\n';
     } else {
-      code += '        await message.answer_audio(audio_url, caption=caption)\n';
+      code += '        await message.answer_audio(\n';
+      code += '            audio_url,\n';
+      code += '            caption=caption';
+      if (duration > 0) code += ',\n            duration=duration';
+      if (performer) code += ',\n            performer=performer';
+      if (title) code += ',\n            title=title';
+      code += '\n        )\n';
     }
     
     code += '    except Exception as e:\n';
@@ -734,6 +766,8 @@ function generateDocumentHandler(node: Node): string {
     const documentUrl = node.data.documentUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
     const documentName = node.data.documentName || "document.pdf";
     const caption = node.data.mediaCaption || node.data.messageText || "📄 Документ";
+    const fileSize = node.data.fileSize || 0;
+    const mimeType = node.data.mimeType || "";
     
     if (caption.includes('\n')) {
       code += `    caption = """${caption}"""\n`;
@@ -744,6 +778,8 @@ function generateDocumentHandler(node: Node): string {
     
     code += `    document_url = "${documentUrl}"\n`;
     code += `    document_name = "${documentName}"\n`;
+    if (fileSize > 0) code += `    file_size = ${fileSize * 1024 * 1024}\n`;  // Convert MB to bytes
+    if (mimeType) code += `    mime_type = "${mimeType}"\n`;
     code += '    \n';
     code += '    try:\n';
     code += '        # Пытаемся отправить документ по URL\n';
@@ -759,14 +795,369 @@ function generateDocumentHandler(node: Node): string {
         }
       });
       code += '        keyboard = builder.as_markup()\n';
-      code += '        await message.answer_document(document_url, caption=caption, reply_markup=keyboard)\n';
+      code += '        await message.answer_document(\n';
+      code += '            URLInputFile(document_url, filename=document_name),\n';
+      code += '            caption=caption,\n';
+      code += '            reply_markup=keyboard\n';
+      code += '        )\n';
     } else {
-      code += '        await message.answer_document(document_url, caption=caption)\n';
+      code += '        await message.answer_document(\n';
+      code += '            URLInputFile(document_url, filename=document_name),\n';
+      code += '            caption=caption\n';
+      code += '        )\n';
     }
     
     code += '    except Exception as e:\n';
     code += '        logging.error(f"Ошибка отправки документа: {e}")\n';
     code += '        await message.answer(f"❌ Не удалось загрузить документ\\n{caption}")\n';
+  }
+  
+  return code;
+}
+
+function generateStickerHandler(node: Node): string {
+  let code = `\n# Обработчик стикера для узла ${node.id}\n`;
+  
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `sticker_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    code += `    logging.info(f"Команда стикера ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
+    
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    const stickerUrl = node.data.stickerUrl || node.data.stickerFileId || "CAACAgIAAxkBAAICGGXm2KvQAAG2X8cxTmZHJkRnYwYlAAJGAANWnb0KmgiEKEZDKVQeBA";
+    
+    code += '    try:\n';
+    code += '        # Отправляем стикер\n';
+    
+    if (node.data.stickerFileId) {
+      code += `        sticker_file_id = "${node.data.stickerFileId}"\n`;
+      code += '        await message.answer_sticker(sticker_file_id)\n';
+    } else {
+      code += `        sticker_url = "${stickerUrl}"\n`;
+      code += '        await message.answer_sticker(sticker_url)\n';
+    }
+    
+    // Добавляем кнопки после стикера если они есть
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      code += '        \n';
+      code += '        # Отправляем кнопки отдельно после стикера\n';
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      code += '        keyboard = builder.as_markup()\n';
+      code += '        await message.answer("Выберите действие:", reply_markup=keyboard)\n';
+    }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки стикера: {e}")\n';
+    code += '        await message.answer("❌ Не удалось отправить стикер")\n';
+  }
+  
+  return code;
+}
+
+function generateVoiceHandler(node: Node): string {
+  let code = `\n# Обработчик голосового сообщения для узла ${node.id}\n`;
+  
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `voice_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    code += `    logging.info(f"Команда голосового сообщения ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
+    
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    const voiceUrl = node.data.voiceUrl || "https://www.soundjay.com/misc/beep-07a.wav";
+    const duration = node.data.duration || 10;
+    
+    code += `    voice_url = "${voiceUrl}"\n`;
+    code += `    duration = ${duration}\n`;
+    code += '    \n';
+    code += '    try:\n';
+    code += '        # Отправляем голосовое сообщение\n';
+    code += '        await message.answer_voice(voice_url, duration=duration)\n';
+    
+    // Добавляем кнопки после голосового сообщения если они есть
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      code += '        \n';
+      code += '        # Отправляем кнопки отдельно после голосового сообщения\n';
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      code += '        keyboard = builder.as_markup()\n';
+      code += '        await message.answer("Выберите действие:", reply_markup=keyboard)\n';
+    }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки голосового сообщения: {e}")\n';
+    code += '        await message.answer("❌ Не удалось отправить голосовое сообщение")\n';
+  }
+  
+  return code;
+}
+
+function generateAnimationHandler(node: Node): string {
+  let code = `\n# Обработчик GIF анимации для узла ${node.id}\n`;
+  
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `animation_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    code += `    logging.info(f"Команда анимации ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
+    
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    const animationUrl = node.data.animationUrl || "https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif";
+    const caption = node.data.mediaCaption || node.data.messageText || "🎬 GIF анимация";
+    const duration = node.data.duration || 0;
+    const width = node.data.width || 0;
+    const height = node.data.height || 0;
+    
+    if (caption.includes('\n')) {
+      code += `    caption = """${caption}"""\n`;
+    } else {
+      const escapedCaption = caption.replace(/"/g, '\\"');
+      code += `    caption = "${escapedCaption}"\n`;
+    }
+    
+    code += `    animation_url = "${animationUrl}"\n`;
+    if (duration > 0) code += `    duration = ${duration}\n`;
+    if (width > 0) code += `    width = ${width}\n`;
+    if (height > 0) code += `    height = ${height}\n`;
+    code += '    \n';
+    code += '    try:\n';
+    code += '        # Отправляем GIF анимацию\n';
+    
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      code += '        keyboard = builder.as_markup()\n';
+      code += '        await message.answer_animation(animation_url, caption=caption, reply_markup=keyboard';
+      if (duration > 0) code += ', duration=duration';
+      if (width > 0) code += ', width=width';
+      if (height > 0) code += ', height=height';
+      code += ')\n';
+    } else {
+      code += '        await message.answer_animation(animation_url, caption=caption';
+      if (duration > 0) code += ', duration=duration';
+      if (width > 0) code += ', width=width';
+      if (height > 0) code += ', height=height';
+      code += ')\n';
+    }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки анимации: {e}")\n';
+    code += '        await message.answer(f"❌ Не удалось загрузить анимацию\\n{caption}")\n';
+  }
+  
+  return code;
+}
+
+function generateLocationHandler(node: Node): string {
+  let code = `\n# Обработчик геолокации для узла ${node.id}\n`;
+  
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `location_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    code += `    logging.info(f"Команда геолокации ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
+    
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    const latitude = node.data.latitude || 55.7558;
+    const longitude = node.data.longitude || 37.6176;
+    const title = node.data.title || "Местоположение";
+    const address = node.data.address || "";
+    const foursquareId = node.data.foursquareId || "";
+    const foursquareType = node.data.foursquareType || "";
+    
+    code += `    latitude = ${latitude}\n`;
+    code += `    longitude = ${longitude}\n`;
+    if (title) code += `    title = "${title}"\n`;
+    if (address) code += `    address = "${address}"\n`;
+    if (foursquareId) code += `    foursquare_id = "${foursquareId}"\n`;
+    if (foursquareType) code += `    foursquare_type = "${foursquareType}"\n`;
+    code += '    \n';
+    code += '    try:\n';
+    code += '        # Отправляем геолокацию\n';
+    
+    if (title || address) {
+      code += '        await message.answer_venue(\n';
+      code += '            latitude=latitude,\n';
+      code += '            longitude=longitude,\n';
+      code += '            title=title,\n';
+      code += '            address=address';
+      if (foursquareId) code += ',\n            foursquare_id=foursquare_id';
+      if (foursquareType) code += ',\n            foursquare_type=foursquare_type';
+      code += '\n        )\n';
+    } else {
+      code += '        await message.answer_location(latitude=latitude, longitude=longitude)\n';
+    }
+    
+    // Добавляем кнопки после геолокации если они есть
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      code += '        \n';
+      code += '        # Отправляем кнопки отдельно после геолокации\n';
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      code += '        keyboard = builder.as_markup()\n';
+      code += '        await message.answer("Выберите действие:", reply_markup=keyboard)\n';
+    }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки геолокации: {e}")\n';
+    code += '        await message.answer("❌ Не удалось отправить геолокацию")\n';
+  }
+  
+  return code;
+}
+
+function generateContactHandler(node: Node): string {
+  let code = `\n# Обработчик контакта для узла ${node.id}\n`;
+  
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `contact_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    code += `    logging.info(f"Команда контакта ${node.data.command} вызвана пользователем {message.from_user.id}")\n`;
+    
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    const phoneNumber = node.data.phoneNumber || "+7 (999) 123-45-67";
+    const firstName = node.data.firstName || "Имя";
+    const lastName = node.data.lastName || "";
+    const userId = node.data.userId || 0;
+    const vcard = node.data.vcard || "";
+    
+    code += `    phone_number = "${phoneNumber}"\n`;
+    code += `    first_name = "${firstName}"\n`;
+    if (lastName) code += `    last_name = "${lastName}"\n`;
+    if (userId > 0) code += `    user_id = ${userId}\n`;
+    if (vcard) code += `    vcard = "${vcard}"\n`;
+    code += '    \n';
+    code += '    try:\n';
+    code += '        # Отправляем контакт\n';
+    code += '        await message.answer_contact(\n';
+    code += '            phone_number=phone_number,\n';
+    code += '            first_name=first_name';
+    if (lastName) code += ',\n            last_name=last_name';
+    if (userId > 0) code += ',\n            user_id=user_id';
+    if (vcard) code += ',\n            vcard=vcard';
+    code += '\n        )\n';
+    
+    // Добавляем кнопки после контакта если они есть
+    if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      code += '        \n';
+      code += '        # Отправляем кнопки отдельно после контакта\n';
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
+      });
+      code += '        keyboard = builder.as_markup()\n';
+      code += '        await message.answer("Выберите действие:", reply_markup=keyboard)\n';
+    }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки контакта: {e}")\n';
+    code += '        await message.answer("❌ Не удалось отправить контакт")\n';
   }
   
   return code;

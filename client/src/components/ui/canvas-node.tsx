@@ -21,6 +21,9 @@ const nodeIcons = {
   start: 'fas fa-play',
   message: 'fas fa-comment',
   photo: 'fas fa-image',
+  video: 'fas fa-video',
+  audio: 'fas fa-music',
+  document: 'fas fa-file-alt',
   keyboard: 'fas fa-keyboard',
   condition: 'fas fa-code-branch',
   input: 'fas fa-edit',
@@ -31,6 +34,9 @@ const nodeColors = {
   start: 'bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
   message: 'bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800',
   photo: 'bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-900/30 dark:to-violet-900/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800',
+  video: 'bg-gradient-to-br from-rose-50 to-pink-100 dark:from-rose-900/30 dark:to-pink-900/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800',
+  audio: 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800',
+  document: 'bg-gradient-to-br from-teal-50 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800',
   keyboard: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
   condition: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
   input: 'bg-gradient-to-br from-cyan-50 to-teal-100 dark:from-cyan-900/30 dark:to-teal-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800',
@@ -188,6 +194,9 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
               )}
               {node.type === 'message' && 'Сообщение'}
               {node.type === 'photo' && 'Фото с текстом'}
+              {node.type === 'video' && 'Видео с текстом'}
+              {node.type === 'audio' && 'Аудио сообщение'}
+              {node.type === 'document' && 'Документ'}
               {node.type === 'keyboard' && 'Клавиатура'}
               {node.type === 'condition' && 'Условие'}
               {node.type === 'input' && 'Ввод данных'}
@@ -214,7 +223,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
           </div>
         </div>
       )}
-      {/* Image preview */}
+      {/* Media previews */}
       {node.type === 'photo' && (
         <div className="bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
           {node.data.imageUrl ? (
@@ -222,6 +231,78 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
           ) : (
             <i className="fas fa-image text-purple-400 dark:text-purple-300 text-3xl"></i>
           )}
+        </div>
+      )}
+      
+      {/* Video preview */}
+      {node.type === 'video' && (
+        <div className="bg-gradient-to-br from-rose-100/50 to-pink-100/50 dark:from-rose-900/30 dark:to-pink-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
+          <div className="text-center">
+            <i className="fas fa-video text-rose-400 dark:text-rose-300 text-3xl mb-2"></i>
+            {node.data.videoUrl ? (
+              <div className="text-xs text-rose-600 dark:text-rose-400 space-y-1">
+                <div className="font-medium">Видео загружено</div>
+                {node.data.duration && (
+                  <div className="flex items-center justify-center space-x-1">
+                    <i className="fas fa-clock text-xs"></i>
+                    <span>{node.data.duration}с</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-xs text-rose-500 dark:text-rose-400">Добавьте URL видео</div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Audio preview */}
+      {node.type === 'audio' && (
+        <div className="bg-gradient-to-br from-orange-100/50 to-amber-100/50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
+          <div className="text-center space-y-2">
+            <i className="fas fa-music text-orange-400 dark:text-orange-300 text-3xl"></i>
+            {node.data.audioUrl ? (
+              <div className="text-xs text-orange-600 dark:text-orange-400 space-y-1">
+                <div className="font-medium">{node.data.title || 'Аудио трек'}</div>
+                {node.data.performer && (
+                  <div className="flex items-center justify-center space-x-1">
+                    <i className="fas fa-user text-xs"></i>
+                    <span>{node.data.performer}</span>
+                  </div>
+                )}
+                {node.data.duration && (
+                  <div className="flex items-center justify-center space-x-1">
+                    <i className="fas fa-clock text-xs"></i>
+                    <span>{node.data.duration}с</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-xs text-orange-500 dark:text-orange-400">Добавьте URL аудио</div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Document preview */}
+      {node.type === 'document' && (
+        <div className="bg-gradient-to-br from-teal-100/50 to-cyan-100/50 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
+          <div className="text-center space-y-2">
+            <i className="fas fa-file-alt text-teal-400 dark:text-teal-300 text-3xl"></i>
+            {node.data.documentUrl ? (
+              <div className="text-xs text-teal-600 dark:text-teal-400 space-y-1">
+                <div className="font-medium">{node.data.filename || 'Документ'}</div>
+                {node.data.fileSize && (
+                  <div className="flex items-center justify-center space-x-1">
+                    <i className="fas fa-hdd text-xs"></i>
+                    <span>{node.data.fileSize} МБ</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-xs text-teal-500 dark:text-teal-400">Добавьте URL документа</div>
+            )}
+          </div>
         </div>
       )}
       {/* Buttons preview */}
