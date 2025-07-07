@@ -124,7 +124,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const targetNode = nodes.find(n => n.id === button.target);
           if (targetNode) {
             code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
-            code += `async def handle_callback_${button.id.replace(/-/g, '_')}(callback_query: types.CallbackQuery):\n`;
+            // Создаем безопасное имя функции на основе target ID
+            const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9]/g, '_');
+            code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
             code += '    await callback_query.answer()\n';
             
             // Generate response for target node
@@ -192,7 +194,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const targetNode = nodes.find(n => n.id === button.target);
           if (targetNode) {
             code += `\n@dp.message(lambda message: message.text == "${buttonText}")\n`;
-            code += `async def handle_reply_${button.id.replace(/-/g, '_')}(message: types.Message):\n`;
+            // Создаем безопасное имя функции на основе button ID
+            const safeFunctionName = button.id.replace(/[^a-zA-Z0-9]/g, '_');
+            code += `async def handle_reply_${safeFunctionName}(message: types.Message):\n`;
             
             // Generate response for target node
             const targetText = targetNode.data.messageText || "Сообщение";
