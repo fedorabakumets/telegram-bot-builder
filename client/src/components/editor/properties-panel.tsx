@@ -14,6 +14,9 @@ import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { extractCoordinatesFromUrl, formatCoordinates, getLocationInfo } from '@/lib/map-utils';
 import { useState, useMemo } from 'react';
+import { RichTextEditor } from './rich-text-editor';
+import { EmojiPicker } from './emoji-picker';
+import { QuickFormatToolbar } from './quick-format-toolbar';
 
 interface PropertiesPanelProps {
   projectId: number;
@@ -38,6 +41,8 @@ export function PropertiesPanel({
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
   const [urlValidation, setUrlValidation] = useState<{[key: string]: { isValid: boolean; message?: string }}>({});
+  const [showRichTextEditor, setShowRichTextEditor] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   // URL validation function
   const validateUrl = (url: string, type: string): { isValid: boolean; message?: string } => {
@@ -1494,23 +1499,78 @@ export function PropertiesPanel({
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Содержимое сообщения</h3>
           <div className="space-y-4">
-            <div>
-              <Label className="text-xs font-medium text-muted-foreground">Текст сообщения</Label>
-              <Textarea
-                value={selectedNode.data.messageText || ''}
-                onChange={(e) => onNodeUpdate(selectedNode.id, { messageText: e.target.value })}
-                className="mt-2 h-24 resize-none"
-                placeholder="Введите текст сообщения..."
-              />
-            </div>
+            {/* Quick Toolbar */}
+            <QuickFormatToolbar 
+              onInsert={(text) => {
+                const currentText = selectedNode.data.messageText || '';
+                onNodeUpdate(selectedNode.id, { messageText: currentText + text });
+              }}
+              isMarkdown={selectedNode.data.markdown}
+            />
             
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-muted-foreground">Поддержка Markdown</Label>
-              <Switch
-                checked={selectedNode.data.markdown}
-                onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { markdown: checked })}
-              />
+            {/* Text Editor Toggle */}
+            <div className="flex items-center gap-2">
+              <UIButton
+                variant={showRichTextEditor ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowRichTextEditor(!showRichTextEditor)}
+                className="text-xs"
+              >
+                {showRichTextEditor ? 'Простой редактор' : 'Расширенный редактор'}
+              </UIButton>
+              <UIButton
+                variant={showEmojiPicker ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="text-xs"
+              >
+                Эмодзи и символы
+              </UIButton>
             </div>
+
+            {/* Rich Text Editor */}
+            {showRichTextEditor ? (
+              <RichTextEditor
+                value={selectedNode.data.messageText || ''}
+                onChange={(value) => onNodeUpdate(selectedNode.id, { messageText: value })}
+                enableMarkdown={selectedNode.data.markdown}
+                onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
+              />
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs font-medium text-muted-foreground">Текст сообщения</Label>
+                  <Textarea
+                    value={selectedNode.data.messageText || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { messageText: e.target.value })}
+                    className="mt-2 h-24 resize-none"
+                    placeholder="Введите текст сообщения..."
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium text-muted-foreground">Поддержка Markdown</Label>
+                  <Switch
+                    checked={selectedNode.data.markdown}
+                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { markdown: checked })}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Emoji Picker */}
+            {showEmojiPicker && (
+              <EmojiPicker
+                onEmojiSelect={(emoji) => {
+                  const currentText = selectedNode.data.messageText || '';
+                  onNodeUpdate(selectedNode.id, { messageText: currentText + emoji });
+                }}
+                onSymbolSelect={(symbol) => {
+                  const currentText = selectedNode.data.messageText || '';
+                  onNodeUpdate(selectedNode.id, { messageText: currentText + symbol });
+                }}
+              />
+            )}
           </div>
         </div>
 
