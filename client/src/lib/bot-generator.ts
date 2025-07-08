@@ -141,9 +141,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           if (targetNode) {
             
             // Handle different target node types
-            if (targetNode.type === 'photo' && targetNode.data.imageUrl) {
+            if (targetNode.type === 'photo') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📸 Фото";
-              const imageUrl = targetNode.data.imageUrl;
+              const imageUrl = targetNode.data.imageUrl || "https://picsum.photos/800/600?random=1";
               
               if (caption.includes('\n')) {
                 code += `    caption = """${caption}"""\n`;
@@ -177,9 +177,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '        logging.error(f"Ошибка отправки фото: {e}")\n';
               code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить фото\\n{caption}")\n';
               
-            } else if (targetNode.type === 'video' && targetNode.data.videoUrl) {
+            } else if (targetNode.type === 'video') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎥 Видео";
-              const videoUrl = targetNode.data.videoUrl;
+              const videoUrl = targetNode.data.videoUrl || "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4";
               
               if (caption.includes('\n')) {
                 code += `    caption = """${caption}"""\n`;
@@ -190,15 +190,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               code += `    video_url = "${videoUrl}"\n`;
               code += '    try:\n';
-              code += '        await callback_query.message.delete()\n';
-              code += '        await bot.send_video(callback_query.from_user.id, video_url, caption=caption)\n';
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_video(callback_query.from_user.id, video_url, caption=caption, reply_markup=keyboard)\n';
+              } else {
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_video(callback_query.from_user.id, video_url, caption=caption)\n';
+              }
+              
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки видео: {e}")\n';
               code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить видео\\n{caption}")\n';
               
-            } else if (targetNode.type === 'audio' && targetNode.data.audioUrl) {
+            } else if (targetNode.type === 'audio') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎵 Аудио";
-              const audioUrl = targetNode.data.audioUrl;
+              const audioUrl = targetNode.data.audioUrl || "https://www.soundjay.com/misc/beep-07a.wav";
               
               if (caption.includes('\n')) {
                 code += `    caption = """${caption}"""\n`;
@@ -209,15 +226,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               code += `    audio_url = "${audioUrl}"\n`;
               code += '    try:\n';
-              code += '        await callback_query.message.delete()\n';
-              code += '        await bot.send_audio(callback_query.from_user.id, audio_url, caption=caption)\n';
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_audio(callback_query.from_user.id, audio_url, caption=caption, reply_markup=keyboard)\n';
+              } else {
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_audio(callback_query.from_user.id, audio_url, caption=caption)\n';
+              }
+              
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки аудио: {e}")\n';
               code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить аудио\\n{caption}")\n';
               
-            } else if (targetNode.type === 'document' && targetNode.data.documentUrl) {
+            } else if (targetNode.type === 'document') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📄 Документ";
-              const documentUrl = targetNode.data.documentUrl;
+              const documentUrl = targetNode.data.documentUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
               
               if (caption.includes('\n')) {
                 code += `    caption = """${caption}"""\n`;
@@ -227,9 +261,28 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               }
               
               code += `    document_url = "${documentUrl}"\n`;
+              const documentName = targetNode.data.documentName || "document.pdf";
+              code += `    document_name = "${documentName}"\n`;
               code += '    try:\n';
-              code += '        await callback_query.message.delete()\n';
-              code += '        await bot.send_document(callback_query.from_user.id, document_url, caption=caption)\n';
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_document(callback_query.from_user.id, URLInputFile(document_url, filename=document_name), caption=caption, reply_markup=keyboard)\n';
+              } else {
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_document(callback_query.from_user.id, URLInputFile(document_url, filename=document_name), caption=caption)\n';
+              }
+              
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки документа: {e}")\n';
               code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить документ\\n{caption}")\n';
