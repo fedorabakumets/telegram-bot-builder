@@ -545,6 +545,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               let longitude = targetNode.data.longitude || 37.6176;
               const title = targetNode.data.title || "";
               const address = targetNode.data.address || "";
+              const city = targetNode.data.city || "";
+              const country = targetNode.data.country || "";
               const mapService = targetNode.data.mapService || 'custom';
               const generateMapPreview = targetNode.data.generateMapPreview !== false;
               
@@ -592,8 +594,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '            address=address\n';
                 code += '        )\n';
               } else {
-                code += '        await bot.send_location(callback_query.from_user.id, latitude=latitude, longitude=longitude)\n';
+                code += '        await bot.send_location(\n';
+                code += '            callback_query.from_user.id,\n';
+                code += '            latitude=latitude,\n';
+                code += '            longitude=longitude\n';
+                code += '        )\n';
               }
+              
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки геолокации: {e}")\n';
+              code += '        await bot.send_message(callback_query.from_user.id, f"❌ Не удалось отправить геолокацию")\n';
               
               // Генерируем кнопки для картографических сервисов если включено
               if (generateMapPreview) {
@@ -1550,6 +1560,8 @@ function generateLocationHandler(node: Node): string {
     let longitude = node.data.longitude || 37.6176;
     const title = node.data.title || "Местоположение";
     const address = node.data.address || "";
+    const city = node.data.city || "";
+    const country = node.data.country || "";
     const foursquareId = node.data.foursquareId || "";
     const foursquareType = node.data.foursquareType || "";
     const mapService = node.data.mapService || 'custom';
@@ -1584,6 +1596,8 @@ function generateLocationHandler(node: Node): string {
     
     if (title) code += `    title = "${title}"\n`;
     if (address) code += `    address = "${address}"\n`;
+    if (city) code += `    city = "${city}"\n`;
+    if (country) code += `    country = "${country}"\n`;
     if (foursquareId) code += `    foursquare_id = "${foursquareId}"\n`;
     if (foursquareType) code += `    foursquare_type = "${foursquareType}"\n`;
     code += '    \n';
@@ -1602,6 +1616,10 @@ function generateLocationHandler(node: Node): string {
     } else {
       code += '        await message.answer_location(latitude=latitude, longitude=longitude)\n';
     }
+    
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка отправки геолокации: {e}")\n';
+    code += '        await message.answer(f"❌ Не удалось отправить геолокацию")\n';
     
     // Генерируем кнопки для картографических сервисов если включено
     if (generateMapPreview) {

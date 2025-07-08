@@ -962,7 +962,13 @@ export function PropertiesPanel({
                                 if (locationInfo) {
                                   onNodeUpdate(selectedNode.id, {
                                     title: locationInfo.title || selectedNode.data.title || 'Местоположение',
-                                    address: locationInfo.address || selectedNode.data.address
+                                    address: locationInfo.address || selectedNode.data.address,
+                                    city: locationInfo.city || selectedNode.data.city,
+                                    country: locationInfo.country || selectedNode.data.country
+                                  });
+                                  toast({
+                                    title: "Информация обновлена",
+                                    description: `Автоматически определены: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                   });
                                 }
                               })
@@ -993,7 +999,13 @@ export function PropertiesPanel({
                                 if (locationInfo) {
                                   onNodeUpdate(selectedNode.id, {
                                     title: locationInfo.title || selectedNode.data.title || 'Местоположение',
-                                    address: locationInfo.address || selectedNode.data.address
+                                    address: locationInfo.address || selectedNode.data.address,
+                                    city: locationInfo.city || selectedNode.data.city,
+                                    country: locationInfo.country || selectedNode.data.country
+                                  });
+                                  toast({
+                                    title: "Информация обновлена",
+                                    description: `Автоматически определены: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                   });
                                 }
                               })
@@ -1043,8 +1055,35 @@ export function PropertiesPanel({
                         value={selectedNode.data.address || ''}
                         onChange={(e) => onNodeUpdate(selectedNode.id, { address: e.target.value })}
                         className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
-                        placeholder="Красная площадь, Москва, Россия"
+                        placeholder="Красная площадь, дом 1"
                       />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                          <i className="fas fa-city mr-1"></i>
+                          Город
+                        </Label>
+                        <Input
+                          value={selectedNode.data.city || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { city: e.target.value })}
+                          className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                          placeholder="Москва"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                          <i className="fas fa-flag mr-1"></i>
+                          Страна
+                        </Label>
+                        <Input
+                          value={selectedNode.data.country || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { country: e.target.value })}
+                          className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                          placeholder="Россия"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1148,7 +1187,13 @@ export function PropertiesPanel({
                                     if (locationInfo) {
                                       onNodeUpdate(selectedNode.id, {
                                         title: locationInfo.title || selectedNode.data.title || 'Местоположение',
-                                        address: locationInfo.address || selectedNode.data.address
+                                        address: locationInfo.address || selectedNode.data.address,
+                                        city: locationInfo.city || selectedNode.data.city,
+                                        country: locationInfo.country || selectedNode.data.country
+                                      });
+                                      toast({
+                                        title: "Координаты обновлены",
+                                        description: `Из Яндекс.Карт: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                       });
                                     }
                                   })
@@ -1202,7 +1247,13 @@ export function PropertiesPanel({
                                     if (locationInfo) {
                                       onNodeUpdate(selectedNode.id, {
                                         title: locationInfo.title || selectedNode.data.title || 'Местоположение',
-                                        address: locationInfo.address || selectedNode.data.address
+                                        address: locationInfo.address || selectedNode.data.address,
+                                        city: locationInfo.city || selectedNode.data.city,
+                                        country: locationInfo.country || selectedNode.data.country
+                                      });
+                                      toast({
+                                        title: "Координаты обновлены",
+                                        description: `Из Google Maps: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                       });
                                     }
                                   })
@@ -1256,7 +1307,13 @@ export function PropertiesPanel({
                                     if (locationInfo) {
                                       onNodeUpdate(selectedNode.id, {
                                         title: locationInfo.title || selectedNode.data.title || 'Местоположение',
-                                        address: locationInfo.address || selectedNode.data.address
+                                        address: locationInfo.address || selectedNode.data.address,
+                                        city: locationInfo.city || selectedNode.data.city,
+                                        country: locationInfo.country || selectedNode.data.country
+                                      });
+                                      toast({
+                                        title: "Координаты обновлены",
+                                        description: `Из 2ГИС: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                       });
                                     }
                                   })

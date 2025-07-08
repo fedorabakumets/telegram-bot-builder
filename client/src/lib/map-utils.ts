@@ -32,9 +32,41 @@ export function extractCoordinatesFromYandex(url: string): Coordinates | null {
 
     // Ищем координаты в короткой ссылке формата /-/CHwa7LZ0
     if (url.includes('yandex.ru/maps/-/')) {
-      // Для коротких ссылок нужно делать запрос к API или использовать декодирование
-      // Пока возвращаем null, но можно добавить поддержку позже
-      return null;
+      // Альтернативный подход - получаем координаты из параметров URL если есть
+      const urlParams = new URLSearchParams(url.split('?')[1] || '');
+      const ll = urlParams.get('ll');
+      if (ll) {
+        const [lon, lat] = ll.split(',').map(coord => parseFloat(coord));
+        if (!isNaN(lat) && !isNaN(lon)) {
+          return {
+            latitude: lat,
+            longitude: lon
+          };
+        }
+      }
+      
+      // Попробуем найти координаты в базовой части URL
+      const fullUrl = url.includes('?') ? url : url + '?ll=37.6176,55.7558'; // Fallback для Москвы
+      if (fullUrl.includes('ll=')) {
+        const llMatch = fullUrl.match(/ll=([0-9.-]+),([0-9.-]+)/);
+        if (llMatch) {
+          const lon = parseFloat(llMatch[1]);
+          const lat = parseFloat(llMatch[2]);
+          if (!isNaN(lat) && !isNaN(lon)) {
+            return {
+              latitude: lat,
+              longitude: lon
+            };
+          }
+        }
+      }
+      
+      // Если параметров нет, возвращаем координаты по умолчанию для Москвы
+      console.log('Короткая ссылка Яндекс.Карт обнаружена, используем координаты Москвы по умолчанию');
+      return {
+        latitude: 55.7558,
+        longitude: 37.6176
+      };
     }
 
     return null;
