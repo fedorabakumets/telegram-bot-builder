@@ -764,8 +764,7 @@ export function RichTextEditor({
                   saveToUndoStack();
                   onChange(e.target.value);
                 }}
-                placeholder="Введите текст сообщения... 
-📝 Совет: Выделите текст и используйте кнопки форматирования выше!"
+                placeholder="Введите текст сообщения..."
                 className={`min-h-[120px] resize-none transition-all duration-200 ${
                   isExpanded ? 'min-h-[200px]' : ''
                 }`}
@@ -801,9 +800,9 @@ export function RichTextEditor({
                 </div>
               )}
               
-              {/* Selection helper overlay */}
-              {value && (
-                <div className="absolute top-2 left-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-1 rounded">
+              {/* Selection helper overlay - показываем только если нет текста */}
+              {!value && (
+                <div className="absolute top-2 right-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-1 rounded opacity-70">
                   💡 Выделите текст для форматирования
                 </div>
               )}
