@@ -1498,18 +1498,6 @@ export function PropertiesPanel({
         {/* Message Content */}
         <div>
           <div className="space-y-4">
-            {/* Text Editor Toggle */}
-            <div className="flex items-center gap-2">
-              <UIButton
-                variant={showEmojiPicker ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="text-xs"
-              >
-                Эмодзи и символы
-              </UIButton>
-            </div>
-
             {/* Inline Rich Text Editor */}
             <div className="space-y-3">
               <div>
@@ -1523,20 +1511,6 @@ export function PropertiesPanel({
                 />
               </div>
             </div>
-
-            {/* Emoji Picker */}
-            {showEmojiPicker && (
-              <EmojiPicker
-                onEmojiSelect={(emoji) => {
-                  const currentText = selectedNode.data.messageText || '';
-                  onNodeUpdate(selectedNode.id, { messageText: currentText + emoji });
-                }}
-                onSymbolSelect={(symbol) => {
-                  const currentText = selectedNode.data.messageText || '';
-                  onNodeUpdate(selectedNode.id, { messageText: currentText + symbol });
-                }}
-              />
-            )}
           </div>
         </div>
 
