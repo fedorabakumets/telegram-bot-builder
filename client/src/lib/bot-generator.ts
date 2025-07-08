@@ -63,6 +63,60 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        return url[1:]  # Убираем ведущий слеш\n';
   code += '    return url\n\n';
 
+  // Добавляем функции для работы с картографическими сервисами
+  code += 'def extract_coordinates_from_yandex(url: str) -> tuple:\n';
+  code += '    """Извлекает координаты из ссылки Яндекс.Карт"""\n';
+  code += '    import re\n';
+  code += '    # Ищем координаты в формате ll=longitude,latitude\n';
+  code += '    match = re.search(r"ll=([\\d.-]+),([\\d.-]+)", url)\n';
+  code += '    if match:\n';
+  code += '        return float(match.group(2)), float(match.group(1))  # lat, lon\n';
+  code += '    # Ищем координаты в формате /longitude,latitude/\n';
+  code += '    match = re.search(r"/([\\d.-]+),([\\d.-]+)/", url)\n';
+  code += '    if match:\n';
+  code += '        return float(match.group(2)), float(match.group(1))  # lat, lon\n';
+  code += '    return None, None\n\n';
+
+  code += 'def extract_coordinates_from_google(url: str) -> tuple:\n';
+  code += '    """Извлекает координаты из ссылки Google Maps"""\n';
+  code += '    import re\n';
+  code += '    # Ищем координаты в формате @latitude,longitude\n';
+  code += '    match = re.search(r"@([\\d.-]+),([\\d.-]+)", url)\n';
+  code += '    if match:\n';
+  code += '        return float(match.group(1)), float(match.group(2))  # lat, lon\n';
+  code += '    # Ищем координаты в формате /latitude,longitude/\n';
+  code += '    match = re.search(r"/([\\d.-]+),([\\d.-]+)/", url)\n';
+  code += '    if match:\n';
+  code += '        return float(match.group(1)), float(match.group(2))  # lat, lon\n';
+  code += '    return None, None\n\n';
+
+  code += 'def extract_coordinates_from_2gis(url: str) -> tuple:\n';
+  code += '    """Извлекает координаты из ссылки 2ГИС"""\n';
+  code += '    import re\n';
+  code += '    # Ищем координаты в различных форматах 2ГИС\n';
+  code += '    # Формат: center/longitude,latitude\n';
+  code += '    match = re.search(r"center/([\\d.-]+),([\\d.-]+)", url)\n';
+  code += '    if match:\n';
+  code += '        return float(match.group(2)), float(match.group(1))  # lat, lon\n';
+  code += '    # Формат: /longitude,latitude/\n';
+  code += '    match = re.search(r"/([\\d.-]+),([\\d.-]+)/", url)\n';
+  code += '    if match:\n';
+  code += '        return float(match.group(2)), float(match.group(1))  # lat, lon\n';
+  code += '    return None, None\n\n';
+
+  code += 'def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dict:\n';
+  code += '    """Генерирует ссылки на различные картографические сервисы"""\n';
+  code += '    import urllib.parse\n';
+  code += '    \n';
+  code += '    encoded_title = urllib.parse.quote(title) if title else ""\n';
+  code += '    \n';
+  code += '    return {\n';
+  code += '        "yandex": f"https://yandex.ru/maps/?ll={longitude},{latitude}&z=15&l=map&pt={longitude},{latitude}",\n';
+  code += '        "google": f"https://maps.google.com/?q={latitude},{longitude}",\n';
+  code += '        "2gis": f"https://2gis.ru/geo/{longitude},{latitude}",\n';
+  code += '        "openstreetmap": f"https://www.openstreetmap.org/?mlat={latitude}&mlon={longitude}&zoom=15"\n';
+  code += '    }\n\n';
+
   // Настройка меню команд для BotFather
   const menuCommands = nodes.filter(node => 
     (node.type === 'start' || node.type === 'command') && 
@@ -487,19 +541,97 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить анимацию\\n{caption}")\n';
               
             } else if (targetNode.type === 'location') {
-              const latitude = targetNode.data.latitude || 55.7558;
-              const longitude = targetNode.data.longitude || 37.6176;
+              let latitude = targetNode.data.latitude || 55.7558;
+              let longitude = targetNode.data.longitude || 37.6176;
               const title = targetNode.data.title || "";
               const address = targetNode.data.address || "";
+              const mapService = targetNode.data.mapService || 'custom';
+              const generateMapPreview = targetNode.data.generateMapPreview !== false;
               
-              code += `    latitude = ${latitude}\n`;
-              code += `    longitude = ${longitude}\n`;
+              code += '    # Определяем координаты на основе выбранного сервиса карт\n';
+              
+              if (mapService === 'yandex' && targetNode.data.yandexMapUrl) {
+                code += `    yandex_url = "${targetNode.data.yandexMapUrl}"\n`;
+                code += '    extracted_lat, extracted_lon = extract_coordinates_from_yandex(yandex_url)\n';
+                code += '    if extracted_lat and extracted_lon:\n';
+                code += '        latitude, longitude = extracted_lat, extracted_lon\n';
+                code += '    else:\n';
+                code += `        latitude, longitude = ${latitude}, ${longitude}  # Fallback координаты\n`;
+              } else if (mapService === 'google' && targetNode.data.googleMapUrl) {
+                code += `    google_url = "${targetNode.data.googleMapUrl}"\n`;
+                code += '    extracted_lat, extracted_lon = extract_coordinates_from_google(google_url)\n';
+                code += '    if extracted_lat and extracted_lon:\n';
+                code += '        latitude, longitude = extracted_lat, extracted_lon\n';
+                code += '    else:\n';
+                code += `        latitude, longitude = ${latitude}, ${longitude}  # Fallback координаты\n`;
+              } else if (mapService === '2gis' && targetNode.data.gisMapUrl) {
+                code += `    gis_url = "${targetNode.data.gisMapUrl}"\n`;
+                code += '    extracted_lat, extracted_lon = extract_coordinates_from_2gis(gis_url)\n';
+                code += '    if extracted_lat and extracted_lon:\n';
+                code += '        latitude, longitude = extracted_lat, extracted_lon\n';
+                code += '    else:\n';
+                code += `        latitude, longitude = ${latitude}, ${longitude}  # Fallback координаты\n`;
+              } else {
+                code += `    latitude, longitude = ${latitude}, ${longitude}\n`;
+              }
+              
               if (title) code += `    title = "${title}"\n`;
               if (address) code += `    address = "${address}"\n`;
               
               code += '    try:\n';
+              code += '        # Удаляем старое сообщение\n';
+              code += '        await callback_query.message.delete()\n';
               
+              code += '        # Отправляем геолокацию\n';
+              if (title || address) {
+                code += '        await bot.send_venue(\n';
+                code += '            callback_query.from_user.id,\n';
+                code += '            latitude=latitude,\n';
+                code += '            longitude=longitude,\n';
+                code += '            title=title,\n';
+                code += '            address=address\n';
+                code += '        )\n';
+              } else {
+                code += '        await bot.send_location(callback_query.from_user.id, latitude=latitude, longitude=longitude)\n';
+              }
+              
+              // Генерируем кнопки для картографических сервисов если включено
+              if (generateMapPreview) {
+                code += '        \n';
+                code += '        # Генерируем ссылки на картографические сервисы\n';
+                code += '        map_urls = generate_map_urls(latitude, longitude, title)\n';
+                code += '        \n';
+                code += '        # Создаем кнопки для различных карт\n';
+                code += '        map_builder = InlineKeyboardBuilder()\n';
+                code += '        map_builder.add(InlineKeyboardButton(text="🗺️ Яндекс Карты", url=map_urls["yandex"]))\n';
+                code += '        map_builder.add(InlineKeyboardButton(text="🌍 Google Maps", url=map_urls["google"]))\n';
+                code += '        map_builder.add(InlineKeyboardButton(text="📍 2ГИС", url=map_urls["2gis"]))\n';
+                code += '        map_builder.add(InlineKeyboardButton(text="🌐 OpenStreetMap", url=map_urls["openstreetmap"]))\n';
+                
+                if (targetNode.data.showDirections) {
+                  code += '        # Добавляем кнопки для построения маршрута\n';
+                  code += '        map_builder.add(InlineKeyboardButton(text="🧭 Маршрут (Яндекс)", url=f"https://yandex.ru/maps/?rtext=~{latitude},{longitude}"))\n';
+                  code += '        map_builder.add(InlineKeyboardButton(text="🚗 Маршрут (Google)", url=f"https://maps.google.com/maps/dir//{latitude},{longitude}"))\n';
+                }
+                
+                code += '        map_builder.adjust(2)  # Размещаем кнопки в 2 столбца\n';
+                code += '        map_keyboard = map_builder.as_markup()\n';
+                code += '        \n';
+                code += '        await bot.send_message(\n';
+                code += '            callback_query.from_user.id,\n';
+                if (targetNode.data.showDirections) {
+                  code += '            "🗺️ Откройте местоположение в удобном картографическом сервисе или постройте маршрут:",\n';
+                } else {
+                  code += '            "🗺️ Откройте местоположение в удобном картографическом сервисе:",\n';
+                }
+                code += '            reply_markup=map_keyboard\n';
+                code += '        )\n';
+              }
+              
+              // Добавляем дополнительные кнопки если они есть
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        \n';
+                code += '        # Отправляем дополнительные кнопки\n';
                 code += '        builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach(btn => {
                   if (btn.action === "url") {
@@ -510,16 +642,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
-                code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_location(callback_query.from_user.id, latitude=latitude, longitude=longitude, reply_markup=keyboard)\n';
-              } else {
-                code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_location(callback_query.from_user.id, latitude=latitude, longitude=longitude)\n';
+                code += '        await bot.send_message(callback_query.from_user.id, "Выберите действие:", reply_markup=keyboard)\n';
               }
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки местоположения: {e}")\n';
-              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить местоположение")\n';
+              code += '        await bot.send_message(callback_query.from_user.id, f"❌ Не удалось отправить местоположение")\n';
               
             } else if (targetNode.type === 'contact') {
               const phoneNumber = targetNode.data.phoneNumber || "+7 999 123 45 67";
@@ -1417,15 +1545,43 @@ function generateLocationHandler(node: Node): string {
       code += '        return\n';
     }
 
-    const latitude = node.data.latitude || 55.7558;
-    const longitude = node.data.longitude || 37.6176;
+    // Получаем координаты из различных источников
+    let latitude = node.data.latitude || 55.7558;
+    let longitude = node.data.longitude || 37.6176;
     const title = node.data.title || "Местоположение";
     const address = node.data.address || "";
     const foursquareId = node.data.foursquareId || "";
     const foursquareType = node.data.foursquareType || "";
+    const mapService = node.data.mapService || 'custom';
+    const generateMapPreview = node.data.generateMapPreview !== false;
+
+    code += '    # Определяем координаты на основе выбранного сервиса карт\n';
     
-    code += `    latitude = ${latitude}\n`;
-    code += `    longitude = ${longitude}\n`;
+    if (mapService === 'yandex' && node.data.yandexMapUrl) {
+      code += `    yandex_url = "${node.data.yandexMapUrl}"\n`;
+      code += '    extracted_lat, extracted_lon = extract_coordinates_from_yandex(yandex_url)\n';
+      code += '    if extracted_lat and extracted_lon:\n';
+      code += '        latitude, longitude = extracted_lat, extracted_lon\n';
+      code += '    else:\n';
+      code += `        latitude, longitude = ${latitude}, ${longitude}  # Fallback координаты\n`;
+    } else if (mapService === 'google' && node.data.googleMapUrl) {
+      code += `    google_url = "${node.data.googleMapUrl}"\n`;
+      code += '    extracted_lat, extracted_lon = extract_coordinates_from_google(google_url)\n';
+      code += '    if extracted_lat and extracted_lon:\n';
+      code += '        latitude, longitude = extracted_lat, extracted_lon\n';
+      code += '    else:\n';
+      code += `        latitude, longitude = ${latitude}, ${longitude}  # Fallback координаты\n`;
+    } else if (mapService === '2gis' && node.data.gisMapUrl) {
+      code += `    gis_url = "${node.data.gisMapUrl}"\n`;
+      code += '    extracted_lat, extracted_lon = extract_coordinates_from_2gis(gis_url)\n';
+      code += '    if extracted_lat and extracted_lon:\n';
+      code += '        latitude, longitude = extracted_lat, extracted_lon\n';
+      code += '    else:\n';
+      code += `        latitude, longitude = ${latitude}, ${longitude}  # Fallback координаты\n`;
+    } else {
+      code += `    latitude, longitude = ${latitude}, ${longitude}\n`;
+    }
+    
     if (title) code += `    title = "${title}"\n`;
     if (address) code += `    address = "${address}"\n`;
     if (foursquareId) code += `    foursquare_id = "${foursquareId}"\n`;
@@ -1447,10 +1603,42 @@ function generateLocationHandler(node: Node): string {
       code += '        await message.answer_location(latitude=latitude, longitude=longitude)\n';
     }
     
-    // Добавляем кнопки после геолокации если они есть
+    // Генерируем кнопки для картографических сервисов если включено
+    if (generateMapPreview) {
+      code += '        \n';
+      code += '        # Генерируем ссылки на картографические сервисы\n';
+      code += '        map_urls = generate_map_urls(latitude, longitude, title)\n';
+      code += '        \n';
+      code += '        # Создаем кнопки для различных карт\n';
+      code += '        map_builder = InlineKeyboardBuilder()\n';
+      code += '        map_builder.add(InlineKeyboardButton(text="🗺️ Яндекс Карты", url=map_urls["yandex"]))\n';
+      code += '        map_builder.add(InlineKeyboardButton(text="🌍 Google Maps", url=map_urls["google"]))\n';
+      code += '        map_builder.add(InlineKeyboardButton(text="📍 2ГИС", url=map_urls["2gis"]))\n';
+      code += '        map_builder.add(InlineKeyboardButton(text="🌐 OpenStreetMap", url=map_urls["openstreetmap"]))\n';
+      
+      if (node.data.showDirections) {
+        code += '        # Добавляем кнопки для построения маршрута\n';
+        code += '        map_builder.add(InlineKeyboardButton(text="🧭 Маршрут (Яндекс)", url=f"https://yandex.ru/maps/?rtext=~{latitude},{longitude}"))\n';
+        code += '        map_builder.add(InlineKeyboardButton(text="🚗 Маршрут (Google)", url=f"https://maps.google.com/maps/dir//{latitude},{longitude}"))\n';
+      }
+      
+      code += '        map_builder.adjust(2)  # Размещаем кнопки в 2 столбца\n';
+      code += '        map_keyboard = map_builder.as_markup()\n';
+      code += '        \n';
+      code += '        await message.answer(\n';
+      if (node.data.showDirections) {
+        code += '            "🗺️ Откройте местоположение в удобном картографическом сервисе или постройте маршрут:",\n';
+      } else {
+        code += '            "🗺️ Откройте местоположение в удобном картографическом сервисе:",\n';
+      }
+      code += '            reply_markup=map_keyboard\n';
+      code += '        )\n';
+    }
+    
+    // Добавляем дополнительные кнопки после геолокации если они есть
     if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        \n';
-      code += '        # Отправляем кнопки отдельно после геолокации\n';
+      code += '        # Отправляем дополнительные кнопки\n';
       code += '        builder = InlineKeyboardBuilder()\n';
       node.data.buttons.forEach(button => {
         if (button.action === "url") {

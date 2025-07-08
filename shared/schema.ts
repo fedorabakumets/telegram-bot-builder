@@ -238,6 +238,14 @@ export const nodeSchema = z.object({
     address: z.string().optional(),
     foursquareId: z.string().optional(),
     foursquareType: z.string().optional(),
+    // Поддержка различных картографических сервисов
+    mapService: z.enum(['yandex', 'google', '2gis', 'custom']).default('custom'),
+    yandexMapUrl: z.string().optional(),
+    googleMapUrl: z.string().optional(),
+    gisMapUrl: z.string().optional(), // 2ГИС
+    mapZoom: z.number().min(1).max(20).default(15),
+    showDirections: z.boolean().default(false),
+    generateMapPreview: z.boolean().default(true),
     phoneNumber: z.string().optional(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),

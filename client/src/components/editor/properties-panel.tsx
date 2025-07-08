@@ -12,6 +12,7 @@ import { MediaSelector } from '@/components/media/media-selector';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
+import { extractCoordinatesFromUrl, formatCoordinates, getLocationInfo } from '@/lib/map-utils';
 import { useState, useMemo } from 'react';
 
 interface PropertiesPanelProps {
@@ -950,7 +951,24 @@ export function PropertiesPanel({
                         type="number"
                         step="any"
                         value={selectedNode.data.latitude || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { latitude: parseFloat(e.target.value) || 0 })}
+                        onChange={(e) => {
+                          const lat = parseFloat(e.target.value) || 0;
+                          onNodeUpdate(selectedNode.id, { latitude: lat });
+                          
+                          // Автоматически получаем информацию о местоположении если есть обе координаты
+                          if (lat && selectedNode.data.longitude) {
+                            getLocationInfo(lat, selectedNode.data.longitude)
+                              .then(locationInfo => {
+                                if (locationInfo) {
+                                  onNodeUpdate(selectedNode.id, {
+                                    title: locationInfo.title || selectedNode.data.title || 'Местоположение',
+                                    address: locationInfo.address || selectedNode.data.address
+                                  });
+                                }
+                              })
+                              .catch(console.error);
+                          }
+                        }}
                         className="border-emerald-200 dark:border-emerald-700 focus:border-emerald-500 focus:ring-emerald-200"
                         placeholder="55.7558"
                       />
@@ -964,7 +982,24 @@ export function PropertiesPanel({
                         type="number"
                         step="any"
                         value={selectedNode.data.longitude || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { longitude: parseFloat(e.target.value) || 0 })}
+                        onChange={(e) => {
+                          const lng = parseFloat(e.target.value) || 0;
+                          onNodeUpdate(selectedNode.id, { longitude: lng });
+                          
+                          // Автоматически получаем информацию о местоположении если есть обе координаты
+                          if (lng && selectedNode.data.latitude) {
+                            getLocationInfo(selectedNode.data.latitude, lng)
+                              .then(locationInfo => {
+                                if (locationInfo) {
+                                  onNodeUpdate(selectedNode.id, {
+                                    title: locationInfo.title || selectedNode.data.title || 'Местоположение',
+                                    address: locationInfo.address || selectedNode.data.address
+                                  });
+                                }
+                              })
+                              .catch(console.error);
+                          }
+                        }}
                         className="border-emerald-200 dark:border-emerald-700 focus:border-emerald-500 focus:ring-emerald-200"
                         placeholder="37.6176"
                       />
@@ -1052,6 +1087,242 @@ export function PropertiesPanel({
                   
                   <div className="text-xs text-purple-600 dark:text-purple-400 mt-2">
                     Интеграция с Foursquare для дополнительной информации о месте
+                  </div>
+                </div>
+
+                {/* Map Services Section */}
+                <div className="bg-gradient-to-br from-orange-50/50 to-red-50/30 dark:from-orange-950/20 dark:to-red-950/10 border border-orange-200/30 dark:border-orange-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                      <i className="fas fa-route text-orange-600 dark:text-orange-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-orange-900 dark:text-orange-100">Картографические сервисы</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                        <i className="fas fa-layer-group mr-1"></i>
+                        Сервис карт
+                      </Label>
+                      <select
+                        value={selectedNode.data.mapService || 'custom'}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { mapService: e.target.value })}
+                        className="w-full px-3 py-2 border border-orange-200 dark:border-orange-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:border-orange-500 focus:ring-orange-200"
+                      >
+                        <option value="custom">Пользовательские координаты</option>
+                        <option value="yandex">Яндекс Карты</option>
+                        <option value="google">Google Maps</option>
+                        <option value="2gis">2ГИС</option>
+                      </select>
+                    </div>
+
+                    {selectedNode.data.mapService === 'yandex' && (
+                      <div>
+                        <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                          <i className="fas fa-link mr-1"></i>
+                          Ссылка на Яндекс Карты
+                        </Label>
+                        <Input
+                          type="url"
+                          value={selectedNode.data.yandexMapUrl || ''}
+                          onChange={(e) => {
+                            const url = e.target.value;
+                            onNodeUpdate(selectedNode.id, { yandexMapUrl: url });
+                            
+                            // Автоматически извлекаем координаты из URL
+                            if (url) {
+                              const { coordinates, service } = extractCoordinatesFromUrl(url);
+                              if (coordinates) {
+                                const updates: any = {
+                                  latitude: coordinates.latitude,
+                                  longitude: coordinates.longitude,
+                                  mapService: service
+                                };
+                                
+                                onNodeUpdate(selectedNode.id, updates);
+                                
+                                // Получаем информацию о местоположении
+                                getLocationInfo(coordinates.latitude, coordinates.longitude)
+                                  .then(locationInfo => {
+                                    if (locationInfo) {
+                                      onNodeUpdate(selectedNode.id, {
+                                        title: locationInfo.title || selectedNode.data.title || 'Местоположение',
+                                        address: locationInfo.address || selectedNode.data.address
+                                      });
+                                    }
+                                  })
+                                  .catch(console.error);
+                              }
+                            }
+                          }}
+                          className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                          placeholder="https://yandex.ru/maps/..."
+                        />
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          Скопируйте ссылку из Яндекс.Карт - координаты извлекутся автоматически
+                        </p>
+                        {selectedNode.data.yandexMapUrl && selectedNode.data.latitude && selectedNode.data.longitude && (
+                          <div className="mt-2 text-xs text-green-600 dark:text-green-400 flex items-center">
+                            <i className="fas fa-check-circle mr-1"></i>
+                            Координаты: {formatCoordinates(selectedNode.data.latitude, selectedNode.data.longitude)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedNode.data.mapService === 'google' && (
+                      <div>
+                        <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                          <i className="fas fa-link mr-1"></i>
+                          Ссылка на Google Maps
+                        </Label>
+                        <Input
+                          type="url"
+                          value={selectedNode.data.googleMapUrl || ''}
+                          onChange={(e) => {
+                            const url = e.target.value;
+                            onNodeUpdate(selectedNode.id, { googleMapUrl: url });
+                            
+                            // Автоматически извлекаем координаты из URL
+                            if (url) {
+                              const { coordinates, service } = extractCoordinatesFromUrl(url);
+                              if (coordinates) {
+                                const updates: any = {
+                                  latitude: coordinates.latitude,
+                                  longitude: coordinates.longitude,
+                                  mapService: service
+                                };
+                                
+                                onNodeUpdate(selectedNode.id, updates);
+                                
+                                // Получаем информацию о местоположении
+                                getLocationInfo(coordinates.latitude, coordinates.longitude)
+                                  .then(locationInfo => {
+                                    if (locationInfo) {
+                                      onNodeUpdate(selectedNode.id, {
+                                        title: locationInfo.title || selectedNode.data.title || 'Местоположение',
+                                        address: locationInfo.address || selectedNode.data.address
+                                      });
+                                    }
+                                  })
+                                  .catch(console.error);
+                              }
+                            }
+                          }}
+                          className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                          placeholder="https://maps.google.com/..."
+                        />
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          Скопируйте ссылку из Google Maps - координаты извлекутся автоматически
+                        </p>
+                        {selectedNode.data.googleMapUrl && selectedNode.data.latitude && selectedNode.data.longitude && (
+                          <div className="mt-2 text-xs text-green-600 dark:text-green-400 flex items-center">
+                            <i className="fas fa-check-circle mr-1"></i>
+                            Координаты: {formatCoordinates(selectedNode.data.latitude, selectedNode.data.longitude)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedNode.data.mapService === '2gis' && (
+                      <div>
+                        <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                          <i className="fas fa-link mr-1"></i>
+                          Ссылка на 2ГИС
+                        </Label>
+                        <Input
+                          type="url"
+                          value={selectedNode.data.gisMapUrl || ''}
+                          onChange={(e) => {
+                            const url = e.target.value;
+                            onNodeUpdate(selectedNode.id, { gisMapUrl: url });
+                            
+                            // Автоматически извлекаем координаты из URL
+                            if (url) {
+                              const { coordinates, service } = extractCoordinatesFromUrl(url);
+                              if (coordinates) {
+                                const updates: any = {
+                                  latitude: coordinates.latitude,
+                                  longitude: coordinates.longitude,
+                                  mapService: service
+                                };
+                                
+                                onNodeUpdate(selectedNode.id, updates);
+                                
+                                // Получаем информацию о местоположении
+                                getLocationInfo(coordinates.latitude, coordinates.longitude)
+                                  .then(locationInfo => {
+                                    if (locationInfo) {
+                                      onNodeUpdate(selectedNode.id, {
+                                        title: locationInfo.title || selectedNode.data.title || 'Местоположение',
+                                        address: locationInfo.address || selectedNode.data.address
+                                      });
+                                    }
+                                  })
+                                  .catch(console.error);
+                              }
+                            }
+                          }}
+                          className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                          placeholder="https://2gis.ru/..."
+                        />
+                        <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          Скопируйте ссылку из 2ГИС - координаты извлекутся автоматически
+                        </p>
+                        {selectedNode.data.gisMapUrl && selectedNode.data.latitude && selectedNode.data.longitude && (
+                          <div className="mt-2 text-xs text-green-600 dark:text-green-400 flex items-center">
+                            <i className="fas fa-check-circle mr-1"></i>
+                            Координаты: {formatCoordinates(selectedNode.data.latitude, selectedNode.data.longitude)}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                          <i className="fas fa-search-plus mr-1"></i>
+                          Масштаб карты
+                        </Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={selectedNode.data.mapZoom || 15}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { mapZoom: parseInt(e.target.value) || 15 })}
+                          className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                          placeholder="15"
+                        />
+                      </div>
+                      <div className="flex flex-col justify-end">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="showDirections"
+                            checked={selectedNode.data.showDirections || false}
+                            onChange={(e) => onNodeUpdate(selectedNode.id, { showDirections: e.target.checked })}
+                            className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                          />
+                          <Label htmlFor="showDirections" className="text-xs font-medium text-orange-700 dark:text-orange-300">
+                            Показать маршрут
+                          </Label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="generateMapPreview"
+                        checked={selectedNode.data.generateMapPreview !== false}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { generateMapPreview: e.target.checked })}
+                        className="w-4 h-4 text-orange-600 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 dark:focus:ring-orange-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                      <Label htmlFor="generateMapPreview" className="text-xs font-medium text-orange-700 dark:text-orange-300">
+                        Генерировать превью карты с кнопками сервисов
+                      </Label>
+                    </div>
                   </div>
                 </div>
               </div>

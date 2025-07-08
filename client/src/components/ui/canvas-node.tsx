@@ -492,24 +492,66 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
       
       {/* Location preview */}
       {node.type === 'location' && (
-        <div className="bg-gradient-to-br from-green-100/50 to-lime-100/50 dark:from-green-900/30 dark:to-lime-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
-          <div className="text-center space-y-2">
-            <i className="fas fa-map-marker-alt text-green-400 dark:text-green-300 text-3xl"></i>
-            <div className="text-xs text-green-600 dark:text-green-400 space-y-1">
-              <div className="font-medium">{node.data.title || 'Геолокация'}</div>
-              {node.data.address && (
-                <div className="flex items-center justify-center space-x-1">
-                  <i className="fas fa-map text-xs"></i>
-                  <span className="truncate max-w-24">{node.data.address}</span>
-                </div>
-              )}
-              {node.data.latitude && node.data.longitude && (
-                <div className="flex items-center justify-center space-x-1">
-                  <i className="fas fa-crosshairs text-xs"></i>
-                  <span>{node.data.latitude.toFixed(2)}, {node.data.longitude.toFixed(2)}</span>
-                </div>
-              )}
-            </div>
+        <div className="bg-gradient-to-br from-green-100/50 to-lime-100/50 dark:from-green-900/30 dark:to-lime-900/30 rounded-lg p-3 mb-4 flex flex-col justify-center space-y-2">
+          <div className="flex items-center justify-center space-x-2">
+            <i className="fas fa-map-marker-alt text-green-400 dark:text-green-300 text-2xl"></i>
+            {node.data.mapService && node.data.mapService !== 'custom' && (
+              <div className="flex items-center space-x-1">
+                {node.data.mapService === 'yandex' && (
+                  <span className="text-xs px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full font-medium border border-yellow-200 dark:border-yellow-800">
+                    Яндекс
+                  </span>
+                )}
+                {node.data.mapService === 'google' && (
+                  <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full font-medium border border-blue-200 dark:border-blue-800">
+                    Google
+                  </span>
+                )}
+                {node.data.mapService === '2gis' && (
+                  <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full font-medium border border-green-200 dark:border-green-800">
+                    2ГИС
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <div className="text-xs text-green-600 dark:text-green-400 space-y-1 text-center">
+            <div className="font-medium text-sm">{node.data.title || 'Геолокация'}</div>
+            
+            {/* Показываем координаты если они есть */}
+            {node.data.latitude && node.data.longitude && (
+              <div className="flex items-center justify-center space-x-1">
+                <i className="fas fa-crosshairs text-xs"></i>
+                <span className="font-mono text-xs">
+                  {parseFloat(node.data.latitude).toFixed(4)}, {parseFloat(node.data.longitude).toFixed(4)}
+                </span>
+              </div>
+            )}
+            
+            {/* Показываем адрес если он есть */}
+            {node.data.address && (
+              <div className="flex items-center justify-center space-x-1">
+                <i className="fas fa-map text-xs"></i>
+                <span className="truncate max-w-32 text-xs">{node.data.address}</span>
+              </div>
+            )}
+            
+            {/* Индикатор что URL загружен */}
+            {(node.data.yandexMapUrl || node.data.googleMapUrl || node.data.gisMapUrl) && (
+              <div className="flex items-center justify-center space-x-1">
+                <i className="fas fa-link text-xs text-green-500"></i>
+                <span className="text-xs opacity-75">URL загружен</span>
+              </div>
+            )}
+            
+            {/* Показываем дополнительные опции */}
+            {node.data.generateMapPreview && (
+              <div className="flex items-center justify-center space-x-1">
+                <i className="fas fa-external-link-alt text-xs text-blue-500"></i>
+                <span className="text-xs opacity-75">Кнопки карт</span>
+              </div>
+            )}
           </div>
         </div>
       )}
