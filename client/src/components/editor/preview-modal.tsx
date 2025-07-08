@@ -21,6 +21,10 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
     time: string;
     buttons?: Array<{ text: string; target?: string; action?: string; }>;
     keyboardType?: 'reply' | 'inline' | 'none';
+    mediaType?: 'photo' | 'video' | 'audio' | 'document' | 'sticker' | 'voice' | 'animation' | 'location' | 'contact' | 'poll' | 'dice';
+    mediaUrl?: string;
+    mediaCaption?: string;
+    mediaData?: any; // Дополнительные данные для специальных типов медиа
   }>>([]);
   const [currentReplyKeyboard, setCurrentReplyKeyboard] = useState<Array<{ text: string; target?: string; action?: string; }> | null>(null);
   const [textInput, setTextInput] = useState('');
@@ -30,6 +34,102 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
 
   // Find start node or first node
   const startNode = nodes.find(node => node.type === 'start') || nodes[0];
+
+  // Helper function to get media information from a node
+  const getMediaInfo = (node: Node) => {
+    switch (node.type) {
+      case 'photo':
+        return {
+          mediaType: 'photo' as const,
+          mediaUrl: node.data.imageUrl || 'https://picsum.photos/800/600?random=1',
+          mediaCaption: node.data.mediaCaption
+        };
+      case 'video':
+        return {
+          mediaType: 'video' as const,
+          mediaUrl: node.data.videoUrl || 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+          mediaCaption: node.data.mediaCaption
+        };
+      case 'audio':
+        return {
+          mediaType: 'audio' as const,
+          mediaUrl: node.data.audioUrl || 'https://www.soundjay.com/misc/beep-07a.wav',
+          mediaCaption: node.data.mediaCaption,
+          mediaData: {
+            performer: node.data.performer,
+            duration: node.data.duration
+          }
+        };
+      case 'document':
+        return {
+          mediaType: 'document' as const,
+          mediaUrl: node.data.documentUrl || 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+          mediaCaption: node.data.mediaCaption,
+          mediaData: {
+            filename: node.data.filename || node.data.documentName || 'document.pdf'
+          }
+        };
+      case 'sticker':
+        return {
+          mediaType: 'sticker' as const,
+          mediaUrl: node.data.stickerUrl || 'https://telegram.org/img/t_logo.png',
+          mediaCaption: node.data.mediaCaption
+        };
+      case 'voice':
+        return {
+          mediaType: 'voice' as const,
+          mediaUrl: node.data.voiceUrl || 'https://www.soundjay.com/misc/beep-07a.wav',
+          mediaCaption: node.data.mediaCaption,
+          mediaData: {
+            duration: node.data.duration
+          }
+        };
+      case 'animation':
+        return {
+          mediaType: 'animation' as const,
+          mediaUrl: node.data.animationUrl || 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif',
+          mediaCaption: node.data.mediaCaption
+        };
+      case 'location':
+        return {
+          mediaType: 'location' as const,
+          mediaData: {
+            latitude: node.data.latitude || 55.7558,
+            longitude: node.data.longitude || 37.6176,
+            title: node.data.title || 'Локация',
+            address: node.data.address
+          }
+        };
+      case 'contact':
+        return {
+          mediaType: 'contact' as const,
+          mediaData: {
+            firstName: node.data.firstName || 'Имя',
+            lastName: node.data.lastName,
+            phoneNumber: node.data.phoneNumber
+          }
+        };
+      case 'poll':
+        return {
+          mediaType: 'poll' as const,
+          mediaData: {
+            question: node.data.question || 'Вопрос',
+            options: node.data.options || ['Вариант 1', 'Вариант 2'],
+            allowsMultipleAnswers: node.data.allowsMultipleAnswers,
+            anonymousVoting: node.data.anonymousVoting
+          }
+        };
+      case 'dice':
+        return {
+          mediaType: 'dice' as const,
+          mediaData: {
+            emoji: node.data.emoji || '🎲'
+          }
+        };
+      default:
+        return {};
+    }
+  };
 
   // Auto-scroll to bottom when new messages are added
   useEffect(() => {
@@ -52,13 +152,18 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
       action: btn.action
     })) : undefined;
 
+
+
+    const mediaInfo = getMediaInfo(startNode);
+
     const botMessage = {
       id: `msg-${Date.now()}`,
       type: 'bot' as const,
-      text: startNode.data.messageText || 'Привет!',
+      text: startNode.data.messageText || (startNode.type === 'start' ? 'Привет!' : ''),
       time,
       buttons,
-      keyboardType: startNode.data.keyboardType
+      keyboardType: startNode.data.keyboardType,
+      ...mediaInfo
     };
 
     setMessageHistory([botMessage]);
@@ -117,7 +222,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
           // Update current node
           setCurrentNodeId(targetNode.id);
           
-          // Get appropriate text based on node type
+          // Get appropriate text and media based on node type
           let responseText = '';
           if (targetNode.data.messageText) {
             responseText = targetNode.data.messageText;
@@ -127,9 +232,21 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
             responseText = `Стартовая команда: ${targetNode.data.command || '/start'}`;
           } else if (targetNode.type === 'input') {
             responseText = 'Ожидаю ввод...';
+          } else if (['photo', 'video', 'audio', 'document', 'sticker', 'voice', 'animation'].includes(targetNode.type)) {
+            responseText = targetNode.data.mediaCaption || '';
+          } else if (targetNode.type === 'location') {
+            responseText = targetNode.data.title || 'Локация';
+          } else if (targetNode.type === 'contact') {
+            responseText = `${targetNode.data.firstName || 'Имя'} ${targetNode.data.lastName || ''}`.trim();
+          } else if (targetNode.type === 'poll') {
+            responseText = targetNode.data.question || 'Опрос';
+          } else if (targetNode.type === 'dice') {
+            responseText = `Кубик ${targetNode.data.emoji || '🎲'}`;
           } else {
             responseText = 'Сообщение';
           }
+
+          const targetMediaInfo = getMediaInfo(targetNode);
           
           const buttons = targetNode.data.keyboardType !== 'none' ? targetNode.data.buttons.map(btn => ({
             text: btn.text,
@@ -147,7 +264,8 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
               minute: '2-digit' 
             }),
             buttons,
-            keyboardType: targetNode.data.keyboardType
+            keyboardType: targetNode.data.keyboardType,
+            ...targetMediaInfo
           };
 
           setMessageHistory(prev => [...prev, botResponse]);
@@ -293,9 +411,230 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                       <i className="fas fa-robot text-white text-xs"></i>
                     </div>
-                    <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 max-w-xs shadow-sm">
-                      <p className="text-sm text-gray-900">{message.text}</p>
-                      <p className="text-xs text-gray-500 mt-1">{message.time}</p>
+                    <div className="max-w-xs">
+                      {/* Media Content */}
+                      {message.mediaType === 'photo' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg overflow-hidden shadow-sm mb-1">
+                          <img
+                            src={message.mediaUrl}
+                            alt="Фото"
+                            className="w-full h-48 object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://picsum.photos/300/200?random=' + Math.random();
+                            }}
+                          />
+                          {message.mediaCaption && (
+                            <div className="px-4 py-2">
+                              <p className="text-sm text-gray-900">{message.mediaCaption}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'video' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg overflow-hidden shadow-sm mb-1">
+                          <video
+                            src={message.mediaUrl}
+                            controls
+                            className="w-full h-48 object-cover"
+                            poster="https://picsum.photos/300/200?random=video"
+                          />
+                          {message.mediaCaption && (
+                            <div className="px-4 py-2">
+                              <p className="text-sm text-gray-900">{message.mediaCaption}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'audio' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 shadow-sm mb-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                              <i className="fas fa-music text-orange-600 text-xs"></i>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">
+                                {message.mediaData?.performer || 'Аудиофайл'}
+                              </p>
+                              {message.mediaData?.duration && (
+                                <p className="text-xs text-gray-500">{message.mediaData.duration}с</p>
+                              )}
+                            </div>
+                          </div>
+                          <audio src={message.mediaUrl} controls className="w-full h-8" />
+                          {message.mediaCaption && (
+                            <p className="text-sm text-gray-900 mt-2">{message.mediaCaption}</p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'document' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 shadow-sm mb-1">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                              <i className="fas fa-file-alt text-teal-600 text-xs"></i>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">
+                                {message.mediaData?.filename || 'Документ'}
+                              </p>
+                              <a 
+                                href={message.mediaUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:underline"
+                              >
+                                Открыть документ
+                              </a>
+                            </div>
+                          </div>
+                          {message.mediaCaption && (
+                            <p className="text-sm text-gray-900 mt-2">{message.mediaCaption}</p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'sticker' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg overflow-hidden shadow-sm mb-1">
+                          <img
+                            src={message.mediaUrl}
+                            alt="Стикер"
+                            className="w-32 h-32 object-contain mx-auto"
+                          />
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'voice' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 shadow-sm mb-1">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                              <i className="fas fa-microphone text-green-600 text-xs"></i>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">Голосовое сообщение</p>
+                              {message.mediaData?.duration && (
+                                <p className="text-xs text-gray-500">{message.mediaData.duration}с</p>
+                              )}
+                            </div>
+                          </div>
+                          <audio src={message.mediaUrl} controls className="w-full h-8 mt-2" />
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'animation' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg overflow-hidden shadow-sm mb-1">
+                          <img
+                            src={message.mediaUrl}
+                            alt="Анимация"
+                            className="w-full h-48 object-cover"
+                          />
+                          {message.mediaCaption && (
+                            <div className="px-4 py-2">
+                              <p className="text-sm text-gray-900">{message.mediaCaption}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'location' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 shadow-sm mb-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                              <i className="fas fa-map-marker-alt text-green-600 text-xs"></i>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">
+                                {message.mediaData?.title || 'Локация'}
+                              </p>
+                              {message.mediaData?.address && (
+                                <p className="text-xs text-gray-500">{message.mediaData.address}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="bg-gray-100 rounded-lg p-3">
+                            <p className="text-xs text-gray-600">
+                              📍 {message.mediaData?.latitude?.toFixed(4)}, {message.mediaData?.longitude?.toFixed(4)}
+                            </p>
+                            <a 
+                              href={`https://maps.google.com/?q=${message.mediaData?.latitude},${message.mediaData?.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:underline"
+                            >
+                              Открыть в картах
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'contact' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 shadow-sm mb-1">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <i className="fas fa-user text-blue-600 text-xs"></i>
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">
+                                {message.mediaData?.firstName} {message.mediaData?.lastName}
+                              </p>
+                              {message.mediaData?.phoneNumber && (
+                                <p className="text-xs text-gray-500">{message.mediaData.phoneNumber}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'poll' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 shadow-sm mb-1">
+                          <div className="flex items-center space-x-2 mb-3">
+                            <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                              <i className="fas fa-poll text-purple-600 text-xs"></i>
+                            </div>
+                            <p className="text-sm font-medium text-gray-900">Опрос</p>
+                          </div>
+                          <p className="text-sm text-gray-900 mb-3">{message.mediaData?.question}</p>
+                          <div className="space-y-2">
+                            {message.mediaData?.options?.map((option: string, index: number) => (
+                              <div key={index} className="flex items-center space-x-2">
+                                <div className="w-4 h-4 border border-gray-300 rounded"></div>
+                                <p className="text-sm text-gray-700">{option}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
+                            {message.mediaData?.allowsMultipleAnswers && (
+                              <span>Множественный выбор</span>
+                            )}
+                            {message.mediaData?.anonymousVoting && (
+                              <span>Анонимно</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {message.mediaType === 'dice' && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 shadow-sm mb-1">
+                          <div className="text-center">
+                            <div className="text-4xl mb-2">{message.mediaData?.emoji || '🎲'}</div>
+                            <p className="text-sm text-gray-600">Бросок кубика</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Text message (if any) */}
+                      {message.text && !['poll', 'dice'].includes(message.mediaType || '') && (
+                        <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 shadow-sm">
+                          <p className="text-sm text-gray-900">{message.text}</p>
+                          <p className="text-xs text-gray-500 mt-1">{message.time}</p>
+                        </div>
+                      )}
+                      
+                      {/* Show time for media messages */}
+                      {message.mediaType && ['poll', 'dice'].includes(message.mediaType) && (
+                        <p className="text-xs text-gray-500 mt-1 px-2">{message.time}</p>
+                      )}
                     </div>
                   </div>
                 ) : (
