@@ -581,14 +581,89 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
                   <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-200 dark:border-amber-800/40">
                     <h5 className="font-medium text-amber-800 dark:text-amber-200 mb-2">Шаг 3: Настройка бота</h5>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-amber-700 dark:text-amber-300">
-                      <li>Откройте файл <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">{projectName.replace(/\s+/g, '_')}_bot.py</code></li>
-                      <li>Найдите строку <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"</code></li>
-                      <li>Замените <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">YOUR_BOT_TOKEN_HERE</code> на токен вашего бота от @BotFather</li>
-                      <li>Найдите строку <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">ADMIN_IDS = [123456789]</code></li>
-                      <li>Замените <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">123456789</code> на ваш Telegram ID (можно узнать у @userinfobot)</li>
-                      <li>Сохраните файл</li>
-                    </ol>
+                    <div className="space-y-3 text-sm">
+                      <div className="text-amber-700 dark:text-amber-300">
+                        <div className="font-medium mb-2">1. Откройте файл бота:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Имя файла:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText(`${projectName.replace(/\s+/g, '_')}_bot.py`)}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono">{projectName.replace(/\s+/g, '_')}_bot.py</code>
+                        </div>
+                      </div>
+
+                      <div className="text-amber-700 dark:text-amber-300">
+                        <div className="font-medium mb-2">2. Найдите и замените токен бота:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Строка для поиска:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono">BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"</code>
+                        </div>
+                      </div>
+
+                      <div className="text-amber-700 dark:text-amber-300">
+                        <div className="font-medium mb-2">3. Настройте администраторов:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Строка для поиска:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('ADMIN_IDS = [123456789]')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono">ADMIN_IDS = [123456789]</code>
+                        </div>
+                        <p className="text-xs mt-2">Замените 123456789 на ваш Telegram ID (узнать можно у @userinfobot)</p>
+                      </div>
+
+                      <div className="text-amber-700 dark:text-amber-300">
+                        <div className="font-medium mb-2">4. Узнайте ваш Telegram ID:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Бот для получения ID:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('@userinfobot')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono">@userinfobot</code>
+                        </div>
+                        <p className="text-xs mt-2">Напишите этому боту /start и он отправит ваш ID</p>
+                      </div>
+
+                      <div className="text-amber-700 dark:text-amber-300 font-medium">
+                        5. Сохраните файл после внесения изменений
+                      </div>
+                    </div>
                   </div>
 
                   <div className="bg-purple-50 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-200 dark:border-purple-800/40">
@@ -630,25 +705,101 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   
                   <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800/40">
                     <h5 className="font-medium text-indigo-800 dark:text-indigo-200 mb-2">Автоматическая настройка меню</h5>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-indigo-700 dark:text-indigo-300">
-                      <li>Найдите @BotFather в Telegram</li>
-                      <li>Отправьте команду <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setcommands</code></li>
-                      <li>Выберите своего бота из списка</li>
-                      <li>Скопируйте команды из раздела "Команды для @BotFather" в сгенерированном Python коде</li>
-                      <li>Вставьте команды в чат с @BotFather и отправьте</li>
-                      <li>Получите подтверждение "Ok, command list updated"</li>
-                      <li>Команды автоматически появятся в меню бота с описаниями</li>
-                    </ol>
+                    <div className="space-y-3 text-sm">
+                      <div className="text-indigo-700 dark:text-indigo-300 space-y-1">
+                        <div>1. Найдите @BotFather в Telegram</div>
+                        <div>2. Отправьте команду настройки меню:</div>
+                      </div>
+                      
+                      <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs text-muted-foreground">Команда для настройки меню:</span>
+                          <Button 
+                            onClick={() => navigator.clipboard.writeText('/setcommands')}
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2"
+                          >
+                            <i className="fas fa-copy text-xs mr-1"></i>
+                            <span className="text-xs">Копировать</span>
+                          </Button>
+                        </div>
+                        <code className="text-sm font-mono">/setcommands</code>
+                      </div>
+
+                      <div className="text-indigo-700 dark:text-indigo-300 space-y-1">
+                        <div>3. Выберите своего бота из списка</div>
+                        <div>4. Скопируйте команды из раздела "Команды для @BotFather" выше</div>
+                        <div>5. Вставьте команды в чат с @BotFather и отправьте</div>
+                        <div>6. Получите подтверждение "Ok, command list updated"</div>
+                        <div>7. Команды автоматически появятся в меню бота с описаниями</div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
-                    <h6 className="font-medium text-foreground mb-1">Дополнительные настройки @BotFather:</h6>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setdescription</code> - установить описание бота</li>
-                      <li>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setuserpic</code> - установить фото профиля</li>
-                      <li>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setname</code> - изменить имя бота</li>
-                      <li>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setabouttext</code> - установить текст "О боте"</li>
-                    </ul>
+                    <h6 className="font-medium text-foreground mb-3">Дополнительные настройки @BotFather:</h6>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between bg-muted/30 dark:bg-muted/10 p-2 rounded border">
+                        <div className="flex items-center space-x-2">
+                          <code className="text-sm font-mono">/setdescription</code>
+                          <span className="text-sm text-muted-foreground">- установить описание бота</span>
+                        </div>
+                        <Button 
+                          onClick={() => navigator.clipboard.writeText('/setdescription')}
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2"
+                        >
+                          <i className="fas fa-copy text-xs"></i>
+                        </Button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between bg-muted/30 dark:bg-muted/10 p-2 rounded border">
+                        <div className="flex items-center space-x-2">
+                          <code className="text-sm font-mono">/setuserpic</code>
+                          <span className="text-sm text-muted-foreground">- установить фото профиля</span>
+                        </div>
+                        <Button 
+                          onClick={() => navigator.clipboard.writeText('/setuserpic')}
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2"
+                        >
+                          <i className="fas fa-copy text-xs"></i>
+                        </Button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between bg-muted/30 dark:bg-muted/10 p-2 rounded border">
+                        <div className="flex items-center space-x-2">
+                          <code className="text-sm font-mono">/setname</code>
+                          <span className="text-sm text-muted-foreground">- изменить имя бота</span>
+                        </div>
+                        <Button 
+                          onClick={() => navigator.clipboard.writeText('/setname')}
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2"
+                        >
+                          <i className="fas fa-copy text-xs"></i>
+                        </Button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between bg-muted/30 dark:bg-muted/10 p-2 rounded border">
+                        <div className="flex items-center space-x-2">
+                          <code className="text-sm font-mono">/setabouttext</code>
+                          <span className="text-sm text-muted-foreground">- установить текст "О боте"</span>
+                        </div>
+                        <Button 
+                          onClick={() => navigator.clipboard.writeText('/setabouttext')}
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2"
+                        >
+                          <i className="fas fa-copy text-xs"></i>
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
