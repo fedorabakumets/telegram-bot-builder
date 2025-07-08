@@ -2,23 +2,23 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { 
   Bold, 
   Italic, 
   Underline, 
   Strikethrough, 
   Code, 
-  Link, 
   Type,
-  Eye,
-  Copy,
-  Sparkles,
+  Quote,
+  Heading3,
+  Link,
+  List,
+  ListOrdered,
   RotateCcw,
   RotateCw,
-  Maximize,
-  Minimize,
-  Settings
+  Copy,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,93 +37,137 @@ export function InlineRichEditor({
   enableMarkdown = false,
   onMarkdownToggle
 }: InlineRichEditorProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [undoStack, setUndoStack] = useState<string[]>([]);
-  const [redoStack, setRedoStack] = useState<string[]>([]);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
+  const [undoStack, setUndoStack] = useState<string[]>([]);
+  const [redoStack, setRedoStack] = useState<string[]>([]);
+  const [isFormatting, setIsFormatting] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Update counts when value changes
-  useEffect(() => {
-    setWordCount(value.trim().split(/\s+/).filter(word => word.length > 0).length);
-    setCharCount(value.length);
-  }, [value]);
-
-  // Save to undo stack
+  // Save state to undo stack
   const saveToUndoStack = useCallback(() => {
     setUndoStack(prev => [...prev.slice(-19), value]);
     setRedoStack([]);
   }, [value]);
 
-  // Convert markdown/HTML to display format
-  const convertToDisplayFormat = useCallback((text: string) => {
-    let displayText = text;
+  // Update word and character counts
+  useEffect(() => {
+    const plainText = value.replace(/<[^>]*>/g, '').replace(/\*\*|__|~~|`/g, '');
+    const words = plainText.trim().split(/\s+/).filter(word => word.length > 0);
+    setWordCount(words.length);
+    setCharCount(plainText.length);
+  }, [value]);
+
+  // Convert value to display HTML
+  const valueToHtml = useCallback((text: string) => {
+    if (!text) return '';
+    
+    let html = text;
     
     if (enableMarkdown) {
-      // Convert markdown to HTML for display
-      displayText = displayText
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="inline-format-bold">$1</strong>')
-        .replace(/_(.*?)_/g, '<em class="inline-format-italic">$1</em>')
-        .replace(/__(.*?)__/g, '<span class="inline-format-underline">$1</span>')
-        .replace(/~(.*?)~/g, '<span class="inline-format-strikethrough">$1</span>')
-        .replace(/`(.*?)`/g, '<code class="inline-format-code">$1</code>')
-        .replace(/```\n(.*?)\n```/gs, '<pre class="inline-format-pre"><code>$1</code></pre>')
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="inline-format-link">$1</a>')
-        .replace(/^> (.*)$/gm, '<blockquote class="inline-format-quote">$1</blockquote>')
-        .replace(/^# (.*)$/gm, '<h3 class="inline-format-heading">$1</h3>')
+      // Convert markdown to HTML for contenteditable
+      html = html
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+        .replace(/__(.*?)__/g, '<u>$1</u>')
+        .replace(/~~(.*?)~~/g, '<s>$1</s>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+        .replace(/^# (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^## (.+)$/gm, '<h4>$1</h4>')
+        .replace(/^### (.+)$/gm, '<h5>$1</h5>')
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
         .replace(/\n/g, '<br>');
     } else {
-      // HTML mode - display tags as formatted text
-      displayText = displayText
-        .replace(/<b>(.*?)<\/b>/g, '<strong class="inline-format-bold">$1</strong>')
-        .replace(/<i>(.*?)<\/i>/g, '<em class="inline-format-italic">$1</em>')
-        .replace(/<u>(.*?)<\/u>/g, '<span class="inline-format-underline">$1</span>')
-        .replace(/<s>(.*?)<\/s>/g, '<span class="inline-format-strikethrough">$1</span>')
-        .replace(/<code>(.*?)<\/code>/g, '<code class="inline-format-code">$1</code>')
-        .replace(/<pre><code>(.*?)<\/code><\/pre>/gs, '<pre class="inline-format-pre"><code>$1</code></pre>')
-        .replace(/<a href="([^"]+)">(.*?)<\/a>/g, '<a href="$1" class="inline-format-link">$2</a>')
-        .replace(/<blockquote>(.*?)<\/blockquote>/g, '<blockquote class="inline-format-quote">$1</blockquote>')
-        .replace(/<h3>(.*?)<\/h3>/g, '<h3 class="inline-format-heading">$1</h3>')
-        .replace(/\n/g, '<br>');
+      // For HTML mode, just convert newlines to br tags
+      html = html.replace(/\n/g, '<br>');
     }
     
-    return displayText;
+    return html;
   }, [enableMarkdown]);
 
-  // Convert display format back to raw text
-  const convertToRawFormat = useCallback((html: string) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    return tempDiv.textContent || tempDiv.innerText || '';
-  }, []);
+  // Convert display HTML back to value
+  const htmlToValue = useCallback((html: string) => {
+    if (!html) return '';
+    
+    let text = html;
+    
+    if (enableMarkdown) {
+      // Convert HTML back to markdown
+      text = text
+        .replace(/<strong[^>]*>(.*?)<\/strong>/g, '**$1**')
+        .replace(/<em[^>]*>(.*?)<\/em>/g, '*$1*')
+        .replace(/<u[^>]*>(.*?)<\/u>/g, '__$1__')
+        .replace(/<s[^>]*>(.*?)<\/s>/g, '~~$1~~')
+        .replace(/<code[^>]*>(.*?)<\/code>/g, '`$1`')
+        .replace(/<blockquote[^>]*>(.*?)<\/blockquote>/g, '> $1')
+        .replace(/<h3[^>]*>(.*?)<\/h3>/g, '# $1')
+        .replace(/<h4[^>]*>(.*?)<\/h4>/g, '## $1')
+        .replace(/<h5[^>]*>(.*?)<\/h5>/g, '### $1')
+        .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, '[$2]($1)')
+        .replace(/<br\s*\/?>/g, '\n')
+        .replace(/<div[^>]*>/g, '\n')
+        .replace(/<\/div>/g, '');
+    } else {
+      // For HTML mode, just convert br tags to newlines
+      text = text
+        .replace(/<br\s*\/?>/g, '\n')
+        .replace(/<div[^>]*>/g, '\n')
+        .replace(/<\/div>/g, '');
+    }
+    
+    return text;
+  }, [enableMarkdown]);
 
-  // Handle input in contenteditable
-  const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLDivElement;
-    const rawText = convertToRawFormat(target.innerHTML);
-    onChange(rawText);
-  }, [onChange, convertToRawFormat]);
-
-  // Update editor content when value changes externally
+  // Update editor content when value changes
   useEffect(() => {
-    if (editorRef.current) {
-      const displayContent = convertToDisplayFormat(value);
-      if (editorRef.current.innerHTML !== displayContent) {
+    if (editorRef.current && !isFormatting) {
+      const html = valueToHtml(value);
+      if (editorRef.current.innerHTML !== html) {
+        // Save current selection
         const selection = window.getSelection();
-        const range = selection?.getRangeAt(0);
-        const startOffset = range?.startOffset;
+        let range = null;
+        let offset = 0;
         
-        editorRef.current.innerHTML = displayContent;
+        if (selection && selection.rangeCount > 0) {
+          try {
+            range = selection.getRangeAt(0);
+            offset = range.startOffset;
+          } catch (e) {
+            // Ignore selection errors
+          }
+        }
         
-        // Restore cursor position
-        if (selection && startOffset !== undefined) {
+        editorRef.current.innerHTML = html;
+        
+        // Restore selection
+        if (range && selection) {
           try {
             const newRange = document.createRange();
-            const textNode = editorRef.current.firstChild;
-            if (textNode) {
-              newRange.setStart(textNode, Math.min(startOffset, textNode.textContent?.length || 0));
+            const walker = document.createTreeWalker(
+              editorRef.current,
+              NodeFilter.SHOW_TEXT,
+              null,
+              false
+            );
+            
+            let currentOffset = 0;
+            let targetNode = null;
+            
+            while (walker.nextNode()) {
+              const node = walker.currentNode;
+              const nodeLength = node.textContent?.length || 0;
+              
+              if (currentOffset + nodeLength >= offset) {
+                targetNode = node;
+                break;
+              }
+              currentOffset += nodeLength;
+            }
+            
+            if (targetNode) {
+              newRange.setStart(targetNode, Math.min(offset - currentOffset, targetNode.textContent?.length || 0));
               newRange.collapse(true);
               selection.removeAllRanges();
               selection.addRange(newRange);
@@ -134,296 +178,374 @@ export function InlineRichEditor({
         }
       }
     }
-  }, [value, convertToDisplayFormat]);
+  }, [value, valueToHtml, isFormatting]);
 
+  // Handle input in contenteditable
+  const handleInput = useCallback(() => {
+    if (editorRef.current) {
+      setIsFormatting(true);
+      const html = editorRef.current.innerHTML;
+      const text = htmlToValue(html);
+      onChange(text);
+      setTimeout(() => setIsFormatting(false), 0);
+    }
+  }, [onChange, htmlToValue]);
+
+  // Format options
   const formatOptions = [
     { 
+      command: 'bold', 
       icon: Bold, 
       name: 'Жирный', 
-      markdown: '**', 
-      html: 'b',
       shortcut: 'Ctrl+B',
-      className: 'inline-format-bold'
+      markdown: '**текст**',
+      html: '<strong>текст</strong>'
     },
     { 
+      command: 'italic', 
       icon: Italic, 
       name: 'Курсив', 
-      markdown: '_', 
-      html: 'i',
       shortcut: 'Ctrl+I',
-      className: 'inline-format-italic'
+      markdown: '*текст*',
+      html: '<em>текст</em>'
     },
     { 
+      command: 'underline', 
       icon: Underline, 
       name: 'Подчеркнутый', 
-      markdown: '__', 
-      html: 'u',
       shortcut: 'Ctrl+U',
-      className: 'inline-format-underline'
+      markdown: '__текст__',
+      html: '<u>текст</u>'
     },
     { 
+      command: 'strikethrough', 
       icon: Strikethrough, 
       name: 'Зачеркнутый', 
-      markdown: '~', 
-      html: 's',
       shortcut: 'Ctrl+Shift+X',
-      className: 'inline-format-strikethrough'
+      markdown: '~~текст~~',
+      html: '<s>текст</s>'
     },
     { 
+      command: 'code', 
       icon: Code, 
       name: 'Код', 
-      markdown: '`', 
-      html: 'code',
       shortcut: 'Ctrl+E',
-      className: 'inline-format-code'
+      markdown: '`код`',
+      html: '<code>код</code>'
+    },
+    { 
+      command: 'quote', 
+      icon: Quote, 
+      name: 'Цитата', 
+      shortcut: 'Ctrl+Q',
+      markdown: '> цитата',
+      html: '<blockquote>цитата</blockquote>'
+    },
+    { 
+      command: 'heading', 
+      icon: Heading3, 
+      name: 'Заголовок', 
+      shortcut: 'Ctrl+H',
+      markdown: '# заголовок',
+      html: '<h3>заголовок</h3>'
     }
   ];
 
-  // Apply formatting to selected text
+  // Apply formatting
   const applyFormatting = useCallback((format: typeof formatOptions[0]) => {
-    const selection = window.getSelection();
-    if (!selection || !selection.rangeCount) return;
-
-    const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
+    if (!editorRef.current) return;
     
-    if (!selectedText) {
+    saveToUndoStack();
+    setIsFormatting(true);
+    
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
       toast({
-        title: "Выделите текст",
-        description: "Сначала выделите текст, который хотите отформатировать",
+        title: "Нет выделения",
+        description: "Выделите текст для форматирования или поставьте курсор в нужное место",
         variant: "default"
       });
+      setIsFormatting(false);
       return;
     }
-
-    saveToUndoStack();
     
-    if (enableMarkdown) {
-      // Markdown formatting
-      let formattedText = '';
-      switch (format.name) {
-        case 'Жирный':
-          formattedText = `**${selectedText}**`;
-          break;
-        case 'Курсив':
-          formattedText = `_${selectedText}_`;
-          break;
-        case 'Подчеркнутый':
-          formattedText = `__${selectedText}__`;
-          break;
-        case 'Зачеркнутый':
-          formattedText = `~${selectedText}~`;
-          break;
-        case 'Код':
-          formattedText = `\`${selectedText}\``;
-          break;
-        default:
-          formattedText = selectedText;
-      }
+    try {
+      const range = selection.getRangeAt(0);
+      const selectedText = range.toString();
       
-      // Replace selected text with formatted version
-      range.deleteContents();
-      range.insertNode(document.createTextNode(formattedText));
-      
-      // Update value
-      const newValue = editorRef.current?.textContent || '';
-      onChange(newValue);
-    } else {
-      // HTML formatting
-      const span = document.createElement('span');
-      span.className = format.className;
-      span.textContent = selectedText;
-      
-      range.deleteContents();
-      range.insertNode(span);
-      
-      // Update value  
-      const newValue = editorRef.current?.textContent || '';
-      onChange(newValue);
-    }
-
-    toast({
-      title: "Форматирование применено",
-      description: `Применено к выделенному тексту: ${format.name}`,
-      variant: "default"
-    });
-  }, [enableMarkdown, onChange, saveToUndoStack, toast]);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        const format = formatOptions.find(f => {
-          const shortcut = f.shortcut?.toLowerCase();
-          if (!shortcut) return false;
-          
-          if (shortcut.includes('shift') && !e.shiftKey) return false;
-          if (!shortcut.includes('shift') && e.shiftKey) return false;
-          
-          const key = shortcut.split('+').pop();
-          return e.key.toLowerCase() === key;
-        });
-        
-        if (format) {
-          e.preventDefault();
-          applyFormatting(format);
+      if (format.command === 'bold' || format.command === 'italic' || format.command === 'underline' || format.command === 'strikethrough') {
+        // Use document.execCommand for basic formatting
+        document.execCommand(format.command, false, undefined);
+      } else if (format.command === 'code') {
+        // Custom code formatting
+        if (selectedText) {
+          const codeElement = document.createElement('code');
+          codeElement.textContent = selectedText;
+          range.deleteContents();
+          range.insertNode(codeElement);
+          range.selectNode(codeElement);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } else if (format.command === 'quote') {
+        // Custom quote formatting
+        if (selectedText) {
+          const quoteElement = document.createElement('blockquote');
+          quoteElement.textContent = selectedText;
+          range.deleteContents();
+          range.insertNode(quoteElement);
+          range.selectNode(quoteElement);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } else if (format.command === 'heading') {
+        // Custom heading formatting
+        if (selectedText) {
+          const headingElement = document.createElement('h3');
+          headingElement.textContent = selectedText;
+          range.deleteContents();
+          range.insertNode(headingElement);
+          range.selectNode(headingElement);
+          selection.removeAllRanges();
+          selection.addRange(range);
         }
       }
-    };
-
-    const editor = editorRef.current;
-    if (editor) {
-      editor.addEventListener('keydown', handleKeyDown);
-      return () => editor.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [formatOptions, applyFormatting]);
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
+      
+      // Update the value
+      setTimeout(() => {
+        handleInput();
+        toast({
+          title: "Форматирование применено",
+          description: `${format.name} применен к выделенному тексту`,
+          variant: "default"
+        });
+      }, 0);
+    } catch (e) {
       toast({
-        title: "Скопировано!",
-        description: "Текст скопирован в буфер обмена"
+        title: "Ошибка форматирования",
+        description: "Не удалось применить форматирование",
+        variant: "destructive"
       });
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
     }
-  };
+    
+    setTimeout(() => setIsFormatting(false), 100);
+  }, [saveToUndoStack, handleInput, toast]);
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      const key = e.key.toLowerCase();
+      
+      switch (key) {
+        case 'b':
+          e.preventDefault();
+          applyFormatting(formatOptions[0]);
+          break;
+        case 'i':
+          e.preventDefault();
+          applyFormatting(formatOptions[1]);
+          break;
+        case 'u':
+          e.preventDefault();
+          applyFormatting(formatOptions[2]);
+          break;
+        case 'e':
+          e.preventDefault();
+          applyFormatting(formatOptions[4]);
+          break;
+        case 'q':
+          e.preventDefault();
+          applyFormatting(formatOptions[5]);
+          break;
+        case 'h':
+          e.preventDefault();
+          applyFormatting(formatOptions[6]);
+          break;
+        case 'x':
+          if (e.shiftKey) {
+            e.preventDefault();
+            applyFormatting(formatOptions[3]);
+          }
+          break;
+        case 'z':
+          if (e.shiftKey) {
+            e.preventDefault();
+            redo();
+          } else {
+            e.preventDefault();
+            undo();
+          }
+          break;
+      }
+    }
+  }, [applyFormatting, formatOptions]);
+
+  // Undo functionality
+  const undo = useCallback(() => {
+    if (undoStack.length > 0) {
+      const previousValue = undoStack[undoStack.length - 1];
+      setRedoStack(prev => [...prev, value]);
+      setUndoStack(prev => prev.slice(0, -1));
+      onChange(previousValue);
+      toast({
+        title: "Отменено",
+        description: "Последнее действие отменено",
+        variant: "default"
+      });
+    }
+  }, [undoStack, value, onChange, toast]);
+
+  // Redo functionality
+  const redo = useCallback(() => {
+    if (redoStack.length > 0) {
+      const nextValue = redoStack[redoStack.length - 1];
+      setUndoStack(prev => [...prev, value]);
+      setRedoStack(prev => prev.slice(0, -1));
+      onChange(nextValue);
+      toast({
+        title: "Повторено",
+        description: "Действие повторено",
+        variant: "default"
+      });
+    }
+  }, [redoStack, value, onChange, toast]);
+
+  // Copy formatted text
+  const copyFormatted = useCallback(() => {
+    if (editorRef.current) {
+      const html = editorRef.current.innerHTML;
+      navigator.clipboard.writeText(html).then(() => {
+        toast({
+          title: "Скопировано",
+          description: "Форматированный текст скопирован в буфер обмена",
+          variant: "default"
+        });
+      });
+    }
+  }, [toast]);
 
   return (
-    <Card className={`w-full transition-all duration-300 ${isExpanded ? 'col-span-2' : ''}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-blue-500" />
-            Встроенный редактор с форматированием
-            {charCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {wordCount} слов • {charCount} символов
-              </Badge>
-            )}
-          </CardTitle>
-          <div className="flex items-center gap-2">
+    <div className="space-y-3">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-1 p-2 bg-muted/50 rounded-md">
+        <div className="flex items-center gap-1">
+          {formatOptions.map((format) => (
             <Button
+              key={format.command}
               variant="ghost"
               size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="h-8 w-8 p-0"
-              title={isExpanded ? "Свернуть" : "Развернуть"}
+              onClick={() => applyFormatting(format)}
+              className="h-7 w-7 p-0"
+              title={`${format.name} (${format.shortcut})`}
             >
-              {isExpanded ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              <format.icon className="h-3 w-3" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onMarkdownToggle?.(!enableMarkdown)}
-              className="text-xs"
-            >
-              {enableMarkdown ? 'Markdown' : 'HTML'}
-            </Button>
-          </div>
+          ))}
         </div>
-
-        {/* Toolbar */}
-        <div className="flex items-center gap-2 pt-2">
-          <div className="flex items-center gap-1">
-            {formatOptions.map((format) => (
-              <Button
-                key={format.name}
-                variant="ghost"
-                size="sm"
-                onClick={() => applyFormatting(format)}
-                className="h-8 w-8 p-0"
-                title={`${format.name} (${format.shortcut})`}
-              >
-                <format.icon className="w-3 h-3" />
-              </Button>
-            ))}
-          </div>
-          
-          <div className="h-6 w-px bg-border mx-2" />
+        
+        <div className="h-4 w-px bg-border mx-1" />
+        
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={undo}
+            disabled={undoStack.length === 0}
+            className="h-7 w-7 p-0"
+            title="Отменить (Ctrl+Z)"
+          >
+            <RotateCcw className="h-3 w-3" />
+          </Button>
           
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => copyToClipboard(value)}
-            disabled={!value.trim()}
-            className="h-8 px-2 text-xs"
-            title="Копировать весь текст"
+            onClick={redo}
+            disabled={redoStack.length === 0}
+            className="h-7 w-7 p-0"
+            title="Повторить (Ctrl+Shift+Z)"
           >
-            <Copy className="w-3 h-3 mr-1" />
-            Копировать
+            <RotateCw className="h-3 w-3" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={copyFormatted}
+            className="h-7 w-7 p-0"
+            title="Копировать форматированный текст"
+          >
+            <Copy className="h-3 w-3" />
           </Button>
         </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <div className="space-y-3">
-          <Label className="text-xs font-medium flex items-center gap-2">
-            <Type className="w-3 h-3" />
-            Редактор с живым форматированием
-          </Label>
-          
-          <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-2 mb-3">
-            <div className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
-              <span>💡</span>
-              <span>Выделите текст и нажмите кнопку форматирования или используйте Ctrl+B/I/U</span>
-            </div>
-          </div>
-          
-          <div className="relative">
-            <div
-              ref={editorRef}
-              contentEditable
-              onInput={handleInput}
-              className={`
-                w-full min-h-[120px] p-3 border rounded-md bg-background 
-                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                text-sm resize-none transition-all duration-200
-                ${isExpanded ? 'min-h-[200px]' : ''}
-              `}
-              style={{
-                whiteSpace: 'pre-wrap',
-                wordWrap: 'break-word'
-              }}
-              suppressContentEditableWarning={true}
-            />
-            
-            {/* Placeholder */}
-            {!value && (
-              <div className="absolute top-3 left-3 text-muted-foreground text-sm pointer-events-none">
-                {placeholder}
-              </div>
-            )}
-            
-            {/* Character count */}
-            {charCount > 0 && (
-              <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
-                {charCount}/4096
-              </div>
-            )}
-          </div>
+        
+        <div className="flex-1" />
+        
+        <div className="flex items-center gap-2">
+          <Label className="text-xs font-medium text-muted-foreground">Markdown</Label>
+          <Switch
+            checked={enableMarkdown}
+            onCheckedChange={onMarkdownToggle}
+            className="scale-75"
+          />
         </div>
+      </div>
 
-        {/* Statistics */}
-        {value && (
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-4">
-              <span>
-                {enableMarkdown ? '📝 Markdown' : '🏷️ HTML'} форматирование
-              </span>
-              <span>📊 {wordCount} слов, {charCount} символов</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {charCount <= 4096 ? (
-                <span className="text-green-600 dark:text-green-400">✓ Telegram OK</span>
-              ) : (
-                <span className="text-red-600 dark:text-red-400">⚠ Превышен лимит</span>
-              )}
-            </div>
+      {/* Editor */}
+      <div className="relative">
+        <div
+          ref={editorRef}
+          contentEditable
+          onInput={handleInput}
+          onKeyDown={handleKeyDown}
+          className="min-h-[120px] p-3 border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-pre-wrap"
+          style={{ 
+            lineHeight: '1.5',
+            overflowWrap: 'break-word',
+            wordBreak: 'break-word'
+          }}
+          data-placeholder={placeholder}
+        />
+        
+        {/* Placeholder */}
+        {!value && (
+          <div className="absolute top-3 left-3 text-muted-foreground text-sm pointer-events-none">
+            {placeholder}
           </div>
         )}
-      </CardContent>
-    </Card>
+        
+        {/* Stats */}
+        <div className="absolute bottom-2 right-2 flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">
+            {wordCount} слов
+          </Badge>
+          <Badge variant="outline" className="text-xs">
+            {charCount} символов
+          </Badge>
+        </div>
+      </div>
+
+      {/* Format Guide */}
+      <div className="text-xs text-muted-foreground space-y-2">
+        <div className="flex items-center gap-2">
+          <Type className="h-3 w-3" />
+          <span>Режим: {enableMarkdown ? 'Markdown' : 'HTML'}</span>
+          <Sparkles className="h-3 w-3" />
+          <span>Живое форматирование включено</span>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2">
+          {formatOptions.slice(0, 4).map((format) => (
+            <div key={format.command} className="flex items-center gap-2">
+              <format.icon className="h-3 w-3" />
+              <span className="text-xs">{format.shortcut}</span>
+              <code className="text-xs bg-muted px-1 rounded">
+                {enableMarkdown ? format.markdown : format.html}
+              </code>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
