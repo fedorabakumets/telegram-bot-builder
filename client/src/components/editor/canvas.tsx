@@ -145,7 +145,7 @@ export function Canvas({
 
   // Handle panning
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button === 1 || (e.button === 0 && e.altKey)) { // Middle mouse or Alt+click
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey)) { // Middle mouse, right mouse, or Alt+click
       e.preventDefault();
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
@@ -167,6 +167,11 @@ export function Canvas({
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
+  }, []);
+
+  // Prevent context menu on right-click when using for panning
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
   }, []);
 
   // Handle keyboard shortcuts
@@ -554,6 +559,7 @@ export function Canvas({
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onContextMenu={handleContextMenu}
         >
           {/* Transformable Canvas Content */}
           <div 
