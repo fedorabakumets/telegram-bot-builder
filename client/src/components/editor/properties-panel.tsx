@@ -694,6 +694,456 @@ export function PropertiesPanel({
                 </div>
               </div>
             )}
+
+            {/* Sticker Configuration */}
+            {selectedNode.type === 'sticker' && (
+              <div className="space-y-6">
+                {/* Sticker URL Section */}
+                <div className="bg-gradient-to-br from-yellow-50/50 to-orange-50/30 dark:from-yellow-950/20 dark:to-orange-950/10 border border-yellow-200/30 dark:border-yellow-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
+                      <i className="fas fa-smile text-yellow-600 dark:text-yellow-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">Настройки стикера</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-2 block">
+                        <i className="fas fa-link mr-1"></i>
+                        URL стикера или file_id
+                      </Label>
+                      <Input
+                        value={selectedNode.data.stickerUrl || selectedNode.data.stickerFileId || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { stickerUrl: e.target.value })}
+                        className="border-yellow-200 dark:border-yellow-700 focus:border-yellow-500 focus:ring-yellow-200"
+                        placeholder="CAACAgIAAxkBAAICGGXm2KvQAAG2X8cxTmZHJkRnYwYlAAJGAANWnb0KmgiEKEZDKVQeBA"
+                      />
+                      <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                        Можно указать file_id стикера из Telegram или URL с прямой ссылкой
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs font-medium text-yellow-700 dark:text-yellow-300 mb-2 block">
+                        <i className="fas fa-tag mr-1"></i>
+                        Набор стикеров
+                      </Label>
+                      <Input
+                        value={selectedNode.data.stickerSetName || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { stickerSetName: e.target.value })}
+                        className="border-yellow-200 dark:border-yellow-700 focus:border-yellow-500 focus:ring-yellow-200"
+                        placeholder="mystickerpack_by_mybot"
+                      />
+                      <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                        Название набора стикеров (опционально)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Voice Message Configuration */}
+            {selectedNode.type === 'voice' && (
+              <div className="space-y-6">
+                {/* Voice URL Section */}
+                <div className="bg-gradient-to-br from-teal-50/50 to-cyan-50/30 dark:from-teal-950/20 dark:to-cyan-950/10 border border-teal-200/30 dark:border-teal-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center">
+                      <i className="fas fa-microphone text-teal-600 dark:text-teal-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-teal-900 dark:text-teal-100">Источник голосового сообщения</Label>
+                  </div>
+                  
+                  <MediaSelector
+                    projectId={projectId}
+                    value={selectedNode.data.voiceUrl || ''}
+                    onChange={(url) => onNodeUpdate(selectedNode.id, { voiceUrl: url })}
+                    fileType="audio"
+                    placeholder="https://example.com/voice-message.ogg"
+                    label="Источник голосового сообщения"
+                  />
+                  
+                  <div className="flex items-center space-x-2 text-xs text-teal-600 dark:text-teal-400 mt-3">
+                    <i className="fas fa-check-circle"></i>
+                    <span>OGG с OPUS кодеком • Макс. 20MB</span>
+                  </div>
+                </div>
+
+                {/* Voice Metadata Section */}
+                <div className="bg-gradient-to-br from-purple-50/50 to-indigo-50/30 dark:from-purple-950/20 dark:to-indigo-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                      <i className="fas fa-info-circle text-purple-600 dark:text-purple-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-purple-900 dark:text-purple-100">Метаданные голосового сообщения</Label>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                      <i className="fas fa-clock mr-1"></i>
+                      Длительность (секунды)
+                    </Label>
+                    <Input
+                      type="number"
+                      value={selectedNode.data.duration || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { duration: parseInt(e.target.value) || 0 })}
+                      className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                      placeholder="30"
+                      min="0"
+                      max="3600"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Animation (GIF) Configuration */}
+            {selectedNode.type === 'animation' && (
+              <div className="space-y-6">
+                {/* Animation URL Section */}
+                <div className="bg-gradient-to-br from-pink-50/50 to-rose-50/30 dark:from-pink-950/20 dark:to-rose-950/10 border border-pink-200/30 dark:border-pink-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center">
+                      <i className="fas fa-film text-pink-600 dark:text-pink-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-pink-900 dark:text-pink-100">Источник GIF анимации</Label>
+                  </div>
+                  
+                  <MediaSelector
+                    projectId={projectId}
+                    value={selectedNode.data.animationUrl || ''}
+                    onChange={(url) => onNodeUpdate(selectedNode.id, { animationUrl: url })}
+                    fileType="video"
+                    placeholder="https://example.com/awesome-animation.gif"
+                    label="Источник анимации"
+                  />
+                  
+                  <div className="flex items-center space-x-2 text-xs text-pink-600 dark:text-pink-400 mt-3">
+                    <i className="fas fa-check-circle"></i>
+                    <span>GIF, MP4 (анимация) • Макс. 50MB</span>
+                  </div>
+                </div>
+
+                {/* Caption Section */}
+                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <i className="fas fa-comment-alt text-green-600 dark:text-green-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Подпись к анимации</Label>
+                  </div>
+                  
+                  <Textarea
+                    value={selectedNode.data.mediaCaption || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { mediaCaption: e.target.value })}
+                    className="resize-none border-green-200 dark:border-green-700 focus:border-green-500 focus:ring-green-200 transition-all duration-200"
+                    rows={3}
+                    placeholder="Описание анимации для пользователей..."
+                  />
+                </div>
+
+                {/* Animation Metadata Section */}
+                <div className="bg-gradient-to-br from-orange-50/50 to-amber-50/30 dark:from-orange-950/20 dark:to-amber-950/10 border border-orange-200/30 dark:border-orange-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                      <i className="fas fa-cog text-orange-600 dark:text-orange-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-orange-900 dark:text-orange-100">Параметры анимации</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                        <i className="fas fa-arrows-alt-h mr-1"></i>
+                        Ширина (px)
+                      </Label>
+                      <Input
+                        type="number"
+                        value={selectedNode.data.width || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { width: parseInt(e.target.value) || 0 })}
+                        className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                        placeholder="480"
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                        <i className="fas fa-arrows-alt-v mr-1"></i>
+                        Высота (px)
+                      </Label>
+                      <Input
+                        type="number"
+                        value={selectedNode.data.height || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { height: parseInt(e.target.value) || 0 })}
+                        className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                        placeholder="320"
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                        <i className="fas fa-clock mr-1"></i>
+                        Длительность (сек)
+                      </Label>
+                      <Input
+                        type="number"
+                        value={selectedNode.data.duration || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { duration: parseInt(e.target.value) || 0 })}
+                        className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                        placeholder="5"
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                        <i className="fas fa-file mr-1"></i>
+                        Название файла
+                      </Label>
+                      <Input
+                        value={selectedNode.data.fileName || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { fileName: e.target.value })}
+                        className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                        placeholder="animation.gif"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Location Configuration */}
+            {selectedNode.type === 'location' && (
+              <div className="space-y-6">
+                {/* Coordinates Section */}
+                <div className="bg-gradient-to-br from-emerald-50/50 to-green-50/30 dark:from-emerald-950/20 dark:to-green-950/10 border border-emerald-200/30 dark:border-emerald-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                      <i className="fas fa-map-marker-alt text-emerald-600 dark:text-emerald-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Координаты местоположения</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mb-2 block">
+                        <i className="fas fa-globe mr-1"></i>
+                        Широта
+                      </Label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={selectedNode.data.latitude || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { latitude: parseFloat(e.target.value) || 0 })}
+                        className="border-emerald-200 dark:border-emerald-700 focus:border-emerald-500 focus:ring-emerald-200"
+                        placeholder="55.7558"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mb-2 block">
+                        <i className="fas fa-globe mr-1"></i>
+                        Долгота
+                      </Label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={selectedNode.data.longitude || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { longitude: parseFloat(e.target.value) || 0 })}
+                        className="border-emerald-200 dark:border-emerald-700 focus:border-emerald-500 focus:ring-emerald-200"
+                        placeholder="37.6176"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+                    Основные координаты точки на карте (обязательно)
+                  </div>
+                </div>
+
+                {/* Location Details Section */}
+                <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                      <i className="fas fa-info-circle text-blue-600 dark:text-blue-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-blue-900 dark:text-blue-100">Описание местоположения</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-tag mr-1"></i>
+                        Название места
+                      </Label>
+                      <Input
+                        value={selectedNode.data.title || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { title: e.target.value })}
+                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                        placeholder="Красная площадь"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-map-signs mr-1"></i>
+                        Адрес
+                      </Label>
+                      <Input
+                        value={selectedNode.data.address || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { address: e.target.value })}
+                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                        placeholder="Красная площадь, Москва, Россия"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Foursquare Integration Section */}
+                <div className="bg-gradient-to-br from-purple-50/50 to-violet-50/30 dark:from-purple-950/20 dark:to-violet-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                      <i className="fas fa-map text-purple-600 dark:text-purple-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-purple-900 dark:text-purple-100">Foursquare (опционально)</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                        <i className="fas fa-hashtag mr-1"></i>
+                        Foursquare ID
+                      </Label>
+                      <Input
+                        value={selectedNode.data.foursquareId || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { foursquareId: e.target.value })}
+                        className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                        placeholder="4b0588f1f964a52079c525e3"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                        <i className="fas fa-layer-group mr-1"></i>
+                        Тип места
+                      </Label>
+                      <Input
+                        value={selectedNode.data.foursquareType || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { foursquareType: e.target.value })}
+                        className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                        placeholder="arts_entertainment/default"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-purple-600 dark:text-purple-400 mt-2">
+                    Интеграция с Foursquare для дополнительной информации о месте
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Contact Configuration */}
+            {selectedNode.type === 'contact' && (
+              <div className="space-y-6">
+                {/* Contact Info Section */}
+                <div className="bg-gradient-to-br from-cyan-50/50 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/30 dark:border-cyan-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">
+                      <i className="fas fa-address-book text-cyan-600 dark:text-cyan-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">Контактная информация</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
+                        <i className="fas fa-phone mr-1"></i>
+                        Номер телефона (обязательно)
+                      </Label>
+                      <Input
+                        value={selectedNode.data.phoneNumber || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { phoneNumber: e.target.value })}
+                        className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
+                        placeholder="+7 (999) 123-45-67"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
+                          <i className="fas fa-user mr-1"></i>
+                          Имя (обязательно)
+                        </Label>
+                        <Input
+                          value={selectedNode.data.firstName || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { firstName: e.target.value })}
+                          className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
+                          placeholder="Иван"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
+                          <i className="fas fa-user mr-1"></i>
+                          Фамилия
+                        </Label>
+                        <Input
+                          value={selectedNode.data.lastName || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { lastName: e.target.value })}
+                          className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
+                          placeholder="Петров"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Contact Details Section */}
+                <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-200/30 dark:border-indigo-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                      <i className="fas fa-id-card text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">Дополнительные данные</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-2 block">
+                        <i className="fas fa-at mr-1"></i>
+                        User ID Telegram
+                      </Label>
+                      <Input
+                        type="number"
+                        value={selectedNode.data.userId || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { userId: parseInt(e.target.value) || 0 })}
+                        className="border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200"
+                        placeholder="123456789"
+                      />
+                      <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                        ID пользователя в Telegram (если известен)
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-2 block">
+                        <i className="fas fa-address-card mr-1"></i>
+                        vCard данные
+                      </Label>
+                      <Textarea
+                        value={selectedNode.data.vcard || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { vcard: e.target.value })}
+                        className="resize-none border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200 transition-all duration-200"
+                        rows={4}
+                        placeholder="BEGIN:VCARD&#10;VERSION:3.0&#10;FN:Иван Петров&#10;TEL:+79991234567&#10;END:VCARD"
+                      />
+                      <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                        Дополнительная контактная информация в формате vCard (опционально)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

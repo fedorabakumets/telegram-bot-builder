@@ -99,6 +99,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += generateAudioHandler(node);
     } else if (node.type === "document") {
       code += generateDocumentHandler(node);
+    } else if (node.type === "sticker") {
+      code += generateStickerHandler(node);
+    } else if (node.type === "voice") {
+      code += generateVoiceHandler(node);
+    } else if (node.type === "animation") {
+      code += generateAnimationHandler(node);
+    } else if (node.type === "location") {
+      code += generateLocationHandler(node);
+    } else if (node.type === "contact") {
+      code += generateContactHandler(node);
     }
     // Note: Message nodes are handled via callback handlers, not as separate message handlers
   });
@@ -345,6 +355,220 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки документа: {e}")\n';
               code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить документ\\n{caption}")\n';
+              
+            } else if (targetNode.type === 'sticker') {
+              const stickerUrl = targetNode.data.stickerUrl || "CAACAgIAAxkBAAICGGXm2KvQAAG2X8cxTmZHJkRnYwYlAAJGAANWnb0KmgiEKEZDKVQeBA";
+              
+              code += `    sticker_url = "${stickerUrl}"\n`;
+              code += '    try:\n';
+              code += '        # Проверяем, является ли это локальным файлом\n';
+              code += '        if is_local_file(sticker_url):\n';
+              code += '            # Отправляем локальный файл\n';
+              code += '            file_path = get_local_file_path(sticker_url)\n';
+              code += '            if os.path.exists(file_path):\n';
+              code += '                sticker_file = FSInputFile(file_path)\n';
+              code += '            else:\n';
+              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+              code += '        else:\n';
+              code += '            # Используем URL или file_id для стикеров\n';
+              code += '            sticker_file = sticker_url\n';
+              code += '        \n';
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_sticker(callback_query.from_user.id, sticker_file, reply_markup=keyboard)\n';
+              } else {
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_sticker(callback_query.from_user.id, sticker_file)\n';
+              }
+              
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки стикера: {e}")\n';
+              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить стикер")\n';
+              
+            } else if (targetNode.type === 'voice') {
+              const voiceUrl = targetNode.data.voiceUrl || "https://www.soundjay.com/misc/beep-07a.wav";
+              const duration = targetNode.data.duration || 30;
+              
+              code += `    voice_url = "${voiceUrl}"\n`;
+              code += `    duration = ${duration}\n`;
+              code += '    try:\n';
+              code += '        # Проверяем, является ли это локальным файлом\n';
+              code += '        if is_local_file(voice_url):\n';
+              code += '            # Отправляем локальный файл\n';
+              code += '            file_path = get_local_file_path(voice_url)\n';
+              code += '            if os.path.exists(file_path):\n';
+              code += '                voice_file = FSInputFile(file_path)\n';
+              code += '            else:\n';
+              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+              code += '        else:\n';
+              code += '            # Используем URL для внешних файлов\n';
+              code += '            voice_file = voice_url\n';
+              code += '        \n';
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_voice(callback_query.from_user.id, voice_file, duration=duration, reply_markup=keyboard)\n';
+              } else {
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_voice(callback_query.from_user.id, voice_file, duration=duration)\n';
+              }
+              
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки голосового сообщения: {e}")\n';
+              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить голосовое сообщение")\n';
+              
+            } else if (targetNode.type === 'animation') {
+              const caption = targetNode.data.mediaCaption || "🎬 Анимация";
+              const animationUrl = targetNode.data.animationUrl || "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif";
+              
+              if (caption.includes('\n')) {
+                code += `    caption = """${caption}"""\n`;
+              } else {
+                const escapedCaption = caption.replace(/"/g, '\\"');
+                code += `    caption = "${escapedCaption}"\n`;
+              }
+              
+              code += `    animation_url = "${animationUrl}"\n`;
+              code += '    try:\n';
+              code += '        # Проверяем, является ли это локальным файлом\n';
+              code += '        if is_local_file(animation_url):\n';
+              code += '            # Отправляем локальный файл\n';
+              code += '            file_path = get_local_file_path(animation_url)\n';
+              code += '            if os.path.exists(file_path):\n';
+              code += '                animation_file = FSInputFile(file_path)\n';
+              code += '            else:\n';
+              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+              code += '        else:\n';
+              code += '            # Используем URL для внешних файлов\n';
+              code += '            animation_file = animation_url\n';
+              code += '        \n';
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_animation(callback_query.from_user.id, animation_file, caption=caption, reply_markup=keyboard)\n';
+              } else {
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_animation(callback_query.from_user.id, animation_file, caption=caption)\n';
+              }
+              
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки анимации: {e}")\n';
+              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить анимацию\\n{caption}")\n';
+              
+            } else if (targetNode.type === 'location') {
+              const latitude = targetNode.data.latitude || 55.7558;
+              const longitude = targetNode.data.longitude || 37.6176;
+              const title = targetNode.data.title || "";
+              const address = targetNode.data.address || "";
+              
+              code += `    latitude = ${latitude}\n`;
+              code += `    longitude = ${longitude}\n`;
+              if (title) code += `    title = "${title}"\n`;
+              if (address) code += `    address = "${address}"\n`;
+              
+              code += '    try:\n';
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_location(callback_query.from_user.id, latitude=latitude, longitude=longitude, reply_markup=keyboard)\n';
+              } else {
+                code += '        await callback_query.message.delete()\n';
+                code += '        await bot.send_location(callback_query.from_user.id, latitude=latitude, longitude=longitude)\n';
+              }
+              
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки местоположения: {e}")\n';
+              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить местоположение")\n';
+              
+            } else if (targetNode.type === 'contact') {
+              const phoneNumber = targetNode.data.phoneNumber || "+7 999 123 45 67";
+              const firstName = targetNode.data.firstName || "Контакт";
+              const lastName = targetNode.data.lastName || "";
+              const userId = targetNode.data.userId || null;
+              const vcard = targetNode.data.vcard || "";
+              
+              code += `    phone_number = "${phoneNumber}"\n`;
+              code += `    first_name = "${firstName}"\n`;
+              if (lastName) code += `    last_name = "${lastName}"\n`;
+              if (userId) code += `    user_id = ${userId}\n`;
+              if (vcard) code += `    vcard = """${vcard}"""\n`;
+              
+              code += '    try:\n';
+              
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+                code += '        await callback_query.message.delete()\n';
+                if (lastName && userId && vcard) {
+                  code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name, last_name=last_name, user_id=user_id, vcard=vcard, reply_markup=keyboard)\n';
+                } else if (lastName) {
+                  code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name, last_name=last_name, reply_markup=keyboard)\n';
+                } else {
+                  code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name, reply_markup=keyboard)\n';
+                }
+              } else {
+                code += '        await callback_query.message.delete()\n';
+                if (lastName && userId && vcard) {
+                  code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name, last_name=last_name, user_id=user_id, vcard=vcard)\n';
+                } else if (lastName) {
+                  code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name, last_name=last_name)\n';
+                } else {
+                  code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name)\n';
+                }
+              }
+              
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка отправки контакта: {e}")\n';
+              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить контакт")\n';
               
             } else {
               // Generate response for target node (default text message)
