@@ -464,6 +464,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                       <li>Установите aiogram (версия 3.x): <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install aiogram</code></li>
                       <li>Или используйте файл requirements.txt: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install -r requirements.txt</code></li>
                       <li>Проверьте установку: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">python -c "import aiogram; print(aiogram.__version__)"</code></li>
+                      <li>Убедитесь что версия aiogram 3.x (например, 3.3.0+)</li>
                     </ol>
                   </div>
 
@@ -502,9 +503,10 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                       <li>Найдите @BotFather в Telegram</li>
                       <li>Отправьте команду <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">/setcommands</code></li>
                       <li>Выберите своего бота из списка</li>
-                      <li>Скопируйте команды из раздела "Команды для @BotFather" выше</li>
+                      <li>Скопируйте команды из раздела "Команды для @BotFather" в сгенерированном Python коде</li>
                       <li>Вставьте команды в чат с @BotFather и отправьте</li>
                       <li>Получите подтверждение "Ok, command list updated"</li>
+                      <li>Команды автоматически появятся в меню бота с описаниями</li>
                     </ol>
                   </div>
 
@@ -527,7 +529,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
                       <h6 className="font-medium text-foreground mb-1">Python код (.py)</h6>
-                      <p className="text-sm text-muted-foreground">Основной файл бота с логикой обработки команд, сообщений и кнопок. Использует aiogram 3.x.</p>
+                      <p className="text-sm text-muted-foreground">Основной файл бота с логикой обработки команд, сообщений, кнопок и медиаконтента. Использует aiogram 3.x с поддержкой локальных файлов и геолокации.</p>
                     </div>
                     
                     <div className="bg-muted/50 dark:bg-muted/20 p-3 rounded-lg border border-muted dark:border-muted/40">
@@ -559,6 +561,48 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
                 <Separator className="my-4" />
 
+                <div className="space-y-3">
+                  <h4 className="font-medium">Тестирование и отладка:</h4>
+                  
+                  <div className="bg-teal-50 dark:bg-teal-950/30 p-4 rounded-lg border border-teal-200 dark:border-teal-800/40">
+                    <h5 className="font-medium text-teal-800 dark:text-teal-200 mb-2">Шаг 5: Проверка функций бота</h5>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-teal-700 dark:text-teal-300">
+                      <li>Протестируйте все команды и убедитесь что они отвечают</li>
+                      <li>Проверьте inline кнопки - они должны реагировать на нажатия</li>
+                      <li>Если есть медиафайлы - убедитесь что они отправляются корректно</li>
+                      <li>Для локальных файлов создайте папку "uploads" и поместите туда медиафайлы</li>
+                      <li>Проверьте геолокацию - кнопки карт должны открывать правильные координаты</li>
+                      <li>Если бот не отвечает - проверьте логи в терминале на наличие ошибок</li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-orange-50 dark:bg-orange-950/30 p-4 rounded-lg border border-orange-200 dark:border-orange-800/40">
+                    <h5 className="font-medium text-orange-800 dark:text-orange-200 mb-2">Решение проблем:</h5>
+                    <ul className="text-sm text-orange-700 dark:text-orange-300 space-y-1">
+                      <li>• <strong>Бот не запускается:</strong> Проверьте токен и версию aiogram</li>
+                      <li>• <strong>Команды не работают:</strong> Убедитесь что они настроены в @BotFather</li>
+                      <li>• <strong>Inline кнопки не реагируют:</strong> Проверьте callback обработчики в коде</li>
+                      <li>• <strong>Медиафайлы не отправляются:</strong> Убедитесь что файлы существуют в папке uploads</li>
+                      <li>• <strong>Ошибки импорта:</strong> Переустановите aiogram: pip install --upgrade aiogram</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <Separator className="my-4" />
+
+                <div className="bg-cyan-50 dark:bg-cyan-950/30 p-4 rounded-lg border border-cyan-200 dark:border-cyan-800/40">
+                  <h5 className="font-medium text-cyan-800 dark:text-cyan-200 mb-2">🚀 Новые возможности бота:</h5>
+                  <ul className="text-sm text-cyan-700 dark:text-cyan-300 space-y-1">
+                    <li>• <strong>Медиаконтент:</strong> Поддержка фото, видео, аудио и документов</li>
+                    <li>• <strong>Локальные файлы:</strong> Автоматическая работа с загруженными файлами</li>
+                    <li>• <strong>Геолокация:</strong> Интеграция с Яндекс.Карты, Google Maps, 2ГИС</li>
+                    <li>• <strong>Умные клавиатуры:</strong> Поддержка inline и reply кнопок</li>
+                    <li>• <strong>Синонимы команд:</strong> Дополнительные варианты активации команд</li>
+                    <li>• <strong>Права доступа:</strong> Админские команды и приватные чаты</li>
+                    <li>• <strong>Обработка ошибок:</strong> Автоматическое логирование и уведомления</li>
+                  </ul>
+                </div>
+
                 <div className="bg-red-50 dark:bg-red-950/30 p-4 rounded-lg border border-red-200 dark:border-red-800/40">
                   <h5 className="font-medium text-red-800 dark:text-red-200 mb-2">⚠️ Важные замечания:</h5>
                   <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
@@ -567,6 +611,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                     <li>• Для продакшена используйте переменные окружения для хранения токена</li>
                     <li>• Тестируйте бота в приватном чате перед публикацией</li>
                     <li>• Сохраняйте резервные копии кода и настроек</li>
+                    <li>• Для медиафайлов создайте папку "uploads" рядом с кодом бота</li>
                   </ul>
                 </div>
               </CardContent>
