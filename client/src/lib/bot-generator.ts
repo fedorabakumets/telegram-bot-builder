@@ -18,9 +18,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   code += 'import asyncio\n';
   code += 'import logging\n';
+  code += 'import os\n';
   code += 'from aiogram import Bot, Dispatcher, types, F\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
-  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile\n';
+  code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from aiogram.enums import ParseMode\n\n';
   
@@ -51,6 +52,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'async def check_auth(user_id: int) -> bool:\n';
   code += '    # Здесь можно добавить логику проверки авторизации\n';
   code += '    return user_id in user_data\n\n';
+  
+  code += 'def is_local_file(url: str) -> bool:\n';
+  code += '    """Проверяет, является ли URL локальным загруженным файлом"""\n';
+  code += '    return url.startswith("/uploads/") or url.startswith("uploads/")\n\n';
+  
+  code += 'def get_local_file_path(url: str) -> str:\n';
+  code += '    """Получает локальный путь к файлу из URL"""\n';
+  code += '    if url.startswith("/"):\n';
+  code += '        return url[1:]  # Убираем ведущий слеш\n';
+  code += '    return url\n\n';
 
   // Настройка меню команд для BotFather
   const menuCommands = nodes.filter(node => 
@@ -154,6 +165,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               code += `    photo_url = "${imageUrl}"\n`;
               code += '    try:\n';
+              code += '        # Проверяем, является ли это локальным файлом\n';
+              code += '        if is_local_file(photo_url):\n';
+              code += '            # Отправляем локальный файл\n';
+              code += '            file_path = get_local_file_path(photo_url)\n';
+              code += '            if os.path.exists(file_path):\n';
+              code += '                photo_file = FSInputFile(file_path)\n';
+              code += '            else:\n';
+              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+              code += '        else:\n';
+              code += '            # Используем URL для внешних файлов\n';
+              code += '            photo_file = photo_url\n';
+              code += '        \n';
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
@@ -167,10 +190,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 });
                 code += '        keyboard = builder.as_markup()\n';
                 code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_photo(callback_query.from_user.id, photo_url, caption=caption, reply_markup=keyboard)\n';
+                code += '        await bot.send_photo(callback_query.from_user.id, photo_file, caption=caption, reply_markup=keyboard)\n';
               } else {
                 code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_photo(callback_query.from_user.id, photo_url, caption=caption)\n';
+                code += '        await bot.send_photo(callback_query.from_user.id, photo_file, caption=caption)\n';
               }
               
               code += '    except Exception as e:\n';
@@ -190,6 +213,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               code += `    video_url = "${videoUrl}"\n`;
               code += '    try:\n';
+              code += '        # Проверяем, является ли это локальным файлом\n';
+              code += '        if is_local_file(video_url):\n';
+              code += '            # Отправляем локальный файл\n';
+              code += '            file_path = get_local_file_path(video_url)\n';
+              code += '            if os.path.exists(file_path):\n';
+              code += '                video_file = FSInputFile(file_path)\n';
+              code += '            else:\n';
+              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+              code += '        else:\n';
+              code += '            # Используем URL для внешних файлов\n';
+              code += '            video_file = video_url\n';
+              code += '        \n';
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
@@ -203,10 +238,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 });
                 code += '        keyboard = builder.as_markup()\n';
                 code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_video(callback_query.from_user.id, video_url, caption=caption, reply_markup=keyboard)\n';
+                code += '        await bot.send_video(callback_query.from_user.id, video_file, caption=caption, reply_markup=keyboard)\n';
               } else {
                 code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_video(callback_query.from_user.id, video_url, caption=caption)\n';
+                code += '        await bot.send_video(callback_query.from_user.id, video_file, caption=caption)\n';
               }
               
               code += '    except Exception as e:\n';
@@ -226,6 +261,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               code += `    audio_url = "${audioUrl}"\n`;
               code += '    try:\n';
+              code += '        # Проверяем, является ли это локальным файлом\n';
+              code += '        if is_local_file(audio_url):\n';
+              code += '            # Отправляем локальный файл\n';
+              code += '            file_path = get_local_file_path(audio_url)\n';
+              code += '            if os.path.exists(file_path):\n';
+              code += '                audio_file = FSInputFile(file_path)\n';
+              code += '            else:\n';
+              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+              code += '        else:\n';
+              code += '            # Используем URL для внешних файлов\n';
+              code += '            audio_file = audio_url\n';
+              code += '        \n';
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
@@ -239,10 +286,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 });
                 code += '        keyboard = builder.as_markup()\n';
                 code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_audio(callback_query.from_user.id, audio_url, caption=caption, reply_markup=keyboard)\n';
+                code += '        await bot.send_audio(callback_query.from_user.id, audio_file, caption=caption, reply_markup=keyboard)\n';
               } else {
                 code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_audio(callback_query.from_user.id, audio_url, caption=caption)\n';
+                code += '        await bot.send_audio(callback_query.from_user.id, audio_file, caption=caption)\n';
               }
               
               code += '    except Exception as e:\n';
@@ -264,6 +311,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               const documentName = targetNode.data.documentName || "document.pdf";
               code += `    document_name = "${documentName}"\n`;
               code += '    try:\n';
+              code += '        # Проверяем, является ли это локальным файлом\n';
+              code += '        if is_local_file(document_url):\n';
+              code += '            # Отправляем локальный файл\n';
+              code += '            file_path = get_local_file_path(document_url)\n';
+              code += '            if os.path.exists(file_path):\n';
+              code += '                document_file = FSInputFile(file_path, filename=document_name)\n';
+              code += '            else:\n';
+              code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+              code += '        else:\n';
+              code += '            # Используем URL для внешних файлов\n';
+              code += '            document_file = URLInputFile(document_url, filename=document_name)\n';
+              code += '        \n';
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
@@ -277,10 +336,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 });
                 code += '        keyboard = builder.as_markup()\n';
                 code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_document(callback_query.from_user.id, URLInputFile(document_url, filename=document_name), caption=caption, reply_markup=keyboard)\n';
+                code += '        await bot.send_document(callback_query.from_user.id, document_file, caption=caption, reply_markup=keyboard)\n';
               } else {
                 code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_document(callback_query.from_user.id, URLInputFile(document_url, filename=document_name), caption=caption)\n';
+                code += '        await bot.send_document(callback_query.from_user.id, document_file, caption=caption)\n';
               }
               
               code += '    except Exception as e:\n';
@@ -587,7 +646,18 @@ function generatePhotoHandler(node: Node): string {
     code += `    photo_url = "${imageUrl}"\n`;
     code += '    \n';
     code += '    try:\n';
-    code += '        # Пытаемся отправить фото по URL\n';
+    code += '        # Проверяем, является ли это локальным файлом\n';
+    code += '        if is_local_file(photo_url):\n';
+    code += '            # Отправляем локальный файл\n';
+    code += '            file_path = get_local_file_path(photo_url)\n';
+    code += '            if os.path.exists(file_path):\n';
+    code += '                photo_file = FSInputFile(file_path)\n';
+    code += '            else:\n';
+    code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+    code += '        else:\n';
+    code += '            # Используем URL для внешних файлов\n';
+    code += '            photo_file = photo_url\n';
+    code += '        \n';
     
     // Обрабатываем клавиатуру для фото
     if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
@@ -603,7 +673,7 @@ function generatePhotoHandler(node: Node): string {
       });
       code += '        keyboard = builder.as_markup()\n';
       code += '        # Отправляем фото с подписью и inline кнопками\n';
-      code += '        await message.answer_photo(photo_url, caption=caption, reply_markup=keyboard)\n';
+      code += '        await message.answer_photo(photo_file, caption=caption, reply_markup=keyboard)\n';
     } else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
       code += '        # Создаем reply клавиатуру\n';
       code += '        builder = ReplyKeyboardBuilder()\n';
@@ -620,10 +690,10 @@ function generatePhotoHandler(node: Node): string {
       const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
       code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
       code += '        # Отправляем фото с подписью и reply клавиатурой\n';
-      code += '        await message.answer_photo(photo_url, caption=caption, reply_markup=keyboard)\n';
+      code += '        await message.answer_photo(photo_file, caption=caption, reply_markup=keyboard)\n';
     } else {
       code += '        # Отправляем фото только с подписью\n';
-      code += '        await message.answer_photo(photo_url, caption=caption)\n';
+      code += '        await message.answer_photo(photo_file, caption=caption)\n';
     }
     
     code += '    except Exception as e:\n';
@@ -675,7 +745,18 @@ function generateVideoHandler(node: Node): string {
     if (fileSize > 0) code += `    file_size = ${fileSize * 1024 * 1024}\n`;  // Convert MB to bytes
     code += '    \n';
     code += '    try:\n';
-    code += '        # Пытаемся отправить видео по URL\n';
+    code += '        # Проверяем, является ли это локальным файлом\n';
+    code += '        if is_local_file(video_url):\n';
+    code += '            # Отправляем локальный файл\n';
+    code += '            file_path = get_local_file_path(video_url)\n';
+    code += '            if os.path.exists(file_path):\n';
+    code += '                video_file = FSInputFile(file_path)\n';
+    code += '            else:\n';
+    code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+    code += '        else:\n';
+    code += '            # Используем URL для внешних файлов\n';
+    code += '            video_file = video_url\n';
+    code += '        \n';
     
     if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        builder = InlineKeyboardBuilder()\n';
@@ -689,14 +770,14 @@ function generateVideoHandler(node: Node): string {
       });
       code += '        keyboard = builder.as_markup()\n';
       code += '        await message.answer_video(\n';
-      code += '            video_url,\n';
+      code += '            video_file,\n';
       code += '            caption=caption';
       if (duration > 0) code += ',\n            duration=duration';
       code += ',\n            reply_markup=keyboard\n';
       code += '        )\n';
     } else {
       code += '        await message.answer_video(\n';
-      code += '            video_url,\n';
+      code += '            video_file,\n';
       code += '            caption=caption';
       if (duration > 0) code += ',\n            duration=duration';
       code += '\n        )\n';
@@ -753,7 +834,18 @@ function generateAudioHandler(node: Node): string {
     if (title) code += `    title = "${title}"\n`;
     code += '    \n';
     code += '    try:\n';
-    code += '        # Пытаемся отправить аудио по URL\n';
+    code += '        # Проверяем, является ли это локальным файлом\n';
+    code += '        if is_local_file(audio_url):\n';
+    code += '            # Отправляем локальный файл\n';
+    code += '            file_path = get_local_file_path(audio_url)\n';
+    code += '            if os.path.exists(file_path):\n';
+    code += '                audio_file = FSInputFile(file_path)\n';
+    code += '            else:\n';
+    code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+    code += '        else:\n';
+    code += '            # Используем URL для внешних файлов\n';
+    code += '            audio_file = audio_url\n';
+    code += '        \n';
     
     if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        builder = InlineKeyboardBuilder()\n';
@@ -767,7 +859,7 @@ function generateAudioHandler(node: Node): string {
       });
       code += '        keyboard = builder.as_markup()\n';
       code += '        await message.answer_audio(\n';
-      code += '            audio_url,\n';
+      code += '            audio_file,\n';
       code += '            caption=caption';
       if (duration > 0) code += ',\n            duration=duration';
       if (performer) code += ',\n            performer=performer';
@@ -776,7 +868,7 @@ function generateAudioHandler(node: Node): string {
       code += '        )\n';
     } else {
       code += '        await message.answer_audio(\n';
-      code += '            audio_url,\n';
+      code += '            audio_file,\n';
       code += '            caption=caption';
       if (duration > 0) code += ',\n            duration=duration';
       if (performer) code += ',\n            performer=performer';
@@ -835,7 +927,18 @@ function generateDocumentHandler(node: Node): string {
     if (mimeType) code += `    mime_type = "${mimeType}"\n`;
     code += '    \n';
     code += '    try:\n';
-    code += '        # Пытаемся отправить документ по URL\n';
+    code += '        # Проверяем, является ли это локальным файлом\n';
+    code += '        if is_local_file(document_url):\n';
+    code += '            # Отправляем локальный файл\n';
+    code += '            file_path = get_local_file_path(document_url)\n';
+    code += '            if os.path.exists(file_path):\n';
+    code += '                document_file = FSInputFile(file_path, filename=document_name)\n';
+    code += '            else:\n';
+    code += '                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")\n';
+    code += '        else:\n';
+    code += '            # Используем URL для внешних файлов\n';
+    code += '            document_file = URLInputFile(document_url, filename=document_name)\n';
+    code += '        \n';
     
     if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        builder = InlineKeyboardBuilder()\n';
@@ -849,13 +952,13 @@ function generateDocumentHandler(node: Node): string {
       });
       code += '        keyboard = builder.as_markup()\n';
       code += '        await message.answer_document(\n';
-      code += '            URLInputFile(document_url, filename=document_name),\n';
+      code += '            document_file,\n';
       code += '            caption=caption,\n';
       code += '            reply_markup=keyboard\n';
       code += '        )\n';
     } else {
       code += '        await message.answer_document(\n';
-      code += '            URLInputFile(document_url, filename=document_name),\n';
+      code += '            document_file,\n';
       code += '            caption=caption\n';
       code += '        )\n';
     }
