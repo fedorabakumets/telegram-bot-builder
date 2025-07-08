@@ -316,49 +316,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
         </button>
       )}
       
-      {/* Floating node type badge */}
-      <div className="absolute -top-2 -left-2 px-2 py-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-full shadow-md">
-        <div className="flex items-center space-x-1">
-          <div className={cn("w-2 h-2 rounded-full", 
-            node.type === 'start' ? 'bg-emerald-500' :
-            node.type === 'command' ? 'bg-indigo-500' :
-            node.type === 'message' ? 'bg-blue-500' :
-            node.type === 'photo' ? 'bg-purple-500' :
-            node.type === 'video' ? 'bg-rose-500' :
-            node.type === 'audio' ? 'bg-orange-500' :
-            node.type === 'document' ? 'bg-teal-500' :
-            node.type === 'sticker' ? 'bg-pink-500' :
-            node.type === 'voice' ? 'bg-emerald-500' :
-            node.type === 'animation' ? 'bg-yellow-500' :
-            node.type === 'location' ? 'bg-green-500' :
-            node.type === 'contact' ? 'bg-sky-500' :
-            node.type === 'poll' ? 'bg-violet-500' :
-            node.type === 'dice' ? 'bg-slate-500' :
-            node.type === 'keyboard' ? 'bg-amber-500' :
-            node.type === 'condition' ? 'bg-red-500' :
-            'bg-cyan-500'
-          )}></div>
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 tracking-wide">
-            {node.type === 'start' ? 'Старт' :
-             node.type === 'command' ? 'Команда' :
-             node.type === 'message' ? 'Сообщение' :
-             node.type === 'photo' ? 'Фото' :
-             node.type === 'video' ? 'Видео' :
-             node.type === 'audio' ? 'Аудио' :
-             node.type === 'document' ? 'Документ' :
-             node.type === 'sticker' ? 'Стикер' :
-             node.type === 'voice' ? 'Голос' :
-             node.type === 'animation' ? 'Анимация' :
-             node.type === 'location' ? 'Геолокация' :
-             node.type === 'contact' ? 'Контакт' :
-             node.type === 'poll' ? 'Опрос' :
-             node.type === 'dice' ? 'Кубик' :
-             node.type === 'keyboard' ? 'Клавиатура' :
-             node.type === 'condition' ? 'Условие' :
-             'Ввод'}
-          </span>
-        </div>
-      </div>
+
       
       {/* Node header */}
       <div className="flex items-start mb-6 relative">
