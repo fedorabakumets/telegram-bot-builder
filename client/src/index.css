@@ -115,6 +115,22 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  /* Grid background patterns */
+  .bg-grid-small {
+    background-image: radial-gradient(circle, hsl(var(--muted-foreground) / 0.3) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .bg-grid-slate-200 {
+    background-image: radial-gradient(circle, rgb(226 232 240 / 0.5) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .bg-grid-slate-800 {
+    background-image: radial-gradient(circle, rgb(30 41 59 / 0.5) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
 }
 
 /* Custom scrollbar */

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
+import { useLocation, useParams } from 'wouter';
 import { Header } from '@/components/editor/header';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
@@ -14,6 +14,9 @@ import { ConnectionManagerPanel } from '@/components/editor/connection-manager-p
 import { EnhancedConnectionControls } from '@/components/editor/enhanced-connection-controls';
 import { ConnectionVisualization } from '@/components/editor/connection-visualization';
 import { SmartConnectionCreator } from '@/components/editor/smart-connection-creator';
+import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
+import { AdaptiveHeader } from '@/components/layout/adaptive-header';
+import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +33,8 @@ export default function Editor() {
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
+  const [showLayoutManager, setShowLayoutManager] = useState(false);
+  const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -206,28 +211,29 @@ export default function Editor() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-gray-50">
-      <Header
-        projectName={currentProject.name}
-        currentTab={currentTab}
-        onTabChange={handleTabChange}
-        onSave={handleSave}
-        onExport={() => setShowExport(true)}
-        onSaveAsTemplate={handleSaveAsTemplate}
-        onLoadTemplate={handleLoadTemplate}
-        isSaving={updateProjectMutation.isPending}
-      />
-
-      <div className="h-[calc(100vh-4rem)]">
-        {currentTab === 'editor' ? (
-          <ResizablePanelGroup direction="horizontal" className="h-full">
-            <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-              <ComponentsSidebar onComponentDrag={handleComponentDrag} onLoadTemplate={handleLoadTemplate} />
-            </ResizablePanel>
-            
-            <ResizableHandle withHandle />
-            
-            <ResizablePanel defaultSize={60} minSize={30}>
+    <>
+      <AdaptiveLayout
+        config={layoutConfig}
+        header={
+          <AdaptiveHeader
+            config={layoutConfig}
+            projectName={currentProject.name}
+            currentTab={currentTab}
+            onTabChange={handleTabChange}
+            onSave={handleSave}
+            onExport={() => setShowExport(true)}
+            onSaveAsTemplate={handleSaveAsTemplate}
+            onLoadTemplate={handleLoadTemplate}
+            onLayoutSettings={() => setShowLayoutManager(true)}
+            isSaving={updateProjectMutation.isPending}
+          />
+        }
+        sidebar={
+          <ComponentsSidebar onComponentDrag={handleComponentDrag} onLoadTemplate={handleLoadTemplate} />
+        }
+        canvas={
+          <div className="h-full">
+            {currentTab === 'editor' ? (
               <Canvas
                 nodes={nodes}
                 connections={connections}
@@ -242,79 +248,87 @@ export default function Editor() {
                 onConnectionAdd={addConnection}
                 onNodesUpdate={updateNodes}
               />
-            </ResizablePanel>
-            
-            <ResizableHandle withHandle />
-            
-            <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
-              <PropertiesPanel
-                projectId={currentProject.id}
-                selectedNode={selectedNode}
-                allNodes={nodes}
-                onNodeUpdate={updateNodeData}
-                onButtonAdd={addButton}
-                onButtonUpdate={updateButton}
-                onButtonDelete={deleteButton}
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        ) : currentTab === 'bot' ? (
-          <div className="h-full p-6 bg-gray-50 overflow-auto">
-            <div className="max-w-2xl mx-auto">
-              <BotControl
-                projectId={currentProject.id}
-                projectName={currentProject.name}
-              />
-            </div>
-          </div>
-        ) : currentTab === 'connections' ? (
-          <div className="h-full bg-background">
-            <ResizablePanelGroup direction="horizontal" className="h-full">
-              <ResizablePanel defaultSize={50} minSize={30}>
-                <div className="h-full p-4 space-y-4 overflow-auto">
-                  <SmartConnectionCreator
-                    nodes={nodes}
-                    connections={connections}
-                    onConnectionAdd={addConnection}
-                    onNodesChange={updateNodes}
-                    autoButtonCreation={autoButtonCreation}
-                    selectedNodeId={selectedNodeId || undefined}
+            ) : currentTab === 'bot' ? (
+              <div className="h-full p-6 bg-gray-50 overflow-auto">
+                <div className="max-w-2xl mx-auto">
+                  <BotControl
+                    projectId={currentProject.id}
+                    projectName={currentProject.name}
                   />
+                </div>
+              </div>
+            ) : currentTab === 'connections' ? (
+              <div className="h-full bg-background">
+                <ResizablePanelGroup direction="horizontal" className="h-full">
+                  <ResizablePanel defaultSize={50} minSize={30}>
+                    <div className="h-full p-4 space-y-4 overflow-auto">
+                      <SmartConnectionCreator
+                        nodes={nodes}
+                        connections={connections}
+                        onConnectionAdd={addConnection}
+                        onNodesChange={updateNodes}
+                        autoButtonCreation={autoButtonCreation}
+                        selectedNodeId={selectedNodeId || undefined}
+                      />
+                      
+                      <EnhancedConnectionControls
+                        nodes={nodes}
+                        connections={connections}
+                        onConnectionAdd={addConnection}
+                        onConnectionDelete={deleteConnection}
+                        onConnectionUpdate={updateConnection}
+                        onNodesChange={updateNodes}
+                        autoButtonCreation={autoButtonCreation}
+                        onAutoButtonCreationChange={setAutoButtonCreation}
+                        selectedConnection={selectedConnection}
+                        onConnectionSelect={setSelectedConnection}
+                      />
+                    </div>
+                  </ResizablePanel>
                   
-                  <EnhancedConnectionControls
-                    nodes={nodes}
-                    connections={connections}
-                    onConnectionsChange={handleConnectionsChange}
-                    onNodesChange={updateNodes}
-                    selectedConnection={selectedConnection || undefined}
-                    onConnectionSelect={handleConnectionSelect}
-                    autoButtonCreation={autoButtonCreation}
-                    onAutoButtonCreationChange={setAutoButtonCreation}
-                  />
-                </div>
-              </ResizablePanel>
-              
-              <ResizableHandle withHandle />
-              
-              <ResizablePanel defaultSize={50} minSize={30}>
-                <div className="h-full p-4 overflow-auto">
-                  <ConnectionVisualization
-                    nodes={nodes}
-                    connections={connections}
-                    onConnectionSelect={handleConnectionSelect}
-                    onConnectionDelete={handleConnectionDelete}
-                    onConnectionEdit={handleConnectionEdit}
-                    selectedConnectionId={selectedConnectionId || undefined}
-                    showLabels={true}
-                    showMetrics={true}
-                    interactive={true}
-                  />
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
+                  <ResizableHandle withHandle />
+                  
+                  <ResizablePanel defaultSize={50} minSize={30}>
+                    <div className="h-full p-4 overflow-auto">
+                      <ConnectionVisualization
+                        nodes={nodes}
+                        connections={connections}
+                        onConnectionSelect={handleConnectionSelect}
+                        onConnectionDelete={handleConnectionDelete}
+                        onConnectionEdit={handleConnectionEdit}
+                        selectedConnectionId={selectedConnectionId || undefined}
+                        showLabels={true}
+                        showMetrics={true}
+                        interactive={true}
+                      />
+                    </div>
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              </div>
+            ) : null}
           </div>
-        ) : null}
-      </div>
+        }
+        properties={
+          <PropertiesPanel
+            projectId={currentProject.id}
+            selectedNode={selectedNode}
+            allNodes={nodes}
+            onNodeUpdate={updateNodeData}
+            onButtonAdd={addButton}
+            onButtonUpdate={updateButton}
+            onButtonDelete={deleteButton}
+          />
+        }
+      />
+
+      {showLayoutManager && (
+        <LayoutManager
+          config={layoutConfig}
+          onConfigChange={updateLayoutConfig}
+          onApply={applyLayoutConfig}
+          onReset={resetLayoutConfig}
+        />
+      )}
 
       <PreviewModal
         isOpen={showPreview}
@@ -348,6 +362,6 @@ export default function Editor() {
         onClose={() => setShowTemplates(false)}
         onSelectTemplate={handleSelectTemplate}
       />
-    </div>
+    </>
   );
 }
