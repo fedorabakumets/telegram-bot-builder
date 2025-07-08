@@ -7,9 +7,10 @@ start - Запустить бота"""
 
 import asyncio
 import logging
+import os
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.enums import ParseMode
 
@@ -41,6 +42,16 @@ async def check_auth(user_id: int) -> bool:
     # Здесь можно добавить логику проверки авторизации
     return user_id in user_data
 
+def is_local_file(url: str) -> bool:
+    """Проверяет, является ли URL локальным загруженным файлом"""
+    return url.startswith("/uploads/") or url.startswith("uploads/")
+
+def get_local_file_path(url: str) -> str:
+    """Получает локальный путь к файлу из URL"""
+    if url.startswith("/"):
+        return url[1:]  # Убираем ведущий слеш
+    return url
+
 
 # Настройка меню команд
 async def set_bot_commands():
@@ -50,7 +61,7 @@ async def set_bot_commands():
     await bot.set_my_commands(commands)
 
 
-# Обработчик фото для узла _cqblEiH2v5sgaFuswR0c
+# Обработчик документа для узла zOw9Edh0SffqwNudyKh7A
 
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
@@ -67,31 +78,37 @@ async def start_handler(message: types.Message):
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="_cqblEiH2v5sgaFuswR0c"))
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="GCOgpJl1uNb9KdCD0i85Q"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="zOw9Edh0SffqwNudyKh7A"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "_cqblEiH2v5sgaFuswR0c")
-async def handle_callback__cqblEiH2v5sgaFuswR0c(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "zOw9Edh0SffqwNudyKh7A")
+async def handle_callback_zOw9Edh0SffqwNudyKh7A(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    caption = "Описание изображения"
-    photo_url = "https://i.pinimg.com/originals/b2/dc/9c/b2dc9c2cee44e45672ad6e3994563ac2.jpg"
+    caption = "Описание документа"
+    document_url = "/uploads/1/2025-07-08/1751940255004-607434323-___________________________.docx"
+    document_name = "document.pdf"
     try:
+        # Проверяем, является ли это локальным файлом
+        if is_local_file(document_url):
+            # Отправляем локальный файл
+            file_path = get_local_file_path(document_url)
+            if os.path.exists(file_path):
+                document_file = FSInputFile(file_path, filename=document_name)
+            else:
+                raise FileNotFoundError(f"Локальный файл не найден: {file_path}")
+        else:
+            # Используем URL для внешних файлов
+            document_file = URLInputFile(document_url, filename=document_name)
+        
         await callback_query.message.delete()
-        await bot.send_photo(callback_query.from_user.id, photo_url, caption=caption)
+        await bot.send_document(callback_query.from_user.id, document_file, caption=caption)
     except Exception as e:
-        logging.error(f"Ошибка отправки фото: {e}")
-        await callback_query.message.edit_text(f"❌ Не удалось загрузить фото\n{caption}")
-
-@dp.callback_query(lambda c: c.data == "GCOgpJl1uNb9KdCD0i85Q")
-async def handle_callback_GCOgpJl1uNb9KdCD0i85Q(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Кнопка пока никуда не ведет
-    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+        logging.error(f"Ошибка отправки документа: {e}")
+        await callback_query.message.edit_text(f"❌ Не удалось загрузить документ\n{caption}")
 
 
 # Запуск бота
