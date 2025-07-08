@@ -525,27 +525,7 @@ export function InlineRichEditor({
         </div>
       </div>
 
-      {/* Format Guide */}
-      <div className="text-xs text-muted-foreground space-y-2">
-        <div className="flex items-center gap-2">
-          <Type className="h-3 w-3" />
-          <span>Режим: {enableMarkdown ? 'Markdown' : 'HTML'}</span>
-          <Sparkles className="h-3 w-3" />
-          <span>Живое форматирование включено</span>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          {formatOptions.slice(0, 4).map((format) => (
-            <div key={format.command} className="flex items-center gap-2">
-              <format.icon className="h-3 w-3" />
-              <span className="text-xs">{format.shortcut}</span>
-              <code className="text-xs bg-muted px-1 rounded">
-                {enableMarkdown ? format.markdown : format.html}
-              </code>
-            </div>
-          ))}
-        </div>
-      </div>
+
     </div>
   );
 }
