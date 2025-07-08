@@ -2,6 +2,137 @@ import { Node } from '@/types/bot';
 import { cn } from '@/lib/utils';
 import { useState, useRef, useEffect } from 'react';
 
+// Function to parse and render formatted text
+function parseFormattedText(text: string): JSX.Element {
+  if (!text) return <span>{text}</span>;
+  
+  // Remove HTML tags and replace with styled spans
+  const parseHTML = (htmlText: string): JSX.Element[] => {
+    const parts: JSX.Element[] = [];
+    let remaining = htmlText;
+    let key = 0;
+    
+    while (remaining.length > 0) {
+      // Bold text
+      const boldMatch = remaining.match(/^(.*?)<b>(.*?)<\/b>(.*)/);
+      if (boldMatch) {
+        if (boldMatch[1]) parts.push(<span key={key++}>{boldMatch[1]}</span>);
+        parts.push(<strong key={key++} className="font-bold">{boldMatch[2]}</strong>);
+        remaining = boldMatch[3];
+        continue;
+      }
+      
+      // Italic text
+      const italicMatch = remaining.match(/^(.*?)<i>(.*?)<\/i>(.*)/);
+      if (italicMatch) {
+        if (italicMatch[1]) parts.push(<span key={key++}>{italicMatch[1]}</span>);
+        parts.push(<em key={key++} className="italic">{italicMatch[2]}</em>);
+        remaining = italicMatch[3];
+        continue;
+      }
+      
+      // Underline text
+      const underlineMatch = remaining.match(/^(.*?)<u>(.*?)<\/u>(.*)/);
+      if (underlineMatch) {
+        if (underlineMatch[1]) parts.push(<span key={key++}>{underlineMatch[1]}</span>);
+        parts.push(<span key={key++} className="underline">{underlineMatch[2]}</span>);
+        remaining = underlineMatch[3];
+        continue;
+      }
+      
+      // Strikethrough text
+      const strikeMatch = remaining.match(/^(.*?)<s>(.*?)<\/s>(.*)/);
+      if (strikeMatch) {
+        if (strikeMatch[1]) parts.push(<span key={key++}>{strikeMatch[1]}</span>);
+        parts.push(<span key={key++} className="line-through">{strikeMatch[2]}</span>);
+        remaining = strikeMatch[3];
+        continue;
+      }
+      
+      // Code text
+      const codeMatch = remaining.match(/^(.*?)<code>(.*?)<\/code>(.*)/);
+      if (codeMatch) {
+        if (codeMatch[1]) parts.push(<span key={key++}>{codeMatch[1]}</span>);
+        parts.push(<code key={key++} className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">{codeMatch[2]}</code>);
+        remaining = codeMatch[3];
+        continue;
+      }
+      
+      // No more matches, add remaining text
+      parts.push(<span key={key++}>{remaining}</span>);
+      break;
+    }
+    
+    return parts;
+  };
+  
+  // Parse Markdown format
+  const parseMarkdown = (mdText: string): JSX.Element[] => {
+    const parts: JSX.Element[] = [];
+    let remaining = mdText;
+    let key = 0;
+    
+    while (remaining.length > 0) {
+      // Bold text
+      const boldMatch = remaining.match(/^(.*?)\*\*(.*?)\*\*(.*)/);
+      if (boldMatch) {
+        if (boldMatch[1]) parts.push(<span key={key++}>{boldMatch[1]}</span>);
+        parts.push(<strong key={key++} className="font-bold">{boldMatch[2]}</strong>);
+        remaining = boldMatch[3];
+        continue;
+      }
+      
+      // Italic text
+      const italicMatch = remaining.match(/^(.*?)\*(.*?)\*(.*)/);
+      if (italicMatch) {
+        if (italicMatch[1]) parts.push(<span key={key++}>{italicMatch[1]}</span>);
+        parts.push(<em key={key++} className="italic">{italicMatch[2]}</em>);
+        remaining = italicMatch[3];
+        continue;
+      }
+      
+      // Underline text
+      const underlineMatch = remaining.match(/^(.*?)__(.*?)__(.*)/);
+      if (underlineMatch) {
+        if (underlineMatch[1]) parts.push(<span key={key++}>{underlineMatch[1]}</span>);
+        parts.push(<span key={key++} className="underline">{underlineMatch[2]}</span>);
+        remaining = underlineMatch[3];
+        continue;
+      }
+      
+      // Strikethrough text
+      const strikeMatch = remaining.match(/^(.*?)~~(.*?)~~(.*)/);
+      if (strikeMatch) {
+        if (strikeMatch[1]) parts.push(<span key={key++}>{strikeMatch[1]}</span>);
+        parts.push(<span key={key++} className="line-through">{strikeMatch[2]}</span>);
+        remaining = strikeMatch[3];
+        continue;
+      }
+      
+      // Code text
+      const codeMatch = remaining.match(/^(.*?)`(.*?)`(.*)/);
+      if (codeMatch) {
+        if (codeMatch[1]) parts.push(<span key={key++}>{codeMatch[1]}</span>);
+        parts.push(<code key={key++} className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">{codeMatch[2]}</code>);
+        remaining = codeMatch[3];
+        continue;
+      }
+      
+      // No more matches, add remaining text
+      parts.push(<span key={key++}>{remaining}</span>);
+      break;
+    }
+    
+    return parts;
+  };
+  
+  // Determine if text contains HTML or Markdown
+  const isHTML = text.includes('<') && text.includes('>');
+  const parsedParts = isHTML ? parseHTML(text) : parseMarkdown(text);
+  
+  return <span>{parsedParts}</span>;
+}
+
 interface CanvasNodeProps {
   node: Node;
   isSelected?: boolean;
@@ -312,9 +443,9 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
         <div className="rounded-xl p-4 mb-4 bg-gradient-to-br from-blue-50/80 to-sky-50/80 dark:from-blue-900/20 dark:to-sky-900/20 border border-blue-100 dark:border-blue-800/30">
           <div className="flex items-start space-x-2">
             <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 mt-1.5 flex-shrink-0"></div>
-            <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed line-clamp-3 font-medium">
-              {node.data.messageText}
-            </p>
+            <div className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed line-clamp-3 font-medium">
+              {parseFormattedText(node.data.messageText)}
+            </div>
           </div>
         </div>
       )}
