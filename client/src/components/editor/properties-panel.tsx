@@ -1497,7 +1497,6 @@ export function PropertiesPanel({
 
         {/* Message Content */}
         <div>
-          <h3 className="text-sm font-medium text-foreground mb-3">Содержимое сообщения</h3>
           <div className="space-y-4">
             {/* Quick Toolbar */}
             <QuickFormatToolbar 
