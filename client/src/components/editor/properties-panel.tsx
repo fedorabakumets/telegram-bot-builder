@@ -15,6 +15,7 @@ import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib
 import { extractCoordinatesFromUrl, formatCoordinates, getLocationInfo } from '@/lib/map-utils';
 import { useState, useMemo } from 'react';
 import { RichTextEditor } from './rich-text-editor';
+import { InlineRichEditor } from './inline-rich-editor';
 import { EmojiPicker } from './emoji-picker';
 import { QuickFormatToolbar } from './quick-format-toolbar';
 
@@ -42,6 +43,7 @@ export function PropertiesPanel({
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
   const [urlValidation, setUrlValidation] = useState<{[key: string]: { isValid: boolean; message?: string }}>({});
   const [showRichTextEditor, setShowRichTextEditor] = useState(false);
+  const [editorType, setEditorType] = useState<'simple' | 'inline' | 'advanced'>('inline');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   // URL validation function
@@ -1539,21 +1541,59 @@ export function PropertiesPanel({
             ) : (
               <div className="space-y-3">
                 <div>
-                  <Label className="text-xs font-medium text-muted-foreground">Текст сообщения</Label>
-                  <Textarea
-                    value={selectedNode.data.messageText || ''}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { messageText: e.target.value })}
-                    className="mt-2 h-24 resize-none"
-                    placeholder="Введите текст сообщения..."
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-medium text-muted-foreground">Поддержка Markdown</Label>
-                  <Switch
-                    checked={selectedNode.data.markdown}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { markdown: checked })}
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-xs font-medium text-muted-foreground">Текст сообщения</Label>
+                    <div className="flex items-center gap-2">
+                      <Select value={editorType} onValueChange={(value: 'simple' | 'inline' | 'advanced') => setEditorType(value)}>
+                        <SelectTrigger className="w-32 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="simple">Простой</SelectItem>
+                          <SelectItem value="inline">Встроенный</SelectItem>
+                          <SelectItem value="advanced">Продвинутый</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs font-medium text-muted-foreground">Markdown</Label>
+                        <Switch
+                          checked={selectedNode.data.markdown}
+                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { markdown: checked })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {editorType === 'simple' && (
+                    <Textarea
+                      value={selectedNode.data.messageText || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { messageText: e.target.value })}
+                      className="mt-2 h-24 resize-none"
+                      placeholder="Введите текст сообщения..."
+                    />
+                  )}
+                  
+                  {editorType === 'inline' && (
+                    <InlineRichEditor
+                      value={selectedNode.data.messageText || ''}
+                      onChange={(value) => onNodeUpdate(selectedNode.id, { messageText: value })}
+                      placeholder="Введите текст сообщения..."
+                      enableMarkdown={selectedNode.data.markdown}
+                      onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
+                    />
+                  )}
+                  
+                  {editorType === 'advanced' && (
+                    <RichTextEditor
+                      value={selectedNode.data.messageText || ''}
+                      onChange={(value) => onNodeUpdate(selectedNode.id, { messageText: value })}
+                      placeholder="Введите текст сообщения..."
+                      enableMarkdown={selectedNode.data.markdown}
+                      onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
+                      enablePresets={true}
+                      enableAdvancedFeatures={true}
+                    />
+                  )}
                 </div>
               </div>
             )}

@@ -100,27 +100,37 @@ export function RichTextEditor({
     if (enableMarkdown) {
       // Обработка Markdown форматирования
       processedText = processedText
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Жирный
-        .replace(/_(.*?)_/g, '<em>$1</em>') // Курсив
-        .replace(/__(.*?)__/g, '<u>$1</u>') // Подчеркнутый
-        .replace(/~(.*?)~/g, '<s>$1</s>') // Зачеркнутый
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="live-preview-bold">$1</strong>') // Жирный
+        .replace(/_(.*?)_/g, '<em class="live-preview-italic">$1</em>') // Курсив
+        .replace(/__(.*?)__/g, '<u class="live-preview-underline">$1</u>') // Подчеркнутый
+        .replace(/~(.*?)~/g, '<s class="live-preview-strikethrough">$1</s>') // Зачеркнутый
         .replace(/`(.*?)`/g, '<code class="live-preview-code">$1</code>') // Код
         .replace(/```\n(.*?)\n```/gs, '<pre class="live-preview-pre"><code>$1</code></pre>') // Блок кода
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="live-preview-link">$1</a>') // Ссылка
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="live-preview-link" target="_blank" rel="noopener noreferrer">$1</a>') // Ссылка
         .replace(/^> (.*)$/gm, '<blockquote class="live-preview-quote">$1</blockquote>') // Цитата
-        .replace(/^# (.*)$/gm, '<h3 class="live-preview-heading">$1</h3>'); // Заголовок
+        .replace(/^# (.*)$/gm, '<h3 class="live-preview-heading">$1</h3>') // Заголовок
+        .replace(/^## (.*)$/gm, '<h4 class="live-preview-heading-2">$1</h4>') // Заголовок 2
+        .replace(/^### (.*)$/gm, '<h5 class="live-preview-heading-3">$1</h5>') // Заголовок 3
+        .replace(/^\* (.*)$/gm, '<li class="live-preview-list-item">$1</li>') // Список
+        .replace(/^\d+\. (.*)$/gm, '<li class="live-preview-list-item-ordered">$1</li>') // Нумерованный список
+        .replace(/---/g, '<hr class="live-preview-separator">') // Разделитель
+        .replace(/\n/g, '<br>'); // Переносы строк
     } else {
       // Обработка HTML форматирования
       processedText = processedText
-        .replace(/<b>(.*?)<\/b>/g, '<strong>$1</strong>')
-        .replace(/<i>(.*?)<\/i>/g, '<em>$1</em>')
-        .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
-        .replace(/<s>(.*?)<\/s>/g, '<s>$1</s>')
+        .replace(/<b>(.*?)<\/b>/g, '<strong class="live-preview-bold">$1</strong>')
+        .replace(/<i>(.*?)<\/i>/g, '<em class="live-preview-italic">$1</em>')
+        .replace(/<u>(.*?)<\/u>/g, '<u class="live-preview-underline">$1</u>')
+        .replace(/<s>(.*?)<\/s>/g, '<s class="live-preview-strikethrough">$1</s>')
         .replace(/<code>(.*?)<\/code>/g, '<code class="live-preview-code">$1</code>')
         .replace(/<pre><code>(.*?)<\/code><\/pre>/gs, '<pre class="live-preview-pre"><code>$1</code></pre>')
-        .replace(/<a href="([^"]+)">(.*?)<\/a>/g, '<a href="$1" class="live-preview-link">$2</a>')
+        .replace(/<a href="([^"]+)">(.*?)<\/a>/g, '<a href="$1" class="live-preview-link" target="_blank" rel="noopener noreferrer">$2</a>')
         .replace(/<blockquote>(.*?)<\/blockquote>/g, '<blockquote class="live-preview-quote">$1</blockquote>')
-        .replace(/<h3>(.*?)<\/h3>/g, '<h3 class="live-preview-heading">$1</h3>');
+        .replace(/<h3>(.*?)<\/h3>/g, '<h3 class="live-preview-heading">$1</h3>')
+        .replace(/<h4>(.*?)<\/h4>/g, '<h4 class="live-preview-heading-2">$1</h4>')
+        .replace(/<h5>(.*?)<\/h5>/g, '<h5 class="live-preview-heading-3">$1</h5>')
+        .replace(/<hr>/g, '<hr class="live-preview-separator">')
+        .replace(/\n/g, '<br>'); // Переносы строк
     }
     
     return processedText;
@@ -901,22 +911,78 @@ export function RichTextEditor({
 
               {/* Живой предпросмотр */}
               <div className="relative">
-                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
-                  Живой предпросмотр
-                </Label>
-                <div className={`border rounded-md p-3 bg-background min-h-[120px] ${
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                    <Eye className="w-3 h-3" />
+                    Живой предпросмотр
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {enableMarkdown ? 'Markdown' : 'HTML'}
+                    </Badge>
+                    {value && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(value)}
+                        className="h-6 w-6 p-0"
+                        title="Копировать весь текст"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className={`border rounded-md bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 min-h-[120px] ${
                   isExpanded ? 'min-h-[200px]' : ''
-                } overflow-auto`}>
+                } overflow-auto shadow-inner`}>
                   {value ? (
-                    <div className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{
-                      __html: renderLivePreview(value)
-                    }} />
+                    <div className="p-3">
+                      {/* Telegram-style message bubble */}
+                      <div className="max-w-full">
+                        <div className="bg-blue-500 text-white rounded-2xl rounded-tl-sm px-4 py-2 inline-block max-w-[80%] shadow-lg">
+                          <div className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{
+                            __html: renderLivePreview(value)
+                          }} />
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                          <span>✓✓</span>
+                          <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="text-muted-foreground text-sm">
-                      Предпросмотр появится здесь...
+                    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                      <div className="text-center space-y-2">
+                        <Eye className="w-8 h-8 mx-auto opacity-50" />
+                        <div>Предпросмотр появится здесь...</div>
+                        <div className="text-xs opacity-70">Начните печатать для живого предпросмотра</div>
+                      </div>
                     </div>
                   )}
                 </div>
+                
+                {/* Статистика и индикаторы */}
+                {value && (
+                  <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        В реальном времени
+                      </span>
+                      <span>{wordCount} слов</span>
+                      <span>{charCount} символов</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {charCount <= 4096 ? (
+                        <span className="text-green-600 dark:text-green-400">✓ Telegram OK</span>
+                      ) : (
+                        <span className="text-red-600 dark:text-red-400">⚠ Превышен лимит</span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             

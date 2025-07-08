@@ -1341,19 +1341,146 @@ body {
 
 /* Live Preview Styles for Rich Text Editor */
 .live-preview-code {
-  background-color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.8);
   color: #1f2937;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace;
+  font-size: 0.85em;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dark .live-preview-code {
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.live-preview-bold {
+  font-weight: 700;
+  color: inherit;
+}
+
+.live-preview-italic {
+  font-style: italic;
+  color: inherit;
+}
+
+.live-preview-underline {
+  text-decoration: underline;
+  color: inherit;
+}
+
+.live-preview-strikethrough {
+  text-decoration: line-through;
+  color: inherit;
+}
+
+/* Inline Rich Editor Styles */
+.inline-format-bold {
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.dark .inline-format-bold {
+  color: #60a5fa;
+}
+
+.inline-format-italic {
+  font-style: italic;
+  color: #7c3aed;
+}
+
+.dark .inline-format-italic {
+  color: #a78bfa;
+}
+
+.inline-format-underline {
+  text-decoration: underline;
+  color: #059669;
+}
+
+.dark .inline-format-underline {
+  color: #34d399;
+}
+
+.inline-format-strikethrough {
+  text-decoration: line-through;
+  color: #dc2626;
+}
+
+.dark .inline-format-strikethrough {
+  color: #f87171;
+}
+
+.inline-format-code {
+  background-color: #f1f5f9;
+  color: #475569;
   padding: 2px 4px;
   border-radius: 3px;
   font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace;
   font-size: 0.9em;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
 }
 
-.dark .live-preview-code {
-  background-color: #374151;
-  color: #f9fafb;
-  border-color: #4b5563;
+.dark .inline-format-code {
+  background-color: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
+.inline-format-pre {
+  background-color: #f8fafc;
+  color: #334155;
+  padding: 8px;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace;
+  white-space: pre-wrap;
+  margin: 8px 0;
+  border: 1px solid #e2e8f0;
+  display: block;
+}
+
+.dark .inline-format-pre {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+.inline-format-link {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.dark .inline-format-link {
+  color: #3b82f6;
+}
+
+.inline-format-quote {
+  border-left: 4px solid #e2e8f0;
+  padding-left: 12px;
+  margin: 8px 0;
+  color: #64748b;
+  font-style: italic;
+  display: block;
+}
+
+.dark .inline-format-quote {
+  border-left-color: #334155;
+  color: #94a3b8;
+}
+
+.inline-format-heading {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 8px 0;
+  color: #1e293b;
+  display: block;
+}
+
+.dark .inline-format-heading {
+  color: #f1f5f9;
 }
 
 .live-preview-pre {
