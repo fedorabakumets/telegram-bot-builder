@@ -461,10 +461,17 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800/40">
                     <h5 className="font-medium text-green-800 dark:text-green-200 mb-2">Шаг 2: Установка зависимостей</h5>
                     <ol className="list-decimal list-inside space-y-1 text-sm text-green-700 dark:text-green-300">
-                      <li>Установите aiogram (версия 3.x): <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install aiogram</code></li>
-                      <li>Или используйте файл requirements.txt: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install -r requirements.txt</code></li>
+                      <li><strong>Рекомендуемый способ:</strong> Установите новые версии библиотек:<br/>
+                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install &quot;aiogram&gt;=3.21.0&quot; &quot;aiohttp&gt;=3.12.13&quot; &quot;requests&gt;=2.32.4&quot; python-dotenv aiofiles</code>
+                      </li>
+                      <li><strong>Альтернативный способ:</strong> Используйте файл requirements.txt:<br/>
+                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install -r requirements.txt</code>
+                      </li>
+                      <li><strong>Если возникают ошибки компиляции:</strong> Используйте готовые бинарные пакеты:<br/>
+                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles</code>
+                      </li>
                       <li>Проверьте установку: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">python -c "import aiogram; print(aiogram.__version__)"</code></li>
-                      <li>Убедитесь что версия aiogram 3.x (например, 3.3.0+)</li>
+                      <li>Убедитесь что версия aiogram 3.x (например, 3.21.0+)</li>
                     </ol>
                   </div>
 
@@ -579,11 +586,17 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <div className="bg-orange-50 dark:bg-orange-950/30 p-4 rounded-lg border border-orange-200 dark:border-orange-800/40">
                     <h5 className="font-medium text-orange-800 dark:text-orange-200 mb-2">Решение проблем:</h5>
                     <ul className="text-sm text-orange-700 dark:text-orange-300 space-y-1">
+                      <li>• <strong>Ошибка при установке зависимостей (Rust required):</strong> Используйте команду с готовыми бинарными пакетами:<br/>
+                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles</code>
+                      </li>
+                      <li>• <strong>Проблемы с pydantic-core:</strong> Обновите pip и установите новые версии:<br/>
+                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install --upgrade pip setuptools wheel</code>
+                      </li>
                       <li>• <strong>Бот не запускается:</strong> Проверьте токен и версию aiogram</li>
                       <li>• <strong>Команды не работают:</strong> Убедитесь что они настроены в @BotFather</li>
                       <li>• <strong>Inline кнопки не реагируют:</strong> Проверьте callback обработчики в коде</li>
                       <li>• <strong>Медиафайлы не отправляются:</strong> Убедитесь что файлы существуют в папке uploads</li>
-                      <li>• <strong>Ошибки импорта:</strong> Переустановите aiogram: pip install --upgrade aiogram</li>
+                      <li>• <strong>Ошибки импорта:</strong> Переустановите aiogram: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install --upgrade aiogram</code></li>
                     </ul>
                   </div>
                 </div>
