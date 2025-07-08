@@ -194,7 +194,7 @@ export const buttonSchema = z.object({
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'condition', 'input', 'command']),
+  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'condition', 'input', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'poll', 'dice']),
   position: z.object({
     x: z.number(),
     y: z.number(),
@@ -227,6 +227,33 @@ export const nodeSchema = z.object({
     maxUsagesPerDay: z.number().optional(), // Максимальное количество использований в день
     enableStatistics: z.boolean().default(true), // Включить сбор статистики
     customParameters: z.array(z.string()).default([]), // Дополнительные параметры команды
+    // Дополнительные поля для новых типов узлов
+    stickerUrl: z.string().optional(),
+    stickerFileId: z.string().optional(),
+    voiceUrl: z.string().optional(),
+    animationUrl: z.string().optional(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+    title: z.string().optional(),
+    address: z.string().optional(),
+    foursquareId: z.string().optional(),
+    foursquareType: z.string().optional(),
+    phoneNumber: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    userId: z.number().optional(),
+    vcard: z.string().optional(),
+    question: z.string().optional(),
+    options: z.array(z.string()).default([]),
+    allowsMultipleAnswers: z.boolean().default(false),
+    anonymousVoting: z.boolean().default(true),
+    emoji: z.string().optional(),
+    duration: z.number().optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    performer: z.string().optional(),
+    fileSize: z.number().optional(),
+    filename: z.string().optional()
   }),
 });
 
