@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { SimpleLayoutConfig } from './simple-layout-customizer';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 interface FlexibleLayoutProps {
   config: SimpleLayoutConfig;
@@ -179,39 +180,97 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     if (rightEl) columns.push(`${rightEl.size}%`);
     else columns.push('0px');
 
+    // Если есть только верхняя/нижняя панель и основной контент
+    if (topEl && !leftEl && !rightEl && (centerEl || bottomEl)) {
+      return (
+        <ResizablePanelGroup direction="vertical" className="h-full">
+          <ResizablePanel defaultSize={topEl.size} minSize={15} maxSize={30}>
+            <div className="h-full border-b border-border bg-background overflow-auto">
+              {getElementContent(topEl.type)}
+            </div>
+          </ResizablePanel>
+          <ResizableHandle />
+          <ResizablePanel defaultSize={100 - topEl.size}>
+            <div className="h-full bg-background overflow-auto">
+              {centerEl ? getElementContent(centerEl.type) : (bottomEl ? getElementContent(bottomEl.type) : null)}
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      );
+    }
+
+    // Если есть боковые панели и основной контент
+    if ((leftEl || rightEl) && centerEl && !topEl && !bottomEl) {
+      return (
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          {leftEl && (
+            <>
+              <ResizablePanel defaultSize={leftEl.size} minSize={15} maxSize={40}>
+                <div className="h-full border-r border-border bg-background overflow-auto">
+                  {getElementContent(leftEl.type)}
+                </div>
+              </ResizablePanel>
+              <ResizableHandle />
+            </>
+          )}
+          <ResizablePanel defaultSize={centerEl.size || 50}>
+            <div className="h-full bg-background overflow-auto">
+              {getElementContent(centerEl.type)}
+            </div>
+          </ResizablePanel>
+          {rightEl && (
+            <>
+              <ResizableHandle />
+              <ResizablePanel defaultSize={rightEl.size} minSize={15} maxSize={40}>
+                <div className="h-full border-l border-border bg-background overflow-auto">
+                  {getElementContent(rightEl.type)}
+                </div>
+              </ResizablePanel>
+            </>
+          )}
+        </ResizablePanelGroup>
+      );
+    }
+
+    // Комбинированный макет (верх + боковые панели)
     return (
-      <div
-        className="h-full"
-        style={{
-          display: 'grid',
-          gridTemplateAreas: areas.join(' '),
-          gridTemplateRows: rows.join(' '),
-          gridTemplateColumns: columns.join(' '),
-          gap: '0px'
-        }}
-      >
+      <div className="h-full flex flex-col">
         {topEl && (
-          <div key="header" style={{ gridArea: 'header' }} className="border-b border-border bg-background">
+          <div className="border-b border-border bg-background" style={{ minHeight: `${topEl.size}px` }}>
             {getElementContent(topEl.type)}
           </div>
         )}
-        {leftEl && (
-          <div key="sidebar" style={{ gridArea: 'sidebar' }} className="border-r border-border bg-background">
-            {getElementContent(leftEl.type)}
-          </div>
-        )}
-        {centerEl && (
-          <div key="main" style={{ gridArea: 'main' }} className="bg-background">
-            {getElementContent(centerEl.type)}
-          </div>
-        )}
-        {rightEl && (
-          <div key="properties" style={{ gridArea: 'properties' }} className="border-l border-border bg-background">
-            {getElementContent(rightEl.type)}
-          </div>
-        )}
+        <div className="flex-1 min-h-0">
+          <ResizablePanelGroup direction="horizontal" className="h-full">
+            {leftEl && (
+              <>
+                <ResizablePanel defaultSize={leftEl.size} minSize={15} maxSize={40}>
+                  <div className="h-full border-r border-border bg-background overflow-auto">
+                    {getElementContent(leftEl.type)}
+                  </div>
+                </ResizablePanel>
+                <ResizableHandle />
+              </>
+            )}
+            <ResizablePanel defaultSize={centerEl?.size || 50}>
+              <div className="h-full bg-background overflow-auto">
+                {centerEl ? getElementContent(centerEl.type) : null}
+              </div>
+            </ResizablePanel>
+            {rightEl && (
+              <>
+                <ResizableHandle />
+                <ResizablePanel defaultSize={rightEl.size} minSize={15} maxSize={40}>
+                  <div className="h-full border-l border-border bg-background overflow-auto">
+                    {getElementContent(rightEl.type)}
+                  </div>
+                </ResizablePanel>
+              </>
+            )}
+          </ResizablePanelGroup>
+        </div>
         {bottomEl && (
-          <div key="footer" style={{ gridArea: 'footer' }} className="border-t border-border bg-background">
+          <div className="border-t border-border bg-background" style={{ minHeight: `${bottomEl.size}px` }}>
             {getElementContent(bottomEl.type)}
           </div>
         )}
