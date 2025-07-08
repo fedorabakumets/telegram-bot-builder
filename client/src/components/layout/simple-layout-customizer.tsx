@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Layout, 
   Settings, 
@@ -23,7 +24,19 @@ import {
   Grid,
   Save,
   Eye,
-  EyeOff
+  EyeOff,
+  Palette,
+  Zap,
+  Download,
+  Upload,
+  Maximize2,
+  Minimize2,
+  Move,
+  ArrowUpDown,
+  ArrowLeftRight,
+  LayoutDashboard,
+  Smartphone,
+  Tablet
 } from 'lucide-react';
 
 export interface SimpleLayoutElement {
@@ -203,19 +216,41 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
               Настройки макета
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
-              <DialogTitle>Настройка макета интерфейса</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <LayoutDashboard className="w-5 h-5" />
+                Настройка макета интерфейса
+              </DialogTitle>
             </DialogHeader>
             
-            <div className="flex h-[600px] gap-4">
+            <div className="flex h-[700px] gap-6">
               {/* Панель настроек */}
-              <div className="w-80 flex flex-col">
-                <div className="flex-1 overflow-auto space-y-4">
-                  {/* Элементы интерфейса */}
-                  <div className="space-y-3">
-                    <h3 className="font-semibold">Элементы интерфейса</h3>
-                    {tempConfig.elements.map(element => (
+              <div className="w-96 flex flex-col">
+                <Tabs defaultValue="elements" className="flex-1 flex flex-col">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="elements" className="flex items-center gap-1">
+                      <Layout className="w-4 h-4" />
+                      Элементы
+                    </TabsTrigger>
+                    <TabsTrigger value="presets" className="flex items-center gap-1">
+                      <Zap className="w-4 h-4" />
+                      Пресеты
+                    </TabsTrigger>
+                    <TabsTrigger value="advanced" className="flex items-center gap-1">
+                      <Settings className="w-4 h-4" />
+                      Продвинутые
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="elements" className="flex-1 overflow-auto space-y-4 mt-4">
+                    {/* Элементы интерфейса */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <LayoutDashboard className="w-4 h-4" />
+                        <h3 className="font-semibold">Элементы интерфейса</h3>
+                      </div>
+                      {tempConfig.elements.map(element => (
                       <Card key={element.id} className="p-3">
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
@@ -272,47 +307,18 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
                         </div>
                       </Card>
                     ))}
-                  </div>
-
-                  <Separator />
-
-                  {/* Общие настройки */}
-                  <div className="space-y-3">
-                    <h3 className="font-semibold">Общие настройки</h3>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="compact"
-                        checked={tempConfig.compactMode}
-                        onCheckedChange={(checked) => 
-                          setTempConfig(prev => ({ ...prev, compactMode: checked }))
-                        }
-                      />
-                      <Label htmlFor="compact">Компактный режим</Label>
                     </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="grid"
-                        checked={tempConfig.showGrid}
-                        onCheckedChange={(checked) => 
-                          setTempConfig(prev => ({ ...prev, showGrid: checked }))
-                        }
-                      />
-                      <Label htmlFor="grid">Показывать сетку</Label>
-                    </div>
-                  </div>
+                  </TabsContent>
 
-                  <Separator />
-
-                  {/* Пресеты */}
-                  <div className="space-y-3">
-                    <h3 className="font-semibold">Быстрые пресеты</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
+                  <TabsContent value="presets" className="flex-1 overflow-auto space-y-4 mt-4">
+                    {/* Быстрые пресеты */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4" />
+                        <h3 className="font-semibold">Быстрые пресеты</h3>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3">
+                        <Card className="p-4 cursor-pointer hover:bg-accent transition-colors" onClick={() => {
                           const preset = {
                             ...tempConfig,
                             elements: tempConfig.elements.map(el => ({
@@ -321,14 +327,17 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
                             }))
                           };
                           setTempConfig(preset);
-                        }}
-                      >
-                        Шапка снизу
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
+                        }}>
+                          <div className="flex items-center gap-3">
+                            <ArrowDown className="w-5 h-5 text-blue-500" />
+                            <div>
+                              <h4 className="font-medium">Шапка снизу</h4>
+                              <p className="text-sm text-muted-foreground">Переместить заголовок в нижнюю часть</p>
+                            </div>
+                          </div>
+                        </Card>
+
+                        <Card className="p-4 cursor-pointer hover:bg-accent transition-colors" onClick={() => {
                           const preset = {
                             ...tempConfig,
                             elements: tempConfig.elements.map(el => ({
@@ -337,16 +346,95 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
                             }))
                           };
                           setTempConfig(preset);
-                        }}
-                      >
-                        Минимальный
-                      </Button>
+                        }}>
+                          <div className="flex items-center gap-3">
+                            <Minimize2 className="w-5 h-5 text-green-500" />
+                            <div>
+                              <h4 className="font-medium">Минимальный режим</h4>
+                              <p className="text-sm text-muted-foreground">Только холст и заголовок</p>
+                            </div>
+                          </div>
+                        </Card>
+
+                        <Card className="p-4 cursor-pointer hover:bg-accent transition-colors" onClick={() => {
+                          const preset = {
+                            ...tempConfig,
+                            elements: tempConfig.elements.map(el => ({
+                              ...el,
+                              visible: true,
+                              position: el.type === 'header' ? 'top' : 
+                                       el.type === 'sidebar' ? 'left' :
+                                       el.type === 'properties' ? 'right' : 'center'
+                            }))
+                          };
+                          setTempConfig(preset);
+                        }}>
+                          <div className="flex items-center gap-3">
+                            <Maximize2 className="w-5 h-5 text-purple-500" />
+                            <div>
+                              <h4 className="font-medium">Полный режим</h4>
+                              <p className="text-sm text-muted-foreground">Показать все панели</p>
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                
-                {/* Кнопки действий */}
-                <div className="flex items-center justify-between border-t pt-4">
+                  </TabsContent>
+
+                  <TabsContent value="advanced" className="flex-1 overflow-auto space-y-4 mt-4">
+                    {/* Продвинутые настройки */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Settings className="w-4 h-4" />
+                        <h3 className="font-semibold">Продвинутые настройки</h3>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="compact"
+                            checked={tempConfig.compactMode}
+                            onCheckedChange={(checked) => 
+                              setTempConfig(prev => ({ ...prev, compactMode: checked }))
+                            }
+                          />
+                          <Label htmlFor="compact">Компактный режим</Label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="grid"
+                            checked={tempConfig.showGrid}
+                            onCheckedChange={(checked) => 
+                              setTempConfig(prev => ({ ...prev, showGrid: checked }))
+                            }
+                          />
+                          <Label htmlFor="grid">Показывать сетку</Label>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="space-y-3">
+                        <h4 className="font-medium flex items-center gap-2">
+                          <Palette className="w-4 h-4" />
+                          Экспорт и импорт
+                        </h4>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="flex-1">
+                            <Download className="w-4 h-4 mr-2" />
+                            Экспорт
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1">
+                            <Upload className="w-4 h-4 mr-2" />
+                            Импорт
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  {/* Кнопки действий */}
+                  <div className="flex items-center justify-between border-t pt-4 mt-4">
                   <Button
                     variant="outline"
                     size="sm"
@@ -371,7 +459,8 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
                       Применить
                     </Button>
                   </div>
-                </div>
+                  </div>
+                </Tabs>
               </div>
               
               {/* Предварительный просмотр */}
