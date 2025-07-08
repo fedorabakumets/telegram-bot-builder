@@ -46,7 +46,6 @@ import {
   Code2,
   Maximize,
   Minimize,
-  Phone,
   AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
