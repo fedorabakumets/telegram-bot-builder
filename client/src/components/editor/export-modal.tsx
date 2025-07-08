@@ -449,10 +449,49 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                       <li>Создайте папку для вашего бота и перейдите в неё</li>
                       <li>Скачайте все необходимые файлы (Python код, requirements.txt, README.md)</li>
                       <li>Рекомендуется создать виртуальное окружение:
-                        <div className="mt-1 ml-4">
-                          <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded text-xs border border-muted dark:border-muted/60">python -m venv venv</code><br />
-                          <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded text-xs border border-muted dark:border-muted/60">source venv/bin/activate</code> (Linux/Mac) или<br />
-                          <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded text-xs border border-muted dark:border-muted/60">venv\Scripts\activate</code> (Windows)
+                        <div className="mt-2 space-y-2">
+                          <div className="bg-muted/30 dark:bg-muted/10 p-2 rounded border">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-muted-foreground">Создание виртуального окружения:</span>
+                              <Button 
+                                onClick={() => navigator.clipboard.writeText('python -m venv venv')}
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 px-2"
+                              >
+                                <i className="fas fa-copy text-xs"></i>
+                              </Button>
+                            </div>
+                            <code className="text-sm font-mono">python -m venv venv</code>
+                          </div>
+                          <div className="bg-muted/30 dark:bg-muted/10 p-2 rounded border">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-muted-foreground">Активация (Linux/Mac):</span>
+                              <Button 
+                                onClick={() => navigator.clipboard.writeText('source venv/bin/activate')}
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 px-2"
+                              >
+                                <i className="fas fa-copy text-xs"></i>
+                              </Button>
+                            </div>
+                            <code className="text-sm font-mono">source venv/bin/activate</code>
+                          </div>
+                          <div className="bg-muted/30 dark:bg-muted/10 p-2 rounded border">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-muted-foreground">Активация (Windows):</span>
+                              <Button 
+                                onClick={() => navigator.clipboard.writeText('venv\\Scripts\\activate')}
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 px-2"
+                              >
+                                <i className="fas fa-copy text-xs"></i>
+                              </Button>
+                            </div>
+                            <code className="text-sm font-mono">venv\Scripts\activate</code>
+                          </div>
                         </div>
                       </li>
                     </ol>
@@ -460,19 +499,84 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
                   <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800/40">
                     <h5 className="font-medium text-green-800 dark:text-green-200 mb-2">Шаг 2: Установка зависимостей</h5>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-green-700 dark:text-green-300">
-                      <li><strong>Рекомендуемый способ:</strong> Установите новые версии библиотек:<br/>
-                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install &quot;aiogram&gt;=3.21.0&quot; &quot;aiohttp&gt;=3.12.13&quot; &quot;requests&gt;=2.32.4&quot; python-dotenv aiofiles</code>
-                      </li>
-                      <li><strong>Альтернативный способ:</strong> Используйте файл requirements.txt:<br/>
-                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install -r requirements.txt</code>
-                      </li>
-                      <li><strong>Если возникают ошибки компиляции:</strong> Используйте готовые бинарные пакеты:<br/>
-                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles</code>
-                      </li>
-                      <li>Проверьте установку: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">python -c "import aiogram; print(aiogram.__version__)"</code></li>
-                      <li>Убедитесь что версия aiogram 3.x (например, 3.21.0+)</li>
-                    </ol>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <div className="font-medium text-green-800 dark:text-green-200 mb-2">Рекомендуемый способ - установка новых версий:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Команда для установки:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('pip install "aiogram>=3.21.0" "aiohttp>=3.12.13" "requests>=2.32.4" python-dotenv aiofiles')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono break-all">pip install "aiogram&gt;=3.21.0" "aiohttp&gt;=3.12.13" "requests&gt;=2.32.4" python-dotenv aiofiles</code>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="font-medium text-green-800 dark:text-green-200 mb-2">Альтернативный способ - через requirements.txt:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Команда для установки:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('pip install -r requirements.txt')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono">pip install -r requirements.txt</code>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="font-medium text-green-800 dark:text-green-200 mb-2">При ошибках компиляции - используйте бинарные пакеты:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Команда для установки:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono break-all">pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles</code>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="font-medium text-green-800 dark:text-green-200 mb-2">Проверка установки:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Команда для проверки:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('python -c "import aiogram; print(aiogram.__version__)"')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono">python -c "import aiogram; print(aiogram.__version__)"</code>
+                        </div>
+                        <p className="text-xs text-green-700 dark:text-green-300 mt-2">Убедитесь что версия aiogram 3.x (например, 3.21.0+)</p>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-200 dark:border-amber-800/40">
@@ -489,13 +593,33 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
                   <div className="bg-purple-50 dark:bg-purple-950/30 p-4 rounded-lg border border-purple-200 dark:border-purple-800/40">
                     <h5 className="font-medium text-purple-800 dark:text-purple-200 mb-2">Шаг 4: Запуск и тестирование</h5>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-purple-700 dark:text-purple-300">
-                      <li>Запустите бота: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">python {projectName.replace(/\s+/g, '_')}_bot.py</code></li>
-                      <li>Дождитесь сообщения "Бот запущен и готов к работе!"</li>
-                      <li>Найдите вашего бота в Telegram и отправьте команду /start</li>
-                      <li>Проверьте работу всех команд и кнопок</li>
-                      <li>Для остановки бота нажмите Ctrl+C в терминале</li>
-                    </ol>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <div className="font-medium text-purple-800 dark:text-purple-200 mb-2">Запуск бота:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Команда для запуска:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText(`python ${projectName.replace(/\s+/g, '_')}_bot.py`)}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono">python {projectName.replace(/\s+/g, '_')}_bot.py</code>
+                        </div>
+                      </div>
+                      
+                      <div className="text-purple-700 dark:text-purple-300 space-y-1">
+                        <div>• Дождитесь сообщения "Бот запущен и готов к работе!"</div>
+                        <div>• Найдите вашего бота в Telegram и отправьте команду /start</div>
+                        <div>• Проверьте работу всех команд и кнопок</div>
+                        <div>• Для остановки бота нажмите <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded">Ctrl+C</code> в терминале</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -585,19 +709,71 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
                   <div className="bg-orange-50 dark:bg-orange-950/30 p-4 rounded-lg border border-orange-200 dark:border-orange-800/40">
                     <h5 className="font-medium text-orange-800 dark:text-orange-200 mb-2">Решение проблем:</h5>
-                    <ul className="text-sm text-orange-700 dark:text-orange-300 space-y-1">
-                      <li>• <strong>Ошибка при установке зависимостей (Rust required):</strong> Используйте команду с готовыми бинарными пакетами:<br/>
-                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles</code>
-                      </li>
-                      <li>• <strong>Проблемы с pydantic-core:</strong> Обновите pip и установите новые версии:<br/>
-                        <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install --upgrade pip setuptools wheel</code>
-                      </li>
-                      <li>• <strong>Бот не запускается:</strong> Проверьте токен и версию aiogram</li>
-                      <li>• <strong>Команды не работают:</strong> Убедитесь что они настроены в @BotFather</li>
-                      <li>• <strong>Inline кнопки не реагируют:</strong> Проверьте callback обработчики в коде</li>
-                      <li>• <strong>Медиафайлы не отправляются:</strong> Убедитесь что файлы существуют в папке uploads</li>
-                      <li>• <strong>Ошибки импорта:</strong> Переустановите aiogram: <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded border border-muted dark:border-muted/60">pip install --upgrade aiogram</code></li>
-                    </ul>
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <div className="font-medium text-orange-800 dark:text-orange-200 mb-2">Ошибка при установке (Rust required):</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Команда с бинарными пакетами:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono break-all">pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles</code>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="font-medium text-orange-800 dark:text-orange-200 mb-2">Проблемы с pydantic-core:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Обновление инструментов:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('pip install --upgrade pip setuptools wheel')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono">pip install --upgrade pip setuptools wheel</code>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="font-medium text-orange-800 dark:text-orange-200 mb-2">Переустановка aiogram при ошибках:</div>
+                        <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-muted-foreground">Команда обновления:</span>
+                            <Button 
+                              onClick={() => navigator.clipboard.writeText('pip install --upgrade aiogram')}
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-2"
+                            >
+                              <i className="fas fa-copy text-xs mr-1"></i>
+                              <span className="text-xs">Копировать</span>
+                            </Button>
+                          </div>
+                          <code className="text-sm font-mono">pip install --upgrade aiogram</code>
+                        </div>
+                      </div>
+
+                      <div className="text-orange-700 dark:text-orange-300 space-y-1">
+                        <div>• <strong>Бот не запускается:</strong> Проверьте токен и версию aiogram</div>
+                        <div>• <strong>Команды не работают:</strong> Убедитесь что они настроены в @BotFather</div>
+                        <div>• <strong>Inline кнопки не реагируют:</strong> Проверьте callback обработчики в коде</div>
+                        <div>• <strong>Медиафайлы не отправляются:</strong> Убедитесь что файлы существуют в папке uploads</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
