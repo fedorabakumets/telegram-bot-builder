@@ -50,7 +50,7 @@ async def set_bot_commands():
     await bot.set_my_commands(commands)
 
 
-# Обработчик фото для узла J3ufCx6YzkUK3CbzntLDh
+# Обработчик фото для узла _cqblEiH2v5sgaFuswR0c
 
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
@@ -67,24 +67,31 @@ async def start_handler(message: types.Message):
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="J3ufCx6YzkUK3CbzntLDh"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="_cqblEiH2v5sgaFuswR0c"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="GCOgpJl1uNb9KdCD0i85Q"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "J3ufCx6YzkUK3CbzntLDh")
-async def handle_callback_J3ufCx6YzkUK3CbzntLDh(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "_cqblEiH2v5sgaFuswR0c")
+async def handle_callback__cqblEiH2v5sgaFuswR0c(callback_query: types.CallbackQuery):
     await callback_query.answer()
     caption = "Описание изображения"
-    photo_url = "/uploads/1/2025-07-08/1751934507545-408154416-test_recaptcha_detection.png"
+    photo_url = "https://i.pinimg.com/originals/b2/dc/9c/b2dc9c2cee44e45672ad6e3994563ac2.jpg"
     try:
         await callback_query.message.delete()
         await bot.send_photo(callback_query.from_user.id, photo_url, caption=caption)
     except Exception as e:
         logging.error(f"Ошибка отправки фото: {e}")
         await callback_query.message.edit_text(f"❌ Не удалось загрузить фото\n{caption}")
+
+@dp.callback_query(lambda c: c.data == "GCOgpJl1uNb9KdCD0i85Q")
+async def handle_callback_GCOgpJl1uNb9KdCD0i85Q(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
 
 # Запуск бота
