@@ -482,7 +482,6 @@ export function InlineRichEditor({
         <div className="flex-1" />
         
         <div className="flex items-center gap-2">
-          <Label className="text-xs font-medium text-muted-foreground">Markdown</Label>
           <Switch
             checked={enableMarkdown}
             onCheckedChange={onMarkdownToggle}
