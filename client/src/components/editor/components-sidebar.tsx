@@ -90,27 +90,6 @@ const components: ComponentDefinition[] = [
     }
   },
   {
-    id: 'user-input',
-    name: 'Сбор ввода пользователя',
-    description: 'Запрос и сохранение ответа пользователя',
-    icon: 'fas fa-keyboard',
-    color: 'bg-purple-100 text-purple-600',
-    type: 'user-input',
-    defaultData: {
-      inputPrompt: 'Пожалуйста, введите ваш ответ:',
-      inputType: 'text',
-      inputVariable: 'user_response',
-      inputRequired: true,
-      inputTimeout: 60,
-      inputRetryMessage: 'Пожалуйста, попробуйте еще раз.',
-      inputSuccessMessage: 'Спасибо за ваш ответ!',
-      saveToDatabase: false,
-      allowSkip: false,
-      keyboardType: 'none',
-      buttons: []
-    }
-  },
-  {
     id: 'document-message',
     name: 'Документ',
     description: 'Файл документа',
@@ -459,7 +438,7 @@ const componentCategories = [
   },
   {
     title: 'Логика',
-    components: components.filter(c => ['condition', 'input'].includes(c.type))
+    components: components.filter(c => ['condition', 'input', 'user-input'].includes(c.type))
   },
   {
     title: 'Команды',
