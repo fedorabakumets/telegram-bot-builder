@@ -9,7 +9,7 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.enums import ParseMode
 
@@ -50,7 +50,7 @@ async def set_bot_commands():
     await bot.set_my_commands(commands)
 
 
-# Обработчик фото для узла MZ56SqrTSk0Otj7Ut7LEm
+# Обработчик фото для узла J3ufCx6YzkUK3CbzntLDh
 
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
@@ -67,18 +67,18 @@ async def start_handler(message: types.Message):
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="MZ56SqrTSk0Otj7Ut7LEm"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="J3ufCx6YzkUK3CbzntLDh"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "MZ56SqrTSk0Otj7Ut7LEm")
-async def handle_callback_MZ56SqrTSk0Otj7Ut7LEm(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "J3ufCx6YzkUK3CbzntLDh")
+async def handle_callback_J3ufCx6YzkUK3CbzntLDh(callback_query: types.CallbackQuery):
     await callback_query.answer()
     caption = "Описание изображения"
-    photo_url = "https://i.pinimg.com/originals/b2/dc/9c/b2dc9c2cee44e45672ad6e3994563ac2.jpg"
+    photo_url = "/uploads/1/2025-07-08/1751934507545-408154416-test_recaptcha_detection.png"
     try:
         await callback_query.message.delete()
         await bot.send_photo(callback_query.from_user.id, photo_url, caption=caption)
