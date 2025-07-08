@@ -17,6 +17,7 @@ import { SmartConnectionCreator } from '@/components/editor/smart-connection-cre
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
+import { LayoutCustomizer } from '@/components/layout/layout-customizer';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
@@ -34,6 +35,7 @@ export default function Editor() {
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
   const [showLayoutManager, setShowLayoutManager] = useState(false);
+  const [showLayoutCustomizer, setShowLayoutCustomizer] = useState(false);
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -229,7 +231,11 @@ export default function Editor() {
           />
         }
         sidebar={
-          <ComponentsSidebar onComponentDrag={handleComponentDrag} onLoadTemplate={handleLoadTemplate} />
+          <ComponentsSidebar 
+            onComponentDrag={handleComponentDrag} 
+            onLoadTemplate={handleLoadTemplate}
+            onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+          />
         }
         canvas={
           <div className="h-full">
@@ -327,6 +333,67 @@ export default function Editor() {
           onConfigChange={updateLayoutConfig}
           onApply={applyLayoutConfig}
           onReset={resetLayoutConfig}
+        />
+      )}
+
+      {showLayoutCustomizer && (
+        <LayoutCustomizer
+          headerContent={
+            <AdaptiveHeader
+              config={layoutConfig}
+              projectName={currentProject.name}
+              currentTab={currentTab}
+              onTabChange={handleTabChange}
+              onSave={handleSave}
+              onExport={() => setShowExport(true)}
+              onSaveAsTemplate={handleSaveAsTemplate}
+              onLoadTemplate={handleLoadTemplate}
+              onLayoutSettings={() => setShowLayoutManager(true)}
+              isSaving={updateProjectMutation.isPending}
+            />
+          }
+          sidebarContent={
+            <ComponentsSidebar 
+              onComponentDrag={handleComponentDrag} 
+              onLoadTemplate={handleLoadTemplate}
+              onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+            />
+          }
+          canvasContent={
+            <div className="h-full">
+              {currentTab === 'editor' ? (
+                <Canvas
+                  nodes={nodes}
+                  connections={connections}
+                  selectedNodeId={selectedNodeId}
+                  selectedConnectionId={selectedConnectionId || undefined}
+                  onNodeSelect={setSelectedNodeId}
+                  onNodeAdd={addNode}
+                  onNodeDelete={deleteNode}
+                  onNodeMove={handleNodeMove}
+                  onConnectionSelect={setSelectedConnectionId}
+                  onConnectionDelete={deleteConnection}
+                  onConnectionAdd={addConnection}
+                  onNodesUpdate={updateNodes}
+                />
+              ) : null}
+            </div>
+          }
+          propertiesContent={
+            <PropertiesPanel
+              projectId={currentProject.id}
+              selectedNode={selectedNode}
+              allNodes={nodes}
+              onNodeUpdate={updateNodeData}
+              onButtonAdd={addButton}
+              onButtonUpdate={updateButton}
+              onButtonDelete={deleteButton}
+            />
+          }
+          onLayoutChange={(elements) => {
+            console.log('Layout changed:', elements);
+            // Здесь можно обновить конфигурацию макета
+          }}
         />
       )}
 

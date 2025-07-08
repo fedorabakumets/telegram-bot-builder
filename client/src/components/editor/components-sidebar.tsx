@@ -1,10 +1,12 @@
 import { ComponentDefinition } from '@shared/schema';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { DragDropTestButton } from '@/components/layout/drag-drop-test-button';
 
 interface ComponentsSidebarProps {
   onComponentDrag: (component: ComponentDefinition) => void;
   onLoadTemplate?: () => void;
+  onOpenLayoutCustomizer?: () => void;
 }
 
 const components: ComponentDefinition[] = [
@@ -405,7 +407,7 @@ const componentCategories = [
   }
 ];
 
-export function ComponentsSidebar({ onComponentDrag, onLoadTemplate }: ComponentsSidebarProps) {
+export function ComponentsSidebar({ onComponentDrag, onLoadTemplate, onOpenLayoutCustomizer }: ComponentsSidebarProps) {
   const [currentTab, setCurrentTab] = useState<'elements' | 'templates'>('elements');
   
   const handleDragStart = (e: React.DragEvent, component: ComponentDefinition) => {
@@ -478,6 +480,11 @@ export function ComponentsSidebar({ onComponentDrag, onLoadTemplate }: Component
           </div>
         ))}
       </div>
+      
+      {/* Drag & Drop Test Button */}
+      {onOpenLayoutCustomizer && (
+        <DragDropTestButton onOpenCustomizer={onOpenLayoutCustomizer} />
+      )}
     </aside>
   );
 }
