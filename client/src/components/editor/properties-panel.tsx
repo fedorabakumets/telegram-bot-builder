@@ -1498,15 +1498,6 @@ export function PropertiesPanel({
         {/* Message Content */}
         <div>
           <div className="space-y-4">
-            {/* Quick Toolbar */}
-            <QuickFormatToolbar 
-              onInsert={(text) => {
-                const currentText = selectedNode.data.messageText || '';
-                onNodeUpdate(selectedNode.id, { messageText: currentText + text });
-              }}
-              isMarkdown={selectedNode.data.markdown}
-            />
-            
             {/* Text Editor Toggle */}
             <div className="flex items-center gap-2">
               <UIButton
