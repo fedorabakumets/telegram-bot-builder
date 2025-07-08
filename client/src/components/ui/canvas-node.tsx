@@ -207,24 +207,24 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
             node.type === 'condition' ? 'bg-red-500' :
             'bg-cyan-500'
           )}></div>
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-            {node.type === 'start' ? 'START' :
-             node.type === 'command' ? 'CMD' :
-             node.type === 'message' ? 'MSG' :
-             node.type === 'photo' ? 'IMG' :
-             node.type === 'video' ? 'VID' :
-             node.type === 'audio' ? 'AUD' :
-             node.type === 'document' ? 'DOC' :
-             node.type === 'sticker' ? 'STK' :
-             node.type === 'voice' ? 'VOI' :
-             node.type === 'animation' ? 'GIF' :
-             node.type === 'location' ? 'LOC' :
-             node.type === 'contact' ? 'CNT' :
-             node.type === 'poll' ? 'PLL' :
-             node.type === 'dice' ? 'DIC' :
-             node.type === 'keyboard' ? 'KEY' :
-             node.type === 'condition' ? 'IF' :
-             'INP'}
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 tracking-wide">
+            {node.type === 'start' ? 'Старт' :
+             node.type === 'command' ? 'Команда' :
+             node.type === 'message' ? 'Сообщение' :
+             node.type === 'photo' ? 'Фото' :
+             node.type === 'video' ? 'Видео' :
+             node.type === 'audio' ? 'Аудио' :
+             node.type === 'document' ? 'Документ' :
+             node.type === 'sticker' ? 'Стикер' :
+             node.type === 'voice' ? 'Голос' :
+             node.type === 'animation' ? 'Анимация' :
+             node.type === 'location' ? 'Геолокация' :
+             node.type === 'contact' ? 'Контакт' :
+             node.type === 'poll' ? 'Опрос' :
+             node.type === 'dice' ? 'Кубик' :
+             node.type === 'keyboard' ? 'Клавиатура' :
+             node.type === 'condition' ? 'Условие' :
+             'Ввод'}
           </span>
         </div>
       </div>
