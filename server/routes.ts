@@ -1,13 +1,17 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { spawn, ChildProcess } from "child_process";
-import { writeFileSync, existsSync, mkdirSync, unlinkSync } from "fs";
+import { writeFileSync, existsSync, mkdirSync, unlinkSync, createWriteStream } from "fs";
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
 import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
+import https from "https";
+import http from "http";
+import { pipeline } from "stream/promises";
+import { URL } from "url";
 
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
@@ -167,6 +171,233 @@ function getFileType(mimeType: string): 'photo' | 'video' | 'audio' | 'document'
   if (mimeType.startsWith('video/')) return 'video';
   if (mimeType.startsWith('audio/')) return 'audio';
   return 'document';
+}
+
+// Функция для загрузки файла по URL с улучшенной обработкой ошибок
+async function downloadFileFromUrl(url: string, destination: string): Promise<{
+  success: boolean;
+  filePath?: string;
+  size?: number;
+  mimeType?: string;
+  fileName?: string;
+  error?: string;
+}> {
+  return new Promise((resolve) => {
+    try {
+      // Проверяем корректность URL
+      const parsedUrl = new URL(url);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        return resolve({ success: false, error: 'Поддерживаются только HTTP и HTTPS ссылки' });
+      }
+
+      // Выбираем модуль для загрузки в зависимости от протокола
+      const client = parsedUrl.protocol === 'https:' ? https : http;
+      
+      // Создаем запрос с заголовками для эмуляции браузера
+      const request = client.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': '*/*',
+          'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'cross-site'
+        },
+        timeout: 30000 // 30 секунд таймаут
+      }, (response) => {
+        // Обрабатываем редиректы
+        if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          const redirectUrl = response.headers.location;
+          console.log(`Редирект с ${url} на ${redirectUrl}`);
+          return downloadFileFromUrl(redirectUrl, destination).then(resolve);
+        }
+
+        // Проверяем статус код
+        if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 400) {
+          return resolve({ 
+            success: false, 
+            error: `Ошибка сервера: ${response.statusCode} ${response.statusMessage}` 
+          });
+        }
+
+        // Получаем информацию о файле из заголовков
+        const contentLength = response.headers['content-length'];
+        const contentType = response.headers['content-type'] || 'application/octet-stream';
+        const contentDisposition = response.headers['content-disposition'];
+        
+        // Извлекаем имя файла из заголовков или URL
+        let fileName = '';
+        if (contentDisposition && contentDisposition.includes('filename=')) {
+          const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (match && match[1]) {
+            fileName = match[1].replace(/['"]/g, '');
+          }
+        }
+        
+        if (!fileName) {
+          fileName = parsedUrl.pathname.split('/').pop() || 'downloaded-file';
+          if (!fileName.includes('.')) {
+            // Добавляем расширение на основе MIME типа
+            const extensions = {
+              'image/jpeg': '.jpg',
+              'image/png': '.png',
+              'image/gif': '.gif',
+              'image/webp': '.webp',
+              'video/mp4': '.mp4',
+              'video/webm': '.webm',
+              'audio/mpeg': '.mp3',
+              'audio/wav': '.wav',
+              'application/pdf': '.pdf',
+              'text/plain': '.txt'
+            };
+            fileName += extensions[contentType as keyof typeof extensions] || '.bin';
+          }
+        }
+
+        // Проверяем размер файла
+        if (contentLength) {
+          const fileSizeBytes = parseInt(contentLength);
+          const maxSize = contentType.startsWith('video/') ? 200 * 1024 * 1024 : 50 * 1024 * 1024;
+          if (fileSizeBytes > maxSize) {
+            return resolve({ 
+              success: false, 
+              error: `Файл слишком большой: ${Math.round(fileSizeBytes / (1024 * 1024))}МБ. Максимальный размер: ${Math.round(maxSize / (1024 * 1024))}МБ` 
+            });
+          }
+        }
+
+        // Создаем поток для записи файла
+        const fileStream = createWriteStream(destination);
+        let downloadedBytes = 0;
+
+        response.on('data', (chunk) => {
+          downloadedBytes += chunk.length;
+          // Проверяем размер во время загрузки
+          const maxSize = contentType.startsWith('video/') ? 200 * 1024 * 1024 : 50 * 1024 * 1024;
+          if (downloadedBytes > maxSize) {
+            response.destroy();
+            fileStream.destroy();
+            if (existsSync(destination)) {
+              unlinkSync(destination);
+            }
+            return resolve({ 
+              success: false, 
+              error: `Файл слишком большой: превышен лимит ${Math.round(maxSize / (1024 * 1024))}МБ` 
+            });
+          }
+        });
+
+        response.pipe(fileStream);
+
+        fileStream.on('finish', () => {
+          resolve({
+            success: true,
+            filePath: destination,
+            size: downloadedBytes,
+            mimeType: contentType,
+            fileName: fileName
+          });
+        });
+
+        fileStream.on('error', (error) => {
+          if (existsSync(destination)) {
+            unlinkSync(destination);
+          }
+          resolve({ success: false, error: `Ошибка записи файла: ${error.message}` });
+        });
+      });
+
+      request.on('error', (error) => {
+        resolve({ success: false, error: `Ошибка сети: ${error.message}` });
+      });
+
+      request.on('timeout', () => {
+        request.destroy();
+        resolve({ success: false, error: 'Превышено время ожидания (30 секунд)' });
+      });
+
+    } catch (error) {
+      resolve({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Неизвестная ошибка' 
+      });
+    }
+  });
+}
+
+// Функция для проверки доступности URL
+async function checkUrlAccessibility(url: string): Promise<{
+  accessible: boolean;
+  mimeType?: string;
+  size?: number;
+  fileName?: string;
+  error?: string;
+}> {
+  return new Promise((resolve) => {
+    try {
+      const parsedUrl = new URL(url);
+      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+        return resolve({ accessible: false, error: 'Поддерживаются только HTTP и HTTPS ссылки' });
+      }
+
+      const client = parsedUrl.protocol === 'https:' ? https : http;
+      
+      const request = client.request(url, { method: 'HEAD', timeout: 10000 }, (response) => {
+        if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          return checkUrlAccessibility(response.headers.location).then(resolve);
+        }
+
+        if (!response.statusCode || response.statusCode < 200 || response.statusCode >= 400) {
+          return resolve({ 
+            accessible: false, 
+            error: `Ошибка сервера: ${response.statusCode} ${response.statusMessage}` 
+          });
+        }
+
+        const contentLength = response.headers['content-length'];
+        const contentType = response.headers['content-type'] || 'application/octet-stream';
+        const contentDisposition = response.headers['content-disposition'];
+        
+        let fileName = '';
+        if (contentDisposition && contentDisposition.includes('filename=')) {
+          const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (match && match[1]) {
+            fileName = match[1].replace(/['"]/g, '');
+          }
+        }
+        
+        if (!fileName) {
+          fileName = parsedUrl.pathname.split('/').pop() || 'file';
+        }
+
+        resolve({
+          accessible: true,
+          mimeType: contentType,
+          size: contentLength ? parseInt(contentLength) : undefined,
+          fileName: fileName
+        });
+      });
+
+      request.on('error', (error) => {
+        resolve({ accessible: false, error: `Ошибка сети: ${error.message}` });
+      });
+
+      request.on('timeout', () => {
+        request.destroy();
+        resolve({ accessible: false, error: 'Превышено время ожидания' });
+      });
+
+      request.end();
+
+    } catch (error) {
+      resolve({ 
+        accessible: false, 
+        error: error instanceof Error ? error.message : 'Неверный URL' 
+      });
+    }
+  });
 }
 
 // Функция для создания Python файла бота
@@ -1614,6 +1845,365 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.status(500).json({ message: "Ошибка при загрузке файлов" });
+    }
+  });
+
+  // Проверка доступности URL перед загрузкой
+  app.post("/api/media/check-url", async (req, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ 
+          message: "URL не указан",
+          code: "MISSING_URL"
+        });
+      }
+
+      const result = await checkUrlAccessibility(url);
+      
+      if (!result.accessible) {
+        return res.status(400).json({
+          accessible: false,
+          error: result.error,
+          code: "URL_NOT_ACCESSIBLE"
+        });
+      }
+
+      // Проверяем тип файла
+      const validation = validateFileDetailed({
+        mimetype: result.mimeType || 'application/octet-stream',
+        size: result.size || 0,
+        originalname: result.fileName || 'file'
+      } as any);
+
+      if (!validation.valid) {
+        return res.status(400).json({
+          accessible: false,
+          error: validation.error,
+          code: "UNSUPPORTED_FILE_TYPE"
+        });
+      }
+
+      res.json({
+        accessible: true,
+        fileInfo: {
+          mimeType: result.mimeType,
+          size: result.size,
+          fileName: result.fileName,
+          fileType: result.mimeType ? getFileType(result.mimeType) : 'document',
+          category: validation.category,
+          sizeMB: result.size ? Math.round(result.size / (1024 * 1024) * 100) / 100 : 0
+        }
+      });
+
+    } catch (error) {
+      console.error('Ошибка проверки URL:', error);
+      res.status(500).json({ 
+        accessible: false,
+        error: "Ошибка при проверке URL",
+        code: "CHECK_ERROR"
+      });
+    }
+  });
+
+  // Загрузка файла по URL с расширенными возможностями
+  app.post("/api/media/download-url/:projectId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { url, description, tags, isPublic, customFileName } = req.body;
+      
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ 
+          message: "URL не указан",
+          code: "MISSING_URL"
+        });
+      }
+
+      // Проверяем, что проект существует
+      const project = await storage.getBotProject(projectId);
+      if (!project) {
+        return res.status(404).json({ 
+          message: "Проект не найден",
+          code: "PROJECT_NOT_FOUND"
+        });
+      }
+
+      // Сначала проверяем доступность файла
+      const urlCheck = await checkUrlAccessibility(url);
+      if (!urlCheck.accessible) {
+        return res.status(400).json({
+          message: "Файл недоступен по указанной ссылке",
+          error: urlCheck.error,
+          code: "URL_NOT_ACCESSIBLE"
+        });
+      }
+
+      // Создаем путь для сохранения
+      const date = new Date().toISOString().split('T')[0];
+      const uploadDir = join(process.cwd(), 'uploads', projectId.toString(), date);
+      
+      if (!existsSync(uploadDir)) {
+        mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // Генерируем уникальное имя файла
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const originalFileName = customFileName || urlCheck.fileName || 'downloaded-file';
+      const extension = originalFileName.split('.').pop()?.toLowerCase() || 'bin';
+      const baseName = originalFileName
+        .split('.')[0]
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+        .substring(0, 50);
+      
+      const fileName = `${uniqueSuffix}-${baseName}.${extension}`;
+      const filePath = join(uploadDir, fileName);
+
+      // Загружаем файл
+      const downloadResult = await downloadFileFromUrl(url, filePath);
+      
+      if (!downloadResult.success) {
+        return res.status(400).json({
+          message: "Ошибка загрузки файла",
+          error: downloadResult.error,
+          code: "DOWNLOAD_FAILED"
+        });
+      }
+
+      // Проверяем загруженный файл
+      const validation = validateFileDetailed({
+        mimetype: downloadResult.mimeType || 'application/octet-stream',
+        size: downloadResult.size || 0,
+        originalname: originalFileName,
+        path: filePath
+      } as any);
+
+      if (!validation.valid) {
+        // Удаляем файл если он не прошел валидацию
+        if (existsSync(filePath)) {
+          unlinkSync(filePath);
+        }
+        return res.status(400).json({
+          message: validation.error,
+          code: "VALIDATION_FAILED"
+        });
+      }
+
+      // Создаем URL для доступа к файлу
+      const fileUrl = `/uploads/${projectId}/${date}/${fileName}`;
+
+      // Обрабатываем теги
+      const processedTags = tags 
+        ? tags
+            .split(',')
+            .map((tag: string) => tag.trim().toLowerCase())
+            .filter((tag: string) => tag.length > 0 && tag.length <= 50)
+            .slice(0, 10)
+        : [];
+
+      // Автоматически добавляем теги
+      const autoTags = ['загружено_по_url'];
+      if (validation.category) {
+        autoTags.push(validation.category);
+      }
+      if (downloadResult.mimeType?.includes('gif')) {
+        autoTags.push('анимация');
+      }
+      if (downloadResult.size && downloadResult.size > 10 * 1024 * 1024) {
+        autoTags.push('большой_файл');
+      }
+
+      const finalTags = [...new Set([...processedTags, ...autoTags])];
+
+      // Сохраняем информацию о файле в базе данных
+      const mediaFile = await storage.createMediaFile({
+        projectId,
+        fileName: originalFileName,
+        fileType: getFileType(downloadResult.mimeType || 'application/octet-stream'),
+        filePath: filePath,
+        fileSize: downloadResult.size || 0,
+        mimeType: downloadResult.mimeType || 'application/octet-stream',
+        url: fileUrl,
+        description: description || `Файл загружен по ссылке: ${originalFileName}`,
+        tags: finalTags,
+        isPublic: isPublic === 'true' || isPublic === true ? 1 : 0
+      });
+
+      // Возвращаем подробную информацию о загруженном файле
+      res.json({
+        ...mediaFile,
+        downloadInfo: {
+          sourceUrl: url,
+          category: validation.category,
+          sizeMB: Math.round((downloadResult.size || 0) / (1024 * 1024) * 100) / 100,
+          autoTagsAdded: autoTags.length,
+          downloadDate: new Date().toISOString(),
+          method: 'url_download'
+        }
+      });
+
+    } catch (error) {
+      console.error('Ошибка при загрузке файла по URL:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка";
+      res.status(500).json({ 
+        message: "Ошибка при загрузке файла по URL",
+        error: errorMessage,
+        code: "DOWNLOAD_ERROR"
+      });
+    }
+  });
+
+  // Пакетная загрузка файлов по URL (множественная загрузка)
+  app.post("/api/media/download-urls/:projectId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { urls, isPublic, defaultDescription } = req.body;
+      
+      if (!urls || !Array.isArray(urls) || urls.length === 0) {
+        return res.status(400).json({ 
+          message: "URLs не указаны",
+          code: "MISSING_URLS"
+        });
+      }
+
+      if (urls.length > 10) {
+        return res.status(400).json({ 
+          message: "Максимум 10 URL за раз",
+          code: "TOO_MANY_URLS"
+        });
+      }
+
+      // Проверяем, что проект существует
+      const project = await storage.getBotProject(projectId);
+      if (!project) {
+        return res.status(404).json({ 
+          message: "Проект не найден",
+          code: "PROJECT_NOT_FOUND"
+        });
+      }
+
+      const downloadedFiles = [];
+      const errors = [];
+      
+      // Создаем путь для сохранения
+      const date = new Date().toISOString().split('T')[0];
+      const uploadDir = join(process.cwd(), 'uploads', projectId.toString(), date);
+      
+      if (!existsSync(uploadDir)) {
+        mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // Обрабатываем каждый URL
+      for (let i = 0; i < urls.length; i++) {
+        const urlData = urls[i];
+        const url = typeof urlData === 'string' ? urlData : urlData.url;
+        const customFileName = typeof urlData === 'object' ? urlData.fileName : undefined;
+        const customDescription = typeof urlData === 'object' ? urlData.description : undefined;
+        
+        try {
+          // Проверяем доступность
+          const urlCheck = await checkUrlAccessibility(url);
+          if (!urlCheck.accessible) {
+            errors.push({
+              url: url,
+              error: `Файл недоступен: ${urlCheck.error}`
+            });
+            continue;
+          }
+
+          // Генерируем путь для файла
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+          const originalFileName = customFileName || urlCheck.fileName || `file-${i + 1}`;
+          const extension = originalFileName.split('.').pop()?.toLowerCase() || 'bin';
+          const baseName = originalFileName
+            .split('.')[0]
+            .replace(/[^a-zA-Z0-9._-]/g, '_')
+            .substring(0, 50);
+          
+          const fileName = `${uniqueSuffix}-${baseName}.${extension}`;
+          const filePath = join(uploadDir, fileName);
+
+          // Загружаем файл
+          const downloadResult = await downloadFileFromUrl(url, filePath);
+          
+          if (!downloadResult.success) {
+            errors.push({
+              url: url,
+              error: `Ошибка загрузки: ${downloadResult.error}`
+            });
+            continue;
+          }
+
+          // Валидация
+          const validation = validateFileDetailed({
+            mimetype: downloadResult.mimeType || 'application/octet-stream',
+            size: downloadResult.size || 0,
+            originalname: originalFileName,
+            path: filePath
+          } as any);
+
+          if (!validation.valid) {
+            if (existsSync(filePath)) {
+              unlinkSync(filePath);
+            }
+            errors.push({
+              url: url,
+              error: `Валидация не пройдена: ${validation.error}`
+            });
+            continue;
+          }
+
+          // Создаем URL для доступа
+          const fileUrl = `/uploads/${projectId}/${date}/${fileName}`;
+
+          // Сохраняем в базе данных
+          const mediaFile = await storage.createMediaFile({
+            projectId,
+            fileName: originalFileName,
+            fileType: getFileType(downloadResult.mimeType || 'application/octet-stream'),
+            filePath: filePath,
+            fileSize: downloadResult.size || 0,
+            mimeType: downloadResult.mimeType || 'application/octet-stream',
+            url: fileUrl,
+            description: customDescription || defaultDescription || `Файл загружен по ссылке: ${originalFileName}`,
+            tags: ['загружено_по_url', validation.category || 'файл'],
+            isPublic: isPublic ? 1 : 0
+          });
+
+          downloadedFiles.push({
+            ...mediaFile,
+            sourceUrl: url
+          });
+
+        } catch (error) {
+          console.error(`Ошибка обработки URL ${url}:`, error);
+          errors.push({
+            url: url,
+            error: error instanceof Error ? error.message : 'Неизвестная ошибка'
+          });
+        }
+      }
+
+      res.json({
+        success: downloadedFiles.length,
+        errors: errors.length,
+        downloadedFiles,
+        errorDetails: errors,
+        summary: {
+          total: urls.length,
+          successful: downloadedFiles.length,
+          failed: errors.length,
+          totalSize: downloadedFiles.reduce((sum, file) => sum + file.fileSize, 0)
+        }
+      });
+
+    } catch (error) {
+      console.error('Ошибка пакетной загрузки по URL:', error);
+      res.status(500).json({ 
+        message: "Ошибка при пакетной загрузке файлов по URL",
+        code: "BATCH_DOWNLOAD_ERROR"
+      });
     }
   });
   

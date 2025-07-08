@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { MediaManager } from "./media-manager";
+import { UrlDownloader } from "./url-downloader";
 import type { MediaFile } from "@shared/schema";
-import { Upload, X, Eye, FileText, Image, Play, Volume2 } from "lucide-react";
+import { Upload, X, Eye, FileText, Image, Play, Volume2, LinkIcon, Download } from "lucide-react";
 
 interface MediaSelectorProps {
   projectId: number;
@@ -97,18 +99,60 @@ export function MediaSelector({
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="w-full">
                 <Upload className="w-4 h-4 mr-2" />
-                Выбрать из загруженных файлов
+                Выбрать или загрузить файл
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Выбрать медиафайл</DialogTitle>
+                <DialogTitle>Управление медиафайлами</DialogTitle>
               </DialogHeader>
-              <MediaManager 
-                projectId={projectId}
-                onSelectFile={handleSelectFile}
-                selectedType={fileType}
-              />
+              
+              <Tabs defaultValue="library" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="library" className="flex items-center gap-2">
+                    <Image className="w-4 h-4" />
+                    Библиотека файлов
+                  </TabsTrigger>
+                  <TabsTrigger value="upload" className="flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    Загрузить файлы
+                  </TabsTrigger>
+                  <TabsTrigger value="url" className="flex items-center gap-2">
+                    <LinkIcon className="w-4 h-4" />
+                    Загрузить по URL
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="library" className="mt-4">
+                  <MediaManager 
+                    projectId={projectId}
+                    onSelectFile={handleSelectFile}
+                    selectedType={fileType}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="upload" className="mt-4">
+                  <MediaManager 
+                    projectId={projectId}
+                    onSelectFile={handleSelectFile}
+                    selectedType={fileType}
+                    showUploader={true}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="url" className="mt-4">
+                  <UrlDownloader
+                    projectId={projectId}
+                    onDownloadComplete={(files) => {
+                      if (files.length > 0) {
+                        handleSelectFile(files[0]);
+                      }
+                      setIsOpen(false);
+                    }}
+                    onClose={() => setIsOpen(false)}
+                  />
+                </TabsContent>
+              </Tabs>
             </DialogContent>
           </Dialog>
         </div>
