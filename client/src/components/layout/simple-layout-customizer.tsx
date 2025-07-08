@@ -54,7 +54,7 @@ const DEFAULT_CONFIG: SimpleLayoutConfig = {
       type: 'header',
       name: 'Шапка',
       position: 'top',
-      size: 8,
+      size: 64,
       visible: true
     },
     {
@@ -414,6 +414,8 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
           </DialogContent>
         </Dialog>
       </div>
+
+
 
       {/* Основной контент */}
       <div className="h-screen">

@@ -124,53 +124,97 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 
     // Если есть только один элемент
     if (visibleElements.length === 1) {
-      return renderElement(visibleElements[0]);
+      return (
+        <div className="h-full">
+          {renderElement(visibleElements[0])}
+        </div>
+      );
     }
 
-    // Определяем структуру макета
-    const hasTop = visibleElements.some(el => el.position === 'top');
-    const hasBottom = visibleElements.some(el => el.position === 'bottom');
-    const hasLeft = visibleElements.some(el => el.position === 'left');
-    const hasRight = visibleElements.some(el => el.position === 'right');
-    const hasCenter = visibleElements.some(el => el.position === 'center');
+    // Определяем элементы по позициям
+    const topEl = visibleElements.find(el => el.position === 'top');
+    const bottomEl = visibleElements.find(el => el.position === 'bottom');
+    const leftEl = visibleElements.find(el => el.position === 'left');
+    const rightEl = visibleElements.find(el => el.position === 'right');
+    const centerEl = visibleElements.find(el => el.position === 'center');
 
-    // Создаем areas строку
-    const topArea = hasTop ? (hasLeft ? 'top-left ' : '') + 'top' + (hasRight ? ' top-right' : '') : '';
-    const middleArea = (hasLeft ? 'left ' : '') + (hasCenter ? 'center' : '') + (hasRight ? ' right' : '');
-    const bottomArea = hasBottom ? (hasLeft ? 'bottom-left ' : '') + 'bottom' + (hasRight ? ' bottom-right' : '') : '';
+    // Простая структура: top / middle / bottom
+    const rows = [];
+    const areas = [];
+    
+    // Верхняя строка
+    if (topEl) {
+      rows.push(`${topEl.size}px`);
+      areas.push('"header header header"');
+    }
+    
+    // Средняя строка
+    rows.push('1fr');
+    let middleArea = '"';
+    if (leftEl) middleArea += 'sidebar ';
+    else middleArea += '. ';
+    
+    if (centerEl) middleArea += 'main ';
+    else middleArea += '. ';
+    
+    if (rightEl) middleArea += 'properties';
+    else middleArea += '.';
+    
+    middleArea += '"';
+    areas.push(middleArea);
+    
+    // Нижняя строка  
+    if (bottomEl) {
+      rows.push(`${bottomEl.size}px`);
+      areas.push('"footer footer footer"');
+    }
 
-    const gridAreas = [topArea, middleArea, bottomArea].filter(Boolean).map(area => `"${area}"`).join(' ');
-
-    // Создаем размеры строк
-    const topSize = visibleElements.find(el => el.position === 'top')?.size || 0;
-    const bottomSize = visibleElements.find(el => el.position === 'bottom')?.size || 0;
-    const rowSizes = [
-      hasTop ? `${topSize}px` : '',
-      '1fr',
-      hasBottom ? `${bottomSize}px` : ''
-    ].filter(Boolean).join(' ');
-
-    // Создаем размеры колонок
-    const leftSize = visibleElements.find(el => el.position === 'left')?.size || 0;
-    const rightSize = visibleElements.find(el => el.position === 'right')?.size || 0;
-    const columnSizes = [
-      hasLeft ? `${leftSize}%` : '',
-      '1fr',
-      hasRight ? `${rightSize}%` : ''
-    ].filter(Boolean).join(' ');
+    // Колонки
+    const columns = [];
+    if (leftEl) columns.push(`${leftEl.size}%`);
+    else columns.push('0px');
+    
+    columns.push('1fr');
+    
+    if (rightEl) columns.push(`${rightEl.size}%`);
+    else columns.push('0px');
 
     return (
       <div
         className="h-full"
         style={{
           display: 'grid',
-          gridTemplateAreas: gridAreas,
-          gridTemplateRows: rowSizes,
-          gridTemplateColumns: columnSizes,
+          gridTemplateAreas: areas.join(' '),
+          gridTemplateRows: rows.join(' '),
+          gridTemplateColumns: columns.join(' '),
           gap: '0px'
         }}
       >
-        {visibleElements.map(element => renderElement(element))}
+        {topEl && (
+          <div key="header" style={{ gridArea: 'header' }} className="border-b border-border bg-background">
+            {getElementContent(topEl.type)}
+          </div>
+        )}
+        {leftEl && (
+          <div key="sidebar" style={{ gridArea: 'sidebar' }} className="border-r border-border bg-background">
+            {getElementContent(leftEl.type)}
+          </div>
+        )}
+        {centerEl && (
+          <div key="main" style={{ gridArea: 'main' }} className="bg-background">
+            {getElementContent(centerEl.type)}
+          </div>
+        )}
+        {rightEl && (
+          <div key="properties" style={{ gridArea: 'properties' }} className="border-l border-border bg-background">
+            {getElementContent(rightEl.type)}
+          </div>
+        )}
+        {bottomEl && (
+          <div key="footer" style={{ gridArea: 'footer' }} className="border-t border-border bg-background">
+            {getElementContent(bottomEl.type)}
+          </div>
+        )}
       </div>
     );
   };

@@ -39,7 +39,7 @@ export default function EditorSimple() {
         type: 'header',
         name: 'Шапка',
         position: 'top',
-        size: 8,
+        size: 64,
         visible: true
       },
       {
