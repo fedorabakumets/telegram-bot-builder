@@ -271,15 +271,6 @@ export default function Editor() {
       />
     );
 
-    const sidebarContent = (
-      <ComponentsSidebar 
-        onComponentDrag={handleComponentDrag} 
-        onLoadTemplate={handleLoadTemplate}
-        onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
-        onLayoutChange={updateLayoutConfig}
-      />
-    );
-
     const canvasContent = (
       <div className="h-full">
         {currentTab === 'editor' ? (
@@ -364,6 +355,19 @@ export default function Editor() {
       />
     );
 
+    const sidebarContent = (
+      <ComponentsSidebar 
+        onComponentDrag={handleComponentDrag} 
+        onLoadTemplate={handleLoadTemplate}
+        onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+        onLayoutChange={updateLayoutConfig}
+        headerContent={headerContent}
+        sidebarContent={<div>Sidebar</div>}
+        canvasContent={canvasContent}
+        propertiesContent={propertiesContent}
+      />
+    );
+
     if (useFlexibleLayout) {
       return (
         <SimpleLayoutCustomizer
@@ -411,6 +415,52 @@ export default function Editor() {
               onLoadTemplate={handleLoadTemplate}
               onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
+              headerContent={
+                <AdaptiveHeader
+                  config={layoutConfig}
+                  projectName={currentProject.name}
+                  currentTab={currentTab}
+                  onTabChange={handleTabChange}
+                  onSave={handleSave}
+                  onExport={() => setShowExport(true)}
+                  onSaveAsTemplate={handleSaveAsTemplate}
+                  onLoadTemplate={handleLoadTemplate}
+                  onLayoutSettings={() => setShowLayoutManager(true)}
+                  isSaving={updateProjectMutation.isPending}
+                />
+              }
+              sidebarContent={<div>Sidebar</div>}
+              canvasContent={
+                <div className="h-full">
+                  {currentTab === 'editor' ? (
+                    <Canvas
+                      nodes={nodes}
+                      connections={connections}
+                      selectedNodeId={selectedNodeId}
+                      selectedConnectionId={selectedConnectionId || undefined}
+                      onNodeSelect={setSelectedNodeId}
+                      onNodeAdd={addNode}
+                      onNodeDelete={deleteNode}
+                      onNodeMove={handleNodeMove}
+                      onConnectionSelect={setSelectedConnectionId}
+                      onConnectionDelete={deleteConnection}
+                      onConnectionAdd={addConnection}
+                      onNodesUpdate={updateNodes}
+                    />
+                  ) : null}
+                </div>
+              }
+              propertiesContent={
+                <PropertiesPanel
+                  projectId={currentProject.id}
+                  selectedNode={selectedNode}
+                  allNodes={nodes}
+                  onNodeUpdate={updateNodeData}
+                  onButtonAdd={addButton}
+                  onButtonUpdate={updateButton}
+                  onButtonDelete={deleteButton}
+                />
+              }
             />
           }
           canvas={
@@ -528,6 +578,53 @@ export default function Editor() {
               onComponentDrag={handleComponentDrag} 
               onLoadTemplate={handleLoadTemplate}
               onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+              onLayoutChange={updateLayoutConfig}
+              headerContent={
+                <AdaptiveHeader
+                  config={layoutConfig}
+                  projectName={currentProject.name}
+                  currentTab={currentTab}
+                  onTabChange={handleTabChange}
+                  onSave={handleSave}
+                  onExport={() => setShowExport(true)}
+                  onSaveAsTemplate={handleSaveAsTemplate}
+                  onLoadTemplate={handleLoadTemplate}
+                  onLayoutSettings={() => setShowLayoutManager(true)}
+                  isSaving={updateProjectMutation.isPending}
+                />
+              }
+              sidebarContent={<div>Sidebar</div>}
+              canvasContent={
+                <div className="h-full">
+                  {currentTab === 'editor' ? (
+                    <Canvas
+                      nodes={nodes}
+                      connections={connections}
+                      selectedNodeId={selectedNodeId}
+                      selectedConnectionId={selectedConnectionId || undefined}
+                      onNodeSelect={setSelectedNodeId}
+                      onNodeAdd={addNode}
+                      onNodeDelete={deleteNode}
+                      onNodeMove={handleNodeMove}
+                      onConnectionSelect={setSelectedConnectionId}
+                      onConnectionDelete={deleteConnection}
+                      onConnectionAdd={addConnection}
+                      onNodesUpdate={updateNodes}
+                    />
+                  ) : null}
+                </div>
+              }
+              propertiesContent={
+                <PropertiesPanel
+                  projectId={currentProject.id}
+                  selectedNode={selectedNode}
+                  allNodes={nodes}
+                  onNodeUpdate={updateNodeData}
+                  onButtonAdd={addButton}
+                  onButtonUpdate={updateButton}
+                  onButtonDelete={deleteButton}
+                />
+              }
             />
           }
           canvasContent={
