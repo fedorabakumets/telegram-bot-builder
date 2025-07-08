@@ -145,7 +145,13 @@ export function Canvas({
 
   // Handle panning
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey)) { // Middle mouse, right mouse, or Alt+click
+    // Check if click is on empty canvas (not on a node)
+    const target = e.target as HTMLElement;
+    const isEmptyCanvas = target.classList.contains('canvas-grid-modern') || 
+                          target.closest('.canvas-grid-modern') === target;
+    
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) || 
+        (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
       e.preventDefault();
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
