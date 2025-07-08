@@ -475,30 +475,83 @@ export function RichTextEditor({
     
     let newText = '';
     let newCursorPosition = start;
+    let isToggleOff = false;
     
     if (hasSelection) {
-      // Если текст выделен - форматируем выделенный текст
-      newText = formatPrefix + selectedText + formatSuffix;
-      newCursorPosition = start + newText.length;
+      // Проверяем, уже ли применено форматирование к выделенному тексту
+      const beforeSelection = value.substring(Math.max(0, start - formatPrefix.length), start);
+      const afterSelection = value.substring(end, Math.min(value.length, end + formatSuffix.length));
+      
+      // Для цитат и заголовков проверяем только начало строки
+      if (format.name === 'Цитата' || format.name === 'Заголовок') {
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const linePrefix = value.substring(lineStart, start);
+        
+        if (linePrefix === formatPrefix) {
+          // Убираем форматирование
+          newText = selectedText;
+          newCursorPosition = start - formatPrefix.length;
+          isToggleOff = true;
+          
+          // Обновляем весь текст, убирая префикс
+          const newValue = value.substring(0, lineStart) + value.substring(start) + value.substring(end);
+          onChange(newValue);
+        } else {
+          // Добавляем форматирование
+          newText = formatPrefix + selectedText;
+          newCursorPosition = start + newText.length;
+          
+          const newValue = value.substring(0, lineStart) + formatPrefix + value.substring(lineStart);
+          onChange(newValue);
+        }
+      } else {
+        // Для обычного форматирования проверяем окружение
+        if (beforeSelection === formatPrefix && afterSelection === formatSuffix) {
+          // Убираем форматирование
+          newText = selectedText;
+          newCursorPosition = start - formatPrefix.length;
+          isToggleOff = true;
+          
+          const newValue = value.substring(0, start - formatPrefix.length) + selectedText + value.substring(end + formatSuffix.length);
+          onChange(newValue);
+        } else {
+          // Добавляем форматирование
+          newText = formatPrefix + selectedText + formatSuffix;
+          newCursorPosition = start + newText.length;
+          
+          const newValue = value.substring(0, start) + newText + value.substring(end);
+          onChange(newValue);
+        }
+      }
     } else {
       // Если текст не выделен - вставляем символы форматирования как в Telegram
       newText = formatPrefix + formatSuffix;
       newCursorPosition = start + formatPrefix.length + cursorOffset;
+      
+      const newValue = value.substring(0, start) + newText + value.substring(end);
+      onChange(newValue);
     }
-    
-    const newValue = value.substring(0, start) + newText + value.substring(end);
-    onChange(newValue);
     
     // Устанавливаем курсор в правильную позицию
     setTimeout(() => {
-      textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+      if (hasSelection && !isToggleOff) {
+        // Если добавляем форматирование, выделяем отформатированный текст
+        if (format.name === 'Цитата' || format.name === 'Заголовок') {
+          textarea.setSelectionRange(newCursorPosition - selectedText.length, newCursorPosition);
+        } else {
+          textarea.setSelectionRange(start + formatPrefix.length, start + formatPrefix.length + selectedText.length);
+        }
+      } else {
+        // Обычное позиционирование курсора
+        textarea.setSelectionRange(newCursorPosition, newCursorPosition);
+      }
       textarea.focus();
     }, 0);
 
     toast({
-      title: "Форматирование применено",
+      title: isToggleOff ? "Форматирование отменено" : "Форматирование применено",
       description: hasSelection 
-        ? `Применено к выделенному тексту: ${format.name}` 
+        ? (isToggleOff ? `Убрано форматирование "${format.name}" с выделенного текста` : `Применено к выделенному тексту: ${format.name}`)
         : `Добавлены символы: ${format.name}`,
       variant: "default"
     });
