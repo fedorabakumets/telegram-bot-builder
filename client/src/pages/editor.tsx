@@ -18,6 +18,8 @@ import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
 import { LayoutCustomizer } from '@/components/layout/layout-customizer';
+import { SimpleLayoutCustomizer, SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
+import { FlexibleLayout } from '@/components/layout/flexible-layout';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +38,45 @@ export default function Editor() {
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
   const [showLayoutManager, setShowLayoutManager] = useState(false);
   const [showLayoutCustomizer, setShowLayoutCustomizer] = useState(false);
+  const [useFlexibleLayout, setUseFlexibleLayout] = useState(true);
+  const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>({
+    elements: [
+      {
+        id: 'header',
+        type: 'header',
+        name: 'Шапка',
+        position: 'top',
+        size: 8,
+        visible: true
+      },
+      {
+        id: 'sidebar',
+        type: 'sidebar',
+        name: 'Боковая панель',
+        position: 'left',
+        size: 20,
+        visible: true
+      },
+      {
+        id: 'canvas',
+        type: 'canvas',
+        name: 'Холст',
+        position: 'center',
+        size: 55,
+        visible: true
+      },
+      {
+        id: 'properties',
+        type: 'properties',
+        name: 'Свойства',
+        position: 'right',
+        size: 25,
+        visible: true
+      }
+    ],
+    compactMode: false,
+    showGrid: true
+  });
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -213,116 +254,195 @@ export default function Editor() {
     );
   }
 
+  // Функция рендеринга содержимого для гибкого макета
+  const renderFlexibleLayoutContent = () => {
+    const headerContent = (
+      <AdaptiveHeader
+        config={layoutConfig}
+        projectName={currentProject.name}
+        currentTab={currentTab}
+        onTabChange={handleTabChange}
+        onSave={handleSave}
+        onExport={() => setShowExport(true)}
+        onSaveAsTemplate={handleSaveAsTemplate}
+        onLoadTemplate={handleLoadTemplate}
+        onLayoutSettings={() => setShowLayoutManager(true)}
+        isSaving={updateProjectMutation.isPending}
+      />
+    );
+
+    const sidebarContent = (
+      <ComponentsSidebar 
+        onComponentDrag={handleComponentDrag} 
+        onLoadTemplate={handleLoadTemplate}
+        onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+        onLayoutChange={updateLayoutConfig}
+      />
+    );
+
+    const canvasContent = (
+      <div className="h-full">
+        {currentTab === 'editor' ? (
+          <Canvas
+            nodes={nodes}
+            connections={connections}
+            selectedNodeId={selectedNodeId}
+            selectedConnectionId={selectedConnectionId || undefined}
+            onNodeSelect={setSelectedNodeId}
+            onNodeAdd={addNode}
+            onNodeDelete={deleteNode}
+            onNodeMove={handleNodeMove}
+            onConnectionSelect={setSelectedConnectionId}
+            onConnectionDelete={deleteConnection}
+            onConnectionAdd={addConnection}
+            onNodesUpdate={updateNodes}
+          />
+        ) : currentTab === 'bot' ? (
+          <div className="h-full p-6 bg-gray-50 overflow-auto">
+            <div className="max-w-2xl mx-auto">
+              <BotControl
+                projectId={currentProject.id}
+                projectName={currentProject.name}
+              />
+            </div>
+          </div>
+        ) : currentTab === 'connections' ? (
+          <div className="h-full bg-background">
+            <div className="h-full flex">
+              <div className="w-1/2 p-4 space-y-4 overflow-auto">
+                <SmartConnectionCreator
+                  nodes={nodes}
+                  connections={connections}
+                  onConnectionAdd={addConnection}
+                  onNodesChange={updateNodes}
+                  autoButtonCreation={autoButtonCreation}
+                  selectedNodeId={selectedNodeId || undefined}
+                />
+                
+                <EnhancedConnectionControls
+                  nodes={nodes}
+                  connections={connections}
+                  onConnectionAdd={addConnection}
+                  onConnectionDelete={deleteConnection}
+                  onConnectionUpdate={updateConnection}
+                  onNodesChange={updateNodes}
+                  autoButtonCreation={autoButtonCreation}
+                  onAutoButtonCreationChange={setAutoButtonCreation}
+                  selectedConnection={selectedConnection}
+                  onConnectionSelect={setSelectedConnection}
+                />
+              </div>
+              
+              <div className="w-1/2 p-4 overflow-auto border-l">
+                <ConnectionVisualization
+                  nodes={nodes}
+                  connections={connections}
+                  onConnectionSelect={handleConnectionSelect}
+                  onConnectionDelete={handleConnectionDelete}
+                  onConnectionEdit={handleConnectionEdit}
+                  selectedConnectionId={selectedConnectionId || undefined}
+                  showLabels={true}
+                  showMetrics={true}
+                  interactive={true}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+
+    const propertiesContent = (
+      <PropertiesPanel
+        projectId={currentProject.id}
+        selectedNode={selectedNode}
+        allNodes={nodes}
+        onNodeUpdate={updateNodeData}
+        onButtonAdd={addButton}
+        onButtonUpdate={updateButton}
+        onButtonDelete={deleteButton}
+      />
+    );
+
+    if (useFlexibleLayout) {
+      return (
+        <SimpleLayoutCustomizer
+          config={flexibleLayoutConfig}
+          onConfigChange={setFlexibleLayoutConfig}
+        >
+          <FlexibleLayout
+            config={flexibleLayoutConfig}
+            headerContent={headerContent}
+            sidebarContent={sidebarContent}
+            canvasContent={canvasContent}
+            propertiesContent={propertiesContent}
+          />
+        </SimpleLayoutCustomizer>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <>
-      <AdaptiveLayout
-        config={layoutConfig}
-        header={
-          <AdaptiveHeader
-            config={layoutConfig}
-            projectName={currentProject.name}
-            currentTab={currentTab}
-            onTabChange={handleTabChange}
-            onSave={handleSave}
-            onExport={() => setShowExport(true)}
-            onSaveAsTemplate={handleSaveAsTemplate}
-            onLoadTemplate={handleLoadTemplate}
-            onLayoutSettings={() => setShowLayoutManager(true)}
-            isSaving={updateProjectMutation.isPending}
-          />
-        }
-        sidebar={
-          <ComponentsSidebar 
-            onComponentDrag={handleComponentDrag} 
-            onLoadTemplate={handleLoadTemplate}
-            onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
-            onLayoutChange={updateLayoutConfig}
-            headerContent={
-              <AdaptiveHeader
-                config={layoutConfig}
-                projectName={currentProject.name}
-                currentTab={currentTab}
-                onTabChange={handleTabChange}
-                onSave={handleSave}
-                onExport={() => setShowExport(true)}
-                onSaveAsTemplate={handleSaveAsTemplate}
-                onLoadTemplate={handleLoadTemplate}
-                onLayoutSettings={() => setShowLayoutManager(true)}
-                isSaving={updateProjectMutation.isPending}
-              />
-            }
-            sidebarContent={
-              <ComponentsSidebar 
-                onComponentDrag={handleComponentDrag} 
-                onLoadTemplate={handleLoadTemplate}
-                onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
-                onLayoutChange={updateLayoutConfig}
-              />
-            }
-            canvasContent={
-              <div className="h-full">
-                {currentTab === 'editor' ? (
-                  <Canvas
-                    nodes={nodes}
-                    connections={connections}
-                    selectedNodeId={selectedNodeId}
-                    selectedConnectionId={selectedConnectionId || undefined}
-                    onNodeSelect={setSelectedNodeId}
-                    onNodeAdd={addNode}
-                    onNodeDelete={deleteNode}
-                    onNodeMove={handleNodeMove}
-                    onConnectionSelect={setSelectedConnectionId}
-                    onConnectionDelete={deleteConnection}
-                    onConnectionAdd={addConnection}
-                    onNodesUpdate={updateNodes}
-                  />
-                ) : null}
-              </div>
-            }
-            propertiesContent={
-              <PropertiesPanel
-                projectId={currentProject.id}
-                selectedNode={selectedNode}
-                allNodes={nodes}
-                onNodeUpdate={updateNodeData}
-                onButtonAdd={addButton}
-                onButtonUpdate={updateButton}
-                onButtonDelete={deleteButton}
-              />
-            }
-          />
-        }
-        canvas={
-          <div className="h-full">
-            {currentTab === 'editor' ? (
-              <Canvas
-                nodes={nodes}
-                connections={connections}
-                selectedNodeId={selectedNodeId}
-                selectedConnectionId={selectedConnectionId || undefined}
-                onNodeSelect={setSelectedNodeId}
-                onNodeAdd={addNode}
-                onNodeDelete={deleteNode}
-                onNodeMove={handleNodeMove}
-                onConnectionSelect={setSelectedConnectionId}
-                onConnectionDelete={deleteConnection}
-                onConnectionAdd={addConnection}
-                onNodesUpdate={updateNodes}
-              />
-            ) : currentTab === 'bot' ? (
-              <div className="h-full p-6 bg-gray-50 overflow-auto">
-                <div className="max-w-2xl mx-auto">
-                  <BotControl
-                    projectId={currentProject.id}
-                    projectName={currentProject.name}
-                  />
+      {useFlexibleLayout ? (
+        renderFlexibleLayoutContent()
+      ) : (
+        <AdaptiveLayout
+          config={layoutConfig}
+          header={
+            <AdaptiveHeader
+              config={layoutConfig}
+              projectName={currentProject.name}
+              currentTab={currentTab}
+              onTabChange={handleTabChange}
+              onSave={handleSave}
+              onExport={() => setShowExport(true)}
+              onSaveAsTemplate={handleSaveAsTemplate}
+              onLoadTemplate={handleLoadTemplate}
+              onLayoutSettings={() => setShowLayoutManager(true)}
+              isSaving={updateProjectMutation.isPending}
+            />
+          }
+          sidebar={
+            <ComponentsSidebar 
+              onComponentDrag={handleComponentDrag} 
+              onLoadTemplate={handleLoadTemplate}
+              onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+              onLayoutChange={updateLayoutConfig}
+            />
+          }
+          canvas={
+            <div className="h-full">
+              {currentTab === 'editor' ? (
+                <Canvas
+                  nodes={nodes}
+                  connections={connections}
+                  selectedNodeId={selectedNodeId}
+                  selectedConnectionId={selectedConnectionId || undefined}
+                  onNodeSelect={setSelectedNodeId}
+                  onNodeAdd={addNode}
+                  onNodeDelete={deleteNode}
+                  onNodeMove={handleNodeMove}
+                  onConnectionSelect={setSelectedConnectionId}
+                  onConnectionDelete={deleteConnection}
+                  onConnectionAdd={addConnection}
+                  onNodesUpdate={updateNodes}
+                />
+              ) : currentTab === 'bot' ? (
+                <div className="h-full p-6 bg-gray-50 overflow-auto">
+                  <div className="max-w-2xl mx-auto">
+                    <BotControl
+                      projectId={currentProject.id}
+                      projectName={currentProject.name}
+                    />
+                  </div>
                 </div>
-              </div>
-            ) : currentTab === 'connections' ? (
-              <div className="h-full bg-background">
-                <ResizablePanelGroup direction="horizontal" className="h-full">
-                  <ResizablePanel defaultSize={50} minSize={30}>
-                    <div className="h-full p-4 space-y-4 overflow-auto">
+              ) : currentTab === 'connections' ? (
+                <div className="h-full bg-background">
+                  <div className="h-full flex">
+                    <div className="w-1/2 p-4 space-y-4 overflow-auto">
                       <SmartConnectionCreator
                         nodes={nodes}
                         connections={connections}
@@ -345,12 +465,8 @@ export default function Editor() {
                         onConnectionSelect={setSelectedConnection}
                       />
                     </div>
-                  </ResizablePanel>
-                  
-                  <ResizableHandle withHandle />
-                  
-                  <ResizablePanel defaultSize={50} minSize={30}>
-                    <div className="h-full p-4 overflow-auto">
+                    
+                    <div className="w-1/2 p-4 overflow-auto border-l">
                       <ConnectionVisualization
                         nodes={nodes}
                         connections={connections}
@@ -363,24 +479,24 @@ export default function Editor() {
                         interactive={true}
                       />
                     </div>
-                  </ResizablePanel>
-                </ResizablePanelGroup>
-              </div>
-            ) : null}
-          </div>
-        }
-        properties={
-          <PropertiesPanel
-            projectId={currentProject.id}
-            selectedNode={selectedNode}
-            allNodes={nodes}
-            onNodeUpdate={updateNodeData}
-            onButtonAdd={addButton}
-            onButtonUpdate={updateButton}
-            onButtonDelete={deleteButton}
-          />
-        }
-      />
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          }
+          properties={
+            <PropertiesPanel
+              projectId={currentProject.id}
+              selectedNode={selectedNode}
+              allNodes={nodes}
+              onNodeUpdate={updateNodeData}
+              onButtonAdd={addButton}
+              onButtonUpdate={updateButton}
+              onButtonDelete={deleteButton}
+            />
+          }
+        />
+      )}
 
       {showLayoutManager && (
         <LayoutManager
