@@ -287,14 +287,12 @@ export function RichTextEditor({
     });
   };
 
-  // Keyboard shortcuts - only work with selected text like in Telegram
+  // Keyboard shortcuts - work like in Telegram (no selection required)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         const textarea = textareaRef.current;
         if (!textarea) return;
-        
-        const hasSelection = textarea.selectionStart !== textarea.selectionEnd;
         
         const format = formatOptions.find(f => {
           const shortcut = f.shortcut?.toLowerCase();
@@ -309,15 +307,7 @@ export function RichTextEditor({
         
         if (format) {
           e.preventDefault();
-          if (hasSelection) {
-            insertFormatting(format);
-          } else {
-            toast({
-              title: "Выделите текст",
-              description: `Для применения ${format.name.toLowerCase()} сначала выделите текст`,
-              variant: "default"
-            });
-          }
+          insertFormatting(format);
         } else if (e.key === 'z' && !e.shiftKey) {
           e.preventDefault();
           undo();
@@ -345,99 +335,138 @@ export function RichTextEditor({
     const end = textarea.selectionEnd;
     const selectedText = value.substring(start, end);
     
-    if (!selectedText) {
-      // Если текст не выделен, показываем подсказку как в Telegram
-      toast({
-        title: "Выделите текст",
-        description: "Сначала выделите текст, который хотите отформатировать",
-        variant: "default"
-      });
-      return;
-    }
+    const hasSelection = start !== end;
     
-    let newText = '';
+    let formatPrefix = '';
+    let formatSuffix = '';
+    let cursorOffset = 0;
     
-    // Применяем форматирование к выделенному тексту как в Telegram
+    // Определяем символы форматирования в зависимости от режима
     if (enableMarkdown) {
       switch (format.name) {
         case 'Жирный':
-          newText = `**${selectedText}**`;
+          formatPrefix = '**';
+          formatSuffix = '**';
           break;
         case 'Курсив':
-          newText = `_${selectedText}_`;
+          formatPrefix = '_';
+          formatSuffix = '_';
           break;
         case 'Подчеркнутый':
-          newText = `__${selectedText}__`;
+          formatPrefix = '__';
+          formatSuffix = '__';
           break;
         case 'Зачеркнутый':
-          newText = `~${selectedText}~`;
+          formatPrefix = '~';
+          formatSuffix = '~';
           break;
         case 'Код':
-          newText = `\`${selectedText}\``;
+          formatPrefix = '`';
+          formatSuffix = '`';
           break;
         case 'Блок кода':
-          newText = `\`\`\`\n${selectedText}\n\`\`\``;
+          formatPrefix = '```\n';
+          formatSuffix = '\n```';
           break;
         case 'Ссылка':
-          const url = prompt('Введите URL:') || 'https://example.com';
-          newText = `[${selectedText}](${url})`;
+          if (hasSelection) {
+            const url = prompt('Введите URL:') || 'https://example.com';
+            formatPrefix = '[';
+            formatSuffix = `](${url})`;
+          } else {
+            formatPrefix = '[';
+            formatSuffix = '](https://example.com)';
+            cursorOffset = 1; // Поставить курсор после '['
+          }
           break;
         case 'Цитата':
-          newText = `> ${selectedText}`;
+          formatPrefix = '> ';
+          formatSuffix = '';
           break;
         case 'Заголовок':
-          newText = `# ${selectedText}`;
+          formatPrefix = '# ';
+          formatSuffix = '';
           break;
         default:
-          newText = selectedText;
+          return;
       }
     } else {
       switch (format.name) {
         case 'Жирный':
-          newText = `<b>${selectedText}</b>`;
+          formatPrefix = '<b>';
+          formatSuffix = '</b>';
           break;
         case 'Курсив':
-          newText = `<i>${selectedText}</i>`;
+          formatPrefix = '<i>';
+          formatSuffix = '</i>';
           break;
         case 'Подчеркнутый':
-          newText = `<u>${selectedText}</u>`;
+          formatPrefix = '<u>';
+          formatSuffix = '</u>';
           break;
         case 'Зачеркнутый':
-          newText = `<s>${selectedText}</s>`;
+          formatPrefix = '<s>';
+          formatSuffix = '</s>';
           break;
         case 'Код':
-          newText = `<code>${selectedText}</code>`;
+          formatPrefix = '<code>';
+          formatSuffix = '</code>';
           break;
         case 'Блок кода':
-          newText = `<pre><code>${selectedText}</code></pre>`;
+          formatPrefix = '<pre><code>';
+          formatSuffix = '</code></pre>';
           break;
         case 'Ссылка':
-          const url = prompt('Введите URL:') || 'https://example.com';
-          newText = `<a href="${url}">${selectedText}</a>`;
+          if (hasSelection) {
+            const url = prompt('Введите URL:') || 'https://example.com';
+            formatPrefix = `<a href="${url}">`;
+            formatSuffix = '</a>';
+          } else {
+            formatPrefix = '<a href="https://example.com">';
+            formatSuffix = '</a>';
+            cursorOffset = formatPrefix.length; // Поставить курсор после открывающего тега
+          }
           break;
         case 'Цитата':
-          newText = `<blockquote>${selectedText}</blockquote>`;
+          formatPrefix = '<blockquote>';
+          formatSuffix = '</blockquote>';
           break;
         case 'Заголовок':
-          newText = `<h3>${selectedText}</h3>`;
+          formatPrefix = '<h3>';
+          formatSuffix = '</h3>';
           break;
         default:
-          newText = selectedText;
+          return;
       }
+    }
+    
+    let newText = '';
+    let newCursorPosition = start;
+    
+    if (hasSelection) {
+      // Если текст выделен - форматируем выделенный текст
+      newText = formatPrefix + selectedText + formatSuffix;
+      newCursorPosition = start + newText.length;
+    } else {
+      // Если текст не выделен - вставляем символы форматирования как в Telegram
+      newText = formatPrefix + formatSuffix;
+      newCursorPosition = start + formatPrefix.length + cursorOffset;
     }
     
     const newValue = value.substring(0, start) + newText + value.substring(end);
     onChange(newValue);
     
-    // Устанавливаем курсор после отформатированного текста
+    // Устанавливаем курсор в правильную позицию
     setTimeout(() => {
-      textarea.setSelectionRange(start + newText.length, start + newText.length);
+      textarea.setSelectionRange(newCursorPosition, newCursorPosition);
       textarea.focus();
     }, 0);
 
     toast({
       title: "Форматирование применено",
-      description: `Применено: ${format.name}`,
+      description: hasSelection 
+        ? `Применено к выделенному тексту: ${format.name}` 
+        : `Добавлены символы: ${format.name}`,
       variant: "default"
     });
   };
