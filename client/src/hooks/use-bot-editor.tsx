@@ -36,6 +36,12 @@ export function useBotEditor(initialData?: BotData) {
     setConnections(prev => prev.filter(conn => conn.id !== connectionId));
   }, []);
 
+  const updateConnection = useCallback((connectionId: string, updates: Partial<Connection>) => {
+    setConnections(prev => prev.map(conn => 
+      conn.id === connectionId ? { ...conn, ...updates } : conn
+    ));
+  }, []);
+
   const updateNodeData = useCallback((nodeId: string, data: Partial<Node['data']>) => {
     setNodes(prev => prev.map(node => 
       node.id === nodeId 
@@ -120,6 +126,7 @@ export function useBotEditor(initialData?: BotData) {
     deleteNode,
     addConnection,
     deleteConnection,
+    updateConnection,
     updateNodeData,
     addButton,
     updateButton,

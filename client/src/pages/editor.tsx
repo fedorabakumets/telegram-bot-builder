@@ -58,6 +58,7 @@ export default function Editor() {
     deleteNode,
     addConnection,
     deleteConnection,
+    updateConnection,
     updateNodeData,
     addButton,
     updateButton,
@@ -235,6 +236,60 @@ export default function Editor() {
             onComponentDrag={handleComponentDrag} 
             onLoadTemplate={handleLoadTemplate}
             onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+            onLayoutChange={updateLayoutConfig}
+            headerContent={
+              <AdaptiveHeader
+                config={layoutConfig}
+                projectName={currentProject.name}
+                currentTab={currentTab}
+                onTabChange={handleTabChange}
+                onSave={handleSave}
+                onExport={() => setShowExport(true)}
+                onSaveAsTemplate={handleSaveAsTemplate}
+                onLoadTemplate={handleLoadTemplate}
+                onLayoutSettings={() => setShowLayoutManager(true)}
+                isSaving={updateProjectMutation.isPending}
+              />
+            }
+            sidebarContent={
+              <ComponentsSidebar 
+                onComponentDrag={handleComponentDrag} 
+                onLoadTemplate={handleLoadTemplate}
+                onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+                onLayoutChange={updateLayoutConfig}
+              />
+            }
+            canvasContent={
+              <div className="h-full">
+                {currentTab === 'editor' ? (
+                  <Canvas
+                    nodes={nodes}
+                    connections={connections}
+                    selectedNodeId={selectedNodeId}
+                    selectedConnectionId={selectedConnectionId || undefined}
+                    onNodeSelect={setSelectedNodeId}
+                    onNodeAdd={addNode}
+                    onNodeDelete={deleteNode}
+                    onNodeMove={handleNodeMove}
+                    onConnectionSelect={setSelectedConnectionId}
+                    onConnectionDelete={deleteConnection}
+                    onConnectionAdd={addConnection}
+                    onNodesUpdate={updateNodes}
+                  />
+                ) : null}
+              </div>
+            }
+            propertiesContent={
+              <PropertiesPanel
+                projectId={currentProject.id}
+                selectedNode={selectedNode}
+                allNodes={nodes}
+                onNodeUpdate={updateNodeData}
+                onButtonAdd={addButton}
+                onButtonUpdate={updateButton}
+                onButtonDelete={deleteButton}
+              />
+            }
           />
         }
         canvas={
