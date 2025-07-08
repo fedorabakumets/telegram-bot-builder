@@ -93,6 +93,39 @@ export function RichTextEditor({
     setRedoStack([]);
   }, [value]);
 
+  // Функция для рендеринга живого предпросмотра с реальными эффектами
+  const renderLivePreview = (text: string) => {
+    let processedText = text;
+    
+    if (enableMarkdown) {
+      // Обработка Markdown форматирования
+      processedText = processedText
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Жирный
+        .replace(/_(.*?)_/g, '<em>$1</em>') // Курсив
+        .replace(/__(.*?)__/g, '<u>$1</u>') // Подчеркнутый
+        .replace(/~(.*?)~/g, '<s>$1</s>') // Зачеркнутый
+        .replace(/`(.*?)`/g, '<code class="live-preview-code">$1</code>') // Код
+        .replace(/```\n(.*?)\n```/gs, '<pre class="live-preview-pre"><code>$1</code></pre>') // Блок кода
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="live-preview-link">$1</a>') // Ссылка
+        .replace(/^> (.*)$/gm, '<blockquote class="live-preview-quote">$1</blockquote>') // Цитата
+        .replace(/^# (.*)$/gm, '<h3 class="live-preview-heading">$1</h3>'); // Заголовок
+    } else {
+      // Обработка HTML форматирования
+      processedText = processedText
+        .replace(/<b>(.*?)<\/b>/g, '<strong>$1</strong>')
+        .replace(/<i>(.*?)<\/i>/g, '<em>$1</em>')
+        .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
+        .replace(/<s>(.*?)<\/s>/g, '<s>$1</s>')
+        .replace(/<code>(.*?)<\/code>/g, '<code class="live-preview-code">$1</code>')
+        .replace(/<pre><code>(.*?)<\/code><\/pre>/gs, '<pre class="live-preview-pre"><code>$1</code></pre>')
+        .replace(/<a href="([^"]+)">(.*?)<\/a>/g, '<a href="$1" class="live-preview-link">$2</a>')
+        .replace(/<blockquote>(.*?)<\/blockquote>/g, '<blockquote class="live-preview-quote">$1</blockquote>')
+        .replace(/<h3>(.*?)<\/h3>/g, '<h3 class="live-preview-heading">$1</h3>');
+    }
+    
+    return processedText;
+  };
+
   const formatOptions = [
     { 
       icon: Bold, 
@@ -756,56 +789,82 @@ export function RichTextEditor({
           </TabsList>
 
           <TabsContent value="edit" className="space-y-3">
-            <div className="relative">
-              <Textarea
-                ref={textareaRef}
-                value={value}
-                onChange={(e) => {
-                  saveToUndoStack();
-                  onChange(e.target.value);
-                }}
-                placeholder="Введите текст сообщения..."
-                className={`min-h-[120px] resize-none transition-all duration-200 ${
-                  isExpanded ? 'min-h-[200px]' : ''
-                }`}
-                rows={isExpanded ? 10 : 6}
-                onSelect={(e) => {
-                  // Показываем интерактивную подсказку при выделении как в Telegram
-                  const textarea = e.target as HTMLTextAreaElement;
-                  if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
-                    const selectedText = value.substring(textarea.selectionStart, textarea.selectionEnd);
-                    if (selectedText.length > 0 && selectedText.length <= 200) {
-                      // Debounce для избежания спама уведомлений
-                      setTimeout(() => {
-                        if (textarea.selectionStart !== textarea.selectionEnd) {
-                          const currentSelection = value.substring(textarea.selectionStart, textarea.selectionEnd);
-                          if (currentSelection === selectedText) {
-                            toast({
-                              title: `✅ Выделено: "${selectedText.slice(0, 20)}${selectedText.length > 20 ? '...' : ''}"`,
-                              description: "Теперь нажмите B/I/U или выберите форматирование из панели выше",
-                              duration: 3000
-                            });
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Редактор */}
+              <div className="relative">
+                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                  Редактор кода
+                </Label>
+                <Textarea
+                  ref={textareaRef}
+                  value={value}
+                  onChange={(e) => {
+                    saveToUndoStack();
+                    onChange(e.target.value);
+                  }}
+                  placeholder="Введите текст сообщения..."
+                  className={`min-h-[120px] resize-none transition-all duration-200 font-mono text-sm ${
+                    isExpanded ? 'min-h-[200px]' : ''
+                  }`}
+                  rows={isExpanded ? 10 : 6}
+                  onSelect={(e) => {
+                    // Показываем интерактивную подсказку при выделении как в Telegram
+                    const textarea = e.target as HTMLTextAreaElement;
+                    if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                      const selectedText = value.substring(textarea.selectionStart, textarea.selectionEnd);
+                      if (selectedText.length > 0 && selectedText.length <= 200) {
+                        // Debounce для избежания спама уведомлений
+                        setTimeout(() => {
+                          if (textarea.selectionStart !== textarea.selectionEnd) {
+                            const currentSelection = value.substring(textarea.selectionStart, textarea.selectionEnd);
+                            if (currentSelection === selectedText) {
+                              toast({
+                                title: `✅ Выделено: "${selectedText.slice(0, 20)}${selectedText.length > 20 ? '...' : ''}"`,
+                                description: "Теперь нажмите B/I/U или выберите форматирование из панели выше",
+                                duration: 3000
+                              });
+                            }
                           }
-                        }
-                      }, 500);
+                        }, 500);
+                      }
                     }
-                  }
-                }}
-              />
-              
-              {/* Character count overlay */}
-              {charCount > 0 && (
-                <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
-                  {charCount}/4096
+                  }}
+                />
+                
+                {/* Character count overlay */}
+                {charCount > 0 && (
+                  <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
+                    {charCount}/4096
+                  </div>
+                )}
+                
+                {/* Selection helper overlay - показываем только если нет текста */}
+                {!value && (
+                  <div className="absolute top-2 right-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-1 rounded opacity-70">
+                    💡 Выделите текст для форматирования
+                  </div>
+                )}
+              </div>
+
+              {/* Живой предпросмотр */}
+              <div className="relative">
+                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                  Живой предпросмотр
+                </Label>
+                <div className={`border rounded-md p-3 bg-background min-h-[120px] ${
+                  isExpanded ? 'min-h-[200px]' : ''
+                } overflow-auto`}>
+                  {value ? (
+                    <div className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{
+                      __html: renderLivePreview(value)
+                    }} />
+                  ) : (
+                    <div className="text-muted-foreground text-sm">
+                      Предпросмотр появится здесь...
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {/* Selection helper overlay - показываем только если нет текста */}
-              {!value && (
-                <div className="absolute top-2 right-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-1 rounded opacity-70">
-                  💡 Выделите текст для форматирования
-                </div>
-              )}
+              </div>
             </div>
             
             <div className="flex items-center justify-between text-xs text-muted-foreground">
