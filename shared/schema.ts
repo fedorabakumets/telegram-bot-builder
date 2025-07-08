@@ -194,7 +194,7 @@ export const buttonSchema = z.object({
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'condition', 'input', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'poll', 'dice']),
+  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'condition', 'input', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'poll', 'dice', 'user-input']),
   position: z.object({
     x: z.number(),
     y: z.number(),
@@ -261,7 +261,22 @@ export const nodeSchema = z.object({
     height: z.number().optional(),
     performer: z.string().optional(),
     fileSize: z.number().optional(),
-    filename: z.string().optional()
+    filename: z.string().optional(),
+    // Настройки для сбора пользовательского ввода
+    inputType: z.enum(['text', 'number', 'email', 'phone', 'photo', 'video', 'audio', 'document', 'location', 'contact', 'any']).default('text'),
+    inputVariable: z.string().optional(), // Имя переменной для сохранения ответа
+    inputPrompt: z.string().optional(), // Текст запроса ввода
+    inputValidation: z.string().optional(), // Правило валидации (regex или описание)
+    inputRequired: z.boolean().default(true), // Обязательность ввода
+    inputTimeout: z.number().optional(), // Таймаут ожидания ввода в секундах
+    inputRetryMessage: z.string().optional(), // Сообщение при неверном вводе
+    inputSuccessMessage: z.string().optional(), // Сообщение при успешном вводе
+    saveToDatabase: z.boolean().default(false), // Сохранять ли в базу данных
+    allowSkip: z.boolean().default(false), // Разрешить пропуск ввода
+    minLength: z.number().optional(), // Минимальная длина текста
+    maxLength: z.number().optional(), // Максимальная длина текста
+    placeholder: z.string().optional(), // Подсказка для ввода
+    defaultValue: z.string().optional() // Значение по умолчанию
   }),
 });
 

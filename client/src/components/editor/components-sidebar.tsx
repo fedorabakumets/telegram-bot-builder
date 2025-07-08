@@ -90,6 +90,27 @@ const components: ComponentDefinition[] = [
     }
   },
   {
+    id: 'user-input',
+    name: 'Сбор ввода пользователя',
+    description: 'Запрос и сохранение ответа пользователя',
+    icon: 'fas fa-keyboard',
+    color: 'bg-purple-100 text-purple-600',
+    type: 'user-input',
+    defaultData: {
+      inputPrompt: 'Пожалуйста, введите ваш ответ:',
+      inputType: 'text',
+      inputVariable: 'user_response',
+      inputRequired: true,
+      inputTimeout: 60,
+      inputRetryMessage: 'Пожалуйста, попробуйте еще раз.',
+      inputSuccessMessage: 'Спасибо за ваш ответ!',
+      saveToDatabase: false,
+      allowSkip: false,
+      keyboardType: 'none',
+      buttons: []
+    }
+  },
+  {
     id: 'document-message',
     name: 'Документ',
     description: 'Файл документа',
@@ -201,6 +222,35 @@ const components: ComponentDefinition[] = [
       lastName: 'Фамилия',
       userId: 0,
       vcard: '',
+      keyboardType: 'none',
+      buttons: [],
+      markdown: false,
+      oneTimeKeyboard: false,
+      resizeKeyboard: true
+    }
+  },
+  {
+    id: 'user-input-collector',
+    name: 'Сбор пользовательского ввода',
+    description: 'Получение и обработка ответов пользователя',
+    icon: 'fas fa-comments',
+    color: 'bg-purple-100 text-purple-600',
+    type: 'user-input',
+    defaultData: {
+      inputPrompt: 'Пожалуйста, введите ваш ответ:',
+      inputType: 'text',
+      inputVariable: 'user_response',
+      inputValidation: '',
+      minLength: 0,
+      maxLength: 0,
+      inputTimeout: 60,
+      inputRequired: true,
+      allowSkip: false,
+      saveToDatabase: false,
+      inputRetryMessage: 'Пожалуйста, попробуйте еще раз.',
+      inputSuccessMessage: 'Спасибо за ваш ответ!',
+      placeholder: '',
+      defaultValue: '',
       keyboardType: 'none',
       buttons: [],
       markdown: false,

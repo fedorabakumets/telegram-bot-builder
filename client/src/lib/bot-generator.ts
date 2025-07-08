@@ -163,6 +163,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += generateLocationHandler(node);
     } else if (node.type === "contact") {
       code += generateContactHandler(node);
+    } else if (node.type === "user-input") {
+      code += generateUserInputHandler(node);
     }
     // Note: Message nodes are handled via callback handlers, not as separate message handlers
   });
@@ -2091,4 +2093,98 @@ export function generateConfigYaml(botName: string): string {
     '  debug: false'
   ];
   return lines.join('\n');
+}
+
+function generateUserInputHandler(node: Node): string {
+  let code = `\n# Обработчик сбора пользовательского ввода для узла ${node.id}\n`;
+  
+  // Генерируем безопасное имя функции
+  const safeFunctionName = node.id.replace(/[^a-zA-Z0-9]/g, '_');
+  
+  // Проверяем, есть ли команда для этого узла
+  if (node.data.command) {
+    const command = node.data.command.replace('/', '');
+    const functionName = `input_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    code += `@dp.message(Command("${command}"))\n`;
+    code += `async def ${functionName}(message: types.Message):\n`;
+    
+    // Добавляем проверки безопасности
+    if (node.data.isPrivateOnly) {
+      code += '    if not await is_private_chat(message):\n';
+      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.adminOnly) {
+      code += '    if not await is_admin(message.from_user.id):\n';
+      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+
+    if (node.data.requiresAuth) {
+      code += '    if not await check_auth(message.from_user.id):\n';
+      code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
+      code += '        return\n';
+    }
+  }
+  
+  // Получаем параметры из узла
+  const inputPrompt = node.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
+  const inputType = node.data.inputType || 'text';
+  const inputVariable = node.data.inputVariable || 'user_response';
+  const inputValidation = node.data.inputValidation || '';
+  const minLength = node.data.minLength || 0;
+  const maxLength = node.data.maxLength || 0;
+  const inputTimeout = node.data.inputTimeout || 60;
+  const inputRequired = node.data.inputRequired !== false;
+  const allowSkip = node.data.allowSkip || false;
+  const saveToDatabase = node.data.saveToDatabase || false;
+  const inputRetryMessage = node.data.inputRetryMessage || "Пожалуйста, попробуйте еще раз.";
+  const inputSuccessMessage = node.data.inputSuccessMessage || "Спасибо за ваш ответ!";
+  const placeholder = node.data.placeholder || "";
+  const defaultValue = node.data.defaultValue || "";
+  
+  // Отправляем запрос пользователю
+  if (inputPrompt.includes('\n')) {
+    code += `    prompt_text = """${inputPrompt}"""\n`;
+  } else {
+    const escapedPrompt = inputPrompt.replace(/"/g, '\\"');
+    code += `    prompt_text = "${escapedPrompt}"\n`;
+  }
+  
+  if (placeholder) {
+    code += `    placeholder_text = "${placeholder}"\n`;
+    code += '    prompt_text += f"\\n\\n💡 {placeholder_text}"\n';
+  }
+  
+  if (allowSkip) {
+    code += '    prompt_text += "\\n\\n⏭️ Нажмите /skip чтобы пропустить"\n';
+  }
+  
+  code += '    await message.answer(prompt_text)\n';
+  code += '    \n';
+  code += '    # Инициализируем пользовательские данные если их нет\n';
+  code += '    if message.from_user.id not in user_data:\n';
+  code += '        user_data[message.from_user.id] = {}\n';
+  code += '    \n';
+  code += '    # Ожидаем ответ пользователя\n';
+  code += '    user_data[message.from_user.id]["waiting_for_input"] = {\n';
+  code += `        "type": "${inputType}",\n`;
+  code += `        "variable": "${inputVariable}",\n`;
+  code += `        "validation": "${inputValidation}",\n`;
+  code += `        "min_length": ${minLength},\n`;
+  code += `        "max_length": ${maxLength},\n`;
+  code += `        "timeout": ${inputTimeout},\n`;
+  code += `        "required": ${inputRequired ? 'True' : 'False'},\n`;
+  code += `        "allow_skip": ${allowSkip ? 'True' : 'False'},\n`;
+  code += `        "save_to_db": ${saveToDatabase ? 'True' : 'False'},\n`;
+  code += `        "retry_message": "${inputRetryMessage}",\n`;
+  code += `        "success_message": "${inputSuccessMessage}",\n`;
+  code += `        "default_value": "${defaultValue}",\n`;
+  code += `        "node_id": "${node.id}"\n`;
+  code += '    }\n';
+  code += '    \n';
+  
+  return code;
 }
