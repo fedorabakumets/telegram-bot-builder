@@ -33,7 +33,8 @@ import {
   RefreshCw,
   Eye,
   UserCheck,
-  UserX
+  UserX,
+  Edit
 } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 
@@ -321,7 +322,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
           {/* Stats Cards */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-4">
+            <div className="grid grid-cols-2 md:grid-cols-7 gap-3 mb-4">
               <Card className="p-3">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-blue-500" />
@@ -373,6 +374,15 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   <div>
                     <p className="text-xs text-muted-foreground">Среднее</p>
                     <p className="text-sm font-semibold">{stats.avgInteractionsPerUser}</p>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-3">
+                <div className="flex items-center gap-2">
+                  <Edit className="w-4 h-4 text-orange-500" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">С ответами</p>
+                    <p className="text-sm font-semibold">{users.filter(u => u.userData && Object.keys(u.userData).length > 0).length}</p>
                   </div>
                 </div>
               </Card>
@@ -446,6 +456,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <TableHead>Пользователь</TableHead>
                 <TableHead>Статус</TableHead>
                 <TableHead>Сообщения</TableHead>
+                <TableHead>Ответы</TableHead>
                 <TableHead>Последняя активность</TableHead>
                 <TableHead>Дата регистрации</TableHead>
                 <TableHead>Действия</TableHead>
@@ -454,7 +465,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
             <TableBody>
               {filteredAndSortedUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <div className="text-muted-foreground">
                       {searchQuery ? 'Пользователи не найдены' : 'Пользователи еще не взаимодействовали с ботом'}
                     </div>
@@ -482,6 +493,18 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                       </div>
                     </TableCell>
                     <TableCell>{user.interactionCount || user.interaction_count || 0}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">
+                          {user.userData && Object.keys(user.userData).length > 0 ? Object.keys(user.userData).length : 0}
+                        </span>
+                        {user.userData && Object.keys(user.userData).length > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            Есть ответы
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm">{formatDate(user.lastInteraction || user.last_interaction)}</TableCell>
                     <TableCell className="text-sm">{formatDate(user.createdAt || user.registered_at)}</TableCell>
                     <TableCell>
@@ -612,14 +635,60 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
               {(selectedUser.userData && Object.keys(selectedUser.userData).length > 0) && (
                 <div>
-                  <Label className="text-sm font-medium">Пользовательские данные</Label>
-                  <div className="mt-2">
-                    <Textarea
-                      value={JSON.stringify(selectedUser.userData, null, 2)}
-                      readOnly
-                      rows={6}
-                      className="text-xs font-mono"
-                    />
+                  <Label className="text-sm font-medium">Ответы пользователя</Label>
+                  <div className="mt-2 space-y-3">
+                    {Object.entries(selectedUser.userData).map(([key, value]) => (
+                      <div key={key} className="border rounded-lg p-3 bg-muted/50">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-foreground">{key}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {typeof value === 'object' && value !== null && 'timestamp' in value 
+                              ? formatDate(value.timestamp) 
+                              : 'Недавно'}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {typeof value === 'object' && value !== null ? (
+                            <div>
+                              {value.value && (
+                                <div className="mb-1">
+                                  <span className="font-medium">Ответ:</span> {value.value}
+                                </div>
+                              )}
+                              {value.type && (
+                                <div className="mb-1">
+                                  <span className="font-medium">Тип:</span> {value.type}
+                                </div>
+                              )}
+                              {value.nodeId && (
+                                <div className="mb-1">
+                                  <span className="font-medium">ID узла:</span> {value.nodeId}
+                                </div>
+                              )}
+                              {value.prompt && (
+                                <div className="mb-1">
+                                  <span className="font-medium">Вопрос:</span> {value.prompt}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div>{String(value)}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-4">
+                    <Label className="text-sm font-medium">Исходные данные (JSON)</Label>
+                    <div className="mt-2">
+                      <Textarea
+                        value={JSON.stringify(selectedUser.userData, null, 2)}
+                        readOnly
+                        rows={4}
+                        className="text-xs font-mono"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
