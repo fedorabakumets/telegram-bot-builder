@@ -254,10 +254,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += generateLocationHandler(node);
     } else if (node.type === "contact") {
       code += generateContactHandler(node);
-    } else if (node.type === "user-input") {
-      code += generateUserInputHandler(node);
     }
-    // Note: Message nodes are handled via callback handlers, not as separate message handlers
+    // Note: user-input and message nodes are handled via callback handlers, not as separate command handlers
   });
 
   // Generate synonym handlers for commands

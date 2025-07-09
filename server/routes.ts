@@ -2394,7 +2394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COUNT(*) FILTER (WHERE is_active = true) as "activeUsers",
           COUNT(*) FILTER (WHERE is_active = false) as "blockedUsers",
           0 as "premiumUsers",
-          COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}' AND user_data::text LIKE '%response_%') as "usersWithResponses",
+          COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}' AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%')) as "usersWithResponses",
           COALESCE(SUM(interaction_count), 0) as "totalInteractions",
           COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
         FROM bot_users
@@ -2446,7 +2446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM bot_users 
         WHERE user_data IS NOT NULL 
           AND user_data != '{}' 
-          AND user_data::text LIKE '%response_%'
+          AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%')
         ORDER BY last_interaction DESC
       `);
       
@@ -2455,13 +2455,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Обрабатываем и структурируем ответы
       const processedResponses = result.rows.map(user => {
         const responses = [];
+        
         if (user.user_data && typeof user.user_data === 'object') {
           Object.entries(user.user_data).forEach(([key, value]) => {
-            if (key.startsWith('response_')) {
+            // Принимаем любые переменные с данными пользователя
+            if (key.startsWith('response_') || key.includes('feedback') || key.includes('answer') || key.includes('input') || key.includes('user_')) {
               let responseData;
               try {
-                responseData = typeof value === 'string' ? JSON.parse(value) : value;
+                // Если value уже объект, используем его как есть
+                responseData = typeof value === 'object' ? value : JSON.parse(value);
               } catch {
+                // Если не удается распарсить, создаем простую структуру
                 responseData = { response: value, type: 'text' };
               }
               

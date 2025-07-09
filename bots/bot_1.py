@@ -231,34 +231,6 @@ async def start_handler(message: types.Message):
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-# Обработчик сбора пользовательского ввода для узла feedback-input
-    prompt_text = "Пожалуйста, введите ваш ответ:"
-    placeholder_text = "Введите ваш отзыв здесь..."
-    prompt_text += f"\n\n💡 {placeholder_text}"
-    await message.answer(prompt_text)
-    
-    # Инициализируем пользовательские данные если их нет
-    if message.from_user.id not in user_data:
-        user_data[message.from_user.id] = {}
-    
-    # Ожидаем ответ пользователя
-    user_data[message.from_user.id]["waiting_for_input"] = {
-        "type": "text",
-        "variable": "user_feedback",
-        "validation": "",
-        "min_length": 10,
-        "max_length": 500,
-        "timeout": 60,
-        "required": True,
-        "allow_skip": False,
-        "save_to_db": True,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": "Спасибо за ваш ответ!",
-        "default_value": "",
-        "node_id": "feedback-input"
-    }
-    
-
 # Обработчики inline кнопок
 
 @dp.callback_query(lambda c: c.data == "survey-question")
