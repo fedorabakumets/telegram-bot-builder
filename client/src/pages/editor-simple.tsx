@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useParams } from 'wouter';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
@@ -9,7 +9,7 @@ import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
-import { TemplatesModal } from '@/components/editor/templates-modal';
+
 import { ConnectionManagerPanel } from '@/components/editor/connection-manager-panel';
 import { EnhancedConnectionControls } from '@/components/editor/enhanced-connection-controls';
 import { ConnectionVisualization } from '@/components/editor/connection-visualization';
@@ -29,7 +29,7 @@ export default function EditorSimple() {
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
+
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
@@ -158,8 +158,8 @@ export default function EditorSimple() {
   }, []);
 
   const handleLoadTemplate = useCallback(() => {
-    setShowTemplates(true);
-  }, []);
+    setLocation('/templates');
+  }, [setLocation]);
 
   const handleSelectTemplate = useCallback((template: any) => {
     try {
@@ -186,6 +186,21 @@ export default function EditorSimple() {
       });
     }
   }, [setBotData, updateProjectMutation, toast]);
+
+  // Проверяем наличие выбранного шаблона в localStorage при загрузке
+  useEffect(() => {
+    const selectedTemplateData = localStorage.getItem('selectedTemplate');
+    if (selectedTemplateData && currentProject) {
+      try {
+        const template = JSON.parse(selectedTemplateData);
+        handleSelectTemplate(template);
+        localStorage.removeItem('selectedTemplate'); // Удаляем после использования
+      } catch (error) {
+        console.error('Ошибка применения шаблона из localStorage:', error);
+        localStorage.removeItem('selectedTemplate');
+      }
+    }
+  }, [currentProject, handleSelectTemplate]);
 
   const handleConnectionSelect = useCallback((connection: Connection | null) => {
     setSelectedConnection(connection);
@@ -393,11 +408,7 @@ export default function EditorSimple() {
         projectName={currentProject.name}
       />
 
-      <TemplatesModal
-        isOpen={showTemplates}
-        onClose={() => setShowTemplates(false)}
-        onSelectTemplate={handleSelectTemplate}
-      />
+
     </>
   );
 }
