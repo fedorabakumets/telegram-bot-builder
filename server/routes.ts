@@ -14,6 +14,7 @@ import { pipeline } from "stream/promises";
 import { URL } from "url";
 import dbRoutes from "./db-routes";
 import { Pool } from "pg";
+import { generatePythonCode } from "../client/src/lib/bot-generator";
 
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
@@ -971,12 +972,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
 
-      // Import the correct code generator from client lib
-      const { generatePythonCode } = await import("../client/src/lib/bot-generator.js");
+      // Generate Python code using the imported function
       const pythonCode = generatePythonCode(project.data as any, project.name);
       res.json({ code: pythonCode });
     } catch (error) {
-      res.status(500).json({ message: "Failed to generate code" });
+      console.error("❌ Ошибка генерации кода:", error);
+      res.status(500).json({ message: "Failed to generate code", error: String(error) });
     }
   });
 

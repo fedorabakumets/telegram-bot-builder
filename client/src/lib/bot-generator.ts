@@ -7,7 +7,7 @@ function escapeForPython(text: string): string {
 }
 
 export function generatePythonCode(botData: BotData, botName: string = "MyBot"): string {
-  const { nodes } = botData;
+  const { nodes, connections } = botData;
   
   let code = '"""\n';
   code += `${botName} - Telegram Bot\n`;
