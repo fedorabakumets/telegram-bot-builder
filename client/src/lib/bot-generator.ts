@@ -793,9 +793,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 }
               });
               code += '    keyboard = builder.as_markup()\n';
-              // Определяем, нужен ли markdown для целевого узла
-              const useMarkdownTarget = targetNode.data.markdown === true;
-              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              // Определяем режим форматирования для целевого узла
+              let parseModeTarget = '';
+              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+              } else if (targetNode.data.formatMode === 'html') {
+                parseModeTarget = ', parse_mode=ParseMode.HTML';
+              }
               code += `    await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
             } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
               code += '    builder = ReplyKeyboardBuilder()\n';
@@ -810,14 +814,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '        await callback_query.message.delete()\n';
               code += '    except:\n';
               code += '        pass  # Игнорируем ошибки удаления\n';
-              // Определяем, нужен ли markdown для целевого узла
-              const useMarkdownTarget = targetNode.data.markdown === true;
-              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              // Определяем режим форматирования для целевого узла
+              let parseModeTarget = '';
+              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+              } else if (targetNode.data.formatMode === 'html') {
+                parseModeTarget = ', parse_mode=ParseMode.HTML';
+              }
               code += `    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})\n`;
             } else {
-              // Определяем, нужен ли markdown для целевого узла
-              const useMarkdownTarget = targetNode.data.markdown === true;
-              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              // Определяем режим форматирования для целевого узла
+              let parseModeTarget = '';
+              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+              } else if (targetNode.data.formatMode === 'html') {
+                parseModeTarget = ', parse_mode=ParseMode.HTML';
+              }
               code += `    await callback_query.message.edit_text(text${parseModeTarget})\n`;
             }
             }
@@ -876,9 +888,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
               const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
               code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-              // Определяем, нужен ли markdown для целевого узла
-              const useMarkdownTarget = targetNode.data.markdown === true;
-              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              // Определяем режим форматирования для целевого узла
+              let parseModeTarget = '';
+              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+              } else if (targetNode.data.formatMode === 'html') {
+                parseModeTarget = ', parse_mode=ParseMode.HTML';
+              }
               code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
@@ -892,15 +908,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 }
               });
               code += '    keyboard = builder.as_markup()\n';
-              // Определяем, нужен ли markdown для целевого узла
-              const useMarkdownTarget = targetNode.data.markdown === true;
-              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              // Определяем режим форматирования для целевого узла
+              let parseModeTarget = '';
+              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+              } else if (targetNode.data.formatMode === 'html') {
+                parseModeTarget = ', parse_mode=ParseMode.HTML';
+              }
               code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
             } else {
               code += '    # Удаляем предыдущие reply клавиатуры если они были\n';
-              // Определяем, нужен ли markdown для целевого узла
-              const useMarkdownTarget = targetNode.data.markdown === true;
-              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              // Определяем режим форматирования для целевого узла
+              let parseModeTarget = '';
+              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+              } else if (targetNode.data.formatMode === 'html') {
+                parseModeTarget = ', parse_mode=ParseMode.HTML';
+              }
               code += `    await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
             }
           }
@@ -1933,9 +1957,14 @@ function generateSynonymHandler(node: Node, synonym: string): string {
 function generateKeyboard(node: Node): string {
   let code = '';
   
-  // Определяем, нужен ли markdown
-  const useMarkdown = node.data.markdown === true;
-  const parseMode = useMarkdown ? ', parse_mode=ParseMode.MARKDOWN' : '';
+  // Определяем режим форматирования
+  let parseMode = '';
+  if (node.data.formatMode === 'markdown' || node.data.markdown === true) {
+    parseMode = ', parse_mode=ParseMode.MARKDOWN';
+  } else if (node.data.formatMode === 'html') {
+    parseMode = ', parse_mode=ParseMode.HTML';
+  }
+  // Если formatMode === 'none' или не указан, то parseMode остается пустым
   
   if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
     code += '    \n';
