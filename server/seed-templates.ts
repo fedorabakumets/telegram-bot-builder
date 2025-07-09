@@ -7,7 +7,7 @@ export async function seedDefaultTemplates() {
     
     // Проверяем, есть ли уже системные шаблоны
     const systemTemplates = existingTemplates.filter(t => t.authorName === 'Система');
-    if (systemTemplates.length >= 6) {
+    if (systemTemplates.length >= 7) {
       console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
@@ -1320,6 +1320,586 @@ export async function seedDefaultTemplates() {
           {
             id: "conn-8",
             source: "thank-you",
+            target: "start-1"
+          }
+        ]
+      }
+    });
+
+    // Комплексный шаблон сбора пользовательского ввода
+    await storage.createBotTemplate({
+      name: "📊 Комплексный сбор данных",
+      description: "Демонстрация всех типов сбора пользовательского ввода: текстовый, кнопочный, множественный выбор, медиа",
+      category: "official",
+      tags: ["сбор данных", "формы", "опросы", "ввод", "кнопки"],
+      isPublic: 1,
+      difficulty: "hard",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 8,
+      estimatedTime: 25,
+      data: {
+        nodes: [
+          {
+            id: "start-1",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              description: "Начало сбора данных",
+              messageText: "🎯 **Добро пожаловать в систему сбора данных!**\n\nЭтот бот демонстрирует все возможности сбора пользовательского ввода:\n\n• 📝 Текстовый ввод\n• 🔘 Кнопочные ответы\n• ☑️ Множественный выбор\n• 📱 Медиа файлы\n• 📊 Структурированные данные\n\nНачнем сбор ваших данных?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-start-survey",
+                  text: "🚀 Начать сбор данных",
+                  action: "goto",
+                  target: "name-input"
+                },
+                {
+                  id: "btn-skip-all",
+                  text: "⏭️ Пропустить все",
+                  action: "goto",
+                  target: "final-results"
+                }
+              ],
+              markdown: true,
+              formatMode: "html",
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "name-input",
+            type: "user-input",
+            position: { x: 400, y: 100 },
+            data: {
+              messageText: "👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):",
+              responseType: "text",
+              inputType: "text",
+              inputVariable: "user_name",
+              placeholder: "Введите ваше имя...",
+              isRequired: true,
+              minLength: 2,
+              maxLength: 50,
+              validationMessage: "Имя должно содержать от 2 до 50 символов",
+              timeoutSeconds: 120,
+              timeoutMessage: "⏰ Время ввода истекло. Попробуйте снова.",
+              saveToDatabase: true,
+              successTarget: "age-buttons",
+              errorTarget: "name-error",
+              formatMode: "html"
+            }
+          },
+          {
+            id: "name-error",
+            type: "message",
+            position: { x: 400, y: 250 },
+            data: {
+              messageText: "❌ **Ошибка ввода имени**\n\nПожалуйста, введите корректное имя (от 2 до 50 символов).\n\nПопробуйте ещё раз:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-retry-name",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "name-input"
+                },
+                {
+                  id: "btn-skip-name",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "age-buttons"
+                }
+              ],
+              markdown: true,
+              formatMode: "html",
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "age-buttons",
+            type: "user-input",
+            position: { x: 700, y: 100 },
+            data: {
+              messageText: "🎂 **Шаг 2: Возрастная группа**\n\n<b>Выберите вашу возрастную группу:</b>\n\nИспользуйте кнопки для выбора:",
+              responseType: "buttons",
+              responseOptions: [
+                {
+                  id: "age-18-25",
+                  text: "18-25 лет",
+                  value: "18-25"
+                },
+                {
+                  id: "age-26-35",
+                  text: "26-35 лет",
+                  value: "26-35"
+                },
+                {
+                  id: "age-36-45",
+                  text: "36-45 лет",
+                  value: "36-45"
+                },
+                {
+                  id: "age-46-55",
+                  text: "46-55 лет",
+                  value: "46-55"
+                },
+                {
+                  id: "age-55+",
+                  text: "55+ лет",
+                  value: "55+"
+                }
+              ],
+              allowMultipleSelection: false,
+              inputVariable: "user_age_group",
+              isRequired: true,
+              saveToDatabase: true,
+              successTarget: "interests-multiple",
+              errorTarget: "age-error",
+              formatMode: "html"
+            }
+          },
+          {
+            id: "age-error",
+            type: "message",
+            position: { x: 700, y: 250 },
+            data: {
+              messageText: "❌ **Ошибка выбора возраста**\n\nПожалуйста, выберите одну из предложенных возрастных групп.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-retry-age",
+                  text: "🔄 Повторить выбор",
+                  action: "goto",
+                  target: "age-buttons"
+                },
+                {
+                  id: "btn-skip-age",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "interests-multiple"
+                }
+              ],
+              markdown: true,
+              formatMode: "html",
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "interests-multiple",
+            type: "user-input",
+            position: { x: 1000, y: 100 },
+            data: {
+              messageText: "🎯 **Шаг 3: Интересы (множественный выбор)**\n\n<b>Выберите ваши интересы (можно несколько):</b>\n\nВыберите все подходящие варианты и нажмите \"Готово\":",
+              responseType: "buttons",
+              responseOptions: [
+                {
+                  id: "int-tech",
+                  text: "💻 Технологии",
+                  value: "technology"
+                },
+                {
+                  id: "int-sport",
+                  text: "⚽ Спорт",
+                  value: "sport"
+                },
+                {
+                  id: "int-music",
+                  text: "🎵 Музыка",
+                  value: "music"
+                },
+                {
+                  id: "int-travel",
+                  text: "✈️ Путешествия",
+                  value: "travel"
+                },
+                {
+                  id: "int-cooking",
+                  text: "👨‍🍳 Кулинария",
+                  value: "cooking"
+                },
+                {
+                  id: "int-books",
+                  text: "📚 Книги",
+                  value: "books"
+                },
+                {
+                  id: "int-done",
+                  text: "✅ Готово",
+                  value: "done"
+                }
+              ],
+              allowMultipleSelection: true,
+              inputVariable: "user_interests",
+              isRequired: true,
+              saveToDatabase: true,
+              successTarget: "contact-input",
+              errorTarget: "interests-error",
+              formatMode: "html"
+            }
+          },
+          {
+            id: "interests-error",
+            type: "message",
+            position: { x: 1000, y: 250 },
+            data: {
+              messageText: "❌ **Ошибка выбора интересов**\n\nПожалуйста, выберите хотя бы один интерес и нажмите \"Готово\".",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-retry-interests",
+                  text: "🔄 Повторить выбор",
+                  action: "goto",
+                  target: "interests-multiple"
+                },
+                {
+                  id: "btn-skip-interests",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "contact-input"
+                }
+              ],
+              markdown: true,
+              formatMode: "html",
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "contact-input",
+            type: "user-input",
+            position: { x: 1300, y: 100 },
+            data: {
+              messageText: "📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:",
+              responseType: "text",
+              inputType: "email",
+              inputVariable: "user_contact",
+              placeholder: "example@email.com или +7-999-123-45-67",
+              isRequired: false,
+              minLength: 5,
+              maxLength: 100,
+              validationMessage: "Введите корректный email или телефон",
+              timeoutSeconds: 180,
+              timeoutMessage: "⏰ Время ввода истекло. Переходим к следующему шагу.",
+              saveToDatabase: true,
+              successTarget: "experience-rating",
+              errorTarget: "contact-error",
+              formatMode: "html"
+            }
+          },
+          {
+            id: "contact-error",
+            type: "message",
+            position: { x: 1300, y: 250 },
+            data: {
+              messageText: "❌ **Ошибка ввода контактов**\n\nПожалуйста, введите корректный email или номер телефона.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-retry-contact",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "contact-input"
+                },
+                {
+                  id: "btn-skip-contact",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "experience-rating"
+                }
+              ],
+              markdown: true,
+              formatMode: "html",
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "experience-rating",
+            type: "user-input",
+            position: { x: 1600, y: 100 },
+            data: {
+              messageText: "⭐ **Шаг 5: Оценка опыта**\n\n<b>Как вы оцениваете опыт использования этого бота?</b>\n\nВыберите количество звезд:",
+              responseType: "buttons",
+              responseOptions: [
+                {
+                  id: "star-1",
+                  text: "⭐ 1 звезда",
+                  value: "1"
+                },
+                {
+                  id: "star-2",
+                  text: "⭐⭐ 2 звезды",
+                  value: "2"
+                },
+                {
+                  id: "star-3",
+                  text: "⭐⭐⭐ 3 звезды",
+                  value: "3"
+                },
+                {
+                  id: "star-4",
+                  text: "⭐⭐⭐⭐ 4 звезды",
+                  value: "4"
+                },
+                {
+                  id: "star-5",
+                  text: "⭐⭐⭐⭐⭐ 5 звезд",
+                  value: "5"
+                }
+              ],
+              allowMultipleSelection: false,
+              inputVariable: "user_rating",
+              isRequired: true,
+              saveToDatabase: true,
+              successTarget: "final-comment",
+              errorTarget: "rating-error",
+              formatMode: "html"
+            }
+          },
+          {
+            id: "rating-error",
+            type: "message",
+            position: { x: 1600, y: 250 },
+            data: {
+              messageText: "❌ **Ошибка оценки**\n\nПожалуйста, выберите оценку от 1 до 5 звезд.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-retry-rating",
+                  text: "🔄 Повторить оценку",
+                  action: "goto",
+                  target: "experience-rating"
+                },
+                {
+                  id: "btn-skip-rating",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "final-comment"
+                }
+              ],
+              markdown: true,
+              formatMode: "html",
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "final-comment",
+            type: "user-input",
+            position: { x: 1900, y: 100 },
+            data: {
+              messageText: "💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):",
+              responseType: "text",
+              inputType: "text",
+              inputVariable: "user_comment",
+              placeholder: "Ваши комментарии и предложения...",
+              isRequired: false,
+              minLength: 0,
+              maxLength: 1000,
+              validationMessage: "Комментарий не должен превышать 1000 символов",
+              timeoutSeconds: 300,
+              timeoutMessage: "⏰ Время ввода истекло. Завершаем сбор данных.",
+              saveToDatabase: true,
+              successTarget: "final-results",
+              errorTarget: "comment-error",
+              formatMode: "html"
+            }
+          },
+          {
+            id: "comment-error",
+            type: "message",
+            position: { x: 1900, y: 250 },
+            data: {
+              messageText: "❌ **Ошибка комментария**\n\nКомментарий слишком длинный. Максимум 1000 символов.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-retry-comment",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "final-comment"
+                },
+                {
+                  id: "btn-skip-comment",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "final-results"
+                }
+              ],
+              markdown: true,
+              formatMode: "html",
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "final-results",
+            type: "message",
+            position: { x: 2200, y: 100 },
+            data: {
+              messageText: "🎉 **Сбор данных завершен!**\n\n<b>Спасибо за участие!</b>\n\nВы успешно продемонстрировали все типы сбора пользовательского ввода:\n\n✅ <b>Текстовый ввод</b> - имя и комментарии\n✅ <b>Одиночный выбор</b> - возраст и рейтинг\n✅ <b>Множественный выбор</b> - интересы\n✅ <b>Валидация данных</b> - проверка email/телефона\n✅ <b>Обработка ошибок</b> - повторы и пропуски\n\nВсе данные сохранены в базе данных и готовы к анализу.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-restart",
+                  text: "🔄 Пройти снова",
+                  action: "goto",
+                  target: "start-1"
+                },
+                {
+                  id: "btn-admin",
+                  text: "👨‍💼 Панель управления",
+                  action: "command",
+                  target: "/admin"
+                }
+              ],
+              markdown: true,
+              formatMode: "html",
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn-1",
+            source: "start-1",
+            target: "name-input"
+          },
+          {
+            id: "conn-2",
+            source: "start-1",
+            target: "final-results"
+          },
+          {
+            id: "conn-3",
+            source: "name-input",
+            target: "age-buttons"
+          },
+          {
+            id: "conn-4",
+            source: "name-input",
+            target: "name-error"
+          },
+          {
+            id: "conn-5",
+            source: "name-error",
+            target: "name-input"
+          },
+          {
+            id: "conn-6",
+            source: "name-error",
+            target: "age-buttons"
+          },
+          {
+            id: "conn-7",
+            source: "age-buttons",
+            target: "interests-multiple"
+          },
+          {
+            id: "conn-8",
+            source: "age-buttons",
+            target: "age-error"
+          },
+          {
+            id: "conn-9",
+            source: "age-error",
+            target: "age-buttons"
+          },
+          {
+            id: "conn-10",
+            source: "age-error",
+            target: "interests-multiple"
+          },
+          {
+            id: "conn-11",
+            source: "interests-multiple",
+            target: "contact-input"
+          },
+          {
+            id: "conn-12",
+            source: "interests-multiple",
+            target: "interests-error"
+          },
+          {
+            id: "conn-13",
+            source: "interests-error",
+            target: "interests-multiple"
+          },
+          {
+            id: "conn-14",
+            source: "interests-error",
+            target: "contact-input"
+          },
+          {
+            id: "conn-15",
+            source: "contact-input",
+            target: "experience-rating"
+          },
+          {
+            id: "conn-16",
+            source: "contact-input",
+            target: "contact-error"
+          },
+          {
+            id: "conn-17",
+            source: "contact-error",
+            target: "contact-input"
+          },
+          {
+            id: "conn-18",
+            source: "contact-error",
+            target: "experience-rating"
+          },
+          {
+            id: "conn-19",
+            source: "experience-rating",
+            target: "final-comment"
+          },
+          {
+            id: "conn-20",
+            source: "experience-rating",
+            target: "rating-error"
+          },
+          {
+            id: "conn-21",
+            source: "rating-error",
+            target: "experience-rating"
+          },
+          {
+            id: "conn-22",
+            source: "rating-error",
+            target: "final-comment"
+          },
+          {
+            id: "conn-23",
+            source: "final-comment",
+            target: "final-results"
+          },
+          {
+            id: "conn-24",
+            source: "final-comment",
+            target: "comment-error"
+          },
+          {
+            id: "conn-25",
+            source: "comment-error",
+            target: "final-comment"
+          },
+          {
+            id: "conn-26",
+            source: "comment-error",
+            target: "final-results"
+          },
+          {
+            id: "conn-27",
+            source: "final-results",
             target: "start-1"
           }
         ]
