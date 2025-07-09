@@ -23,7 +23,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'from aiogram.filters import CommandStart, Command\n';
   code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
-  code += 'from aiogram.enums import ParseMode\n\n';
+  code += 'from aiogram.enums import ParseMode\n';
+  code += 'import asyncpg\n';
+  code += 'from datetime import datetime\n';
+  code += 'import json\n\n';
   
   code += '# Токен вашего бота (получите у @BotFather)\n';
   code += 'BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"\n\n';
@@ -38,8 +41,93 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '# Список администраторов (добавьте свой Telegram ID)\n';
   code += 'ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов\n\n';
   
-  code += '# Хранилище пользователей (в реальном боте используйте базу данных)\n';
+  code += '# Настройки базы данных\n';
+  code += 'DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/bot_db")\n\n';
+  
+  code += '# Пул соединений с базой данных\n';
+  code += 'db_pool = None\n\n';
+  
+  code += '# Хранилище пользователей (резервное для случаев без БД)\n';
   code += 'user_data = {}\n\n';
+
+  // Добавляем функции для работы с базой данных
+  code += '\n# Функции для работы с базой данных\n';
+  code += 'async def init_database():\n';
+  code += '    """Инициализация подключения к базе данных и создание таблиц"""\n';
+  code += '    global db_pool\n';
+  code += '    try:\n';
+  code += '        db_pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=10)\n';
+  code += '        # Создаем таблицу пользователей если её нет\n';
+  code += '        async with db_pool.acquire() as conn:\n';
+  code += '            await conn.execute("""\n';
+  code += '                CREATE TABLE IF NOT EXISTS bot_users (\n';
+  code += '                    user_id BIGINT PRIMARY KEY,\n';
+  code += '                    username TEXT,\n';
+  code += '                    first_name TEXT,\n';
+  code += '                    last_name TEXT,\n';
+  code += '                    registered_at TIMESTAMP DEFAULT NOW(),\n';
+  code += '                    last_interaction TIMESTAMP DEFAULT NOW(),\n';
+  code += '                    interaction_count INTEGER DEFAULT 0,\n';
+  code += '                    user_data JSONB DEFAULT \'{}\',\n';
+  code += '                    is_active BOOLEAN DEFAULT TRUE\n';
+  code += '                );\n';
+  code += '            """)\n';
+  code += '        logging.info("✅ База данных инициализирована")\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")\n';
+  code += '        db_pool = None\n\n';
+
+  code += 'async def save_user_to_db(user_id: int, username: str = None, first_name: str = None, last_name: str = None):\n';
+  code += '    """Сохраняет пользователя в базу данных"""\n';
+  code += '    if not db_pool:\n';
+  code += '        return False\n';
+  code += '    try:\n';
+  code += '        async with db_pool.acquire() as conn:\n';
+  code += '            await conn.execute("""\n';
+  code += '                INSERT INTO bot_users (user_id, username, first_name, last_name)\n';
+  code += '                VALUES ($1, $2, $3, $4)\n';
+  code += '                ON CONFLICT (user_id) DO UPDATE SET\n';
+  code += '                    username = EXCLUDED.username,\n';
+  code += '                    first_name = EXCLUDED.first_name,\n';
+  code += '                    last_name = EXCLUDED.last_name,\n';
+  code += '                    last_interaction = NOW(),\n';
+  code += '                    interaction_count = bot_users.interaction_count + 1\n';
+  code += '            """, user_id, username, first_name, last_name)\n';
+  code += '        return True\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка сохранения пользователя в БД: {e}")\n';
+  code += '        return False\n\n';
+
+  code += 'async def get_user_from_db(user_id: int):\n';
+  code += '    """Получает данные пользователя из базы данных"""\n';
+  code += '    if not db_pool:\n';
+  code += '        return None\n';
+  code += '    try:\n';
+  code += '        async with db_pool.acquire() as conn:\n';
+  code += '            row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1", user_id)\n';
+  code += '            if row:\n';
+  code += '                return dict(row)\n';
+  code += '        return None\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка получения пользователя из БД: {e}")\n';
+  code += '        return None\n\n';
+
+  code += 'async def update_user_data_in_db(user_id: int, data_key: str, data_value):\n';
+  code += '    """Обновляет пользовательские данные в базе данных"""\n';
+  code += '    if not db_pool:\n';
+  code += '        return False\n';
+  code += '    try:\n';
+  code += '        async with db_pool.acquire() as conn:\n';
+  code += '            await conn.execute("""\n';
+  code += '                UPDATE bot_users \n';
+  code += '                SET user_data = user_data || $2::jsonb,\n';
+  code += '                    last_interaction = NOW()\n';
+  code += '                WHERE user_id = $1\n';
+  code += '            """, user_id, json.dumps({data_key: data_value}))\n';
+  code += '        return True\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка обновления данных пользователя: {e}")\n';
+  code += '        return False\n\n';
 
   // Добавляем утилитарные функции
   code += '\n# Утилитарные функции\n';
@@ -50,7 +138,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    return message.chat.type == "private"\n\n';
   
   code += 'async def check_auth(user_id: int) -> bool:\n';
-  code += '    # Здесь можно добавить логику проверки авторизации\n';
+  code += '    # Проверяем наличие пользователя в БД или локальном хранилище\n';
+  code += '    if db_pool:\n';
+  code += '        user = await get_user_from_db(user_id)\n';
+  code += '        return user is not None\n';
   code += '    return user_id in user_data\n\n';
   
   code += 'def is_local_file(url: str) -> bool:\n';
@@ -1032,8 +1123,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    \n';
   code += '    # Сохраняем в базу данных если включено\n';
   code += '    if input_config.get("save_to_database"):\n';
-  code += '        logging.info(f"Сохранение в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
-  code += '        # Здесь можно добавить код для сохранения в реальную базу данных\n';
+  code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)\n';
+  code += '        if saved_to_db:\n';
+  code += '            logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+  code += '        else:\n';
+  code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
   code += '    \n';
   code += '    # Отправляем сообщение об успехе\n';
   code += '    success_message = input_config.get("success_message", "Спасибо за ваш ответ!")\n';
@@ -1047,10 +1141,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
 
   code += '\n\n# Запуск бота\n';
   code += 'async def main():\n';
+  code += '    # Инициализируем базу данных\n';
+  code += '    await init_database()\n';
   if (menuCommands.length > 0) {
     code += '    await set_bot_commands()\n';
   }
-  code += '    print("Бот запущен!")\n';
+  code += '    print("🤖 Бот запущен и готов к работе!")\n';
   code += '    await dp.start_polling(bot)\n\n';
   
   code += 'if __name__ == "__main__":\n';
@@ -1084,12 +1180,25 @@ function generateStartHandler(node: Node): string {
 
   // Регистрируем пользователя
   code += '\n    # Регистрируем пользователя в системе\n';
-  code += '    user_data[message.from_user.id] = {\n';
-  code += '        "username": message.from_user.username,\n';
-  code += '        "first_name": message.from_user.first_name,\n';
-  code += '        "last_name": message.from_user.last_name,\n';
-  code += '        "registered_at": message.date\n';
-  code += '    }\n\n';
+  code += '    user_id = message.from_user.id\n';
+  code += '    username = message.from_user.username\n';
+  code += '    first_name = message.from_user.first_name\n';
+  code += '    last_name = message.from_user.last_name\n';
+  code += '    \n';
+  code += '    # Сохраняем пользователя в базу данных\n';
+  code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
+  code += '    \n';
+  code += '    # Резервное сохранение в локальное хранилище\n';
+  code += '    if not saved_to_db:\n';
+  code += '        user_data[user_id] = {\n';
+  code += '            "username": username,\n';
+  code += '            "first_name": first_name,\n';
+  code += '            "last_name": last_name,\n';
+  code += '            "registered_at": message.date\n';
+  code += '        }\n';
+  code += '        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")\n';
+  code += '    else:\n';
+  code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
   
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
   // Используем тройные кавычки для многострочного текста
@@ -1133,12 +1242,25 @@ function generateCommandHandler(node: Node): string {
   }
 
   // Сохраняем информацию о команде в пользовательских данных
-  code += '    # Сохраняем статистику использования команд\n';
-  code += '    if message.from_user.id not in user_data:\n';
-  code += '        user_data[message.from_user.id] = {}\n';
-  code += '    if "commands_used" not in user_data[message.from_user.id]:\n';
-  code += '        user_data[message.from_user.id]["commands_used"] = {}\n';
-  code += `    user_data[message.from_user.id]["commands_used"]["${command}"] = user_data[message.from_user.id]["commands_used"].get("${command}", 0) + 1\n`;
+  code += '    # Сохраняем пользователя и статистику использования команд\n';
+  code += '    user_id = message.from_user.id\n';
+  code += '    username = message.from_user.username\n';
+  code += '    first_name = message.from_user.first_name\n';
+  code += '    last_name = message.from_user.last_name\n';
+  code += '    \n';
+  code += '    # Сохраняем пользователя в базу данных\n';
+  code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
+  code += '    \n';
+  code += '    # Обновляем статистику команд в БД\n';
+  code += `    if saved_to_db:\n`;
+  code += `        await update_user_data_in_db(user_id, "command_${command.replace('/', '')}", datetime.now().isoformat())\n`;
+  code += '    \n';
+  code += '    # Резервное сохранение в локальное хранилище\n';
+  code += '    if user_id not in user_data:\n';
+  code += '        user_data[user_id] = {}\n';
+  code += '    if "commands_used" not in user_data[user_id]:\n';
+  code += '        user_data[user_id]["commands_used"] = {}\n';
+  code += `    user_data[user_id]["commands_used"]["${command}"] = user_data[user_id]["commands_used"].get("${command}", 0) + 1\n`;
 
   const messageText = node.data.messageText || "Команда выполнена";
   // Используем тройные кавычки для многострочного текста
@@ -2101,15 +2223,15 @@ export function generateRequirementsTxt(): string {
     'requests>=2.32.4',
     'python-dotenv>=1.0.0',
     'aiofiles>=23.2.1',
+    'asyncpg>=0.29.0',
     '',
     '# Note: These versions have pre-compiled wheels and do not require Rust',
     '# If you still encounter issues, try:',
     '# pip install --upgrade pip setuptools wheel',
-    '# pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles',
+    '# pip install --only-binary=all aiogram aiohttp requests python-dotenv aiofiles asyncpg',
     '',
     '# Optional dependencies for extended functionality',
     '# redis>=5.0.1  # For session storage',
-    '# asyncpg>=0.29.0  # For PostgreSQL database',
     '# motor>=3.3.2  # For MongoDB',
     '# pillow>=10.1.0  # For image processing'
   ];
@@ -2149,11 +2271,17 @@ export function generateReadme(botData: BotData, botName: string): string {
   readme += '   ```bash\n';
   readme += '   pip install -r requirements.txt\n';
   readme += '   ```\n\n';
-  readme += '3. Создайте файл `.env` и добавьте ваш токен бота:\n';
+  readme += '3. Создайте файл `.env` и добавьте настройки:\n';
   readme += '   ```\n';
   readme += '   BOT_TOKEN=your_bot_token_here\n';
+  readme += '   DATABASE_URL=postgresql://user:password@localhost:5432/bot_db\n';
   readme += '   ```\n\n';
-  readme += '4. Запустите бота:\n';
+  readme += '4. Настройте базу данных PostgreSQL (опционально):\n';
+  readme += '   - Создайте базу данных PostgreSQL\n';
+  readme += '   - Обновите DATABASE_URL в .env файле\n';
+  readme += '   - Бот автоматически создаст необходимые таблицы при запуске\n';
+  readme += '   - Если БД недоступна, бот будет использовать локальное хранилище\n\n';
+  readme += '5. Запустите бота:\n';
   readme += '   ```bash\n';
   readme += '   python bot.py\n';
   readme += '   ```\n\n';
