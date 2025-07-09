@@ -40,29 +40,29 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
   // Статистика бота
   const botStats = {
-    totalNodes: botData.nodes.length,
-    commandNodes: botData.nodes.filter(node => node.type === 'start' || node.type === 'command').length,
-    messageNodes: botData.nodes.filter(node => node.type === 'message').length,
-    photoNodes: botData.nodes.filter(node => node.type === 'photo').length,
-    keyboardNodes: botData.nodes.filter(node => node.data.keyboardType !== 'none').length,
-    totalButtons: botData.nodes.reduce((sum, node) => sum + (node.data.buttons?.length || 0), 0),
-    commandsInMenu: botData.nodes.filter(node => 
-      (node.type === 'start' || node.type === 'command') && node.data.showInMenu
-    ).length,
-    adminOnlyCommands: botData.nodes.filter(node => 
-      (node.type === 'start' || node.type === 'command') && node.data.adminOnly
-    ).length,
-    privateOnlyCommands: botData.nodes.filter(node => 
-      (node.type === 'start' || node.type === 'command') && node.data.isPrivateOnly
-    ).length
+    totalNodes: botData?.nodes?.length || 0,
+    commandNodes: botData?.nodes?.filter(node => node.type === 'start' || node.type === 'command').length || 0,
+    messageNodes: botData?.nodes?.filter(node => node.type === 'message').length || 0,
+    photoNodes: botData?.nodes?.filter(node => node.type === 'photo').length || 0,
+    keyboardNodes: botData?.nodes?.filter(node => node.data?.keyboardType !== 'none').length || 0,
+    totalButtons: botData?.nodes?.reduce((sum, node) => sum + (node.data?.buttons?.length || 0), 0) || 0,
+    commandsInMenu: botData?.nodes?.filter(node => 
+      (node.type === 'start' || node.type === 'command') && node.data?.showInMenu
+    ).length || 0,
+    adminOnlyCommands: botData?.nodes?.filter(node => 
+      (node.type === 'start' || node.type === 'command') && node.data?.adminOnly
+    ).length || 0,
+    privateOnlyCommands: botData?.nodes?.filter(node => 
+      (node.type === 'start' || node.type === 'command') && node.data?.isPrivateOnly
+    ).length || 0
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && botData) {
       const validation = validateBotStructure(botData);
-      setValidationResult(validation);
+      setValidationResult(validation || { isValid: false, errors: [] });
       
-      if (validation.isValid) {
+      if (validation?.isValid) {
         // Generate all export formats
         const pythonCode = generatePythonCode(botData, projectName);
         const jsonData = JSON.stringify(botData, null, 2);
@@ -83,7 +83,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
       }
       
       // Генерация команд для BotFather
-      const botFatherCmds = generateBotFatherCommands(botData.nodes);
+      const botFatherCmds = generateBotFatherCommands(botData?.nodes || []);
       setBotFatherCommands(botFatherCmds);
     }
   }, [isOpen, botData, projectName]);
@@ -239,7 +239,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                     </div>
                     <div className="flex justify-between">
                       <span>Соединения между узлами:</span>
-                      <Badge variant="outline">{botData.connections.length}</Badge>
+                      <Badge variant="outline">{botData?.connections?.length || 0}</Badge>
                     </div>
                   </div>
                 </div>
@@ -272,7 +272,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                       <span className="font-medium">Найдены ошибки в структуре бота:</span>
                     </div>
                     <div className="space-y-2">
-                      {validationResult.errors.map((error, index) => (
+                      {(validationResult.errors || []).map((error, index) => (
                         <div key={index} className="flex items-start space-x-2 p-3 bg-red-50 dark:bg-red-950/20 rounded border-l-4 border-red-200 dark:border-red-800/60">
                           <i className="fas fa-times-circle text-red-500 dark:text-red-400 mt-0.5"></i>
                           <span className="text-sm text-red-700 dark:text-red-300">{error}</span>
