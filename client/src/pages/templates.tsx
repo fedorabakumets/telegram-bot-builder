@@ -608,10 +608,15 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
   // Компоненты для layout
   const headerContent = (
     <AdaptiveHeader
+      config={{
+        headerPosition: 'top',
+        compactMode: flexibleLayoutConfig.compactMode
+      } as any}
       projectName="Шаблоны ботов"
       currentTab={currentTab as any}
       onTabChange={() => {}} // Не используется в шаблонах
       onSave={() => {}} // Не используется в шаблонах
+      onExport={() => {}} // Добавлено обязательное поле
       onSaveAsTemplate={() => {}} // Не используется в шаблонах
       onLoadTemplate={() => setLocation('/')} // Назад к редактору
       onLayoutSettings={() => {}} // Не используется в шаблонах
