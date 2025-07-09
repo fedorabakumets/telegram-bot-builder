@@ -248,7 +248,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
           } else if (targetNode.type === 'input') {
             responseText = 'Ожидаю ввод...';
           } else if (targetNode.type === 'user-input') {
-            responseText = targetNode.data.prompt || 'Введите ваш ответ:';
+            responseText = targetNode.data.inputPrompt || 'Введите ваш ответ:';
           } else if (['photo', 'video', 'audio', 'document', 'sticker', 'voice', 'animation'].includes(targetNode.type)) {
             responseText = targetNode.data.mediaCaption || '';
           } else if (targetNode.type === 'location') {
@@ -265,13 +265,30 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
 
           const targetMediaInfo = getMediaInfo(targetNode);
           
-          const buttons = targetNode.data.keyboardType !== 'none' && targetNode.data.buttons ? targetNode.data.buttons.map(btn => ({
-            text: btn.text,
-            target: btn.target,
-            action: btn.action
-          })) : undefined;
+          // Handle buttons for user-input nodes with response type buttons
+          let buttons;
+          if (targetNode.type === 'user-input' && targetNode.data.responseType === 'buttons' && targetNode.data.responseOptions) {
+            // Generate buttons from response options for user-input nodes
+            buttons = targetNode.data.responseOptions.map(option => ({
+              text: option.text,
+              target: 'next', // Will handle response collection
+              action: 'select_option',
+              value: option.value
+            }));
+          } else if (targetNode.data.keyboardType !== 'none' && targetNode.data.buttons) {
+            // Regular buttons for other node types
+            buttons = targetNode.data.buttons.map(btn => ({
+              text: btn.text,
+              target: btn.target,
+              action: btn.action
+            }));
+          }
 
           // Create bot response from target node
+          const keyboardType = (targetNode.type === 'user-input' && targetNode.data.responseType === 'buttons') 
+            ? 'inline' 
+            : targetNode.data.keyboardType;
+            
           const botResponse = {
             id: `msg-${Date.now()}-bot`,
             type: 'bot' as const,
@@ -281,7 +298,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
               minute: '2-digit' 
             }),
             buttons,
-            keyboardType: targetNode.data.keyboardType,
+            keyboardType,
             ...targetMediaInfo
           };
 
@@ -290,12 +307,15 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
           // Update reply keyboard based on target node
           if (targetNode.data.keyboardType === 'reply' && buttons) {
             setCurrentReplyKeyboard(buttons);
-          } else if (targetNode.data.keyboardType === 'none') {
+          } else if (targetNode.data.keyboardType === 'none' || (targetNode.type === 'user-input' && targetNode.data.responseType === 'buttons')) {
             setCurrentReplyKeyboard(null);
           }
           
           // Check if target node expects input
-          setWaitingForInput((targetNode.type === 'input' || targetNode.type === 'user-input') && targetNode.data.keyboardType === 'none');
+          const expectsTextInput = (targetNode.type === 'input' || targetNode.type === 'user-input') && 
+                                  targetNode.data.keyboardType === 'none' && 
+                                  (!targetNode.data.responseType || targetNode.data.responseType === 'text');
+          setWaitingForInput(expectsTextInput);
         } else {
           // Node not found - show error
           let errorText = '';
