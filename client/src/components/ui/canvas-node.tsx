@@ -144,6 +144,8 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
     shouldUseHTML = text.includes('<') && text.includes('>');
   }
   
+
+  
   const parsedParts = shouldUseHTML ? parseHTML(text) : parseMarkdown(text);
   
   return <span>{parsedParts}</span>;
@@ -412,7 +414,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
             )}
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-            {node.data.description || 'Элемент бота'}
+            {node.data.description ? parseFormattedText(node.data.description, node.data.formatMode, node.data.markdown) : 'Элемент бота'}
           </p>
         </div>
       </div>
