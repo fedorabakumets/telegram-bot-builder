@@ -2468,21 +2468,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update user data
+  // Update user data in bot_users table
   app.put("/api/users/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const validatedData = insertUserBotDataSchema.partial().parse(req.body);
-      const userData = await storage.updateUserBotData(id, validatedData);
-      if (!userData) {
-        return res.status(404).json({ message: "User data not found" });
+      const userId = req.params.id; // This is telegram user_id as string
+      
+      // Подключаемся напрямую к PostgreSQL для обновления данных в bot_users
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      // Проверяем какие поля можно обновить
+      const updateFields = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      if (req.body.isActive !== undefined) {
+        updateFields.push(`is_active = $${paramIndex++}`);
+        values.push(Boolean(req.body.isActive === 1 || req.body.isActive === true));
       }
-      res.json(userData);
+      
+      // Note: is_blocked and is_premium columns don't exist in bot_users table
+      // These fields are handled through user_data JSON field if needed
+      
+      if (updateFields.length === 0) {
+        await pool.end();
+        return res.status(400).json({ message: "No valid fields to update" });
+      }
+      
+      const query = `
+        UPDATE bot_users 
+        SET ${updateFields.join(', ')}, last_interaction = NOW()
+        WHERE user_id = $${paramIndex}
+        RETURNING *
+      `;
+      values.push(userId);
+      
+      console.log('Updating user:', userId, 'with query:', query, 'values:', values);
+      
+      const result = await pool.query(query, values);
+      await pool.end();
+      
+      console.log('Update result:', result.rows.length, 'rows affected');
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(result.rows[0]);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      console.error("Ошибка обновления пользователя в bot_users:", error);
+      // Fallback to regular update if bot_users table doesn't exist
+      try {
+        const id = parseInt(req.params.id);
+        const validatedData = insertUserBotDataSchema.partial().parse(req.body);
+        const userData = await storage.updateUserBotData(id, validatedData);
+        if (!userData) {
+          return res.status(404).json({ message: "User data not found" });
+        }
+        res.json(userData);
+      } catch (fallbackError) {
+        res.status(500).json({ message: "Failed to update user data" });
       }
-      res.status(500).json({ message: "Failed to update user data" });
     }
   });
 

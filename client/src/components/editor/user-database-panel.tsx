@@ -62,11 +62,15 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   // Fetch user data
   const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery<UserBotData[]>({
     queryKey: [`/api/projects/${projectId}/users`],
+    staleTime: 0,
+    cacheTime: 0,
   });
 
   // Fetch user stats
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
     queryKey: [`/api/projects/${projectId}/users/stats`],
+    staleTime: 0,
+    cacheTime: 0,
   });
 
   // Search users
@@ -101,17 +105,25 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     mutationFn: ({ userId, data }: { userId: number; data: Partial<UserBotData> }) => 
       apiRequest('PUT', `/api/users/${userId}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+      // Принудительно очищаем кэш и обновляем данные
+      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
+      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+      
+      // Принудительно обновляем данные
+      setTimeout(() => {
+        refetchUsers();
+        refetchStats();
+      }, 100);
+      
       toast({
-        title: "Пользователь обновлен",
-        description: "Данные пользователя успешно обновлены",
+        title: "Статус изменен",
+        description: "Статус пользователя успешно обновлен",
       });
     },
     onError: () => {
       toast({
         title: "Ошибка",
-        description: "Не удалось обновить пользователя",
+        description: "Не удалось обновить статус пользователя",
         variant: "destructive",
       });
     }
@@ -154,8 +166,28 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
     // Sort
     result = [...result].sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
+      let aValue: any, bValue: any;
+      
+      // Map camelCase field names to snake_case if needed
+      if (sortField === 'lastInteraction') {
+        aValue = a.lastInteraction || a.last_interaction;
+        bValue = b.lastInteraction || b.last_interaction;
+      } else if (sortField === 'createdAt') {
+        aValue = a.createdAt || a.registered_at;
+        bValue = b.createdAt || b.registered_at;
+      } else if (sortField === 'interactionCount') {
+        aValue = a.interactionCount || a.interaction_count;
+        bValue = b.interactionCount || b.interaction_count;
+      } else if (sortField === 'firstName') {
+        aValue = a.firstName || a.first_name;
+        bValue = b.firstName || b.first_name;
+      } else if (sortField === 'userName') {
+        aValue = a.userName || a.username;
+        bValue = b.userName || b.username;
+      } else {
+        aValue = a[sortField];
+        bValue = b[sortField];
+      }
 
       if (sortField === 'lastInteraction' || sortField === 'createdAt') {
         aValue = new Date(aValue || 0).getTime();
@@ -180,12 +212,29 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     refetchStats();
   };
 
-  const handleUserStatusToggle = (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => {
-    const newValue = !user[field];
-    updateUserMutation.mutate({
-      userId: user.id,
-      data: { [field]: newValue ? 1 : 0 }
-    });
+  const handleUserStatusToggle = (user: any, field: 'isActive' | 'isBlocked' | 'isPremium') => {
+    const currentValue = user[field] || user[`is_${field.slice(2).toLowerCase()}`];
+    const newValue = !currentValue;
+    const userId = user.id || user.user_id;
+    
+    if (!userId) {
+      console.error('User ID not found');
+      return;
+    }
+    
+    // Только isActive работает в базе данных
+    if (field === 'isActive') {
+      updateUserMutation.mutate({
+        userId: userId,
+        data: { [field]: newValue }
+      });
+    } else {
+      toast({
+        title: "Функция недоступна",
+        description: `Изменение статуса "${field}" пока не поддерживается`,
+        variant: "destructive",
+      });
+    }
   };
 
   const formatDate = (date: string | Date | null) => {
@@ -199,11 +248,17 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     });
   };
 
-  const formatUserName = (user: UserBotData) => {
-    const parts = [user.firstName, user.lastName].filter(Boolean);
+  const formatUserName = (user: any) => {
+    // Поддерживаем как camelCase так и snake_case форматы
+    const firstName = user.firstName || user.first_name;
+    const lastName = user.lastName || user.last_name;
+    const userName = user.userName || user.username;
+    const userId = user.userId || user.user_id;
+    
+    const parts = [firstName, lastName].filter(Boolean);
     if (parts.length > 0) return parts.join(' ');
-    if (user.userName) return `@${user.userName}`;
-    return `ID: ${user.userId}`;
+    if (userName) return `@${userName}`;
+    return `ID: ${userId}`;
   };
 
   if (usersLoading || statsLoading) {
@@ -406,29 +461,29 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredAndSortedUsers.map((user) => (
-                  <TableRow key={user.id}>
+                filteredAndSortedUsers.map((user, index) => (
+                  <TableRow key={user.id || user.user_id || index}>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div>
                           <div className="font-medium">{formatUserName(user)}</div>
-                          <div className="text-xs text-muted-foreground">ID: {user.userId}</div>
+                          <div className="text-xs text-muted-foreground">ID: {user.userId || user.user_id}</div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        <Badge variant={user.isActive ? "default" : "secondary"}>
-                          {user.isActive ? "Активен" : "Неактивен"}
+                        <Badge variant={(user.isActive || user.is_active) ? "default" : "secondary"}>
+                          {(user.isActive || user.is_active) ? "Активен" : "Неактивен"}
                         </Badge>
-                        {user.isPremium && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                        {user.isBlocked && <Badge variant="destructive">Заблокирован</Badge>}
-                        {user.isBot && <Badge variant="outline">Бот</Badge>}
+                        {(user.isPremium || user.is_premium) && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                        {(user.isBlocked || user.is_blocked) && <Badge variant="destructive">Заблокирован</Badge>}
+                        {(user.isBot || user.is_bot) && <Badge variant="outline">Бот</Badge>}
                       </div>
                     </TableCell>
-                    <TableCell>{user.interactionCount || 0}</TableCell>
-                    <TableCell className="text-sm">{formatDate(user.lastInteraction)}</TableCell>
-                    <TableCell className="text-sm">{formatDate(user.createdAt)}</TableCell>
+                    <TableCell>{user.interactionCount || user.interaction_count || 0}</TableCell>
+                    <TableCell className="text-sm">{formatDate(user.lastInteraction || user.last_interaction)}</TableCell>
+                    <TableCell className="text-sm">{formatDate(user.createdAt || user.registered_at)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button
@@ -445,9 +500,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           variant="outline"
                           size="sm"
                           onClick={() => handleUserStatusToggle(user, 'isActive')}
-                          className={user.isActive ? "text-red-600" : "text-green-600"}
+                          className={(user.isActive || user.is_active) ? "text-red-600" : "text-green-600"}
                         >
-                          {user.isActive ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
+                          {(user.isActive || user.is_active) ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -464,7 +519,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Отмена</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteUserMutation.mutate(user.id)}>
+                              <AlertDialogAction onClick={() => deleteUserMutation.mutate(user.id || user.user_id)}>
                                 Удалить
                               </AlertDialogAction>
                             </AlertDialogFooter>
@@ -496,10 +551,10 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div>
                   <Label className="text-sm font-medium">Основная информация</Label>
                   <div className="mt-2 space-y-2">
-                    <div><span className="text-sm text-muted-foreground">Имя:</span> {selectedUser.firstName || 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {selectedUser.lastName || 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Username:</span> {selectedUser.userName ? `@${selectedUser.userName}` : 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {selectedUser.userId}</div>
+                    <div><span className="text-sm text-muted-foreground">Имя:</span> {selectedUser.firstName || selectedUser.first_name || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {selectedUser.lastName || selectedUser.last_name || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Username:</span> {(selectedUser.userName || selectedUser.username) ? `@${selectedUser.userName || selectedUser.username}` : 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {selectedUser.userId || selectedUser.user_id}</div>
                     <div><span className="text-sm text-muted-foreground">Язык:</span> {selectedUser.languageCode || 'Не указано'}</div>
                   </div>
                 </div>
@@ -507,7 +562,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div>
                   <Label className="text-sm font-medium">Статистика</Label>
                   <div className="mt-2 space-y-2">
-                    <div><span className="text-sm text-muted-foreground">Сообщений:</span> {selectedUser.interactionCount || 0}</div>
+                    <div><span className="text-sm text-muted-foreground">Сообщений:</span> {selectedUser.interactionCount || selectedUser.interaction_count || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Сессий:</span> {selectedUser.sessionsCount || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Отправлено:</span> {selectedUser.totalMessagesSent || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Получено:</span> {selectedUser.totalMessagesReceived || 0}</div>
@@ -517,38 +572,30 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               </div>
 
               <div>
-                <Label className="text-sm font-medium">Статусы</Label>
-                <div className="mt-2 flex gap-4">
+                <Label className="text-sm font-medium">Статус пользователя</Label>
+                <div className="mt-2">
                   <div className="flex items-center space-x-2">
                     <Switch
-                      checked={Boolean(selectedUser.isActive)}
+                      checked={Boolean(selectedUser.isActive || selectedUser.is_active)}
                       onCheckedChange={(checked) => handleUserStatusToggle(selectedUser, 'isActive')}
                     />
                     <Label>Активен</Label>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (пользователь может взаимодействовать с ботом)
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      checked={Boolean(selectedUser.isPremium)}
-                      onCheckedChange={(checked) => handleUserStatusToggle(selectedUser, 'isPremium')}
-                    />
-                    <Label>Premium</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      checked={Boolean(selectedUser.isBlocked)}
-                      onCheckedChange={(checked) => handleUserStatusToggle(selectedUser, 'isBlocked')}
-                    />
-                    <Label>Заблокирован</Label>
-                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Вы можете деактивировать пользователя, если нужно временно ограничить его доступ к боту.
+                  </p>
                 </div>
               </div>
 
               <div>
                 <Label className="text-sm font-medium">Даты</Label>
                 <div className="mt-2 space-y-2">
-                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {formatDate(selectedUser.createdAt)}</div>
+                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {formatDate(selectedUser.createdAt || selectedUser.registered_at)}</div>
                   <div><span className="text-sm text-muted-foreground">Последнее обновление:</span> {formatDate(selectedUser.updatedAt)}</div>
-                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {formatDate(selectedUser.lastInteraction)}</div>
+                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {formatDate(selectedUser.lastInteraction || selectedUser.last_interaction)}</div>
                 </div>
               </div>
 
