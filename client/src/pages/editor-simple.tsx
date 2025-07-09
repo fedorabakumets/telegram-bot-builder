@@ -388,6 +388,7 @@ export default function EditorSimple() {
           setCurrentTab('editor');
         }}
         nodes={nodes}
+        connections={connections}
         projectName={currentProject.name}
       />
 

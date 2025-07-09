@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Node } from '@shared/schema';
+import { Node, Connection } from '@shared/schema';
 import { parseCommandFromText } from '@/lib/commands';
 import { useState, useRef, useEffect } from 'react';
 
@@ -24,10 +24,11 @@ interface PreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   nodes: Node[];
+  connections: Connection[];
   projectName: string;
 }
 
-export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewModalProps) {
+export function PreviewModal({ isOpen, onClose, nodes, connections, projectName }: PreviewModalProps) {
   const [currentNodeId, setCurrentNodeId] = useState<string>('');
   const [messageHistory, setMessageHistory] = useState<Array<{
     id: string;
@@ -49,6 +50,37 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
 
   // Find start node or first node
   const startNode = nodes.find(node => node.type === 'start') || nodes[0];
+
+  // Helper function to find next node based on connections
+  const findNextNode = (currentNodeId: string, isSuccess: boolean = true) => {
+    // Find all connections from current node
+    const fromConnections = connections.filter(conn => conn.source === currentNodeId);
+    
+    if (fromConnections.length === 0) {
+      return null;
+    }
+
+    // For user-input nodes, we need to find the success or error path
+    const currentNode = nodes.find(node => node.id === currentNodeId);
+    if (currentNode?.type === 'user-input') {
+      if (isSuccess) {
+        // Find the primary success connection (usually first connection)
+        const successConnection = fromConnections[0];
+        return successConnection ? nodes.find(node => node.id === successConnection.target) : null;
+      } else {
+        // Find error connection if exists
+        const errorConnection = fromConnections.find(conn => {
+          const targetNode = nodes.find(node => node.id === conn.target);
+          return targetNode && targetNode.data.messageText && targetNode.data.messageText.includes('Ошибка');
+        });
+        return errorConnection ? nodes.find(node => node.id === errorConnection.target) : null;
+      }
+    }
+
+    // For other node types, return the first connection
+    const nextConnection = fromConnections[0];
+    return nextConnection ? nodes.find(node => node.id === nextConnection.target) : null;
+  };
 
   // Helper function to get media information from a node
   const getMediaInfo = (node: Node) => {
@@ -384,8 +416,39 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
       if (synonymNode) {
         handleUserMessage(userInput, synonymNode.id, 'goto');
       } else {
-        // Regular text input
-        handleUserMessage(userInput);
+        // Regular text input - check if we're waiting for user input
+        if (waitingForInput && currentNodeId) {
+          // Validate the input and find next node
+          const currentNode = nodes.find(node => node.id === currentNodeId);
+          if (currentNode?.type === 'user-input') {
+            // Simple validation (you can extend this)
+            const minLength = currentNode.data.minLength || 0;
+            const maxLength = currentNode.data.maxLength || 1000;
+            const isValid = userInput.length >= minLength && userInput.length <= maxLength;
+            
+            if (isValid) {
+              // Find success path
+              const nextNode = findNextNode(currentNodeId, true);
+              if (nextNode) {
+                handleUserMessage(userInput, nextNode.id, 'goto');
+              } else {
+                handleUserMessage(userInput);
+              }
+            } else {
+              // Find error path
+              const errorNode = findNextNode(currentNodeId, false);
+              if (errorNode) {
+                handleUserMessage(userInput, errorNode.id, 'goto');
+              } else {
+                handleUserMessage(userInput);
+              }
+            }
+          } else {
+            handleUserMessage(userInput);
+          }
+        } else {
+          handleUserMessage(userInput);
+        }
       }
     }
     
