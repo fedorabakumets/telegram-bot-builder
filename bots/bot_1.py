@@ -11,6 +11,9 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.enums import ParseMode
+import asyncpg
+from datetime import datetime
+import json
 
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
@@ -25,8 +28,93 @@ dp = Dispatcher()
 # Список администраторов (добавьте свой Telegram ID)
 ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов
 
-# Хранилище пользователей (в реальном боте используйте базу данных)
+# Настройки базы данных
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/bot_db")
+
+# Пул соединений с базой данных
+db_pool = None
+
+# Хранилище пользователей (резервное для случаев без БД)
 user_data = {}
+
+
+# Функции для работы с базой данных
+async def init_database():
+    """Инициализация подключения к базе данных и создание таблиц"""
+    global db_pool
+    try:
+        db_pool = await asyncpg.create_pool(DATABASE_URL, min_size=1, max_size=10)
+        # Создаем таблицу пользователей если её нет
+        async with db_pool.acquire() as conn:
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS bot_users (
+                    user_id BIGINT PRIMARY KEY,
+                    username TEXT,
+                    first_name TEXT,
+                    last_name TEXT,
+                    registered_at TIMESTAMP DEFAULT NOW(),
+                    last_interaction TIMESTAMP DEFAULT NOW(),
+                    interaction_count INTEGER DEFAULT 0,
+                    user_data JSONB DEFAULT '{}',
+                    is_active BOOLEAN DEFAULT TRUE
+                );
+            """)
+        logging.info("✅ База данных инициализирована")
+    except Exception as e:
+        logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")
+        db_pool = None
+
+async def save_user_to_db(user_id: int, username: str = None, first_name: str = None, last_name: str = None):
+    """Сохраняет пользователя в базу данных"""
+    if not db_pool:
+        return False
+    try:
+        async with db_pool.acquire() as conn:
+            await conn.execute("""
+                INSERT INTO bot_users (user_id, username, first_name, last_name)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (user_id) DO UPDATE SET
+                    username = EXCLUDED.username,
+                    first_name = EXCLUDED.first_name,
+                    last_name = EXCLUDED.last_name,
+                    last_interaction = NOW(),
+                    interaction_count = bot_users.interaction_count + 1
+            """, user_id, username, first_name, last_name)
+        return True
+    except Exception as e:
+        logging.error(f"Ошибка сохранения пользователя в БД: {e}")
+        return False
+
+async def get_user_from_db(user_id: int):
+    """Получает данные пользователя из базы данных"""
+    if not db_pool:
+        return None
+    try:
+        async with db_pool.acquire() as conn:
+            row = await conn.fetchrow("SELECT * FROM bot_users WHERE user_id = $1", user_id)
+            if row:
+                return dict(row)
+        return None
+    except Exception as e:
+        logging.error(f"Ошибка получения пользователя из БД: {e}")
+        return None
+
+async def update_user_data_in_db(user_id: int, data_key: str, data_value):
+    """Обновляет пользовательские данные в базе данных"""
+    if not db_pool:
+        return False
+    try:
+        async with db_pool.acquire() as conn:
+            await conn.execute("""
+                UPDATE bot_users 
+                SET user_data = user_data || $2::jsonb,
+                    last_interaction = NOW()
+                WHERE user_id = $1
+            """, user_id, json.dumps({data_key: data_value}))
+        return True
+    except Exception as e:
+        logging.error(f"Ошибка обновления данных пользователя: {e}")
+        return False
 
 
 # Утилитарные функции
@@ -37,7 +125,10 @@ async def is_private_chat(message: types.Message) -> bool:
     return message.chat.type == "private"
 
 async def check_auth(user_id: int) -> bool:
-    # Здесь можно добавить логику проверки авторизации
+    # Проверяем наличие пользователя в БД или локальном хранилище
+    if db_pool:
+        user = await get_user_from_db(user_id)
+        return user is not None
     return user_id in user_data
 
 def is_local_file(url: str) -> bool:
@@ -108,15 +199,28 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
 async def start_handler(message: types.Message):
 
     # Регистрируем пользователя в системе
-    user_data[message.from_user.id] = {
-        "username": message.from_user.username,
-        "first_name": message.from_user.first_name,
-        "last_name": message.from_user.last_name,
-        "registered_at": message.date
-    }
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    
+    # Сохраняем пользователя в базу данных
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
+    
+    # Резервное сохранение в локальное хранилище
+    if not saved_to_db:
+        user_data[user_id] = {
+            "username": username,
+            "first_name": first_name,
+            "last_name": last_name,
+            "registered_at": message.date
+        }
+        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")
+    else:
+        logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = """<b>🚀 Привет! Я твой первый бот!
-</b>
+    text = """🚀 Привет! Я твой первый бот!
+
 Ты можешь написать:
 • /start - чтобы запустить меня
 • старт - это тоже работает!
@@ -127,7 +231,7 @@ async def start_handler(message: types.Message):
     builder.add(KeyboardButton(text="ℹ️ Информация"))
     builder.add(KeyboardButton(text="❓ Помощь"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await message.answer(text, reply_markup=keyboard)
 
 # Обработчики синонимов команд
 
@@ -171,8 +275,8 @@ async def handle_reply_btn_help(message: types.Message):
 
 @dp.message(lambda message: message.text == "◀️ Назад")
 async def handle_reply_btn_back_info(message: types.Message):
-    text = """<b>🚀 Привет! Я твой первый бот!
-</b>
+    text = """🚀 Привет! Я твой первый бот!
+
 Ты можешь написать:
 • /start - чтобы запустить меня
 • старт - это тоже работает!
@@ -182,7 +286,7 @@ async def handle_reply_btn_back_info(message: types.Message):
     builder.add(KeyboardButton(text="ℹ️ Информация"))
     builder.add(KeyboardButton(text="❓ Помощь"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
+    await message.answer(text, reply_markup=keyboard)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -250,8 +354,11 @@ async def handle_user_input(message: types.Message):
     
     # Сохраняем в базу данных если включено
     if input_config.get("save_to_database"):
-        logging.info(f"Сохранение в БД: {variable_name} = {user_text} (пользователь {user_id})")
-        # Здесь можно добавить код для сохранения в реальную базу данных
+        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)
+        if saved_to_db:
+            logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")
+        else:
+            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
     
     # Отправляем сообщение об успехе
     success_message = input_config.get("success_message", "Спасибо за ваш ответ!")
@@ -266,7 +373,9 @@ async def handle_user_input(message: types.Message):
 
 # Запуск бота
 async def main():
-    print("Бот запущен!")
+    # Инициализируем базу данных
+    await init_database()
+    print("🤖 Бот запущен и готов к работе!")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
