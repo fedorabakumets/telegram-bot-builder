@@ -2394,7 +2394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COUNT(*) FILTER (WHERE is_active = true) as "activeUsers",
           COUNT(*) FILTER (WHERE is_active = false) as "blockedUsers",
           0 as "premiumUsers",
-          COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}' AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%')) as "usersWithResponses",
+          COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}' AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%' OR user_data::text LIKE '%input%' OR user_data::text LIKE '%user_%')) as "usersWithResponses",
           COALESCE(SUM(interaction_count), 0) as "totalInteractions",
           COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
         FROM bot_users
@@ -2446,7 +2446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM bot_users 
         WHERE user_data IS NOT NULL 
           AND user_data != '{}' 
-          AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%')
+          AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%' OR user_data::text LIKE '%input%' OR user_data::text LIKE '%user_%')
         ORDER BY last_interaction DESC
       `);
       
