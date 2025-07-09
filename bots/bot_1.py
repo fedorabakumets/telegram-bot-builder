@@ -1,9 +1,7 @@
 """
 Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
-
-Команды для @BotFather:
-start - Запустить бота"""
+"""
 
 import asyncio
 import logging
@@ -197,14 +195,6 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
     }
 
 
-# Настройка меню команд
-async def set_bot_commands():
-    commands = [
-        BotCommand(command="start", description="Запустить бота"),
-    ]
-    await bot.set_my_commands(commands)
-
-
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
 
@@ -229,17 +219,22 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = "Привет! Добро пожаловать!"
+    text = """👋 Добро пожаловать в бот обратной связи!
+
+Мы очень ценим мнение наших пользователей. Поделитесь своими впечатлениями!"""
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="qtgiyw3f81CNFzBNj8ZmS"))
+    builder.add(InlineKeyboardButton(text="📝 Начать опрос", callback_data="survey-question"))
+    builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="thank-you"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-# Обработчик сбора пользовательского ввода для узла qtgiyw3f81CNFzBNj8ZmS
+# Обработчик сбора пользовательского ввода для узла feedback-input
     prompt_text = "Пожалуйста, введите ваш ответ:"
+    placeholder_text = "Введите ваш отзыв здесь..."
+    prompt_text += f"\n\n💡 {placeholder_text}"
     await message.answer(prompt_text)
     
     # Инициализируем пользовательские данные если их нет
@@ -249,30 +244,60 @@ async def start_handler(message: types.Message):
     # Ожидаем ответ пользователя
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "text",
-        "variable": "user_response",
+        "variable": "user_feedback",
         "validation": "",
-        "min_length": 0,
-        "max_length": 0,
+        "min_length": 10,
+        "max_length": 500,
         "timeout": 60,
         "required": True,
         "allow_skip": False,
-        "save_to_db": False,
+        "save_to_db": True,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": "Спасибо за ваш ответ!",
         "default_value": "",
-        "node_id": "qtgiyw3f81CNFzBNj8ZmS"
+        "node_id": "feedback-input"
     }
     
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "qtgiyw3f81CNFzBNj8ZmS")
-async def handle_callback_qtgiyw3f81CNFzBNj8ZmS(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "survey-question")
+async def handle_callback_survey_question(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    text = """📋 **Вопрос 1 из 2**
+
+Как бы вы оценили качество нашего сервиса?"""
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐⭐ Отлично", callback_data="feedback-input"))
+    builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐ Хорошо", callback_data="feedback-input"))
+    builder.add(InlineKeyboardButton(text="⭐⭐⭐ Средне", callback_data="feedback-input"))
+    builder.add(InlineKeyboardButton(text="⭐⭐ Плохо", callback_data="feedback-input"))
+    builder.add(InlineKeyboardButton(text="⭐ Ужасно", callback_data="feedback-input"))
+    keyboard = builder.as_markup()
+    await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+
+@dp.callback_query(lambda c: c.data == "thank-you")
+async def handle_callback_thank_you(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    text = """🎉 **Спасибо за участие!**
+
+Ваша обратная связь очень важна для нас и поможет улучшить наш сервис.
+
+Если у вас есть ещё вопросы или предложения, не стесняйтесь обращаться!"""
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🔄 Пройти опрос снова", callback_data="start-1"))
+    keyboard = builder.as_markup()
+    await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+
+@dp.callback_query(lambda c: c.data == "feedback-input")
+async def handle_callback_feedback_input(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Удаляем старое сообщение
     await callback_query.message.delete()
     
     text = "Пожалуйста, введите ваш ответ:"
+    placeholder_text = "Введите ваш отзыв здесь..."
+    text += f"\n\n💡 {placeholder_text}"
     await bot.send_message(callback_query.from_user.id, text)
     
     # Инициализируем пользовательские данные если их нет
@@ -282,18 +307,30 @@ async def handle_callback_qtgiyw3f81CNFzBNj8ZmS(callback_query: types.CallbackQu
     # Настраиваем ожидание ввода
     user_data[callback_query.from_user.id]["waiting_for_input"] = {
         "type": "text",
-        "variable": "user_response",
+        "variable": "user_feedback",
         "validation": "",
-        "min_length": 0,
-        "max_length": 0,
+        "min_length": 10,
+        "max_length": 500,
         "timeout": 60,
         "required": True,
         "allow_skip": False,
-        "save_to_database": False,
+        "save_to_database": True,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": "Спасибо за ваш ответ!",
-        "node_id": "qtgiyw3f81CNFzBNj8ZmS"
+        "node_id": "feedback-input"
     }
+
+@dp.callback_query(lambda c: c.data == "start-1")
+async def handle_callback_start_1(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    text = """👋 Добро пожаловать в бот обратной связи!
+
+Мы очень ценим мнение наших пользователей. Поделитесь своими впечатлениями!"""
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="📝 Начать опрос", callback_data="survey-question"))
+    builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="thank-you"))
+    keyboard = builder.as_markup()
+    await callback_query.message.edit_text(text, reply_markup=keyboard)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -399,7 +436,6 @@ async def main():
     try:
         # Инициализируем базу данных
         await init_database()
-        await set_bot_commands()
         print("🤖 Бот запущен и готов к работе!")
         await dp.start_polling(bot)
     except KeyboardInterrupt:
