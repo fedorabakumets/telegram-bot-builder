@@ -508,13 +508,28 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 }
                               }
                               
+                              // Format the question text
+                              const formatQuestionText = (key, responseData) => {
+                                if (responseData?.prompt && responseData.prompt.trim()) {
+                                  return responseData.prompt.length > 40 ? `${responseData.prompt.substring(0, 40)}...` : responseData.prompt;
+                                }
+                                
+                                // Generate a question based on the key
+                                if (key.includes('feedback')) return 'Обратная связь';
+                                if (key.includes('name')) return 'Имя';
+                                if (key.includes('age')) return 'Возраст';
+                                if (key.includes('city')) return 'Город';
+                                if (key.includes('contact')) return 'Контакт';
+                                if (key.includes('email')) return 'Email';
+                                if (key.includes('phone')) return 'Телефон';
+                                if (key.startsWith('response_')) return key.replace('response_', 'Вопрос ');
+                                return key;
+                              };
+                              
                               return (
                                 <div key={key} className="text-xs bg-muted/50 rounded p-2">
                                   <div className="font-medium text-blue-600 dark:text-blue-400 mb-1">
-                                    {responseData?.prompt ? 
-                                      (responseData.prompt.length > 40 ? `${responseData.prompt.substring(0, 40)}...` : responseData.prompt) :
-                                      (key.startsWith('response_') ? key.replace('response_', 'Вопрос ') : key)
-                                    }
+                                    {formatQuestionText(key, responseData)}
                                   </div>
                                   <div className="text-foreground font-medium">
                                     {responseData?.value ? 
