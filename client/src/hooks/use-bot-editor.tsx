@@ -57,7 +57,7 @@ export function useBotEditor(initialData?: BotData) {
             ...node, 
             data: { 
               ...node.data, 
-              buttons: [...node.data.buttons, button] 
+              buttons: [...(node.data.buttons || []), button] 
             } 
           }
         : node
@@ -71,7 +71,7 @@ export function useBotEditor(initialData?: BotData) {
             ...node, 
             data: { 
               ...node.data, 
-              buttons: node.data.buttons.map(btn => 
+              buttons: (node.data.buttons || []).map(btn => 
                 btn.id === buttonId ? { ...btn, ...updates } : btn
               )
             } 
@@ -87,7 +87,7 @@ export function useBotEditor(initialData?: BotData) {
             ...node, 
             data: { 
               ...node.data, 
-              buttons: node.data.buttons.filter(btn => btn.id !== buttonId)
+              buttons: (node.data.buttons || []).filter(btn => btn.id !== buttonId)
             } 
           }
         : node

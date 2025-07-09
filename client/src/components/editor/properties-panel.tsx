@@ -1835,7 +1835,7 @@ export function PropertiesPanel({
                 </div>
                 
                 <div className="space-y-2">
-                  {selectedNode.data.buttons.map((button) => (
+                  {(selectedNode.data.buttons || []).map((button) => (
                     <div key={button.id} className="bg-muted/50 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
                         <Input

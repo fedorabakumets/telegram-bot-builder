@@ -161,7 +161,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
       minute: '2-digit' 
     });
 
-    const buttons = startNode.data.keyboardType !== 'none' ? startNode.data.buttons.map(btn => ({
+    const buttons = startNode.data.keyboardType !== 'none' && startNode.data.buttons ? startNode.data.buttons.map(btn => ({
       text: btn.text,
       target: btn.target,
       action: btn.action
@@ -265,7 +265,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
 
           const targetMediaInfo = getMediaInfo(targetNode);
           
-          const buttons = targetNode.data.keyboardType !== 'none' ? targetNode.data.buttons.map(btn => ({
+          const buttons = targetNode.data.keyboardType !== 'none' && targetNode.data.buttons ? targetNode.data.buttons.map(btn => ({
             text: btn.text,
             target: btn.target,
             action: btn.action
