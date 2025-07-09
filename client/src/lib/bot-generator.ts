@@ -805,7 +805,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               // Handle user-input nodes
               const inputPrompt = targetNode.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
               const inputType = targetNode.data.inputType || 'text';
-              const inputVariable = targetNode.data.inputVariable || 'user_response';
+              const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
               const inputValidation = targetNode.data.inputValidation || '';
               const minLength = targetNode.data.minLength || 0;
               const maxLength = targetNode.data.maxLength || 0;
@@ -2469,7 +2469,7 @@ function generateUserInputHandler(node: Node): string {
   // Получаем параметры из узла
   const inputPrompt = node.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
   const inputType = node.data.inputType || 'text';
-  const inputVariable = node.data.inputVariable || 'user_response';
+  const inputVariable = node.data.inputVariable || `response_${node.id}`;
   const inputValidation = node.data.inputValidation || '';
   const minLength = node.data.minLength || 0;
   const maxLength = node.data.maxLength || 0;

@@ -2393,7 +2393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COUNT(*) FILTER (WHERE is_active = true) as "activeUsers",
           COUNT(*) FILTER (WHERE is_active = false) as "blockedUsers",
           0 as "premiumUsers",
-          COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}') as "usersWithResponses",
+          COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}' AND user_data::text LIKE '%response_%') as "usersWithResponses",
           COALESCE(SUM(interaction_count), 0) as "totalInteractions",
           COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
         FROM bot_users
