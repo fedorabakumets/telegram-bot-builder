@@ -1,5 +1,5 @@
 """
-Комплексный тест форматирования - Telegram Bot
+Проблема пользователя - markdown не работает - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
 """
 
@@ -115,88 +115,55 @@ async def start_handler(message: types.Message):
         "registered_at": message.date
     }
 
-    text = """🎯 **Добро пожаловать в тест форматирования!**
+    text = """🏛️ **ДОБРО ПОЖАЛОВАТЬ В УЛЬТРА-КОМПЛЕКСНЫЙ ПОЛИТИКО-ИСТОРИЧЕСКИЙ ОПРОС!**
 
-*Выберите тип форматирования:*"""
+📚 Этот опрос включает:
+• 🗳️ **Политические взгляды** (20+ вопросов)
+• 📜 **Историческое знание** (25+ вопросов)
+• 🤔 **Философские воззрения** (15+ вопросов)
+• 🌍 **Социологический анализ** (20+ вопросов)
+
+⏱️ **Время прохождения:** 45-60 минут
+🎯 **Результат:** Подробный анализ ваших взглядов
+
+**Готовы начать глубокое исследование?**"""
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📝 Markdown", callback_data="markdown-node"))
-    builder.add(InlineKeyboardButton(text="🌐 HTML", callback_data="html-node"))
-    builder.add(InlineKeyboardButton(text="📄 Обычный текст", callback_data="plain-node"))
+    builder.add(InlineKeyboardButton(text="🚀 Начать опрос", callback_data="question-1"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "markdown-node")
-async def handle_callback_markdown_node(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "question-1")
+async def handle_callback_question_1(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = """📝 **MARKDOWN ФОРМАТИРОВАНИЕ:**
-
-**Жирный текст**
-*Курсивный текст*
-__Подчеркнутый текст__
-`Код`
-
-~~Зачеркнутый текст~~
-
-• Список
-• Элементов
-
-[Ссылка](https://example.com)"""
+    text = "**Вопрос 1:** Какова ваша политическая позиция?"
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="◀️ Назад", callback_data="start-1"))
+    builder.add(InlineKeyboardButton(text="Левые взгляды", callback_data="start-1"))
+    builder.add(InlineKeyboardButton(text="Правые взгляды", callback_data="start-1"))
     keyboard = builder.as_markup()
     await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
-
-@dp.callback_query(lambda c: c.data == "html-node")
-async def handle_callback_html_node(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    text = """🌐 <b>HTML ФОРМАТИРОВАНИЕ:</b>
-
-<b>Жирный текст</b>
-<i>Курсивный текст</i>
-<u>Подчеркнутый текст</u>
-<code>Код</code>
-
-<s>Зачеркнутый текст</s>
-
-• Список
-• Элементов
-
-<a href="https://example.com">Ссылка</a>"""
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="◀️ Назад", callback_data="start-1"))
-    keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
-
-@dp.callback_query(lambda c: c.data == "plain-node")
-async def handle_callback_plain_node(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    text = """📄 ОБЫЧНЫЙ ТЕКСТ:
-
-Привет! Это обычный текст без форматирования.
-
-Здесь нет жирного или курсивного текста.
-
-Просто обычное сообщение."""
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="◀️ Назад", callback_data="start-1"))
-    keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard)
 
 @dp.callback_query(lambda c: c.data == "start-1")
 async def handle_callback_start_1(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = """🎯 **Добро пожаловать в тест форматирования!**
+    text = """🏛️ **ДОБРО ПОЖАЛОВАТЬ В УЛЬТРА-КОМПЛЕКСНЫЙ ПОЛИТИКО-ИСТОРИЧЕСКИЙ ОПРОС!**
 
-*Выберите тип форматирования:*"""
+📚 Этот опрос включает:
+• 🗳️ **Политические взгляды** (20+ вопросов)
+• 📜 **Историческое знание** (25+ вопросов)
+• 🤔 **Философские воззрения** (15+ вопросов)
+• 🌍 **Социологический анализ** (20+ вопросов)
+
+⏱️ **Время прохождения:** 45-60 минут
+🎯 **Результат:** Подробный анализ ваших взглядов
+
+**Готовы начать глубокое исследование?**"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📝 Markdown", callback_data="markdown-node"))
-    builder.add(InlineKeyboardButton(text="🌐 HTML", callback_data="html-node"))
-    builder.add(InlineKeyboardButton(text="📄 Обычный текст", callback_data="plain-node"))
+    builder.add(InlineKeyboardButton(text="🚀 Начать опрос", callback_data="question-1"))
     keyboard = builder.as_markup()
     await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
 

@@ -1,5 +1,5 @@
 """
-Комплексный тест форматирования - Telegram Bot
+Тест форматирования - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
 """
 
@@ -115,88 +115,65 @@ async def start_handler(message: types.Message):
         "registered_at": message.date
     }
 
-    text = """🎯 **Добро пожаловать в тест форматирования!**
+    text = """🤖 **Тест форматирования**
 
-*Выберите тип форматирования:*"""
+**Жирный текст** должен быть жирным
+*Курсивный текст* должен быть курсивом
+`Код` должен быть кодом
+__Подчеркнутый__ должен быть подчеркнутым
+~~Зачеркнутый~~ должен быть зачеркнутым"""
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📝 Markdown", callback_data="markdown-node"))
-    builder.add(InlineKeyboardButton(text="🌐 HTML", callback_data="html-node"))
-    builder.add(InlineKeyboardButton(text="📄 Обычный текст", callback_data="plain-node"))
+    builder.add(InlineKeyboardButton(text="🌐 HTML тест", callback_data="html-test"))
+    builder.add(InlineKeyboardButton(text="📝 Обычный текст", callback_data="plain-test"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "markdown-node")
-async def handle_callback_markdown_node(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "html-test")
+async def handle_callback_html_test(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = """📝 **MARKDOWN ФОРМАТИРОВАНИЕ:**
+    text = """🌐 <b>HTML Форматирование</b>
 
-**Жирный текст**
-*Курсивный текст*
-__Подчеркнутый текст__
-`Код`
-
-~~Зачеркнутый текст~~
-
-• Список
-• Элементов
-
-[Ссылка](https://example.com)"""
+<b>Жирный</b> в HTML
+<i>Курсивный</i> в HTML
+<code>Код</code> в HTML
+<u>Подчеркнутый</u> в HTML
+<s>Зачеркнутый</s> в HTML"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="◀️ Назад", callback_data="start-1"))
-    keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
-
-@dp.callback_query(lambda c: c.data == "html-node")
-async def handle_callback_html_node(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    text = """🌐 <b>HTML ФОРМАТИРОВАНИЕ:</b>
-
-<b>Жирный текст</b>
-<i>Курсивный текст</i>
-<u>Подчеркнутый текст</u>
-<code>Код</code>
-
-<s>Зачеркнутый текст</s>
-
-• Список
-• Элементов
-
-<a href="https://example.com">Ссылка</a>"""
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="◀️ Назад", callback_data="start-1"))
+    builder.add(InlineKeyboardButton(text="🔙 Назад", callback_data="start-1"))
     keyboard = builder.as_markup()
     await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
 
-@dp.callback_query(lambda c: c.data == "plain-node")
-async def handle_callback_plain_node(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "plain-test")
+async def handle_callback_plain_test(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = """📄 ОБЫЧНЫЙ ТЕКСТ:
+    text = """📝 Обычный текст без форматирования
 
-Привет! Это обычный текст без форматирования.
-
-Здесь нет жирного или курсивного текста.
-
-Просто обычное сообщение."""
+**Это не должно быть жирным**
+*Это не должно быть курсивом*
+`Это не должно быть кодом`"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="◀️ Назад", callback_data="start-1"))
+    builder.add(InlineKeyboardButton(text="🔙 Назад", callback_data="start-1"))
     keyboard = builder.as_markup()
     await callback_query.message.edit_text(text, reply_markup=keyboard)
 
 @dp.callback_query(lambda c: c.data == "start-1")
 async def handle_callback_start_1(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = """🎯 **Добро пожаловать в тест форматирования!**
+    text = """🤖 **Тест форматирования**
 
-*Выберите тип форматирования:*"""
+**Жирный текст** должен быть жирным
+*Курсивный текст* должен быть курсивом
+`Код` должен быть кодом
+__Подчеркнутый__ должен быть подчеркнутым
+~~Зачеркнутый~~ должен быть зачеркнутым"""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📝 Markdown", callback_data="markdown-node"))
-    builder.add(InlineKeyboardButton(text="🌐 HTML", callback_data="html-node"))
-    builder.add(InlineKeyboardButton(text="📄 Обычный текст", callback_data="plain-node"))
+    builder.add(InlineKeyboardButton(text="🌐 HTML тест", callback_data="html-test"))
+    builder.add(InlineKeyboardButton(text="📝 Обычный текст", callback_data="plain-test"))
     keyboard = builder.as_markup()
     await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
 

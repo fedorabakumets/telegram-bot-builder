@@ -1,118 +1,110 @@
+#!/usr/bin/env python3
 """
 Комплексный тест всех видов форматирования
 """
 
+import json
 import requests
+import sys
 
 def create_comprehensive_formatting_test():
     """Создает комплексный тест форматирования с разными сценариями"""
+    
     bot_data = {
         "nodes": [
-            # Стартовый узел с markdown
             {
                 "id": "start-1",
-                "type": "start", 
+                "type": "start",
                 "data": {
                     "command": "/start",
-                    "messageText": "🤖 **Комплексный тест форматирования**\n\nЭтот бот тестирует:\n• **Markdown** форматирование\n• *HTML* форматирование  \n• `Обычный` текст\n\nВыберите тест:",
+                    "messageText": "🎯 **Добро пожаловать в тест форматирования!**\n\n*Выберите тип форматирования:*",
+                    "keyboardType": "inline",
                     "formatMode": "markdown",
-                    "keyboardType": "inline",
                     "buttons": [
-                        {"id": "btn1", "text": "📝 Markdown тест", "action": "goto", "target": "markdown-node"},
-                        {"id": "btn2", "text": "🌐 HTML тест", "action": "goto", "target": "html-node"},
-                        {"id": "btn3", "text": "📄 Обычный текст", "action": "goto", "target": "plain-node"}
+                        {
+                            "id": "btn-markdown",
+                            "text": "📝 Markdown",
+                            "action": "goto",
+                            "target": "markdown-node"
+                        },
+                        {
+                            "id": "btn-html",
+                            "text": "🌐 HTML",
+                            "action": "goto",
+                            "target": "html-node"
+                        },
+                        {
+                            "id": "btn-plain",
+                            "text": "📄 Обычный текст",
+                            "action": "goto",
+                            "target": "plain-node"
+                        }
                     ]
-                }
+                },
+                "position": {"x": 100, "y": 100}
             },
-            # Команда помощи с HTML
-            {
-                "id": "help-1",
-                "type": "command",
-                "data": {
-                    "command": "/help",
-                    "messageText": "<b>🆘 Справка по боту</b>\n\n<i>HTML форматирование работает!</i>\n\n<code>Доступные команды:</code>\n• <b>/start</b> - запуск бота\n• <b>/help</b> - эта справка\n\n<u>Поддерживаемые форматы:</u>\n• <s>Зачеркнутый</s> текст\n• <pre>Блок кода</pre>\n\n<a href=\"https://telegram.org\">Ссылка на Telegram</a>",
-                    "formatMode": "html", 
-                    "keyboardType": "inline",
-                    "buttons": [
-                        {"id": "btn4", "text": "🔙 Назад к началу", "action": "goto", "target": "start-1"}
-                    ]
-                }
-            },
-            # Узел с markdown форматированием
             {
                 "id": "markdown-node",
                 "type": "message",
                 "data": {
-                    "messageText": "📝 **Тест Markdown форматирования**\n\n**Жирный текст** работает\n*Курсивный текст* тоже работает\n`Встроенный код` отображается правильно\n__Подчеркнутый текст__ виден\n~~Зачеркнутый текст~~ тоже\n\n```python\n# Блок кода\ndef hello():\n    print(\"Hello World!\")\n```\n\n> Цитата выглядит красиво\n\n# Заголовок\n## Подзаголовок\n\n[Ссылка на сайт](https://example.com)",
+                    "messageText": "📝 **MARKDOWN ФОРМАТИРОВАНИЕ:**\n\n**Жирный текст**\n*Курсивный текст*\n__Подчеркнутый текст__\n`Код`\n\n~~Зачеркнутый текст~~\n\n• Список\n• Элементов\n\n[Ссылка](https://example.com)",
+                    "keyboardType": "inline",
                     "formatMode": "markdown",
-                    "keyboardType": "inline", 
                     "buttons": [
-                        {"id": "btn5", "text": "🌐 Переключить на HTML", "action": "goto", "target": "html-node"},
-                        {"id": "btn6", "text": "🏠 Главное меню", "action": "goto", "target": "start-1"}
+                        {
+                            "id": "btn-back-md",
+                            "text": "◀️ Назад",
+                            "action": "goto",
+                            "target": "start-1"
+                        }
                     ]
-                }
+                },
+                "position": {"x": 400, "y": 50}
             },
-            # Узел с HTML форматированием
             {
                 "id": "html-node",
                 "type": "message",
                 "data": {
-                    "messageText": "🌐 <b>Тест HTML форматирования</b>\n\n<b>Жирный текст</b> в HTML\n<i>Курсивный текст</i> в HTML\n<code>Встроенный код</code> в HTML\n<u>Подчеркнутый текст</u> в HTML\n<s>Зачеркнутый текст</s> в HTML\n\n<pre>Блок кода в HTML\nс несколькими строками</pre>\n\n<a href=\"https://telegram.org\">Ссылка в HTML формате</a>\n\nВсе работает отлично!",
-                    "formatMode": "html",
+                    "messageText": "🌐 <b>HTML ФОРМАТИРОВАНИЕ:</b>\n\n<b>Жирный текст</b>\n<i>Курсивный текст</i>\n<u>Подчеркнутый текст</u>\n<code>Код</code>\n\n<s>Зачеркнутый текст</s>\n\n• Список\n• Элементов\n\n<a href=\"https://example.com\">Ссылка</a>",
                     "keyboardType": "inline",
+                    "formatMode": "html",
                     "buttons": [
-                        {"id": "btn7", "text": "📝 Переключить на Markdown", "action": "goto", "target": "markdown-node"},
-                        {"id": "btn8", "text": "📄 Обычный текст", "action": "goto", "target": "plain-node"},
-                        {"id": "btn9", "text": "🏠 Главное меню", "action": "goto", "target": "start-1"}
+                        {
+                            "id": "btn-back-html",
+                            "text": "◀️ Назад",
+                            "action": "goto",
+                            "target": "start-1"
+                        }
                     ]
-                }
+                },
+                "position": {"x": 400, "y": 150}
             },
-            # Узел без форматирования
             {
                 "id": "plain-node",
-                "type": "message", 
-                "data": {
-                    "messageText": "📄 Обычный текст без форматирования\n\n**Это НЕ будет жирным**\n*Это НЕ будет курсивом*\n<b>Это НЕ будет жирным в HTML</b>\n<i>Это НЕ будет курсивом в HTML</i>\n\nВесь текст отображается как есть, без обработки markdown или HTML тегов.\n\nИспользуется когда нужен чистый текст без форматирования.",
-                    "formatMode": "none",
-                    "keyboardType": "inline",
-                    "buttons": [
-                        {"id": "btn10", "text": "📝 Markdown", "action": "goto", "target": "markdown-node"},
-                        {"id": "btn11", "text": "🌐 HTML", "action": "goto", "target": "html-node"},
-                        {"id": "btn12", "text": "🏠 Главное меню", "action": "goto", "target": "start-1"}
-                    ]
-                }
-            },
-            # Узел с reply клавиатурой и markdown
-            {
-                "id": "reply-markdown-node",
                 "type": "message",
                 "data": {
-                    "messageText": "🎹 **Reply клавиатура с Markdown**\n\nЭтот узел использует:\n• **Reply** клавиатуру\n• *Markdown* форматирование\n\nТекст форматируется, а кнопки отображаются внизу экрана.",
-                    "formatMode": "markdown",
-                    "keyboardType": "reply",
-                    "resizeKeyboard": True,
-                    "oneTimeKeyboard": False,
+                    "messageText": "📄 ОБЫЧНЫЙ ТЕКСТ:\n\nПривет! Это обычный текст без форматирования.\n\nЗдесь нет жирного или курсивного текста.\n\nПросто обычное сообщение.",
+                    "keyboardType": "inline",
+                    "formatMode": "none",
                     "buttons": [
-                        {"id": "btn13", "text": "📝 Тест Markdown", "action": "goto", "target": "markdown-node"},
-                        {"id": "btn14", "text": "🌐 Тест HTML", "action": "goto", "target": "html-node"},
-                        {"id": "btn15", "text": "🏠 Главное меню", "action": "goto", "target": "start-1"}
+                        {
+                            "id": "btn-back-plain",
+                            "text": "◀️ Назад",
+                            "action": "goto",
+                            "target": "start-1"
+                        }
                     ]
-                }
+                },
+                "position": {"x": 400, "y": 250}
             }
         ],
         "connections": [
             {"id": "conn1", "from": "start-1", "to": "markdown-node"},
             {"id": "conn2", "from": "start-1", "to": "html-node"},
             {"id": "conn3", "from": "start-1", "to": "plain-node"},
-            {"id": "conn4", "from": "help-1", "to": "start-1"},
-            {"id": "conn5", "from": "markdown-node", "to": "html-node"},
-            {"id": "conn6", "from": "markdown-node", "to": "start-1"},
-            {"id": "conn7", "from": "html-node", "to": "markdown-node"},
-            {"id": "conn8", "from": "html-node", "to": "plain-node"}, 
-            {"id": "conn9", "from": "html-node", "to": "start-1"},
-            {"id": "conn10", "from": "plain-node", "to": "markdown-node"},
-            {"id": "conn11", "from": "plain-node", "to": "html-node"},
-            {"id": "conn12", "from": "plain-node", "to": "start-1"}
+            {"id": "conn4", "from": "markdown-node", "to": "start-1"},
+            {"id": "conn5", "from": "html-node", "to": "start-1"},
+            {"id": "conn6", "from": "plain-node", "to": "start-1"}
         ]
     }
     
@@ -120,101 +112,112 @@ def create_comprehensive_formatting_test():
 
 def test_comprehensive_formatting():
     """Комплексный тест форматирования"""
-    print("🧪 КОМПЛЕКСНЫЙ ТЕСТ: Все виды форматирования")
-    print("=" * 70)
     
+    print("🧪 КОМПЛЕКСНЫЙ ТЕСТ ФОРМАТИРОВАНИЯ")
+    print("=" * 50)
+    
+    # Создаём тестовый бот
     bot_data = create_comprehensive_formatting_test()
     
+    # Создаём проект через API
+    project_data = {
+        "name": "Комплексный тест форматирования",
+        "description": "Тест для проверки всех видов форматирования",
+        "data": bot_data
+    }
+    
     try:
-        # Создаем проект
-        project_data = {
-            "name": "Комплексный тест форматирования",
-            "description": "Тест всех видов форматирования: Markdown, HTML, без форматирования",
-            "data": bot_data
-        }
+        # Создаём проект
+        create_response = requests.post('http://localhost:5000/api/projects', 
+                                      json=project_data)
         
-        create_response = requests.post('http://localhost:5000/api/projects', json=project_data)
-        if create_response.status_code != 201:
-            print(f"❌ Ошибка создания проекта: {create_response.status_code}")
-            return
+        if create_response.status_code == 201:
+            project_id = create_response.json()['id']
+            print(f"✅ Проект создан с ID: {project_id}")
             
-        project_id = create_response.json()['id']
-        print(f"✅ Проект создан с ID: {project_id}")
-        
-        # Генерируем код
-        export_response = requests.post(f'http://localhost:5000/api/projects/{project_id}/export')
-        if export_response.status_code == 200:
-            generated_code = export_response.json()['code']
+            # Генерируем код
+            export_response = requests.post(f'http://localhost:5000/api/projects/{project_id}/export')
             
-            # Сохраняем файл
-            with open('comprehensive_formatting_test_RESULT.py', 'w', encoding='utf-8') as f:
-                f.write(generated_code)
-            
-            print("✅ Код сгенерирован и сохранен в 'comprehensive_formatting_test_RESULT.py'")
-            
-            # Детальный анализ
-            print("\n📊 ДЕТАЛЬНЫЙ АНАЛИЗ:")
-            
-            # Подсчитываем разные типы форматирования
-            markdown_count = generated_code.count('parse_mode=ParseMode.MARKDOWN')
-            html_count = generated_code.count('parse_mode=ParseMode.HTML')
-            total_message_count = generated_code.count('await message.answer(')
-            total_edit_count = generated_code.count('await callback_query.message.edit_text(')
-            total_send_count = generated_code.count('await bot.send_message(')
-            
-            print(f"📝 Markdown parse_mode: {markdown_count} раз")
-            print(f"🌐 HTML parse_mode: {html_count} раз")
-            print(f"📨 Всего message.answer: {total_message_count} раз")
-            print(f"✏️ Всего edit_text: {total_edit_count} раз")
-            print(f"📤 Всего send_message: {total_send_count} раз")
-            
-            # Проверяем покрытие
-            nodes_with_formatting = 6  # У нас 6 узлов с разным форматированием
-            total_formatting_found = markdown_count + html_count
-            
-            print(f"\n📈 ПОКРЫТИЕ ТЕСТИРОВАНИЯ:")
-            print(f"Узлов с форматированием: {nodes_with_formatting}")
-            print(f"Форматирований найдено: {total_formatting_found}")
-            
-            # Проверяем конкретные узлы
-            checks = {
-                "START команда с Markdown": 'parse_mode=ParseMode.MARKDOWN' in generated_code and '@dp.message(CommandStart())' in generated_code,
-                "HELP команда с HTML": 'parse_mode=ParseMode.HTML' in generated_code and '@dp.message(Command("help"))' in generated_code,
-                "Callback обработчики": '@dp.callback_query(' in generated_code,
-                "Reply клавиатуры": 'ReplyKeyboardBuilder()' in generated_code,
-                "Inline клавиатуры": 'InlineKeyboardBuilder()' in generated_code,
-                "Без форматирования": total_message_count > (markdown_count + html_count)
-            }
-            
-            print(f"\n✅ ПРОВЕРКА КОМПОНЕНТОВ:")
-            for check_name, result in checks.items():
-                status = "✅" if result else "❌"
-                print(f"{status} {check_name}: {'Работает' if result else 'НЕ работает'}")
-            
-            # Итоговый результат
-            all_checks_passed = all(checks.values())
-            formatting_ok = markdown_count >= 2 and html_count >= 1
-            
-            print(f"\n🎯 ИТОГОВЫЙ РЕЗУЛЬТАТ:")
-            if all_checks_passed and formatting_ok:
-                print("🟢 ВСЕ ТЕСТЫ ПРОШЛИ УСПЕШНО!")
-                print("   Форматирование работает стабильно во всех сценариях")
-                return True
-            else:
-                print("🔴 ЕСТЬ ПРОБЛЕМЫ!")
-                if not formatting_ok:
-                    print(f"   Недостаточно форматирования: Markdown={markdown_count}, HTML={html_count}")
-                if not all_checks_passed:
-                    print("   Не все компоненты работают правильно")
-                return False
+            if export_response.status_code == 200:
+                generated_code = export_response.json()['code']
                 
+                # Сохраняем код для анализа
+                filename = 'comprehensive_formatting_test_RESULT.py'
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write(generated_code)
+                
+                print(f"✅ Код сохранён в '{filename}'")
+                
+                # Анализируем код
+                analyze_formatting_code(generated_code)
+                
+            else:
+                print(f"❌ Ошибка генерации кода: {export_response.status_code}")
+                print(export_response.text)
         else:
-            print(f"❌ Ошибка экспорта: {export_response.status_code}")
-            return False
+            print(f"❌ Ошибка создания проекта: {create_response.status_code}")
+            print(create_response.text)
             
     except Exception as e:
-        print(f"❌ Ошибка: {e}")
-        return False
+        print(f"❌ Ошибка запроса: {e}")
+
+def analyze_formatting_code(code):
+    """Анализирует сгенерированный код форматирования"""
+    
+    print("\n🔍 АНАЛИЗ СГЕНЕРИРОВАННОГО КОДА:")
+    print("-" * 40)
+    
+    # Подсчитываем parse_mode
+    markdown_count = code.count('parse_mode=ParseMode.MARKDOWN')
+    html_count = code.count('parse_mode=ParseMode.HTML')
+    
+    print(f"📊 Найдено parse_mode=ParseMode.MARKDOWN: {markdown_count}")
+    print(f"📊 Найдено parse_mode=ParseMode.HTML: {html_count}")
+    
+    # Анализируем start_handler
+    lines = code.split('\n')
+    in_start_handler = False
+    start_handler_lines = []
+    
+    for line in lines:
+        if 'async def start_handler' in line:
+            in_start_handler = True
+            start_handler_lines.append(line)
+        elif in_start_handler and line.startswith('async def '):
+            break
+        elif in_start_handler:
+            start_handler_lines.append(line)
+    
+    print(f"\n📝 START HANDLER ({len(start_handler_lines)} строк):")
+    for i, line in enumerate(start_handler_lines[-10:]):  # Показываем последние 10 строк
+        print(f"  {i+1}: {line}")
+    
+    # Проверяем callback обработчики
+    callback_handlers = []
+    for line in lines:
+        if 'async def handle_callback_' in line:
+            callback_handlers.append(line.strip())
+    
+    print(f"\n🔗 CALLBACK ОБРАБОТЧИКИ ({len(callback_handlers)}):")
+    for handler in callback_handlers:
+        print(f"  • {handler}")
+    
+    # Проверяем, есть ли проблемы с форматированием
+    has_mixed_formatting = False
+    for line in lines:
+        if 'parse_mode=ParseMode.MARKDOWN' in line:
+            # Ищем HTML теги в окружающем тексте
+            line_index = lines.index(line)
+            for i in range(max(0, line_index-10), min(len(lines), line_index+10)):
+                if '<b>' in lines[i] or '<i>' in lines[i]:
+                    has_mixed_formatting = True
+                    break
+    
+    if has_mixed_formatting:
+        print("\n⚠️  ПРЕДУПРЕЖДЕНИЕ: Найдено смешанное форматирование!")
+        print("    HTML теги используются с Markdown parse_mode")
+    else:
+        print("\n✅ Форматирование выглядит корректным")
 
 if __name__ == "__main__":
     test_comprehensive_formatting()

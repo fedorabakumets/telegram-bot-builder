@@ -214,6 +214,7 @@ export const nodeSchema = z.object({
     oneTimeKeyboard: z.boolean().default(false),
     resizeKeyboard: z.boolean().default(true),
     markdown: z.boolean().default(false),
+    formatMode: z.enum(['html', 'markdown', 'none']).default('none'),
     // Синонимы для команд - текстовые сообщения, которые будут вызывать ту же функцию
     synonyms: z.array(z.string()).default([]),
     // Дополнительные настройки безопасности

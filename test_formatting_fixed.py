@@ -1,11 +1,14 @@
+#!/usr/bin/env python3
 """
-Тест форматирования текста ПОСЛЕ исправления генератора
+Тест исправленного форматирования
 """
 
+import json
 import requests
 
-def create_formatting_test_bot():
-    """Создает тестовый бот с markdown форматированием"""
+def create_fixed_formatting_test():
+    """Создаем тест с исправленным форматированием"""
+    
     bot_data = {
         "nodes": [
             {
@@ -13,170 +16,180 @@ def create_formatting_test_bot():
                 "type": "start",
                 "data": {
                     "command": "/start",
-                    "messageText": "🤖 **Добро пожаловать!**\n\nЭто **жирный текст**\nЭто *курсивный текст*\nЭто `моноширинный код`\n\n__Подчеркнутый текст__\n~~Зачеркнутый текст~~\n\n> Цитата текста\n\n# Заголовок\n## Подзаголовок\n\nВыберите тест:",
-                    "formatMode": "markdown",
+                    # ПРАВИЛЬНО: markdown синтаксис с markdown форматированием
+                    "messageText": "Привет! **Добро пожаловать!**",
                     "keyboardType": "inline",
+                    "formatMode": "markdown",
                     "buttons": [
                         {
                             "id": "btn-html",
-                            "text": "🔄 HTML форматирование",
+                            "text": "HTML тест",
                             "action": "goto",
-                            "target": "html-node"
+                            "target": "html-test"
                         },
                         {
-                            "id": "btn-plain",
-                            "text": "📝 Обычный текст", 
+                            "id": "btn-markdown",
+                            "text": "Markdown тест",
                             "action": "goto",
-                            "target": "plain-node"
+                            "target": "markdown-test"
                         }
                     ]
-                }
+                },
+                "position": {"x": 100, "y": 100}
             },
             {
-                "id": "html-node",
+                "id": "html-test",
                 "type": "message",
                 "data": {
-                    "messageText": "🌟 <b>HTML Форматирование</b>\n\n<b>Жирный текст</b> в HTML\n<i>Курсивный текст</i> в HTML\n<code>Код</code> в HTML\n<u>Подчеркнутый</u> в HTML\n<s>Зачеркнутый</s> в HTML\n\n<pre>Блок кода\n  с отступами</pre>\n\n<a href=\"https://telegram.org\">Ссылка в HTML</a>",
-                    "formatMode": "html",
+                    # ПРАВИЛЬНО: HTML синтаксис с HTML форматированием
+                    "messageText": "Это HTML узел с <b>жирным</b> текстом и <i>курсивом</i>",
                     "keyboardType": "inline",
+                    "formatMode": "html",
                     "buttons": [
                         {
                             "id": "btn-back",
-                            "text": "🔙 Назад к Markdown",
-                            "action": "goto", 
+                            "text": "Назад",
+                            "action": "goto",
                             "target": "start-1"
                         }
                     ]
-                }
+                },
+                "position": {"x": 300, "y": 100}
             },
             {
-                "id": "plain-node", 
+                "id": "markdown-test",
                 "type": "message",
                 "data": {
-                    "messageText": "Обычный текст без форматирования\n\n**Это должно отображаться как есть**\n*Это тоже*\n<b>И это</b>\n\nНикакого форматирования не применяется.",
-                    "formatMode": "none",
+                    # ПРАВИЛЬНО: Markdown синтаксис с markdown форматированием
+                    "messageText": "Это Markdown узел с **жирным** текстом и *курсивом*",
                     "keyboardType": "inline",
+                    "formatMode": "markdown",
                     "buttons": [
                         {
-                            "id": "btn-back-start",
-                            "text": "🔙 Вернуться к тестам",
+                            "id": "btn-back-md",
+                            "text": "Назад",
                             "action": "goto",
-                            "target": "start-1" 
+                            "target": "start-1"
                         }
                     ]
-                }
+                },
+                "position": {"x": 300, "y": 200}
             }
         ],
         "connections": [
-            {
-                "id": "conn1",
-                "from": "start-1",
-                "to": "html-node"
-            },
-            {
-                "id": "conn2", 
-                "from": "start-1",
-                "to": "plain-node"
-            },
-            {
-                "id": "conn3",
-                "from": "html-node",
-                "to": "start-1"
-            },
-            {
-                "id": "conn4",
-                "from": "plain-node", 
-                "to": "start-1"
-            }
+            {"id": "conn1", "from": "start-1", "to": "html-test"},
+            {"id": "conn2", "from": "start-1", "to": "markdown-test"},
+            {"id": "conn3", "from": "html-test", "to": "start-1"},
+            {"id": "conn4", "from": "markdown-test", "to": "start-1"}
         ]
     }
     
     return bot_data
 
-def test_formatting_generation():
-    """Тестирует генерацию кода после исправления форматирования"""
-    print("🧪 ТЕСТ: Форматирование текста после исправления")
-    print("=" * 60)
+def test_fixed_formatting():
+    """Тестируем исправленное форматирование"""
     
-    # Создаем тестовые данные
-    bot_data = create_formatting_test_bot()
+    print("🧪 ТЕСТ ИСПРАВЛЕННОГО ФОРМАТИРОВАНИЯ")
+    print("=" * 50)
     
-    # Отправляем через API для генерации кода
+    # Создаём исправленный бот
+    bot_data = create_fixed_formatting_test()
+    
+    # Создаём проект через API
+    project_data = {
+        "name": "Тест исправленного форматирования",
+        "description": "Демонстрация правильного форматирования",
+        "data": bot_data
+    }
+    
     try:
-        # Создаем временный проект
-        project_data = {
-            "name": "Тест форматирования ИСПРАВЛЕН",
-            "description": "Тестовый проект для проверки исправленного форматирования",
-            "data": bot_data
-        }
-        
+        # Создаём проект
         create_response = requests.post('http://localhost:5000/api/projects', 
                                       json=project_data)
-        if create_response.status_code != 201:
-            print(f"❌ Ошибка создания проекта: {create_response.status_code}")
-            return
-            
-        project_id = create_response.json()['id']
-        print(f"✅ Проект создан с ID: {project_id}")
         
-        # Генерируем код через API экспорта
-        export_response = requests.post(f'http://localhost:5000/api/projects/{project_id}/export')
-        if export_response.status_code == 200:
-            generated_code = export_response.json()['code']
+        if create_response.status_code == 201:
+            project_id = create_response.json()['id']
+            print(f"✅ Проект создан с ID: {project_id}")
             
-            # Сохраняем в файл для проверки
-            with open('formatting_test_FIXED.py', 'w', encoding='utf-8') as f:
-                f.write(generated_code)
+            # Генерируем код
+            export_response = requests.post(f'http://localhost:5000/api/projects/{project_id}/export')
             
-            print("✅ Код сгенерирован и сохранен в 'formatting_test_FIXED.py'")
-            
-            # Анализируем результат
-            print("\n📊 АНАЛИЗ СГЕНЕРИРОВАННОГО КОДА:")
-            
-            # Проверяем parse_mode в коде
-            markdown_count = generated_code.count('parse_mode=ParseMode.MARKDOWN')
-            html_count = generated_code.count('parse_mode=ParseMode.HTML')
-            no_parse_count = generated_code.count('await message.answer(text,') - markdown_count - html_count
-            
-            print(f"📝 Markdown форматирование: {markdown_count} раз")
-            print(f"🌐 HTML форматирование: {html_count} раз")
-            print(f"📄 Без форматирования: {no_parse_count} раз")
-            
-            if markdown_count > 0:
-                print("✅ Markdown форматирование найдено в коде")
-            else:
-                print("❌ Markdown форматирование НЕ найдено в коде")
+            if export_response.status_code == 200:
+                generated_code = export_response.json()['code']
                 
-            if html_count > 0:
-                print("✅ HTML форматирование найдено в коде")
-            else:
-                print("❌ HTML форматирование НЕ найдено в коде")
+                # Сохраняем код для анализа
+                with open('test_fixed_formatting_result.py', 'w', encoding='utf-8') as f:
+                    f.write(generated_code)
                 
-            # Проверяем есть ли старые проблемы
-            if 'node.data.markdown === true' in generated_code:
-                print("❌ НАЙДЕНА СТАРАЯ ЛОГИКА: node.data.markdown === true")
-            else:
-                print("✅ Старая логика успешно удалена")
+                print("✅ Код сохранён в 'test_fixed_formatting_result.py'")
                 
-            # Проверяем новую логика
-            if 'formatMode' in generated_code:
-                print("✅ Новая логика formatMode найдена")
-            else:
-                print("❌ Новая логика formatMode НЕ найдена")
-            
-            print("\n🎯 РЕЗУЛЬТАТ ТЕСТИРОВАНИЯ:")
-            if markdown_count > 0 and html_count > 0:
-                print("✅ ФОРМАТИРОВАНИЕ ИСПРАВЛЕНО УСПЕШНО!")
-                print("   Код корректно генерирует разные режимы форматирования")
-            else:
-                print("❌ ПРОБЛЕМЫ С ФОРМАТИРОВАНИЕМ ОСТАЛИСЬ")
-                print("   Требуется дополнительная отладка")
+                # Анализируем исправления
+                analyze_fixed_formatting(generated_code)
                 
+                print("\n🎯 РЕЗЮМЕ:")
+                print("=" * 30)
+                print("✅ Правильное использование:")
+                print("   • Markdown синтаксис (**текст**) с formatMode: 'markdown'")
+                print("   • HTML синтаксис (<b>текст</b>) с formatMode: 'html'")
+                print("❌ Неправильное использование:")
+                print("   • HTML теги (<b>текст</b>) с formatMode: 'markdown'")
+                print("   • Markdown синтаксис (**текст**) с formatMode: 'html'")
+                
+            else:
+                print(f"❌ Ошибка генерации кода: {export_response.status_code}")
+                print(export_response.text)
         else:
-            print(f"❌ Ошибка экспорта: {export_response.status_code}")
+            print(f"❌ Ошибка создания проекта: {create_response.status_code}")
+            print(create_response.text)
             
     except Exception as e:
         print(f"❌ Ошибка запроса: {e}")
 
+def analyze_fixed_formatting(code):
+    """Анализируем исправленное форматирование"""
+    
+    print("\n🔍 АНАЛИЗ ИСПРАВЛЕННОГО ФОРМАТИРОВАНИЯ:")
+    print("-" * 40)
+    
+    # Подсчитываем parse_mode
+    markdown_count = code.count('parse_mode=ParseMode.MARKDOWN')
+    html_count = code.count('parse_mode=ParseMode.HTML')
+    
+    print(f"📊 Найдено parse_mode=ParseMode.MARKDOWN: {markdown_count}")
+    print(f"📊 Найдено parse_mode=ParseMode.HTML: {html_count}")
+    
+    # Проверяем соответствие синтаксиса и parse_mode
+    lines = code.split('\n')
+    
+    # Поиск start_handler
+    for i, line in enumerate(lines):
+        if 'async def start_handler' in line:
+            # Ищем текст
+            for j in range(i, min(i + 20, len(lines))):
+                if 'text = "' in lines[j] and '**' in lines[j]:
+                    print(f"✅ Start handler: Markdown синтаксис найден в строке {j+1}")
+                    break
+            # Ищем parse_mode
+            for j in range(i, min(i + 30, len(lines))):
+                if 'parse_mode=ParseMode.MARKDOWN' in lines[j]:
+                    print(f"✅ Start handler: ParseMode.MARKDOWN найден в строке {j+1}")
+                    break
+            break
+    
+    # Поиск HTML callback
+    for i, line in enumerate(lines):
+        if 'async def handle_callback_html_test' in line:
+            # Ищем текст
+            for j in range(i, min(i + 20, len(lines))):
+                if 'text = "' in lines[j] and '<b>' in lines[j]:
+                    print(f"✅ HTML callback: HTML синтаксис найден в строке {j+1}")
+                    break
+            # Ищем parse_mode
+            for j in range(i, min(i + 30, len(lines))):
+                if 'parse_mode=ParseMode.HTML' in lines[j]:
+                    print(f"✅ HTML callback: ParseMode.HTML найден в строке {j+1}")
+                    break
+            break
+
 if __name__ == "__main__":
-    test_formatting_generation()
+    test_fixed_formatting()

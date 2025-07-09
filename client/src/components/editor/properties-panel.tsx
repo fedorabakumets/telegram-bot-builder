@@ -1789,6 +1789,7 @@ export function PropertiesPanel({
                   placeholder="Введите текст сообщения..."
                   enableMarkdown={selectedNode.data.markdown}
                   onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
+                  onFormatModeChange={(formatMode) => onNodeUpdate(selectedNode.id, { formatMode })}
                 />
               </div>
             </div>

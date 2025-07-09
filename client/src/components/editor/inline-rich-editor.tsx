@@ -28,6 +28,7 @@ interface InlineRichEditorProps {
   placeholder?: string;
   enableMarkdown?: boolean;
   onMarkdownToggle?: (enabled: boolean) => void;
+  onFormatModeChange?: (formatMode: 'html' | 'markdown' | 'none') => void;
 }
 
 export function InlineRichEditor({
@@ -35,7 +36,8 @@ export function InlineRichEditor({
   onChange,
   placeholder = "Введите текст сообщения...",
   enableMarkdown = false,
-  onMarkdownToggle
+  onMarkdownToggle,
+  onFormatModeChange
 }: InlineRichEditorProps) {
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
@@ -258,6 +260,11 @@ export function InlineRichEditor({
     saveToUndoStack();
     setIsFormatting(true);
     
+    // Автоматически переключаемся в HTML режим при использовании кнопок форматирования
+    if (onFormatModeChange) {
+      onFormatModeChange('html');
+    }
+    
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
       toast({
@@ -329,7 +336,7 @@ export function InlineRichEditor({
     }
     
     setTimeout(() => setIsFormatting(false), 100);
-  }, [saveToUndoStack, handleInput, toast]);
+  }, [saveToUndoStack, handleInput, toast, onFormatModeChange]);
 
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
