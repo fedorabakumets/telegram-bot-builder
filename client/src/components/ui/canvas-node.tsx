@@ -700,7 +700,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
         </div>
       )}
       {/* Buttons preview */}
-      {node.data.buttons.length > 0 && (
+      {node.data.buttons && node.data.buttons.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center space-x-2 mb-3">
             <div className="w-1 h-4 bg-amber-500 dark:bg-amber-400 rounded-full"></div>
@@ -749,7 +749,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
               ))}
             </div>
           )}
-          {node.data.buttons.length > (node.data.keyboardType === 'inline' ? 4 : 2) && (
+          {node.data.buttons && node.data.buttons.length > (node.data.keyboardType === 'inline' ? 4 : 2) && (
             <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-2 font-medium">
               <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
                 +{node.data.buttons.length - (node.data.keyboardType === 'inline' ? 4 : 2)} еще
