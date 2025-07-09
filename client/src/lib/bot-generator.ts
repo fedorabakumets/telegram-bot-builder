@@ -1,6 +1,11 @@
 import { BotData, Node } from '@shared/schema';
 import { generateBotFatherCommands } from './commands';
 
+// Функция для правильного экранирования строк в Python коде
+function escapeForPython(text: string): string {
+  return text.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+}
+
 export function generatePythonCode(botData: BotData, botName: string = "MyBot"): string {
   const { nodes } = botData;
   
@@ -823,12 +828,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    \n';
               
               // Отправляем запрос пользователю
-              if (inputPrompt.includes('\n')) {
-                code += `    text = """${inputPrompt}"""\n`;
-              } else {
-                const escapedPrompt = inputPrompt.replace(/"/g, '\\"');
-                code += `    text = "${escapedPrompt}"\n`;
-              }
+              const escapedPrompt = escapeForPython(inputPrompt);
+              code += `    text = f"${escapedPrompt}"\n`;
               
               if (responseType === 'buttons' && responseOptions.length > 0) {
                 // Обработка кнопочного ответа
@@ -898,7 +899,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
                 code += `        "retry_message": "${inputRetryMessage}",\n`;
                 code += `        "success_message": "${inputSuccessMessage}",\n`;
-                code += `        "prompt": "${inputPrompt.replace(/"/g, '\\"')}",\n`;
+                code += `        "prompt": "${escapeForPython(inputPrompt)}",\n`;
                 code += `        "node_id": "${targetNode.id}"\n`;
                 code += '    }\n';
               }
@@ -1117,7 +1118,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       // Обработчики для каждого варианта ответа
       responseOptions.forEach((option, index) => {
         code += `\n@dp.callback_query(F.data == "response_${node.id}_${index}")\n`;
-        code += `async def handle_response_${node.id}_${index}(callback_query: types.CallbackQuery):\n`;
+        const safeFunctionName = `${node.id}_${index}`.replace(/[^a-zA-Z0-9_]/g, '_');
+        code += `async def handle_response_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
         code += '    user_id = callback_query.from_user.id\n';
         code += '    \n';
         code += '    # Проверяем настройки кнопочного ответа\n';
@@ -1370,13 +1372,8 @@ function generateStartHandler(node: Node): string {
   code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
   
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
-  // Используем тройные кавычки для многострочного текста
-  if (messageText.includes('\n')) {
-    code += `    text = """${messageText}"""\n`;
-  } else {
-    const escapedText = messageText.replace(/"/g, '\\"');
-    code += `    text = "${escapedText}"\n`;
-  }
+  const escapedText = escapeForPython(messageText);
+  code += `    text = f"${escapedText}"\n`;
   
   return code + generateKeyboard(node);
 }
@@ -1432,13 +1429,8 @@ function generateCommandHandler(node: Node): string {
   code += `    user_data[user_id]["commands_used"]["${command}"] = user_data[user_id]["commands_used"].get("${command}", 0) + 1\n`;
 
   const messageText = node.data.messageText || "Команда выполнена";
-  // Используем тройные кавычки для многострочного текста
-  if (messageText.includes('\n')) {
-    code += `\n    text = """${messageText}"""\n`;
-  } else {
-    const escapedText = messageText.replace(/"/g, '\\"');
-    code += `\n    text = "${escapedText}"\n`;
-  }
+  const escapedText = escapeForPython(messageText);
+  code += `\n    text = f"${escapedText}"\n`;
   
   return code + generateKeyboard(node);
 }
@@ -1475,13 +1467,8 @@ function generatePhotoHandler(node: Node): string {
     const imageUrl = node.data.imageUrl || "https://via.placeholder.com/400x300?text=Photo";
     const caption = node.data.messageText || "📸 Фото";
     
-    // Используем тройные кавычки для многострочного caption
-    if (caption.includes('\n')) {
-      code += `    caption = """${caption}"""\n`;
-    } else {
-      const escapedCaption = caption.replace(/"/g, '\\"');
-      code += `    caption = "${escapedCaption}"\n`;
-    }
+    const escapedCaption = escapeForPython(caption);
+    code += `    caption = f"${escapedCaption}"\n`;
     
     code += `    photo_url = "${imageUrl}"\n`;
     code += '    \n';
