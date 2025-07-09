@@ -127,7 +127,7 @@ async def start_handler(message: types.Message):
     builder.add(KeyboardButton(text="ℹ️ Информация"))
     builder.add(KeyboardButton(text="❓ Помощь"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=keyboard)
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
 
 # Обработчики синонимов команд
 
@@ -182,7 +182,7 @@ async def handle_reply_btn_back_info(message: types.Message):
     builder.add(KeyboardButton(text="ℹ️ Информация"))
     builder.add(KeyboardButton(text="❓ Помощь"))
     keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=keyboard)
+    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.HTML)
 
 
 # Универсальный обработчик пользовательского ввода
