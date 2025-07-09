@@ -5,6 +5,21 @@ import { Node } from '@shared/schema';
 import { parseCommandFromText } from '@/lib/commands';
 import { useState, useRef, useEffect } from 'react';
 
+// Функция для рендеринга markdown в HTML
+const renderMarkdown = (text: string): string => {
+  return text
+    // Жирный текст: **text** → <strong>text</strong>
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Курсив: *text* → <em>text</em>
+    .replace(/\*((?:[^*]|\*{2})*?)\*/g, '<em>$1</em>')
+    // Код: `text` → <code>text</code>
+    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-xs">$1</code>')
+    // Переносы строк: \n → <br>
+    .replace(/\n/g, '<br>')
+    // Ссылки: [text](url) → <a href="url">text</a>
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">$1</a>');
+};
+
 interface PreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -427,7 +442,10 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                           />
                           {message.mediaCaption && (
                             <div className="px-4 py-2">
-                              <p className="text-sm text-gray-900">{message.mediaCaption}</p>
+                              <div 
+                                className="text-sm text-gray-900"
+                                dangerouslySetInnerHTML={{ __html: renderMarkdown(message.mediaCaption) }}
+                              />
                             </div>
                           )}
                         </div>
@@ -443,7 +461,10 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                           />
                           {message.mediaCaption && (
                             <div className="px-4 py-2">
-                              <p className="text-sm text-gray-900">{message.mediaCaption}</p>
+                              <div 
+                                className="text-sm text-gray-900"
+                                dangerouslySetInnerHTML={{ __html: renderMarkdown(message.mediaCaption) }}
+                              />
                             </div>
                           )}
                         </div>
@@ -466,7 +487,10 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                           </div>
                           <audio src={message.mediaUrl} controls className="w-full h-8" />
                           {message.mediaCaption && (
-                            <p className="text-sm text-gray-900 mt-2">{message.mediaCaption}</p>
+                            <div 
+                              className="text-sm text-gray-900 mt-2"
+                              dangerouslySetInnerHTML={{ __html: renderMarkdown(message.mediaCaption) }}
+                            />
                           )}
                         </div>
                       )}
@@ -492,7 +516,10 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                             </div>
                           </div>
                           {message.mediaCaption && (
-                            <p className="text-sm text-gray-900 mt-2">{message.mediaCaption}</p>
+                            <div 
+                              className="text-sm text-gray-900 mt-2"
+                              dangerouslySetInnerHTML={{ __html: renderMarkdown(message.mediaCaption) }}
+                            />
                           )}
                         </div>
                       )}
@@ -533,7 +560,10 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                           />
                           {message.mediaCaption && (
                             <div className="px-4 py-2">
-                              <p className="text-sm text-gray-900">{message.mediaCaption}</p>
+                              <div 
+                                className="text-sm text-gray-900"
+                                dangerouslySetInnerHTML={{ __html: renderMarkdown(message.mediaCaption) }}
+                              />
                             </div>
                           )}
                         </div>
@@ -628,7 +658,10 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
                       {/* Text message (if any) */}
                       {message.text && !['poll', 'dice'].includes(message.mediaType || '') && (
                         <div className="bg-white rounded-2xl rounded-tl-lg px-4 py-3 shadow-sm">
-                          <p className="text-sm text-gray-900">{message.text}</p>
+                          <div 
+                            className="text-sm text-gray-900"
+                            dangerouslySetInnerHTML={{ __html: renderMarkdown(message.text) }}
+                          />
                           <p className="text-xs text-gray-500 mt-1">{message.time}</p>
                         </div>
                       )}

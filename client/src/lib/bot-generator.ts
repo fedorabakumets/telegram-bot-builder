@@ -793,7 +793,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 }
               });
               code += '    keyboard = builder.as_markup()\n';
-              code += '    await callback_query.message.edit_text(text, reply_markup=keyboard)\n';
+              // Определяем, нужен ли markdown для целевого узла
+              const useMarkdownTarget = targetNode.data.markdown === true;
+              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              code += `    await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
             } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
               code += '    builder = ReplyKeyboardBuilder()\n';
               targetNode.data.buttons.forEach(btn => {
@@ -807,9 +810,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '        await callback_query.message.delete()\n';
               code += '    except:\n';
               code += '        pass  # Игнорируем ошибки удаления\n';
-              code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
+              // Определяем, нужен ли markdown для целевого узла
+              const useMarkdownTarget = targetNode.data.markdown === true;
+              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              code += `    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})\n`;
             } else {
-              code += '    await callback_query.message.edit_text(text)\n';
+              // Определяем, нужен ли markdown для целевого узла
+              const useMarkdownTarget = targetNode.data.markdown === true;
+              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              code += `    await callback_query.message.edit_text(text${parseModeTarget})\n`;
             }
             }
           } else {
@@ -850,8 +859,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Generate response for target node
             const targetText = targetNode.data.messageText || "Сообщение";
-            const escapedTargetText = targetText.replace(/\n/g, '\\n').replace(/"/g, '\\"');
-            code += `    text = "${escapedTargetText}"\n`;
+            // Используем тройные кавычки для многострочного текста
+            if (targetText.includes('\n')) {
+              code += `    text = """${targetText}"""\n`;
+            } else {
+              const escapedTargetText = targetText.replace(/"/g, '\\"');
+              code += `    text = "${escapedTargetText}"\n`;
+            }
             
             // Handle keyboard for target node
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
@@ -862,7 +876,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
               const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
               code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-              code += '    await message.answer(text, reply_markup=keyboard)\n';
+              // Определяем, нужен ли markdown для целевого узла
+              const useMarkdownTarget = targetNode.data.markdown === true;
+              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
               targetNode.data.buttons.forEach(btn => {
@@ -875,10 +892,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 }
               });
               code += '    keyboard = builder.as_markup()\n';
-              code += '    await message.answer(text, reply_markup=keyboard)\n';
+              // Определяем, нужен ли markdown для целевого узла
+              const useMarkdownTarget = targetNode.data.markdown === true;
+              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
             } else {
               code += '    # Удаляем предыдущие reply клавиатуры если они были\n';
-              code += '    await message.answer(text, reply_markup=ReplyKeyboardRemove())\n';
+              // Определяем, нужен ли markdown для целевого узла
+              const useMarkdownTarget = targetNode.data.markdown === true;
+              const parseModeTarget = useMarkdownTarget ? ', parse_mode=ParseMode.MARKDOWN' : '';
+              code += `    await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
             }
           }
         }
@@ -1910,6 +1933,10 @@ function generateSynonymHandler(node: Node, synonym: string): string {
 function generateKeyboard(node: Node): string {
   let code = '';
   
+  // Определяем, нужен ли markdown
+  const useMarkdown = node.data.markdown === true;
+  const parseMode = useMarkdown ? ', parse_mode=ParseMode.MARKDOWN' : '';
+  
   if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
     code += '    \n';
     code += '    builder = ReplyKeyboardBuilder()\n';
@@ -1926,7 +1953,7 @@ function generateKeyboard(node: Node): string {
     const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
     const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
     code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-    code += '    await message.answer(text, reply_markup=keyboard)\n';
+    code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
   } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
     code += '    \n';
     code += '    # Создаем inline клавиатуру с кнопками\n';
@@ -1943,12 +1970,12 @@ function generateKeyboard(node: Node): string {
     
     code += '    keyboard = builder.as_markup()\n';
     code += '    # Отправляем сообщение с прикрепленными inline кнопками\n';
-    code += '    await message.answer(text, reply_markup=keyboard)\n';
+    code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
   } else if (node.data.keyboardType === "none" || !node.data.keyboardType) {
     code += '    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)\n';
-    code += '    await message.answer(text, reply_markup=ReplyKeyboardRemove())\n';
+    code += `    await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseMode})\n`;
   } else {
-    code += '    await message.answer(text)\n';
+    code += `    await message.answer(text${parseMode})\n`;
   }
   
   return code;
