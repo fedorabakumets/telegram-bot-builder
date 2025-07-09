@@ -205,6 +205,32 @@ async def set_bot_commands():
     await bot.set_my_commands(commands)
 
 
+# Обработчик сбора пользовательского ввода для узла RXdA-Kw-Q4G6d1DUYlgsp
+    prompt_text = "Пожалуйста, введите ваш ответ:"
+    await message.answer(prompt_text)
+    
+    # Инициализируем пользовательские данные если их нет
+    if message.from_user.id not in user_data:
+        user_data[message.from_user.id] = {}
+    
+    # Ожидаем ответ пользователя
+    user_data[message.from_user.id]["waiting_for_input"] = {
+        "type": "text",
+        "variable": "user_response",
+        "validation": "",
+        "min_length": 0,
+        "max_length": 0,
+        "timeout": 60,
+        "required": True,
+        "allow_skip": False,
+        "save_to_db": False,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": "Спасибо за ваш ответ!",
+        "default_value": "",
+        "node_id": "RXdA-Kw-Q4G6d1DUYlgsp"
+    }
+    
+
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
 
@@ -233,41 +259,15 @@ async def start_handler(message: types.Message):
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="_EJYxj2JPRYAEOz1G-_wO"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="RXdA-Kw-Q4G6d1DUYlgsp"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-# Обработчик сбора пользовательского ввода для узла _EJYxj2JPRYAEOz1G-_wO
-    prompt_text = "Пожалуйста, введите ваш ответ:"
-    await message.answer(prompt_text)
-    
-    # Инициализируем пользовательские данные если их нет
-    if message.from_user.id not in user_data:
-        user_data[message.from_user.id] = {}
-    
-    # Ожидаем ответ пользователя
-    user_data[message.from_user.id]["waiting_for_input"] = {
-        "type": "text",
-        "variable": "user_response",
-        "validation": "",
-        "min_length": 0,
-        "max_length": 0,
-        "timeout": 60,
-        "required": True,
-        "allow_skip": False,
-        "save_to_db": True,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": "Спасибо за ваш ответ!",
-        "default_value": "",
-        "node_id": "_EJYxj2JPRYAEOz1G-_wO"
-    }
-    
-
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "_EJYxj2JPRYAEOz1G-_wO")
-async def handle_callback__EJYxj2JPRYAEOz1G__wO(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "RXdA-Kw-Q4G6d1DUYlgsp")
+async def handle_callback_RXdA_Kw_Q4G6d1DUYlgsp(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Удаляем старое сообщение
     await callback_query.message.delete()
@@ -289,10 +289,10 @@ async def handle_callback__EJYxj2JPRYAEOz1G__wO(callback_query: types.CallbackQu
         "timeout": 60,
         "required": True,
         "allow_skip": False,
-        "save_to_database": True,
+        "save_to_database": False,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": "Спасибо за ваш ответ!",
-        "node_id": "_EJYxj2JPRYAEOz1G-_wO"
+        "node_id": "RXdA-Kw-Q4G6d1DUYlgsp"
     }
 
 
