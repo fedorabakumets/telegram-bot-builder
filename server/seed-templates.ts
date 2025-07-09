@@ -7,7 +7,7 @@ export async function seedDefaultTemplates() {
     
     // Проверяем, есть ли уже системные шаблоны
     const systemTemplates = existingTemplates.filter(t => t.authorName === 'Система');
-    if (systemTemplates.length >= 7) {
+    if (systemTemplates.length >= 8) {
       console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
@@ -1902,6 +1902,858 @@ export async function seedDefaultTemplates() {
             source: "final-results",
             target: "start-1"
           }
+        ]
+      }
+    });
+
+    // Комплексный сбор корпоративной информации
+    await storage.createBotTemplate({
+      name: "📊 Комплексный сбор корпоративной информации",
+      description: "Профессиональная система сбора детальной информации о компаниях, сотрудниках и проектах с многоуровневой структурой",
+      category: "business",
+      tags: ["анкета", "сбор данных", "корпоративный", "комплексный", "профессиональный", "многоуровневый"],
+      isPublic: 1,
+      difficulty: "hard",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 9,
+      estimatedTime: 45,
+      data: {
+        nodes: [
+          {
+            id: "start-welcome",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              description: "Запуск комплексного сбора корпоративной информации",
+              messageText: "🏢 **ДОБРО ПОЖАЛОВАТЬ В СИСТЕМУ СБОРА КОРПОРАТИВНОЙ ИНФОРМАЦИИ**\n\n📋 **Этот процесс включает:**\n• 👤 Персональные данные сотрудника\n• 🏢 Информация о компании\n• 💼 Профессиональный опыт\n• 📊 Текущие проекты\n• 🎯 Цели и планы\n• 📞 Контактная информация\n• 🔒 Конфиденциальность\n\n⏱️ **Время заполнения:** 30-45 минут\n🎯 **Результат:** Полная корпоративная анкета\n\n**Начинаем процесс сбора информации?**",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "start-process",
+                  text: "🚀 Начать заполнение",
+                  action: "goto",
+                  target: "personal-info"
+                },
+                {
+                  id: "view-privacy",
+                  text: "🔒 Политика конфиденциальности",
+                  action: "goto",
+                  target: "privacy-policy"
+                },
+                {
+                  id: "instructions",
+                  text: "📖 Инструкции",
+                  action: "goto",
+                  target: "filling-instructions"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "privacy-policy",
+            type: "message",
+            position: { x: 400, y: 50 },
+            data: {
+              messageText: "🔒 **ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ**\n\n✅ **Мы гарантируем:**\n• Защиту всех персональных данных\n• Использование данных только для внутренних целей\n• Соблюдение требований GDPR и 152-ФЗ\n• Возможность удаления данных по запросу\n\n🛡️ **Безопасность:**\n• Шифрование данных при передаче\n• Ограниченный доступ к информации\n• Регулярные аудиты безопасности\n\n📧 **Контакты:** privacy@company.com",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "accept-privacy",
+                  text: "✅ Принять и продолжить",
+                  action: "goto",
+                  target: "personal-info"
+                },
+                {
+                  id: "back-to-start",
+                  text: "◀️ Назад к началу",
+                  action: "goto",
+                  target: "start-welcome"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "filling-instructions",
+            type: "message",
+            position: { x: 400, y: 150 },
+            data: {
+              messageText: "📖 **ИНСТРУКЦИИ ПО ЗАПОЛНЕНИЮ**\n\n🎯 **Общие рекомендации:**\n• Заполняйте все поля максимально точно\n• При необходимости используйте кнопку \"Пропустить\"\n• Можете вернуться к предыдущим разделам\n• Сохранение происходит автоматически\n\n⚡ **Быстрые команды:**\n• /help - помощь в любое время\n• /status - текущий прогресс\n• /reset - начать заново\n\n💡 **Совет:** Подготовьте заранее данные о компании и проектах",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "start-after-instructions",
+                  text: "🚀 Начать заполнение",
+                  action: "goto",
+                  target: "personal-info"
+                },
+                {
+                  id: "back-from-instructions",
+                  text: "◀️ Назад к началу",
+                  action: "goto",
+                  target: "start-welcome"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "personal-info",
+            type: "user-input",
+            position: { x: 700, y: 100 },
+            data: {
+              messageText: "👤 **РАЗДЕЛ 1: ПЕРСОНАЛЬНЫЕ ДАННЫЕ**\n\n**Введите ваше полное имя:**\n\n*Пример: Иванов Иван Иванович*\n\n📝 Укажите фамилию, имя и отчество полностью",
+              responseType: "text",
+              inputType: "text",
+              inputVariable: "full_name",
+              minLength: 3,
+              maxLength: 100,
+              inputTimeout: 300,
+              inputRequired: true,
+              allowSkip: false,
+              saveToDatabase: true,
+              inputRetryMessage: "Пожалуйста, укажите ваше полное имя (минимум 3 символа)",
+              inputSuccessMessage: "✅ Имя сохранено",
+              placeholder: "Фамилия Имя Отчество",
+              successTarget: "position-info",
+              errorTarget: "personal-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "personal-error",
+            type: "message",
+            position: { x: 950, y: 100 },
+            data: {
+              messageText: "❌ **ОШИБКА ВВОДА ПЕРСОНАЛЬНЫХ ДАННЫХ**\n\nПожалуйста, укажите корректное полное имя.\n\n**Требования:**\n• Минимум 3 символа\n• Максимум 100 символов\n• Только буквы и пробелы",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-personal",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "personal-info"
+                },
+                {
+                  id: "skip-personal",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "position-info"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "position-info",
+            type: "user-input",
+            position: { x: 700, y: 250 },
+            data: {
+              messageText: "💼 **РАЗДЕЛ 2: ДОЛЖНОСТЬ И ОТДЕЛ**\n\n**Укажите вашу текущую должность:**\n\n*Пример: Ведущий разработчик / Менеджер проектов / Системный аналитик*\n\n📝 Укажите полное название должности",
+              responseType: "text",
+              inputType: "text",
+              inputVariable: "position_title",
+              minLength: 3,
+              maxLength: 150,
+              inputTimeout: 300,
+              inputRequired: true,
+              allowSkip: false,
+              saveToDatabase: true,
+              inputRetryMessage: "Пожалуйста, укажите вашу должность (минимум 3 символа)",
+              inputSuccessMessage: "✅ Должность сохранена",
+              placeholder: "Название должности",
+              successTarget: "department-choice",
+              errorTarget: "position-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "position-error",
+            type: "message",
+            position: { x: 950, y: 250 },
+            data: {
+              messageText: "❌ **ОШИБКА ВВОДА ДОЛЖНОСТИ**\n\nПожалуйста, укажите корректное название должности.\n\n**Требования:**\n• Минимум 3 символа\n• Максимум 150 символов",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-position",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "position-info"
+                },
+                {
+                  id: "skip-position",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "department-choice"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "department-choice",
+            type: "user-input",
+            position: { x: 700, y: 400 },
+            data: {
+              messageText: "🏢 **РАЗДЕЛ 3: ОТДЕЛ/ПОДРАЗДЕЛЕНИЕ**\n\n**Выберите ваш отдел:**\n\nЕсли вашего отдела нет в списке, выберите \"Другое\"",
+              responseType: "buttons",
+              responseOptions: [
+                {
+                  id: "dept-it",
+                  text: "💻 IT-отдел",
+                  value: "IT"
+                },
+                {
+                  id: "dept-sales",
+                  text: "📈 Отдел продаж",
+                  value: "sales"
+                },
+                {
+                  id: "dept-marketing",
+                  text: "📢 Маркетинг",
+                  value: "marketing"
+                },
+                {
+                  id: "dept-hr",
+                  text: "👥 HR-отдел",
+                  value: "hr"
+                },
+                {
+                  id: "dept-finance",
+                  text: "💰 Финансы",
+                  value: "finance"
+                },
+                {
+                  id: "dept-operations",
+                  text: "⚙️ Операции",
+                  value: "operations"
+                },
+                {
+                  id: "dept-management",
+                  text: "👔 Руководство",
+                  value: "management"
+                },
+                {
+                  id: "dept-other",
+                  text: "📋 Другое",
+                  value: "other"
+                }
+              ],
+              allowMultipleSelection: false,
+              inputVariable: "department",
+              isRequired: true,
+              saveToDatabase: true,
+              successTarget: "experience-level",
+              errorTarget: "department-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "department-error",
+            type: "message",
+            position: { x: 950, y: 400 },
+            data: {
+              messageText: "❌ **ОШИБКА ВЫБОРА ОТДЕЛА**\n\nПожалуйста, выберите ваш отдел из предложенных вариантов.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-department",
+                  text: "🔄 Повторить выбор",
+                  action: "goto",
+                  target: "department-choice"
+                },
+                {
+                  id: "skip-department",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "experience-level"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "experience-level",
+            type: "user-input",
+            position: { x: 700, y: 550 },
+            data: {
+              messageText: "⭐ **РАЗДЕЛ 4: ОПЫТ РАБОТЫ**\n\n**Укажите ваш уровень опыта:**\n\nВыберите наиболее подходящий вариант",
+              responseType: "buttons",
+              responseOptions: [
+                {
+                  id: "exp-junior",
+                  text: "🌱 Начинающий (0-2 года)",
+                  value: "junior"
+                },
+                {
+                  id: "exp-middle",
+                  text: "💼 Средний (2-5 лет)",
+                  value: "middle"
+                },
+                {
+                  id: "exp-senior",
+                  text: "🎯 Старший (5-10 лет)",
+                  value: "senior"
+                },
+                {
+                  id: "exp-lead",
+                  text: "👑 Ведущий (10+ лет)",
+                  value: "lead"
+                },
+                {
+                  id: "exp-executive",
+                  text: "🏆 Руководитель",
+                  value: "executive"
+                }
+              ],
+              allowMultipleSelection: false,
+              inputVariable: "experience_level",
+              isRequired: true,
+              saveToDatabase: true,
+              successTarget: "company-info",
+              errorTarget: "experience-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "experience-error",
+            type: "message",
+            position: { x: 950, y: 550 },
+            data: {
+              messageText: "❌ **ОШИБКА ВЫБОРА ОПЫТА**\n\nПожалуйста, выберите ваш уровень опыта из предложенных вариантов.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-experience",
+                  text: "🔄 Повторить выбор",
+                  action: "goto",
+                  target: "experience-level"
+                },
+                {
+                  id: "skip-experience",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "company-info"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "company-info",
+            type: "user-input",
+            position: { x: 1100, y: 100 },
+            data: {
+              messageText: "🏢 **РАЗДЕЛ 5: ИНФОРМАЦИЯ О КОМПАНИИ**\n\n**Укажите название вашей компании:**\n\n*Пример: ООО \"Технологические решения\" / АО \"Инновации\" / ИП Иванов И.И.*\n\n📝 Полное или сокращенное наименование",
+              responseType: "text",
+              inputType: "text",
+              inputVariable: "company_name",
+              minLength: 2,
+              maxLength: 200,
+              inputTimeout: 300,
+              inputRequired: true,
+              allowSkip: false,
+              saveToDatabase: true,
+              inputRetryMessage: "Пожалуйста, укажите название компании (минимум 2 символа)",
+              inputSuccessMessage: "✅ Название компании сохранено",
+              placeholder: "Название компании",
+              successTarget: "company-size",
+              errorTarget: "company-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "company-error",
+            type: "message",
+            position: { x: 1350, y: 100 },
+            data: {
+              messageText: "❌ **ОШИБКА ВВОДА КОМПАНИИ**\n\nПожалуйста, укажите корректное название компании.\n\n**Требования:**\n• Минимум 2 символа\n• Максимум 200 символов",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-company",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "company-info"
+                },
+                {
+                  id: "skip-company",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "company-size"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "company-size",
+            type: "user-input",
+            position: { x: 1100, y: 250 },
+            data: {
+              messageText: "📊 **РАЗДЕЛ 6: РАЗМЕР КОМПАНИИ**\n\n**Выберите размер вашей компании:**\n\nУкажите примерное количество сотрудников",
+              responseType: "buttons",
+              responseOptions: [
+                {
+                  id: "size-micro",
+                  text: "👤 Микро (1-10 человек)",
+                  value: "micro"
+                },
+                {
+                  id: "size-small",
+                  text: "👥 Малая (11-50 человек)",
+                  value: "small"
+                },
+                {
+                  id: "size-medium",
+                  text: "🏢 Средняя (51-250 человек)",
+                  value: "medium"
+                },
+                {
+                  id: "size-large",
+                  text: "🏬 Большая (251-1000 человек)",
+                  value: "large"
+                },
+                {
+                  id: "size-enterprise",
+                  text: "🏭 Корпорация (1000+ человек)",
+                  value: "enterprise"
+                }
+              ],
+              allowMultipleSelection: false,
+              inputVariable: "company_size",
+              isRequired: true,
+              saveToDatabase: true,
+              successTarget: "project-info",
+              errorTarget: "size-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "size-error",
+            type: "message",
+            position: { x: 1350, y: 250 },
+            data: {
+              messageText: "❌ **ОШИБКА ВЫБОРА РАЗМЕРА**\n\nПожалуйста, выберите размер компании из предложенных вариантов.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-size",
+                  text: "🔄 Повторить выбор",
+                  action: "goto",
+                  target: "company-size"
+                },
+                {
+                  id: "skip-size",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "project-info"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "project-info",
+            type: "user-input",
+            position: { x: 1100, y: 400 },
+            data: {
+              messageText: "📋 **РАЗДЕЛ 7: ТЕКУЩИЕ ПРОЕКТЫ**\n\n**Опишите ваши текущие проекты:**\n\n*Пример: Разработка CRM-системы, внедрение системы аналитики, автоматизация бизнес-процессов*\n\n📝 Укажите 2-3 основных проекта",
+              responseType: "text",
+              inputType: "text",
+              inputVariable: "current_projects",
+              minLength: 10,
+              maxLength: 1000,
+              inputTimeout: 600,
+              inputRequired: true,
+              allowSkip: true,
+              saveToDatabase: true,
+              inputRetryMessage: "Пожалуйста, опишите ваши проекты подробнее (минимум 10 символов)",
+              inputSuccessMessage: "✅ Информация о проектах сохранена",
+              placeholder: "Описание текущих проектов...",
+              successTarget: "goals-objectives",
+              errorTarget: "project-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "project-error",
+            type: "message",
+            position: { x: 1350, y: 400 },
+            data: {
+              messageText: "❌ **ОШИБКА ВВОДА ПРОЕКТОВ**\n\nПожалуйста, опишите ваши проекты более подробно.\n\n**Требования:**\n• Минимум 10 символов\n• Максимум 1000 символов",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-project",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "project-info"
+                },
+                {
+                  id: "skip-project",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "goals-objectives"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "goals-objectives",
+            type: "user-input",
+            position: { x: 1100, y: 550 },
+            data: {
+              messageText: "🎯 **РАЗДЕЛ 8: ЦЕЛИ И ЗАДАЧИ**\n\n**Опишите ваши профессиональные цели:**\n\n*Пример: Развитие в области машинного обучения, получение сертификации, повышение до тимлида*\n\n📝 Укажите краткосрочные и долгосрочные цели",
+              responseType: "text",
+              inputType: "text",
+              inputVariable: "professional_goals",
+              minLength: 10,
+              maxLength: 800,
+              inputTimeout: 600,
+              inputRequired: true,
+              allowSkip: true,
+              saveToDatabase: true,
+              inputRetryMessage: "Пожалуйста, опишите ваши цели подробнее (минимум 10 символов)",
+              inputSuccessMessage: "✅ Профессиональные цели сохранены",
+              placeholder: "Профессиональные цели и задачи...",
+              successTarget: "contact-info",
+              errorTarget: "goals-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "goals-error",
+            type: "message",
+            position: { x: 1350, y: 550 },
+            data: {
+              messageText: "❌ **ОШИБКА ВВОДА ЦЕЛЕЙ**\n\nПожалуйста, опишите ваши цели более подробно.\n\n**Требования:**\n• Минимум 10 символов\n• Максимум 800 символов",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-goals",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "goals-objectives"
+                },
+                {
+                  id: "skip-goals",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "contact-info"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "contact-info",
+            type: "user-input",
+            position: { x: 1500, y: 100 },
+            data: {
+              messageText: "📞 **РАЗДЕЛ 9: КОНТАКТНАЯ ИНФОРМАЦИЯ**\n\n**Укажите ваш рабочий email:**\n\n*Пример: ivan.ivanov@company.com*\n\n📧 Корпоративный или основной email для связи",
+              responseType: "text",
+              inputType: "email",
+              inputVariable: "work_email",
+              minLength: 5,
+              maxLength: 150,
+              inputTimeout: 300,
+              inputRequired: true,
+              allowSkip: false,
+              saveToDatabase: true,
+              inputRetryMessage: "Пожалуйста, укажите корректный email адрес",
+              inputSuccessMessage: "✅ Email сохранен",
+              placeholder: "email@company.com",
+              successTarget: "phone-info",
+              errorTarget: "contact-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "contact-error",
+            type: "message",
+            position: { x: 1750, y: 100 },
+            data: {
+              messageText: "❌ **ОШИБКА ВВОДА EMAIL**\n\nПожалуйста, укажите корректный email адрес.\n\n**Требования:**\n• Формат: name@domain.com\n• Минимум 5 символов\n• Максимум 150 символов",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-contact",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "contact-info"
+                },
+                {
+                  id: "skip-contact",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "phone-info"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "phone-info",
+            type: "user-input",
+            position: { x: 1500, y: 250 },
+            data: {
+              messageText: "📱 **РАЗДЕЛ 10: ТЕЛЕФОН**\n\n**Укажите ваш рабочий телефон:**\n\n*Пример: +7 (999) 123-45-67*\n\n📞 Рабочий или мобильный телефон для связи",
+              responseType: "text",
+              inputType: "phone",
+              inputVariable: "work_phone",
+              minLength: 10,
+              maxLength: 20,
+              inputTimeout: 300,
+              inputRequired: true,
+              allowSkip: true,
+              saveToDatabase: true,
+              inputRetryMessage: "Пожалуйста, укажите корректный номер телефона",
+              inputSuccessMessage: "✅ Телефон сохранен",
+              placeholder: "+7 (999) 123-45-67",
+              successTarget: "additional-info",
+              errorTarget: "phone-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "phone-error",
+            type: "message",
+            position: { x: 1750, y: 250 },
+            data: {
+              messageText: "❌ **ОШИБКА ВВОДА ТЕЛЕФОНА**\n\nПожалуйста, укажите корректный номер телефона.\n\n**Требования:**\n• Формат: +7 (999) 123-45-67\n• Минимум 10 символов\n• Максимум 20 символов",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-phone",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "phone-info"
+                },
+                {
+                  id: "skip-phone",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "additional-info"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "additional-info",
+            type: "user-input",
+            position: { x: 1500, y: 400 },
+            data: {
+              messageText: "📝 **РАЗДЕЛ 11: ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ**\n\n**Есть ли что-то еще, что вы хотели бы добавить?**\n\n*Пример: Навыки, сертификаты, интересные проекты, предложения по улучшению*\n\n💡 Любая дополнительная информация о вас или вашей работе",
+              responseType: "text",
+              inputType: "text",
+              inputVariable: "additional_notes",
+              minLength: 0,
+              maxLength: 1000,
+              inputTimeout: 600,
+              inputRequired: false,
+              allowSkip: true,
+              saveToDatabase: true,
+              inputRetryMessage: "Слишком много текста, сократите до 1000 символов",
+              inputSuccessMessage: "✅ Дополнительная информация сохранена",
+              placeholder: "Дополнительная информация (необязательно)...",
+              successTarget: "final-review",
+              errorTarget: "additional-error",
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "additional-error",
+            type: "message",
+            position: { x: 1750, y: 400 },
+            data: {
+              messageText: "❌ **ОШИБКА ДОПОЛНИТЕЛЬНОЙ ИНФОРМАЦИИ**\n\nСлишком много текста.\n\n**Требования:**\n• Максимум 1000 символов",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "retry-additional",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "additional-info"
+                },
+                {
+                  id: "skip-additional",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "final-review"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "final-review",
+            type: "message",
+            position: { x: 1500, y: 550 },
+            data: {
+              messageText: "🎉 **СБОР ИНФОРМАЦИИ ЗАВЕРШЕН!**\n\n✅ **Собранные данные:**\n• 👤 Персональные данные\n• 💼 Профессиональная информация\n• 🏢 Данные о компании\n• 📊 Проекты и цели\n• 📞 Контактная информация\n\n🔄 **Что делать дальше:**\n• Данные сохранены в системе\n• Вы получите подтверждение на email\n• Можете обновить данные в любое время\n\n**Спасибо за участие!**",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "download-pdf",
+                  text: "📄 Скачать PDF",
+                  action: "goto",
+                  target: "download-info"
+                },
+                {
+                  id: "send-email",
+                  text: "📧 Отправить на email",
+                  action: "goto",
+                  target: "email-confirmation"
+                },
+                {
+                  id: "restart-process",
+                  text: "🔄 Начать заново",
+                  action: "goto",
+                  target: "start-welcome"
+                },
+                {
+                  id: "main-menu",
+                  text: "📋 Главное меню",
+                  action: "command",
+                  target: "/menu"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "download-info",
+            type: "message",
+            position: { x: 1800, y: 450 },
+            data: {
+              messageText: "📄 **СКАЧИВАНИЕ PDF ОТЧЕТА**\n\n🔄 **Генерируем отчет...**\n\n📊 **Отчет будет содержать:**\n• Все введенные данные\n• Структурированный вид\n• Timestamp создания\n• Подпись системы\n\n⏱️ Готовность через 10-15 секунд",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "pdf-ready",
+                  text: "✅ PDF готов",
+                  action: "goto",
+                  target: "final-review"
+                },
+                {
+                  id: "back-to-review",
+                  text: "◀️ Назад к результатам",
+                  action: "goto",
+                  target: "final-review"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          },
+          {
+            id: "email-confirmation",
+            type: "message",
+            position: { x: 1800, y: 550 },
+            data: {
+              messageText: "📧 **ОТПРАВКА НА EMAIL**\n\n✅ **Письмо отправлено на:**\n{work_email}\n\n📬 **Содержимое письма:**\n• Полный отчет с данными\n• Ссылка для редактирования\n• Контакты для обратной связи\n\n⏱️ Проверьте почту в течение 5 минут",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "email-sent",
+                  text: "✅ Понятно",
+                  action: "goto",
+                  target: "final-review"
+                },
+                {
+                  id: "resend-email",
+                  text: "🔄 Отправить повторно",
+                  action: "goto",
+                  target: "email-confirmation"
+                }
+              ],
+              markdown: true,
+              formatMode: "markdown"
+            }
+          }
+        ],
+        connections: [
+          { id: "conn-1", source: "start-welcome", target: "personal-info" },
+          { id: "conn-2", source: "start-welcome", target: "privacy-policy" },
+          { id: "conn-3", source: "start-welcome", target: "filling-instructions" },
+          { id: "conn-4", source: "privacy-policy", target: "personal-info" },
+          { id: "conn-5", source: "privacy-policy", target: "start-welcome" },
+          { id: "conn-6", source: "filling-instructions", target: "personal-info" },
+          { id: "conn-7", source: "filling-instructions", target: "start-welcome" },
+          { id: "conn-8", source: "personal-info", target: "position-info" },
+          { id: "conn-9", source: "personal-info", target: "personal-error" },
+          { id: "conn-10", source: "personal-error", target: "personal-info" },
+          { id: "conn-11", source: "personal-error", target: "position-info" },
+          { id: "conn-12", source: "position-info", target: "department-choice" },
+          { id: "conn-13", source: "position-info", target: "position-error" },
+          { id: "conn-14", source: "position-error", target: "position-info" },
+          { id: "conn-15", source: "position-error", target: "department-choice" },
+          { id: "conn-16", source: "department-choice", target: "experience-level" },
+          { id: "conn-17", source: "department-choice", target: "department-error" },
+          { id: "conn-18", source: "department-error", target: "department-choice" },
+          { id: "conn-19", source: "department-error", target: "experience-level" },
+          { id: "conn-20", source: "experience-level", target: "company-info" },
+          { id: "conn-21", source: "experience-level", target: "experience-error" },
+          { id: "conn-22", source: "experience-error", target: "experience-level" },
+          { id: "conn-23", source: "experience-error", target: "company-info" },
+          { id: "conn-24", source: "company-info", target: "company-size" },
+          { id: "conn-25", source: "company-info", target: "company-error" },
+          { id: "conn-26", source: "company-error", target: "company-info" },
+          { id: "conn-27", source: "company-error", target: "company-size" },
+          { id: "conn-28", source: "company-size", target: "project-info" },
+          { id: "conn-29", source: "company-size", target: "size-error" },
+          { id: "conn-30", source: "size-error", target: "company-size" },
+          { id: "conn-31", source: "size-error", target: "project-info" },
+          { id: "conn-32", source: "project-info", target: "goals-objectives" },
+          { id: "conn-33", source: "project-info", target: "project-error" },
+          { id: "conn-34", source: "project-error", target: "project-info" },
+          { id: "conn-35", source: "project-error", target: "goals-objectives" },
+          { id: "conn-36", source: "goals-objectives", target: "contact-info" },
+          { id: "conn-37", source: "goals-objectives", target: "goals-error" },
+          { id: "conn-38", source: "goals-error", target: "goals-objectives" },
+          { id: "conn-39", source: "goals-error", target: "contact-info" },
+          { id: "conn-40", source: "contact-info", target: "phone-info" },
+          { id: "conn-41", source: "contact-info", target: "contact-error" },
+          { id: "conn-42", source: "contact-error", target: "contact-info" },
+          { id: "conn-43", source: "contact-error", target: "phone-info" },
+          { id: "conn-44", source: "phone-info", target: "additional-info" },
+          { id: "conn-45", source: "phone-info", target: "phone-error" },
+          { id: "conn-46", source: "phone-error", target: "phone-info" },
+          { id: "conn-47", source: "phone-error", target: "additional-info" },
+          { id: "conn-48", source: "additional-info", target: "final-review" },
+          { id: "conn-49", source: "additional-info", target: "additional-error" },
+          { id: "conn-50", source: "additional-error", target: "additional-info" },
+          { id: "conn-51", source: "additional-error", target: "final-review" },
+          { id: "conn-52", source: "final-review", target: "download-info" },
+          { id: "conn-53", source: "final-review", target: "email-confirmation" },
+          { id: "conn-54", source: "final-review", target: "start-welcome" },
+          { id: "conn-55", source: "download-info", target: "final-review" },
+          { id: "conn-56", source: "email-confirmation", target: "final-review" },
+          { id: "conn-57", source: "email-confirmation", target: "email-confirmation" }
         ]
       }
     });
