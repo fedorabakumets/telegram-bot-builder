@@ -2248,42 +2248,197 @@ async def handle_user_input(message: types.Message):
     if next_node_id:
         try:
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
-            # Имитируем callback запрос для перехода к следующему узлу
-            from types import SimpleNamespace
-            callback_query = SimpleNamespace()
-            callback_query.from_user = message.from_user
-            callback_query.message = message
-            callback_query.data = next_node_id
             
-            # Вызываем соответствующий обработчик
+            # Находим узел по ID и выполняем соответствующее действие
             if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
+                logging.info(f"Переход к узлу start-1 типа start")
             elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
+                prompt_text = f"👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):"
+                placeholder_text = "Введите ваше имя..."
+                prompt_text += f"\n\n💡 {placeholder_text}"
+                await message.answer(prompt_text)
+                
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "user_name",
+                    "validation": "",
+                    "min_length": 2,
+                    "max_length": 50,
+                    "timeout": 60,
+                    "required": True,
+                    "allow_skip": False,
+                    "save_to_database": True,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):",
+                    "node_id": "name-input",
+                    "next_node_id": "age-buttons"
+                }
             elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
+                text = f"❌ **Ошибка ввода имени**\n\nПожалуйста, введите корректное имя (от 2 до 50 символов).\n\nПопробуйте ещё раз:"
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить ввод", callback_data="name-input"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="age-buttons"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
+                prompt_text = f"🎂 **Шаг 2: Возрастная группа**\n\n<b>Выберите вашу возрастную группу:</b>\n\nИспользуйте кнопки для выбора:"
+                await message.answer(prompt_text)
+                
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "user_age_group",
+                    "validation": "",
+                    "min_length": 0,
+                    "max_length": 0,
+                    "timeout": 60,
+                    "required": True,
+                    "allow_skip": False,
+                    "save_to_database": True,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"🎂 **Шаг 2: Возрастная группа**\n\n<b>Выберите вашу возрастную группу:</b>\n\nИспользуйте кнопки для выбора:",
+                    "node_id": "age-buttons",
+                    "next_node_id": "interests-multiple"
+                }
             elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
+                text = f"❌ **Ошибка выбора возраста**\n\nПожалуйста, выберите одну из предложенных возрастных групп."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить выбор", callback_data="age-buttons"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="interests-multiple"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
+                prompt_text = f"🎯 **Шаг 3: Интересы (множественный выбор)**\n\n<b>Выберите ваши интересы (можно несколько):</b>\n\nВыберите все подходящие варианты и нажмите \"Готово\":"
+                await message.answer(prompt_text)
+                
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "user_interests",
+                    "validation": "",
+                    "min_length": 0,
+                    "max_length": 0,
+                    "timeout": 60,
+                    "required": True,
+                    "allow_skip": False,
+                    "save_to_database": True,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"🎯 **Шаг 3: Интересы (множественный выбор)**\n\n<b>Выберите ваши интересы (можно несколько):</b>\n\nВыберите все подходящие варианты и нажмите \"Готово\":",
+                    "node_id": "interests-multiple",
+                    "next_node_id": "contact-input"
+                }
             elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
+                text = f"❌ **Ошибка выбора интересов**\n\nПожалуйста, выберите хотя бы один интерес и нажмите \"Готово\"."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить выбор", callback_data="interests-multiple"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="contact-input"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
+                prompt_text = f"📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:"
+                placeholder_text = "example@email.com или +7-999-123-45-67"
+                prompt_text += f"\n\n💡 {placeholder_text}"
+                await message.answer(prompt_text)
+                
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "email",
+                    "variable": "user_contact",
+                    "validation": "",
+                    "min_length": 5,
+                    "max_length": 100,
+                    "timeout": 60,
+                    "required": True,
+                    "allow_skip": False,
+                    "save_to_database": True,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:",
+                    "node_id": "contact-input",
+                    "next_node_id": "experience-rating"
+                }
             elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
+                text = f"❌ **Ошибка ввода контактов**\n\nПожалуйста, введите корректный email или номер телефона."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить ввод", callback_data="contact-input"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="experience-rating"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
+                prompt_text = f"⭐ **Шаг 5: Оценка опыта**\n\n<b>Как вы оцениваете опыт использования этого бота?</b>\n\nВыберите количество звезд:"
+                await message.answer(prompt_text)
+                
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "user_rating",
+                    "validation": "",
+                    "min_length": 0,
+                    "max_length": 0,
+                    "timeout": 60,
+                    "required": True,
+                    "allow_skip": False,
+                    "save_to_database": True,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"⭐ **Шаг 5: Оценка опыта**\n\n<b>Как вы оцениваете опыт использования этого бота?</b>\n\nВыберите количество звезд:",
+                    "node_id": "experience-rating",
+                    "next_node_id": "final-comment"
+                }
             elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
+                text = f"❌ **Ошибка оценки**\n\nПожалуйста, выберите оценку от 1 до 5 звезд."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить оценку", callback_data="experience-rating"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="final-comment"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
+                prompt_text = f"💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):"
+                placeholder_text = "Ваши комментарии и предложения..."
+                prompt_text += f"\n\n💡 {placeholder_text}"
+                await message.answer(prompt_text)
+                
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "user_comment",
+                    "validation": "",
+                    "min_length": 0,
+                    "max_length": 1000,
+                    "timeout": 60,
+                    "required": True,
+                    "allow_skip": False,
+                    "save_to_database": True,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):",
+                    "node_id": "final-comment",
+                    "next_node_id": "final-results"
+                }
             elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
+                text = f"❌ **Ошибка комментария**\n\nКомментарий слишком длинный. Максимум 1000 символов."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить ввод", callback_data="final-comment"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="final-results"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
+                text = f"🎉 **Сбор данных завершен!**\n\n<b>Спасибо за участие!</b>\n\nВы успешно продемонстрировали все типы сбора пользовательского ввода:\n\n✅ <b>Текстовый ввод</b> - имя и комментарии\n✅ <b>Одиночный выбор</b> - возраст и рейтинг\n✅ <b>Множественный выбор</b> - интересы\n✅ <b>Валидация данных</b> - проверка email/телефона\n✅ <b>Обработка ошибок</b> - повторы и пропуски\n\nВсе данные сохранены в базе данных и готовы к анализу."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Пройти снова", callback_data="start-1"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
