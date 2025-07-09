@@ -7,7 +7,7 @@ export async function seedDefaultTemplates() {
     
     // Проверяем, есть ли уже системные шаблоны
     const systemTemplates = existingTemplates.filter(t => t.authorName === 'Система');
-    if (systemTemplates.length >= 5) {
+    if (systemTemplates.length >= 6) {
       console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
@@ -1115,6 +1115,212 @@ export async function seedDefaultTemplates() {
             "id": "conn-results-recommendations",
             "source": "final-results",
             "target": "recommendations"
+          }
+        ]
+      }
+    });
+
+    // Простой опрос с пользовательским вводом
+    await storage.createBotTemplate({
+      name: "📝 Опрос с текстовым вводом",
+      description: "Простой бот для сбора обратной связи от пользователей с полем для ввода текста",
+      category: "business",
+      tags: ["опрос", "ввод", "обратная связь", "анкета"],
+      isPublic: 1,
+      difficulty: "medium",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 4,
+      estimatedTime: 15,
+      data: {
+        nodes: [
+          {
+            id: "start-1",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              description: "Приветствие и начало опроса",
+              messageText: "👋 Добро пожаловать в бот обратной связи!\n\nМы очень ценим мнение наших пользователей. Поделитесь своими впечатлениями!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-start-survey",
+                  text: "📝 Начать опрос",
+                  action: "goto",
+                  target: "survey-question"
+                },
+                {
+                  id: "btn-skip",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "thank-you"
+                }
+              ],
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "survey-question",
+            type: "message",
+            position: { x: 400, y: 100 },
+            data: {
+              messageText: "📋 **Вопрос 1 из 2**\n\nКак бы вы оценили качество нашего сервиса?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-excellent",
+                  text: "⭐⭐⭐⭐⭐ Отлично",
+                  action: "goto",
+                  target: "feedback-input"
+                },
+                {
+                  id: "btn-good",
+                  text: "⭐⭐⭐⭐ Хорошо",
+                  action: "goto",
+                  target: "feedback-input"
+                },
+                {
+                  id: "btn-average",
+                  text: "⭐⭐⭐ Средне",
+                  action: "goto",
+                  target: "feedback-input"
+                },
+                {
+                  id: "btn-poor",
+                  text: "⭐⭐ Плохо",
+                  action: "goto",
+                  target: "feedback-input"
+                },
+                {
+                  id: "btn-terrible",
+                  text: "⭐ Ужасно",
+                  action: "goto",
+                  target: "feedback-input"
+                }
+              ],
+              markdown: true,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "feedback-input",
+            type: "user-input",
+            position: { x: 700, y: 100 },
+            data: {
+              messageText: "💬 **Вопрос 2 из 2**\n\nРасскажите подробнее о своих впечатлениях. Что вам понравилось или что можно улучшить?\n\n✍️ Напишите ваш отзыв:",
+              inputType: "text",
+              inputVariable: "user_feedback",
+              placeholder: "Введите ваш отзыв здесь...",
+              isRequired: true,
+              minLength: 10,
+              maxLength: 500,
+              validationMessage: "Пожалуйста, введите отзыв от 10 до 500 символов",
+              timeoutSeconds: 300,
+              timeoutMessage: "⏰ Время для ввода истекло. Попробуйте снова позже.",
+              saveToDatabase: true,
+              successTarget: "thank-you",
+              errorTarget: "feedback-error"
+            }
+          },
+          {
+            id: "feedback-error",
+            type: "message",
+            position: { x: 700, y: 250 },
+            data: {
+              messageText: "❌ **Ошибка ввода**\n\nПожалуйста, введите корректный отзыв (от 10 до 500 символов).\n\nПопробуйте ещё раз:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-retry",
+                  text: "🔄 Повторить ввод",
+                  action: "goto",
+                  target: "feedback-input"
+                },
+                {
+                  id: "btn-skip-feedback",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  target: "thank-you"
+                }
+              ],
+              markdown: true,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "thank-you",
+            type: "message",
+            position: { x: 1000, y: 100 },
+            data: {
+              messageText: "🎉 **Спасибо за участие!**\n\nВаша обратная связь очень важна для нас и поможет улучшить наш сервис.\n\nЕсли у вас есть ещё вопросы или предложения, не стесняйтесь обращаться!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-restart",
+                  text: "🔄 Пройти опрос снова",
+                  action: "goto",
+                  target: "start-1"
+                },
+                {
+                  id: "btn-help",
+                  text: "❓ Помощь",
+                  action: "command",
+                  target: "/help"
+                }
+              ],
+              markdown: true,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn-1",
+            source: "start-1",
+            target: "survey-question"
+          },
+          {
+            id: "conn-2",
+            source: "start-1",
+            target: "thank-you"
+          },
+          {
+            id: "conn-3",
+            source: "survey-question",
+            target: "feedback-input"
+          },
+          {
+            id: "conn-4",
+            source: "feedback-input",
+            target: "thank-you"
+          },
+          {
+            id: "conn-5",
+            source: "feedback-input",
+            target: "feedback-error"
+          },
+          {
+            id: "conn-6",
+            source: "feedback-error",
+            target: "feedback-input"
+          },
+          {
+            id: "conn-7",
+            source: "feedback-error",
+            target: "thank-you"
+          },
+          {
+            id: "conn-8",
+            source: "thank-you",
+            target: "start-1"
           }
         ]
       }
