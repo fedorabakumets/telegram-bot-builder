@@ -5,7 +5,7 @@ import { writeFileSync, existsSync, mkdirSync, unlinkSync, createWriteStream } f
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema } from "@shared/schema";
+import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 import https from "https";
@@ -2327,6 +2327,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Ошибка при обновлении использования файла:", error);
       res.status(500).json({ message: "Ошибка при обновлении использования файла" });
+    }
+  });
+
+  // User Bot Data Management endpoints
+  
+  // Get all user data for a project
+  app.get("/api/projects/:id/users", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const users = await storage.getUserBotDataByProject(projectId);
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user data" });
+    }
+  });
+
+  // Get user data stats for a project
+  app.get("/api/projects/:id/users/stats", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const stats = await storage.getUserBotDataStats(projectId);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user stats" });
+    }
+  });
+
+  // Get specific user data by ID
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userData = await storage.getUserBotData(id);
+      if (!userData) {
+        return res.status(404).json({ message: "User data not found" });
+      }
+      res.json(userData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user data" });
+    }
+  });
+
+  // Get user data by project and telegram user ID
+  app.get("/api/projects/:projectId/users/:userId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const userId = req.params.userId;
+      const userData = await storage.getUserBotDataByProjectAndUser(projectId, userId);
+      if (!userData) {
+        return res.status(404).json({ message: "User data not found" });
+      }
+      res.json(userData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user data" });
+    }
+  });
+
+  // Create new user data
+  app.post("/api/projects/:id/users", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const validatedData = insertUserBotDataSchema.parse({
+        ...req.body,
+        projectId
+      });
+      const userData = await storage.createUserBotData(validatedData);
+      res.status(201).json(userData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create user data" });
+    }
+  });
+
+  // Update user data
+  app.put("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertUserBotDataSchema.partial().parse(req.body);
+      const userData = await storage.updateUserBotData(id, validatedData);
+      if (!userData) {
+        return res.status(404).json({ message: "User data not found" });
+      }
+      res.json(userData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update user data" });
+    }
+  });
+
+  // Delete user data
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteUserBotData(id);
+      if (!success) {
+        return res.status(404).json({ message: "User data not found" });
+      }
+      res.json({ message: "User data deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user data" });
+    }
+  });
+
+  // Delete all user data for a project
+  app.delete("/api/projects/:id/users", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const success = await storage.deleteUserBotDataByProject(projectId);
+      res.json({ message: "All user data deleted successfully", deleted: success });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user data" });
+    }
+  });
+
+  // Search user data
+  app.get("/api/projects/:id/users/search", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const query = req.query.q as string;
+      
+      if (!query || query.trim().length === 0) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+      
+      const users = await storage.searchUserBotData(projectId, query.trim());
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search user data" });
+    }
+  });
+
+  // Increment user interaction count
+  app.post("/api/users/:id/interaction", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.incrementUserInteraction(id);
+      if (!success) {
+        return res.status(404).json({ message: "User data not found" });
+      }
+      res.json({ message: "Interaction count incremented" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to increment interaction" });
+    }
+  });
+
+  // Update user state
+  app.put("/api/users/:id/state", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { state } = req.body;
+      
+      if (!state || typeof state !== 'string') {
+        return res.status(400).json({ message: "State is required and must be a string" });
+      }
+      
+      const success = await storage.updateUserState(id, state);
+      if (!success) {
+        return res.status(404).json({ message: "User data not found" });
+      }
+      res.json({ message: "User state updated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user state" });
     }
   });
 

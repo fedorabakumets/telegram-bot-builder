@@ -4,6 +4,7 @@ import {
   botTemplates,
   botTokens,
   mediaFiles,
+  userBotData,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
@@ -13,7 +14,9 @@ import {
   type BotToken,
   type InsertBotToken,
   type MediaFile,
-  type InsertMediaFile
+  type InsertMediaFile,
+  type UserBotData,
+  type InsertUserBotData
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
@@ -68,6 +71,27 @@ export interface IStorage {
   deleteMediaFile(id: number): Promise<boolean>;
   incrementMediaFileUsage(id: number): Promise<boolean>;
   searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]>;
+  
+  // User bot data
+  getUserBotData(id: number): Promise<UserBotData | undefined>;
+  getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined>;
+  getUserBotDataByProject(projectId: number): Promise<UserBotData[]>;
+  getAllUserBotData(): Promise<UserBotData[]>;
+  createUserBotData(userData: InsertUserBotData): Promise<UserBotData>;
+  updateUserBotData(id: number, userData: Partial<InsertUserBotData>): Promise<UserBotData | undefined>;
+  deleteUserBotData(id: number): Promise<boolean>;
+  deleteUserBotDataByProject(projectId: number): Promise<boolean>;
+  incrementUserInteraction(id: number): Promise<boolean>;
+  updateUserState(id: number, state: string): Promise<boolean>;
+  searchUserBotData(projectId: number, query: string): Promise<UserBotData[]>;
+  getUserBotDataStats(projectId: number): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    blockedUsers: number;
+    premiumUsers: number;
+    totalInteractions: number;
+    avgInteractionsPerUser: number;
+  }>;
 }
 
 // Legacy Memory Storage - kept for reference
@@ -448,6 +472,128 @@ class MemStorage implements IStorage {
   async markTokenAsUsed(id: number): Promise<boolean> {
     // In memory implementation - not supported
     return false;
+  }
+
+  // Media Files (Memory implementation - not supported)
+  async getMediaFile(id: number): Promise<MediaFile | undefined> {
+    return undefined;
+  }
+
+  async getMediaFilesByProject(projectId: number): Promise<MediaFile[]> {
+    return [];
+  }
+
+  async getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]> {
+    return [];
+  }
+
+  async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
+    const file: MediaFile = {
+      ...insertFile,
+      id: this.currentTemplateId++,
+      usageCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    return file;
+  }
+
+  async updateMediaFile(id: number, updateData: Partial<InsertMediaFile>): Promise<MediaFile | undefined> {
+    return undefined;
+  }
+
+  async deleteMediaFile(id: number): Promise<boolean> {
+    return false;
+  }
+
+  async incrementMediaFileUsage(id: number): Promise<boolean> {
+    return false;
+  }
+
+  async searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]> {
+    return [];
+  }
+
+  // User Bot Data (Memory implementation - not supported)
+  async getUserBotData(id: number): Promise<UserBotData | undefined> {
+    return undefined;
+  }
+
+  async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
+    return undefined;
+  }
+
+  async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
+    return [];
+  }
+
+  async getAllUserBotData(): Promise<UserBotData[]> {
+    return [];
+  }
+
+  async createUserBotData(insertUserData: InsertUserBotData): Promise<UserBotData> {
+    const userData: UserBotData = {
+      ...insertUserData,
+      id: this.currentTemplateId++,
+      lastInteraction: new Date(),
+      interactionCount: insertUserData.interactionCount || 0,
+      userData: insertUserData.userData || {},
+      preferences: insertUserData.preferences || {},
+      commandsUsed: insertUserData.commandsUsed || {},
+      sessionsCount: insertUserData.sessionsCount || 1,
+      totalMessagesSent: insertUserData.totalMessagesSent || 0,
+      totalMessagesReceived: insertUserData.totalMessagesReceived || 0,
+      isBot: insertUserData.isBot || 0,
+      isPremium: insertUserData.isPremium || 0,
+      isBlocked: insertUserData.isBlocked || 0,
+      isActive: insertUserData.isActive || 1,
+      tags: insertUserData.tags || [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    return userData;
+  }
+
+  async updateUserBotData(id: number, updateData: Partial<InsertUserBotData>): Promise<UserBotData | undefined> {
+    return undefined;
+  }
+
+  async deleteUserBotData(id: number): Promise<boolean> {
+    return false;
+  }
+
+  async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
+    return false;
+  }
+
+  async incrementUserInteraction(id: number): Promise<boolean> {
+    return false;
+  }
+
+  async updateUserState(id: number, state: string): Promise<boolean> {
+    return false;
+  }
+
+  async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
+    return [];
+  }
+
+  async getUserBotDataStats(projectId: number): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    blockedUsers: number;
+    premiumUsers: number;
+    totalInteractions: number;
+    avgInteractionsPerUser: number;
+  }> {
+    return {
+      totalUsers: 0,
+      activeUsers: 0,
+      blockedUsers: 0,
+      premiumUsers: 0,
+      totalInteractions: 0,
+      avgInteractionsPerUser: 0
+    };
   }
 }
 
@@ -1082,6 +1228,189 @@ export class OptimizedDatabaseStorage implements IStorage {
       .where(eq(botTokens.id, id));
     
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Media Files (simplified implementation)
+  async getMediaFile(id: number): Promise<MediaFile | undefined> {
+    const [file] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    return file || undefined;
+  }
+
+  async getMediaFilesByProject(projectId: number): Promise<MediaFile[]> {
+    return await db.select().from(mediaFiles)
+      .where(eq(mediaFiles.projectId, projectId))
+      .orderBy(desc(mediaFiles.createdAt));
+  }
+
+  async getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]> {
+    return await db.select().from(mediaFiles)
+      .where(and(eq(mediaFiles.projectId, projectId), eq(mediaFiles.fileType, fileType)))
+      .orderBy(desc(mediaFiles.createdAt));
+  }
+
+  async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
+    const [file] = await db
+      .insert(mediaFiles)
+      .values(insertFile)
+      .returning();
+    return file;
+  }
+
+  async updateMediaFile(id: number, updateData: Partial<InsertMediaFile>): Promise<MediaFile | undefined> {
+    const [file] = await db
+      .update(mediaFiles)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(mediaFiles.id, id))
+      .returning();
+    return file || undefined;
+  }
+
+  async deleteMediaFile(id: number): Promise<boolean> {
+    const result = await db.delete(mediaFiles).where(eq(mediaFiles.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async incrementMediaFileUsage(id: number): Promise<boolean> {
+    const [file] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    if (!file) return false;
+    
+    const result = await db
+      .update(mediaFiles)
+      .set({ usageCount: (file.usageCount || 0) + 1 })
+      .where(eq(mediaFiles.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    return await db.select().from(mediaFiles)
+      .where(
+        and(
+          eq(mediaFiles.projectId, projectId),
+          or(
+            ilike(mediaFiles.fileName, searchTerm),
+            ilike(mediaFiles.description, searchTerm)
+          )
+        )
+      )
+      .orderBy(desc(mediaFiles.createdAt));
+  }
+
+  // User Bot Data
+  async getUserBotData(id: number): Promise<UserBotData | undefined> {
+    const [userData] = await db.select().from(userBotData).where(eq(userBotData.id, id));
+    return userData || undefined;
+  }
+
+  async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
+    const [userData] = await db.select().from(userBotData)
+      .where(and(eq(userBotData.projectId, projectId), eq(userBotData.userId, userId)));
+    return userData || undefined;
+  }
+
+  async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
+    return await db.select().from(userBotData)
+      .where(eq(userBotData.projectId, projectId))
+      .orderBy(desc(userBotData.lastInteraction));
+  }
+
+  async getAllUserBotData(): Promise<UserBotData[]> {
+    return await db.select().from(userBotData)
+      .orderBy(desc(userBotData.lastInteraction));
+  }
+
+  async createUserBotData(insertUserData: InsertUserBotData): Promise<UserBotData> {
+    const [userData] = await db
+      .insert(userBotData)
+      .values(insertUserData)
+      .returning();
+    return userData;
+  }
+
+  async updateUserBotData(id: number, updateData: Partial<InsertUserBotData>): Promise<UserBotData | undefined> {
+    const [userData] = await db
+      .update(userBotData)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(userBotData.id, id))
+      .returning();
+    return userData || undefined;
+  }
+
+  async deleteUserBotData(id: number): Promise<boolean> {
+    const result = await db.delete(userBotData).where(eq(userBotData.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
+    const result = await db.delete(userBotData).where(eq(userBotData.projectId, projectId));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async incrementUserInteraction(id: number): Promise<boolean> {
+    const [userData] = await db.select().from(userBotData).where(eq(userBotData.id, id));
+    if (!userData) return false;
+    
+    const result = await db
+      .update(userBotData)
+      .set({ 
+        interactionCount: (userData.interactionCount || 0) + 1,
+        lastInteraction: new Date()
+      })
+      .where(eq(userBotData.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async updateUserState(id: number, state: string): Promise<boolean> {
+    const result = await db
+      .update(userBotData)
+      .set({ currentState: state, updatedAt: new Date() })
+      .where(eq(userBotData.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    return await db.select().from(userBotData)
+      .where(
+        and(
+          eq(userBotData.projectId, projectId),
+          or(
+            ilike(userBotData.firstName, searchTerm),
+            ilike(userBotData.lastName, searchTerm),
+            ilike(userBotData.userName, searchTerm),
+            ilike(userBotData.userId, searchTerm)
+          )
+        )
+      )
+      .orderBy(desc(userBotData.lastInteraction));
+  }
+
+  async getUserBotDataStats(projectId: number): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    blockedUsers: number;
+    premiumUsers: number;
+    totalInteractions: number;
+    avgInteractionsPerUser: number;
+  }> {
+    const users = await db.select().from(userBotData)
+      .where(eq(userBotData.projectId, projectId));
+    
+    const totalUsers = users.length;
+    const activeUsers = users.filter(u => u.isActive === 1).length;
+    const blockedUsers = users.filter(u => u.isBlocked === 1).length;
+    const premiumUsers = users.filter(u => u.isPremium === 1).length;
+    const totalInteractions = users.reduce((sum, u) => sum + (u.interactionCount || 0), 0);
+    const avgInteractionsPerUser = totalUsers > 0 ? Math.round(totalInteractions / totalUsers) : 0;
+
+    return {
+      totalUsers,
+      activeUsers,
+      blockedUsers,
+      premiumUsers,
+      totalInteractions,
+      avgInteractionsPerUser
+    };
   }
 }
 

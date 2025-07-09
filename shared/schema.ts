@@ -83,6 +83,41 @@ export const mediaFiles = pgTable("media_files", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const userBotData = pgTable("user_bot_data", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").notNull(), // Telegram user ID
+  userName: text("user_name"), // Имя пользователя в Telegram
+  firstName: text("first_name"), // Имя пользователя
+  lastName: text("last_name"), // Фамилия пользователя
+  languageCode: text("language_code"), // Код языка пользователя
+  isBot: integer("is_bot").default(0), // 0 = человек, 1 = бот
+  isPremium: integer("is_premium").default(0), // 0 = обычный, 1 = премиум
+  // Данные взаимодействий
+  lastInteraction: timestamp("last_interaction").defaultNow(),
+  interactionCount: integer("interaction_count").default(0),
+  // Сохраненные данные из user-input узлов
+  userData: jsonb("user_data").default({}), // Пользовательские данные (ответы на вопросы, формы и т.д.)
+  // Настройки и состояние
+  currentState: text("current_state"), // Текущее состояние в диалоге с ботом
+  preferences: jsonb("preferences").default({}), // Пользовательские настройки
+  // Статистика
+  commandsUsed: jsonb("commands_used").default({}), // Статистика использования команд
+  sessionsCount: integer("sessions_count").default(1), // Количество сессий
+  totalMessagesSent: integer("total_messages_sent").default(0), // Общее количество отправленных сообщений
+  totalMessagesReceived: integer("total_messages_received").default(0), // Общее количество полученных сообщений
+  // Метаданные
+  deviceInfo: text("device_info"), // Информация об устройстве
+  locationData: jsonb("location_data"), // Данные геолокации (если предоставлены)
+  contactData: jsonb("contact_data"), // Контактные данные (если предоставлены)
+  isBlocked: integer("is_blocked").default(0), // 0 = не заблокирован, 1 = заблокирован
+  isActive: integer("is_active").default(1), // 0 = неактивен, 1 = активен
+  tags: text("tags").array().default([]), // Теги для категоризации пользователей
+  notes: text("notes"), // Заметки администратора
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
   name: true,
   description: true,
@@ -164,6 +199,44 @@ export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({
   isPublic: z.number().min(0).max(1).default(0),
 });
 
+export const insertUserBotDataSchema = createInsertSchema(userBotData).pick({
+  projectId: true,
+  userId: true,
+  userName: true,
+  firstName: true,
+  lastName: true,
+  languageCode: true,
+  isBot: true,
+  isPremium: true,
+  userData: true,
+  currentState: true,
+  preferences: true,
+  commandsUsed: true,
+  sessionsCount: true,
+  totalMessagesSent: true,
+  totalMessagesReceived: true,
+  deviceInfo: true,
+  locationData: true,
+  contactData: true,
+  isBlocked: true,
+  isActive: true,
+  tags: true,
+  notes: true,
+}).extend({
+  userId: z.string().min(1, "ID пользователя обязателен"),
+  userData: z.record(z.any()).default({}),
+  preferences: z.record(z.any()).default({}),
+  commandsUsed: z.record(z.any()).default({}),
+  tags: z.array(z.string()).default([]),
+  isBot: z.number().min(0).max(1).default(0),
+  isPremium: z.number().min(0).max(1).default(0),
+  isBlocked: z.number().min(0).max(1).default(0),
+  isActive: z.number().min(0).max(1).default(1),
+  sessionsCount: z.number().min(1).default(1),
+  totalMessagesSent: z.number().min(0).default(0),
+  totalMessagesReceived: z.number().min(0).default(0),
+});
+
 // Схема для оценки шаблона
 export const rateTemplateSchema = z.object({
   templateId: z.number(),
@@ -180,6 +253,8 @@ export type InsertBotToken = z.infer<typeof insertBotTokenSchema>;
 export type BotToken = typeof botTokens.$inferSelect;
 export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
 export type MediaFile = typeof mediaFiles.$inferSelect;
+export type InsertUserBotData = z.infer<typeof insertUserBotDataSchema>;
+export type UserBotData = typeof userBotData.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({
