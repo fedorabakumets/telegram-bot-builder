@@ -67,7 +67,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 350, y: 100 },
             data: {
-              messageText: "ℹ️ **Информация о нас**\n\nМы предоставляем качественные услуги и всегда готовы помочь нашим клиентам.",
+              messageText: "ℹ️ Информация о нас\n\nМы предоставляем качественные услуги и всегда готовы помочь нашим клиентам.",
               keyboardType: "reply",
               buttons: [
                 {
@@ -77,7 +77,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -87,7 +87,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 350, y: 250 },
             data: {
-              messageText: "📞 **Наши контакты:**\n\n📧 Email: info@example.com\n📱 Телефон: +7 (999) 123-45-67\n🌐 Сайт: example.com",
+              messageText: "📞 Наши контакты:\n\n📧 Email: info@example.com\n📱 Телефон: +7 (999) 123-45-67\n🌐 Сайт: example.com",
               keyboardType: "reply",
               buttons: [
                 {
@@ -97,7 +97,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -109,7 +109,7 @@ export async function seedDefaultTemplates() {
             data: {
               command: "/help",
               description: "Справка по боту",
-              messageText: "❓ **Справка**\n\nИспользуйте кнопки меню для навигации по боту.\n\nДоступные команды:\n/start - Главное меню\n/help - Эта справка",
+              messageText: "❓ Справка\n\nИспользуйте кнопки меню для навигации по боту.\n\nДоступные команды:\n/start - Главное меню\n/help - Эта справка",
               keyboardType: "reply",
               buttons: [
                 {
@@ -119,7 +119,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -200,7 +200,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 50 },
             data: {
-              messageText: "💻 **Технические вопросы:**\n\n• Проблемы с входом\n• Ошибки в работе\n• Настройка аккаунта\n\nВыберите вопрос:",
+              messageText: "💻 Технические вопросы:\n\n• Проблемы с входом\n• Ошибки в работе\n• Настройка аккаунта\n\nВыберите вопрос:",
               keyboardType: "inline",
               buttons: [
                 {
@@ -216,7 +216,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -226,7 +226,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 150 },
             data: {
-              messageText: "💳 **Вопросы оплаты:**\n\n• Способы оплаты\n• Возврат средств\n• Тарифы\n\nВыберите вопрос:",
+              messageText: "💳 Вопросы оплаты:\n\n• Способы оплаты\n• Возврат средств\n• Тарифы\n\nВыберите вопрос:",
               keyboardType: "inline",
               buttons: [
                 {
@@ -242,7 +242,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -252,7 +252,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 250 },
             data: {
-              messageText: "❓ **Общие вопросы:**\n\n• О компании\n• Контакты\n• Часы работы",
+              messageText: "❓ Общие вопросы:\n\n• О компании\n• Контакты\n• Часы работы",
               keyboardType: "inline",
               buttons: [
                 {
@@ -268,7 +268,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -348,7 +348,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 100 },
             data: {
-              messageText: "📦 **Каталог товаров:**\n\n🏷️ Категории:",
+              messageText: "📦 Каталог товаров:\n\n🏷️ Категории:",
               keyboardType: "inline",
               buttons: [
                 {
@@ -376,7 +376,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -386,7 +386,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 200 },
             data: {
-              messageText: "🛒 **Ваша корзина пуста**\n\nДобавьте товары из каталога!",
+              messageText: "🛒 Ваша корзина пуста\n\nДобавьте товары из каталога!",
               keyboardType: "reply",
               buttons: [
                 {
@@ -402,7 +402,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -412,7 +412,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 300 },
             data: {
-              messageText: "🚚 **Информация о доставке:**\n\n📦 Бесплатная доставка от 2000₽\n⏱️ Доставка 1-3 дня\n📍 Доставляем по всей России\n\n💳 Оплата при получении или картой",
+              messageText: "🚚 Информация о доставке:\n\n📦 Бесплатная доставка от 2000₽\n⏱️ Доставка 1-3 дня\n📍 Доставляем по всей России\n\n💳 Оплата при получении или картой",
               keyboardType: "reply",
               buttons: [
                 {
@@ -422,7 +422,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -498,7 +498,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 350, y: 100 },
             data: {
-              messageText: "📋 **Информация о боте:**\n\nЭто простой бот-пример, который показывает:\n• Как работают команды\n• Как использовать синонимы\n• Базовую навигацию\n\nТеперь ты можешь создать своего!",
+              messageText: "📋 Информация о боте:\n\nЭто простой бот-пример, который показывает:\n• Как работают команды\n• Как использовать синонимы\n• Базовую навигацию\n\nТеперь ты можешь создать своего!",
               keyboardType: "reply",
               buttons: [
                 {
@@ -508,7 +508,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -518,7 +518,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 350, y: 250 },
             data: {
-              messageText: "❓ **Справка:**\n\n🔤 **Команды:**\n• /start или старт - запуск бота\n\n🎯 **Советы:**\n• Используй кнопки для навигации\n• Синонимы делают бота удобнее\n• Экспериментируй с настройками!",
+              messageText: "❓ Справка:\n\n🔤 Команды:\n• /start или старт - запуск бота\n\n🎯 Советы:\n• Используй кнопки для навигации\n• Синонимы делают бота удобнее\n• Экспериментируй с настройками!",
               keyboardType: "reply",
               buttons: [
                 {
@@ -528,7 +528,7 @@ export async function seedDefaultTemplates() {
                   target: "start-1"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1169,7 +1169,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 100 },
             data: {
-              messageText: "📋 **Вопрос 1 из 2**\n\nКак бы вы оценили качество нашего сервиса?",
+              messageText: "📋 Вопрос 1 из 2\n\nКак бы вы оценили качество нашего сервиса?",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1203,7 +1203,7 @@ export async function seedDefaultTemplates() {
                   target: "feedback-input"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1213,7 +1213,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 700, y: 100 },
             data: {
-              messageText: "💬 **Вопрос 2 из 2**\n\nРасскажите подробнее о своих впечатлениях. Что вам понравилось или что можно улучшить?\n\n✍️ Напишите ваш отзыв:",
+              messageText: "💬 Вопрос 2 из 2\n\nРасскажите подробнее о своих впечатлениях. Что вам понравилось или что можно улучшить?\n\n✍️ Напишите ваш отзыв:",
               inputType: "text",
               inputVariable: "user_feedback",
               placeholder: "Введите ваш отзыв здесь...",
@@ -1233,7 +1233,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 700, y: 250 },
             data: {
-              messageText: "❌ **Ошибка ввода**\n\nПожалуйста, введите корректный отзыв (от 10 до 500 символов).\n\nПопробуйте ещё раз:",
+              messageText: "❌ Ошибка ввода\n\nПожалуйста, введите корректный отзыв (от 10 до 500 символов).\n\nПопробуйте ещё раз:",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1249,7 +1249,7 @@ export async function seedDefaultTemplates() {
                   target: "thank-you"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1259,7 +1259,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1000, y: 100 },
             data: {
-              messageText: "🎉 **Спасибо за участие!**\n\nВаша обратная связь очень важна для нас и поможет улучшить наш сервис.\n\nЕсли у вас есть ещё вопросы или предложения, не стесняйтесь обращаться!",
+              messageText: "🎉 Спасибо за участие!\n\nВаша обратная связь очень важна для нас и поможет улучшить наш сервис.\n\nЕсли у вас есть ещё вопросы или предложения, не стесняйтесь обращаться!",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1275,7 +1275,7 @@ export async function seedDefaultTemplates() {
                   target: "/help"
                 }
               ],
-              markdown: true,
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1349,7 +1349,7 @@ export async function seedDefaultTemplates() {
             data: {
               command: "/start",
               description: "Начало сбора данных",
-              messageText: "🎯 **Добро пожаловать в систему сбора данных!**\n\nЭтот бот демонстрирует все возможности сбора пользовательского ввода:\n\n• 📝 Текстовый ввод\n• 🔘 Кнопочные ответы\n• ☑️ Множественный выбор\n• 📱 Медиа файлы\n• 📊 Структурированные данные\n\nНачнем сбор ваших данных?",
+              messageText: "🎯 Добро пожаловать в систему сбора данных!\n\nЭтот бот демонстрирует все возможности сбора пользовательского ввода:\n\n• 📝 Текстовый ввод\n• 🔘 Кнопочные ответы\n• ☑️ Множественный выбор\n• 📱 Медиа файлы\n• 📊 Структурированные данные\n\nНачнем сбор ваших данных?",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1365,8 +1365,8 @@ export async function seedDefaultTemplates() {
                   target: "final-results"
                 }
               ],
-              markdown: true,
-              formatMode: "html",
+              formatMode: "none",
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1376,7 +1376,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 400, y: 100 },
             data: {
-              messageText: "👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):",
+              messageText: "👤 Шаг 1: Персональные данные\n\nКак вас зовут?\n\nВведите ваше имя (от 2 до 50 символов):",
               responseType: "text",
               inputType: "text",
               inputVariable: "user_name",
@@ -1390,7 +1390,7 @@ export async function seedDefaultTemplates() {
               saveToDatabase: true,
               successTarget: "age-buttons",
               errorTarget: "name-error",
-              formatMode: "html"
+              formatMode: "none"
             }
           },
           {
@@ -1398,7 +1398,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 250 },
             data: {
-              messageText: "❌ **Ошибка ввода имени**\n\nПожалуйста, введите корректное имя (от 2 до 50 символов).\n\nПопробуйте ещё раз:",
+              messageText: "❌ Ошибка ввода имени\n\nПожалуйста, введите корректное имя (от 2 до 50 символов).\n\nПопробуйте ещё раз:",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1414,8 +1414,8 @@ export async function seedDefaultTemplates() {
                   target: "age-buttons"
                 }
               ],
-              markdown: true,
-              formatMode: "html",
+              formatMode: "none",
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1425,7 +1425,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 700, y: 100 },
             data: {
-              messageText: "🎂 **Шаг 2: Возрастная группа**\n\n<b>Выберите вашу возрастную группу:</b>\n\nИспользуйте кнопки для выбора:",
+              messageText: "🎂 Шаг 2: Возрастная группа\n\nВыберите вашу возрастную группу:\n\nИспользуйте кнопки для выбора:",
               responseType: "buttons",
               responseOptions: [
                 {
@@ -1460,7 +1460,7 @@ export async function seedDefaultTemplates() {
               saveToDatabase: true,
               successTarget: "interests-multiple",
               errorTarget: "age-error",
-              formatMode: "html"
+              formatMode: "none"
             }
           },
           {
@@ -1468,7 +1468,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 700, y: 250 },
             data: {
-              messageText: "❌ **Ошибка выбора возраста**\n\nПожалуйста, выберите одну из предложенных возрастных групп.",
+              messageText: "❌ Ошибка выбора возраста\n\nПожалуйста, выберите одну из предложенных возрастных групп.",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1484,8 +1484,8 @@ export async function seedDefaultTemplates() {
                   target: "interests-multiple"
                 }
               ],
-              markdown: true,
-              formatMode: "html",
+              formatMode: "none",
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1495,7 +1495,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1000, y: 100 },
             data: {
-              messageText: "🎯 **Шаг 3: Интересы (множественный выбор)**\n\n<b>Выберите ваши интересы (можно несколько):</b>\n\nВыберите все подходящие варианты и нажмите \"Готово\":",
+              messageText: "🎯 Шаг 3: Интересы (множественный выбор)\n\nВыберите ваши интересы (можно несколько):\n\nВыберите все подходящие варианты и нажмите \"Готово\":",
               responseType: "buttons",
               responseOptions: [
                 {
@@ -1540,7 +1540,7 @@ export async function seedDefaultTemplates() {
               saveToDatabase: true,
               successTarget: "contact-input",
               errorTarget: "interests-error",
-              formatMode: "html"
+              formatMode: "none"
             }
           },
           {
@@ -1548,7 +1548,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1000, y: 250 },
             data: {
-              messageText: "❌ **Ошибка выбора интересов**\n\nПожалуйста, выберите хотя бы один интерес и нажмите \"Готово\".",
+              messageText: "❌ Ошибка выбора интересов\n\nПожалуйста, выберите хотя бы один интерес и нажмите \"Готово\".",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1564,8 +1564,8 @@ export async function seedDefaultTemplates() {
                   target: "contact-input"
                 }
               ],
-              markdown: true,
-              formatMode: "html",
+              formatMode: "none",
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1575,7 +1575,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1300, y: 100 },
             data: {
-              messageText: "📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:",
+              messageText: "📱 Шаг 4: Контактная информация\n\nВведите ваш email или телефон:\n\nМы используем эти данные для связи с вами:",
               responseType: "text",
               inputType: "email",
               inputVariable: "user_contact",
@@ -1589,7 +1589,7 @@ export async function seedDefaultTemplates() {
               saveToDatabase: true,
               successTarget: "experience-rating",
               errorTarget: "contact-error",
-              formatMode: "html"
+              formatMode: "none"
             }
           },
           {
@@ -1597,7 +1597,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1300, y: 250 },
             data: {
-              messageText: "❌ **Ошибка ввода контактов**\n\nПожалуйста, введите корректный email или номер телефона.",
+              messageText: "❌ Ошибка ввода контактов\n\nПожалуйста, введите корректный email или номер телефона.",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1613,8 +1613,8 @@ export async function seedDefaultTemplates() {
                   target: "experience-rating"
                 }
               ],
-              markdown: true,
-              formatMode: "html",
+              formatMode: "none",
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1624,7 +1624,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1600, y: 100 },
             data: {
-              messageText: "⭐ **Шаг 5: Оценка опыта**\n\n<b>Как вы оцениваете опыт использования этого бота?</b>\n\nВыберите количество звезд:",
+              messageText: "⭐ Шаг 5: Оценка опыта\n\nКак вы оцениваете опыт использования этого бота?\n\nВыберите количество звезд:",
               responseType: "buttons",
               responseOptions: [
                 {
@@ -1659,7 +1659,7 @@ export async function seedDefaultTemplates() {
               saveToDatabase: true,
               successTarget: "final-comment",
               errorTarget: "rating-error",
-              formatMode: "html"
+              formatMode: "none"
             }
           },
           {
@@ -1667,7 +1667,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1600, y: 250 },
             data: {
-              messageText: "❌ **Ошибка оценки**\n\nПожалуйста, выберите оценку от 1 до 5 звезд.",
+              messageText: "❌ Ошибка оценки\n\nПожалуйста, выберите оценку от 1 до 5 звезд.",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1683,8 +1683,8 @@ export async function seedDefaultTemplates() {
                   target: "final-comment"
                 }
               ],
-              markdown: true,
-              formatMode: "html",
+              formatMode: "none",
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1694,7 +1694,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1900, y: 100 },
             data: {
-              messageText: "💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):",
+              messageText: "💭 Шаг 6: Заключительный комментарий\n\nЕсть ли у вас дополнительные комментарии или предложения?\n\nНапишите ваше мнение (необязательно):",
               responseType: "text",
               inputType: "text",
               inputVariable: "user_comment",
@@ -1708,7 +1708,7 @@ export async function seedDefaultTemplates() {
               saveToDatabase: true,
               successTarget: "final-results",
               errorTarget: "comment-error",
-              formatMode: "html"
+              formatMode: "none"
             }
           },
           {
@@ -1716,7 +1716,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1900, y: 250 },
             data: {
-              messageText: "❌ **Ошибка комментария**\n\nКомментарий слишком длинный. Максимум 1000 символов.",
+              messageText: "❌ Ошибка комментария\n\nКомментарий слишком длинный. Максимум 1000 символов.",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1732,8 +1732,8 @@ export async function seedDefaultTemplates() {
                   target: "final-results"
                 }
               ],
-              markdown: true,
-              formatMode: "html",
+              formatMode: "none",
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1743,7 +1743,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 2200, y: 100 },
             data: {
-              messageText: "🎉 **Сбор данных завершен!**\n\n<b>Спасибо за участие!</b>\n\nВы успешно продемонстрировали все типы сбора пользовательского ввода:\n\n✅ <b>Текстовый ввод</b> - имя и комментарии\n✅ <b>Одиночный выбор</b> - возраст и рейтинг\n✅ <b>Множественный выбор</b> - интересы\n✅ <b>Валидация данных</b> - проверка email/телефона\n✅ <b>Обработка ошибок</b> - повторы и пропуски\n\nВсе данные сохранены в базе данных и готовы к анализу.",
+              messageText: "🎉 Сбор данных завершен!\n\nСпасибо за участие!\n\nВы успешно продемонстрировали все типы сбора пользовательского ввода:\n\n✅ Текстовый ввод - имя и комментарии\n✅ Одиночный выбор - возраст и рейтинг\n✅ Множественный выбор - интересы\n✅ Валидация данных - проверка email/телефона\n✅ Обработка ошибок - повторы и пропуски\n\nВсе данные сохранены в базе данных и готовы к анализу.",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1759,8 +1759,8 @@ export async function seedDefaultTemplates() {
                   target: "/admin"
                 }
               ],
-              markdown: true,
-              formatMode: "html",
+              formatMode: "none",
+              formatMode: "none",
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
@@ -1929,7 +1929,7 @@ export async function seedDefaultTemplates() {
             data: {
               command: "/start",
               description: "Запуск комплексного сбора корпоративной информации",
-              messageText: "🏢 <b>ДОБРО ПОЖАЛОВАТЬ В СИСТЕМУ СБОРА КОРПОРАТИВНОЙ ИНФОРМАЦИИ</b>\n\n📋 <b>Этот процесс включает:</b>\n• 👤 Персональные данные сотрудника\n• 🏢 Информация о компании\n• 💼 Профессиональный опыт\n• 📊 Текущие проекты\n• 🎯 Цели и планы\n• 📞 Контактная информация\n• 🔒 Конфиденциальность\n\n⏱️ <b>Время заполнения:</b> 30-45 минут\n🎯 <b>Результат:</b> Полная корпоративная анкета\n\n<b>Начинаем процесс сбора информации?</b>",
+              messageText: "🏢 ДОБРО ПОЖАЛОВАТЬ В СИСТЕМУ СБОРА КОРПОРАТИВНОЙ ИНФОРМАЦИИ\n\n📋 Этот процесс включает:\n• 👤 Персональные данные сотрудника\n• 🏢 Информация о компании\n• 💼 Профессиональный опыт\n• 📊 Текущие проекты\n• 🎯 Цели и планы\n• 📞 Контактная информация\n• 🔒 Конфиденциальность\n\n⏱️ Время заполнения: 30-45 минут\n🎯 Результат: Полная корпоративная анкета\n\nНачинаем процесс сбора информации?",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1951,8 +1951,8 @@ export async function seedDefaultTemplates() {
                   target: "filling-instructions"
                 }
               ],
-              markdown: true,
-              formatMode: "html"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -1960,7 +1960,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 50 },
             data: {
-              messageText: "🔒 <b>ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</b>\n\n✅ <b>Мы гарантируем:</b>\n• Защиту всех персональных данных\n• Использование данных только для внутренних целей\n• Соблюдение требований GDPR и 152-ФЗ\n• Возможность удаления данных по запросу\n\n🛡️ <b>Безопасность:</b>\n• Шифрование данных при передаче\n• Ограниченный доступ к информации\n• Регулярные аудиты безопасности\n\n📧 <b>Контакты:</b> privacy@company.com",
+              messageText: "🔒 ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ\n\n✅ Мы гарантируем:\n• Защиту всех персональных данных\n• Использование данных только для внутренних целей\n• Соблюдение требований GDPR и 152-ФЗ\n• Возможность удаления данных по запросу\n\n🛡️ Безопасность:\n• Шифрование данных при передаче\n• Ограниченный доступ к информации\n• Регулярные аудиты безопасности\n\n📧 Контакты: privacy@company.com",
               keyboardType: "inline",
               buttons: [
                 {
@@ -1976,8 +1976,8 @@ export async function seedDefaultTemplates() {
                   target: "start-welcome"
                 }
               ],
-              markdown: true,
-              formatMode: "html"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -1985,7 +1985,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 400, y: 150 },
             data: {
-              messageText: "📖 <b>ИНСТРУКЦИИ ПО ЗАПОЛНЕНИЮ</b>\n\n🎯 <b>Общие рекомендации:</b>\n• Заполняйте все поля максимально точно\n• При необходимости используйте кнопку \"Пропустить\"\n• Можете вернуться к предыдущим разделам\n• Сохранение происходит автоматически\n\n⚡ <b>Быстрые команды:</b>\n• /help - помощь в любое время\n• /status - текущий прогресс\n• /reset - начать заново\n\n💡 <b>Совет:</b> Подготовьте заранее данные о компании и проектах",
+              messageText: "📖 ИНСТРУКЦИИ ПО ЗАПОЛНЕНИЮ\n\n🎯 Общие рекомендации:\n• Заполняйте все поля максимально точно\n• При необходимости используйте кнопку \"Пропустить\"\n• Можете вернуться к предыдущим разделам\n• Сохранение происходит автоматически\n\n⚡ Быстрые команды:\n• /help - помощь в любое время\n• /status - текущий прогресс\n• /reset - начать заново\n\n💡 Совет: Подготовьте заранее данные о компании и проектах",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2001,8 +2001,8 @@ export async function seedDefaultTemplates() {
                   target: "start-welcome"
                 }
               ],
-              markdown: true,
-              formatMode: "html"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2010,7 +2010,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 700, y: 100 },
             data: {
-              messageText: "👤 <b>РАЗДЕЛ 1: ПЕРСОНАЛЬНЫЕ ДАННЫЕ</b>\n\n<b>Введите ваше полное имя:</b>\n\n<i>Пример: Иванов Иван Иванович</i>\n\n📝 Укажите фамилию, имя и отчество полностью",
+              messageText: "👤 РАЗДЕЛ 1: ПЕРСОНАЛЬНЫЕ ДАННЫЕ\n\nВведите ваше полное имя:\n\nПример: Иванов Иван Иванович\n\n📝 Укажите фамилию, имя и отчество полностью",
               responseType: "text",
               inputType: "text",
               inputVariable: "full_name",
@@ -2025,7 +2025,7 @@ export async function seedDefaultTemplates() {
               placeholder: "Фамилия Имя Отчество",
               successTarget: "position-info",
               errorTarget: "personal-error",
-              formatMode: "html"
+              formatMode: "none"
             }
           },
           {
@@ -2033,7 +2033,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 950, y: 100 },
             data: {
-              messageText: "❌ **ОШИБКА ВВОДА ПЕРСОНАЛЬНЫХ ДАННЫХ**\n\nПожалуйста, укажите корректное полное имя.\n\n**Требования:**\n• Минимум 3 символа\n• Максимум 100 символов\n• Только буквы и пробелы",
+              messageText: "❌ ОШИБКА ВВОДА ПЕРСОНАЛЬНЫХ ДАННЫХ\n\nПожалуйста, укажите корректное полное имя.\n\nТребования:\n• Минимум 3 символа\n• Максимум 100 символов\n• Только буквы и пробелы",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2049,8 +2049,8 @@ export async function seedDefaultTemplates() {
                   target: "position-info"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2058,7 +2058,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 700, y: 250 },
             data: {
-              messageText: "💼 **РАЗДЕЛ 2: ДОЛЖНОСТЬ И ОТДЕЛ**\n\n**Укажите вашу текущую должность:**\n\n*Пример: Ведущий разработчик / Менеджер проектов / Системный аналитик*\n\n📝 Укажите полное название должности",
+              messageText: "💼 РАЗДЕЛ 2: ДОЛЖНОСТЬ И ОТДЕЛ\n\nУкажите вашу текущую должность:\n\nПример: Ведущий разработчик / Менеджер проектов / Системный аналитик\n\n📝 Укажите полное название должности",
               responseType: "text",
               inputType: "text",
               inputVariable: "position_title",
@@ -2073,7 +2073,7 @@ export async function seedDefaultTemplates() {
               placeholder: "Название должности",
               successTarget: "department-choice",
               errorTarget: "position-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2081,7 +2081,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 950, y: 250 },
             data: {
-              messageText: "❌ **ОШИБКА ВВОДА ДОЛЖНОСТИ**\n\nПожалуйста, укажите корректное название должности.\n\n**Требования:**\n• Минимум 3 символа\n• Максимум 150 символов",
+              messageText: "❌ ОШИБКА ВВОДА ДОЛЖНОСТИ\n\nПожалуйста, укажите корректное название должности.\n\nТребования:\n• Минимум 3 символа\n• Максимум 150 символов",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2097,8 +2097,8 @@ export async function seedDefaultTemplates() {
                   target: "department-choice"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2106,7 +2106,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 700, y: 400 },
             data: {
-              messageText: "🏢 **РАЗДЕЛ 3: ОТДЕЛ/ПОДРАЗДЕЛЕНИЕ**\n\n**Выберите ваш отдел:**\n\nЕсли вашего отдела нет в списке, выберите \"Другое\"",
+              messageText: "🏢 РАЗДЕЛ 3: ОТДЕЛ/ПОДРАЗДЕЛЕНИЕ\n\nВыберите ваш отдел:\n\nЕсли вашего отдела нет в списке, выберите \"Другое\"",
               responseType: "buttons",
               responseOptions: [
                 {
@@ -2156,7 +2156,7 @@ export async function seedDefaultTemplates() {
               saveToDatabase: true,
               successTarget: "experience-level",
               errorTarget: "department-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2164,7 +2164,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 950, y: 400 },
             data: {
-              messageText: "❌ **ОШИБКА ВЫБОРА ОТДЕЛА**\n\nПожалуйста, выберите ваш отдел из предложенных вариантов.",
+              messageText: "❌ ОШИБКА ВЫБОРА ОТДЕЛА\n\nПожалуйста, выберите ваш отдел из предложенных вариантов.",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2180,8 +2180,8 @@ export async function seedDefaultTemplates() {
                   target: "experience-level"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2189,7 +2189,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 700, y: 550 },
             data: {
-              messageText: "⭐ **РАЗДЕЛ 4: ОПЫТ РАБОТЫ**\n\n**Укажите ваш уровень опыта:**\n\nВыберите наиболее подходящий вариант",
+              messageText: "⭐ РАЗДЕЛ 4: ОПЫТ РАБОТЫ\n\nУкажите ваш уровень опыта:\n\nВыберите наиболее подходящий вариант",
               responseType: "buttons",
               responseOptions: [
                 {
@@ -2224,7 +2224,7 @@ export async function seedDefaultTemplates() {
               saveToDatabase: true,
               successTarget: "company-info",
               errorTarget: "experience-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2232,7 +2232,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 950, y: 550 },
             data: {
-              messageText: "❌ **ОШИБКА ВЫБОРА ОПЫТА**\n\nПожалуйста, выберите ваш уровень опыта из предложенных вариантов.",
+              messageText: "❌ ОШИБКА ВЫБОРА ОПЫТА\n\nПожалуйста, выберите ваш уровень опыта из предложенных вариантов.",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2248,8 +2248,8 @@ export async function seedDefaultTemplates() {
                   target: "company-info"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2257,7 +2257,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1100, y: 100 },
             data: {
-              messageText: "🏢 **РАЗДЕЛ 5: ИНФОРМАЦИЯ О КОМПАНИИ**\n\n**Укажите название вашей компании:**\n\n*Пример: ООО \"Технологические решения\" / АО \"Инновации\" / ИП Иванов И.И.*\n\n📝 Полное или сокращенное наименование",
+              messageText: "🏢 РАЗДЕЛ 5: ИНФОРМАЦИЯ О КОМПАНИИ\n\nУкажите название вашей компании:\n\nПример: ООО \"Технологические решения\" / АО \"Инновации\" / ИП Иванов И.И.\n\n📝 Полное или сокращенное наименование",
               responseType: "text",
               inputType: "text",
               inputVariable: "company_name",
@@ -2272,7 +2272,7 @@ export async function seedDefaultTemplates() {
               placeholder: "Название компании",
               successTarget: "company-size",
               errorTarget: "company-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2280,7 +2280,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1350, y: 100 },
             data: {
-              messageText: "❌ **ОШИБКА ВВОДА КОМПАНИИ**\n\nПожалуйста, укажите корректное название компании.\n\n**Требования:**\n• Минимум 2 символа\n• Максимум 200 символов",
+              messageText: "❌ ОШИБКА ВВОДА КОМПАНИИ\n\nПожалуйста, укажите корректное название компании.\n\nТребования:\n• Минимум 2 символа\n• Максимум 200 символов",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2296,8 +2296,8 @@ export async function seedDefaultTemplates() {
                   target: "company-size"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2305,7 +2305,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1100, y: 250 },
             data: {
-              messageText: "📊 **РАЗДЕЛ 6: РАЗМЕР КОМПАНИИ**\n\n**Выберите размер вашей компании:**\n\nУкажите примерное количество сотрудников",
+              messageText: "📊 РАЗДЕЛ 6: РАЗМЕР КОМПАНИИ\n\nВыберите размер вашей компании:\n\nУкажите примерное количество сотрудников",
               responseType: "buttons",
               responseOptions: [
                 {
@@ -2340,7 +2340,7 @@ export async function seedDefaultTemplates() {
               saveToDatabase: true,
               successTarget: "project-info",
               errorTarget: "size-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2348,7 +2348,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1350, y: 250 },
             data: {
-              messageText: "❌ **ОШИБКА ВЫБОРА РАЗМЕРА**\n\nПожалуйста, выберите размер компании из предложенных вариантов.",
+              messageText: "❌ ОШИБКА ВЫБОРА РАЗМЕРА\n\nПожалуйста, выберите размер компании из предложенных вариантов.",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2364,8 +2364,8 @@ export async function seedDefaultTemplates() {
                   target: "project-info"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2373,7 +2373,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1100, y: 400 },
             data: {
-              messageText: "📋 **РАЗДЕЛ 7: ТЕКУЩИЕ ПРОЕКТЫ**\n\n**Опишите ваши текущие проекты:**\n\n*Пример: Разработка CRM-системы, внедрение системы аналитики, автоматизация бизнес-процессов*\n\n📝 Укажите 2-3 основных проекта",
+              messageText: "📋 РАЗДЕЛ 7: ТЕКУЩИЕ ПРОЕКТЫ\n\nОпишите ваши текущие проекты:\n\nПример: Разработка CRM-системы, внедрение системы аналитики, автоматизация бизнес-процессов\n\n📝 Укажите 2-3 основных проекта",
               responseType: "text",
               inputType: "text",
               inputVariable: "current_projects",
@@ -2388,7 +2388,7 @@ export async function seedDefaultTemplates() {
               placeholder: "Описание текущих проектов...",
               successTarget: "goals-objectives",
               errorTarget: "project-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2396,7 +2396,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1350, y: 400 },
             data: {
-              messageText: "❌ **ОШИБКА ВВОДА ПРОЕКТОВ**\n\nПожалуйста, опишите ваши проекты более подробно.\n\n**Требования:**\n• Минимум 10 символов\n• Максимум 1000 символов",
+              messageText: "❌ ОШИБКА ВВОДА ПРОЕКТОВ\n\nПожалуйста, опишите ваши проекты более подробно.\n\nТребования:\n• Минимум 10 символов\n• Максимум 1000 символов",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2412,8 +2412,8 @@ export async function seedDefaultTemplates() {
                   target: "goals-objectives"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2421,7 +2421,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1100, y: 550 },
             data: {
-              messageText: "🎯 **РАЗДЕЛ 8: ЦЕЛИ И ЗАДАЧИ**\n\n**Опишите ваши профессиональные цели:**\n\n*Пример: Развитие в области машинного обучения, получение сертификации, повышение до тимлида*\n\n📝 Укажите краткосрочные и долгосрочные цели",
+              messageText: "🎯 РАЗДЕЛ 8: ЦЕЛИ И ЗАДАЧИ\n\nОпишите ваши профессиональные цели:\n\nПример: Развитие в области машинного обучения, получение сертификации, повышение до тимлида\n\n📝 Укажите краткосрочные и долгосрочные цели",
               responseType: "text",
               inputType: "text",
               inputVariable: "professional_goals",
@@ -2436,7 +2436,7 @@ export async function seedDefaultTemplates() {
               placeholder: "Профессиональные цели и задачи...",
               successTarget: "contact-info",
               errorTarget: "goals-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2444,7 +2444,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1350, y: 550 },
             data: {
-              messageText: "❌ **ОШИБКА ВВОДА ЦЕЛЕЙ**\n\nПожалуйста, опишите ваши цели более подробно.\n\n**Требования:**\n• Минимум 10 символов\n• Максимум 800 символов",
+              messageText: "❌ ОШИБКА ВВОДА ЦЕЛЕЙ\n\nПожалуйста, опишите ваши цели более подробно.\n\nТребования:\n• Минимум 10 символов\n• Максимум 800 символов",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2460,8 +2460,8 @@ export async function seedDefaultTemplates() {
                   target: "contact-info"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2469,7 +2469,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1500, y: 100 },
             data: {
-              messageText: "📞 **РАЗДЕЛ 9: КОНТАКТНАЯ ИНФОРМАЦИЯ**\n\n**Укажите ваш рабочий email:**\n\n*Пример: ivan.ivanov@company.com*\n\n📧 Корпоративный или основной email для связи",
+              messageText: "📞 РАЗДЕЛ 9: КОНТАКТНАЯ ИНФОРМАЦИЯ\n\nУкажите ваш рабочий email:\n\nПример: ivan.ivanov@company.com\n\n📧 Корпоративный или основной email для связи",
               responseType: "text",
               inputType: "email",
               inputVariable: "work_email",
@@ -2484,7 +2484,7 @@ export async function seedDefaultTemplates() {
               placeholder: "email@company.com",
               successTarget: "phone-info",
               errorTarget: "contact-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2492,7 +2492,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1750, y: 100 },
             data: {
-              messageText: "❌ **ОШИБКА ВВОДА EMAIL**\n\nПожалуйста, укажите корректный email адрес.\n\n**Требования:**\n• Формат: name@domain.com\n• Минимум 5 символов\n• Максимум 150 символов",
+              messageText: "❌ ОШИБКА ВВОДА EMAIL\n\nПожалуйста, укажите корректный email адрес.\n\nТребования:\n• Формат: name@domain.com\n• Минимум 5 символов\n• Максимум 150 символов",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2508,8 +2508,8 @@ export async function seedDefaultTemplates() {
                   target: "phone-info"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2517,7 +2517,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1500, y: 250 },
             data: {
-              messageText: "📱 **РАЗДЕЛ 10: ТЕЛЕФОН**\n\n**Укажите ваш рабочий телефон:**\n\n*Пример: +7 (999) 123-45-67*\n\n📞 Рабочий или мобильный телефон для связи",
+              messageText: "📱 РАЗДЕЛ 10: ТЕЛЕФОН\n\nУкажите ваш рабочий телефон:\n\nПример: +7 (999) 123-45-67\n\n📞 Рабочий или мобильный телефон для связи",
               responseType: "text",
               inputType: "phone",
               inputVariable: "work_phone",
@@ -2532,7 +2532,7 @@ export async function seedDefaultTemplates() {
               placeholder: "+7 (999) 123-45-67",
               successTarget: "additional-info",
               errorTarget: "phone-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2540,7 +2540,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1750, y: 250 },
             data: {
-              messageText: "❌ **ОШИБКА ВВОДА ТЕЛЕФОНА**\n\nПожалуйста, укажите корректный номер телефона.\n\n**Требования:**\n• Формат: +7 (999) 123-45-67\n• Минимум 10 символов\n• Максимум 20 символов",
+              messageText: "❌ ОШИБКА ВВОДА ТЕЛЕФОНА\n\nПожалуйста, укажите корректный номер телефона.\n\nТребования:\n• Формат: +7 (999) 123-45-67\n• Минимум 10 символов\n• Максимум 20 символов",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2556,8 +2556,8 @@ export async function seedDefaultTemplates() {
                   target: "additional-info"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2565,7 +2565,7 @@ export async function seedDefaultTemplates() {
             type: "user-input",
             position: { x: 1500, y: 400 },
             data: {
-              messageText: "📝 **РАЗДЕЛ 11: ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ**\n\n**Есть ли что-то еще, что вы хотели бы добавить?**\n\n*Пример: Навыки, сертификаты, интересные проекты, предложения по улучшению*\n\n💡 Любая дополнительная информация о вас или вашей работе",
+              messageText: "📝 РАЗДЕЛ 11: ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ\n\nЕсть ли что-то еще, что вы хотели бы добавить?\n\nПример: Навыки, сертификаты, интересные проекты, предложения по улучшению\n\n💡 Любая дополнительная информация о вас или вашей работе",
               responseType: "text",
               inputType: "text",
               inputVariable: "additional_notes",
@@ -2580,7 +2580,7 @@ export async function seedDefaultTemplates() {
               placeholder: "Дополнительная информация (необязательно)...",
               successTarget: "final-review",
               errorTarget: "additional-error",
-              formatMode: "markdown"
+              formatMode: "none"
             }
           },
           {
@@ -2588,7 +2588,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1750, y: 400 },
             data: {
-              messageText: "❌ **ОШИБКА ДОПОЛНИТЕЛЬНОЙ ИНФОРМАЦИИ**\n\nСлишком много текста.\n\n**Требования:**\n• Максимум 1000 символов",
+              messageText: "❌ ОШИБКА ДОПОЛНИТЕЛЬНОЙ ИНФОРМАЦИИ\n\nСлишком много текста.\n\nТребования:\n• Максимум 1000 символов",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2604,8 +2604,8 @@ export async function seedDefaultTemplates() {
                   target: "final-review"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2613,7 +2613,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1500, y: 550 },
             data: {
-              messageText: "🎉 **СБОР ИНФОРМАЦИИ ЗАВЕРШЕН!**\n\n✅ **Собранные данные:**\n• 👤 Персональные данные\n• 💼 Профессиональная информация\n• 🏢 Данные о компании\n• 📊 Проекты и цели\n• 📞 Контактная информация\n\n🔄 **Что делать дальше:**\n• Данные сохранены в системе\n• Вы получите подтверждение на email\n• Можете обновить данные в любое время\n\n**Спасибо за участие!**",
+              messageText: "🎉 СБОР ИНФОРМАЦИИ ЗАВЕРШЕН!\n\n✅ Собранные данные:\n• 👤 Персональные данные\n• 💼 Профессиональная информация\n• 🏢 Данные о компании\n• 📊 Проекты и цели\n• 📞 Контактная информация\n\n🔄 Что делать дальше:\n• Данные сохранены в системе\n• Вы получите подтверждение на email\n• Можете обновить данные в любое время\n\nСпасибо за участие!",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2641,8 +2641,8 @@ export async function seedDefaultTemplates() {
                   target: "/menu"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2650,7 +2650,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1800, y: 450 },
             data: {
-              messageText: "📄 **СКАЧИВАНИЕ PDF ОТЧЕТА**\n\n🔄 **Генерируем отчет...**\n\n📊 **Отчет будет содержать:**\n• Все введенные данные\n• Структурированный вид\n• Timestamp создания\n• Подпись системы\n\n⏱️ Готовность через 10-15 секунд",
+              messageText: "📄 СКАЧИВАНИЕ PDF ОТЧЕТА\n\n🔄 Генерируем отчет...\n\n📊 Отчет будет содержать:\n• Все введенные данные\n• Структурированный вид\n• Timestamp создания\n• Подпись системы\n\n⏱️ Готовность через 10-15 секунд",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2666,8 +2666,8 @@ export async function seedDefaultTemplates() {
                   target: "final-review"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           },
           {
@@ -2675,7 +2675,7 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 1800, y: 550 },
             data: {
-              messageText: "📧 **ОТПРАВКА НА EMAIL**\n\n✅ **Письмо отправлено на:**\n{work_email}\n\n📬 **Содержимое письма:**\n• Полный отчет с данными\n• Ссылка для редактирования\n• Контакты для обратной связи\n\n⏱️ Проверьте почту в течение 5 минут",
+              messageText: "📧 ОТПРАВКА НА EMAIL\n\n✅ Письмо отправлено на:\n{work_email}\n\n📬 Содержимое письма:\n• Полный отчет с данными\n• Ссылка для редактирования\n• Контакты для обратной связи\n\n⏱️ Проверьте почту в течение 5 минут",
               keyboardType: "inline",
               buttons: [
                 {
@@ -2691,8 +2691,8 @@ export async function seedDefaultTemplates() {
                   target: "email-confirmation"
                 }
               ],
-              markdown: true,
-              formatMode: "markdown"
+              formatMode: "none",
+              formatMode: "none"
             }
           }
         ],
