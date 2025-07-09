@@ -607,21 +607,69 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
 
   // Компоненты для layout
   const headerContent = (
-    <AdaptiveHeader
-      config={{
-        headerPosition: 'top',
-        compactMode: flexibleLayoutConfig.compactMode
-      } as any}
-      projectName="Шаблоны ботов"
-      currentTab={currentTab as any}
-      onTabChange={() => {}} // Не используется в шаблонах
-      onSave={() => {}} // Не используется в шаблонах
-      onExport={() => {}} // Добавлено обязательное поле
-      onSaveAsTemplate={() => {}} // Не используется в шаблонах
-      onLoadTemplate={() => setLocation('/')} // Назад к редактору
-      onLayoutSettings={() => {}} // Не используется в шаблонах
-      isSaving={false}
-    />
+    <div className="h-16 bg-background border-b border-border px-6 flex items-center justify-between">
+      {/* Левая часть - логотип и навигация */}
+      <div className="flex items-center space-x-6">
+        {/* Логотип и название */}
+        <div className="flex items-center space-x-3">
+          <div className="bg-primary rounded-lg w-8 h-8 flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">Шаблоны ботов</h1>
+            <p className="text-xs text-muted-foreground">Выберите готовый шаблон</p>
+          </div>
+        </div>
+
+        {/* Навигация по табам */}
+        <nav className="flex items-center space-x-1">
+          {[
+            { key: 'all', label: 'Все шаблоны', icon: Filter },
+            { key: 'featured', label: 'Рекомендуемые', icon: Crown },
+            { key: 'popular', label: 'Популярные', icon: TrendingUp },
+            { key: 'my', label: 'Мои шаблоны', icon: User }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = currentTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setCurrentTab(tab.key)}
+                className={`
+                  relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 
+                  flex items-center gap-2 group
+                  ${isActive 
+                    ? 'text-primary bg-primary/10 shadow-sm ring-1 ring-primary/20' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }
+                `}
+              >
+                <Icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${
+                  isActive ? 'text-primary' : ''
+                }`} />
+                {tab.label}
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-lg -z-10" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Правая часть - действия */}
+      <div className="flex items-center space-x-3">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setLocation('/')}
+          className="transition-all hover:scale-105"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Назад к редактору
+        </Button>
+      </div>
+    </div>
   );
 
   const sidebarContent = (
