@@ -512,13 +512,98 @@ async def handle_response_age_buttons_0(callback_query: types.CallbackQuery):
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -609,13 +694,98 @@ async def handle_response_age_buttons_1(callback_query: types.CallbackQuery):
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -706,13 +876,98 @@ async def handle_response_age_buttons_2(callback_query: types.CallbackQuery):
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -803,13 +1058,98 @@ async def handle_response_age_buttons_3(callback_query: types.CallbackQuery):
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -900,13 +1240,98 @@ async def handle_response_age_buttons_4(callback_query: types.CallbackQuery):
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -997,13 +1422,98 @@ async def handle_response_interests_multiple_0(callback_query: types.CallbackQue
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1094,13 +1604,98 @@ async def handle_response_interests_multiple_1(callback_query: types.CallbackQue
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1191,13 +1786,98 @@ async def handle_response_interests_multiple_2(callback_query: types.CallbackQue
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1288,13 +1968,98 @@ async def handle_response_interests_multiple_3(callback_query: types.CallbackQue
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1385,13 +2150,98 @@ async def handle_response_interests_multiple_4(callback_query: types.CallbackQue
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1482,13 +2332,98 @@ async def handle_response_interests_multiple_5(callback_query: types.CallbackQue
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1579,13 +2514,98 @@ async def handle_response_interests_multiple_6(callback_query: types.CallbackQue
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1676,13 +2696,98 @@ async def handle_response_experience_rating_0(callback_query: types.CallbackQuer
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1773,13 +2878,98 @@ async def handle_response_experience_rating_1(callback_query: types.CallbackQuer
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1870,13 +3060,98 @@ async def handle_response_experience_rating_2(callback_query: types.CallbackQuer
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -1967,13 +3242,98 @@ async def handle_response_experience_rating_3(callback_query: types.CallbackQuer
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
@@ -2064,13 +3424,98 @@ async def handle_response_experience_rating_4(callback_query: types.CallbackQuer
     
     # Обработка множественного выбора
     if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
+        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
+        if selected_value == "done":
+            # Завершаем множественный выбор
+            if len(config["selected"]) > 0:
+                # Сохраняем все выбранные элементы
+                variable_name = config.get("variable", "user_response")
+                import datetime
+                timestamp = datetime.datetime.now().isoformat()
+                node_id = config.get("node_id", "unknown")
+                
+                # Создаем структурированный ответ для множественного выбора
+                response_data = {
+                    "value": [item["value"] for item in config["selected"]],
+                    "text": [item["text"] for item in config["selected"]],
+                    "type": "multiple_choice",
+                    "timestamp": timestamp,
+                    "nodeId": node_id,
+                    "variable": variable_name
+                }
+                
+                # Сохраняем в пользовательские данные
+                user_data[user_id][variable_name] = response_data
+                
+                # Сохраняем в базу данных если включено
+                if config.get("save_to_database"):
+                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                    if saved_to_db:
+                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
+                    else:
+                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+                
+                # Отправляем сообщение об успехе
+                success_message = config.get("success_message", "Спасибо за ваш выбор!")
+                selected_items = ", ".join([item["text"] for item in config["selected"]])
+                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
+                
+                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
+                
+                # Очищаем состояние
+                del user_data[user_id]["button_response_config"]
+                
+                # Автоматическая навигация к следующему узлу
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start-1":
+                            await handle_callback_start_1(callback_query)
+                        elif next_node_id == "name-input":
+                            await handle_callback_name_input(callback_query)
+                        elif next_node_id == "name-error":
+                            await handle_callback_name_error(callback_query)
+                        elif next_node_id == "age-buttons":
+                            await handle_callback_age_buttons(callback_query)
+                        elif next_node_id == "age-error":
+                            await handle_callback_age_error(callback_query)
+                        elif next_node_id == "interests-multiple":
+                            await handle_callback_interests_multiple(callback_query)
+                        elif next_node_id == "interests-error":
+                            await handle_callback_interests_error(callback_query)
+                        elif next_node_id == "contact-input":
+                            await handle_callback_contact_input(callback_query)
+                        elif next_node_id == "contact-error":
+                            await handle_callback_contact_error(callback_query)
+                        elif next_node_id == "experience-rating":
+                            await handle_callback_experience_rating(callback_query)
+                        elif next_node_id == "rating-error":
+                            await handle_callback_rating_error(callback_query)
+                        elif next_node_id == "final-comment":
+                            await handle_callback_final_comment(callback_query)
+                        elif next_node_id == "comment-error":
+                            await handle_callback_comment_error(callback_query)
+                        elif next_node_id == "final-results":
+                            await handle_callback_final_results(callback_query)
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+                return
+            else:
+                # Если ничего не выбрано, показываем предупреждение
+                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
+                return
         else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
+            # Обычная логика множественного выбора
+            if selected_value not in config["selected"]:
+                config["selected"].append({"text": selected_text, "value": selected_value})
+                await callback_query.answer(f"✅ Выбрано: {selected_text}")
+            else:
+                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
+                await callback_query.answer(f"❌ Убрано: {selected_text}")
+            return  # Не завершаем сбор, позволяем выбрать еще
     
     # Сохраняем одиночный выбор
     variable_name = config.get("variable", "user_response")
