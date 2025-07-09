@@ -494,15 +494,45 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     </TableCell>
                     <TableCell>{user.interactionCount || user.interaction_count || 0}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">
-                          {((user.userData || user.user_data) && Object.keys(user.userData || user.user_data).length > 0) ? 
-                            Object.keys(user.userData || user.user_data).filter(key => key.startsWith('response_')).length : 0}
-                        </span>
-                        {((user.userData || user.user_data) && Object.keys(user.userData || user.user_data).filter(key => key.startsWith('response_')).length > 0) && (
-                          <Badge variant="outline" className="text-xs">
-                            Есть ответы
-                          </Badge>
+                      <div className="max-w-xs">
+                        {((user.userData || user.user_data) && Object.keys(user.userData || user.user_data).length > 0) ? (
+                          <div className="space-y-1">
+                            {Object.entries(user.userData || user.user_data).slice(0, 2).map(([key, value]) => {
+                              // Parse value if it's a string (from PostgreSQL)
+                              let responseData = value;
+                              if (typeof value === 'string') {
+                                try {
+                                  responseData = JSON.parse(value);
+                                } catch {
+                                  responseData = { value: value, type: 'text' };
+                                }
+                              }
+                              
+                              return (
+                                <div key={key} className="text-xs bg-muted/50 rounded p-2">
+                                  <div className="font-medium text-blue-600 dark:text-blue-400 mb-1">
+                                    {responseData?.prompt ? 
+                                      (responseData.prompt.length > 40 ? `${responseData.prompt.substring(0, 40)}...` : responseData.prompt) :
+                                      (key.startsWith('response_') ? key.replace('response_', 'Вопрос ') : key)
+                                    }
+                                  </div>
+                                  <div className="text-foreground font-medium">
+                                    {responseData?.value ? 
+                                      (responseData.value.length > 30 ? `${responseData.value.substring(0, 30)}...` : responseData.value) :
+                                      (typeof value === 'string' ? (value.length > 30 ? `${value.substring(0, 30)}...` : value) : JSON.stringify(value))
+                                    }
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {Object.keys(user.userData || user.user_data).length > 2 && (
+                              <div className="text-xs text-muted-foreground">
+                                +{Object.keys(user.userData || user.user_data).length - 2} еще...
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Нет ответов</span>
                         )}
                       </div>
                     </TableCell>
