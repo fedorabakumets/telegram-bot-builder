@@ -637,8 +637,14 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               {/* Enhanced user responses section */}
               {((selectedUser.userData || selectedUser.user_data) && Object.keys(selectedUser.userData || selectedUser.user_data).length > 0) && (
                 <div>
-                  <Label className="text-sm font-medium">Ответы пользователя</Label>
-                  <div className="mt-2 space-y-3">
+                  <div className="flex items-center gap-2 mb-4">
+                    <MessageSquare className="w-5 h-5 text-primary" />
+                    <Label className="text-base font-semibold">Ответы пользователя</Label>
+                    <Badge variant="secondary" className="text-xs">
+                      {Object.keys(selectedUser.userData || selectedUser.user_data).length}
+                    </Badge>
+                  </div>
+                  <div className="space-y-4">
                     {Object.entries(selectedUser.userData || selectedUser.user_data).map(([key, value]) => {
                       // Parse value if it's a string (from PostgreSQL)
                       let responseData = value;
@@ -651,56 +657,105 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                       }
                       
                       return (
-                        <div key={key} className="border rounded-lg p-4 bg-muted/50 hover:bg-muted/70 transition-colors">
+                        <div key={key} className="border rounded-lg p-4 bg-gradient-to-br from-muted/30 to-muted/60 hover:from-muted/50 hover:to-muted/80 transition-all duration-200 shadow-sm hover:shadow-md">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-foreground">
-                                {key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-green-500"></div>
+                                <span className="text-sm font-medium text-foreground">
+                                  {key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key}
+                                </span>
+                              </div>
                               {responseData?.type && (
-                                <Badge variant="outline" className="text-xs">
-                                  {responseData.type === 'text' ? 'Текст' : 
-                                   responseData.type === 'number' ? 'Число' :
-                                   responseData.type === 'email' ? 'Email' :
-                                   responseData.type === 'phone' ? 'Телефон' :
+                                <Badge variant="outline" className="text-xs border-primary/20 text-primary">
+                                  {responseData.type === 'text' ? '📝 Текст' : 
+                                   responseData.type === 'number' ? '🔢 Число' :
+                                   responseData.type === 'email' ? '📧 Email' :
+                                   responseData.type === 'phone' ? '📞 Телефон' :
                                    responseData.type}
                                 </Badge>
                               )}
                             </div>
-                            <span className="text-xs text-muted-foreground">
-                              {responseData?.timestamp 
-                                ? formatDate(responseData.timestamp) 
-                                : 'Недавно'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground font-medium">
+                                {responseData?.timestamp 
+                                  ? formatDate(responseData.timestamp) 
+                                  : 'Недавно'}
+                              </span>
+                            </div>
                           </div>
                           
                           <div className="text-sm">
                             {responseData?.value ? (
-                              <div className="bg-background rounded p-3 border">
-                                <div className="font-medium text-foreground mb-1">Ответ:</div>
-                                <div className="text-foreground">{responseData.value}</div>
-                                {responseData.nodeId && (
-                                  <div className="text-xs text-muted-foreground mt-2">
-                                    ID узла: {responseData.nodeId}
+                              <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
+                                {/* Показываем вопрос если есть */}
+                                {responseData.prompt ? (
+                                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                      <span className="font-medium text-blue-900 dark:text-blue-100">Вопрос:</span>
+                                    </div>
+                                    <div className="text-blue-800 dark:text-blue-200 leading-relaxed">
+                                      {responseData.prompt}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900/20 rounded-lg border border-gray-200 dark:border-gray-800">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <MessageSquare className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                      <span className="font-medium text-gray-900 dark:text-gray-100">Вопрос:</span>
+                                    </div>
+                                    <div className="text-gray-600 dark:text-gray-400 leading-relaxed italic">
+                                      {key.startsWith('response_') 
+                                        ? `Ответ на вопрос ${key.replace('response_', '')}`
+                                        : 'Информация о вопросе отсутствует'}
+                                    </div>
                                   </div>
                                 )}
-                                {responseData.prompt && (
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    Вопрос: {responseData.prompt}
+                                
+                                {/* Показываем ответ */}
+                                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Edit className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                    <span className="font-medium text-green-900 dark:text-green-100">Ответ:</span>
+                                  </div>
+                                  <div className="text-green-800 dark:text-green-200 leading-relaxed font-medium">
+                                    {responseData.value}
+                                  </div>
+                                </div>
+                                
+                                {/* Дополнительная информация */}
+                                {responseData.nodeId && (
+                                  <div className="mt-3 pt-3 border-t border-border">
+                                    <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                      <span className="inline-block w-2 h-2 bg-muted-foreground rounded-full"></span>
+                                      ID узла: {responseData.nodeId}
+                                    </div>
                                   </div>
                                 )}
                               </div>
                             ) : typeof value === 'object' && value !== null ? (
-                              <div className="bg-background rounded p-3 border">
-                                <div className="font-medium text-foreground mb-1">Данные:</div>
-                                <pre className="text-xs text-muted-foreground overflow-auto">
-                                  {JSON.stringify(value, null, 2)}
-                                </pre>
+                              <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <Settings className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                                  <span className="font-medium text-orange-900 dark:text-orange-100">Системные данные:</span>
+                                </div>
+                                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 p-3">
+                                  <pre className="text-xs text-orange-800 dark:text-orange-200 overflow-auto whitespace-pre-wrap">
+                                    {JSON.stringify(value, null, 2)}
+                                  </pre>
+                                </div>
                               </div>
                             ) : (
-                              <div className="bg-background rounded p-3 border">
-                                <div className="font-medium text-foreground mb-1">Значение:</div>
-                                <div className="text-foreground">{String(value)}</div>
+                              <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <Eye className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                  <span className="font-medium text-purple-900 dark:text-purple-100">Значение:</span>
+                                </div>
+                                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 p-3">
+                                  <div className="text-purple-800 dark:text-purple-200 leading-relaxed">{String(value)}</div>
+                                </div>
                               </div>
                             )}
                           </div>
