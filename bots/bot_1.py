@@ -1,7 +1,9 @@
 """
 Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
-"""
+
+Команды для @BotFather:
+start - Запустить бота"""
 
 import asyncio
 import logging
@@ -195,6 +197,14 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
     }
 
 
+# Настройка меню команд
+async def set_bot_commands():
+    commands = [
+        BotCommand(command="start", description="Запустить бота"),
+    ]
+    await bot.set_my_commands(commands)
+
+
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
 
@@ -219,74 +229,9 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = """🚀 Привет! Я твой первый бот!
-
-Ты можешь написать:
-• /start - чтобы запустить меня
-• старт - это тоже работает!
-
-Выбери действие:"""
-    
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="ℹ️ Информация"))
-    builder.add(KeyboardButton(text="❓ Помощь"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=keyboard)
-
-# Обработчики синонимов команд
-
-@dp.message(lambda message: message.text and message.text.lower() == "старт")
-async def start_synonym_старт_handler(message: types.Message):
-    # Синоним для команды /start
-    await start_handler(message)
-
-# Обработчики reply кнопок
-
-@dp.message(lambda message: message.text == "ℹ️ Информация")
-async def handle_reply_btn_info(message: types.Message):
-    text = """📋 **Информация о боте:**
-
-Это простой бот-пример, который показывает:
-• Как работают команды
-• Как использовать синонимы
-• Базовую навигацию
-
-Теперь ты можешь создать своего!"""
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="◀️ Назад"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
-
-@dp.message(lambda message: message.text == "❓ Помощь")
-async def handle_reply_btn_help(message: types.Message):
-    text = """❓ **Справка:**
-
-🔤 **Команды:**
-• /start или старт - запуск бота
-
-🎯 **Советы:**
-• Используй кнопки для навигации
-• Синонимы делают бота удобнее
-• Экспериментируй с настройками!"""
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="◀️ Назад"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
-
-@dp.message(lambda message: message.text == "◀️ Назад")
-async def handle_reply_btn_back_info(message: types.Message):
-    text = """🚀 Привет! Я твой первый бот!
-
-Ты можешь написать:
-• /start - чтобы запустить меня
-• старт - это тоже работает!
-
-Выбери действие:"""
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="ℹ️ Информация"))
-    builder.add(KeyboardButton(text="❓ Помощь"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)
-    await message.answer(text, reply_markup=keyboard)
+    text = "Привет! Добро пожаловать!"
+    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 
 # Универсальный обработчик пользовательского ввода
@@ -375,6 +320,7 @@ async def handle_user_input(message: types.Message):
 async def main():
     # Инициализируем базу данных
     await init_database()
+    await set_bot_commands()
     print("🤖 Бот запущен и готов к работе!")
     await dp.start_polling(bot)
 

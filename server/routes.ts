@@ -2336,25 +2336,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // User Bot Data Management endpoints
   
-  // Get all user data for a project
+  // Get all user data for a project from bot_users table (real bot data)
   app.get("/api/projects/:id/users", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
-      const users = await storage.getUserBotDataByProject(projectId);
-      res.json(users);
+      
+      // Подключаемся напрямую к PostgreSQL для получения данных из bot_users
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      const result = await pool.query(
+        `SELECT 
+          user_id, 
+          username, 
+          first_name, 
+          last_name, 
+          registered_at, 
+          last_interaction, 
+          interaction_count, 
+          user_data, 
+          is_active 
+        FROM bot_users 
+        ORDER BY last_interaction DESC LIMIT 100`
+      );
+      
+      await pool.end();
+      res.json(result.rows);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user data" });
+      console.error("Ошибка получения пользователей из bot_users:", error);
+      // Fallback to regular user data if bot_users table doesn't exist
+      try {
+        const users = await storage.getUserBotDataByProject(projectId);
+        res.json(users);
+      } catch (fallbackError) {
+        res.status(500).json({ message: "Failed to fetch user data" });
+      }
     }
   });
 
-  // Get user data stats for a project
+  // Get user data stats for a project from bot_users table
   app.get("/api/projects/:id/users/stats", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
-      const stats = await storage.getUserBotDataStats(projectId);
+      
+      // Подключаемся напрямую к PostgreSQL для получения статистики из bot_users
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      const result = await pool.query(`
+        SELECT 
+          COUNT(*) as "totalUsers",
+          COUNT(*) FILTER (WHERE is_active = true) as "activeUsers",
+          COUNT(*) FILTER (WHERE is_active = false) as "blockedUsers",
+          0 as "premiumUsers",
+          COALESCE(SUM(interaction_count), 0) as "totalInteractions",
+          COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
+        FROM bot_users
+      `);
+      
+      await pool.end();
+      
+      const stats = result.rows[0];
+      // Преобразуем строки в числа
+      Object.keys(stats).forEach(key => {
+        if (typeof stats[key] === 'string' && !isNaN(stats[key])) {
+          stats[key] = parseInt(stats[key]);
+        }
+      });
+      
       res.json(stats);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch user stats" });
+      console.error("Ошибка получения статистики из bot_users:", error);
+      // Fallback to regular stats if bot_users table doesn't exist
+      try {
+        const stats = await storage.getUserBotDataStats(projectId);
+        res.json(stats);
+      } catch (fallbackError) {
+        res.status(500).json({ message: "Failed to fetch user stats" });
+      }
     }
   });
 
