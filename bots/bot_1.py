@@ -1,9 +1,7 @@
 """
 Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
-
-Команды для @BotFather:
-start - Запустить бота"""
+"""
 
 import asyncio
 import logging
@@ -18,7 +16,7 @@ from datetime import datetime
 import json
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
+BOT_TOKEN = "test_token_for_debug"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -197,14 +195,6 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
     }
 
 
-# Настройка меню команд
-async def set_bot_commands():
-    commands = [
-        BotCommand(command="start", description="Запустить бота"),
-    ]
-    await bot.set_my_commands(commands)
-
-
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
 
@@ -229,16 +219,19 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = "Привет! Добро пожаловать!"
+    text = """Привет! Добро пожаловать в мой бот! 🤖
+
+Я помогу вам протестировать систему ответов."""
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="uo0_xwDSpJ1vH3-fP9obt"))
+    builder.add(InlineKeyboardButton(text="📚 Помощь", callback_data="help-1"))
+    builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="survey-1"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-# Обработчик сбора пользовательского ввода для узла uo0_xwDSpJ1vH3-fP9obt
+# Обработчик сбора пользовательского ввода для узла survey-1
     prompt_text = "Пожалуйста, введите ваш ответ:"
     await message.answer(prompt_text)
     
@@ -249,7 +242,7 @@ async def start_handler(message: types.Message):
     # Ожидаем ответ пользователя
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "text",
-        "variable": "user_response",
+        "variable": "response_name",
         "validation": "",
         "min_length": 0,
         "max_length": 0,
@@ -257,17 +250,31 @@ async def start_handler(message: types.Message):
         "required": True,
         "allow_skip": False,
         "save_to_db": True,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": "Спасибо за ваш ответ!",
+        "retry_message": "Пожалуйста, введите ваше имя (2-50 символов)",
+        "success_message": "Спасибо! Теперь расскажите о себе",
         "default_value": "",
-        "node_id": "uo0_xwDSpJ1vH3-fP9obt"
+        "node_id": "survey-1"
     }
     
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "uo0_xwDSpJ1vH3-fP9obt")
-async def handle_callback_uo0_xwDSpJ1vH3_fP9obt(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "help-1")
+async def handle_callback_help_1(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    text = """Это справочная информация о боте.
+
+Вы можете:
+- Пройти опрос
+- Получить помощь
+- Связаться с поддержкой"""
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🔙 Назад", callback_data="start-1"))
+    keyboard = builder.as_markup()
+    await callback_query.message.edit_text(text, reply_markup=keyboard)
+
+@dp.callback_query(lambda c: c.data == "survey-1")
+async def handle_callback_survey_1(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Удаляем старое сообщение
     await callback_query.message.delete()
@@ -282,7 +289,7 @@ async def handle_callback_uo0_xwDSpJ1vH3_fP9obt(callback_query: types.CallbackQu
     # Настраиваем ожидание ввода
     user_data[callback_query.from_user.id]["waiting_for_input"] = {
         "type": "text",
-        "variable": "user_response",
+        "variable": "response_name",
         "validation": "",
         "min_length": 0,
         "max_length": 0,
@@ -290,10 +297,22 @@ async def handle_callback_uo0_xwDSpJ1vH3_fP9obt(callback_query: types.CallbackQu
         "required": True,
         "allow_skip": False,
         "save_to_database": True,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": "Спасибо за ваш ответ!",
-        "node_id": "uo0_xwDSpJ1vH3-fP9obt"
+        "retry_message": "Пожалуйста, введите ваше имя (2-50 символов)",
+        "success_message": "Спасибо! Теперь расскажите о себе",
+        "node_id": "survey-1"
     }
+
+@dp.callback_query(lambda c: c.data == "start-1")
+async def handle_callback_start_1(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    text = """Привет! Добро пожаловать в мой бот! 🤖
+
+Я помогу вам протестировать систему ответов."""
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="📚 Помощь", callback_data="help-1"))
+    builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="survey-1"))
+    keyboard = builder.as_markup()
+    await callback_query.message.edit_text(text, reply_markup=keyboard)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -397,7 +416,6 @@ async def handle_user_input(message: types.Message):
 async def main():
     # Инициализируем базу данных
     await init_database()
-    await set_bot_commands()
     print("🤖 Бот запущен и готов к работе!")
     await dp.start_polling(bot)
 

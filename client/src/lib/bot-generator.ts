@@ -1156,13 +1156,29 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
 
   code += '\n\n# Запуск бота\n';
   code += 'async def main():\n';
-  code += '    # Инициализируем базу данных\n';
-  code += '    await init_database()\n';
+  code += '    global db_pool\n';
+  code += '    try:\n';
+  code += '        # Инициализируем базу данных\n';
+  code += '        await init_database()\n';
   if (menuCommands.length > 0) {
-    code += '    await set_bot_commands()\n';
+    code += '        await set_bot_commands()\n';
   }
-  code += '    print("🤖 Бот запущен и готов к работе!")\n';
-  code += '    await dp.start_polling(bot)\n\n';
+  code += '        print("🤖 Бот запущен и готов к работе!")\n';
+  code += '        await dp.start_polling(bot)\n';
+  code += '    except KeyboardInterrupt:\n';
+  code += '        print("🛑 Получен сигнал остановки, завершаем работу...")\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Критическая ошибка: {e}")\n';
+  code += '    finally:\n';
+  code += '        # Правильно закрываем все соединения\n';
+  code += '        if db_pool:\n';
+  code += '            await db_pool.close()\n';
+  code += '            print("🔌 Соединение с базой данных закрыто")\n';
+  code += '        \n';
+  code += '        # Закрываем сессию бота\n';
+  code += '        await bot.session.close()\n';
+  code += '        print("🔌 Сессия бота закрыта")\n';
+  code += '        print("✅ Бот корректно завершил работу")\n\n';
   
   code += 'if __name__ == "__main__":\n';
   code += '    asyncio.run(main())\n';
