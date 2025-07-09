@@ -1522,6 +1522,25 @@ export function PropertiesPanel({
                         placeholder="Пожалуйста, введите ваш ответ..."
                       />
                     </div>
+
+                    <div>
+                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                        <i className="fas fa-input mr-1"></i>
+                        Тип ответа
+                      </Label>
+                      <Select
+                        value={selectedNode.data.responseType || 'text'}
+                        onValueChange={(value) => onNodeUpdate(selectedNode.id, { responseType: value })}
+                      >
+                        <SelectTrigger className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text">Текстовый ввод</SelectItem>
+                          <SelectItem value="buttons">Кнопки выбора</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -1567,6 +1586,106 @@ export function PropertiesPanel({
                     </div>
                   </div>
                 </div>
+
+                {/* Response Options Section (only for buttons type) */}
+                {selectedNode.data.responseType === 'buttons' && (
+                  <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-200/30 dark:border-indigo-800/30 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                        <i className="fas fa-list text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                      </div>
+                      <Label className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">Варианты ответов</Label>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300">Кнопки выбора</Label>
+                        <UIButton
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const newOption = {
+                              id: nanoid(),
+                              text: 'Новый вариант',
+                              value: ''
+                            };
+                            const currentOptions = selectedNode.data.responseOptions || [];
+                            onNodeUpdate(selectedNode.id, { 
+                              responseOptions: [...currentOptions, newOption] 
+                            });
+                          }}
+                          className="text-xs text-indigo-600 hover:text-indigo-700 font-medium h-auto p-1"
+                        >
+                          + Добавить вариант
+                        </UIButton>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {(selectedNode.data.responseOptions || []).map((option, index) => (
+                          <div key={option.id} className="bg-card/50 rounded-lg p-3 border border-border/50">
+                            <div className="flex items-center justify-between mb-2">
+                              <Input
+                                value={option.text}
+                                onChange={(e) => {
+                                  const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                  updatedOptions[index] = { ...option, text: e.target.value };
+                                  onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                }}
+                                className="flex-1 text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                placeholder="Текст кнопки"
+                              />
+                              <UIButton
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const updatedOptions = (selectedNode.data.responseOptions || []).filter((_, i) => i !== index);
+                                  onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                }}
+                                className="text-muted-foreground hover:text-destructive h-auto p-1"
+                              >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                              </UIButton>
+                            </div>
+                            <div>
+                              <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1 block">
+                                Значение для сохранения
+                              </Label>
+                              <Input
+                                value={option.value || ''}
+                                onChange={(e) => {
+                                  const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                  updatedOptions[index] = { ...option, value: e.target.value };
+                                  onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                }}
+                                className="text-xs border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200"
+                                placeholder="Значение (если пусто - используется текст кнопки)"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
+                        <div className="flex-1">
+                          <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300">
+                            Множественный выбор
+                          </Label>
+                          <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                            Разрешить выбор нескольких вариантов
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <Switch
+                            checked={selectedNode.data.allowMultipleSelection ?? false}
+                            onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { allowMultipleSelection: checked })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Validation Section */}
                 <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-lg p-4">

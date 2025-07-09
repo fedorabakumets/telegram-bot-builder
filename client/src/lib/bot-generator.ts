@@ -801,12 +801,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
             } else if (targetNode.type === 'user-input') {
               // Handle user-input nodes
-              const inputPrompt = targetNode.data.messageText || "Пожалуйста, введите ваш ответ:";
+              const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
+              const responseType = targetNode.data.responseType || 'text';
               const inputType = targetNode.data.inputType || 'text';
               const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+              const responseOptions = targetNode.data.responseOptions || [];
+              const allowMultipleSelection = targetNode.data.allowMultipleSelection || false;
               const inputValidation = targetNode.data.inputValidation || '';
-              const minLength = targetNode.data.inputMinLength || 0;
-              const maxLength = targetNode.data.inputMaxLength || 0;
+              const minLength = targetNode.data.minLength || 0;
+              const maxLength = targetNode.data.maxLength || 0;
               const inputTimeout = targetNode.data.inputTimeout || 60;
               const inputRequired = targetNode.data.inputRequired !== false;
               const allowSkip = targetNode.data.allowSkip || false;
@@ -827,37 +830,78 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `    text = "${escapedPrompt}"\n`;
               }
               
-              if (placeholder) {
-                code += `    placeholder_text = "${placeholder}"\n`;
-                code += '    text += f"\\n\\n💡 {placeholder_text}"\n';
+              if (responseType === 'buttons' && responseOptions.length > 0) {
+                // Обработка кнопочного ответа
+                code += '    \n';
+                code += '    # Создаем кнопки для выбора ответа\n';
+                code += '    builder = InlineKeyboardBuilder()\n';
+                
+                responseOptions.forEach((option, index) => {
+                  const optionValue = option.value || option.text;
+                  code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
+                });
+                
+                if (allowSkip) {
+                  code += `    builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="skip_${targetNode.id}"))\n`;
+                }
+                
+                code += '    keyboard = builder.as_markup()\n';
+                code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
+                code += '    \n';
+                code += '    # Инициализируем пользовательские данные если их нет\n';
+                code += '    if callback_query.from_user.id not in user_data:\n';
+                code += '        user_data[callback_query.from_user.id] = {}\n';
+                code += '    \n';
+                code += '    # Сохраняем настройки для обработки ответа\n';
+                code += '    user_data[callback_query.from_user.id]["button_response_config"] = {\n';
+                code += `        "node_id": "${targetNode.id}",\n`;
+                code += `        "variable": "${inputVariable}",\n`;
+                code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+                code += `        "success_message": "${inputSuccessMessage}",\n`;
+                code += `        "allow_multiple": ${allowMultipleSelection ? 'True' : 'False'},\n`;
+                code += '        "options": [\n';
+                responseOptions.forEach((option, index) => {
+                  const optionValue = option.value || option.text;
+                  code += `            {"index": ${index}, "text": "${option.text}", "value": "${optionValue}"},\n`;
+                });
+                code += '        ],\n';
+                code += `        "selected": []\n`;
+                code += '    }\n';
+                
+              } else {
+                // Обработка текстового ввода (оригинальная логика)
+                if (placeholder) {
+                  code += `    placeholder_text = "${placeholder}"\n`;
+                  code += '    text += f"\\n\\n💡 {placeholder_text}"\n';
+                }
+                
+                if (allowSkip) {
+                  code += '    text += "\\n\\n⏭️ Нажмите /skip чтобы пропустить"\n';
+                }
+                
+                code += '    await bot.send_message(callback_query.from_user.id, text)\n';
+                code += '    \n';
+                code += '    # Инициализируем пользовательские данные если их нет\n';
+                code += '    if callback_query.from_user.id not in user_data:\n';
+                code += '        user_data[callback_query.from_user.id] = {}\n';
+                code += '    \n';
+                code += '    # Настраиваем ожидание ввода\n';
+                code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+                code += `        "type": "${inputType}",\n`;
+                code += `        "variable": "${inputVariable}",\n`;
+                code += `        "validation": "${inputValidation}",\n`;
+                code += `        "min_length": ${minLength},\n`;
+                code += `        "max_length": ${maxLength},\n`;
+                code += `        "timeout": ${inputTimeout},\n`;
+                code += `        "required": ${inputRequired ? 'True' : 'False'},\n`;
+                code += `        "allow_skip": ${allowSkip ? 'True' : 'False'},\n`;
+                code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+                code += `        "retry_message": "${inputRetryMessage}",\n`;
+                code += `        "success_message": "${inputSuccessMessage}",\n`;
+                code += `        "prompt": "${inputPrompt.replace(/"/g, '\\"')}",\n`;
+                code += `        "node_id": "${targetNode.id}"\n`;
+                code += '    }\n';
               }
-              
-              if (allowSkip) {
-                code += '    text += "\\n\\n⏭️ Нажмите /skip чтобы пропустить"\n';
-              }
-              
-              code += '    await bot.send_message(callback_query.from_user.id, text)\n';
-              code += '    \n';
-              code += '    # Инициализируем пользовательские данные если их нет\n';
-              code += '    if callback_query.from_user.id not in user_data:\n';
-              code += '        user_data[callback_query.from_user.id] = {}\n';
-              code += '    \n';
-              code += '    # Настраиваем ожидание ввода\n';
-              code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-              code += `        "type": "${inputType}",\n`;
-              code += `        "variable": "${inputVariable}",\n`;
-              code += `        "validation": "${inputValidation}",\n`;
-              code += `        "min_length": ${minLength},\n`;
-              code += `        "max_length": ${maxLength},\n`;
-              code += `        "timeout": ${inputTimeout},\n`;
-              code += `        "required": ${inputRequired ? 'True' : 'False'},\n`;
-              code += `        "allow_skip": ${allowSkip ? 'True' : 'False'},\n`;
-              code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
-              code += `        "retry_message": "${inputRetryMessage}",\n`;
-              code += `        "success_message": "${inputSuccessMessage}",\n`;
-              code += `        "prompt": "${inputPrompt.replace(/"/g, '\\"')}",\n`;
-              code += `        "node_id": "${targetNode.id}"\n`;
-              code += '    }\n';
               
             } else {
               // Generate response for target node (default text message)
@@ -1054,6 +1098,101 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += '    text += f"Долгота: {location.longitude}"\n';
       code += '    await message.answer(text)\n';
     }
+  }
+
+  // Добавляем обработчики кнопочных ответов для user-input узлов
+  const userInputNodes = nodes.filter(node => 
+    node.type === 'user-input' && 
+    node.data.responseType === 'buttons' && 
+    Array.isArray(node.data.responseOptions) && 
+    node.data.responseOptions.length > 0
+  );
+
+  if (userInputNodes.length > 0) {
+    code += '\n# Обработчики кнопочных ответов для сбора пользовательского ввода\n';
+    
+    userInputNodes.forEach(node => {
+      const responseOptions = node.data.responseOptions || [];
+      
+      // Обработчики для каждого варианта ответа
+      responseOptions.forEach((option, index) => {
+        code += `\n@dp.callback_query(F.data == "response_${node.id}_${index}")\n`;
+        code += `async def handle_response_${node.id}_${index}(callback_query: types.CallbackQuery):\n`;
+        code += '    user_id = callback_query.from_user.id\n';
+        code += '    \n';
+        code += '    # Проверяем настройки кнопочного ответа\n';
+        code += '    if user_id not in user_data or "button_response_config" not in user_data[user_id]:\n';
+        code += '        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)\n';
+        code += '        return\n';
+        code += '    \n';
+        code += '    config = user_data[user_id]["button_response_config"]\n';
+        code += `    selected_value = "${option.value || option.text}"\n`;
+        code += `    selected_text = "${option.text}"\n`;
+        code += '    \n';
+        code += '    # Обработка множественного выбора\n';
+        code += '    if config.get("allow_multiple"):\n';
+        code += '        if selected_value not in config["selected"]:\n';
+        code += '            config["selected"].append({"text": selected_text, "value": selected_value})\n';
+        code += '            await callback_query.answer(f"✅ Выбрано: {selected_text}")\n';
+        code += '        else:\n';
+        code += '            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]\n';
+        code += '            await callback_query.answer(f"❌ Убрано: {selected_text}")\n';
+        code += '        return  # Не завершаем сбор, позволяем выбрать еще\n';
+        code += '    \n';
+        code += '    # Сохраняем одиночный выбор\n';
+        code += '    variable_name = config.get("variable", "user_response")\n';
+        code += '    import datetime\n';
+        code += '    timestamp = datetime.datetime.now().isoformat()\n';
+        code += '    node_id = config.get("node_id", "unknown")\n';
+        code += '    \n';
+        code += '    # Создаем структурированный ответ\n';
+        code += '    response_data = {\n';
+        code += '        "value": selected_value,\n';
+        code += '        "text": selected_text,\n';
+        code += '        "type": "button_choice",\n';
+        code += '        "timestamp": timestamp,\n';
+        code += '        "nodeId": node_id,\n';
+        code += '        "variable": variable_name\n';
+        code += '    }\n';
+        code += '    \n';
+        code += '    # Сохраняем в пользовательские данные\n';
+        code += '    user_data[user_id][variable_name] = response_data\n';
+        code += '    \n';
+        code += '    # Сохраняем в базу данных если включено\n';
+        code += '    if config.get("save_to_database"):\n';
+        code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
+        code += '        if saved_to_db:\n';
+        code += '            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")\n';
+        code += '        else:\n';
+        code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+        code += '    \n';
+        code += '    # Отправляем сообщение об успехе\n';
+        code += '    success_message = config.get("success_message", "Спасибо за ваш выбор!")\n';
+        code += '    await callback_query.message.edit_text(f"{success_message}\\n\\n✅ Ваш выбор: {selected_text}")\n';
+        code += '    \n';
+        code += '    # Очищаем состояние\n';
+        code += '    del user_data[user_id]["button_response_config"]\n';
+        code += '    \n';
+        code += '    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")\n';
+      });
+      
+      // Обработчик для кнопки "Пропустить"
+      if (node.data.allowSkip) {
+        code += `\n@dp.callback_query(F.data == "skip_${node.id}")\n`;
+        code += `async def handle_skip_${node.id}(callback_query: types.CallbackQuery):\n`;
+        code += '    user_id = callback_query.from_user.id\n';
+        code += '    \n';
+        code += '    # Проверяем настройки\n';
+        code += '    if user_id not in user_data or "button_response_config" not in user_data[user_id]:\n';
+        code += '        await callback_query.answer("⚠️ Сессия истекла", show_alert=True)\n';
+        code += '        return\n';
+        code += '    \n';
+        code += '    await callback_query.message.edit_text("⏭️ Ответ пропущен")\n';
+        code += '    del user_data[user_id]["button_response_config"]\n';
+        code += '    \n';
+        code += '    logging.info(f"Пользователь {user_id} пропустил кнопочный ответ")\n';
+      }
+    });
   }
 
   // Добавляем универсальный обработчик пользовательского ввода

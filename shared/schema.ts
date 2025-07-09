@@ -341,6 +341,13 @@ export const nodeSchema = z.object({
     filename: z.string().optional(),
     // Настройки для сбора пользовательского ввода
     inputType: z.enum(['text', 'number', 'email', 'phone', 'photo', 'video', 'audio', 'document', 'location', 'contact', 'any']).default('text'),
+    responseType: z.enum(['text', 'buttons']).default('text'), // Тип ответа: текстовый ввод или кнопки
+    responseOptions: z.array(z.object({
+      id: z.string(),
+      text: z.string(),
+      value: z.string().optional()
+    })).default([]), // Варианты ответов для кнопок
+    allowMultipleSelection: z.boolean().default(false), // Разрешить множественный выбор
     inputVariable: z.string().optional(), // Имя переменной для сохранения ответа
     inputPrompt: z.string().optional(), // Текст запроса ввода
     inputValidation: z.string().optional(), // Правило валидации (regex или описание)
