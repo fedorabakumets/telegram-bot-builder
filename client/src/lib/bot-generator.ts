@@ -801,12 +801,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
             } else if (targetNode.type === 'user-input') {
               // Handle user-input nodes
-              const inputPrompt = targetNode.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
+              const inputPrompt = targetNode.data.messageText || "Пожалуйста, введите ваш ответ:";
               const inputType = targetNode.data.inputType || 'text';
               const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
               const inputValidation = targetNode.data.inputValidation || '';
-              const minLength = targetNode.data.minLength || 0;
-              const maxLength = targetNode.data.maxLength || 0;
+              const minLength = targetNode.data.inputMinLength || 0;
+              const maxLength = targetNode.data.inputMaxLength || 0;
               const inputTimeout = targetNode.data.inputTimeout || 60;
               const inputRequired = targetNode.data.inputRequired !== false;
               const allowSkip = targetNode.data.allowSkip || false;
@@ -855,6 +855,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
               code += `        "retry_message": "${inputRetryMessage}",\n`;
               code += `        "success_message": "${inputSuccessMessage}",\n`;
+              code += `        "prompt": "${inputPrompt.replace(/"/g, '\\"')}",\n`;
               code += `        "node_id": "${targetNode.id}"\n`;
               code += '    }\n';
               

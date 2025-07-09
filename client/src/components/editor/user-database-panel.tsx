@@ -511,39 +511,49 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                               // Format the question text
                               const formatQuestionText = (key, responseData) => {
                                 if (responseData?.prompt && responseData.prompt.trim()) {
-                                  return responseData.prompt.length > 35 ? `${responseData.prompt.substring(0, 35)}...` : responseData.prompt;
+                                  return responseData.prompt;
                                 }
                                 
                                 // Generate a question based on the key
-                                if (key.includes('feedback')) return '💬 Обратная связь';
-                                if (key.includes('name')) return '👤 Имя';
-                                if (key.includes('age')) return '🎂 Возраст';
-                                if (key.includes('city')) return '🏙️ Город';
-                                if (key.includes('contact')) return '📞 Контакт';
-                                if (key.includes('email')) return '📧 Email';
-                                if (key.includes('phone')) return '📱 Телефон';
-                                if (key.includes('rating')) return '⭐ Оценка';
-                                if (key.includes('review')) return '📝 Отзыв';
-                                if (key.includes('suggestion')) return '💡 Предложение';
-                                if (key.startsWith('response_')) return `❓ ${key.replace('response_', 'Вопрос ')}`;
-                                if (key.startsWith('user_')) return `👤 ${key.replace('user_', '').replace('_', ' ')}`;
-                                return `❓ ${key}`;
+                                if (key.includes('feedback')) return 'Расскажите подробнее о своих впечатлениях. Что вам понравилось или что можно улучшить?';
+                                if (key.includes('name')) return 'Как вас зовут?';
+                                if (key.includes('age')) return 'Сколько вам лет?';
+                                if (key.includes('city')) return 'Из какого вы города?';
+                                if (key.includes('contact')) return 'Поделитесь контактом';
+                                if (key.includes('email')) return 'Укажите ваш email';
+                                if (key.includes('phone')) return 'Укажите ваш телефон';
+                                if (key.includes('rating')) return 'Оцените нашу работу';
+                                if (key.includes('review')) return 'Оставьте отзыв';
+                                if (key.includes('suggestion')) return 'Поделитесь предложением';
+                                if (key.startsWith('response_')) return `Вопрос ${key.replace('response_', '')}`;
+                                if (key.startsWith('user_')) return `Пользовательский ввод: ${key.replace('user_', '').replace('_', ' ')}`;
+                                return `Вопрос: ${key}`;
                               };
                               
                               return (
-                                <div key={key} className="text-xs bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <MessageSquare className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                                    <div className="font-medium text-blue-700 dark:text-blue-300">
+                                <div key={key} className="text-xs bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800 mb-2">
+                                  <div className="mb-2">
+                                    <div className="flex items-start gap-2 mb-1">
+                                      <MessageSquare className="w-3 h-3 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                                      <div className="font-medium text-blue-700 dark:text-blue-300 text-xs">
+                                        Вопрос:
+                                      </div>
+                                    </div>
+                                    <div className="text-xs text-gray-700 dark:text-gray-300 ml-5 leading-relaxed">
                                       {formatQuestionText(key, responseData)}
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <Edit className="w-3 h-3 text-green-600 dark:text-green-400" />
-                                    <div className="text-foreground font-medium">
+                                  <div>
+                                    <div className="flex items-start gap-2 mb-1">
+                                      <Edit className="w-3 h-3 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                                      <div className="font-medium text-green-700 dark:text-green-300 text-xs">
+                                        Ответ:
+                                      </div>
+                                    </div>
+                                    <div className="text-xs text-foreground font-medium ml-5 leading-relaxed">
                                       {responseData?.value ? 
-                                        (responseData.value.length > 30 ? `${responseData.value.substring(0, 30)}...` : responseData.value) :
-                                        (typeof value === 'string' ? (value.length > 30 ? `${value.substring(0, 30)}...` : value) : JSON.stringify(value))
+                                        (responseData.value.length > 50 ? `${responseData.value.substring(0, 50)}...` : responseData.value) :
+                                        (typeof value === 'string' ? (value.length > 50 ? `${value.substring(0, 50)}...` : value) : JSON.stringify(value))
                                       }
                                     </div>
                                   </div>
