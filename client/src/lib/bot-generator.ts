@@ -710,6 +710,65 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '        logging.error(f"Ошибка отправки контакта: {e}")\n';
               code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить контакт")\n';
               
+            } else if (targetNode.type === 'user-input') {
+              // Handle user-input nodes
+              const inputPrompt = targetNode.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
+              const inputType = targetNode.data.inputType || 'text';
+              const inputVariable = targetNode.data.inputVariable || 'user_response';
+              const inputValidation = targetNode.data.inputValidation || '';
+              const minLength = targetNode.data.minLength || 0;
+              const maxLength = targetNode.data.maxLength || 0;
+              const inputTimeout = targetNode.data.inputTimeout || 60;
+              const inputRequired = targetNode.data.inputRequired !== false;
+              const allowSkip = targetNode.data.allowSkip || false;
+              const saveToDatabase = targetNode.data.saveToDatabase || false;
+              const inputRetryMessage = targetNode.data.inputRetryMessage || "Пожалуйста, попробуйте еще раз.";
+              const inputSuccessMessage = targetNode.data.inputSuccessMessage || "Спасибо за ваш ответ!";
+              const placeholder = targetNode.data.placeholder || "";
+              
+              code += '    # Удаляем старое сообщение\n';
+              code += '    await callback_query.message.delete()\n';
+              code += '    \n';
+              
+              // Отправляем запрос пользователю
+              if (inputPrompt.includes('\n')) {
+                code += `    text = """${inputPrompt}"""\n`;
+              } else {
+                const escapedPrompt = inputPrompt.replace(/"/g, '\\"');
+                code += `    text = "${escapedPrompt}"\n`;
+              }
+              
+              if (placeholder) {
+                code += `    placeholder_text = "${placeholder}"\n`;
+                code += '    text += f"\\n\\n💡 {placeholder_text}"\n';
+              }
+              
+              if (allowSkip) {
+                code += '    text += "\\n\\n⏭️ Нажмите /skip чтобы пропустить"\n';
+              }
+              
+              code += '    await bot.send_message(callback_query.from_user.id, text)\n';
+              code += '    \n';
+              code += '    # Инициализируем пользовательские данные если их нет\n';
+              code += '    if callback_query.from_user.id not in user_data:\n';
+              code += '        user_data[callback_query.from_user.id] = {}\n';
+              code += '    \n';
+              code += '    # Настраиваем ожидание ввода\n';
+              code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+              code += `        "type": "${inputType}",\n`;
+              code += `        "variable": "${inputVariable}",\n`;
+              code += `        "validation": "${inputValidation}",\n`;
+              code += `        "min_length": ${minLength},\n`;
+              code += `        "max_length": ${maxLength},\n`;
+              code += `        "timeout": ${inputTimeout},\n`;
+              code += `        "required": ${inputRequired},\n`;
+              code += `        "allow_skip": ${allowSkip},\n`;
+              code += `        "save_to_database": ${saveToDatabase},\n`;
+              code += `        "retry_message": "${inputRetryMessage}",\n`;
+              code += `        "success_message": "${inputSuccessMessage}",\n`;
+              code += `        "node_id": "${targetNode.id}"\n`;
+              code += '    }\n';
+              
             } else {
               // Generate response for target node (default text message)
               const targetText = targetNode.data.messageText || "Сообщение";
@@ -859,6 +918,85 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += '    await message.answer(text)\n';
     }
   }
+
+  // Добавляем универсальный обработчик пользовательского ввода
+  code += '\n\n# Универсальный обработчик пользовательского ввода\n';
+  code += '@dp.message(F.text)\n';
+  code += 'async def handle_user_input(message: types.Message):\n';
+  code += '    user_id = message.from_user.id\n';
+  code += '    \n';
+  code += '    # Проверяем, ожидаем ли мы ввод от пользователя\n';
+  code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
+  code += '        return  # Игнорируем сообщение если не ожидаем ввод\n';
+  code += '    \n';
+  code += '    input_config = user_data[user_id]["waiting_for_input"]\n';
+  code += '    user_text = message.text\n';
+  code += '    \n';
+  code += '    # Проверяем команду пропуска\n';
+  code += '    if input_config.get("allow_skip") and user_text == "/skip":\n';
+  code += '        await message.answer("⏭️ Ввод пропущен")\n';
+  code += '        del user_data[user_id]["waiting_for_input"]\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    # Валидация длины текста\n';
+  code += '    min_length = input_config.get("min_length", 0)\n';
+  code += '    max_length = input_config.get("max_length", 0)\n';
+  code += '    \n';
+  code += '    if min_length > 0 and len(user_text) < min_length:\n';
+  code += '        retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '        await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    if max_length > 0 and len(user_text) > max_length:\n';
+  code += '        retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '        await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    # Валидация типа ввода\n';
+  code += '    input_type = input_config.get("type", "text")\n';
+  code += '    \n';
+  code += '    if input_type == "email":\n';
+  code += '        import re\n';
+  code += '        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n';
+  code += '        if not re.match(email_pattern, user_text):\n';
+  code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '            await message.answer(f"❌ Неверный формат email. {retry_message}")\n';
+  code += '            return\n';
+  code += '    \n';
+  code += '    elif input_type == "number":\n';
+  code += '        try:\n';
+  code += '            float(user_text)\n';
+  code += '        except ValueError:\n';
+  code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '            await message.answer(f"❌ Введите корректное число. {retry_message}")\n';
+  code += '            return\n';
+  code += '    \n';
+  code += '    elif input_type == "phone":\n';
+  code += '        import re\n';
+  code += '        phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n';
+  code += '        if not re.match(phone_pattern, user_text):\n';
+  code += '            retry_message = input_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '            await message.answer(f"❌ Неверный формат телефона. {retry_message}")\n';
+  code += '            return\n';
+  code += '    \n';
+  code += '    # Сохраняем ответ пользователя\n';
+  code += '    variable_name = input_config.get("variable", "user_response")\n';
+  code += '    user_data[user_id][variable_name] = user_text\n';
+  code += '    \n';
+  code += '    # Сохраняем в базу данных если включено\n';
+  code += '    if input_config.get("save_to_database"):\n';
+  code += '        logging.info(f"Сохранение в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+  code += '        # Здесь можно добавить код для сохранения в реальную базу данных\n';
+  code += '    \n';
+  code += '    # Отправляем сообщение об успехе\n';
+  code += '    success_message = input_config.get("success_message", "Спасибо за ваш ответ!")\n';
+  code += '    await message.answer(success_message)\n';
+  code += '    \n';
+  code += '    # Очищаем состояние ожидания ввода\n';
+  code += '    del user_data[user_id]["waiting_for_input"]\n';
+  code += '    \n';
+  code += '    logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")\n';
+  code += '\n';
 
   code += '\n\n# Запуск бота\n';
   code += 'async def main():\n';

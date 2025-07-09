@@ -177,7 +177,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
     }
     
     // Check if this node expects input
-    const inputNode = nodes.find(node => node.type === 'input');
+    const inputNode = nodes.find(node => node.type === 'input' || node.type === 'user-input');
     setWaitingForInput(!!inputNode && startNode.data.keyboardType === 'none');
   };
 
@@ -232,6 +232,8 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
             responseText = `Стартовая команда: ${targetNode.data.command || '/start'}`;
           } else if (targetNode.type === 'input') {
             responseText = 'Ожидаю ввод...';
+          } else if (targetNode.type === 'user-input') {
+            responseText = targetNode.data.prompt || 'Введите ваш ответ:';
           } else if (['photo', 'video', 'audio', 'document', 'sticker', 'voice', 'animation'].includes(targetNode.type)) {
             responseText = targetNode.data.mediaCaption || '';
           } else if (targetNode.type === 'location') {
@@ -278,7 +280,7 @@ export function PreviewModal({ isOpen, onClose, nodes, projectName }: PreviewMod
           }
           
           // Check if target node expects input
-          setWaitingForInput(targetNode.type === 'input' && targetNode.data.keyboardType === 'none');
+          setWaitingForInput((targetNode.type === 'input' || targetNode.type === 'user-input') && targetNode.data.keyboardType === 'none');
         } else {
           // Node not found - show error
           let errorText = '';
