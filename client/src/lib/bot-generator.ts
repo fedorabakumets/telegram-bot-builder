@@ -853,6 +853,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    if callback_query.from_user.id not in user_data:\n';
                 code += '        user_data[callback_query.from_user.id] = {}\n';
                 code += '    \n';
+                // Find the next node to navigate to after successful input
+                const nextConnection = connections.find(conn => conn.source === targetNode.id);
+                const nextNodeId = nextConnection ? nextConnection.target : null;
+                
                 code += '    # Сохраняем настройки для обработки ответа\n';
                 code += '    user_data[callback_query.from_user.id]["button_response_config"] = {\n';
                 code += `        "node_id": "${targetNode.id}",\n`;
@@ -860,6 +864,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
                 code += `        "success_message": "${inputSuccessMessage}",\n`;
                 code += `        "allow_multiple": ${allowMultipleSelection ? 'True' : 'False'},\n`;
+                code += `        "next_node_id": "${nextNodeId || ''}",\n`;
                 code += '        "options": [\n';
                 responseOptions.forEach((option, index) => {
                   const optionValue = option.value || option.text;
@@ -886,6 +891,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    if callback_query.from_user.id not in user_data:\n';
                 code += '        user_data[callback_query.from_user.id] = {}\n';
                 code += '    \n';
+                // Find the next node to navigate to after successful input
+                const nextConnection = connections.find(conn => conn.source === targetNode.id);
+                const nextNodeId = nextConnection ? nextConnection.target : null;
+                
                 code += '    # Настраиваем ожидание ввода\n';
                 code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
                 code += `        "type": "${inputType}",\n`;
@@ -900,7 +909,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `        "retry_message": "${inputRetryMessage}",\n`;
                 code += `        "success_message": "${inputSuccessMessage}",\n`;
                 code += `        "prompt": "${escapeForPython(inputPrompt)}",\n`;
-                code += `        "node_id": "${targetNode.id}"\n`;
+                code += `        "node_id": "${targetNode.id}",\n`;
+                code += `        "next_node_id": "${nextNodeId || ''}"\n`;
                 code += '    }\n';
               }
               
@@ -1176,6 +1186,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '    del user_data[user_id]["button_response_config"]\n';
         code += '    \n';
         code += '    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")\n';
+        code += '    \n';
+        code += '    # Автоматическая навигация к следующему узлу\n';
+        code += '    next_node_id = config.get("next_node_id")\n';
+        code += '    if next_node_id:\n';
+        code += '        try:\n';
+        code += '            # Вызываем обработчик для следующего узла\n';
+        
+        // Generate if-elif chain for all nodes
+        nodes.forEach((btnNode, btnIndex) => {
+          const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+          const condition = btnIndex === 0 ? 'if' : 'elif';
+          code += `            ${condition} next_node_id == "${btnNode.id}":\n`;
+          code += `                await handle_callback_${safeFunctionName}(callback_query)\n`;
+        });
+        
+        code += '            else:\n';
+        code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+        code += '        except Exception as e:\n';
+        code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
       });
       
       // Обработчик для кнопки "Пропустить"
@@ -1292,6 +1321,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    del user_data[user_id]["waiting_for_input"]\n';
   code += '    \n';
   code += '    logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")\n';
+  code += '    \n';
+  code += '    # Автоматическая навигация к следующему узлу после успешного ввода\n';
+  code += '    next_node_id = input_config.get("next_node_id")\n';
+  code += '    logging.info(f"🔄 Проверяем навигацию: next_node_id = {next_node_id}")\n';
+  code += '    if next_node_id:\n';
+  code += '        try:\n';
+  code += '            logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+  code += '            # Имитируем callback запрос для перехода к следующему узлу\n';
+  code += '            from types import SimpleNamespace\n';
+  code += '            callback_query = SimpleNamespace()\n';
+  code += '            callback_query.from_user = message.from_user\n';
+  code += '            callback_query.message = message\n';
+  code += '            callback_query.data = next_node_id\n';
+  code += '            \n';
+  code += '            # Вызываем соответствующий обработчик\n';
+  
+  // Generate if-elif chain for all nodes
+  nodes.forEach((node, index) => {
+    const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+    const condition = index === 0 ? 'if' : 'elif';
+    code += `            ${condition} next_node_id == "${node.id}":\n`;
+    code += `                await handle_callback_${safeFunctionName}(callback_query)\n`;
+  });
+  
+  code += '            else:\n';
+  code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  code += '        except Exception as e:\n';
+  code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
   code += '\n';
 
   code += '\n\n# Запуск бота\n';
