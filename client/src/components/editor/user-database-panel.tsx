@@ -456,7 +456,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <TableHead>Пользователь</TableHead>
                 <TableHead>Статус</TableHead>
                 <TableHead>Сообщения</TableHead>
-                <TableHead>Ответы</TableHead>
+                <TableHead>Вопросы и ответы</TableHead>
                 <TableHead>Последняя активность</TableHead>
                 <TableHead>Дата регистрации</TableHead>
                 <TableHead>Действия</TableHead>
@@ -511,31 +511,41 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                               // Format the question text
                               const formatQuestionText = (key, responseData) => {
                                 if (responseData?.prompt && responseData.prompt.trim()) {
-                                  return responseData.prompt.length > 40 ? `${responseData.prompt.substring(0, 40)}...` : responseData.prompt;
+                                  return responseData.prompt.length > 35 ? `${responseData.prompt.substring(0, 35)}...` : responseData.prompt;
                                 }
                                 
                                 // Generate a question based on the key
-                                if (key.includes('feedback')) return 'Обратная связь';
-                                if (key.includes('name')) return 'Имя';
-                                if (key.includes('age')) return 'Возраст';
-                                if (key.includes('city')) return 'Город';
-                                if (key.includes('contact')) return 'Контакт';
-                                if (key.includes('email')) return 'Email';
-                                if (key.includes('phone')) return 'Телефон';
-                                if (key.startsWith('response_')) return key.replace('response_', 'Вопрос ');
-                                return key;
+                                if (key.includes('feedback')) return '💬 Обратная связь';
+                                if (key.includes('name')) return '👤 Имя';
+                                if (key.includes('age')) return '🎂 Возраст';
+                                if (key.includes('city')) return '🏙️ Город';
+                                if (key.includes('contact')) return '📞 Контакт';
+                                if (key.includes('email')) return '📧 Email';
+                                if (key.includes('phone')) return '📱 Телефон';
+                                if (key.includes('rating')) return '⭐ Оценка';
+                                if (key.includes('review')) return '📝 Отзыв';
+                                if (key.includes('suggestion')) return '💡 Предложение';
+                                if (key.startsWith('response_')) return `❓ ${key.replace('response_', 'Вопрос ')}`;
+                                if (key.startsWith('user_')) return `👤 ${key.replace('user_', '').replace('_', ' ')}`;
+                                return `❓ ${key}`;
                               };
                               
                               return (
-                                <div key={key} className="text-xs bg-muted/50 rounded p-2">
-                                  <div className="font-medium text-blue-600 dark:text-blue-400 mb-1">
-                                    {formatQuestionText(key, responseData)}
+                                <div key={key} className="text-xs bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <MessageSquare className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                    <div className="font-medium text-blue-700 dark:text-blue-300">
+                                      {formatQuestionText(key, responseData)}
+                                    </div>
                                   </div>
-                                  <div className="text-foreground font-medium">
-                                    {responseData?.value ? 
-                                      (responseData.value.length > 30 ? `${responseData.value.substring(0, 30)}...` : responseData.value) :
-                                      (typeof value === 'string' ? (value.length > 30 ? `${value.substring(0, 30)}...` : value) : JSON.stringify(value))
-                                    }
+                                  <div className="flex items-center gap-2">
+                                    <Edit className="w-3 h-3 text-green-600 dark:text-green-400" />
+                                    <div className="text-foreground font-medium">
+                                      {responseData?.value ? 
+                                        (responseData.value.length > 30 ? `${responseData.value.substring(0, 30)}...` : responseData.value) :
+                                        (typeof value === 'string' ? (value.length > 30 ? `${value.substring(0, 30)}...` : value) : JSON.stringify(value))
+                                      }
+                                    </div>
                                   </div>
                                 </div>
                               );
