@@ -158,6 +158,7 @@ const nodeIcons = {
   keyboard: 'fas fa-keyboard',
   condition: 'fas fa-code-branch',
   input: 'fas fa-edit',
+  'user-input': 'fas fa-comments',
   command: 'fas fa-terminal',
   sticker: 'fas fa-laugh',
   voice: 'fas fa-microphone',
@@ -178,6 +179,7 @@ const nodeColors = {
   keyboard: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
   condition: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
   input: 'bg-gradient-to-br from-cyan-50 to-teal-100 dark:from-cyan-900/30 dark:to-teal-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800',
+  'user-input': 'bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800',
   command: 'bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800',
   sticker: 'bg-gradient-to-br from-pink-50 to-fuchsia-100 dark:from-pink-900/30 dark:to-fuchsia-900/30 text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800',
   voice: 'bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
@@ -337,6 +339,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
                 case 'contact': return !!(node.data.phoneNumber && node.data.firstName);
                 case 'poll': return !!(node.data.question && node.data.options?.length);
                 case 'command': return !!node.data.command;
+                case 'user-input': return !!(node.data.inputType && node.data.variableName);
                 default: return !!node.data.messageText;
               }
             })();
@@ -377,6 +380,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
               {node.type === 'keyboard' && 'Клавиатура'}
               {node.type === 'condition' && 'Условие'}
               {node.type === 'input' && 'Ввод данных'}
+              {node.type === 'user-input' && 'Сбор ввода'}
               {node.type === 'sticker' && 'Стикер'}
               {node.type === 'voice' && 'Голосовое сообщение'}
               {node.type === 'animation' && 'GIF анимация'}
@@ -696,6 +700,128 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
                 <span>{node.data.emoji || '🎲'} Развлечение</span>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* User Input preview */}
+      {node.type === 'user-input' && (
+        <div className="bg-gradient-to-br from-purple-50/70 to-indigo-50/70 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-xl p-4 mb-4 border border-purple-200 dark:border-purple-800/30">
+          <div className="space-y-3">
+            {/* Input type and variable display */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                  <i className="fas fa-edit text-purple-600 dark:text-purple-400 text-xs"></i>
+                </div>
+                <div className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                  {node.data.inputType ? (
+                    <span className="capitalize">
+                      {node.data.inputType === 'text' && 'Текст'}
+                      {node.data.inputType === 'number' && 'Число'}
+                      {node.data.inputType === 'email' && 'Email'}
+                      {node.data.inputType === 'phone' && 'Телефон'}
+                      {node.data.inputType === 'photo' && 'Фото'}
+                      {node.data.inputType === 'video' && 'Видео'}
+                      {node.data.inputType === 'audio' && 'Аудио'}
+                      {node.data.inputType === 'document' && 'Документ'}
+                      {node.data.inputType === 'location' && 'Местоположение'}
+                      {node.data.inputType === 'contact' && 'Контакт'}
+                      {node.data.inputType === 'any' && 'Любой тип'}
+                    </span>
+                  ) : (
+                    'Тип ввода'
+                  )}
+                </div>
+              </div>
+              {node.data.variableName && (
+                <div className="text-xs font-mono text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded">
+                  ${node.data.variableName}
+                </div>
+              )}
+            </div>
+
+            {/* Response type indicator */}
+            {node.data.responseType && (
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                  <i className={cn(
+                    "text-indigo-600 dark:text-indigo-400 text-xs",
+                    node.data.responseType === 'text' ? 'fas fa-keyboard' : 'fas fa-mouse-pointer'
+                  )}></i>
+                </div>
+                <div className="text-xs text-indigo-700 dark:text-indigo-300">
+                  {node.data.responseType === 'text' ? 'Текстовый ввод' : 'Кнопочный ответ'}
+                </div>
+              </div>
+            )}
+
+            {/* Button options preview */}
+            {node.data.responseType === 'buttons' && node.data.responseOptions && node.data.responseOptions.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">Варианты ответов:</div>
+                <div className="flex flex-wrap gap-1">
+                  {node.data.responseOptions.slice(0, 3).map((option, index) => (
+                    <div key={index} className="text-xs bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full">
+                      {option.text}
+                    </div>
+                  ))}
+                  {node.data.responseOptions.length > 3 && (
+                    <div className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">
+                      +{node.data.responseOptions.length - 3} еще
+                    </div>
+                  )}
+                </div>
+                {node.data.allowMultipleSelection && (
+                  <div className="text-xs text-indigo-600 dark:text-indigo-400 flex items-center space-x-1">
+                    <i className="fas fa-check-double text-xs"></i>
+                    <span>Множественный выбор</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Validation info */}
+            {(node.data.minLength || node.data.maxLength || node.data.timeout) && (
+              <div className="flex items-center space-x-3 text-xs text-gray-600 dark:text-gray-400">
+                {node.data.minLength && (
+                  <div className="flex items-center space-x-1">
+                    <i className="fas fa-arrow-up text-xs"></i>
+                    <span>Мин: {node.data.minLength}</span>
+                  </div>
+                )}
+                {node.data.maxLength && (
+                  <div className="flex items-center space-x-1">
+                    <i className="fas fa-arrow-down text-xs"></i>
+                    <span>Макс: {node.data.maxLength}</span>
+                  </div>
+                )}
+                {node.data.timeout && (
+                  <div className="flex items-center space-x-1">
+                    <i className="fas fa-clock text-xs"></i>
+                    <span>{node.data.timeout}с</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Save to database indicator */}
+            {node.data.saveToDatabase && (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                  <i className="fas fa-database text-green-600 dark:text-green-400 text-xs"></i>
+                </div>
+                <div className="text-xs text-green-700 dark:text-green-300">Сохранение в БД</div>
+              </div>
+            )}
+
+            {/* Configuration status */}
+            {!(node.data.inputType && node.data.variableName) && (
+              <div className="flex items-center space-x-2 text-orange-600 dark:text-orange-400">
+                <i className="fas fa-exclamation-triangle text-xs"></i>
+                <div className="text-xs">Требуется настройка</div>
+              </div>
+            )}
           </div>
         </div>
       )}
