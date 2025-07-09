@@ -607,58 +607,58 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
 
   // Компоненты для layout
   const headerContent = (
-    <div className="h-16 bg-background border-b border-border px-6 flex items-center justify-between">
-      {/* Левая часть - логотип и навигация */}
-      <div className="flex items-center space-x-6">
-        {/* Логотип и название */}
-        <div className="flex items-center space-x-3">
-          <div className="bg-primary rounded-lg w-8 h-8 flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">Шаблоны ботов</h1>
-            <p className="text-xs text-muted-foreground">Выберите готовый шаблон</p>
-          </div>
+    <div className="h-16 bg-background border-b border-border px-6 flex items-center justify-between relative">
+      {/* Левая часть - логотип и название */}
+      <div className="flex items-center space-x-3">
+        <div className="bg-primary rounded-lg w-8 h-8 flex items-center justify-center">
+          <Sparkles className="h-5 w-5 text-primary-foreground" />
         </div>
-
-        {/* Навигация по табам */}
-        <nav className="flex items-center space-x-1">
-          {[
-            { key: 'all', label: 'Все шаблоны', icon: Filter },
-            { key: 'featured', label: 'Рекомендуемые', icon: Crown },
-            { key: 'popular', label: 'Популярные', icon: TrendingUp },
-            { key: 'my', label: 'Мои шаблоны', icon: User }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = currentTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setCurrentTab(tab.key)}
-                className={`
-                  relative px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 
-                  flex items-center gap-2 group
-                  ${isActive 
-                    ? 'text-primary bg-primary/10 shadow-sm ring-1 ring-primary/20' 
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  }
-                `}
-              >
-                <Icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${
-                  isActive ? 'text-primary' : ''
-                }`} />
-                {tab.label}
-                {isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-lg -z-10" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
+        <div>
+          <h1 className="text-lg font-semibold text-foreground">TelegramBot Builder</h1>
+          <p className="text-xs text-muted-foreground">Шаблоны ботов</p>
+        </div>
       </div>
 
-      {/* Правая часть - действия */}
+      {/* Центральная часть - навигация табов */}
+      <nav className="flex items-center space-x-1">
+        {[
+          { key: 'all', label: 'Все шаблоны', icon: Filter },
+          { key: 'featured', label: 'Рекомендуемые', icon: Crown },
+          { key: 'popular', label: 'Популярные', icon: TrendingUp },
+          { key: 'my', label: 'Мои шаблоны', icon: User }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = currentTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setCurrentTab(tab.key)}
+              className={`
+                relative px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 
+                flex items-center gap-2 group
+                ${isActive 
+                  ? 'text-primary bg-primary/10 shadow-sm' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }
+              `}
+            >
+              <Icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${
+                isActive ? 'text-primary' : ''
+              }`} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Правая часть - действия и настройки */}
       <div className="flex items-center space-x-3">
+        {/* Компактные настройки макета */}
+        <SimpleLayoutCustomizer
+          config={flexibleLayoutConfig}
+          onConfigChange={setFlexibleLayoutConfig}
+        />
+        
         <Button 
           variant="outline" 
           size="sm"
