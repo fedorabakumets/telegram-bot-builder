@@ -382,7 +382,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   <Edit className="w-4 h-4 text-orange-500" />
                   <div>
                     <p className="text-xs text-muted-foreground">С ответами</p>
-                    <p className="text-sm font-semibold">{users.filter(u => u.userData && Object.keys(u.userData).length > 0).length}</p>
+                    <p className="text-sm font-semibold">{stats.usersWithResponses || 0}</p>
                   </div>
                 </div>
               </Card>

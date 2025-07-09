@@ -230,8 +230,70 @@ async def start_handler(message: types.Message):
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
     text = "Привет! Добро пожаловать!"
-    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    
+    # Создаем inline клавиатуру с кнопками
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="0ispOvXMl8A_SwDYzEc-C"))
+    keyboard = builder.as_markup()
+    # Отправляем сообщение с прикрепленными inline кнопками
+    await message.answer(text, reply_markup=keyboard)
+
+# Обработчик сбора пользовательского ввода для узла 0ispOvXMl8A_SwDYzEc-C
+    prompt_text = "Пожалуйста, введите ваш ответ:"
+    await message.answer(prompt_text)
+    
+    # Инициализируем пользовательские данные если их нет
+    if message.from_user.id not in user_data:
+        user_data[message.from_user.id] = {}
+    
+    # Ожидаем ответ пользователя
+    user_data[message.from_user.id]["waiting_for_input"] = {
+        "type": "text",
+        "variable": "user_response",
+        "validation": "",
+        "min_length": 0,
+        "max_length": 0,
+        "timeout": 60,
+        "required": True,
+        "allow_skip": False,
+        "save_to_db": True,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": "Спасибо за ваш ответ!",
+        "default_value": "",
+        "node_id": "0ispOvXMl8A_SwDYzEc-C"
+    }
+    
+
+# Обработчики inline кнопок
+
+@dp.callback_query(lambda c: c.data == "0ispOvXMl8A_SwDYzEc-C")
+async def handle_callback_0ispOvXMl8A_SwDYzEc_C(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Удаляем старое сообщение
+    await callback_query.message.delete()
+    
+    text = "Пожалуйста, введите ваш ответ:"
+    await bot.send_message(callback_query.from_user.id, text)
+    
+    # Инициализируем пользовательские данные если их нет
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    # Настраиваем ожидание ввода
+    user_data[callback_query.from_user.id]["waiting_for_input"] = {
+        "type": "text",
+        "variable": "user_response",
+        "validation": "",
+        "min_length": 0,
+        "max_length": 0,
+        "timeout": 60,
+        "required": True,
+        "allow_skip": False,
+        "save_to_database": True,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": "Спасибо за ваш ответ!",
+        "node_id": "0ispOvXMl8A_SwDYzEc-C"
+    }
 
 
 # Универсальный обработчик пользовательского ввода
@@ -293,13 +355,28 @@ async def handle_user_input(message: types.Message):
             await message.answer(f"❌ Неверный формат телефона. {retry_message}")
             return
     
-    # Сохраняем ответ пользователя
+    # Сохраняем ответ пользователя в структурированном формате
     variable_name = input_config.get("variable", "user_response")
-    user_data[user_id][variable_name] = user_text
+    import datetime
+    timestamp = datetime.datetime.now().isoformat()
+    node_id = input_config.get("node_id", "unknown")
+    
+    # Создаем структурированный ответ
+    response_data = {
+        "value": user_text,
+        "type": input_type,
+        "timestamp": timestamp,
+        "nodeId": node_id,
+        "prompt": input_config.get("prompt", ""),
+        "variable": variable_name
+    }
+    
+    # Сохраняем в пользовательские данные
+    user_data[user_id][variable_name] = response_data
     
     # Сохраняем в базу данных если включено
     if input_config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)
+        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
         if saved_to_db:
             logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")
         else:
