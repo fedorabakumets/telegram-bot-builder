@@ -1328,21 +1328,97 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    if next_node_id:\n';
   code += '        try:\n';
   code += '            logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-  code += '            # Имитируем callback запрос для перехода к следующему узлу\n';
-  code += '            from types import SimpleNamespace\n';
-  code += '            callback_query = SimpleNamespace()\n';
-  code += '            callback_query.from_user = message.from_user\n';
-  code += '            callback_query.message = message\n';
-  code += '            callback_query.data = next_node_id\n';
   code += '            \n';
-  code += '            # Вызываем соответствующий обработчик\n';
+  code += '            # Находим узел по ID и выполняем соответствующее действие\n';
   
-  // Generate if-elif chain for all nodes
-  nodes.forEach((node, index) => {
-    const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  // Generate navigation logic for each node type
+  nodes.forEach((targetNode, index) => {
     const condition = index === 0 ? 'if' : 'elif';
-    code += `            ${condition} next_node_id == "${node.id}":\n`;
-    code += `                await handle_callback_${safeFunctionName}(callback_query)\n`;
+    code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
+    
+    if (targetNode.type === 'message') {
+      const messageText = escapeForPython(targetNode.data.messageText || 'Сообщение');
+      code += `                text = f"${messageText}"\n`;
+      
+      // Определяем режим форматирования
+      if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+        code += '                parse_mode = ParseMode.MARKDOWN\n';
+      } else if (targetNode.data.formatMode === 'html') {
+        code += '                parse_mode = ParseMode.HTML\n';
+      } else {
+        code += '                parse_mode = None\n';
+      }
+      
+      // Добавляем кнопки если есть
+      if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+        code += '                builder = InlineKeyboardBuilder()\n';
+        targetNode.data.buttons.forEach(button => {
+          if (button.action === "url") {
+            code += `                builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+          } else if (button.action === 'goto') {
+            const callbackData = button.target || button.id || 'no_action';
+            code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+          }
+        });
+        code += '                keyboard = builder.as_markup()\n';
+        code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
+      } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
+        code += '                builder = ReplyKeyboardBuilder()\n';
+        targetNode.data.buttons.forEach(button => {
+          code += `                builder.add(KeyboardButton(text="${button.text}"))\n`;
+        });
+        const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
+        const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
+        code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+        code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
+      } else {
+        code += '                await message.answer(text, parse_mode=parse_mode)\n';
+      }
+    } else if (targetNode.type === 'user-input') {
+      const inputPrompt = escapeForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
+      const inputType = targetNode.data.inputType || 'text';
+      const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+      const minLength = targetNode.data.minLength || 0;
+      const maxLength = targetNode.data.maxLength || 0;
+      const inputTimeout = targetNode.data.inputTimeout || 60;
+      const saveToDatabase = targetNode.data.saveToDatabase || false;
+      const placeholder = targetNode.data.placeholder || "";
+      
+      code += `                prompt_text = f"${inputPrompt}"\n`;
+      if (placeholder) {
+        code += `                placeholder_text = "${placeholder}"\n`;
+        code += '                prompt_text += f"\\n\\n💡 {placeholder_text}"\n';
+      }
+      code += '                await message.answer(prompt_text)\n';
+      code += '                \n';
+      code += '                # Настраиваем ожидание ввода\n';
+      code += '                user_data[user_id]["waiting_for_input"] = {\n';
+      code += `                    "type": "${inputType}",\n`;
+      code += `                    "variable": "${inputVariable}",\n`;
+      code += '                    "validation": "",\n';
+      code += `                    "min_length": ${minLength},\n`;
+      code += `                    "max_length": ${maxLength},\n`;
+      code += `                    "timeout": ${inputTimeout},\n`;
+      code += '                    "required": True,\n';
+      code += '                    "allow_skip": False,\n';
+      code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+      code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+      code += '                    "success_message": "Спасибо за ваш ответ!",\n';
+      code += `                    "prompt": f"${inputPrompt}",\n`;
+      code += `                    "node_id": "${targetNode.id}",\n`;
+      
+      // Находим следующий узел для этого user-input узла
+      const nextConnection = connections.find(conn => conn.source === targetNode.id);
+      if (nextConnection) {
+        code += `                    "next_node_id": "${nextConnection.target}"\n`;
+      } else {
+        code += '                    "next_node_id": None\n';
+      }
+      code += '                }\n';
+    } else {
+      // Для других типов узлов просто логируем
+      code += `                logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
+    }
   });
   
   code += '            else:\n';
