@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useState, useRef, useEffect } from 'react';
 
 // Function to parse and render formatted text
-function parseFormattedText(text: string): JSX.Element {
+function parseFormattedText(text: string, formatMode?: string, markdown?: boolean): JSX.Element {
   if (!text) return <span>{text}</span>;
   
   // Remove HTML tags and replace with styled spans
@@ -126,9 +126,25 @@ function parseFormattedText(text: string): JSX.Element {
     return parts;
   };
   
-  // Determine if text contains HTML or Markdown
-  const isHTML = text.includes('<') && text.includes('>');
-  const parsedParts = isHTML ? parseHTML(text) : parseMarkdown(text);
+  // Determine formatting mode based on node properties
+  let shouldUseHTML = false;
+  
+  if (formatMode === 'html') {
+    shouldUseHTML = true;
+  } else if (formatMode === 'markdown') {
+    shouldUseHTML = false;
+  } else if (formatMode === 'none') {
+    // For 'none' mode, check if text contains HTML tags and parse them
+    shouldUseHTML = text.includes('<') && text.includes('>');
+  } else if (markdown === true) {
+    // Legacy support for 'markdown' property
+    shouldUseHTML = false;
+  } else {
+    // Auto-detect: if text contains HTML tags, use HTML parser
+    shouldUseHTML = text.includes('<') && text.includes('>');
+  }
+  
+  const parsedParts = shouldUseHTML ? parseHTML(text) : parseMarkdown(text);
   
   return <span>{parsedParts}</span>;
 }
@@ -406,7 +422,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
           <div className="flex items-start space-x-2">
             <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 mt-1.5 flex-shrink-0"></div>
             <div className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed line-clamp-3 font-medium">
-              {parseFormattedText(node.data.messageText)}
+              {parseFormattedText(node.data.messageText, node.data.formatMode, node.data.markdown)}
             </div>
           </div>
         </div>
