@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield, ArrowLeft } from 'lucide-react';
+import { Loader2, Search, Download, Eye, Calendar, User, Filter, Star, TrendingUp, Crown, Sparkles, Trash2, Heart, Bookmark, Clock, Globe, Shield, ArrowLeft, Layout } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
@@ -609,55 +609,62 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
   const headerContent = (
     <div className="h-16 bg-background border-b border-border px-6 flex items-center justify-between relative">
       {/* Левая часть - логотип и название */}
-      <div className="flex items-center space-x-3">
-        <div className="bg-primary rounded-lg w-8 h-8 flex items-center justify-center">
-          <Sparkles className="h-5 w-5 text-primary-foreground" />
+      <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-3">
+          <div className="bg-primary rounded-lg w-8 h-8 flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">TelegramBot Builder</h1>
+            <p className="text-xs text-muted-foreground">Шаблоны ботов</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">TelegramBot Builder</h1>
-          <p className="text-xs text-muted-foreground">Шаблоны ботов</p>
-        </div>
-      </div>
 
-      {/* Центральная часть - навигация табов */}
-      <nav className="flex items-center space-x-1">
-        {[
-          { key: 'all', label: 'Все шаблоны', icon: Filter },
-          { key: 'featured', label: 'Рекомендуемые', icon: Crown },
-          { key: 'popular', label: 'Популярные', icon: TrendingUp },
-          { key: 'my', label: 'Мои шаблоны', icon: User }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = currentTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setCurrentTab(tab.key)}
-              className={`
-                relative px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 
-                flex items-center gap-2 group
-                ${isActive 
-                  ? 'text-primary bg-primary/10 shadow-sm' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }
-              `}
-            >
-              <Icon className={`h-4 w-4 transition-transform group-hover:scale-110 ${
-                isActive ? 'text-primary' : ''
-              }`} />
-              {tab.label}
-            </button>
-          );
-        })}
-      </nav>
+        {/* Навигация по основным разделам */}
+        <nav className="flex items-center space-x-1">
+          {[
+            { key: 'editor', label: 'Редактор', onClick: () => setLocation('/') },
+            { key: 'templates', label: 'Шаблоны', onClick: () => {}, isActive: true },
+            { key: 'export', label: 'Экспорт', onClick: () => setLocation('/') },
+            { key: 'bot', label: 'Бот', onClick: () => setLocation('/') }
+          ].map((tab) => {
+            const isActive = tab.isActive;
+            return (
+              <button
+                key={tab.key}
+                onClick={tab.onClick}
+                className={`
+                  relative px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 
+                  flex items-center gap-2 group
+                  ${isActive 
+                    ? 'text-primary bg-primary/10 shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }
+                `}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* Правая часть - действия и настройки */}
       <div className="flex items-center space-x-3">
-        {/* Компактные настройки макета */}
+        {/* Настройки макета */}
         <SimpleLayoutCustomizer
           config={flexibleLayoutConfig}
           onConfigChange={setFlexibleLayoutConfig}
-        />
+        >
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="transition-all hover:scale-105"
+          >
+            <Layout className="h-4 w-4 mr-2" />
+            Настройки макета
+          </Button>
+        </SimpleLayoutCustomizer>
         
         <Button 
           variant="outline" 
