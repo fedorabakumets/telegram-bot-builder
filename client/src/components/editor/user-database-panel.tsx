@@ -646,7 +646,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                         try {
                           responseData = JSON.parse(value);
                         } catch {
-                          responseData = { response: value, type: 'text' };
+                          responseData = { value: value, type: 'text' };
                         }
                       }
                       
@@ -675,10 +675,10 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           </div>
                           
                           <div className="text-sm">
-                            {responseData?.response ? (
+                            {responseData?.value ? (
                               <div className="bg-background rounded p-3 border">
                                 <div className="font-medium text-foreground mb-1">Ответ:</div>
-                                <div className="text-foreground">{responseData.response}</div>
+                                <div className="text-foreground">{responseData.value}</div>
                                 {responseData.nodeId && (
                                   <div className="text-xs text-muted-foreground mt-2">
                                     ID узла: {responseData.nodeId}

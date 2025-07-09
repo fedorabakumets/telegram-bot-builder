@@ -33,11 +33,12 @@ interface ResponsesData {
   last_interaction: string;
   responses: Array<{
     key: string;
-    response: string;
+    value: string;
     type: string;
     timestamp: string;
     nodeId?: string;
     prompt?: string;
+    variable?: string;
   }>;
   responseCount: number;
 }
@@ -76,7 +77,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
         (user.last_name?.toLowerCase().includes(query)) ||
         (user.username?.toLowerCase().includes(query)) ||
         (user.user_id?.includes(query)) ||
-        user.responses.some(response => response.response?.toLowerCase().includes(query))
+        user.responses.some(response => response.value?.toLowerCase().includes(query))
       );
     }
 
@@ -171,7 +172,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
           `"${formatUserName(user)}"`,
           user.username || '',
           response.key,
-          `"${response.response}"`,
+          `"${response.value}"`,
           response.type,
           response.timestamp || '',
           response.nodeId || ''
@@ -406,7 +407,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                     <CardContent>
                                       <div className="bg-muted/50 rounded p-3 mb-2">
                                         <p className="text-sm font-medium mb-1">Ответ:</p>
-                                        <p className="text-foreground">{response.response}</p>
+                                        <p className="text-foreground">{response.value}</p>
                                       </div>
                                       {response.prompt && (
                                         <div className="text-xs text-muted-foreground">
@@ -436,7 +437,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                 {response.key.replace('response_', '')}:
                               </span>
                               <span className="text-sm text-muted-foreground truncate max-w-xs">
-                                {response.response}
+                                {response.value}
                               </span>
                             </div>
                             <Badge 
