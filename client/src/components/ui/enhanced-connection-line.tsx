@@ -44,12 +44,12 @@ export function EnhancedConnectionLine({
     const baseWidth = 320;
     const baseHeight = 200;
     
-    const sourceButtonHeight = sourceNode.data.buttons.length > 0 ? 
+    const sourceButtonHeight = sourceNode.data.buttons && sourceNode.data.buttons.length > 0 ? 
       (sourceNode.data.keyboardType === 'inline' ? 
         Math.ceil(sourceNode.data.buttons.length / 2) * 50 : 
         sourceNode.data.buttons.length * 40) : 0;
     
-    const targetButtonHeight = targetNode.data.buttons.length > 0 ? 
+    const targetButtonHeight = targetNode.data.buttons && targetNode.data.buttons.length > 0 ? 
       (targetNode.data.keyboardType === 'inline' ? 
         Math.ceil(targetNode.data.buttons.length / 2) * 50 : 
         targetNode.data.buttons.length * 40) : 0;
@@ -89,9 +89,9 @@ export function EnhancedConnectionLine({
     const midPoint = { x: midX, y: midY };
 
     // Поиск связанной кнопки
-    const relatedButton = sourceNode.data.buttons.find(button => 
+    const relatedButton = sourceNode.data.buttons ? sourceNode.data.buttons.find(button => 
       button.action === 'goto' && button.target === connection.target
-    );
+    ) : undefined;
 
     const buttonInfo = relatedButton ? {
       text: relatedButton.text,
