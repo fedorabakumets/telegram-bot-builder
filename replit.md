@@ -26,8 +26,16 @@ This is a visual Telegram bot builder application that allows users to create Te
 ### Database Layer
 - **ORM**: Drizzle ORM for type-safe database operations
 - **Database**: PostgreSQL (configured for Neon serverless)
-- **Schema**: Single table for bot projects with JSON storage for bot flow data
+- **Schema**: Comprehensive schema with multiple tables:
+  - botProjects: Core bot project data with JSON flow storage
+  - botInstances: Bot execution instances with status tracking
+  - botTemplates: Reusable bot templates with metadata
+  - botTokens: Secure bot token storage
+  - mediaFiles: Media file management
+  - userBotData: User interaction data
 - **Migrations**: Drizzle Kit for schema management
+- **Performance**: Enhanced with caching layer and connection pooling
+- **Monitoring**: Real-time health monitoring and database metrics
 
 ## Key Components
 
@@ -537,6 +545,18 @@ Changelog:
   * Жирный текст теперь отображается правильно в Telegram ботах созданных из шаблона
   * Создан скрипт update_political_template.py для автоматической конвертации markdown в HTML
   * Подтверждено успешное функционирование через тестирование реального бота
+- July 09, 2025. КАРДИНАЛЬНОЕ УЛУЧШЕНИЕ БАЗЫ ДАННЫХ: Система управления и мониторинга PostgreSQL
+  * Создана система мониторинга здоровья базы данных с автоматической диагностикой
+  * Реализован DatabaseManager с проверкой состояния подключений и автоматическим восстановлением
+  * Добавлена система кэширования DatabaseCache с инвалидацией и статистикой
+  * Создан EnhancedDatabaseStorage с поддержкой транзакций и retry-логики
+  * Добавлены API endpoints для мониторинга: /api/database/health, /stats, /cache/stats
+  * Реализованы операции обслуживания: backup, cleanup, optimization, maintenance
+  * Добавлен автоматический мониторинг подключений с интервалом 30 секунд
+  * Создана система очистки устаревших данных и кэш-записей
+  * Добавлена поддержка пула соединений с оптимизацией производительности
+  * Реализована система метрик базы данных с детальной статистикой
+  * Все операции с базой данных теперь кэшируются для повышения производительности
 ```
 
 ## User Preferences

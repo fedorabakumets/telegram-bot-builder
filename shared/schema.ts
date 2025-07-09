@@ -208,6 +208,7 @@ export const insertUserBotDataSchema = createInsertSchema(userBotData).pick({
   languageCode: true,
   isBot: true,
   isPremium: true,
+  interactionCount: true,
   userData: true,
   currentState: true,
   preferences: true,

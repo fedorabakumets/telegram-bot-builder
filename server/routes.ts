@@ -12,6 +12,7 @@ import https from "https";
 import http from "http";
 import { pipeline } from "stream/promises";
 import { URL } from "url";
+import dbRoutes from "./db-routes";
 
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
@@ -876,6 +877,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Clean up inconsistent bot states
   await cleanupBotStates();
+  
+  // Register database management routes
+  app.use("/api/database", dbRoutes);
   
   // Get all bot projects
   app.get("/api/projects", async (req, res) => {

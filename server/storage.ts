@@ -20,6 +20,8 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
+import { dbManager } from "./db-utils";
+import { cachedOps } from "./db-cache";
 
 export interface IStorage {
   getBotProject(id: number): Promise<BotProject | undefined>;
@@ -491,6 +493,7 @@ class MemStorage implements IStorage {
     const file: MediaFile = {
       ...insertFile,
       id: this.currentTemplateId++,
+      description: insertFile.description || null,
       usageCount: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -535,19 +538,28 @@ class MemStorage implements IStorage {
     const userData: UserBotData = {
       ...insertUserData,
       id: this.currentTemplateId++,
+      userName: insertUserData.userName || null,
+      firstName: insertUserData.firstName || null,
+      lastName: insertUserData.lastName || null,
+      languageCode: insertUserData.languageCode || null,
       lastInteraction: new Date(),
       interactionCount: insertUserData.interactionCount || 0,
       userData: insertUserData.userData || {},
+      currentState: insertUserData.currentState || null,
       preferences: insertUserData.preferences || {},
       commandsUsed: insertUserData.commandsUsed || {},
       sessionsCount: insertUserData.sessionsCount || 1,
       totalMessagesSent: insertUserData.totalMessagesSent || 0,
       totalMessagesReceived: insertUserData.totalMessagesReceived || 0,
+      deviceInfo: insertUserData.deviceInfo || null,
+      locationData: insertUserData.locationData || null,
+      contactData: insertUserData.contactData || null,
       isBot: insertUserData.isBot || 0,
       isPremium: insertUserData.isPremium || 0,
       isBlocked: insertUserData.isBlocked || 0,
       isActive: insertUserData.isActive || 1,
       tags: insertUserData.tags || [],
+      notes: insertUserData.notes || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -930,10 +942,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementMediaFileUsage(id: number): Promise<boolean> {
+    const [file] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    if (!file) return false;
+    
     const result = await db
       .update(mediaFiles)
       .set({ 
-        usageCount: db.raw('usage_count + 1'),
+        usageCount: (file.usageCount || 0) + 1,
         updatedAt: new Date()
       })
       .where(eq(mediaFiles.id, id));
@@ -953,6 +968,125 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(desc(mediaFiles.usageCount), desc(mediaFiles.createdAt));
+  }
+
+  // User Bot Data
+  async getUserBotData(id: number): Promise<UserBotData | undefined> {
+    const [userData] = await db.select().from(userBotData).where(eq(userBotData.id, id));
+    return userData || undefined;
+  }
+
+  async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
+    const [userData] = await db.select().from(userBotData)
+      .where(and(eq(userBotData.projectId, projectId), eq(userBotData.userId, userId)));
+    return userData || undefined;
+  }
+
+  async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
+    return await db.select().from(userBotData)
+      .where(eq(userBotData.projectId, projectId))
+      .orderBy(desc(userBotData.lastInteraction));
+  }
+
+  async getAllUserBotData(): Promise<UserBotData[]> {
+    return await db.select().from(userBotData).orderBy(desc(userBotData.lastInteraction));
+  }
+
+  async createUserBotData(insertUserData: InsertUserBotData): Promise<UserBotData> {
+    const [userData] = await db
+      .insert(userBotData)
+      .values(insertUserData)
+      .returning();
+    return userData;
+  }
+
+  async updateUserBotData(id: number, updateData: Partial<InsertUserBotData>): Promise<UserBotData | undefined> {
+    const [userData] = await db
+      .update(userBotData)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(userBotData.id, id))
+      .returning();
+    return userData || undefined;
+  }
+
+  async deleteUserBotData(id: number): Promise<boolean> {
+    const result = await db.delete(userBotData).where(eq(userBotData.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
+    const result = await db.delete(userBotData).where(eq(userBotData.projectId, projectId));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async incrementUserInteraction(id: number): Promise<boolean> {
+    const [userData] = await db.select().from(userBotData).where(eq(userBotData.id, id));
+    if (!userData) return false;
+    
+    const result = await db
+      .update(userBotData)
+      .set({ 
+        interactionCount: (userData.interactionCount || 0) + 1,
+        lastInteraction: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(userBotData.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async updateUserState(id: number, state: string): Promise<boolean> {
+    const result = await db
+      .update(userBotData)
+      .set({ 
+        currentState: state,
+        updatedAt: new Date()
+      })
+      .where(eq(userBotData.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    return await db.select().from(userBotData)
+      .where(
+        and(
+          eq(userBotData.projectId, projectId),
+          or(
+            ilike(userBotData.userName, searchTerm),
+            ilike(userBotData.firstName, searchTerm),
+            ilike(userBotData.lastName, searchTerm),
+            ilike(userBotData.notes, searchTerm)
+          )
+        )
+      )
+      .orderBy(desc(userBotData.lastInteraction));
+  }
+
+  async getUserBotDataStats(projectId: number): Promise<{
+    totalUsers: number;
+    activeUsers: number;
+    blockedUsers: number;
+    premiumUsers: number;
+    totalInteractions: number;
+    avgInteractionsPerUser: number;
+  }> {
+    const users = await db.select().from(userBotData).where(eq(userBotData.projectId, projectId));
+    
+    const totalUsers = users.length;
+    const activeUsers = users.filter(u => u.isActive === 1).length;
+    const blockedUsers = users.filter(u => u.isBlocked === 1).length;
+    const premiumUsers = users.filter(u => u.isPremium === 1).length;
+    const totalInteractions = users.reduce((sum, u) => sum + (u.interactionCount || 0), 0);
+    const avgInteractionsPerUser = totalUsers > 0 ? totalInteractions / totalUsers : 0;
+
+    return {
+      totalUsers,
+      activeUsers,
+      blockedUsers,
+      premiumUsers,
+      totalInteractions,
+      avgInteractionsPerUser
+    };
   }
 }
 
@@ -1414,5 +1548,130 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 }
 
-// Используем DatabaseStorage для постоянного хранения шаблонов
-export const storage = new DatabaseStorage();
+// Enhanced Database Storage with caching and monitoring
+export class EnhancedDatabaseStorage extends DatabaseStorage {
+  // Override methods to add caching and monitoring
+  
+  async getBotProject(id: number): Promise<BotProject | undefined> {
+    return await cachedOps.getProjectCached(id, () => super.getBotProject(id));
+  }
+
+  async getBotTemplate(id: number): Promise<BotTemplate | undefined> {
+    return await cachedOps.getTemplateCached(id, () => super.getBotTemplate(id));
+  }
+
+  async getTemplatesByCategory(category: string): Promise<BotTemplate[]> {
+    return await cachedOps.getTemplateListCached(category, () => super.getTemplatesByCategory(category));
+  }
+
+  async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
+    return await dbManager.executeWithRetry(async () => {
+      const project = await super.createBotProject(insertProject);
+      cachedOps.invalidateProject(project.id);
+      return project;
+    });
+  }
+
+  async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
+    return await dbManager.executeWithRetry(async () => {
+      const project = await super.updateBotProject(id, updateData);
+      cachedOps.invalidateProject(id);
+      return project;
+    });
+  }
+
+  async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
+    return await dbManager.executeWithRetry(async () => {
+      const template = await super.createBotTemplate(insertTemplate);
+      cachedOps.invalidateAllTemplates();
+      return template;
+    });
+  }
+
+  async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
+    return await dbManager.executeWithRetry(async () => {
+      const template = await super.updateBotTemplate(id, updateData);
+      cachedOps.invalidateTemplate(id);
+      return template;
+    });
+  }
+
+  // Transaction support for complex operations
+  async createProjectWithTemplate(projectData: InsertBotProject, templateData: InsertBotTemplate): Promise<{ project: BotProject; template: BotTemplate }> {
+    return await dbManager.transaction(async (tx) => {
+      const project = await super.createBotProject(projectData);
+      const template = await super.createBotTemplate({ ...templateData, authorId: project.id.toString() });
+      
+      cachedOps.invalidateProject(project.id);
+      cachedOps.invalidateAllTemplates();
+      
+      return { project, template };
+    });
+  }
+
+  // Bulk operations with better performance
+  async bulkCreateTemplates(templates: InsertBotTemplate[]): Promise<BotTemplate[]> {
+    return await dbManager.executeWithRetry(async () => {
+      const results = await Promise.all(
+        templates.map(template => super.createBotTemplate(template))
+      );
+      cachedOps.invalidateAllTemplates();
+      return results;
+    });
+  }
+
+  // Enhanced statistics with caching
+  async getDetailedStats(): Promise<{
+    projects: number;
+    templates: number;
+    activeInstances: number;
+    totalUsers: number;
+    systemHealth: any;
+    cacheStats: any;
+  }> {
+    const [projects, templates, instances, users] = await Promise.all([
+      this.getAllBotProjects(),
+      this.getAllBotTemplates(),
+      this.getAllBotInstances(),
+      this.getAllUserBotData()
+    ]);
+
+    return {
+      projects: projects.length,
+      templates: templates.length,
+      activeInstances: instances.filter(i => i.status === 'running').length,
+      totalUsers: users.length,
+      systemHealth: dbManager.getConnectionStats(),
+      cacheStats: cachedOps.getStats()
+    };
+  }
+
+  // Database maintenance operations
+  async performMaintenance(): Promise<void> {
+    console.log('Starting database maintenance...');
+    
+    // Optimize connections
+    await dbManager.optimizeConnections();
+    
+    // Clean up old data (older than 30 days)
+    await dbManager.cleanupOldData(30);
+    
+    // Clear expired cache entries
+    cachedOps.cleanup();
+    
+    console.log('Database maintenance completed');
+  }
+
+  // Backup operations
+  async createBackup(): Promise<string> {
+    return await dbManager.createBackup();
+  }
+
+  // Health check
+  async healthCheck(): Promise<boolean> {
+    return await dbManager.performHealthCheck();
+  }
+}
+
+// Используем EnhancedDatabaseStorage для продвинутого управления базой данных
+export const storage = new EnhancedDatabaseStorage();
