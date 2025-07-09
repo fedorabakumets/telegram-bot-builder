@@ -6,8 +6,8 @@ import { LayoutConfig } from './layout-manager';
 interface AdaptiveHeaderProps {
   config: LayoutConfig;
   projectName: string;
-  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database';
-  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database') => void;
+  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database' | 'responses';
+  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database' | 'responses') => void;
   onSave: () => void;
   onExport: () => void;
   onSaveAsTemplate?: () => void;
@@ -66,7 +66,8 @@ export function AdaptiveHeader({
         { key: 'export', label: 'Экспорт' },
         { key: 'bot', label: 'Бот' },
         { key: 'connections', label: 'Связи' },
-        { key: 'database', label: 'База данных' }
+        { key: 'database', label: 'База данных' },
+        { key: 'responses', label: 'Ответы' }
       ].map((tab) => (
         <button 
           key={tab.key}

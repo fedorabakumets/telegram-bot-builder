@@ -15,6 +15,7 @@ import { EnhancedConnectionControls } from '@/components/editor/enhanced-connect
 import { ConnectionVisualization } from '@/components/editor/connection-visualization';
 import { SmartConnectionCreator } from '@/components/editor/smart-connection-creator';
 import { UserDatabasePanel } from '@/components/editor/user-database-panel';
+import { ResponsesPanel } from '@/components/editor/responses-panel';
 import { SimpleLayoutCustomizer, SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 import { FlexibleLayout } from '@/components/layout/flexible-layout';
 import { useBotEditor } from '@/hooks/use-bot-editor';
@@ -24,7 +25,7 @@ import { BotProject, Connection, ComponentDefinition, BotData } from '@shared/sc
 
 export default function EditorSimple() {
   const [, setLocation] = useLocation();
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database'>('editor');
+  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database' | 'responses'>('editor');
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -323,6 +324,13 @@ export default function EditorSimple() {
       ) : currentTab === 'database' ? (
         <div className="h-full">
           <UserDatabasePanel
+            projectId={currentProject.id}
+            projectName={currentProject.name}
+          />
+        </div>
+      ) : currentTab === 'responses' ? (
+        <div className="h-full">
+          <ResponsesPanel
             projectId={currentProject.id}
             projectName={currentProject.name}
           />

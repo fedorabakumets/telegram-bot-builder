@@ -2422,6 +2422,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get detailed user responses for a project
+  app.get("/api/projects/:id/responses", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      
+      // Подключаемся напрямую к PostgreSQL для получения ответов пользователей
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      const result = await pool.query(`
+        SELECT 
+          user_id,
+          username,
+          first_name,
+          last_name,
+          user_data,
+          registered_at,
+          last_interaction
+        FROM bot_users 
+        WHERE user_data IS NOT NULL 
+          AND user_data != '{}' 
+          AND user_data::text LIKE '%response_%'
+        ORDER BY last_interaction DESC
+      `);
+      
+      await pool.end();
+      
+      // Обрабатываем и структурируем ответы
+      const processedResponses = result.rows.map(user => {
+        const responses = [];
+        if (user.user_data && typeof user.user_data === 'object') {
+          Object.entries(user.user_data).forEach(([key, value]) => {
+            if (key.startsWith('response_')) {
+              let responseData;
+              try {
+                responseData = typeof value === 'string' ? JSON.parse(value) : value;
+              } catch {
+                responseData = { response: value, type: 'text' };
+              }
+              
+              responses.push({
+                key,
+                ...responseData,
+                timestamp: responseData.timestamp || null
+              });
+            }
+          });
+        }
+        
+        return {
+          user_id: user.user_id,
+          username: user.username,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          registered_at: user.registered_at,
+          last_interaction: user.last_interaction,
+          responses: responses.sort((a, b) => 
+            new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime()
+          ),
+          responseCount: responses.length
+        };
+      });
+      
+      res.json(processedResponses);
+    } catch (error) {
+      console.error("Ошибка получения ответов пользователей:", error);
+      res.status(500).json({ message: "Failed to fetch user responses" });
+    }
+  });
+
   // Get specific user data by ID
   app.get("/api/users/:id", async (req, res) => {
     try {

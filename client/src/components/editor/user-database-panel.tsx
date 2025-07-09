@@ -634,60 +634,90 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 </div>
               )}
 
-              {(selectedUser.userData && Object.keys(selectedUser.userData).length > 0) && (
+              {/* Enhanced user responses section */}
+              {((selectedUser.userData || selectedUser.user_data) && Object.keys(selectedUser.userData || selectedUser.user_data).length > 0) && (
                 <div>
                   <Label className="text-sm font-medium">Ответы пользователя</Label>
                   <div className="mt-2 space-y-3">
-                    {Object.entries(selectedUser.userData).map(([key, value]) => (
-                      <div key={key} className="border rounded-lg p-3 bg-muted/50">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-foreground">{key}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {typeof value === 'object' && value !== null && 'timestamp' in value 
-                              ? formatDate(value.timestamp) 
-                              : 'Недавно'}
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {typeof value === 'object' && value !== null ? (
-                            <div>
-                              {value.value && (
-                                <div className="mb-1">
-                                  <span className="font-medium">Ответ:</span> {value.value}
-                                </div>
-                              )}
-                              {value.type && (
-                                <div className="mb-1">
-                                  <span className="font-medium">Тип:</span> {value.type}
-                                </div>
-                              )}
-                              {value.nodeId && (
-                                <div className="mb-1">
-                                  <span className="font-medium">ID узла:</span> {value.nodeId}
-                                </div>
-                              )}
-                              {value.prompt && (
-                                <div className="mb-1">
-                                  <span className="font-medium">Вопрос:</span> {value.prompt}
-                                </div>
+                    {Object.entries(selectedUser.userData || selectedUser.user_data).map(([key, value]) => {
+                      // Parse value if it's a string (from PostgreSQL)
+                      let responseData = value;
+                      if (typeof value === 'string') {
+                        try {
+                          responseData = JSON.parse(value);
+                        } catch {
+                          responseData = { response: value, type: 'text' };
+                        }
+                      }
+                      
+                      return (
+                        <div key={key} className="border rounded-lg p-4 bg-muted/50 hover:bg-muted/70 transition-colors">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-foreground">
+                                {key.startsWith('response_') ? key.replace('response_', 'Ответ ') : key}
+                              </span>
+                              {responseData?.type && (
+                                <Badge variant="outline" className="text-xs">
+                                  {responseData.type === 'text' ? 'Текст' : 
+                                   responseData.type === 'number' ? 'Число' :
+                                   responseData.type === 'email' ? 'Email' :
+                                   responseData.type === 'phone' ? 'Телефон' :
+                                   responseData.type}
+                                </Badge>
                               )}
                             </div>
-                          ) : (
-                            <div>{String(value)}</div>
-                          )}
+                            <span className="text-xs text-muted-foreground">
+                              {responseData?.timestamp 
+                                ? formatDate(responseData.timestamp) 
+                                : 'Недавно'}
+                            </span>
+                          </div>
+                          
+                          <div className="text-sm">
+                            {responseData?.response ? (
+                              <div className="bg-background rounded p-3 border">
+                                <div className="font-medium text-foreground mb-1">Ответ:</div>
+                                <div className="text-foreground">{responseData.response}</div>
+                                {responseData.nodeId && (
+                                  <div className="text-xs text-muted-foreground mt-2">
+                                    ID узла: {responseData.nodeId}
+                                  </div>
+                                )}
+                                {responseData.prompt && (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    Вопрос: {responseData.prompt}
+                                  </div>
+                                )}
+                              </div>
+                            ) : typeof value === 'object' && value !== null ? (
+                              <div className="bg-background rounded p-3 border">
+                                <div className="font-medium text-foreground mb-1">Данные:</div>
+                                <pre className="text-xs text-muted-foreground overflow-auto">
+                                  {JSON.stringify(value, null, 2)}
+                                </pre>
+                              </div>
+                            ) : (
+                              <div className="bg-background rounded p-3 border">
+                                <div className="font-medium text-foreground mb-1">Значение:</div>
+                                <div className="text-foreground">{String(value)}</div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   
                   <div className="mt-4">
-                    <Label className="text-sm font-medium">Исходные данные (JSON)</Label>
+                    <Label className="text-sm font-medium">Все данные пользователя (JSON)</Label>
                     <div className="mt-2">
                       <Textarea
-                        value={JSON.stringify(selectedUser.userData, null, 2)}
+                        value={JSON.stringify(selectedUser.userData || selectedUser.user_data, null, 2)}
                         readOnly
-                        rows={4}
-                        className="text-xs font-mono"
+                        rows={6}
+                        className="text-xs font-mono bg-muted"
+                        placeholder="Нет данных для отображения"
                       />
                     </div>
                   </div>
