@@ -1376,6 +1376,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       }
     } else if (targetNode.type === 'user-input') {
       const inputPrompt = escapeForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
+      const responseType = targetNode.data.responseType || 'text';
       const inputType = targetNode.data.inputType || 'text';
       const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
       const minLength = targetNode.data.minLength || 0;
@@ -1383,38 +1384,83 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       const inputTimeout = targetNode.data.inputTimeout || 60;
       const saveToDatabase = targetNode.data.saveToDatabase || false;
       const placeholder = targetNode.data.placeholder || "";
+      const responseOptions = targetNode.data.responseOptions || [];
+      const allowMultipleSelection = targetNode.data.allowMultipleSelection || false;
+      const allowSkip = targetNode.data.allowSkip || false;
       
       code += `                prompt_text = f"${inputPrompt}"\n`;
       if (placeholder) {
         code += `                placeholder_text = "${placeholder}"\n`;
         code += '                prompt_text += f"\\n\\n💡 {placeholder_text}"\n';
       }
-      code += '                await message.answer(prompt_text)\n';
-      code += '                \n';
-      code += '                # Настраиваем ожидание ввода\n';
-      code += '                user_data[user_id]["waiting_for_input"] = {\n';
-      code += `                    "type": "${inputType}",\n`;
-      code += `                    "variable": "${inputVariable}",\n`;
-      code += '                    "validation": "",\n';
-      code += `                    "min_length": ${minLength},\n`;
-      code += `                    "max_length": ${maxLength},\n`;
-      code += `                    "timeout": ${inputTimeout},\n`;
-      code += '                    "required": True,\n';
-      code += '                    "allow_skip": False,\n';
-      code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
-      code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-      code += '                    "success_message": "Спасибо за ваш ответ!",\n';
-      code += `                    "prompt": f"${inputPrompt}",\n`;
-      code += `                    "node_id": "${targetNode.id}",\n`;
       
-      // Находим следующий узел для этого user-input узла
-      const nextConnection = connections.find(conn => conn.source === targetNode.id);
-      if (nextConnection) {
-        code += `                    "next_node_id": "${nextConnection.target}"\n`;
+      // Check if this is a button response node
+      if (responseType === 'buttons' && responseOptions.length > 0) {
+        // For button response nodes, set up button_response_config
+        code += '                \n';
+        code += '                # Создаем кнопки для выбора ответа\n';
+        code += '                builder = InlineKeyboardBuilder()\n';
+        
+        responseOptions.forEach((option, index) => {
+          const optionValue = option.value || option.text;
+          code += `                builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
+        });
+        
+        if (allowSkip) {
+          code += `                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="skip_${targetNode.id}"))\n`;
+        }
+        
+        code += '                keyboard = builder.as_markup()\n';
+        code += '                await message.answer(prompt_text, reply_markup=keyboard)\n';
+        code += '                \n';
+        code += '                # Настраиваем конфигурацию кнопочного ответа\n';
+        code += '                user_data[user_id]["button_response_config"] = {\n';
+        code += `                    "variable": "${inputVariable}",\n`;
+        code += `                    "node_id": "${targetNode.id}",\n`;
+        code += `                    "timeout": ${inputTimeout},\n`;
+        code += `                    "allow_multiple": ${allowMultipleSelection ? 'True' : 'False'},\n`;
+        code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+        code += '                    "selected": [],\n';
+        code += '                    "success_message": "Спасибо за ваш ответ!",\n';
+        code += `                    "prompt": f"${inputPrompt}",\n`;
+        
+        // Находим следующий узел для этого user-input узла
+        const nextConnection = connections.find(conn => conn.source === targetNode.id);
+        if (nextConnection) {
+          code += `                    "next_node_id": "${nextConnection.target}"\n`;
+        } else {
+          code += '                    "next_node_id": None\n';
+        }
+        code += '                }\n';
       } else {
-        code += '                    "next_node_id": None\n';
+        // For text input nodes, use waiting_for_input
+        code += '                await message.answer(prompt_text)\n';
+        code += '                \n';
+        code += '                # Настраиваем ожидание ввода\n';
+        code += '                user_data[user_id]["waiting_for_input"] = {\n';
+        code += `                    "type": "${inputType}",\n`;
+        code += `                    "variable": "${inputVariable}",\n`;
+        code += '                    "validation": "",\n';
+        code += `                    "min_length": ${minLength},\n`;
+        code += `                    "max_length": ${maxLength},\n`;
+        code += `                    "timeout": ${inputTimeout},\n`;
+        code += '                    "required": True,\n';
+        code += '                    "allow_skip": False,\n';
+        code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+        code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+        code += '                    "success_message": "Спасибо за ваш ответ!",\n';
+        code += `                    "prompt": f"${inputPrompt}",\n`;
+        code += `                    "node_id": "${targetNode.id}",\n`;
+        
+        // Находим следующий узел для этого user-input узла
+        const nextConnection = connections.find(conn => conn.source === targetNode.id);
+        if (nextConnection) {
+          code += `                    "next_node_id": "${nextConnection.target}"\n`;
+        } else {
+          code += '                    "next_node_id": None\n';
+        }
+        code += '                }\n';
       }
-      code += '                }\n';
     } else {
       // Для других типов узлов просто логируем
       code += `                logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;

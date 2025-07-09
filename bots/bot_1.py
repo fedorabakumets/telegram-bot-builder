@@ -260,7 +260,8 @@ async def handle_callback_name_input(callback_query: types.CallbackQuery):
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": "Спасибо за ваш ответ!",
         "prompt": "👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):",
-        "node_id": "name-input"
+        "node_id": "name-input",
+        "next_node_id": "age-buttons"
     }
 
 @dp.callback_query(lambda c: c.data == "final-results")
@@ -313,6 +314,7 @@ async def handle_callback_age_buttons(callback_query: types.CallbackQuery):
         "save_to_database": True,
         "success_message": "Спасибо за ваш ответ!",
         "allow_multiple": False,
+        "next_node_id": "interests-multiple",
         "options": [
             {"index": 0, "text": "18-25 лет", "value": "18-25"},
             {"index": 1, "text": "26-35 лет", "value": "26-35"},
@@ -354,6 +356,7 @@ async def handle_callback_interests_multiple(callback_query: types.CallbackQuery
         "save_to_database": True,
         "success_message": "Спасибо за ваш ответ!",
         "allow_multiple": True,
+        "next_node_id": "contact-input",
         "options": [
             {"index": 0, "text": "💻 Технологии", "value": "technology"},
             {"index": 1, "text": "⚽ Спорт", "value": "sport"},
@@ -395,7 +398,8 @@ async def handle_callback_contact_input(callback_query: types.CallbackQuery):
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": "Спасибо за ваш ответ!",
         "prompt": "📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:",
-        "node_id": "contact-input"
+        "node_id": "contact-input",
+        "next_node_id": "experience-rating"
     }
 
 @dp.callback_query(lambda c: c.data == "experience-rating")
@@ -427,6 +431,7 @@ async def handle_callback_experience_rating(callback_query: types.CallbackQuery)
         "save_to_database": True,
         "success_message": "Спасибо за ваш ответ!",
         "allow_multiple": False,
+        "next_node_id": "final-comment",
         "options": [
             {"index": 0, "text": "⭐ 1 звезда", "value": "1"},
             {"index": 1, "text": "⭐⭐ 2 звезды", "value": "2"},
@@ -466,7 +471,8 @@ async def handle_callback_final_comment(callback_query: types.CallbackQuery):
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": "Спасибо за ваш ответ!",
         "prompt": "💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):",
-        "node_id": "final-comment"
+        "node_id": "final-comment",
+        "next_node_id": "final-results"
     }
 
 @dp.callback_query(lambda c: c.data == "start-1")
@@ -549,6 +555,44 @@ async def handle_response_age_buttons_0(callback_query: types.CallbackQuery):
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_age-buttons_1")
 async def handle_response_age_buttons_1(callback_query: types.CallbackQuery):
@@ -608,6 +652,44 @@ async def handle_response_age_buttons_1(callback_query: types.CallbackQuery):
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_age-buttons_2")
 async def handle_response_age_buttons_2(callback_query: types.CallbackQuery):
@@ -667,6 +749,44 @@ async def handle_response_age_buttons_2(callback_query: types.CallbackQuery):
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_age-buttons_3")
 async def handle_response_age_buttons_3(callback_query: types.CallbackQuery):
@@ -726,6 +846,44 @@ async def handle_response_age_buttons_3(callback_query: types.CallbackQuery):
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_age-buttons_4")
 async def handle_response_age_buttons_4(callback_query: types.CallbackQuery):
@@ -785,6 +943,44 @@ async def handle_response_age_buttons_4(callback_query: types.CallbackQuery):
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_interests-multiple_0")
 async def handle_response_interests_multiple_0(callback_query: types.CallbackQuery):
@@ -844,6 +1040,44 @@ async def handle_response_interests_multiple_0(callback_query: types.CallbackQue
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_interests-multiple_1")
 async def handle_response_interests_multiple_1(callback_query: types.CallbackQuery):
@@ -903,6 +1137,44 @@ async def handle_response_interests_multiple_1(callback_query: types.CallbackQue
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_interests-multiple_2")
 async def handle_response_interests_multiple_2(callback_query: types.CallbackQuery):
@@ -962,6 +1234,44 @@ async def handle_response_interests_multiple_2(callback_query: types.CallbackQue
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_interests-multiple_3")
 async def handle_response_interests_multiple_3(callback_query: types.CallbackQuery):
@@ -1021,6 +1331,44 @@ async def handle_response_interests_multiple_3(callback_query: types.CallbackQue
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_interests-multiple_4")
 async def handle_response_interests_multiple_4(callback_query: types.CallbackQuery):
@@ -1080,6 +1428,44 @@ async def handle_response_interests_multiple_4(callback_query: types.CallbackQue
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_interests-multiple_5")
 async def handle_response_interests_multiple_5(callback_query: types.CallbackQuery):
@@ -1139,6 +1525,44 @@ async def handle_response_interests_multiple_5(callback_query: types.CallbackQue
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_interests-multiple_6")
 async def handle_response_interests_multiple_6(callback_query: types.CallbackQuery):
@@ -1198,6 +1622,44 @@ async def handle_response_interests_multiple_6(callback_query: types.CallbackQue
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_experience-rating_0")
 async def handle_response_experience_rating_0(callback_query: types.CallbackQuery):
@@ -1257,6 +1719,44 @@ async def handle_response_experience_rating_0(callback_query: types.CallbackQuer
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_experience-rating_1")
 async def handle_response_experience_rating_1(callback_query: types.CallbackQuery):
@@ -1316,6 +1816,44 @@ async def handle_response_experience_rating_1(callback_query: types.CallbackQuer
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_experience-rating_2")
 async def handle_response_experience_rating_2(callback_query: types.CallbackQuery):
@@ -1375,6 +1913,44 @@ async def handle_response_experience_rating_2(callback_query: types.CallbackQuer
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_experience-rating_3")
 async def handle_response_experience_rating_3(callback_query: types.CallbackQuery):
@@ -1434,6 +2010,44 @@ async def handle_response_experience_rating_3(callback_query: types.CallbackQuer
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 @dp.callback_query(F.data == "response_experience-rating_4")
 async def handle_response_experience_rating_4(callback_query: types.CallbackQuery):
@@ -1493,6 +2107,44 @@ async def handle_response_experience_rating_4(callback_query: types.CallbackQuer
     del user_data[user_id]["button_response_config"]
     
     logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
+    
+    # Автоматическая навигация к следующему узлу
+    next_node_id = config.get("next_node_id")
+    if next_node_id:
+        try:
+            # Вызываем обработчик для следующего узла
+            if next_node_id == "start-1":
+                await handle_callback_start_1(callback_query)
+            elif next_node_id == "name-input":
+                await handle_callback_name_input(callback_query)
+            elif next_node_id == "name-error":
+                await handle_callback_name_error(callback_query)
+            elif next_node_id == "age-buttons":
+                await handle_callback_age_buttons(callback_query)
+            elif next_node_id == "age-error":
+                await handle_callback_age_error(callback_query)
+            elif next_node_id == "interests-multiple":
+                await handle_callback_interests_multiple(callback_query)
+            elif next_node_id == "interests-error":
+                await handle_callback_interests_error(callback_query)
+            elif next_node_id == "contact-input":
+                await handle_callback_contact_input(callback_query)
+            elif next_node_id == "contact-error":
+                await handle_callback_contact_error(callback_query)
+            elif next_node_id == "experience-rating":
+                await handle_callback_experience_rating(callback_query)
+            elif next_node_id == "rating-error":
+                await handle_callback_rating_error(callback_query)
+            elif next_node_id == "final-comment":
+                await handle_callback_final_comment(callback_query)
+            elif next_node_id == "comment-error":
+                await handle_callback_comment_error(callback_query)
+            elif next_node_id == "final-results":
+                await handle_callback_final_results(callback_query)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 
 # Универсальный обработчик пользовательского ввода
@@ -1589,6 +2241,222 @@ async def handle_user_input(message: types.Message):
     del user_data[user_id]["waiting_for_input"]
     
     logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")
+    
+    # Автоматическая навигация к следующему узлу после успешного ввода
+    next_node_id = input_config.get("next_node_id")
+    logging.info(f"🔄 Проверяем навигацию: next_node_id = {next_node_id}")
+    if next_node_id:
+        try:
+            logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
+            
+            # Находим узел по ID и выполняем соответствующее действие
+            if next_node_id == "start-1":
+                logging.info(f"Переход к узлу start-1 типа start")
+            elif next_node_id == "name-input":
+                prompt_text = f"👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):"
+                placeholder_text = "Введите ваше имя..."
+                prompt_text += f"\n\n💡 {placeholder_text}"
+                await message.answer(prompt_text)
+                
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "user_name",
+                    "validation": "",
+                    "min_length": 2,
+                    "max_length": 50,
+                    "timeout": 60,
+                    "required": True,
+                    "allow_skip": False,
+                    "save_to_database": True,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):",
+                    "node_id": "name-input",
+                    "next_node_id": "age-buttons"
+                }
+            elif next_node_id == "name-error":
+                text = f"❌ **Ошибка ввода имени**\n\nПожалуйста, введите корректное имя (от 2 до 50 символов).\n\nПопробуйте ещё раз:"
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить ввод", callback_data="name-input"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="age-buttons"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "age-buttons":
+                prompt_text = f"🎂 **Шаг 2: Возрастная группа**\n\n<b>Выберите вашу возрастную группу:</b>\n\nИспользуйте кнопки для выбора:"
+                
+                # Создаем кнопки для выбора ответа
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="18-25 лет", callback_data="response_age-buttons_0"))
+                builder.add(InlineKeyboardButton(text="26-35 лет", callback_data="response_age-buttons_1"))
+                builder.add(InlineKeyboardButton(text="36-45 лет", callback_data="response_age-buttons_2"))
+                builder.add(InlineKeyboardButton(text="46-55 лет", callback_data="response_age-buttons_3"))
+                builder.add(InlineKeyboardButton(text="55+ лет", callback_data="response_age-buttons_4"))
+                keyboard = builder.as_markup()
+                await message.answer(prompt_text, reply_markup=keyboard)
+                
+                # Настраиваем конфигурацию кнопочного ответа
+                user_data[user_id]["button_response_config"] = {
+                    "variable": "user_age_group",
+                    "node_id": "age-buttons",
+                    "timeout": 60,
+                    "allow_multiple": False,
+                    "save_to_database": True,
+                    "selected": [],
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"🎂 **Шаг 2: Возрастная группа**\n\n<b>Выберите вашу возрастную группу:</b>\n\nИспользуйте кнопки для выбора:",
+                    "next_node_id": "interests-multiple"
+                }
+            elif next_node_id == "age-error":
+                text = f"❌ **Ошибка выбора возраста**\n\nПожалуйста, выберите одну из предложенных возрастных групп."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить выбор", callback_data="age-buttons"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="interests-multiple"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "interests-multiple":
+                prompt_text = f"🎯 **Шаг 3: Интересы (множественный выбор)**\n\n<b>Выберите ваши интересы (можно несколько):</b>\n\nВыберите все подходящие варианты и нажмите \"Готово\":"
+                
+                # Создаем кнопки для выбора ответа
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="💻 Технологии", callback_data="response_interests-multiple_0"))
+                builder.add(InlineKeyboardButton(text="⚽ Спорт", callback_data="response_interests-multiple_1"))
+                builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="response_interests-multiple_2"))
+                builder.add(InlineKeyboardButton(text="✈️ Путешествия", callback_data="response_interests-multiple_3"))
+                builder.add(InlineKeyboardButton(text="👨‍🍳 Кулинария", callback_data="response_interests-multiple_4"))
+                builder.add(InlineKeyboardButton(text="📚 Книги", callback_data="response_interests-multiple_5"))
+                builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="response_interests-multiple_6"))
+                keyboard = builder.as_markup()
+                await message.answer(prompt_text, reply_markup=keyboard)
+                
+                # Настраиваем конфигурацию кнопочного ответа
+                user_data[user_id]["button_response_config"] = {
+                    "variable": "user_interests",
+                    "node_id": "interests-multiple",
+                    "timeout": 60,
+                    "allow_multiple": True,
+                    "save_to_database": True,
+                    "selected": [],
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"🎯 **Шаг 3: Интересы (множественный выбор)**\n\n<b>Выберите ваши интересы (можно несколько):</b>\n\nВыберите все подходящие варианты и нажмите \"Готово\":",
+                    "next_node_id": "contact-input"
+                }
+            elif next_node_id == "interests-error":
+                text = f"❌ **Ошибка выбора интересов**\n\nПожалуйста, выберите хотя бы один интерес и нажмите \"Готово\"."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить выбор", callback_data="interests-multiple"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="contact-input"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "contact-input":
+                prompt_text = f"📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:"
+                placeholder_text = "example@email.com или +7-999-123-45-67"
+                prompt_text += f"\n\n💡 {placeholder_text}"
+                await message.answer(prompt_text)
+                
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "email",
+                    "variable": "user_contact",
+                    "validation": "",
+                    "min_length": 5,
+                    "max_length": 100,
+                    "timeout": 60,
+                    "required": True,
+                    "allow_skip": False,
+                    "save_to_database": True,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:",
+                    "node_id": "contact-input",
+                    "next_node_id": "experience-rating"
+                }
+            elif next_node_id == "contact-error":
+                text = f"❌ **Ошибка ввода контактов**\n\nПожалуйста, введите корректный email или номер телефона."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить ввод", callback_data="contact-input"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="experience-rating"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "experience-rating":
+                prompt_text = f"⭐ **Шаг 5: Оценка опыта**\n\n<b>Как вы оцениваете опыт использования этого бота?</b>\n\nВыберите количество звезд:"
+                
+                # Создаем кнопки для выбора ответа
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="⭐ 1 звезда", callback_data="response_experience-rating_0"))
+                builder.add(InlineKeyboardButton(text="⭐⭐ 2 звезды", callback_data="response_experience-rating_1"))
+                builder.add(InlineKeyboardButton(text="⭐⭐⭐ 3 звезды", callback_data="response_experience-rating_2"))
+                builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐ 4 звезды", callback_data="response_experience-rating_3"))
+                builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐⭐ 5 звезд", callback_data="response_experience-rating_4"))
+                keyboard = builder.as_markup()
+                await message.answer(prompt_text, reply_markup=keyboard)
+                
+                # Настраиваем конфигурацию кнопочного ответа
+                user_data[user_id]["button_response_config"] = {
+                    "variable": "user_rating",
+                    "node_id": "experience-rating",
+                    "timeout": 60,
+                    "allow_multiple": False,
+                    "save_to_database": True,
+                    "selected": [],
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"⭐ **Шаг 5: Оценка опыта**\n\n<b>Как вы оцениваете опыт использования этого бота?</b>\n\nВыберите количество звезд:",
+                    "next_node_id": "final-comment"
+                }
+            elif next_node_id == "rating-error":
+                text = f"❌ **Ошибка оценки**\n\nПожалуйста, выберите оценку от 1 до 5 звезд."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить оценку", callback_data="experience-rating"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="final-comment"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "final-comment":
+                prompt_text = f"💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):"
+                placeholder_text = "Ваши комментарии и предложения..."
+                prompt_text += f"\n\n💡 {placeholder_text}"
+                await message.answer(prompt_text)
+                
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "user_comment",
+                    "validation": "",
+                    "min_length": 0,
+                    "max_length": 1000,
+                    "timeout": 60,
+                    "required": True,
+                    "allow_skip": False,
+                    "save_to_database": True,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!",
+                    "prompt": f"💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):",
+                    "node_id": "final-comment",
+                    "next_node_id": "final-results"
+                }
+            elif next_node_id == "comment-error":
+                text = f"❌ **Ошибка комментария**\n\nКомментарий слишком длинный. Максимум 1000 символов."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Повторить ввод", callback_data="final-comment"))
+                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="final-results"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "final-results":
+                text = f"🎉 **Сбор данных завершен!**\n\n<b>Спасибо за участие!</b>\n\nВы успешно продемонстрировали все типы сбора пользовательского ввода:\n\n✅ <b>Текстовый ввод</b> - имя и комментарии\n✅ <b>Одиночный выбор</b> - возраст и рейтинг\n✅ <b>Множественный выбор</b> - интересы\n✅ <b>Валидация данных</b> - проверка email/телефона\n✅ <b>Обработка ошибок</b> - повторы и пропуски\n\nВсе данные сохранены в базе данных и готовы к анализу."
+                parse_mode = ParseMode.MARKDOWN
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Пройти снова", callback_data="start-1"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+        except Exception as e:
+            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 
 
