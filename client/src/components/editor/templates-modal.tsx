@@ -619,7 +619,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
             Шаблоны ботов
@@ -627,12 +627,12 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
         </DialogHeader>
 
         {showPreview && selectedTemplate ? (
-          <div className="flex-1 overflow-y-auto py-4">
+          <div className="flex-1 overflow-y-auto py-4 pr-2">
             <TemplatePreview template={selectedTemplate} />
           </div>
         ) : (
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="flex flex-col h-full">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs value={currentTab} onValueChange={setCurrentTab} className="flex flex-col h-full min-h-0">
+            <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
               <TabsTrigger value="all" className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
                 Все шаблоны
@@ -651,7 +651,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
               </TabsTrigger>
             </TabsList>
 
-            <div className="space-y-4 py-4 border-b">
+            <div className="space-y-4 py-4 border-b flex-shrink-0">
               <div className="flex gap-4">
                 <div className="flex-1">
                   <div className="relative">
@@ -694,55 +694,57 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
               </div>
             </div>
 
-            <TabsContent value="all" className="flex-1 overflow-y-auto">
-              <TemplateGrid 
-                templates={filteredAndSortedTemplates} 
-                isLoading={isLoading}
-                onPreview={handlePreview}
-                onUse={handleUseTemplate}
-                onRate={handleRateTemplate}
-                searchTerm={searchTerm}
-                selectedCategory={selectedCategory}
-              />
-            </TabsContent>
-            
-            <TabsContent value="featured" className="flex-1 overflow-y-auto">
-              <TemplateGrid 
-                templates={filteredAndSortedTemplates} 
-                isLoading={isLoadingFeatured}
-                onPreview={handlePreview}
-                onUse={handleUseTemplate}
-                onRate={handleRateTemplate}
-                searchTerm={searchTerm}
-                selectedCategory={selectedCategory}
-              />
-            </TabsContent>
-            
-            <TabsContent value="popular" className="flex-1 overflow-y-auto">
-              <TemplateGrid 
-                templates={filteredAndSortedTemplates} 
-                isLoading={isLoading}
-                onPreview={handlePreview}
-                onUse={handleUseTemplate}
-                onRate={handleRateTemplate}
-                searchTerm={searchTerm}
-                selectedCategory={selectedCategory}
-              />
-            </TabsContent>
-            
-            <TabsContent value="my" className="flex-1 overflow-y-auto">
-              <TemplateGrid 
-                templates={filteredAndSortedTemplates} 
-                isLoading={isLoadingMy}
-                onPreview={handlePreview}
-                onUse={handleUseTemplate}
-                onRate={handleRateTemplate}
-                onDelete={handleDeleteTemplate}
-                searchTerm={searchTerm}
-                selectedCategory={selectedCategory}
-                showDeleteButton={true}
-              />
-            </TabsContent>
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <TabsContent value="all" className="h-full overflow-y-auto pr-2 mt-0">
+                <TemplateGrid 
+                  templates={filteredAndSortedTemplates} 
+                  isLoading={isLoading}
+                  onPreview={handlePreview}
+                  onUse={handleUseTemplate}
+                  onRate={handleRateTemplate}
+                  searchTerm={searchTerm}
+                  selectedCategory={selectedCategory}
+                />
+              </TabsContent>
+              
+              <TabsContent value="featured" className="h-full overflow-y-auto pr-2 mt-0">
+                <TemplateGrid 
+                  templates={filteredAndSortedTemplates} 
+                  isLoading={isLoadingFeatured}
+                  onPreview={handlePreview}
+                  onUse={handleUseTemplate}
+                  onRate={handleRateTemplate}
+                  searchTerm={searchTerm}
+                  selectedCategory={selectedCategory}
+                />
+              </TabsContent>
+              
+              <TabsContent value="popular" className="h-full overflow-y-auto pr-2 mt-0">
+                <TemplateGrid 
+                  templates={filteredAndSortedTemplates} 
+                  isLoading={isLoading}
+                  onPreview={handlePreview}
+                  onUse={handleUseTemplate}
+                  onRate={handleRateTemplate}
+                  searchTerm={searchTerm}
+                  selectedCategory={selectedCategory}
+                />
+              </TabsContent>
+              
+              <TabsContent value="my" className="h-full overflow-y-auto pr-2 mt-0">
+                <TemplateGrid 
+                  templates={filteredAndSortedTemplates} 
+                  isLoading={isLoadingMy}
+                  onPreview={handlePreview}
+                  onUse={handleUseTemplate}
+                  onRate={handleRateTemplate}
+                  onDelete={handleDeleteTemplate}
+                  searchTerm={searchTerm}
+                  selectedCategory={selectedCategory}
+                  showDeleteButton={true}
+                />
+              </TabsContent>
+            </div>
           </Tabs>
         )}
       </DialogContent>
