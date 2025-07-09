@@ -292,22 +292,6 @@ const components: ComponentDefinition[] = [
     }
   },
   {
-    id: 'user-input',
-    name: 'Ввод данных',
-    description: 'Сбор информации',
-    icon: 'fas fa-edit',
-    color: 'bg-cyan-100 text-cyan-600',
-    type: 'input',
-    defaultData: {
-      messageText: 'Введите данные:',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
     id: 'start-command',
     name: '/start команда',
     description: 'Точка входа в бота',
@@ -438,7 +422,7 @@ const componentCategories = [
   },
   {
     title: 'Логика',
-    components: components.filter(c => ['condition', 'input', 'user-input'].includes(c.type))
+    components: components.filter(c => ['condition', 'user-input'].includes(c.type))
   },
   {
     title: 'Команды',
