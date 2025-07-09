@@ -14,6 +14,9 @@ import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { BotTemplate } from '@shared/schema';
 import type { BotData } from '@/types/bot';
+import { AdaptiveHeader } from '@/components/layout/adaptive-header';
+import { SimpleLayoutCustomizer, SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
+import { FlexibleLayout } from '@/components/layout/flexible-layout';
 
 interface TemplatesPageProps {
   onSelectTemplate?: (template: BotTemplate) => void;
@@ -27,6 +30,45 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
   const [showPreview, setShowPreview] = useState(false);
   const [currentTab, setCurrentTab] = useState('all');
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'recent' | 'name'>('popular');
+  
+  const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>({
+    elements: [
+      {
+        id: 'header',
+        type: 'header',
+        name: 'Шапка',
+        position: 'top',
+        size: 64,
+        visible: true
+      },
+      {
+        id: 'sidebar',
+        type: 'sidebar',
+        name: 'Боковая панель',
+        position: 'left',
+        size: 20,
+        visible: true
+      },
+      {
+        id: 'canvas',
+        type: 'canvas',
+        name: 'Содержимое',
+        position: 'center',
+        size: 60,
+        visible: true
+      },
+      {
+        id: 'properties',
+        type: 'properties',
+        name: 'Фильтры',
+        position: 'right',
+        size: 20,
+        visible: true
+      }
+    ],
+    compactMode: false,
+    showGrid: false
+  });
 
   const { toast } = useToast();
 
@@ -563,99 +605,101 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     );
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Назад к редактору
-                </Button>
-              </Link>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-6 w-6 text-primary" />
-                <h1 className="text-2xl font-bold">Шаблоны ботов</h1>
-              </div>
-            </div>
-          </div>
+  // Компоненты для layout
+  const headerContent = (
+    <AdaptiveHeader
+      projectName="Шаблоны ботов"
+      currentTab={currentTab as any}
+      onTabChange={() => {}} // Не используется в шаблонах
+      onSave={() => {}} // Не используется в шаблонах
+      onSaveAsTemplate={() => {}} // Не используется в шаблонах
+      onLoadTemplate={() => setLocation('/')} // Назад к редактору
+      onLayoutSettings={() => {}} // Не используется в шаблонах
+      isSaving={false}
+    />
+  );
+
+  const sidebarContent = (
+    <div className="p-4 space-y-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <h2 className="font-semibold">Категории</h2>
+      </div>
+      
+      <Tabs value={currentTab} onValueChange={setCurrentTab} orientation="vertical" className="w-full">
+        <TabsList className="grid w-full grid-cols-1 h-auto">
+          <TabsTrigger value="all" className="justify-start gap-2">
+            <Filter className="h-4 w-4" />
+            Все шаблоны
+          </TabsTrigger>
+          <TabsTrigger value="featured" className="justify-start gap-2">
+            <Crown className="h-4 w-4" />
+            Рекомендуемые
+          </TabsTrigger>
+          <TabsTrigger value="popular" className="justify-start gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Популярные
+          </TabsTrigger>
+          <TabsTrigger value="my" className="justify-start gap-2">
+            <User className="h-4 w-4" />
+            Мои шаблоны
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <div className="space-y-3">
+        <div>
+          <label className="text-sm font-medium mb-2 block">Категория</label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Выберите категорию" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <label className="text-sm font-medium mb-2 block">Сортировка</label>
+          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="popular">Популярность</SelectItem>
+              <SelectItem value="rating">Рейтинг</SelectItem>
+              <SelectItem value="recent">Новые</SelectItem>
+              <SelectItem value="name">По алфавиту</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
+    </div>
+  );
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
-        {showPreview && selectedTemplate ? (
-          <div className="max-w-4xl mx-auto">
-            <TemplatePreview template={selectedTemplate} />
+  const canvasContent = (
+    <div className="p-4 h-full">
+      {showPreview && selectedTemplate ? (
+        <TemplatePreview template={selectedTemplate} />
+      ) : (
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Поиск шаблонов..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
-        ) : (
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
-              <TabsTrigger value="all" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Все шаблоны
-              </TabsTrigger>
-              <TabsTrigger value="featured" className="flex items-center gap-2">
-                <Crown className="h-4 w-4" />
-                Рекомендуемые
-              </TabsTrigger>
-              <TabsTrigger value="popular" className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Популярные
-              </TabsTrigger>
-              <TabsTrigger value="my" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Мои шаблоны
-              </TabsTrigger>
-            </TabsList>
 
-            <div className="space-y-4 mb-6">
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      placeholder="Поиск шаблонов..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <div className="w-48">
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Категория" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="w-36">
-                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="popular">Популярность</SelectItem>
-                      <SelectItem value="rating">Рейтинг</SelectItem>
-                      <SelectItem value="recent">Новые</SelectItem>
-                      <SelectItem value="name">По алфавиту</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            <TabsContent value="all">
+          <div className="h-full overflow-y-auto">
+            <TabsContent value="all" className="mt-0">
               <TemplateGrid 
                 templates={filteredAndSortedTemplates} 
                 isLoading={isLoading}
@@ -667,7 +711,7 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
               />
             </TabsContent>
             
-            <TabsContent value="featured">
+            <TabsContent value="featured" className="mt-0">
               <TemplateGrid 
                 templates={filteredAndSortedTemplates} 
                 isLoading={isLoadingFeatured}
@@ -679,7 +723,7 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
               />
             </TabsContent>
             
-            <TabsContent value="popular">
+            <TabsContent value="popular" className="mt-0">
               <TemplateGrid 
                 templates={filteredAndSortedTemplates} 
                 isLoading={isLoading}
@@ -691,7 +735,7 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
               />
             </TabsContent>
             
-            <TabsContent value="my">
+            <TabsContent value="my" className="mt-0">
               <TemplateGrid 
                 templates={filteredAndSortedTemplates} 
                 isLoading={isLoadingMy}
@@ -704,10 +748,98 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
                 showDeleteButton={true}
               />
             </TabsContent>
-          </Tabs>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+
+  const propertiesContent = (
+    <div className="p-4 space-y-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Filter className="h-5 w-5 text-primary" />
+        <h2 className="font-semibold">Фильтры</h2>
+      </div>
+      
+      {selectedTemplate && showPreview ? (
+        <div className="space-y-4">
+          <h3 className="font-medium">Информация о шаблоне</h3>
+          <div className="space-y-2 text-sm">
+            <div>
+              <span className="font-medium">Название:</span>
+              <p className="text-muted-foreground">{selectedTemplate.name}</p>
+            </div>
+            {selectedTemplate.description && (
+              <div>
+                <span className="font-medium">Описание:</span>
+                <p className="text-muted-foreground">{selectedTemplate.description}</p>
+              </div>
+            )}
+            <div>
+              <span className="font-medium">Категория:</span>
+              <p className="text-muted-foreground">
+                {categories.find(c => c.value === selectedTemplate.category)?.label || selectedTemplate.category}
+              </p>
+            </div>
+            {selectedTemplate.tags && selectedTemplate.tags.length > 0 && (
+              <div>
+                <span className="font-medium">Теги:</span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {selectedTemplate.tags.map((tag) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4 text-sm">
+          <div>
+            <span className="font-medium">Всего шаблонов:</span>
+            <p className="text-muted-foreground">{templates.length}</p>
+          </div>
+          <div>
+            <span className="font-medium">Отфильтровано:</span>
+            <p className="text-muted-foreground">{filteredAndSortedTemplates.length}</p>
+          </div>
+          {searchTerm && (
+            <div>
+              <span className="font-medium">Поиск:</span>
+              <p className="text-muted-foreground">"{searchTerm}"</p>
+            </div>
+          )}
+          <div>
+            <span className="font-medium">Текущая вкладка:</span>
+            <p className="text-muted-foreground">
+              {currentTab === 'all' && 'Все шаблоны'}
+              {currentTab === 'featured' && 'Рекомендуемые'}
+              {currentTab === 'popular' && 'Популярные'}
+              {currentTab === 'my' && 'Мои шаблоны'}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <Tabs value={currentTab} onValueChange={setCurrentTab}>
+      <SimpleLayoutCustomizer
+        config={flexibleLayoutConfig}
+        onConfigChange={setFlexibleLayoutConfig}
+      >
+        <FlexibleLayout
+          config={flexibleLayoutConfig}
+          headerContent={headerContent}
+          sidebarContent={sidebarContent}
+          canvasContent={canvasContent}
+          propertiesContent={propertiesContent}
+        />
+      </SimpleLayoutCustomizer>
+    </Tabs>
   );
 }
 
