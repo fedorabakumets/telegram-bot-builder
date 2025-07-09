@@ -2248,42 +2248,39 @@ async def handle_user_input(message: types.Message):
     if next_node_id:
         try:
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
-            # Имитируем callback запрос для перехода к следующему узлу
-            from types import SimpleNamespace
-            callback_query = SimpleNamespace()
-            callback_query.from_user = message.from_user
-            callback_query.message = message
-            callback_query.data = next_node_id
+            # Отправляем новое сообщение для следующего узла напрямую
+            # Вместо имитации callback_query отправляем новое сообщение
             
-            # Вызываем соответствующий обработчик
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
+            # Отправляем сообщение для следующего узла напрямую
+            if next_node_id == "age-buttons":
+                # Отправляем сообщение с кнопками возраста
+                text = f"🎂 **Шаг 2: Возрастная группа**\n\n<b>Укажите вашу возрастную группу:</b>\n\nВыберите подходящий вариант из списка ниже."
+                
+                # Создаем кнопки для выбора ответа
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="18-25 лет", callback_data="response_age-buttons_0"))
+                builder.add(InlineKeyboardButton(text="26-35 лет", callback_data="response_age-buttons_1"))
+                builder.add(InlineKeyboardButton(text="36-45 лет", callback_data="response_age-buttons_2"))
+                builder.add(InlineKeyboardButton(text="46-55 лет", callback_data="response_age-buttons_3"))
+                builder.add(InlineKeyboardButton(text="55+ лет", callback_data="response_age-buttons_4"))
+                builder.adjust(1)
+                
+                # Настраиваем сбор кнопочных ответов
+                user_data[user_id]["button_response_config"] = {
+                    "variable": "user_age",
+                    "type": "button_choice",
+                    "allow_multiple": False,
+                    "success_message": "✅ Возрастная группа сохранена!",
+                    "save_to_database": True,
+                    "node_id": "age-buttons",
+                    "next_node_id": "interests-multiple"
+                }
+                
+                await message.answer(
+                    text=text,
+                    reply_markup=builder.as_markup(),
+                    parse_mode=ParseMode.HTML
+                )
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
