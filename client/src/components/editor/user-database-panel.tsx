@@ -496,9 +496,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span className="text-sm">
-                          {user.userData && Object.keys(user.userData).length > 0 ? Object.keys(user.userData).length : 0}
+                          {((user.userData || user.user_data) && Object.keys(user.userData || user.user_data).length > 0) ? Object.keys(user.userData || user.user_data).length : 0}
                         </span>
-                        {user.userData && Object.keys(user.userData).length > 0 && (
+                        {((user.userData || user.user_data) && Object.keys(user.userData || user.user_data).length > 0) && (
                           <Badge variant="outline" className="text-xs">
                             Есть ответы
                           </Badge>

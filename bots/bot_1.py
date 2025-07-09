@@ -233,12 +233,12 @@ async def start_handler(message: types.Message):
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="0ispOvXMl8A_SwDYzEc-C"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="_EJYxj2JPRYAEOz1G-_wO"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-# Обработчик сбора пользовательского ввода для узла 0ispOvXMl8A_SwDYzEc-C
+# Обработчик сбора пользовательского ввода для узла _EJYxj2JPRYAEOz1G-_wO
     prompt_text = "Пожалуйста, введите ваш ответ:"
     await message.answer(prompt_text)
     
@@ -260,14 +260,14 @@ async def start_handler(message: types.Message):
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": "Спасибо за ваш ответ!",
         "default_value": "",
-        "node_id": "0ispOvXMl8A_SwDYzEc-C"
+        "node_id": "_EJYxj2JPRYAEOz1G-_wO"
     }
     
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "0ispOvXMl8A_SwDYzEc-C")
-async def handle_callback_0ispOvXMl8A_SwDYzEc_C(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "_EJYxj2JPRYAEOz1G-_wO")
+async def handle_callback__EJYxj2JPRYAEOz1G__wO(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Удаляем старое сообщение
     await callback_query.message.delete()
@@ -292,7 +292,7 @@ async def handle_callback_0ispOvXMl8A_SwDYzEc_C(callback_query: types.CallbackQu
         "save_to_database": True,
         "retry_message": "Пожалуйста, попробуйте еще раз.",
         "success_message": "Спасибо за ваш ответ!",
-        "node_id": "0ispOvXMl8A_SwDYzEc-C"
+        "node_id": "_EJYxj2JPRYAEOz1G-_wO"
     }
 
 
