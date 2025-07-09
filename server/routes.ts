@@ -13,6 +13,7 @@ import http from "http";
 import { pipeline } from "stream/promises";
 import { URL } from "url";
 import dbRoutes from "./db-routes";
+import { Pool } from "pg";
 
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
@@ -2625,9 +2626,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/projects/:id/users", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
-      const success = await storage.deleteUserBotDataByProject(projectId);
-      res.json({ message: "All user data deleted successfully", deleted: success });
+      
+      // Подключение к PostgreSQL
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+      });
+
+      try {
+        // Удаляем всех пользователей из таблицы bot_users для данного проекта
+        const deleteResult = await pool.query(
+          `DELETE FROM bot_users WHERE project_id = $1`,
+          [projectId]
+        );
+        
+        await pool.end();
+        
+        console.log(`Deleted ${deleteResult.rowCount || 0} users for project ${projectId}`);
+        
+        res.json({ 
+          message: "All user data deleted successfully", 
+          deleted: true,
+          deletedCount: deleteResult.rowCount || 0
+        });
+      } catch (dbError) {
+        await pool.end();
+        console.error("Ошибка при удалении пользователей из bot_users:", dbError);
+        
+        // Fallback to regular storage if bot_users table doesn't exist
+        const success = await storage.deleteUserBotDataByProject(projectId);
+        res.json({ 
+          message: "All user data deleted successfully (fallback)", 
+          deleted: success,
+          deletedCount: 0
+        });
+      }
     } catch (error) {
+      console.error("Failed to delete user data:", error);
       res.status(500).json({ message: "Failed to delete user data" });
     }
   });

@@ -1,7 +1,9 @@
 """
 Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
-"""
+
+Команды для @BotFather:
+start - Запустить бота"""
 
 import asyncio
 import logging
@@ -16,7 +18,7 @@ from datetime import datetime
 import json
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "test_token_for_debug"
+BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -195,6 +197,14 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
     }
 
 
+# Настройка меню команд
+async def set_bot_commands():
+    commands = [
+        BotCommand(command="start", description="Запустить бота"),
+    ]
+    await bot.set_my_commands(commands)
+
+
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
 
@@ -219,19 +229,16 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = """Привет! Добро пожаловать в мой бот! 🤖
-
-Я помогу вам протестировать систему ответов."""
+    text = "Привет! Добро пожаловать!"
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📚 Помощь", callback_data="help-1"))
-    builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="survey-1"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="qtgiyw3f81CNFzBNj8ZmS"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-# Обработчик сбора пользовательского ввода для узла survey-1
+# Обработчик сбора пользовательского ввода для узла qtgiyw3f81CNFzBNj8ZmS
     prompt_text = "Пожалуйста, введите ваш ответ:"
     await message.answer(prompt_text)
     
@@ -242,39 +249,25 @@ async def start_handler(message: types.Message):
     # Ожидаем ответ пользователя
     user_data[message.from_user.id]["waiting_for_input"] = {
         "type": "text",
-        "variable": "response_name",
+        "variable": "user_response",
         "validation": "",
         "min_length": 0,
         "max_length": 0,
         "timeout": 60,
         "required": True,
         "allow_skip": False,
-        "save_to_db": True,
-        "retry_message": "Пожалуйста, введите ваше имя (2-50 символов)",
-        "success_message": "Спасибо! Теперь расскажите о себе",
+        "save_to_db": False,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": "Спасибо за ваш ответ!",
         "default_value": "",
-        "node_id": "survey-1"
+        "node_id": "qtgiyw3f81CNFzBNj8ZmS"
     }
     
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "help-1")
-async def handle_callback_help_1(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    text = """Это справочная информация о боте.
-
-Вы можете:
-- Пройти опрос
-- Получить помощь
-- Связаться с поддержкой"""
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🔙 Назад", callback_data="start-1"))
-    keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard)
-
-@dp.callback_query(lambda c: c.data == "survey-1")
-async def handle_callback_survey_1(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "qtgiyw3f81CNFzBNj8ZmS")
+async def handle_callback_qtgiyw3f81CNFzBNj8ZmS(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Удаляем старое сообщение
     await callback_query.message.delete()
@@ -289,30 +282,18 @@ async def handle_callback_survey_1(callback_query: types.CallbackQuery):
     # Настраиваем ожидание ввода
     user_data[callback_query.from_user.id]["waiting_for_input"] = {
         "type": "text",
-        "variable": "response_name",
+        "variable": "user_response",
         "validation": "",
         "min_length": 0,
         "max_length": 0,
         "timeout": 60,
         "required": True,
         "allow_skip": False,
-        "save_to_database": True,
-        "retry_message": "Пожалуйста, введите ваше имя (2-50 символов)",
-        "success_message": "Спасибо! Теперь расскажите о себе",
-        "node_id": "survey-1"
+        "save_to_database": False,
+        "retry_message": "Пожалуйста, попробуйте еще раз.",
+        "success_message": "Спасибо за ваш ответ!",
+        "node_id": "qtgiyw3f81CNFzBNj8ZmS"
     }
-
-@dp.callback_query(lambda c: c.data == "start-1")
-async def handle_callback_start_1(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    text = """Привет! Добро пожаловать в мой бот! 🤖
-
-Я помогу вам протестировать систему ответов."""
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📚 Помощь", callback_data="help-1"))
-    builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="survey-1"))
-    keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -414,10 +395,27 @@ async def handle_user_input(message: types.Message):
 
 # Запуск бота
 async def main():
-    # Инициализируем базу данных
-    await init_database()
-    print("🤖 Бот запущен и готов к работе!")
-    await dp.start_polling(bot)
+    global db_pool
+    try:
+        # Инициализируем базу данных
+        await init_database()
+        await set_bot_commands()
+        print("🤖 Бот запущен и готов к работе!")
+        await dp.start_polling(bot)
+    except KeyboardInterrupt:
+        print("🛑 Получен сигнал остановки, завершаем работу...")
+    except Exception as e:
+        logging.error(f"Критическая ошибка: {e}")
+    finally:
+        # Правильно закрываем все соединения
+        if db_pool:
+            await db_pool.close()
+            print("🔌 Соединение с базой данных закрыто")
+        
+        # Закрываем сессию бота
+        await bot.session.close()
+        print("🔌 Сессия бота закрыта")
+        print("✅ Бот корректно завершил работу")
 
 if __name__ == "__main__":
     asyncio.run(main())
