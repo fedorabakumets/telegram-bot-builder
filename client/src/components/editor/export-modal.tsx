@@ -45,7 +45,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     messageNodes: botData.nodes.filter(node => node.type === 'message').length,
     photoNodes: botData.nodes.filter(node => node.type === 'photo').length,
     keyboardNodes: botData.nodes.filter(node => node.data.keyboardType !== 'none').length,
-    totalButtons: botData.nodes.reduce((sum, node) => sum + node.data.buttons.length, 0),
+    totalButtons: botData.nodes.reduce((sum, node) => sum + (node.data.buttons?.length || 0), 0),
     commandsInMenu: botData.nodes.filter(node => 
       (node.type === 'start' || node.type === 'command') && node.data.showInMenu
     ).length,
