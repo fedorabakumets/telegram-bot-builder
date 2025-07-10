@@ -233,318 +233,18 @@ async def start_handler(message: types.Message):
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="WX_y28ZEsx6Sxaa8FMaJE"))
+    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="2siQY4OxebpQNU8waZbhA"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "WX_y28ZEsx6Sxaa8FMaJE")
-async def handle_callback_WX_y28ZEsx6Sxaa8FMaJE(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "2siQY4OxebpQNU8waZbhA")
+async def handle_callback_2siQY4OxebpQNU8waZbhA(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    # Удаляем старое сообщение
-    await callback_query.message.delete()
-    
-    text = f"Пожалуйста, введите ваш ответ:"
-    
-    # Создаем кнопки для выбора ответа
-    builder = ReplyKeyboardBuilder()
-    builder.add(KeyboardButton(text="Новый вариант"))
-    builder.add(KeyboardButton(text="Новый вариант"))
-    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
-    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
-    
-    # Инициализируем пользовательские данные если их нет
-    if callback_query.from_user.id not in user_data:
-        user_data[callback_query.from_user.id] = {}
-    
-    # Сохраняем настройки для обработки ответа
-    user_data[callback_query.from_user.id]["button_response_config"] = {
-        "node_id": "WX_y28ZEsx6Sxaa8FMaJE",
-        "variable": "user_response",
-        "save_to_database": True,
-        "success_message": "Спасибо за ваш ответ!",
-        "allow_multiple": False,
-        "next_node_id": "",
-        "options": [
-            {"index": 0, "text": "Новый вариант", "value": "Новый вариант", "action": "goto", "target": "", "url": ""},
-            {"index": 1, "text": "Новый вариант", "value": "Новый вариант", "action": "goto", "target": "", "url": ""},
-        ],
-        "selected": []
-    }
-
-# Обработчики кнопочных ответов для сбора пользовательского ввода
-
-@dp.callback_query(F.data == "response_WX_y28ZEsx6Sxaa8FMaJE_0")
-async def handle_response_WX_y28ZEsx6Sxaa8FMaJE_0(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "Новый вариант"
-    selected_text = "Новый вариант"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
-        if selected_value == "done":
-            # Завершаем множественный выбор
-            if len(config["selected"]) > 0:
-                # Сохраняем все выбранные элементы
-                variable_name = config.get("variable", "user_response")
-                import datetime
-                timestamp = datetime.datetime.now().isoformat()
-                node_id = config.get("node_id", "unknown")
-                
-                # Создаем структурированный ответ для множественного выбора
-                response_data = {
-                    "value": [item["value"] for item in config["selected"]],
-                    "text": [item["text"] for item in config["selected"]],
-                    "type": "multiple_choice",
-                    "timestamp": timestamp,
-                    "nodeId": node_id,
-                    "variable": variable_name
-                }
-                
-                # Сохраняем в пользовательские данные
-                user_data[user_id][variable_name] = response_data
-                
-                # Сохраняем в базу данных если включено
-                if config.get("save_to_database"):
-                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-                    if saved_to_db:
-                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
-                    else:
-                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-                
-                # Отправляем сообщение об успехе
-                success_message = config.get("success_message", "Спасибо за ваш выбор!")
-                selected_items = ", ".join([item["text"] for item in config["selected"]])
-                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
-                
-                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
-                
-                # Очищаем состояние
-                del user_data[user_id]["button_response_config"]
-                
-                # Автоматическая навигация к следующему узлу
-                next_node_id = config.get("next_node_id")
-                if next_node_id:
-                    try:
-                        # Вызываем обработчик для следующего узла
-                        if next_node_id == "WX_y28ZEsx6Sxaa8FMaJE":
-                            await handle_callback_WX_y28ZEsx6Sxaa8FMaJE(callback_query)
-                        elif next_node_id == "U25v-AbrQiCdcr5x8zLib":
-                            await handle_callback_U25v_AbrQiCdcr5x8zLib(callback_query)
-                        else:
-                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-                    except Exception as e:
-                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-                return
-            else:
-                # Если ничего не выбрано, показываем предупреждение
-                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
-                return
-        else:
-            # Обычная логика множественного выбора
-            if selected_value not in config["selected"]:
-                config["selected"].append({"text": selected_text, "value": selected_value})
-                await callback_query.answer(f"✅ Выбрано: {selected_text}")
-            else:
-                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-                await callback_query.answer(f"❌ Убрано: {selected_text}")
-            return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Навигация на основе действия кнопки
-    # Автоматическая навигация к следующему узлу (fallback)
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "WX_y28ZEsx6Sxaa8FMaJE":
-                await handle_callback_WX_y28ZEsx6Sxaa8FMaJE(callback_query)
-            elif next_node_id == "U25v-AbrQiCdcr5x8zLib":
-                await handle_callback_U25v_AbrQiCdcr5x8zLib(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_WX_y28ZEsx6Sxaa8FMaJE_1")
-async def handle_response_WX_y28ZEsx6Sxaa8FMaJE_1(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "Новый вариант"
-    selected_text = "Новый вариант"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        # Проверяем, является ли это кнопкой "Готово" для завершения выбора
-        if selected_value == "done":
-            # Завершаем множественный выбор
-            if len(config["selected"]) > 0:
-                # Сохраняем все выбранные элементы
-                variable_name = config.get("variable", "user_response")
-                import datetime
-                timestamp = datetime.datetime.now().isoformat()
-                node_id = config.get("node_id", "unknown")
-                
-                # Создаем структурированный ответ для множественного выбора
-                response_data = {
-                    "value": [item["value"] for item in config["selected"]],
-                    "text": [item["text"] for item in config["selected"]],
-                    "type": "multiple_choice",
-                    "timestamp": timestamp,
-                    "nodeId": node_id,
-                    "variable": variable_name
-                }
-                
-                # Сохраняем в пользовательские данные
-                user_data[user_id][variable_name] = response_data
-                
-                # Сохраняем в базу данных если включено
-                if config.get("save_to_database"):
-                    saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-                    if saved_to_db:
-                        logging.info(f"✅ Множественный выбор сохранен в БД: {variable_name} = {response_data['text']} (пользователь {user_id})")
-                    else:
-                        logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-                
-                # Отправляем сообщение об успехе
-                success_message = config.get("success_message", "Спасибо за ваш выбор!")
-                selected_items = ", ".join([item["text"] for item in config["selected"]])
-                await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_items}")
-                
-                logging.info(f"Получен множественный выбор: {variable_name} = {[item['text'] for item in config['selected']]}")
-                
-                # Очищаем состояние
-                del user_data[user_id]["button_response_config"]
-                
-                # Автоматическая навигация к следующему узлу
-                next_node_id = config.get("next_node_id")
-                if next_node_id:
-                    try:
-                        # Вызываем обработчик для следующего узла
-                        if next_node_id == "WX_y28ZEsx6Sxaa8FMaJE":
-                            await handle_callback_WX_y28ZEsx6Sxaa8FMaJE(callback_query)
-                        elif next_node_id == "U25v-AbrQiCdcr5x8zLib":
-                            await handle_callback_U25v_AbrQiCdcr5x8zLib(callback_query)
-                        else:
-                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-                    except Exception as e:
-                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-                return
-            else:
-                # Если ничего не выбрано, показываем предупреждение
-                await callback_query.answer("⚠️ Выберите хотя бы один вариант перед завершением", show_alert=True)
-                return
-        else:
-            # Обычная логика множественного выбора
-            if selected_value not in config["selected"]:
-                config["selected"].append({"text": selected_text, "value": selected_value})
-                await callback_query.answer(f"✅ Выбрано: {selected_text}")
-            else:
-                config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-                await callback_query.answer(f"❌ Убрано: {selected_text}")
-            return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Навигация на основе действия кнопки
-    # Автоматическая навигация к следующему узлу (fallback)
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "WX_y28ZEsx6Sxaa8FMaJE":
-                await handle_callback_WX_y28ZEsx6Sxaa8FMaJE(callback_query)
-            elif next_node_id == "U25v-AbrQiCdcr5x8zLib":
-                await handle_callback_U25v_AbrQiCdcr5x8zLib(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    text = "Новое сообщение"
+    await callback_query.message.edit_text(text)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -640,10 +340,10 @@ async def handle_user_input(message: types.Message):
                 target_node_id = option_target
                 try:
                     # Вызываем обработчик для целевого узла
-                    if target_node_id == "WX_y28ZEsx6Sxaa8FMaJE":
-                        await handle_callback_WX_y28ZEsx6Sxaa8FMaJE(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "U25v-AbrQiCdcr5x8zLib":
-                        await handle_callback_U25v_AbrQiCdcr5x8zLib(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    if target_node_id == "2siQY4OxebpQNU8waZbhA":
+                        await handle_callback_2siQY4OxebpQNU8waZbhA(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "WKrDpmQk5JOYmwlSBWKKj":
+                        await handle_callback_WKrDpmQk5JOYmwlSBWKKj(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -654,10 +354,10 @@ async def handle_user_input(message: types.Message):
                 if next_node_id:
                     try:
                         # Вызываем обработчик для следующего узла
-                        if next_node_id == "WX_y28ZEsx6Sxaa8FMaJE":
-                            await handle_callback_WX_y28ZEsx6Sxaa8FMaJE(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "U25v-AbrQiCdcr5x8zLib":
-                            await handle_callback_U25v_AbrQiCdcr5x8zLib(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        if next_node_id == "2siQY4OxebpQNU8waZbhA":
+                            await handle_callback_2siQY4OxebpQNU8waZbhA(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "WKrDpmQk5JOYmwlSBWKKj":
+                            await handle_callback_WKrDpmQk5JOYmwlSBWKKj(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -670,19 +370,76 @@ async def handle_user_input(message: types.Message):
             await message.answer(f"❌ Неверный выбор. Пожалуйста, выберите один из предложенных вариантов:\n\n{options_text}")
             return
     
-    # Проверяем, ожидаем ли мы текстовый ввод от пользователя
-    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:
-        return  # Игнорируем сообщение если не ожидаем ввод
-    
-    input_config = user_data[user_id]["waiting_for_input"]
-    user_text = message.text
-    
-    # Проверяем команду пропуска
-    if input_config.get("allow_skip") and user_text == "/skip":
-        await message.answer("⏭️ Ввод пропущен")
+    # Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)
+    if user_id in user_data and "waiting_for_input" in user_data[user_id]:
+        # Обрабатываем ввод через универсальную систему
+        waiting_node_id = user_data[user_id]["waiting_for_input"]
+        input_type = user_data[user_id].get("input_type", "text")
+        user_text = message.text
+        
+        # Находим узел для получения настроек
+        if waiting_node_id == "2siQY4OxebpQNU8waZbhA":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = datetime.datetime.now().isoformat()
+            
+            # Создаем структурированный ответ
+            response_data = {
+                "value": user_text,
+                "type": "text",
+                "timestamp": timestamp,
+                "nodeId": "2siQY4OxebpQNU8waZbhA",
+                "variable": "user_response"
+            }
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["user_response"] = response_data
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: user_response = {user_text}")
+            
+            return
+        
+        # Если узел не найден
+        logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")
         del user_data[user_id]["waiting_for_input"]
         return
     
+    # НОВАЯ ЛОГИКА: Проверяем, включен ли дополнительный сбор ответов для обычных кнопок
+    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):
+        input_node_id = user_data[user_id].get("input_node_id")
+        input_variable = user_data[user_id].get("input_variable", "button_response")
+        user_text = message.text
+        
+        # Сохраняем любой текст как дополнительный ответ
+        import datetime
+        timestamp = datetime.datetime.now().isoformat()
+        
+        response_data = {
+            "value": user_text,
+            "type": "text_addition",
+            "timestamp": timestamp,
+            "nodeId": input_node_id,
+            "variable": input_variable,
+            "source": "additional_text_input"
+        }
+        
+        # Сохраняем в пользовательские данные
+        user_data[user_id][f"{input_variable}_additional"] = response_data
+        
+        # Уведомляем пользователя
+        await message.answer("✅ Дополнительный комментарий сохранен!")
+        
+        logging.info(f"Дополнительный текстовый ввод: {input_variable}_additional = {user_text} (пользователь {user_id})")
+        return
+    
+    # Если нет активного ожидания ввода, игнорируем сообщение
+    return
     # Валидация длины текста
     min_length = input_config.get("min_length", 0)
     max_length = input_config.get("max_length", 0)
@@ -768,30 +525,12 @@ async def handle_user_input(message: types.Message):
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
             
             # Находим узел по ID и выполняем соответствующее действие
-            if next_node_id == "WX_y28ZEsx6Sxaa8FMaJE":
-                prompt_text = f"Пожалуйста, введите ваш ответ:"
-                
-                # Создаем кнопки для выбора ответа
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="Новый вариант", callback_data="response_WX_y28ZEsx6Sxaa8FMaJE_0"))
-                builder.add(InlineKeyboardButton(text="Новый вариант", callback_data="response_WX_y28ZEsx6Sxaa8FMaJE_1"))
-                keyboard = builder.as_markup()
-                await message.answer(prompt_text, reply_markup=keyboard)
-                
-                # Настраиваем конфигурацию кнопочного ответа
-                user_data[user_id]["button_response_config"] = {
-                    "variable": "user_response",
-                    "node_id": "WX_y28ZEsx6Sxaa8FMaJE",
-                    "timeout": 60,
-                    "allow_multiple": False,
-                    "save_to_database": True,
-                    "selected": [],
-                    "success_message": "Спасибо за ваш ответ!",
-                    "prompt": f"Пожалуйста, введите ваш ответ:",
-                    "next_node_id": None
-                }
-            elif next_node_id == "U25v-AbrQiCdcr5x8zLib":
-                logging.info(f"Переход к узлу U25v-AbrQiCdcr5x8zLib типа start")
+            if next_node_id == "2siQY4OxebpQNU8waZbhA":
+                text = f"Новое сообщение"
+                parse_mode = None
+                await message.answer(text, parse_mode=parse_mode)
+            elif next_node_id == "WKrDpmQk5JOYmwlSBWKKj":
+                logging.info(f"Переход к узлу WKrDpmQk5JOYmwlSBWKKj типа start")
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
