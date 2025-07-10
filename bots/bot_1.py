@@ -415,22 +415,25 @@ async def handle_callback_N1q3_DYFHOucSIyw58fdu(callback_query: types.CallbackQu
     logging.info(f"Кнопка сохранена: {button_display_text} (пользователь {user_id})")
     
     text = "Хочешься присоединиться к чату?"
-    # Активируем сбор пользовательского ввода
-    if callback_query.from_user.id not in user_data:
-        user_data[callback_query.from_user.id] = {}
     
-    user_data[callback_query.from_user.id]["waiting_for_input"] = "N1q3_DYFHOucSIyw58fdu"
-    user_data[callback_query.from_user.id]["input_type"] = "text"
-    user_data[callback_query.from_user.id]["input_variable"] = "response_N1q3_DYFHOucSIyw58fdu"
-    user_data[callback_query.from_user.id]["save_to_database"] = True
-    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="ДА", callback_data="1fJCssfE7JH8ASXBpgeUh"))
+    builder.add(InlineKeyboardButton(text="НЕТ", callback_data="u5L4a6DvDiwKBF6st7MJ8"))
+    keyboard = builder.as_markup()
+    
+    # Дополнительно: настраиваем сбор пользовательских ответов
+    user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
+    user_data[callback_query.from_user.id]["input_collection_enabled"] = True
+    user_data[callback_query.from_user.id]["input_node_id"] = "N1q3_DYFHOucSIyw58fdu"
+    user_data[callback_query.from_user.id]["input_variable"] = "источник"
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
-        await callback_query.message.edit_text(text)
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
     except Exception as e:
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text)
+        await callback_query.message.answer(text, reply_markup=keyboard)
     
 
 
