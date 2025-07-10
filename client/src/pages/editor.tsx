@@ -153,6 +153,16 @@ export default function Editor() {
     }
   }, [updateProjectMutation]);
 
+  // Enhanced onNodeUpdate that auto-saves changes
+  const handleNodeUpdate = useCallback((nodeId: string, updates: Partial<Node['data']>) => {
+    // First update local state
+    updateNodeData(nodeId, updates);
+    // Then auto-save to database with a small delay
+    setTimeout(() => {
+      updateProjectMutation.mutate({});
+    }, 500); // 500ms delay to allow for rapid typing
+  }, [updateNodeData, updateProjectMutation]);
+
   const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
     updateNode(nodeId, { position });
   }, [updateNode]);
@@ -348,7 +358,7 @@ export default function Editor() {
         projectId={currentProject.id}
         selectedNode={selectedNode}
         allNodes={nodes}
-        onNodeUpdate={updateNodeData}
+        onNodeUpdate={handleNodeUpdate}
         onButtonAdd={addButton}
         onButtonUpdate={updateButton}
         onButtonDelete={deleteButton}

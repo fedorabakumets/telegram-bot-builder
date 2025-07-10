@@ -229,150 +229,9 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = f"Привет! Добро пожаловать!"
-    
-    # Создаем inline клавиатуру с кнопками
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Ответить", callback_data="LwwhMKFn9QBHBDG5PhQMM"))
-    keyboard = builder.as_markup()
-    # Отправляем сообщение с прикрепленными inline кнопками
-    await message.answer(text, reply_markup=keyboard)
-
-# Обработчики inline кнопок
-
-@dp.callback_query(lambda c: c.data == "ng8y2zwBXtBE5nwhu92LM")
-async def handle_callback_ng8y2zwBXtBE5nwhu92LM(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
-    user_id = callback_query.from_user.id
-    button_text = "Обратно"
-    
-    # Сохраняем ответ в базу данных
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    
-    response_data = {
-        "value": button_text,
-        "type": "inline_button",
-        "timestamp": timestamp,
-        "nodeId": "ng8y2zwBXtBE5nwhu92LM",
-        "variable": "button_click",
-        "source": "inline_button_click"
-    }
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["last_button_click"] = response_data
-    
-    # Сохраняем в базу данных
-    await update_user_data_in_db(user_id, "button_click", response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
-    
     text = "Привет! Добро пожаловать!"
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Ответить", callback_data="LwwhMKFn9QBHBDG5PhQMM"))
-    keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
-    try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
-
-@dp.callback_query(lambda c: c.data == "258reuEOoevW3up6TsjWe")
-async def handle_callback_258reuEOoevW3up6TsjWe(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
-    user_id = callback_query.from_user.id
-    button_text = "Хорошо"
-    
-    # Сохраняем ответ в базу данных
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    
-    response_data = {
-        "value": button_text,
-        "type": "inline_button",
-        "timestamp": timestamp,
-        "nodeId": "258reuEOoevW3up6TsjWe",
-        "variable": "button_click",
-        "source": "inline_button_click"
-    }
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["last_button_click"] = response_data
-    
-    # Сохраняем в базу данных
-    await update_user_data_in_db(user_id, "button_click", response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
-    
-    text = "Я с тобой"
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Обратно", callback_data="ng8y2zwBXtBE5nwhu92LM"))
-    keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
-    try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
-
-@dp.callback_query(lambda c: c.data == "LwwhMKFn9QBHBDG5PhQMM")
-async def handle_callback_LwwhMKFn9QBHBDG5PhQMM(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
-    user_id = callback_query.from_user.id
-    button_text = "Ответить"
-    
-    # Сохраняем ответ в базу данных
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    
-    response_data = {
-        "value": button_text,
-        "type": "inline_button",
-        "timestamp": timestamp,
-        "nodeId": "LwwhMKFn9QBHBDG5PhQMM",
-        "variable": "button_click",
-        "source": "inline_button_click"
-    }
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["last_button_click"] = response_data
-    
-    # Сохраняем в базу данных
-    await update_user_data_in_db(user_id, "button_click", response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
-    
-    text = """Как тебе?
-Выбери кнопку или введи текст"""
-    # Активируем сбор пользовательского ввода (основной цикл)
-    if callback_query.from_user.id not in user_data:
-        user_data[callback_query.from_user.id] = {}
-    
-    user_data[callback_query.from_user.id]["waiting_for_input"] = "LwwhMKFn9QBHBDG5PhQMM"
-    user_data[callback_query.from_user.id]["input_type"] = "text"
-    user_data[callback_query.from_user.id]["input_variable"] = "настроение"
-    user_data[callback_query.from_user.id]["save_to_database"] = True
-    user_data[callback_query.from_user.id]["input_target_node_id"] = "258reuEOoevW3up6TsjWe"
-    
-    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Хорошо", callback_data="258reuEOoevW3up6TsjWe"))
-    builder.add(InlineKeyboardButton(text="Плохо", callback_data="258reuEOoevW3up6TsjWe"))
-    keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
-    try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
-    
+    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
+    await message.answer(text, reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.HTML)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -468,12 +327,8 @@ async def handle_user_input(message: types.Message):
                 target_node_id = option_target
                 try:
                     # Вызываем обработчик для целевого узла
-                    if target_node_id == "258reuEOoevW3up6TsjWe":
-                        await handle_callback_258reuEOoevW3up6TsjWe(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "LwwhMKFn9QBHBDG5PhQMM":
-                        await handle_callback_LwwhMKFn9QBHBDG5PhQMM(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "ng8y2zwBXtBE5nwhu92LM":
-                        await handle_callback_ng8y2zwBXtBE5nwhu92LM(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    if target_node_id == "mGuXNYCpWqIrX1mxQXftW":
+                        await handle_callback_mGuXNYCpWqIrX1mxQXftW(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -484,12 +339,8 @@ async def handle_user_input(message: types.Message):
                 if next_node_id:
                     try:
                         # Вызываем обработчик для следующего узла
-                        if next_node_id == "258reuEOoevW3up6TsjWe":
-                            await handle_callback_258reuEOoevW3up6TsjWe(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "LwwhMKFn9QBHBDG5PhQMM":
-                            await handle_callback_LwwhMKFn9QBHBDG5PhQMM(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "ng8y2zwBXtBE5nwhu92LM":
-                            await handle_callback_ng8y2zwBXtBE5nwhu92LM(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        if next_node_id == "mGuXNYCpWqIrX1mxQXftW":
+                            await handle_callback_mGuXNYCpWqIrX1mxQXftW(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -510,55 +361,6 @@ async def handle_user_input(message: types.Message):
         user_text = message.text
         
         # Находим узел для получения настроек
-        if waiting_node_id == "LwwhMKFn9QBHBDG5PhQMM":
-            
-            # Сохраняем ответ пользователя
-            import datetime
-            timestamp = datetime.datetime.now().isoformat()
-            
-            # Создаем структурированный ответ
-            response_data = {
-                "value": user_text,
-                "type": "text",
-                "timestamp": timestamp,
-                "nodeId": "LwwhMKFn9QBHBDG5PhQMM",
-                "variable": "настроение"
-            }
-            
-            # Сохраняем в пользовательские данные
-            user_data[user_id]["настроение"] = response_data
-            
-            # Сохраняем в базу данных
-            saved_to_db = await update_user_data_in_db(user_id, "настроение", response_data)
-            if saved_to_db:
-                logging.info(f"✅ Данные сохранены в БД: настроение = {user_text} (пользователь {user_id})")
-            else:
-                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-            
-            await message.answer("✅ Спасибо за ваш ответ!")
-            
-            # Очищаем состояние ожидания ввода
-            del user_data[user_id]["waiting_for_input"]
-            
-            logging.info(f"Получен пользовательский ввод: настроение = {user_text}")
-            
-            # Переходим к следующему узлу
-            try:
-                # Создаем фиктивный callback_query для навигации
-                import types as aiogram_types
-                import asyncio
-                fake_callback = aiogram_types.SimpleNamespace(
-                    id="input_nav",
-                    from_user=message.from_user,
-                    chat_instance="",
-                    data="258reuEOoevW3up6TsjWe",
-                    message=message,
-                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
-                )
-                await handle_callback_258reuEOoevW3up6TsjWe(fake_callback)
-            except Exception as e:
-                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
-            return
         
         # Если узел не найден
         logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")
@@ -680,23 +482,8 @@ async def handle_user_input(message: types.Message):
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
             
             # Находим узел по ID и выполняем соответствующее действие
-            if next_node_id == "258reuEOoevW3up6TsjWe":
-                text = f"Я с тобой"
-                parse_mode = None
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="Обратно", callback_data="ng8y2zwBXtBE5nwhu92LM"))
-                keyboard = builder.as_markup()
-                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "LwwhMKFn9QBHBDG5PhQMM":
-                text = f"Как тебе?\nВыбери кнопку или введи текст"
-                parse_mode = None
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="Хорошо", callback_data="258reuEOoevW3up6TsjWe"))
-                builder.add(InlineKeyboardButton(text="Плохо", callback_data="258reuEOoevW3up6TsjWe"))
-                keyboard = builder.as_markup()
-                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "ng8y2zwBXtBE5nwhu92LM":
-                logging.info(f"Переход к узлу ng8y2zwBXtBE5nwhu92LM типа start")
+            if next_node_id == "mGuXNYCpWqIrX1mxQXftW":
+                logging.info(f"Переход к узлу mGuXNYCpWqIrX1mxQXftW типа start")
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
