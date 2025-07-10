@@ -230,8 +230,53 @@ async def start_handler(message: types.Message):
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
     text = "Привет! Добро пожаловать!"
-    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
+    await message.answer(text)
+    
+    # Устанавливаем состояние ожидания ввода
+    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+    user_data[message.from_user.id]["waiting_for_input"] = "RUiDzGV2OHNvud89U92uP"
+
+# Обработчики inline кнопок
+
+@dp.callback_query(lambda c: c.data == "nDDNCrhIQd7UTDKG8DkDO")
+async def handle_callback_nDDNCrhIQd7UTDKG8DkDO(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    button_text = callback_query.data
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = callback_query.data
+    
+    # Сохраняем ответ в базу данных
+    import datetime
+    timestamp = datetime.datetime.now().isoformat()
+    
+    response_data = {
+        "value": button_display_text,
+        "type": "inline_button",
+        "timestamp": timestamp,
+        "nodeId": "nDDNCrhIQd7UTDKG8DkDO",
+        "variable": "button_click",
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["last_button_click"] = response_data
+    
+    # Сохраняем в базу данных
+    await update_user_data_in_db(user_id, "button_click", response_data)
+    logging.info(f"Кнопка сохранена: {button_display_text} (пользователь {user_id})")
+    
+    text = "Новое сообщение"
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -329,6 +374,8 @@ async def handle_user_input(message: types.Message):
                     # Вызываем обработчик для целевого узла
                     if target_node_id == "RUiDzGV2OHNvud89U92uP":
                         await handle_callback_RUiDzGV2OHNvud89U92uP(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "nDDNCrhIQd7UTDKG8DkDO":
+                        await handle_callback_nDDNCrhIQd7UTDKG8DkDO(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -341,6 +388,8 @@ async def handle_user_input(message: types.Message):
                         # Вызываем обработчик для следующего узла
                         if next_node_id == "RUiDzGV2OHNvud89U92uP":
                             await handle_callback_RUiDzGV2OHNvud89U92uP(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "nDDNCrhIQd7UTDKG8DkDO":
+                            await handle_callback_nDDNCrhIQd7UTDKG8DkDO(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -361,6 +410,48 @@ async def handle_user_input(message: types.Message):
         user_text = message.text
         
         # Находим узел для получения настроек
+        if waiting_node_id == "RUiDzGV2OHNvud89U92uP":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = datetime.datetime.now().isoformat()
+            
+            # Создаем структурированный ответ
+            response_data = {
+                "value": user_text,
+                "type": "text",
+                "timestamp": timestamp,
+                "nodeId": "RUiDzGV2OHNvud89U92uP",
+                "variable": "user_response"
+            }
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["user_response"] = response_data
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: user_response = {user_text}")
+            
+            # Переходим к следующему узлу
+            try:
+                # Создаем фиктивный callback_query для навигации
+                import types as aiogram_types
+                import asyncio
+                fake_callback = aiogram_types.SimpleNamespace(
+                    id="input_nav",
+                    from_user=message.from_user,
+                    chat_instance="",
+                    data="nDDNCrhIQd7UTDKG8DkDO",
+                    message=message,
+                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
+                )
+                await handle_callback_nDDNCrhIQd7UTDKG8DkDO(fake_callback)
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
+            return
         
         # Если узел не найден
         logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")
@@ -484,6 +575,10 @@ async def handle_user_input(message: types.Message):
             # Находим узел по ID и выполняем соответствующее действие
             if next_node_id == "RUiDzGV2OHNvud89U92uP":
                 logging.info(f"Переход к узлу RUiDzGV2OHNvud89U92uP типа start")
+            elif next_node_id == "nDDNCrhIQd7UTDKG8DkDO":
+                text = "Новое сообщение"
+                parse_mode = None
+                await message.answer(text, parse_mode=parse_mode)
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
