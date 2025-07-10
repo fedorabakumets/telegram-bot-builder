@@ -243,6 +243,32 @@ async def start_handler(message: types.Message):
 @dp.callback_query(lambda c: c.data == "ng8y2zwBXtBE5nwhu92LM")
 async def handle_callback_ng8y2zwBXtBE5nwhu92LM(callback_query: types.CallbackQuery):
     await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    button_text = "Обратно"
+    
+    # Сохраняем ответ в базу данных
+    import datetime
+    timestamp = datetime.datetime.now().isoformat()
+    
+    response_data = {
+        "value": button_text,
+        "type": "inline_button",
+        "timestamp": timestamp,
+        "nodeId": "ng8y2zwBXtBE5nwhu92LM",
+        "variable": "button_click",
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["last_button_click"] = response_data
+    
+    # Сохраняем в базу данных
+    await update_user_data_in_db(user_id, "button_click", response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
     text = "Привет! Добро пожаловать!"
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Ответить", callback_data="LwwhMKFn9QBHBDG5PhQMM"))
@@ -257,6 +283,32 @@ async def handle_callback_ng8y2zwBXtBE5nwhu92LM(callback_query: types.CallbackQu
 @dp.callback_query(lambda c: c.data == "258reuEOoevW3up6TsjWe")
 async def handle_callback_258reuEOoevW3up6TsjWe(callback_query: types.CallbackQuery):
     await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    button_text = "Хорошо"
+    
+    # Сохраняем ответ в базу данных
+    import datetime
+    timestamp = datetime.datetime.now().isoformat()
+    
+    response_data = {
+        "value": button_text,
+        "type": "inline_button",
+        "timestamp": timestamp,
+        "nodeId": "258reuEOoevW3up6TsjWe",
+        "variable": "button_click",
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["last_button_click"] = response_data
+    
+    # Сохраняем в базу данных
+    await update_user_data_in_db(user_id, "button_click", response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
     text = "Я с тобой"
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Обратно", callback_data="ng8y2zwBXtBE5nwhu92LM"))
@@ -271,6 +323,32 @@ async def handle_callback_258reuEOoevW3up6TsjWe(callback_query: types.CallbackQu
 @dp.callback_query(lambda c: c.data == "LwwhMKFn9QBHBDG5PhQMM")
 async def handle_callback_LwwhMKFn9QBHBDG5PhQMM(callback_query: types.CallbackQuery):
     await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    button_text = "Ответить"
+    
+    # Сохраняем ответ в базу данных
+    import datetime
+    timestamp = datetime.datetime.now().isoformat()
+    
+    response_data = {
+        "value": button_text,
+        "type": "inline_button",
+        "timestamp": timestamp,
+        "nodeId": "LwwhMKFn9QBHBDG5PhQMM",
+        "variable": "button_click",
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["last_button_click"] = response_data
+    
+    # Сохраняем в базу данных
+    await update_user_data_in_db(user_id, "button_click", response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
     text = """Как тебе?
 Выбери кнопку или введи текст"""
     # Активируем сбор пользовательского ввода (основной цикл)

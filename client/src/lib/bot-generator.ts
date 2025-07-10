@@ -335,6 +335,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
           
+          // Сохраняем нажатие кнопки в базу данных
+          code += '    # Сохраняем нажатие кнопки в базу данных\n';
+          code += '    user_id = callback_query.from_user.id\n';
+          code += `    button_text = "${button.text}"\n`;
+          code += '    \n';
+          code += '    # Сохраняем ответ в базу данных\n';
+          code += '    import datetime\n';
+          code += '    timestamp = datetime.datetime.now().isoformat()\n';
+          code += '    \n';
+          code += '    response_data = {\n';
+          code += '        "value": button_text,\n';
+          code += '        "type": "inline_button",\n';
+          code += '        "timestamp": timestamp,\n';
+          code += `        "nodeId": "${button.target || callbackData}",\n`;
+          code += '        "variable": "button_click",\n';
+          code += '        "source": "inline_button_click"\n';
+          code += '    }\n';
+          code += '    \n';
+          code += '    # Сохраняем в пользовательские данные\n';
+          code += '    if user_id not in user_data:\n';
+          code += '        user_data[user_id] = {}\n';
+          code += '    user_data[user_id]["last_button_click"] = response_data\n';
+          code += '    \n';
+          code += '    # Сохраняем в базу данных\n';
+          code += '    await update_user_data_in_db(user_id, "button_click", response_data)\n';
+          code += '    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")\n';
+          code += '    \n';
+          
           if (targetNode) {
             
             // Handle different target node types
@@ -1113,6 +1141,50 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}")\n`;
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
+          
+          // Сохраняем нажатие кнопки в базу данных
+          code += '    # Сохраняем нажатие кнопки в базу данных\n';
+          code += '    user_id = callback_query.from_user.id\n';
+          code += '    button_text = callback_query.data\n';
+          code += '    \n';
+          code += '    # Ищем текст кнопки по callback_data\n';
+          // Генерируем код для поиска текста кнопки
+          const sourceNode = nodes.find(n => 
+            n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
+          );
+          if (sourceNode) {
+            const button = sourceNode.data.buttons.find(btn => btn.target === nodeId);
+            if (button) {
+              code += `    button_display_text = "${button.text}"\n`;
+            } else {
+              code += '    button_display_text = callback_query.data\n';
+            }
+          } else {
+            code += '    button_display_text = callback_query.data\n';
+          }
+          code += '    \n';
+          code += '    # Сохраняем ответ в базу данных\n';
+          code += '    import datetime\n';
+          code += '    timestamp = datetime.datetime.now().isoformat()\n';
+          code += '    \n';
+          code += '    response_data = {\n';
+          code += '        "value": button_display_text,\n';
+          code += '        "type": "inline_button",\n';
+          code += '        "timestamp": timestamp,\n';
+          code += `        "nodeId": "${nodeId}",\n`;
+          code += '        "variable": "button_click",\n';
+          code += '        "source": "inline_button_click"\n';
+          code += '    }\n';
+          code += '    \n';
+          code += '    # Сохраняем в пользовательские данные\n';
+          code += '    if user_id not in user_data:\n';
+          code += '        user_data[user_id] = {}\n';
+          code += '    user_data[user_id]["last_button_click"] = response_data\n';
+          code += '    \n';
+          code += '    # Сохраняем в базу данных\n';
+          code += '    await update_user_data_in_db(user_id, "button_click", response_data)\n';
+          code += '    logging.info(f"Кнопка сохранена: {button_display_text} (пользователь {user_id})")\n';
+          code += '    \n';
           
           // Generate response based on node type
           if (targetNode.type === 'user-input') {
