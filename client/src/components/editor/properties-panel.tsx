@@ -1543,47 +1543,17 @@ export function PropertiesPanel({
                       </Select>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
-                          <i className="fas fa-tag mr-1"></i>
-                          Тип ввода
-                        </Label>
-                        <Select
-                          value={selectedNode.data.inputType || 'text'}
-                          onValueChange={(value) => onNodeUpdate(selectedNode.id, { inputType: value })}
-                        >
-                          <SelectTrigger className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="text">Текст</SelectItem>
-                            <SelectItem value="number">Число</SelectItem>
-                            <SelectItem value="email">Email</SelectItem>
-                            <SelectItem value="phone">Телефон</SelectItem>
-                            <SelectItem value="photo">Фото</SelectItem>
-                            <SelectItem value="video">Видео</SelectItem>
-                            <SelectItem value="audio">Аудио</SelectItem>
-                            <SelectItem value="document">Документ</SelectItem>
-                            <SelectItem value="location">Местоположение</SelectItem>
-                            <SelectItem value="contact">Контакт</SelectItem>
-                            <SelectItem value="any">Любой</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
-                          <i className="fas fa-code mr-1"></i>
-                          Имя переменной
-                        </Label>
-                        <Input
-                          value={selectedNode.data.inputVariable || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { inputVariable: e.target.value })}
-                          className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
-                          placeholder="user_response"
-                        />
-                      </div>
+                    <div>
+                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                        <i className="fas fa-code mr-1"></i>
+                        Имя переменной
+                      </Label>
+                      <Input
+                        value={selectedNode.data.inputVariable || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { inputVariable: e.target.value })}
+                        className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                        placeholder="user_response"
+                      />
                     </div>
                   </div>
                 </div>
@@ -2074,30 +2044,7 @@ export function PropertiesPanel({
                     </Select>
                   </div>
 
-                  {/* Input Type for text responses */}
-                  {selectedNode.data.responseType === 'text' && (
-                    <div>
-                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                        <i className="fas fa-keyboard mr-1"></i>
-                        Тип ввода
-                      </Label>
-                      <Select
-                        value={selectedNode.data.inputType || 'text'}
-                        onValueChange={(value) => onNodeUpdate(selectedNode.id, { inputType: value })}
-                      >
-                        <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="text">Текст</SelectItem>
-                          <SelectItem value="number">Число</SelectItem>
-                          <SelectItem value="email">Email</SelectItem>
-                          <SelectItem value="phone">Телефон</SelectItem>
-                          <SelectItem value="any">Любой</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+
 
                   {/* Button Type for button responses */}
                   {selectedNode.data.responseType === 'buttons' && (
