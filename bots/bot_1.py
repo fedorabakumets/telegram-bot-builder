@@ -247,7 +247,12 @@ async def handle_callback_ng8y2zwBXtBE5nwhu92LM(callback_query: types.CallbackQu
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Ответить", callback_data="LwwhMKFn9QBHBDG5PhQMM"))
     keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard)
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
 
 @dp.callback_query(lambda c: c.data == "258reuEOoevW3up6TsjWe")
 async def handle_callback_258reuEOoevW3up6TsjWe(callback_query: types.CallbackQuery):
@@ -256,7 +261,12 @@ async def handle_callback_258reuEOoevW3up6TsjWe(callback_query: types.CallbackQu
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Обратно", callback_data="ng8y2zwBXtBE5nwhu92LM"))
     keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard)
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
 
 @dp.callback_query(lambda c: c.data == "LwwhMKFn9QBHBDG5PhQMM")
 async def handle_callback_LwwhMKFn9QBHBDG5PhQMM(callback_query: types.CallbackQuery):
@@ -278,7 +288,12 @@ async def handle_callback_LwwhMKFn9QBHBDG5PhQMM(callback_query: types.CallbackQu
     builder.add(InlineKeyboardButton(text="Хорошо", callback_data="258reuEOoevW3up6TsjWe"))
     builder.add(InlineKeyboardButton(text="Плохо", callback_data="258reuEOoevW3up6TsjWe"))
     keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard)
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
     
 
 
