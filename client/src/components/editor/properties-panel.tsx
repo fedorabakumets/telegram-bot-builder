@@ -2027,23 +2027,23 @@ export function PropertiesPanel({
                     </div>
                   </div>
                   
-                  {/* Response Type */}
-                  <div>
-                    <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                      <i className="fas fa-list mr-1"></i>
-                      Тип ответа
-                    </Label>
-                    <Select
-                      value={selectedNode.data.responseType || 'text'}
-                      onValueChange={(value: 'text') => onNodeUpdate(selectedNode.id, { responseType: value })}
-                    >
-                      <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="text">Текстовый ввод</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  {/* Text Input Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-blue-200/30 dark:border-blue-800/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        <i className="fas fa-keyboard mr-1"></i>
+                        Текстовый ввод
+                      </Label>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Если выбран текстовый ввод, то как варианты ответа воспринимаются и кнопки и текстовой ввод
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.enableTextInput ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableTextInput: checked })}
+                      />
+                    </div>
                   </div>
 
 
