@@ -2355,7 +2355,7 @@ export function PropertiesPanel({
                             <SelectItem key={node.id} value={node.id}>
                               <div className="flex items-center gap-2">
                                 <i className="fas fa-terminal text-xs text-purple-500"></i>
-                                <span>{node.data.command}</span>
+                                <span>{node.data.command} ({node.id})</span>
                               </div>
                             </SelectItem>
                           ))}
@@ -2400,7 +2400,7 @@ export function PropertiesPanel({
                               <SelectItem key={node.id} value={node.id}>
                                 <div className="flex items-center gap-2">
                                   <i className={`${iconClass} text-xs`}></i>
-                                  <span>{nodeName}</span>
+                                  <span>{nodeName} ({node.id})</span>
                                 </div>
                               </SelectItem>
                             );
@@ -2413,6 +2413,13 @@ export function PropertiesPanel({
                         )}
                       </SelectContent>
                     </Select>
+                    
+                    <Input
+                      value={selectedNode.data.inputTargetNodeId || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { inputTargetNodeId: e.target.value })}
+                      className="mt-2 text-xs border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                      placeholder="Или введите ID узла вручную (например: ylObKToWFsIl-opIcowPZ)"
+                    />
                   </div>
 
                   {/* Save to Database */}
