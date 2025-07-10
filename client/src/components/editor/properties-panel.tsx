@@ -1600,6 +1600,28 @@ export function PropertiesPanel({
                     </div>
                     
                     <div className="space-y-4">
+                      <div>
+                        <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-2 block">
+                          <i className="fas fa-keyboard mr-1"></i>
+                          Тип кнопок
+                        </Label>
+                        <Select
+                          value={selectedNode.data.buttonType || 'inline'}
+                          onValueChange={(value) => onNodeUpdate(selectedNode.id, { buttonType: value })}
+                        >
+                          <SelectTrigger className="border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="inline">Inline кнопки</SelectItem>
+                            <SelectItem value="reply">Reply кнопки</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                          Inline кнопки появляются под сообщением, Reply кнопки заменяют клавиатуру
+                        </div>
+                      </div>
+                      
                       <div className="flex items-center justify-between">
                         <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300">Кнопки выбора</Label>
                         <UIButton
@@ -1609,7 +1631,10 @@ export function PropertiesPanel({
                             const newOption = {
                               id: nanoid(),
                               text: 'Новый вариант',
-                              value: ''
+                              value: '',
+                              action: 'goto' as const,
+                              target: '',
+                              url: ''
                             };
                             const currentOptions = selectedNode.data.responseOptions || [];
                             onNodeUpdate(selectedNode.id, { 
@@ -1650,20 +1675,180 @@ export function PropertiesPanel({
                                 </svg>
                               </UIButton>
                             </div>
-                            <div>
-                              <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1 block">
-                                Значение для сохранения
-                              </Label>
-                              <Input
-                                value={option.value || ''}
-                                onChange={(e) => {
-                                  const updatedOptions = [...(selectedNode.data.responseOptions || [])];
-                                  updatedOptions[index] = { ...option, value: e.target.value };
-                                  onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
-                                }}
-                                className="text-xs border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200"
-                                placeholder="Значение (если пусто - используется текст кнопки)"
-                              />
+                            
+                            <div className="space-y-2">
+                              <div>
+                                <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1 block">
+                                  Значение для сохранения
+                                </Label>
+                                <Input
+                                  value={option.value || ''}
+                                  onChange={(e) => {
+                                    const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                    updatedOptions[index] = { ...option, value: e.target.value };
+                                    onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                  }}
+                                  className="text-xs border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200"
+                                  placeholder="Значение (если пусто - используется текст кнопки)"
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1 block">
+                                  Действие после выбора
+                                </Label>
+                                <Select
+                                  value={option.action || 'goto'}
+                                  onValueChange={(value: 'goto' | 'command' | 'url') => {
+                                    const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                    updatedOptions[index] = { ...option, action: value };
+                                    onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                  }}
+                                >
+                                  <SelectTrigger className="w-full text-xs border-indigo-200 dark:border-indigo-700 focus:border-indigo-500">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="goto">Перейти к экрану</SelectItem>
+                                    <SelectItem value="command">Выполнить команду</SelectItem>
+                                    <SelectItem value="url">Открыть ссылку</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {option.action === 'url' && (
+                                <div>
+                                  <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1 block">
+                                    Ссылка
+                                  </Label>
+                                  <Input
+                                    value={option.url || ''}
+                                    onChange={(e) => {
+                                      const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                      updatedOptions[index] = { ...option, url: e.target.value };
+                                      onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                    }}
+                                    className="text-xs border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200"
+                                    placeholder="https://example.com"
+                                  />
+                                </div>
+                              )}
+                              
+                              {option.action === 'command' && (
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1 block">
+                                      Команда
+                                    </Label>
+                                    <Select
+                                      value={option.target || ''}
+                                      onValueChange={(value) => {
+                                        const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                        updatedOptions[index] = { ...option, target: value };
+                                        onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                      }}
+                                    >
+                                      <SelectTrigger className="text-xs border-indigo-200 dark:border-indigo-700">
+                                        <SelectValue placeholder="Выберите команду" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {allNodes
+                                          ?.filter(node => (node.type === 'start' || node.type === 'command') && node.data.command)
+                                          .map((node) => (
+                                            <SelectItem key={node.id} value={node.data.command!}>
+                                              <div className="flex items-center space-x-2">
+                                                <i className={`${node.type === 'start' ? 'fas fa-play' : 'fas fa-terminal'} text-xs`}></i>
+                                                <span>{node.data.command}</span>
+                                                {node.data.description && (
+                                                  <span className="text-gray-500">- {node.data.description}</span>
+                                                )}
+                                              </div>
+                                            </SelectItem>
+                                          ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <Input
+                                    value={option.target || ''}
+                                    onChange={(e) => {
+                                      const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                      updatedOptions[index] = { ...option, target: e.target.value };
+                                      onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                    }}
+                                    className="text-xs border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200"
+                                    placeholder="Или введите команду вручную (например: /help)"
+                                  />
+                                  
+                                  {option.target && !option.target.startsWith('/') && (
+                                    <div className="flex items-center text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 p-2 rounded-md">
+                                      <svg className="w-3 h-3 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                      </svg>
+                                      <span>Команда должна начинаться с символа "/"</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {option.action === 'goto' && (
+                                <div className="space-y-2">
+                                  <div>
+                                    <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-1 block">
+                                      Целевой экран
+                                    </Label>
+                                    <Select
+                                      value={option.target || ''}
+                                      onValueChange={(value) => {
+                                        const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                        updatedOptions[index] = { ...option, target: value };
+                                        onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                      }}
+                                    >
+                                      <SelectTrigger className="text-xs border-indigo-200 dark:border-indigo-700">
+                                        <SelectValue placeholder="Выберите экран" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {allNodes
+                                          ?.filter(node => node.id !== selectedNode.id)
+                                          .map((node) => {
+                                            const nodeName = 
+                                              node.type === 'start' ? node.data.command :
+                                              node.type === 'command' ? node.data.command :
+                                              node.type === 'message' ? 'Сообщение' :
+                                              node.type === 'photo' ? 'Фото' :
+                                              node.type === 'keyboard' ? 'Клавиатура' :
+                                              node.type === 'condition' ? 'Условие' :
+                                              node.type === 'input' ? 'Ввод' :
+                                              node.type === 'user-input' ? 'Сбор данных' : 'Узел';
+                                            
+                                            return (
+                                              <SelectItem key={node.id} value={node.id}>
+                                                {nodeName} ({node.id})
+                                              </SelectItem>
+                                            );
+                                          })}
+                                        {(!allNodes || allNodes.filter(node => node.id !== selectedNode.id).length === 0) && (
+                                          <SelectItem value="no-nodes" disabled>
+                                            Создайте другие экраны для выбора
+                                          </SelectItem>
+                                        )}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <Input
+                                    value={option.target || ''}
+                                    onChange={(e) => {
+                                      const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                      updatedOptions[index] = { ...option, target: e.target.value };
+                                      onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                    }}
+                                    className="text-xs border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200"
+                                    placeholder="Или введите ID вручную"
+                                  />
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}

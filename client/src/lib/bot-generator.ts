@@ -833,21 +833,38 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               if (responseType === 'buttons' && responseOptions.length > 0) {
                 // Обработка кнопочного ответа
+                const buttonType = targetNode.data.buttonType || 'inline';
                 code += '    \n';
                 code += '    # Создаем кнопки для выбора ответа\n';
-                code += '    builder = InlineKeyboardBuilder()\n';
                 
-                responseOptions.forEach((option, index) => {
-                  const optionValue = option.value || option.text;
-                  code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
-                });
-                
-                if (allowSkip) {
-                  code += `    builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="skip_${targetNode.id}"))\n`;
+                if (buttonType === 'reply') {
+                  code += '    builder = ReplyKeyboardBuilder()\n';
+                  
+                  responseOptions.forEach((option, index) => {
+                    code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
+                  });
+                  
+                  if (allowSkip) {
+                    code += `    builder.add(KeyboardButton(text="⏭️ Пропустить"))\n`;
+                  }
+                  
+                  code += '    keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=True)\n';
+                  code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
+                } else {
+                  code += '    builder = InlineKeyboardBuilder()\n';
+                  
+                  responseOptions.forEach((option, index) => {
+                    const optionValue = option.value || option.text;
+                    code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
+                  });
+                  
+                  if (allowSkip) {
+                    code += `    builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="skip_${targetNode.id}"))\n`;
+                  }
+                  
+                  code += '    keyboard = builder.as_markup()\n';
+                  code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
                 }
-                
-                code += '    keyboard = builder.as_markup()\n';
-                code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
                 code += '    \n';
                 code += '    # Инициализируем пользовательские данные если их нет\n';
                 code += '    if callback_query.from_user.id not in user_data:\n';
@@ -868,7 +885,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '        "options": [\n';
                 responseOptions.forEach((option, index) => {
                   const optionValue = option.value || option.text;
-                  code += `            {"index": ${index}, "text": "${option.text}", "value": "${optionValue}"},\n`;
+                  const optionAction = option.action || 'goto';
+                  const optionTarget = option.target || '';
+                  const optionUrl = option.url || '';
+                  code += `            {"index": ${index}, "text": "${option.text}", "value": "${optionValue}", "action": "${optionAction}", "target": "${optionTarget}", "url": "${optionUrl}"},\n`;
                 });
                 code += '        ],\n';
                 code += `        "selected": []\n`;
@@ -1253,24 +1273,85 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '    \n';
         code += '    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")\n';
         code += '    \n';
-        code += '    # Автоматическая навигация к следующему узлу\n';
-        code += '    next_node_id = config.get("next_node_id")\n';
-        code += '    if next_node_id:\n';
-        code += '        try:\n';
-        code += '            # Вызываем обработчик для следующего узла\n';
+        code += '    # Навигация на основе действия кнопки\n';
         
-        // Generate if-elif chain for all nodes
-        nodes.forEach((btnNode, btnIndex) => {
-          const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-          const condition = btnIndex === 0 ? 'if' : 'elif';
-          code += `            ${condition} next_node_id == "${btnNode.id}":\n`;
-          code += `                await handle_callback_${safeFunctionName}(callback_query)\n`;
-        });
+        // Добавляем логику навигации в зависимости от action кнопки
+        const optionAction = option.action || 'goto';
+        const optionTarget = option.target || '';
+        const optionUrl = option.url || '';
         
-        code += '            else:\n';
-        code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-        code += '        except Exception as e:\n';
-        code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+        if (optionAction === 'url' && optionUrl) {
+          code += `    # Открытие ссылки\n`;
+          code += `    url = "${optionUrl}"\n`;
+          code += `    keyboard = InlineKeyboardMarkup(inline_keyboard=[\n`;
+          code += `        [InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]\n`;
+          code += `    ])\n`;
+          code += `    await callback_query.message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)\n`;
+        } else if (optionAction === 'command' && optionTarget) {
+          code += `    # Выполнение команды\n`;
+          code += `    command = "${optionTarget}"\n`;
+          code += `    # Создаем фиктивное сообщение для выполнения команды\n`;
+          code += `    import types as aiogram_types\n`;
+          code += `    fake_message = aiogram_types.SimpleNamespace(\n`;
+          code += `        from_user=callback_query.from_user,\n`;
+          code += `        chat=callback_query.message.chat,\n`;
+          code += `        text=command,\n`;
+          code += `        message_id=callback_query.message.message_id\n`;
+          code += `    )\n`;
+          code += `    \n`;
+          // Добавляем обработку различных команд
+          const commandNodes = nodes.filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
+          commandNodes.forEach((cmdNode, cmdIndex) => {
+            const condition = cmdIndex === 0 ? 'if' : 'elif';
+            const cmdSafeName = cmdNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            code += `    ${condition} command == "${cmdNode.data.command}":\n`;
+            code += `        try:\n`;
+            code += `            await ${cmdNode.type === 'start' ? 'start_handler' : `${cmdNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`}(fake_message)\n`;
+            code += `        except Exception as e:\n`;
+            code += `            logging.error(f"Ошибка выполнения команды ${cmdNode.data.command}: {e}")\n`;
+          });
+          if (commandNodes.length > 0) {
+            code += `    else:\n`;
+            code += `        logging.warning(f"Неизвестная команда: {command}")\n`;
+          }
+        } else if (optionAction === 'goto' && optionTarget) {
+          code += `    # Переход к узлу\n`;
+          code += `    target_node_id = "${optionTarget}"\n`;
+          code += `    try:\n`;
+          code += `        # Вызываем обработчик для целевого узла\n`;
+          
+          // Generate if-elif chain for all nodes
+          nodes.forEach((btnNode, btnIndex) => {
+            const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            const condition = btnIndex === 0 ? 'if' : 'elif';
+            code += `        ${condition} target_node_id == "${btnNode.id}":\n`;
+            code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
+          });
+          
+          code += '        else:\n';
+          code += '            logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
+          code += '    except Exception as e:\n';
+          code += '        logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")\n';
+        } else {
+          // Fallback к старой системе next_node_id если нет action
+          code += '    # Автоматическая навигация к следующему узлу (fallback)\n';
+          code += '    next_node_id = config.get("next_node_id")\n';
+          code += '    if next_node_id:\n';
+          code += '        try:\n';
+          code += '            # Вызываем обработчик для следующего узла\n';
+          
+          nodes.forEach((btnNode, btnIndex) => {
+            const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            const condition = btnIndex === 0 ? 'if' : 'elif';
+            code += `            ${condition} next_node_id == "${btnNode.id}":\n`;
+            code += `                await handle_callback_${safeFunctionName}(callback_query)\n`;
+          });
+          
+          code += '            else:\n';
+          code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+          code += '        except Exception as e:\n';
+          code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+        }
       });
       
       // Обработчик для кнопки "Пропустить"
@@ -1298,7 +1379,143 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'async def handle_user_input(message: types.Message):\n';
   code += '    user_id = message.from_user.id\n';
   code += '    \n';
-  code += '    # Проверяем, ожидаем ли мы ввод от пользователя\n';
+  code += '    # Проверяем, ожидаем ли мы кнопочный ответ через reply клавиатуру\n';
+  code += '    if user_id in user_data and "button_response_config" in user_data[user_id]:\n';
+  code += '        config = user_data[user_id]["button_response_config"]\n';
+  code += '        user_text = message.text\n';
+  code += '        \n';
+  code += '        # Ищем выбранный вариант среди доступных опций\n';
+  code += '        selected_option = None\n';
+  code += '        for option in config.get("options", []):\n';
+  code += '            if option["text"] == user_text:\n';
+  code += '                selected_option = option\n';
+  code += '                break\n';
+  code += '        \n';
+  code += '        if selected_option:\n';
+  code += '            selected_value = selected_option["value"]\n';
+  code += '            selected_text = selected_option["text"]\n';
+  code += '            \n';
+  code += '            # Сохраняем ответ пользователя\n';
+  code += '            variable_name = config.get("variable", "button_response")\n';
+  code += '            import datetime\n';
+  code += '            timestamp = datetime.datetime.now().isoformat()\n';
+  code += '            node_id = config.get("node_id", "unknown")\n';
+  code += '            \n';
+  code += '            # Создаем структурированный ответ\n';
+  code += '            response_data = {\n';
+  code += '                "value": selected_value,\n';
+  code += '                "text": selected_text,\n';
+  code += '                "type": "button_choice",\n';
+  code += '                "timestamp": timestamp,\n';
+  code += '                "nodeId": node_id,\n';
+  code += '                "variable": variable_name\n';
+  code += '            }\n';
+  code += '            \n';
+  code += '            # Сохраняем в пользовательские данные\n';
+  code += '            user_data[user_id][variable_name] = response_data\n';
+  code += '            \n';
+  code += '            # Сохраняем в базу данных если включено\n';
+  code += '            if config.get("save_to_database"):\n';
+  code += '                saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
+  code += '                if saved_to_db:\n';
+  code += '                    logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")\n';
+  code += '                else:\n';
+  code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '            \n';
+  code += '            # Отправляем сообщение об успехе\n';
+  code += '            success_message = config.get("success_message", "Спасибо за ваш выбор!")\n';
+  code += '            await message.answer(f"{success_message}\\n\\n✅ Ваш выбор: {selected_text}", reply_markup=ReplyKeyboardRemove())\n';
+  code += '            \n';
+  code += '            # Очищаем состояние\n';
+  code += '            del user_data[user_id]["button_response_config"]\n';
+  code += '            \n';
+  code += '            logging.info(f"Получен кнопочный ответ через reply клавиатуру: {variable_name} = {selected_text}")\n';
+  code += '            \n';
+  code += '            # Навигация на основе действия кнопки\n';
+  code += '            option_action = selected_option.get("action", "goto")\n';
+  code += '            option_target = selected_option.get("target", "")\n';
+  code += '            option_url = selected_option.get("url", "")\n';
+  code += '            \n';
+  code += '            if option_action == "url" and option_url:\n';
+  code += '                # Открытие ссылки\n';
+  code += '                url = option_url\n';
+  code += '                keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
+  code += '                    [InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]\n';
+  code += '                ])\n';
+  code += '                await message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)\n';
+  code += '            elif option_action == "command" and option_target:\n';
+  code += '                # Выполнение команды\n';
+  code += '                command = option_target\n';
+  code += '                # Создаем фиктивное сообщение для выполнения команды\n';
+  code += '                import types as aiogram_types\n';
+  code += '                fake_message = aiogram_types.SimpleNamespace(\n';
+  code += '                    from_user=message.from_user,\n';
+  code += '                    chat=message.chat,\n';
+  code += '                    text=command,\n';
+  code += '                    message_id=message.message_id\n';
+  code += '                )\n';
+  code += '                \n';
+  
+  // Добавляем обработку различных команд для reply клавиатур
+  const commandNodes = nodes.filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
+  commandNodes.forEach((cmdNode, cmdIndex) => {
+    const condition = cmdIndex === 0 ? 'if' : 'elif';
+    code += `                ${condition} command == "${cmdNode.data.command}":\n`;
+    code += `                    try:\n`;
+    code += `                        await ${cmdNode.type === 'start' ? 'start_handler' : `${cmdNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`}(fake_message)\n`;
+    code += `                    except Exception as e:\n`;
+    code += `                        logging.error(f"Ошибка выполнения команды ${cmdNode.data.command}: {e}")\n`;
+  });
+  if (commandNodes.length > 0) {
+    code += `                else:\n`;
+    code += `                    logging.warning(f"Неизвестная команда: {command}")\n`;
+  }
+  
+  code += '            elif option_action == "goto" and option_target:\n';
+  code += '                # Переход к узлу\n';
+  code += '                target_node_id = option_target\n';
+  code += '                try:\n';
+  code += '                    # Вызываем обработчик для целевого узла\n';
+
+  // Generate navigation logic for reply button responses  
+  nodes.forEach((btnNode, btnIndex) => {
+    const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+    const condition = btnIndex === 0 ? 'if' : 'elif';
+    code += `                    ${condition} target_node_id == "${btnNode.id}":\n`;
+    code += `                        await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))\n`;
+  });
+  
+  code += '                    else:\n';
+  code += '                        logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
+  code += '                except Exception as e:\n';
+  code += '                    logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")\n';
+  code += '            else:\n';
+  code += '                # Fallback к старой системе next_node_id если нет action\n';
+  code += '                next_node_id = config.get("next_node_id")\n';
+  code += '                if next_node_id:\n';
+  code += '                    try:\n';
+  code += '                        # Вызываем обработчик для следующего узла\n';
+  
+  nodes.forEach((btnNode, btnIndex) => {
+    const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+    const condition = btnIndex === 0 ? 'if' : 'elif';
+    code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
+    code += `                            await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+  });
+  
+  code += '                        else:\n';
+  code += '                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  code += '                    except Exception as e:\n';
+  code += '                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+  code += '            return\n';
+  code += '        else:\n';
+  code += '            # Неверный выбор - показываем доступные варианты\n';
+  code += '            available_options = [option["text"] for option in config.get("options", [])]\n';
+  code += '            options_text = "\\n".join([f"• {opt}" for opt in available_options])\n';
+  code += '            await message.answer(f"❌ Неверный выбор. Пожалуйста, выберите один из предложенных вариантов:\\n\\n{options_text}")\n';
+  code += '            return\n';
+  code += '    \n';
+  code += '    # Проверяем, ожидаем ли мы текстовый ввод от пользователя\n';
   code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
   code += '        return  # Игнорируем сообщение если не ожидаем ввод\n';
   code += '    \n';
