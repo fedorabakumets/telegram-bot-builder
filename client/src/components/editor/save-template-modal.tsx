@@ -30,6 +30,7 @@ interface TemplateFormData {
   requiresToken: boolean;
   complexity: number;
   estimatedTime: number;
+  isBaseTemplate: boolean;
 }
 
 export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: SaveTemplateModalProps) {
@@ -44,6 +45,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     requiresToken: true,
     complexity: 1,
     estimatedTime: 5,
+    isBaseTemplate: false,
   });
   const [newTag, setNewTag] = useState('');
   
@@ -55,7 +57,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
       return await apiRequest('POST', '/api/templates', {
         name: data.name,
         description: data.description,
-        category: data.category,
+        category: data.isBaseTemplate ? 'official' : data.category,
         tags: data.tags,
         isPublic: data.isPublic ? 1 : 0,
         difficulty: data.difficulty,
@@ -63,15 +65,23 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
         requiresToken: data.requiresToken ? 1 : 0,
         complexity: data.complexity,
         estimatedTime: data.estimatedTime,
+        authorName: data.isBaseTemplate ? 'Система' : 'Пользователь',
+        featured: data.isBaseTemplate ? 1 : 0,
         data: botData,
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
+      if (variables.isBaseTemplate) {
+        queryClient.invalidateQueries({ queryKey: ['/api/templates/category/official'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/templates/featured'] });
+      }
       toast({
         title: 'Шаблон сохранен',
-        description: 'Ваш шаблон бота успешно сохранен',
+        description: variables.isBaseTemplate 
+          ? 'Ваш шаблон сохранен как базовый и будет отображаться в списке по умолчанию'
+          : 'Ваш шаблон бота успешно сохранен',
       });
       onClose();
       resetForm();
@@ -97,6 +107,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
       requiresToken: true,
       complexity: 1,
       estimatedTime: 5,
+      isBaseTemplate: false,
     });
     setNewTag('');
   };
@@ -335,6 +346,19 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
               />
               <Label htmlFor="requiresToken">
                 Требует токен бота (пользователю нужно будет указать токен)
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                id="isBaseTemplate"
+                type="checkbox"
+                checked={formData.isBaseTemplate}
+                onChange={(e) => setFormData(prev => ({ ...prev, isBaseTemplate: e.target.checked }))}
+                className="h-4 w-4"
+              />
+              <Label htmlFor="isBaseTemplate">
+                Сделать базовым шаблоном (будет отображаться в списке по умолчанию)
               </Label>
             </div>
           </div>
