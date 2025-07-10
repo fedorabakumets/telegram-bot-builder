@@ -208,35 +208,7 @@ const components: ComponentDefinition[] = [
       resizeKeyboard: true
     }
   },
-  {
-    id: 'user-input-collector',
-    name: 'Сбор пользовательского ввода',
-    description: 'Получение и обработка ответов пользователя',
-    icon: 'fas fa-comments',
-    color: 'bg-purple-100 text-purple-600',
-    type: 'user-input',
-    defaultData: {
-      inputPrompt: 'Пожалуйста, введите ваш ответ:',
-      inputType: 'text',
-      inputVariable: 'user_response',
-      inputValidation: '',
-      minLength: 0,
-      maxLength: 0,
-      inputTimeout: 60,
-      inputRequired: true,
-      allowSkip: false,
-      saveToDatabase: false,
-      inputRetryMessage: 'Пожалуйста, попробуйте еще раз.',
-      inputSuccessMessage: 'Спасибо за ваш ответ!',
-      placeholder: '',
-      defaultValue: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
+
   {
     id: 'reply-keyboard',
     name: 'Reply клавиатура',
@@ -275,22 +247,7 @@ const components: ComponentDefinition[] = [
       resizeKeyboard: true
     }
   },
-  {
-    id: 'condition',
-    name: 'Условие',
-    description: 'If/else логика',
-    icon: 'fas fa-code-branch',
-    color: 'bg-red-100 text-red-600',
-    type: 'condition',
-    defaultData: {
-      messageText: 'Условие выполнено',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
+
   {
     id: 'start-command',
     name: '/start команда',
@@ -419,10 +376,6 @@ const componentCategories = [
   {
     title: 'Кнопки',
     components: components.filter(c => c.type === 'keyboard')
-  },
-  {
-    title: 'Логика',
-    components: components.filter(c => ['condition', 'user-input'].includes(c.type))
   },
   {
     title: 'Команды',
