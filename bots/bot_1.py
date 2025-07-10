@@ -244,7 +244,18 @@ async def start_handler(message: types.Message):
 async def handle_callback_xtEZ0Z4CUpkWyFNdBLorj(callback_query: types.CallbackQuery):
     await callback_query.answer()
     text = "Как вас зовут?"
+    # Активируем сбор пользовательского ввода (основной цикл)
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "xtEZ0Z4CUpkWyFNdBLorj"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "имя"
+    user_data[callback_query.from_user.id]["save_to_database"] = True
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "-0oRrlrqED9ftXHpoJEdO"
+    
     await callback_query.message.edit_text(text)
+    
 
 @dp.callback_query(lambda c: c.data == "9q4tb3UOhuqEuYZNuFEFf")
 async def handle_callback_9q4tb3UOhuqEuYZNuFEFf(callback_query: types.CallbackQuery):
