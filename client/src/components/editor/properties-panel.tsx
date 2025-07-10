@@ -308,11 +308,13 @@ export function PropertiesPanel({
                 
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground">Описание</Label>
-                  <Input
+                  <InlineRichEditor
                     value={selectedNode.data.description || ''}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { description: e.target.value })}
-                    className="mt-2"
+                    onChange={(value) => onNodeUpdate(selectedNode.id, { description: value })}
                     placeholder="Описание команды"
+                    enableMarkdown={selectedNode.data.markdown}
+                    onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
+                    onFormatModeChange={(formatMode) => onNodeUpdate(selectedNode.id, { formatMode })}
                   />
                   <div className="text-xs text-muted-foreground mt-1">
                     Используется для меню команд в @BotFather
