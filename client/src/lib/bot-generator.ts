@@ -281,15 +281,41 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     });
   }
 
-  // Generate callback handlers for inline buttons
+  // Generate callback handlers for inline buttons AND input target nodes
   const inlineNodes = nodes.filter(node => 
     node.data.keyboardType === 'inline' && node.data.buttons.length > 0
   );
 
-  if (inlineNodes.length > 0) {
+  // Also collect all target nodes from user input collections
+  const inputTargetNodeIds = new Set<string>();
+  nodes.forEach(node => {
+    if (node.data.inputTargetNodeId) {
+      inputTargetNodeIds.add(node.data.inputTargetNodeId);
+    }
+  });
+
+  // Collect all referenced node IDs
+  const allReferencedNodeIds = new Set<string>();
+  
+  // Add nodes from inline buttons
+  inlineNodes.forEach(node => {
+    node.data.buttons.forEach(button => {
+      if (button.action === 'goto' && button.target) {
+        allReferencedNodeIds.add(button.target);
+      }
+    });
+  });
+  
+  // Add input target nodes
+  inputTargetNodeIds.forEach(nodeId => {
+    allReferencedNodeIds.add(nodeId);
+  });
+
+  if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0) {
     code += '\n# Обработчики inline кнопок\n';
     const processedCallbacks = new Set<string>();
     
+    // First, handle inline button nodes
     inlineNodes.forEach(node => {
       node.data.buttons.forEach(button => {
         if (button.action === 'goto') {
@@ -945,8 +971,31 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `    text = "${escapedTargetText}"\n`;
               }
             
-              // Handle keyboard for target node
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+              // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла (основной цикл)
+              if (targetNode.data.collectUserInput === true) {
+                // Настраиваем сбор пользовательского ввода
+                const inputType = targetNode.data.inputType || 'text';
+                const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+                const saveToDatabase = targetNode.data.saveToDatabase || false;
+                const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+                
+                code += '    # Активируем сбор пользовательского ввода (основной цикл)\n';
+                code += '    if callback_query.from_user.id not in user_data:\n';
+                code += '        user_data[callback_query.from_user.id] = {}\n';
+                code += '    \n';
+                code += `    user_data[callback_query.from_user.id]["waiting_for_input"] = "${targetNode.id}"\n`;
+                code += `    user_data[callback_query.from_user.id]["input_type"] = "${inputType}"\n`;
+                code += `    user_data[callback_query.from_user.id]["input_variable"] = "${inputVariable}"\n`;
+                code += `    user_data[callback_query.from_user.id]["save_to_database"] = ${saveToDatabase ? 'True' : 'False'}\n`;
+                code += `    user_data[callback_query.from_user.id]["input_target_node_id"] = "${inputTargetNodeId || ''}"\n`;
+                code += '    \n';
+                code += '    await callback_query.message.edit_text(text)\n';
+                code += '    \n';
+              } else {
+                // Обычное отображение сообщения без сбора ввода
+                
+                // Handle keyboard for target node
+                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
               targetNode.data.buttons.forEach(btn => {
                 if (btn.action === "url") {
@@ -997,7 +1046,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               }
               code += `    await callback_query.message.edit_text(text${parseModeTarget})\n`;
             }
-            }
+              } // Закрываем else блок для обычного отображения (основной цикл)
+            } // Закрываем else блок для обычных текстовых сообщений (основной цикл)
           } else {
             // Кнопка без цели - просто уведомляем пользователя
             code += '    # Кнопка пока никуда не ведет\n';
@@ -1005,6 +1055,118 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
         }
       });
+    });
+    
+    // Now generate callback handlers for all remaining referenced nodes that don't have inline buttons
+    allReferencedNodeIds.forEach(nodeId => {
+      if (!processedCallbacks.has(nodeId)) {
+        const targetNode = nodes.find(n => n.id === nodeId);
+        if (targetNode) {
+          processedCallbacks.add(nodeId);
+          
+          // Create callback handler for this node
+          const safeFunctionName = nodeId.replace(/[^a-zA-Z0-9]/g, '_');
+          code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}")\n`;
+          code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+          code += '    await callback_query.answer()\n';
+          
+          // Generate response based on node type
+          if (targetNode.type === 'user-input') {
+            // Handle user-input nodes
+            const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
+            const responseType = targetNode.data.responseType || 'text';
+            const inputType = targetNode.data.inputType || 'text';
+            const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+            const saveToDatabase = targetNode.data.saveToDatabase || false;
+            
+            code += '    # Удаляем старое сообщение\n';
+            code += '    await callback_query.message.delete()\n';
+            code += '    \n';
+            
+            const escapedPrompt = escapeForPython(inputPrompt);
+            code += `    text = f"${escapedPrompt}"\n`;
+            
+            if (responseType === 'text') {
+              // Find next node through connections
+              const nextConnection = connections.find(conn => conn.source === targetNode.id);
+              const nextNodeId = nextConnection ? nextConnection.target : null;
+              
+              code += '    # Настраиваем ожидание ввода\n';
+              code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+              code += `        "type": "${inputType}",\n`;
+              code += `        "variable": "${inputVariable}",\n`;
+              code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+              code += `        "node_id": "${targetNode.id}",\n`;
+              code += `        "next_node_id": "${nextNodeId || ''}"\n`;
+              code += '    }\n';
+              code += '    await bot.send_message(callback_query.from_user.id, text)\n';
+            }
+          } else {
+            // Handle regular message nodes
+            const targetText = targetNode.data.messageText || "Сообщение";
+            
+            if (targetText.includes('\n')) {
+              code += `    text = """${targetText}"""\n`;
+            } else {
+              const escapedTargetText = targetText.replace(/"/g, '\\"');
+              code += `    text = "${escapedTargetText}"\n`;
+            }
+            
+            // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
+            if (targetNode.data.collectUserInput === true) {
+              // Настраиваем сбор пользовательского ввода
+              const inputType = targetNode.data.inputType || 'text';
+              const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+              const saveToDatabase = targetNode.data.saveToDatabase || false;
+              const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+              
+              code += '    # Активируем сбор пользовательского ввода\n';
+              code += '    if callback_query.from_user.id not in user_data:\n';
+              code += '        user_data[callback_query.from_user.id] = {}\n';
+              code += '    \n';
+              code += `    user_data[callback_query.from_user.id]["waiting_for_input"] = "${targetNode.id}"\n`;
+              code += `    user_data[callback_query.from_user.id]["input_type"] = "${inputType}"\n`;
+              code += `    user_data[callback_query.from_user.id]["input_variable"] = "${inputVariable}"\n`;
+              code += `    user_data[callback_query.from_user.id]["save_to_database"] = ${saveToDatabase ? 'True' : 'False'}\n`;
+              code += `    user_data[callback_query.from_user.id]["input_target_node_id"] = "${inputTargetNodeId || ''}"\n`;
+              code += '    \n';
+              code += '    await callback_query.message.edit_text(text)\n';
+              code += '    \n';
+            } else {
+              // Обычное отображение сообщения без сбора ввода
+              
+              // Handle keyboard for target node
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              code += '    builder = InlineKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach(btn => {
+                if (btn.action === "url") {
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                } else if (btn.action === 'goto') {
+                  const callbackData = btn.target || btn.id || 'no_action';
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                }
+              });
+              code += '    keyboard = builder.as_markup()\n';
+              let parseModeTarget = '';
+              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+              } else if (targetNode.data.formatMode === 'html') {
+                parseModeTarget = ', parse_mode=ParseMode.HTML';
+              }
+              code += `    await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
+            } else {
+              let parseModeTarget = '';
+              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+              } else if (targetNode.data.formatMode === 'html') {
+                parseModeTarget = ', parse_mode=ParseMode.HTML';
+              }
+              code += `    await callback_query.message.edit_text(text${parseModeTarget})\n`;
+            }
+            } // Закрываем else блок для обычного отображения
+          } // Закрываем else блок для regular message nodes
+        }
+      }
     });
   }
   
@@ -1672,7 +1834,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       const targetNode = nodes.find(n => n.id === node.data.inputTargetNodeId);
       if (targetNode) {
         const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="input_nav", from_user=message.from_user, chat_instance="", data="${targetNode.id}", message=message))\n`;
+        code += `                # Создаем фиктивный callback_query для навигации\n`;
+        code += `                import types as aiogram_types\n`;
+        code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
+        code += `                    id="input_nav",\n`;
+        code += `                    from_user=message.from_user,\n`;
+        code += `                    chat_instance="",\n`;
+        code += `                    data="${targetNode.id}",\n`;
+        code += `                    message=message,\n`;
+        code += `                    answer=lambda text="", show_alert=False: None\n`;
+        code += `                )\n`;
+        code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
       }
       
       code += `            except Exception as e:\n`;
