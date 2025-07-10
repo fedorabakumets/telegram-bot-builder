@@ -6,6 +6,9 @@ import { useState, useRef, useEffect } from 'react';
 function parseFormattedText(text: string, formatMode?: string, markdown?: boolean): JSX.Element {
   if (!text) return <span>{text}</span>;
   
+  // Debug logging
+  console.log('parseFormattedText called with:', { text: text.substring(0, 100), formatMode, markdown });
+  
   // Remove HTML tags and replace with styled spans
   const parseHTML = (htmlText: string): JSX.Element[] => {
     const parts: JSX.Element[] = [];
@@ -13,8 +16,8 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
     let key = 0;
     
     while (remaining.length > 0) {
-      // Bold text
-      const boldMatch = remaining.match(/^(.*?)<b>(.*?)<\/b>(.*)/);
+      // Bold text (both <b> and <strong> tags)
+      const boldMatch = remaining.match(/^(.*?)<(?:b|strong)>(.*?)<\/(?:b|strong)>(.*)/);
       if (boldMatch) {
         if (boldMatch[1]) parts.push(<span key={key++}>{boldMatch[1]}</span>);
         parts.push(<strong key={key++} className="font-bold">{boldMatch[2]}</strong>);
@@ -22,8 +25,8 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
         continue;
       }
       
-      // Italic text
-      const italicMatch = remaining.match(/^(.*?)<i>(.*?)<\/i>(.*)/);
+      // Italic text (both <i> and <em> tags)
+      const italicMatch = remaining.match(/^(.*?)<(?:i|em)>(.*?)<\/(?:i|em)>(.*)/);
       if (italicMatch) {
         if (italicMatch[1]) parts.push(<span key={key++}>{italicMatch[1]}</span>);
         parts.push(<em key={key++} className="italic">{italicMatch[2]}</em>);
@@ -135,16 +138,24 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
     shouldUseHTML = false;
   } else if (formatMode === 'none') {
     // For 'none' mode, check if text contains HTML tags and parse them
-    shouldUseHTML = text.includes('<') && text.includes('>');
+    // Look for common HTML tags used in formatting
+    const hasHTMLTags = text.includes('<b>') || text.includes('<i>') || text.includes('<u>') || 
+                       text.includes('<s>') || text.includes('<code>') || text.includes('<strong>') || 
+                       text.includes('<em>') || text.includes('<a href');
+    shouldUseHTML = hasHTMLTags;
+    console.log('formatMode=none detection:', { hasHTMLTags, shouldUseHTML, containsB: text.includes('<b>'), containsStrong: text.includes('<strong>') });
   } else if (markdown === true) {
     // Legacy support for 'markdown' property
     shouldUseHTML = false;
   } else {
-    // Auto-detect: if text contains HTML tags, use HTML parser
-    shouldUseHTML = text.includes('<') && text.includes('>');
+    // Auto-detect: if text contains HTML formatting tags, use HTML parser
+    const hasHTMLTags = text.includes('<b>') || text.includes('<i>') || text.includes('<u>') || 
+                       text.includes('<s>') || text.includes('<code>') || text.includes('<strong>') || 
+                       text.includes('<em>') || text.includes('<a href');
+    shouldUseHTML = hasHTMLTags;
   }
   
-
+  console.log('Final decision:', { formatMode, shouldUseHTML, parser: shouldUseHTML ? 'HTML' : 'Markdown' });
   
   const parsedParts = shouldUseHTML ? parseHTML(text) : parseMarkdown(text);
   

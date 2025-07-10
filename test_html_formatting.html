@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test HTML Formatting</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-box { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .font-bold { font-weight: bold; }
+        .italic { font-style: italic; }
+        .underline { text-decoration: underline; }
+        .line-through { text-decoration: line-through; }
+        code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Test HTML Formatting in Canvas Node</h1>
+    
+    <div class="test-box">
+        <h3>Original Text with HTML Tags:</h3>
+        <p>&lt;b&gt;Bold Text&lt;/b&gt; and &lt;i&gt;Italic Text&lt;/i&gt;</p>
+    </div>
+    
+    <div class="test-box">
+        <h3>Rendered HTML:</h3>
+        <p><b>Bold Text</b> and <i>Italic Text</i></p>
+    </div>
+    
+    <div class="test-box">
+        <h3>More Complex Example:</h3>
+        <p>This is <b>bold</b>, this is <i>italic</i>, this is <u>underlined</u>, this is <s>strikethrough</s>, and this is <code>code</code>.</p>
+    </div>
+    
+    <script>
+        // Test the parseHTML function logic
+        function parseHTML(htmlText) {
+            const div = document.createElement('div');
+            div.innerHTML = htmlText;
+            return div.textContent || div.innerText || '';
+        }
+        
+        // Test cases
+        const testCases = [
+            'Normal text',
+            '<b>Bold text</b>',
+            '<i>Italic text</i>',
+            '<b>Bold</b> and <i>Italic</i>',
+            'Mixed <b>bold</b> and <i>italic</i> text',
+            '<u>Underlined</u> text',
+            '<s>Strikethrough</s> text',
+            '<code>Code text</code>',
+            'Complex: <b>Bold</b>, <i>Italic</i>, <u>Underlined</u>, <s>Strike</s>, <code>Code</code>'
+        ];
+        
+        console.log('Testing HTML parsing:');
+        testCases.forEach((text, index) => {
+            const hasHTMLTags = text.includes('<b>') || text.includes('<i>') || text.includes('<u>') || 
+                               text.includes('<s>') || text.includes('<code>') || text.includes('<strong>') || 
+                               text.includes('<em>') || text.includes('<a href');
+            console.log(`Test ${index + 1}: "${text}"`);
+            console.log(`  Has HTML tags: ${hasHTMLTags}`);
+            console.log(`  Should use HTML parser: ${hasHTMLTags}`);
+        });
+    </script>
+</body>
+</html>
