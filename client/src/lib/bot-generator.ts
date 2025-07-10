@@ -1061,6 +1061,29 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 parseModeTarget = ', parse_mode=ParseMode.HTML';
               }
               code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+            
+            // Дополнительно: сохраняем нажатие reply кнопки если включен сбор ответов
+            code += '    \n';
+            code += '    # Сохраняем нажатие reply кнопки если включен сбор ответов\n';
+            code += '    user_id = message.from_user.id\n';
+            code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
+            code += '        import datetime\n';
+            code += '        timestamp = datetime.datetime.now().isoformat()\n';
+            code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
+            code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
+            code += '        \n';
+            code += '        response_data = {\n';
+            code += `            "value": "${buttonText}",\n`;
+            code += '            "type": "reply_button",\n';
+            code += '            "timestamp": timestamp,\n';
+            code += '            "nodeId": input_node_id,\n';
+            code += '            "variable": input_variable,\n';
+            code += '            "source": "reply_button_click"\n';
+            code += '        }\n';
+            code += '        \n';
+            code += '        user_data[user_id][f"{input_variable}_button"] = response_data\n';
+            code += '        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")\n';
+            
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
               targetNode.data.buttons.forEach(btn => {
@@ -1081,6 +1104,29 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 parseModeTarget = ', parse_mode=ParseMode.HTML';
               }
               code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+            
+            // Дополнительно: сохраняем нажатие reply кнопки если включен сбор ответов
+            code += '    \n';
+            code += '    # Сохраняем нажатие reply кнопки если включен сбор ответов\n';
+            code += '    user_id = message.from_user.id\n';
+            code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
+            code += '        import datetime\n';
+            code += '        timestamp = datetime.datetime.now().isoformat()\n';
+            code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
+            code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
+            code += '        \n';
+            code += '        response_data = {\n';
+            code += `            "value": "${buttonText}",\n`;
+            code += '            "type": "reply_button",\n';
+            code += '            "timestamp": timestamp,\n';
+            code += '            "nodeId": input_node_id,\n';
+            code += '            "variable": input_variable,\n';
+            code += '            "source": "reply_button_click"\n';
+            code += '        }\n';
+            code += '        \n';
+            code += '        user_data[user_id][f"{input_variable}_button"] = response_data\n';
+            code += '        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")\n';
+            
             } else {
               code += '    # Удаляем предыдущие reply клавиатуры если они были\n';
               // Определяем режим форматирования для целевого узла
@@ -1640,6 +1686,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        # Если узел не найден\n';
   code += '        logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")\n';
   code += '        del user_data[user_id]["waiting_for_input"]\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    # НОВАЯ ЛОГИКА: Проверяем, включен ли дополнительный сбор ответов для обычных кнопок\n';
+  code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
+  code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
+  code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
+  code += '        user_text = message.text\n';
+  code += '        \n';
+  code += '        # Сохраняем любой текст как дополнительный ответ\n';
+  code += '        import datetime\n';
+  code += '        timestamp = datetime.datetime.now().isoformat()\n';
+  code += '        \n';
+  code += '        response_data = {\n';
+  code += '            "value": user_text,\n';
+  code += '            "type": "text_addition",\n';
+  code += '            "timestamp": timestamp,\n';
+  code += '            "nodeId": input_node_id,\n';
+  code += '            "variable": input_variable,\n';
+  code += '            "source": "additional_text_input"\n';
+  code += '        }\n';
+  code += '        \n';
+  code += '        # Сохраняем в пользовательские данные\n';
+  code += '        user_data[user_id][f"{input_variable}_additional"] = response_data\n';
+  code += '        \n';
+  code += '        # Уведомляем пользователя\n';
+  code += '        await message.answer("✅ Дополнительный комментарий сохранен!")\n';
+  code += '        \n';
+  code += '        logging.info(f"Дополнительный текстовый ввод: {input_variable}_additional = {user_text} (пользователь {user_id})")\n';
   code += '        return\n';
   code += '    \n';
   code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
@@ -2846,61 +2920,116 @@ function generateKeyboard(node: Node): string {
   }
   // Если formatMode === 'none' или не указан, то parseMode остается пустым
   
-  // ПРИОРИТЕТ 1: Система сбора пользовательского ввода с кнопками
-  if (node.data.collectUserInput && node.data.responseType === 'buttons' && node.data.responseOptions && node.data.responseOptions.length > 0) {
-    // Используем кнопки из системы сбора ввода
-    const buttonType = node.data.inputButtonType || 'inline';
-    
-    if (buttonType === 'reply') {
+  // НОВАЯ ЛОГИКА: Сбор ввода как дополнительная функциональность к обычным кнопкам
+  
+  // Определяем есть ли обычные кнопки у узла
+  const hasRegularButtons = node.data.keyboardType !== "none" && node.data.buttons && node.data.buttons.length > 0;
+  
+  // Определяем включен ли сбор пользовательского ввода  
+  const hasInputCollection = node.data.collectUserInput === true;
+  
+  // CASE 1: Есть обычные кнопки + сбор ввода = обычные кнопки работают + дополнительно сохраняются как ответы
+  if (hasRegularButtons && hasInputCollection) {
+    // Отправляем обычные кнопки как обычно
+    if (node.data.keyboardType === "reply") {
       code += '    \n';
-      code += '    # Создаем reply клавиатуру для сбора ответов\n';
+      code += '    # Создаем reply клавиатуру (+ дополнительный сбор ответов включен)\n';
       code += '    builder = ReplyKeyboardBuilder()\n';
-      node.data.responseOptions.forEach(option => {
-        code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
+      node.data.buttons.forEach(button => {
+        if (button.action === "contact" && button.requestContact) {
+          code += `    builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+        } else if (button.action === "location" && button.requestLocation) {
+          code += `    builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+        } else {
+          code += `    builder.add(KeyboardButton(text="${button.text}"))\n`;
+        }
       });
+      
       const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
       const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
       code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
       code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       
-      // Устанавливаем состояние ожидания ввода
+    } else if (node.data.keyboardType === "inline") {
       code += '    \n';
-      code += '    # Устанавливаем состояние ожидания ответа\n';
-      code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
-      code += `    user_data[message.from_user.id]["waiting_for_input"] = "${node.id}"\n`;
-      
-    } else {
-      // inline кнопки для сбора ответов
-      code += '    \n';
-      code += '    # Создаем inline клавиатуру для сбора ответов\n';
+      code += '    # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n';
       code += '    builder = InlineKeyboardBuilder()\n';
-      node.data.responseOptions.forEach(option => {
-        const callbackData = `input_${node.id}_${option.id}`;
-        code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="${callbackData}"))\n`;
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        }
       });
+      
       code += '    keyboard = builder.as_markup()\n';
       code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
     }
     
-    // ВАЖНО: Если включен сбор ввода, НЕ добавляем обычные клавиатуры (завершаем функцию)
-    return code;
-    
-  } 
-  // ПРИОРИТЕТ 2: Система сбора текстового ввода (БЕЗ дублирования клавиатур)  
-  else if (node.data.collectUserInput && node.data.responseType === 'text') {
-    // При текстовом сборе ввода НЕ добавляем обычные клавиатуры, чтобы избежать дублирования
-    code += `    await message.answer(text${parseMode})\n`;
+    // Дополнительно настраиваем сбор ответов
     code += '    \n';
-    code += '    # Устанавливаем состояние ожидания текстового ввода (без дублирования клавиатур)\n';
+    code += '    # Дополнительно: настраиваем сбор пользовательских ответов\n';
+    code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
+    code += `    user_data[message.from_user.id]["input_collection_enabled"] = True\n`;
+    code += `    user_data[message.from_user.id]["input_node_id"] = "${node.id}"\n`;
+    if (node.data.inputVariable) {
+      code += `    user_data[message.from_user.id]["input_variable"] = "${node.data.inputVariable}"\n`;
+    }
+    
+    return code;
+  }
+  
+  // CASE 2: Только сбор ввода БЕЗ обычных кнопок = специальные кнопки для сбора или текстовый ввод
+  else if (!hasRegularButtons && hasInputCollection) {
+    
+    // Если настроены специальные кнопки ответа
+    if (node.data.responseType === 'buttons' && node.data.responseOptions && node.data.responseOptions.length > 0) {
+      const buttonType = node.data.inputButtonType || 'inline';
+      
+      if (buttonType === 'reply') {
+        code += '    \n';
+        code += '    # Создаем reply клавиатуру для сбора ответов\n';
+        code += '    builder = ReplyKeyboardBuilder()\n';
+        node.data.responseOptions.forEach(option => {
+          code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
+        });
+        const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
+        const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
+        code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+        code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+      } else {
+        // inline кнопки для сбора ответов
+        code += '    \n';
+        code += '    # Создаем inline клавиатуру для сбора ответов\n';
+        code += '    builder = InlineKeyboardBuilder()\n';
+        node.data.responseOptions.forEach(option => {
+          const callbackData = `input_${node.id}_${option.id}`;
+          code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="${callbackData}"))\n`;
+        });
+        code += '    keyboard = builder.as_markup()\n';
+        code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      }
+      
+    } else {
+      // Текстовый ввод
+      code += `    await message.answer(text${parseMode})\n`;
+    }
+    
+    // Устанавливаем состояние ожидания ввода
+    code += '    \n';
+    code += '    # Устанавливаем состояние ожидания ввода\n';
     code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
     code += `    user_data[message.from_user.id]["waiting_for_input"] = "${node.id}"\n`;
-    code += `    user_data[message.from_user.id]["input_type"] = "${node.data.inputType || 'text'}"\n`;
+    if (node.data.inputType) {
+      code += `    user_data[message.from_user.id]["input_type"] = "${node.data.inputType}"\n`;
+    }
     
-    // ВАЖНО: Если включен сбор ввода, НЕ добавляем обычные клавиатуры (завершаем функцию)
     return code;
-    
-  } 
-  // ПРИОРИТЕТ 3: Обычные клавиатуры (только если не включен сбор ввода)
+  }
+  
+  // CASE 3: Только обычные кнопки БЕЗ сбора ввода = работает как раньше
   else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
     // Обычная reply клавиатура
     code += '    \n';
