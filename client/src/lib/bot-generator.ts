@@ -60,7 +60,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов\n\n';
   
   code += '# Настройки базы данных\n';
-  code += 'DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/bot_db")\n\n';
+  code += 'DATABASE_URL = os.getenv("DATABASE_URL")\n\n';
   
   code += '# Пул соединений с базой данных\n';
   code += 'db_pool = None\n\n';

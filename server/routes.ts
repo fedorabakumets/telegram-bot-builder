@@ -2344,13 +2344,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.id);
       console.log(`Fetching users for project ${projectId}`);
       
-      // Use storage interface to get user data from user_bot_data table
-      const users = await storage.getUserBotDataByProject(projectId);
-      console.log(`Found ${users.length} users for project ${projectId}`);
-      res.json(users);
+      // Connect directly to PostgreSQL to get data from bot_users table
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL
+      });
+      
+      const result = await pool.query(`
+        SELECT 
+          user_id,
+          username,
+          first_name,
+          last_name,
+          registered_at,
+          last_interaction,
+          interaction_count,
+          user_data,
+          is_active
+        FROM bot_users 
+        ORDER BY last_interaction DESC
+      `);
+      
+      await pool.end();
+      
+      console.log(`Found ${result.rows.length} users for project ${projectId}`);
+      res.json(result.rows);
     } catch (error) {
       console.error("Error fetching user data:", error);
-      res.status(500).json({ message: "Failed to fetch user data" });
+      // Fallback to storage interface if bot_users table doesn't exist
+      try {
+        const users = await storage.getUserBotDataByProject(projectId);
+        console.log(`Found ${users.length} users for project ${projectId} from fallback`);
+        res.json(users);
+      } catch (fallbackError) {
+        res.status(500).json({ message: "Failed to fetch user data" });
+      }
     }
   });
 
@@ -2360,7 +2388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.id);
       console.log(`Fetching user stats for project ${projectId}`);
       
-      // Use direct PostgreSQL query on user_bot_data table
+      // Use direct PostgreSQL query on bot_users table
       const { Pool } = await import('pg');
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL
@@ -2369,15 +2397,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         SELECT 
           COUNT(*) as "totalUsers",
-          COUNT(*) FILTER (WHERE is_active = 1) as "activeUsers",
-          COUNT(*) FILTER (WHERE is_active = 0) as "blockedUsers",
-          COUNT(*) FILTER (WHERE is_premium = 1) as "premiumUsers",
+          COUNT(*) FILTER (WHERE is_active = true) as "activeUsers",
+          COUNT(*) FILTER (WHERE is_active = false) as "blockedUsers",
+          0 as "premiumUsers",
           COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}' AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%' OR user_data::text LIKE '%input%' OR user_data::text LIKE '%user_%')) as "usersWithResponses",
           COALESCE(SUM(interaction_count), 0) as "totalInteractions",
           COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
-        FROM user_bot_data
-        WHERE project_id = $1
-      `, [projectId]);
+        FROM bot_users
+      `);
       
       await pool.end();
       
@@ -2393,7 +2420,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error) {
       console.error("Error fetching user stats:", error);
-      res.status(500).json({ message: "Failed to fetch user stats" });
+      // Fallback to user_bot_data table if bot_users doesn't exist
+      try {
+        const { Pool } = await import('pg');
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL
+        });
+        
+        const result = await pool.query(`
+          SELECT 
+            COUNT(*) as "totalUsers",
+            COUNT(*) FILTER (WHERE is_active = 1) as "activeUsers",
+            COUNT(*) FILTER (WHERE is_active = 0) as "blockedUsers",
+            COUNT(*) FILTER (WHERE is_premium = 1) as "premiumUsers",
+            COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}' AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%' OR user_data::text LIKE '%input%' OR user_data::text LIKE '%user_%')) as "usersWithResponses",
+            COALESCE(SUM(interaction_count), 0) as "totalInteractions",
+            COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
+          FROM user_bot_data
+          WHERE project_id = $1
+        `, [projectId]);
+        
+        await pool.end();
+        
+        const stats = result.rows[0];
+        Object.keys(stats).forEach(key => {
+          if (typeof stats[key] === 'string' && !isNaN(stats[key])) {
+            stats[key] = parseInt(stats[key]);
+          }
+        });
+        
+        res.json(stats);
+      } catch (fallbackError) {
+        res.status(500).json({ message: "Failed to fetch user stats" });
+      }
     }
   });
 
@@ -2402,7 +2461,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.id);
       
-      // Подключаемся напрямую к PostgreSQL для получения ответов пользователей
+      // Подключаемся напрямую к PostgreSQL для получения ответов пользователей из bot_users
       const { Pool } = await import('pg');
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL
@@ -2411,19 +2470,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         SELECT 
           user_id,
-          user_name as username,
+          username,
           first_name,
           last_name,
           user_data,
-          created_at as registered_at,
+          registered_at,
           last_interaction
-        FROM user_bot_data 
-        WHERE project_id = $1
-          AND user_data IS NOT NULL 
+        FROM bot_users 
+        WHERE user_data IS NOT NULL 
           AND user_data != '{}' 
           AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%' OR user_data::text LIKE '%input%' OR user_data::text LIKE '%user_%')
         ORDER BY last_interaction DESC
-      `, [projectId]);
+      `);
       
       await pool.end();
       

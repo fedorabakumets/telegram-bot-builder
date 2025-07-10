@@ -31,7 +31,7 @@ dp = Dispatcher()
 ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов
 
 # Настройки базы данных
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/bot_db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Пул соединений с базой данных
 db_pool = None
@@ -229,9 +229,9 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = "<i><b>Привет! Добро пожаловать!</b></i>"
+    text = "Привет! Добро пожаловать!"
     # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
-    await message.answer(text, reply_markup=ReplyKeyboardRemove(), parse_mode=ParseMode.HTML)
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 
 # Универсальный обработчик пользовательского ввода
@@ -327,8 +327,8 @@ async def handle_user_input(message: types.Message):
                 target_node_id = option_target
                 try:
                     # Вызываем обработчик для целевого узла
-                    if target_node_id == "59HK6w5QHuaU1qqFBZa7g":
-                        await handle_callback_59HK6w5QHuaU1qqFBZa7g(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    if target_node_id == "RUiDzGV2OHNvud89U92uP":
+                        await handle_callback_RUiDzGV2OHNvud89U92uP(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -339,8 +339,8 @@ async def handle_user_input(message: types.Message):
                 if next_node_id:
                     try:
                         # Вызываем обработчик для следующего узла
-                        if next_node_id == "59HK6w5QHuaU1qqFBZa7g":
-                            await handle_callback_59HK6w5QHuaU1qqFBZa7g(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        if next_node_id == "RUiDzGV2OHNvud89U92uP":
+                            await handle_callback_RUiDzGV2OHNvud89U92uP(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -482,8 +482,8 @@ async def handle_user_input(message: types.Message):
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
             
             # Находим узел по ID и выполняем соответствующее действие
-            if next_node_id == "59HK6w5QHuaU1qqFBZa7g":
-                logging.info(f"Переход к узлу 59HK6w5QHuaU1qqFBZa7g типа start")
+            if next_node_id == "RUiDzGV2OHNvud89U92uP":
+                logging.info(f"Переход к узлу RUiDzGV2OHNvud89U92uP типа start")
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
