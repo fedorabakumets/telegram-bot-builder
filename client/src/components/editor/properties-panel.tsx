@@ -1525,23 +1525,95 @@ export function PropertiesPanel({
                       />
                     </div>
 
-                    <div>
-                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
-                        <i className="fas fa-input mr-1"></i>
-                        Тип ответа
-                      </Label>
-                      <Select
-                        value={selectedNode.data.responseType || 'text'}
-                        onValueChange={(value) => onNodeUpdate(selectedNode.id, { responseType: value })}
-                      >
-                        <SelectTrigger className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="text">Текстовый ввод</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    {/* Text Input Toggle */}
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                      <div className="flex-1">
+                        <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                          <i className="fas fa-keyboard mr-1"></i>
+                          Текстовый ввод
+                        </Label>
+                        <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                          Если выбран текстовый ввод, то как варианты ответа воспринимаются и кнопки и текстовой ввод
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <Switch
+                          checked={selectedNode.data.enableTextInput ?? false}
+                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableTextInput: checked })}
+                        />
+                      </div>
                     </div>
+
+                    {/* Text Input Settings */}
+                    {selectedNode.data.enableTextInput && (
+                      <div className="space-y-4 bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                        <div className="flex items-center space-x-2 mb-3">
+                          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <i className="fas fa-check text-white text-xs"></i>
+                          </div>
+                          <Label className="text-xs font-semibold text-green-900 dark:text-green-100">Настройки текстового ввода</Label>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-xs font-medium text-green-700 dark:text-green-300 mb-2 block">
+                            <i className="fas fa-code mr-1"></i>
+                            Имя переменной
+                          </Label>
+                          <Input
+                            value={selectedNode.data.inputVariable || ''}
+                            onChange={(e) => onNodeUpdate(selectedNode.id, { inputVariable: e.target.value })}
+                            className="border-green-200 dark:border-green-700 focus:border-green-500 focus:ring-green-200"
+                            placeholder="user_response"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs font-medium text-green-700 dark:text-green-300 mb-2 block">
+                            <i className="fas fa-arrow-right mr-1"></i>
+                            Переход после ввода текста
+                          </Label>
+                          <Select
+                            value={selectedNode.data.textInputTarget || ''}
+                            onValueChange={(value) => onNodeUpdate(selectedNode.id, { textInputTarget: value })}
+                          >
+                            <SelectTrigger className="border-green-200 dark:border-green-700 focus:border-green-500">
+                              <SelectValue placeholder="Выберите экран для перехода" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allNodes
+                                .filter(node => node.id !== selectedNode.id)
+                                .map((node) => {
+                                  const nodeName = 
+                                    node.type === 'start' ? node.data.command :
+                                    node.type === 'command' ? node.data.command :
+                                    node.type === 'message' ? 'Сообщение' :
+                                    node.type === 'photo' ? 'Фото' :
+                                    node.type === 'video' ? 'Видео' :
+                                    node.type === 'audio' ? 'Аудио' :
+                                    node.type === 'document' ? 'Документ' :
+                                    node.type === 'location' ? 'Геолокация' :
+                                    node.type === 'contact' ? 'Контакт' :
+                                    node.type === 'keyboard' ? 'Клавиатура' :
+                                    node.type === 'condition' ? 'Условие' :
+                                    node.type === 'user-input' ? 'Пользовательский ввод' :
+                                    node.type === 'input' ? 'Ввод' : 'Узел';
+                                  
+                                  return (
+                                    <SelectItem key={node.id} value={node.id}>
+                                      {nodeName} ({node.id})
+                                    </SelectItem>
+                                  );
+                                })}
+                              {allNodes.filter(node => node.id !== selectedNode.id).length === 0 && (
+                                <SelectItem value="no-nodes" disabled>
+                                  Создайте другие экраны для выбора
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
                     
                     <div>
                       <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
