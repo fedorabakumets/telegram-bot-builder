@@ -928,22 +928,268 @@ body {
 /* Enhanced Switch Styling for Dark Theme */
 .dark [role="switch"][data-state="checked"] {
   background: hsl(var(--primary));
+  border: 2px solid hsl(var(--primary) / 0.3);
   box-shadow: 
     0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--primary) / 0.2),
-    0 2px 4px hsl(var(--background) / 0.1);
+    0 0 0 4px hsl(var(--primary) / 0.3),
+    0 2px 4px hsl(var(--background) / 0.1),
+    inset 0 1px 0 hsl(var(--primary) / 0.1);
 }
 
 .dark [role="switch"][data-state="unchecked"] {
   background: hsl(var(--muted));
-  border: 1px solid hsl(var(--border));
+  border: 2px solid hsl(var(--border));
+  box-shadow: 
+    0 0 0 1px hsl(var(--border) / 0.5),
+    0 1px 2px hsl(var(--background) / 0.1),
+    inset 0 1px 0 hsl(var(--muted) / 0.1);
 }
 
 .dark [role="switch"]:hover {
+  transform: scale(1.02);
   box-shadow: 
     0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--ring) / 0.1),
+    0 0 0 4px hsl(var(--ring) / 0.2),
     0 2px 4px hsl(var(--background) / 0.1);
+  transition: all 0.2s ease;
+}
+
+.dark [role="switch"][data-state="checked"]:hover {
+  box-shadow: 
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--primary) / 0.4),
+    0 0 8px hsl(var(--primary) / 0.2),
+    0 2px 4px hsl(var(--background) / 0.1);
+}
+
+/* Enhanced Switch Thumb Styling for Dark Theme */
+.dark [role="switch"] [data-state="checked"] {
+  background: hsl(var(--primary-foreground));
+  box-shadow: 
+    0 2px 4px hsl(var(--background) / 0.2),
+    0 0 0 1px hsl(var(--primary) / 0.1);
+}
+
+.dark [role="switch"] [data-state="unchecked"] {
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 
+    0 2px 4px hsl(var(--background) / 0.2),
+    0 0 0 1px hsl(var(--border) / 0.3);
+}
+
+/* Enhanced Checkbox Styling for Dark Theme */
+.dark input[type="checkbox"] {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid hsl(var(--border));
+  border-radius: 0.25rem;
+  background: hsl(var(--background));
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px hsl(var(--background) / 0.1),
+    0 0 0 1px hsl(var(--border) / 0.3);
+}
+
+.dark input[type="checkbox"]:hover {
+  border-color: hsl(var(--primary) / 0.6);
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.2),
+    0 1px 2px hsl(var(--background) / 0.1);
+  transform: scale(1.05);
+}
+
+.dark input[type="checkbox"]:checked {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.3),
+    0 0 4px hsl(var(--primary) / 0.2),
+    0 1px 2px hsl(var(--background) / 0.1);
+}
+
+.dark input[type="checkbox"]:checked::before {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: hsl(var(--primary-foreground));
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.dark input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 
+    0 0 0 2px hsl(var(--ring) / 0.2),
+    0 0 0 4px hsl(var(--ring) / 0.1),
+    0 1px 2px hsl(var(--background) / 0.1);
+}
+
+.dark input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Enhanced Radix Checkbox Styling for Dark Theme */
+.dark [role="checkbox"] {
+  border: 2px solid hsl(var(--border));
+  background: hsl(var(--background));
+  box-shadow: 
+    0 1px 2px hsl(var(--background) / 0.1),
+    0 0 0 1px hsl(var(--border) / 0.3);
+  transition: all 0.2s ease;
+}
+
+.dark [role="checkbox"]:hover {
+  border-color: hsl(var(--primary) / 0.6);
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.2),
+    0 1px 2px hsl(var(--background) / 0.1);
+  transform: scale(1.05);
+}
+
+.dark [role="checkbox"][data-state="checked"] {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.3),
+    0 0 4px hsl(var(--primary) / 0.2),
+    0 1px 2px hsl(var(--background) / 0.1);
+}
+
+.dark [role="checkbox"][data-state="checked"]:hover {
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.4),
+    0 0 6px hsl(var(--primary) / 0.3),
+    0 1px 2px hsl(var(--background) / 0.1);
+}
+
+/* Light Theme Enhancements for Checkboxes and Switches */
+input[type="checkbox"] {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid hsl(var(--border));
+  border-radius: 0.25rem;
+  background: hsl(var(--background));
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 
+    0 1px 2px hsl(var(--muted-foreground) / 0.1),
+    0 0 0 1px hsl(var(--border) / 0.3);
+}
+
+input[type="checkbox"]:hover {
+  border-color: hsl(var(--primary) / 0.6);
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.2),
+    0 1px 2px hsl(var(--muted-foreground) / 0.1);
+  transform: scale(1.05);
+}
+
+input[type="checkbox"]:checked {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.3),
+    0 0 4px hsl(var(--primary) / 0.2),
+    0 1px 2px hsl(var(--muted-foreground) / 0.1);
+}
+
+input[type="checkbox"]:checked::before {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: hsl(var(--primary-foreground));
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 
+    0 0 0 2px hsl(var(--ring) / 0.2),
+    0 0 0 4px hsl(var(--ring) / 0.1),
+    0 1px 2px hsl(var(--muted-foreground) / 0.1);
+}
+
+/* Enhanced Radix Checkbox Light Theme */
+[role="checkbox"] {
+  border: 2px solid hsl(var(--border));
+  background: hsl(var(--background));
+  box-shadow: 
+    0 1px 2px hsl(var(--muted-foreground) / 0.1),
+    0 0 0 1px hsl(var(--border) / 0.3);
+  transition: all 0.2s ease;
+}
+
+[role="checkbox"]:hover {
+  border-color: hsl(var(--primary) / 0.6);
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.2),
+    0 1px 2px hsl(var(--muted-foreground) / 0.1);
+  transform: scale(1.05);
+}
+
+[role="checkbox"][data-state="checked"] {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.3),
+    0 0 4px hsl(var(--primary) / 0.2),
+    0 1px 2px hsl(var(--muted-foreground) / 0.1);
+}
+
+[role="checkbox"][data-state="checked"]:hover {
+  box-shadow: 
+    0 0 0 2px hsl(var(--primary) / 0.4),
+    0 0 6px hsl(var(--primary) / 0.3),
+    0 1px 2px hsl(var(--muted-foreground) / 0.1);
+}
+
+/* Enhanced Switch Light Theme */
+[role="switch"][data-state="checked"] {
+  background: hsl(var(--primary));
+  border: 2px solid hsl(var(--primary) / 0.3);
+  box-shadow: 
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--primary) / 0.2),
+    0 2px 4px hsl(var(--muted-foreground) / 0.1);
+}
+
+[role="switch"][data-state="unchecked"] {
+  background: hsl(var(--input));
+  border: 2px solid hsl(var(--border));
+  box-shadow: 
+    0 0 0 1px hsl(var(--border) / 0.5),
+    0 1px 2px hsl(var(--muted-foreground) / 0.1);
+}
+
+[role="switch"]:hover {
+  transform: scale(1.02);
+  box-shadow: 
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring) / 0.2),
+    0 2px 4px hsl(var(--muted-foreground) / 0.1);
+  transition: all 0.2s ease;
+}
+
+[role="switch"][data-state="checked"]:hover {
+  box-shadow: 
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--primary) / 0.3),
+    0 0 8px hsl(var(--primary) / 0.2),
+    0 2px 4px hsl(var(--muted-foreground) / 0.1);
 }
 
 /* Accordion Enhanced Styling */
