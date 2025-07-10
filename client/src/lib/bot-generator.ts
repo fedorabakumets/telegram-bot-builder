@@ -2846,7 +2846,7 @@ function generateKeyboard(node: Node): string {
   }
   // Если formatMode === 'none' или не указан, то parseMode остается пустым
   
-  // Проверяем, включен ли универсальный сбор ввода
+  // ПРИОРИТЕТ 1: Система сбора пользовательского ввода с кнопками
   if (node.data.collectUserInput && node.data.responseType === 'buttons' && node.data.responseOptions && node.data.responseOptions.length > 0) {
     // Используем кнопки из системы сбора ввода
     const buttonType = node.data.inputButtonType || 'inline';
@@ -2870,7 +2870,7 @@ function generateKeyboard(node: Node): string {
       code += `    user_data[message.from_user.id]["waiting_for_input"] = "${node.id}"\n`;
       
     } else {
-      // inline кнопки
+      // inline кнопки для сбора ответов
       code += '    \n';
       code += '    # Создаем inline клавиатуру для сбора ответов\n';
       code += '    builder = InlineKeyboardBuilder()\n';
@@ -2882,16 +2882,26 @@ function generateKeyboard(node: Node): string {
       code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
     }
     
-  } else if (node.data.collectUserInput && node.data.responseType === 'text') {
-    // Текстовый ввод - отправляем сообщение и ждем ответ
+    // ВАЖНО: Если включен сбор ввода, НЕ добавляем обычные клавиатуры (завершаем функцию)
+    return code;
+    
+  } 
+  // ПРИОРИТЕТ 2: Система сбора текстового ввода (БЕЗ дублирования клавиатур)  
+  else if (node.data.collectUserInput && node.data.responseType === 'text') {
+    // При текстовом сборе ввода НЕ добавляем обычные клавиатуры, чтобы избежать дублирования
     code += `    await message.answer(text${parseMode})\n`;
     code += '    \n';
-    code += '    # Устанавливаем состояние ожидания текстового ввода\n';
+    code += '    # Устанавливаем состояние ожидания текстового ввода (без дублирования клавиатур)\n';
     code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
     code += `    user_data[message.from_user.id]["waiting_for_input"] = "${node.id}"\n`;
     code += `    user_data[message.from_user.id]["input_type"] = "${node.data.inputType || 'text'}"\n`;
     
-  } else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
+    // ВАЖНО: Если включен сбор ввода, НЕ добавляем обычные клавиатуры (завершаем функцию)
+    return code;
+    
+  } 
+  // ПРИОРИТЕТ 3: Обычные клавиатуры (только если не включен сбор ввода)
+  else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
     // Обычная reply клавиатура
     code += '    \n';
     code += '    builder = ReplyKeyboardBuilder()\n';

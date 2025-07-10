@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "id": "start-1",
+      "type": "start", 
+      "position": { "x": 100, "y": 100 },
+      "data": {
+        "messageText": "Добро пожаловать! Выберите ваш возраст:",
+        "command": "/start",
+        "collectUserInput": true,
+        "responseType": "buttons",
+        "responseOptions": [
+          { "id": "age_18_25", "text": "18-25" },
+          { "id": "age_26_35", "text": "26-35" },
+          { "id": "age_36_45", "text": "36-45" }
+        ],
+        "inputButtonType": "inline",
+        "keyboardType": "inline",
+        "buttons": [
+          { "id": "btn_settings", "text": "Настройки", "action": "goto", "target": "settings-1" },
+          { "id": "btn_help", "text": "Помощь", "action": "goto", "target": "help-1" }
+        ]
+      }
+    },
+    {
+      "id": "help-1",
+      "type": "command",
+      "position": { "x": 300, "y": 100 },
+      "data": {
+        "messageText": "Введите ваш вопрос:",
+        "command": "/help", 
+        "collectUserInput": true,
+        "responseType": "text",
+        "inputType": "text",
+        "keyboardType": "inline",
+        "buttons": [
+          { "id": "btn_back", "text": "Назад", "action": "goto", "target": "start-1" }
+        ]
+      }
+    },
+    {
+      "id": "settings-1",
+      "type": "message",
+      "position": { "x": 500, "y": 100 },
+      "data": {
+        "messageText": "Настройки бота",
+        "keyboardType": "inline",
+        "buttons": [
+          { "id": "btn_back_start", "text": "Главная", "action": "goto", "target": "start-1" }
+        ]
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-1",
+      "source": "start-1",
+      "target": "settings-1"
+    },
+    {
+      "id": "conn-2", 
+      "source": "start-1",
+      "target": "help-1"
+    },
+    {
+      "id": "conn-3",
+      "source": "help-1",
+      "target": "start-1"
+    },
+    {
+      "id": "conn-4",
+      "source": "settings-1", 
+      "target": "start-1"
+    }
+  ]
+}
