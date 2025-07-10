@@ -19,7 +19,7 @@ from datetime import datetime
 import json
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "7828006998:AAE9AjwH4dGb9K4qbvCOKhFcVIVBWvp6GgU"
+BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -295,10 +295,10 @@ async def handle_callback_collection_message(callback_query: types.CallbackQuery
     
     # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Отлично", callback_data="thank-you-message"))
-    builder.add(InlineKeyboardButton(text=" Хорошо", callback_data="thank-you-message"))
-    builder.add(InlineKeyboardButton(text="Средне", callback_data="thank-you-message"))
-    builder.add(InlineKeyboardButton(text=" Плохо", callback_data="thank-you-message"))
+    builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐⭐ Отлично", callback_data="thank-you-message"))
+    builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐ Хорошо", callback_data="thank-you-message"))
+    builder.add(InlineKeyboardButton(text="⭐⭐⭐ Средне", callback_data="thank-you-message"))
+    builder.add(InlineKeyboardButton(text="⭐⭐ Плохо", callback_data="thank-you-message"))
     keyboard = builder.as_markup()
     await callback_query.message.edit_text(text, reply_markup=keyboard)
     
@@ -650,10 +650,10 @@ async def handle_user_input(message: types.Message):
                 text = f"📊 Расскажите о своем опыте с нашим сервисом:\n\n• Нажмите одну из кнопок для быстрого ответа\n• Или напишите развернутый отзыв текстом\n\nВаш ответ будет сохранен в любом случае!"
                 parse_mode = None
                 builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="Отлично", callback_data="thank-you-message"))
-                builder.add(InlineKeyboardButton(text=" Хорошо", callback_data="thank-you-message"))
-                builder.add(InlineKeyboardButton(text="Средне", callback_data="thank-you-message"))
-                builder.add(InlineKeyboardButton(text=" Плохо", callback_data="thank-you-message"))
+                builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐⭐ Отлично", callback_data="thank-you-message"))
+                builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐ Хорошо", callback_data="thank-you-message"))
+                builder.add(InlineKeyboardButton(text="⭐⭐⭐ Средне", callback_data="thank-you-message"))
+                builder.add(InlineKeyboardButton(text="⭐⭐ Плохо", callback_data="thank-you-message"))
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "thank-you-message":
