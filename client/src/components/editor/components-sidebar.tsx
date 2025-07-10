@@ -393,7 +393,7 @@ export function ComponentsSidebar({
   canvasContent,
   propertiesContent
 }: ComponentsSidebarProps) {
-  const [currentTab, setCurrentTab] = useState<'elements' | 'templates' | 'layout'>('elements');
+  const [currentTab, setCurrentTab] = useState<'elements' | 'templates'>('elements');
   
   const handleDragStart = (e: React.DragEvent, component: ComponentDefinition) => {
     e.dataTransfer.setData('application/json', JSON.stringify(component));
@@ -434,16 +434,7 @@ export function ComponentsSidebar({
           >
             Шаблоны
           </button>
-          <button 
-            onClick={() => setCurrentTab('layout')}
-            className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              currentTab === 'layout' 
-                ? 'bg-background text-foreground shadow-sm' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Макет
-          </button>
+          
         </div>
       </div>
       
