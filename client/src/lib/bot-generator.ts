@@ -1273,85 +1273,93 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '    \n';
         code += '    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")\n';
         code += '    \n';
-        code += '    # Навигация на основе действия кнопки\n';
+        code += '    # Навигация на основе индивидуальных настроек кнопки\n';
+        code += '    # Находим настройки для этого конкретного варианта ответа\n';
+        code += '    options = config.get("options", [])\n';
+        code += `    current_option = None\n`;
+        code += `    for option in options:\n`;
+        code += `        if option.get("callback_data") == "response_${node.id}_${index}":\n`;
+        code += `            current_option = option\n`;
+        code += `            break\n`;
+        code += '    \n';
+        code += '    if current_option:\n';
+        code += '        option_action = current_option.get("action", "goto")\n';
+        code += '        option_target = current_option.get("target", "")\n';
+        code += '        option_url = current_option.get("url", "")\n';
+        code += '        \n';
+        code += '        if option_action == "url" and option_url:\n';
+        code += '            # Открываем ссылку\n';
+        code += '            from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup\n';
+        code += '            keyboard = InlineKeyboardMarkup(inline_keyboard=[\n';
+        code += '                [InlineKeyboardButton(text="🔗 Открыть ссылку", url=option_url)]\n';
+        code += '            ])\n';
+        code += '            await callback_query.message.edit_text(f"{success_message}\\n\\n✅ Ваш выбор: {selected_text}", reply_markup=keyboard)\n';
+        code += '        elif option_action == "command" and option_target:\n';
+        code += '            # Выполняем команду\n';
+        code += '            command = option_target\n';
+        code += '            if not command.startswith("/"):\n';
+        code += '                command = "/" + command\n';
+        code += '            \n';
+        code += '            # Создаем фиктивное сообщение для выполнения команды\n';
+        code += '            import aiogram.types as aiogram_types\n';
+        code += '            fake_message = aiogram_types.SimpleNamespace(\n';
+        code += '                from_user=callback_query.from_user,\n';
+        code += '                chat=callback_query.message.chat,\n';
+        code += '                text=command,\n';
+        code += '                message_id=callback_query.message.message_id\n';
+        code += '            )\n';
+        code += '            \n';
         
-        // Добавляем логику навигации в зависимости от action кнопки
-        const optionAction = option.action || 'goto';
-        const optionTarget = option.target || '';
-        const optionUrl = option.url || '';
-        
-        if (optionAction === 'url' && optionUrl) {
-          code += `    # Открытие ссылки\n`;
-          code += `    url = "${optionUrl}"\n`;
-          code += `    keyboard = InlineKeyboardMarkup(inline_keyboard=[\n`;
-          code += `        [InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]\n`;
-          code += `    ])\n`;
-          code += `    await callback_query.message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)\n`;
-        } else if (optionAction === 'command' && optionTarget) {
-          code += `    # Выполнение команды\n`;
-          code += `    command = "${optionTarget}"\n`;
-          code += `    # Создаем фиктивное сообщение для выполнения команды\n`;
-          code += `    import types as aiogram_types\n`;
-          code += `    fake_message = aiogram_types.SimpleNamespace(\n`;
-          code += `        from_user=callback_query.from_user,\n`;
-          code += `        chat=callback_query.message.chat,\n`;
-          code += `        text=command,\n`;
-          code += `        message_id=callback_query.message.message_id\n`;
-          code += `    )\n`;
-          code += `    \n`;
-          // Добавляем обработку различных команд
-          const commandNodes = nodes.filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
-          commandNodes.forEach((cmdNode, cmdIndex) => {
-            const condition = cmdIndex === 0 ? 'if' : 'elif';
-            const cmdSafeName = cmdNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-            code += `    ${condition} command == "${cmdNode.data.command}":\n`;
-            code += `        try:\n`;
-            code += `            await ${cmdNode.type === 'start' ? 'start_handler' : `${cmdNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`}(fake_message)\n`;
-            code += `        except Exception as e:\n`;
-            code += `            logging.error(f"Ошибка выполнения команды ${cmdNode.data.command}: {e}")\n`;
-          });
-          if (commandNodes.length > 0) {
-            code += `    else:\n`;
-            code += `        logging.warning(f"Неизвестная команда: {command}")\n`;
-          }
-        } else if (optionAction === 'goto' && optionTarget) {
-          code += `    # Переход к узлу\n`;
-          code += `    target_node_id = "${optionTarget}"\n`;
-          code += `    try:\n`;
-          code += `        # Вызываем обработчик для целевого узла\n`;
-          
-          // Generate if-elif chain for all nodes
-          nodes.forEach((btnNode, btnIndex) => {
-            const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-            const condition = btnIndex === 0 ? 'if' : 'elif';
-            code += `        ${condition} target_node_id == "${btnNode.id}":\n`;
-            code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
-          });
-          
-          code += '        else:\n';
-          code += '            logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
-          code += '    except Exception as e:\n';
-          code += '        logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")\n';
-        } else {
-          // Fallback к старой системе next_node_id если нет action
-          code += '    # Автоматическая навигация к следующему узлу (fallback)\n';
-          code += '    next_node_id = config.get("next_node_id")\n';
-          code += '    if next_node_id:\n';
-          code += '        try:\n';
-          code += '            # Вызываем обработчик для следующего узла\n';
-          
-          nodes.forEach((btnNode, btnIndex) => {
-            const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-            const condition = btnIndex === 0 ? 'if' : 'elif';
-            code += `            ${condition} next_node_id == "${btnNode.id}":\n`;
-            code += `                await handle_callback_${safeFunctionName}(callback_query)\n`;
-          });
-          
-          code += '            else:\n';
-          code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
-          code += '        except Exception as e:\n';
-          code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+        // Добавляем обработку различных команд для button responses
+        const commandNodes = nodes.filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
+        commandNodes.forEach((cmdNode, cmdIndex) => {
+          const condition = cmdIndex === 0 ? 'if' : 'elif';
+          code += `            ${condition} command == "${cmdNode.data.command}":\n`;
+          code += `                try:\n`;
+          code += `                    await ${cmdNode.type === 'start' ? 'start_handler' : `${cmdNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_')}_handler`}(fake_message)\n`;
+          code += `                except Exception as e:\n`;
+          code += `                    logging.error(f"Ошибка выполнения команды ${cmdNode.data.command}: {e}")\n`;
+        });
+        if (commandNodes.length > 0) {
+          code += `            else:\n`;
+          code += `                logging.warning(f"Неизвестная команда: {command}")\n`;
         }
+        code += '        elif option_action == "goto" and option_target:\n';
+        code += '            # Переход к узлу\n';
+        code += '            target_node_id = option_target\n';
+        code += '            try:\n';
+        code += '                # Вызываем обработчик для целевого узла\n';
+        
+        // Generate navigation logic for button responses  
+        nodes.forEach((btnNode, btnIndex) => {
+          const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+          const condition = btnIndex === 0 ? 'if' : 'elif';
+          code += `                ${condition} target_node_id == "${btnNode.id}":\n`;
+          code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
+        });
+        
+        code += '                else:\n';
+        code += '                    logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
+        code += '            except Exception as e:\n';
+        code += '                logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")\n';
+        code += '    else:\n';
+        code += '        # Fallback к старой системе next_node_id если нет настроек кнопки\n';
+        code += '        next_node_id = config.get("next_node_id")\n';
+        code += '        if next_node_id:\n';
+        code += '            try:\n';
+        code += '                # Вызываем обработчик для следующего узла\n';
+          
+          nodes.forEach((btnNode, btnIndex) => {
+            const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            const condition = btnIndex === 0 ? 'if' : 'elif';
+            code += `                ${condition} next_node_id == "${btnNode.id}":\n`;
+            code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
+          });
+          
+          code += '                else:\n';
+          code += '                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+          code += '            except Exception as e:\n';
+          code += '                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
       });
       
       // Обработчик для кнопки "Пропустить"
@@ -1814,8 +1822,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '                    "selected": [],\n';
         code += '                    "success_message": "Спасибо за ваш ответ!",\n';
         code += `                    "prompt": f"${inputPrompt}",\n`;
+        code += '                    "options": [\n';
         
-        // Находим следующий узел для этого user-input узла
+        // Добавляем каждый вариант ответа с индивидуальными настройками навигации
+        responseOptions.forEach((option, index) => {
+          const optionValue = option.value || option.text;
+          const action = option.action || 'goto';
+          const target = option.target || '';
+          const url = option.url || '';
+          
+          code += '                        {\n';
+          code += `                            "text": "${option.text}",\n`;
+          code += `                            "value": "${optionValue}",\n`;
+          code += `                            "action": "${action}",\n`;
+          code += `                            "target": "${target}",\n`;
+          code += `                            "url": "${url}",\n`;
+          code += `                            "callback_data": "response_${targetNode.id}_${index}"\n`;
+          code += '                        }';
+          if (index < responseOptions.length - 1) {
+            code += ',';
+          }
+          code += '\n';
+        });
+        
+        code += '                    ],\n';
+        
+        // Находим следующий узел для этого user-input узла (fallback)
         const nextConnection = connections.find(conn => conn.source === targetNode.id);
         if (nextConnection) {
           code += `                    "next_node_id": "${nextConnection.target}"\n`;

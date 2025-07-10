@@ -2458,6 +2458,173 @@ export function PropertiesPanel({
                                   placeholder="Значение (если пусто - используется текст кнопки)"
                                 />
                               </div>
+                              
+                              {/* Navigation settings for each button */}
+                              <div>
+                                <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1 block">
+                                  Действие кнопки
+                                </Label>
+                                <Select
+                                  value={option.action || 'goto'}
+                                  onValueChange={(value: 'goto' | 'command' | 'url') => {
+                                    const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                    updatedOptions[index] = { ...option, action: value };
+                                    onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                  }}
+                                >
+                                  <SelectTrigger className="text-xs border-blue-200 dark:border-blue-700 focus:border-blue-500">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="goto">
+                                      <div className="flex items-center gap-2">
+                                        <i className="fas fa-arrow-right text-xs text-blue-500"></i>
+                                        <span>Перейти к экрану</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="command">
+                                      <div className="flex items-center gap-2">
+                                        <i className="fas fa-terminal text-xs text-purple-500"></i>
+                                        <span>Выполнить команду</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="url">
+                                      <div className="flex items-center gap-2">
+                                        <i className="fas fa-external-link-alt text-xs text-green-500"></i>
+                                        <span>Открыть ссылку</span>
+                                      </div>
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Target selection based on action type */}
+                              {option.action === 'goto' && (
+                                <div>
+                                  <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1 block">
+                                    Выберите экран
+                                  </Label>
+                                  <Select
+                                    value={option.target || ''}
+                                    onValueChange={(value) => {
+                                      const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                      updatedOptions[index] = { ...option, target: value };
+                                      onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                    }}
+                                  >
+                                    <SelectTrigger className="text-xs border-blue-200 dark:border-blue-700 focus:border-blue-500">
+                                      <SelectValue placeholder="Выберите экран или введите ID вручную" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {/* Команды */}
+                                      {allNodes
+                                        ?.filter(node => node.id !== selectedNode.id && (node.type === 'start' || node.type === 'command'))
+                                        .map((node) => (
+                                          <SelectItem key={node.id} value={node.id}>
+                                            <div className="flex items-center gap-2">
+                                              <i className="fas fa-terminal text-xs text-purple-500"></i>
+                                              <span>{node.data.command}</span>
+                                            </div>
+                                          </SelectItem>
+                                        ))}
+                                      
+                                      {/* Другие узлы */}
+                                      {allNodes
+                                        ?.filter(node => node.id !== selectedNode.id && node.type !== 'start' && node.type !== 'command')
+                                        .map((node) => {
+                                          const nodeName = 
+                                            node.type === 'message' ? 'Сообщение' :
+                                            node.type === 'photo' ? 'Фото' :
+                                            node.type === 'video' ? 'Видео' :
+                                            node.type === 'audio' ? 'Аудио' :
+                                            node.type === 'document' ? 'Документ' :
+                                            node.type === 'keyboard' ? 'Клавиатура' :
+                                            node.type === 'condition' ? 'Условие' :
+                                            node.type === 'input' ? 'Ввод' :
+                                            node.type === 'user-input' ? 'Сбор данных' :
+                                            node.type === 'location' ? 'Геолокация' :
+                                            node.type === 'contact' ? 'Контакт' :
+                                            node.type === 'sticker' ? 'Стикер' :
+                                            node.type === 'voice' ? 'Голосовое' :
+                                            node.type === 'animation' ? 'Анимация' : 'Узел';
+                                          
+                                          const iconClass = 
+                                            node.type === 'message' ? 'fas fa-comment text-blue-500' :
+                                            node.type === 'photo' ? 'fas fa-image text-green-500' :
+                                            node.type === 'video' ? 'fas fa-video text-red-500' :
+                                            node.type === 'audio' ? 'fas fa-music text-orange-500' :
+                                            node.type === 'document' ? 'fas fa-file text-gray-500' :
+                                            node.type === 'keyboard' ? 'fas fa-keyboard text-yellow-500' :
+                                            node.type === 'condition' ? 'fas fa-code-branch text-purple-500' :
+                                            node.type === 'input' ? 'fas fa-edit text-cyan-500' :
+                                            node.type === 'user-input' ? 'fas fa-user-edit text-indigo-500' :
+                                            node.type === 'location' ? 'fas fa-map-marker-alt text-pink-500' :
+                                            node.type === 'contact' ? 'fas fa-address-book text-teal-500' :
+                                            node.type === 'sticker' ? 'fas fa-smile text-yellow-400' :
+                                            node.type === 'voice' ? 'fas fa-microphone text-blue-400' :
+                                            node.type === 'animation' ? 'fas fa-play-circle text-green-400' : 'fas fa-cube text-gray-400';
+                                          
+                                          return (
+                                            <SelectItem key={node.id} value={node.id}>
+                                              <div className="flex items-center gap-2">
+                                                <i className={`${iconClass} text-xs`}></i>
+                                                <span>{nodeName}</span>
+                                              </div>
+                                            </SelectItem>
+                                          );
+                                        })}
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  {/* Manual ID input */}
+                                  <Input
+                                    value={option.target || ''}
+                                    onChange={(e) => {
+                                      const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                      updatedOptions[index] = { ...option, target: e.target.value };
+                                      onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                    }}
+                                    className="text-xs border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200 mt-1"
+                                    placeholder="или введите ID экрана вручную"
+                                  />
+                                </div>
+                              )}
+
+                              {option.action === 'command' && (
+                                <div>
+                                  <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1 block">
+                                    Команда для выполнения
+                                  </Label>
+                                  <Input
+                                    value={option.target || ''}
+                                    onChange={(e) => {
+                                      const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                      updatedOptions[index] = { ...option, target: e.target.value };
+                                      onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                    }}
+                                    className="text-xs border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                                    placeholder="например: /start, /help, /menu"
+                                  />
+                                </div>
+                              )}
+
+                              {option.action === 'url' && (
+                                <div>
+                                  <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1 block">
+                                    Ссылка для открытия
+                                  </Label>
+                                  <Input
+                                    value={option.url || ''}
+                                    onChange={(e) => {
+                                      const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                      updatedOptions[index] = { ...option, url: e.target.value };
+                                      onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                    }}
+                                    className="text-xs border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                                    placeholder="https://example.com"
+                                  />
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
