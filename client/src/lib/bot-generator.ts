@@ -1255,12 +1255,40 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `    user_data[callback_query.from_user.id]["save_to_database"] = ${saveToDatabase ? 'True' : 'False'}\n`;
               code += `    user_data[callback_query.from_user.id]["input_target_node_id"] = "${inputTargetNodeId || ''}"\n`;
               code += '    \n';
-              code += '    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n';
-              code += '    try:\n';
-              code += '        await callback_query.message.edit_text(text)\n';
-              code += '    except Exception as e:\n';
-              code += '        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n';
-              code += '        await callback_query.message.answer(text)\n';
+              
+              // ИСПРАВЛЕНИЕ: Добавляем поддержку inline кнопок даже при включенном сборе ввода
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+                code += '    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
+                code += '    builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '    keyboard = builder.as_markup()\n';
+                let parseModeTarget = '';
+                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                } else if (targetNode.data.formatMode === 'html') {
+                  parseModeTarget = ', parse_mode=ParseMode.HTML';
+                }
+                code += '    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n';
+                code += '    try:\n';
+                code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
+                code += '    except Exception as e:\n';
+                code += '        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n';
+                code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+              } else {
+                code += '    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n';
+                code += '    try:\n';
+                code += '        await callback_query.message.edit_text(text)\n';
+                code += '    except Exception as e:\n';
+                code += '        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n';
+                code += '        await callback_query.message.answer(text)\n';
+              }
               code += '    \n';
             } else {
               // Обычное отображение сообщения без сбора ввода

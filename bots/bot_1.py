@@ -415,19 +415,21 @@ async def handle_callback_N1q3_DYFHOucSIyw58fdu(callback_query: types.CallbackQu
     logging.info(f"Кнопка сохранена: {button_display_text} (пользователь {user_id})")
     
     text = "Хочешься присоединиться к чату?"
+    # Активируем сбор пользовательского ввода
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
     
-    # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "N1q3_DYFHOucSIyw58fdu"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "желание"
+    user_data[callback_query.from_user.id]["save_to_database"] = True
+    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    
+    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="ДА", callback_data="1fJCssfE7JH8ASXBpgeUh"))
     builder.add(InlineKeyboardButton(text="НЕТ", callback_data="u5L4a6DvDiwKBF6st7MJ8"))
     keyboard = builder.as_markup()
-    
-    # Дополнительно: настраиваем сбор пользовательских ответов
-    user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
-    user_data[callback_query.from_user.id]["input_collection_enabled"] = True
-    user_data[callback_query.from_user.id]["input_node_id"] = "N1q3_DYFHOucSIyw58fdu"
-    user_data[callback_query.from_user.id]["input_variable"] = "источник"
-    
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
         await callback_query.message.edit_text(text, reply_markup=keyboard)
@@ -637,16 +639,16 @@ async def handle_user_input(message: types.Message):
                 "type": "text",
                 "timestamp": timestamp,
                 "nodeId": "N1q3_DYFHOucSIyw58fdu",
-                "variable": "user_response"
+                "variable": "желание"
             }
             
             # Сохраняем в пользовательские данные
-            user_data[user_id]["user_response"] = response_data
+            user_data[user_id]["желание"] = response_data
             
             # Сохраняем в базу данных
-            saved_to_db = await update_user_data_in_db(user_id, "user_response", response_data)
+            saved_to_db = await update_user_data_in_db(user_id, "желание", response_data)
             if saved_to_db:
-                logging.info(f"✅ Данные сохранены в БД: user_response = {user_text} (пользователь {user_id})")
+                logging.info(f"✅ Данные сохранены в БД: желание = {user_text} (пользователь {user_id})")
             else:
                 logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
             
@@ -655,7 +657,7 @@ async def handle_user_input(message: types.Message):
             # Очищаем состояние ожидания ввода
             del user_data[user_id]["waiting_for_input"]
             
-            logging.info(f"Получен пользовательский ввод: user_response = {user_text}")
+            logging.info(f"Получен пользовательский ввод: желание = {user_text}")
             
             return
         
