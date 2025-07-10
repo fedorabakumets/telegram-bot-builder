@@ -104,7 +104,7 @@ def create_modern_data_collection_template():
                         "saveToDatabase": True,
                         "inputRetryMessage": "Пожалуйста, напишите отзыв от 5 до 500 символов",
                         "inputSuccessMessage": "Спасибо за ваш отзыв! Мы ценим вашу обратную связь.",
-                        "nextNodeId": "thank-you-message"
+                        "inputTargetNodeId": "thank-you-message"
                     }
                 },
                 

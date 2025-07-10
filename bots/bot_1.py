@@ -3,7 +3,8 @@
 Сгенерировано с помощью TelegramBot Builder
 
 Команды для @BotFather:
-start - Запустить бота"""
+start - Запустить процесс сбора данных
+help - Получить помощь"""
 
 import asyncio
 import logging
@@ -18,7 +19,7 @@ from datetime import datetime
 import json
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
+BOT_TOKEN = "7828006998:AAE9AjwH4dGb9K4qbvCOKhFcVIVBWvp6GgU"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -200,7 +201,8 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
 # Настройка меню команд
 async def set_bot_commands():
     commands = [
-        BotCommand(command="start", description="Запустить бота"),
+        BotCommand(command="start", description="Запустить процесс сбора данных"),
+        BotCommand(command="help", description="Получить помощь"),
     ]
     await bot.set_my_commands(commands)
 
@@ -229,49 +231,99 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = f"Привет! Добро пожаловать!"
+    text = f"👋 Добро пожаловать в современный бот для сбора данных!\n\nНажмите кнопку ниже, чтобы начать процесс сбора информации."
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="xtEZ0Z4CUpkWyFNdBLorj"))
+    builder.add(InlineKeyboardButton(text="🚀 Начать сбор данных", callback_data="collection-message"))
+    keyboard = builder.as_markup()
+    # Отправляем сообщение с прикрепленными inline кнопками
+    await message.answer(text, reply_markup=keyboard)
+
+@dp.message(Command("help"))
+async def help_handler(message: types.Message):
+    logging.info(f"Команда /help вызвана пользователем {message.from_user.id}")
+    # Сохраняем пользователя и статистику использования команд
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    
+    # Сохраняем пользователя в базу данных
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
+    
+    # Обновляем статистику команд в БД
+    if saved_to_db:
+        await update_user_data_in_db(user_id, "command_help", datetime.now().isoformat())
+    
+    # Резервное сохранение в локальное хранилище
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "commands_used" not in user_data[user_id]:
+        user_data[user_id]["commands_used"] = {}
+    user_data[user_id]["commands_used"]["/help"] = user_data[user_id]["commands_used"].get("/help", 0) + 1
+
+    text = f"❓ Помощь по использованию бота:\n\n• /start - Начать сбор данных\n• /help - Эта справка\n\nБот демонстрирует современные возможности сбора данных:\n✅ Кнопочные ответы\n✅ Текстовый ввод\n✅ Сохранение в базу данных\n✅ Аддитивная логика сбора"
+    
+    # Создаем inline клавиатуру с кнопками
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🏠 Вернуться к началу", callback_data="start-command"))
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "xtEZ0Z4CUpkWyFNdBLorj")
-async def handle_callback_xtEZ0Z4CUpkWyFNdBLorj(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "collection-message")
+async def handle_callback_collection_message(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = "Как вас зовут?"
+    text = """📊 Расскажите о своем опыте с нашим сервисом:
+
+• Нажмите одну из кнопок для быстрого ответа
+• Или напишите развернутый отзыв текстом
+
+Ваш ответ будет сохранен в любом случае!"""
     # Активируем сбор пользовательского ввода (основной цикл)
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
     
-    user_data[callback_query.from_user.id]["waiting_for_input"] = "xtEZ0Z4CUpkWyFNdBLorj"
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "collection-message"
     user_data[callback_query.from_user.id]["input_type"] = "text"
-    user_data[callback_query.from_user.id]["input_variable"] = "имя"
+    user_data[callback_query.from_user.id]["input_variable"] = "user_feedback"
     user_data[callback_query.from_user.id]["save_to_database"] = True
-    user_data[callback_query.from_user.id]["input_target_node_id"] = "-0oRrlrqED9ftXHpoJEdO"
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "thank-you-message"
     
-    await callback_query.message.edit_text(text)
+    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Отлично", callback_data="thank-you-message"))
+    builder.add(InlineKeyboardButton(text=" Хорошо", callback_data="thank-you-message"))
+    builder.add(InlineKeyboardButton(text="Средне", callback_data="thank-you-message"))
+    builder.add(InlineKeyboardButton(text=" Плохо", callback_data="thank-you-message"))
+    keyboard = builder.as_markup()
+    await callback_query.message.edit_text(text, reply_markup=keyboard)
     
 
-@dp.callback_query(lambda c: c.data == "9q4tb3UOhuqEuYZNuFEFf")
-async def handle_callback_9q4tb3UOhuqEuYZNuFEFf(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "thank-you-message")
+async def handle_callback_thank_you_message(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = "Привет! Добро пожаловать!"
+    text = """🎉 Спасибо за участие в опросе!
+
+Ваш отзыв поможет нам улучшить наш сервис. Мы ценим каждое мнение наших пользователей.
+
+💾 Все данные сохранены в нашей системе."""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Новая кнопка", callback_data="xtEZ0Z4CUpkWyFNdBLorj"))
+    builder.add(InlineKeyboardButton(text="🔄 Пройти опрос снова", callback_data="start-command"))
     keyboard = builder.as_markup()
     await callback_query.message.edit_text(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "-0oRrlrqED9ftXHpoJEdO")
-async def handle_callback__0oRrlrqED9ftXHpoJEdO(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "start-command")
+async def handle_callback_start_command(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = "Спасибо за ответ"
+    text = """👋 Добро пожаловать в современный бот для сбора данных!
+
+Нажмите кнопку ниже, чтобы начать процесс сбора информации."""
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Заново", callback_data="9q4tb3UOhuqEuYZNuFEFf"))
+    builder.add(InlineKeyboardButton(text="🚀 Начать сбор данных", callback_data="collection-message"))
     keyboard = builder.as_markup()
     await callback_query.message.edit_text(text, reply_markup=keyboard)
 
@@ -362,6 +414,11 @@ async def handle_user_input(message: types.Message):
                         await start_handler(fake_message)
                     except Exception as e:
                         logging.error(f"Ошибка выполнения команды /start: {e}")
+                elif command == "/help":
+                    try:
+                        await _help_handler(fake_message)
+                    except Exception as e:
+                        logging.error(f"Ошибка выполнения команды /help: {e}")
                 else:
                     logging.warning(f"Неизвестная команда: {command}")
             elif option_action == "goto" and option_target:
@@ -369,12 +426,14 @@ async def handle_user_input(message: types.Message):
                 target_node_id = option_target
                 try:
                     # Вызываем обработчик для целевого узла
-                    if target_node_id == "9q4tb3UOhuqEuYZNuFEFf":
-                        await handle_callback_9q4tb3UOhuqEuYZNuFEFf(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "xtEZ0Z4CUpkWyFNdBLorj":
-                        await handle_callback_xtEZ0Z4CUpkWyFNdBLorj(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "-0oRrlrqED9ftXHpoJEdO":
-                        await handle_callback__0oRrlrqED9ftXHpoJEdO(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    if target_node_id == "start-command":
+                        await handle_callback_start_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "collection-message":
+                        await handle_callback_collection_message(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "thank-you-message":
+                        await handle_callback_thank_you_message(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "help-command":
+                        await handle_callback_help_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -385,12 +444,14 @@ async def handle_user_input(message: types.Message):
                 if next_node_id:
                     try:
                         # Вызываем обработчик для следующего узла
-                        if next_node_id == "9q4tb3UOhuqEuYZNuFEFf":
-                            await handle_callback_9q4tb3UOhuqEuYZNuFEFf(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "xtEZ0Z4CUpkWyFNdBLorj":
-                            await handle_callback_xtEZ0Z4CUpkWyFNdBLorj(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "-0oRrlrqED9ftXHpoJEdO":
-                            await handle_callback__0oRrlrqED9ftXHpoJEdO(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        if next_node_id == "start-command":
+                            await handle_callback_start_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "collection-message":
+                            await handle_callback_collection_message(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "thank-you-message":
+                            await handle_callback_thank_you_message(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "help-command":
+                            await handle_callback_help_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -411,7 +472,7 @@ async def handle_user_input(message: types.Message):
         user_text = message.text
         
         # Находим узел для получения настроек
-        if waiting_node_id == "xtEZ0Z4CUpkWyFNdBLorj":
+        if waiting_node_id == "collection-message":
             
             # Сохраняем ответ пользователя
             import datetime
@@ -422,17 +483,17 @@ async def handle_user_input(message: types.Message):
                 "value": user_text,
                 "type": "text",
                 "timestamp": timestamp,
-                "nodeId": "xtEZ0Z4CUpkWyFNdBLorj",
-                "variable": "имя"
+                "nodeId": "collection-message",
+                "variable": "user_feedback"
             }
             
             # Сохраняем в пользовательские данные
-            user_data[user_id]["имя"] = response_data
+            user_data[user_id]["user_feedback"] = response_data
             
             # Сохраняем в базу данных
-            saved_to_db = await update_user_data_in_db(user_id, "имя", response_data)
+            saved_to_db = await update_user_data_in_db(user_id, "user_feedback", response_data)
             if saved_to_db:
-                logging.info(f"✅ Данные сохранены в БД: имя = {user_text} (пользователь {user_id})")
+                logging.info(f"✅ Данные сохранены в БД: user_feedback = {user_text} (пользователь {user_id})")
             else:
                 logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
             
@@ -440,22 +501,25 @@ async def handle_user_input(message: types.Message):
             
             # Очищаем состояние ожидания ввода
             del user_data[user_id]["waiting_for_input"]
+            if "input_type" in user_data[user_id]:
+                del user_data[user_id]["input_type"]
             
-            logging.info(f"Получен пользовательский ввод: имя = {user_text}")
+            logging.info(f"Получен пользовательский ввод: user_feedback = {user_text}")
             
             # Переходим к следующему узлу
             try:
                 # Создаем фиктивный callback_query для навигации
                 import types as aiogram_types
+                import asyncio
                 fake_callback = aiogram_types.SimpleNamespace(
                     id="input_nav",
                     from_user=message.from_user,
                     chat_instance="",
-                    data="-0oRrlrqED9ftXHpoJEdO",
+                    data="thank-you-message",
                     message=message,
-                    answer=lambda text="", show_alert=False: None
+                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
                 )
-                await handle_callback__0oRrlrqED9ftXHpoJEdO(fake_callback)
+                await handle_callback_thank_you_message(fake_callback)
             except Exception as e:
                 logging.error(f"Ошибка при переходе к следующему узлу: {e}")
             return
@@ -580,19 +644,27 @@ async def handle_user_input(message: types.Message):
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
             
             # Находим узел по ID и выполняем соответствующее действие
-            if next_node_id == "9q4tb3UOhuqEuYZNuFEFf":
-                logging.info(f"Переход к узлу 9q4tb3UOhuqEuYZNuFEFf типа start")
-            elif next_node_id == "xtEZ0Z4CUpkWyFNdBLorj":
-                text = f"Как вас зовут?"
-                parse_mode = None
-                await message.answer(text, parse_mode=parse_mode)
-            elif next_node_id == "-0oRrlrqED9ftXHpoJEdO":
-                text = f"Спасибо за ответ"
+            if next_node_id == "start-command":
+                logging.info(f"Переход к узлу start-command типа start")
+            elif next_node_id == "collection-message":
+                text = f"📊 Расскажите о своем опыте с нашим сервисом:\n\n• Нажмите одну из кнопок для быстрого ответа\n• Или напишите развернутый отзыв текстом\n\nВаш ответ будет сохранен в любом случае!"
                 parse_mode = None
                 builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="Заново", callback_data="9q4tb3UOhuqEuYZNuFEFf"))
+                builder.add(InlineKeyboardButton(text="Отлично", callback_data="thank-you-message"))
+                builder.add(InlineKeyboardButton(text=" Хорошо", callback_data="thank-you-message"))
+                builder.add(InlineKeyboardButton(text="Средне", callback_data="thank-you-message"))
+                builder.add(InlineKeyboardButton(text=" Плохо", callback_data="thank-you-message"))
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "thank-you-message":
+                text = f"🎉 Спасибо за участие в опросе!\n\nВаш отзыв поможет нам улучшить наш сервис. Мы ценим каждое мнение наших пользователей.\n\n💾 Все данные сохранены в нашей системе."
+                parse_mode = None
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Пройти опрос снова", callback_data="start-command"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "help-command":
+                logging.info(f"Переход к узлу help-command типа command")
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:

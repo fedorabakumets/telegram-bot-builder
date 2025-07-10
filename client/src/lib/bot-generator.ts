@@ -989,7 +989,31 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `    user_data[callback_query.from_user.id]["save_to_database"] = ${saveToDatabase ? 'True' : 'False'}\n`;
                 code += `    user_data[callback_query.from_user.id]["input_target_node_id"] = "${inputTargetNodeId || ''}"\n`;
                 code += '    \n';
-                code += '    await callback_query.message.edit_text(text)\n';
+                
+                // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок даже при включенном сборе ввода
+                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+                  code += '    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
+                  code += '    builder = InlineKeyboardBuilder()\n';
+                  targetNode.data.buttons.forEach(btn => {
+                    if (btn.action === "url") {
+                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                    } else if (btn.action === 'goto') {
+                      const callbackData = btn.target || btn.id || 'no_action';
+                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    }
+                  });
+                  code += '    keyboard = builder.as_markup()\n';
+                  // Определяем режим форматирования для целевого узла
+                  let parseModeTarget = '';
+                  if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                    parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                  } else if (targetNode.data.formatMode === 'html') {
+                    parseModeTarget = ', parse_mode=ParseMode.HTML';
+                  }
+                  code += `    await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
+                } else {
+                  code += '    await callback_query.message.edit_text(text)\n';
+                }
                 code += '    \n';
               } else {
                 // Обычное отображение сообщения без сбора ввода
@@ -1836,13 +1860,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
         code += `                # Создаем фиктивный callback_query для навигации\n`;
         code += `                import types as aiogram_types\n`;
+        code += `                import asyncio\n`;
         code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
         code += `                    id="input_nav",\n`;
         code += `                    from_user=message.from_user,\n`;
         code += `                    chat_instance="",\n`;
         code += `                    data="${targetNode.id}",\n`;
         code += `                    message=message,\n`;
-        code += `                    answer=lambda text="", show_alert=False: None\n`;
+        code += `                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n`;
         code += `                )\n`;
         code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
       }
