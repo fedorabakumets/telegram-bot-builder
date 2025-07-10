@@ -6,6 +6,19 @@ function escapeForPython(text: string): string {
   return text.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
 
+// Функция для правильного форматирования текста с поддержкой многострочности
+function formatTextForPython(text: string): string {
+  if (!text) return '""';
+  
+  // Для многострочного текста используем тройные кавычки
+  if (text.includes('\n')) {
+    return `"""${text}"""`;
+  } else {
+    // Для однострочного текста экранируем только кавычки
+    return `"${text.replace(/"/g, '\\"')}"`;
+  }
+}
+
 export function generatePythonCode(botData: BotData, botName: string = "MyBot"): string {
   const { nodes, connections } = botData;
   
@@ -882,8 +895,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    \n';
               
               // Отправляем запрос пользователю
-              const escapedPrompt = escapeForPython(inputPrompt);
-              code += `    text = f"${escapedPrompt}"\n`;
+              const formattedPrompt = formatTextForPython(inputPrompt);
+              code += `    text = ${formattedPrompt}\n`;
               
               if (responseType === 'buttons' && responseOptions.length > 0) {
                 // Обработка кнопочного ответа
@@ -982,7 +995,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
                 code += `        "retry_message": "${inputRetryMessage}",\n`;
                 code += `        "success_message": "${inputSuccessMessage}",\n`;
-                code += `        "prompt": "${escapeForPython(inputPrompt)}",\n`;
+                code += `        "prompt": "${inputPrompt}",\n`;
                 code += `        "node_id": "${targetNode.id}",\n`;
                 code += `        "next_node_id": "${nextNodeId || ''}"\n`;
                 code += '    }\n';
@@ -995,8 +1008,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetText.includes('\n')) {
                 code += `    text = """${targetText}"""\n`;
               } else {
-                const escapedTargetText = targetText.replace(/"/g, '\\"');
-                code += `    text = "${escapedTargetText}"\n`;
+                const formattedTargetText = formatTextForPython(targetText);
+                code += `    text = ${formattedTargetText}\n`;
               }
             
               // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла (основной цикл)
@@ -1199,8 +1212,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '    await callback_query.message.delete()\n';
             code += '    \n';
             
-            const escapedPrompt = escapeForPython(inputPrompt);
-            code += `    text = f"${escapedPrompt}"\n`;
+            const formattedPrompt = formatTextForPython(inputPrompt);
+            code += `    text = ${formattedPrompt}\n`;
             
             if (responseType === 'text') {
               // Find next node through connections
@@ -1221,12 +1234,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             // Handle regular message nodes
             const targetText = targetNode.data.messageText || "Сообщение";
             
-            if (targetText.includes('\n')) {
-              code += `    text = """${targetText}"""\n`;
-            } else {
-              const escapedTargetText = targetText.replace(/"/g, '\\"');
-              code += `    text = "${escapedTargetText}"\n`;
-            }
+            const formattedTargetText = formatTextForPython(targetText);
+            code += `    text = ${formattedTargetText}\n`;
             
             // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
             if (targetNode.data.collectUserInput === true) {
@@ -1329,13 +1338,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Generate response for target node
             const targetText = targetNode.data.messageText || "Сообщение";
-            // Используем тройные кавычки для многострочного текста
-            if (targetText.includes('\n')) {
-              code += `    text = """${targetText}"""\n`;
-            } else {
-              const escapedTargetText = targetText.replace(/"/g, '\\"');
-              code += `    text = "${escapedTargetText}"\n`;
-            }
+            const formattedTargetText = formatTextForPython(targetText);
+            code += `    text = ${formattedTargetText}\n`;
             
             // Handle keyboard for target node
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
@@ -2114,8 +2118,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
     
     if (targetNode.type === 'message') {
-      const messageText = escapeForPython(targetNode.data.messageText || 'Сообщение');
-      code += `                text = f"${messageText}"\n`;
+      const messageText = formatTextForPython(targetNode.data.messageText || 'Сообщение');
+      code += `                text = ${messageText}\n`;
       
       // Определяем режим форматирования
       if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -2152,7 +2156,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '                await message.answer(text, parse_mode=parse_mode)\n';
       }
     } else if (targetNode.type === 'user-input') {
-      const inputPrompt = escapeForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
+      const inputPrompt = formatTextForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
       const responseType = targetNode.data.responseType || 'text';
       const inputType = targetNode.data.inputType || 'text';
       const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
@@ -2352,8 +2356,8 @@ function generateStartHandler(node: Node): string {
   code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
   
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
-  const escapedText = escapeForPython(messageText);
-  code += `    text = f"${escapedText}"\n`;
+  const formattedText = formatTextForPython(messageText);
+  code += `    text = ${formattedText}\n`;
   
   return code + generateKeyboard(node);
 }
@@ -2409,8 +2413,8 @@ function generateCommandHandler(node: Node): string {
   code += `    user_data[user_id]["commands_used"]["${command}"] = user_data[user_id]["commands_used"].get("${command}", 0) + 1\n`;
 
   const messageText = node.data.messageText || "Команда выполнена";
-  const escapedText = escapeForPython(messageText);
-  code += `\n    text = f"${escapedText}"\n`;
+  const formattedText = formatTextForPython(messageText);
+  code += `\n    text = ${formattedText}\n`;
   
   return code + generateKeyboard(node);
 }
@@ -2447,8 +2451,8 @@ function generatePhotoHandler(node: Node): string {
     const imageUrl = node.data.imageUrl || "https://via.placeholder.com/400x300?text=Photo";
     const caption = node.data.messageText || "📸 Фото";
     
-    const escapedCaption = escapeForPython(caption);
-    code += `    caption = f"${escapedCaption}"\n`;
+    const formattedCaption = formatTextForPython(caption);
+    code += `    caption = ${formattedCaption}\n`;
     
     code += `    photo_url = "${imageUrl}"\n`;
     code += '    \n';
