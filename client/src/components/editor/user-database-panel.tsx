@@ -83,19 +83,32 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
   // Delete user mutation
   const deleteUserMutation = useMutation({
-    mutationFn: (userId: number) => apiRequest('DELETE', `/api/users/${userId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+    mutationFn: (userId: number) => {
+      console.log(`Attempting to delete user with ID: ${userId}`);
+      return apiRequest('DELETE', `/api/users/${userId}`);
+    },
+    onSuccess: (data) => {
+      console.log("User deletion successful:", data);
+      // Force clear cache and refetch
+      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
+      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+      
+      // Delay refetch to ensure cache is cleared
+      setTimeout(() => {
+        refetchUsers();
+        refetchStats();
+      }, 100);
+      
       toast({
         title: "Пользователь удален",
         description: "Данные пользователя успешно удалены",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("User deletion failed:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось удалить пользователя",
+        title: "Ошибка удаления",
+        description: "Не удалось удалить пользователя. Проверьте консоль для подробностей.",
         variant: "destructive",
       });
     }
@@ -132,19 +145,33 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
   // Delete all users mutation
   const deleteAllUsersMutation = useMutation({
-    mutationFn: () => apiRequest('DELETE', `/api/projects/${projectId}/users`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+    mutationFn: () => {
+      console.log(`Attempting to delete all users for project: ${projectId}`);
+      return apiRequest('DELETE', `/api/projects/${projectId}/users`);
+    },
+    onSuccess: (data) => {
+      console.log("Bulk deletion successful:", data);
+      // Force clear cache and refetch
+      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
+      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+      
+      // Delay refetch to ensure cache is cleared
+      setTimeout(() => {
+        refetchUsers();
+        refetchStats();
+      }, 100);
+      
+      const deletedCount = data?.deletedCount || 0;
       toast({
-        title: "Все данные удалены",
-        description: "Все пользовательские данные удалены",
+        title: "База данных очищена",
+        description: `Удалено записей: ${deletedCount}. Все пользовательские данные удалены.`,
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Bulk deletion failed:", error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось удалить данные",
+        title: "Ошибка очистки базы",
+        description: "Не удалось очистить базу данных. Проверьте консоль для подробностей.",
         variant: "destructive",
       });
     }

@@ -2338,52 +2338,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // User Bot Data Management endpoints
   
-  // Get all user data for a project from bot_users table (real bot data)
+  // Get all user data for a project
   app.get("/api/projects/:id/users", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      console.log(`Fetching users for project ${projectId}`);
       
-      // Подключаемся напрямую к PostgreSQL для получения данных из bot_users
-      const { Pool } = await import('pg');
-      const pool = new Pool({
-        connectionString: process.env.DATABASE_URL
-      });
-      
-      const result = await pool.query(
-        `SELECT 
-          user_id, 
-          username, 
-          first_name, 
-          last_name, 
-          registered_at, 
-          last_interaction, 
-          interaction_count, 
-          user_data, 
-          is_active 
-        FROM bot_users 
-        ORDER BY last_interaction DESC LIMIT 100`
-      );
-      
-      await pool.end();
-      res.json(result.rows);
+      // Use storage interface to get user data from user_bot_data table
+      const users = await storage.getUserBotDataByProject(projectId);
+      console.log(`Found ${users.length} users for project ${projectId}`);
+      res.json(users);
     } catch (error) {
-      console.error("Ошибка получения пользователей из bot_users:", error);
-      // Fallback to regular user data if bot_users table doesn't exist
-      try {
-        const users = await storage.getUserBotDataByProject(projectId);
-        res.json(users);
-      } catch (fallbackError) {
-        res.status(500).json({ message: "Failed to fetch user data" });
-      }
+      console.error("Error fetching user data:", error);
+      res.status(500).json({ message: "Failed to fetch user data" });
     }
   });
 
-  // Get user data stats for a project from bot_users table
+  // Get user data stats for a project
   app.get("/api/projects/:id/users/stats", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      console.log(`Fetching user stats for project ${projectId}`);
       
-      // Подключаемся напрямую к PostgreSQL для получения статистики из bot_users
+      // Use direct PostgreSQL query on user_bot_data table
       const { Pool } = await import('pg');
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL
@@ -2392,35 +2369,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         SELECT 
           COUNT(*) as "totalUsers",
-          COUNT(*) FILTER (WHERE is_active = true) as "activeUsers",
-          COUNT(*) FILTER (WHERE is_active = false) as "blockedUsers",
-          0 as "premiumUsers",
+          COUNT(*) FILTER (WHERE is_active = 1) as "activeUsers",
+          COUNT(*) FILTER (WHERE is_active = 0) as "blockedUsers",
+          COUNT(*) FILTER (WHERE is_premium = 1) as "premiumUsers",
           COUNT(*) FILTER (WHERE user_data IS NOT NULL AND user_data != '{}' AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%' OR user_data::text LIKE '%input%' OR user_data::text LIKE '%user_%')) as "usersWithResponses",
           COALESCE(SUM(interaction_count), 0) as "totalInteractions",
           COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
-        FROM bot_users
-      `);
+        FROM user_bot_data
+        WHERE project_id = $1
+      `, [projectId]);
       
       await pool.end();
       
       const stats = result.rows[0];
-      // Преобразуем строки в числа
+      // Convert strings to numbers
       Object.keys(stats).forEach(key => {
         if (typeof stats[key] === 'string' && !isNaN(stats[key])) {
           stats[key] = parseInt(stats[key]);
         }
       });
       
+      console.log(`User stats for project ${projectId}:`, stats);
       res.json(stats);
     } catch (error) {
-      console.error("Ошибка получения статистики из bot_users:", error);
-      // Fallback to regular stats if bot_users table doesn't exist
-      try {
-        const stats = await storage.getUserBotDataStats(projectId);
-        res.json(stats);
-      } catch (fallbackError) {
-        res.status(500).json({ message: "Failed to fetch user stats" });
-      }
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ message: "Failed to fetch user stats" });
     }
   });
 
@@ -2438,18 +2411,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         SELECT 
           user_id,
-          username,
+          user_name as username,
           first_name,
           last_name,
           user_data,
-          registered_at,
+          created_at as registered_at,
           last_interaction
-        FROM bot_users 
-        WHERE user_data IS NOT NULL 
+        FROM user_bot_data 
+        WHERE project_id = $1
+          AND user_data IS NOT NULL 
           AND user_data != '{}' 
           AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%' OR user_data::text LIKE '%input%' OR user_data::text LIKE '%user_%')
         ORDER BY last_interaction DESC
-      `);
+      `, [projectId]);
       
       await pool.end();
       
@@ -2617,12 +2591,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/users/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Подключение к PostgreSQL для прямого удаления
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+      });
+
+      try {
+        // Пытаемся удалить из bot_users если пользователь передал user_id
+        const deleteResult = await pool.query(
+          `DELETE FROM bot_users WHERE user_id = $1`,
+          [id]
+        );
+        
+        await pool.end();
+        
+        if (deleteResult.rowCount && deleteResult.rowCount > 0) {
+          console.log(`Deleted user ${id} from bot_users table`);
+          return res.json({ message: "User data deleted successfully" });
+        }
+      } catch (dbError) {
+        await pool.end();
+        console.log("bot_users table not found, falling back to user_bot_data");
+      }
+
+      // Fallback: удаляем из user_bot_data таблицы
       const success = await storage.deleteUserBotData(id);
       if (!success) {
         return res.status(404).json({ message: "User data not found" });
       }
       res.json({ message: "User data deleted successfully" });
     } catch (error) {
+      console.error("Failed to delete user data:", error);
       res.status(500).json({ message: "Failed to delete user data" });
     }
   });
@@ -2631,6 +2631,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/projects/:id/users", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      let totalDeleted = 0;
       
       // Подключение к PostgreSQL
       const pool = new Pool({
@@ -2644,27 +2645,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           [projectId]
         );
         
-        await pool.end();
-        
-        console.log(`Deleted ${deleteResult.rowCount || 0} users for project ${projectId}`);
-        
-        res.json({ 
-          message: "All user data deleted successfully", 
-          deleted: true,
-          deletedCount: deleteResult.rowCount || 0
-        });
+        totalDeleted += deleteResult.rowCount || 0;
+        console.log(`Deleted ${deleteResult.rowCount || 0} users from bot_users for project ${projectId}`);
       } catch (dbError) {
-        await pool.end();
-        console.error("Ошибка при удалении пользователей из bot_users:", dbError);
-        
-        // Fallback to regular storage if bot_users table doesn't exist
-        const success = await storage.deleteUserBotDataByProject(projectId);
-        res.json({ 
-          message: "All user data deleted successfully (fallback)", 
-          deleted: success,
-          deletedCount: 0
-        });
+        console.log("bot_users table not found or error:", dbError.message);
       }
+
+      await pool.end();
+      
+      // Подсчитываем количество записей в user_bot_data перед удалением
+      const existingUserData = await storage.getUserBotDataByProject(projectId);
+      const userBotDataCount = existingUserData.length;
+      
+      // Удаляем из user_bot_data таблицы
+      const fallbackSuccess = await storage.deleteUserBotDataByProject(projectId);
+      if (fallbackSuccess) {
+        totalDeleted += userBotDataCount;
+        console.log(`Deleted ${userBotDataCount} users from user_bot_data for project ${projectId}`);
+      }
+      
+      res.json({ 
+        message: "All user data deleted successfully", 
+        deleted: true,
+        deletedCount: totalDeleted
+      });
     } catch (error) {
       console.error("Failed to delete user data:", error);
       res.status(500).json({ message: "Failed to delete user data" });
