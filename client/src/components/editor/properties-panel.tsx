@@ -2291,6 +2291,301 @@ export function PropertiesPanel({
           </div>
         </div>
 
+        {/* Universal User Input Collection */}
+        {selectedNode.type !== 'user-input' && (
+          <div>
+            <h3 className="text-sm font-medium text-foreground mb-3">Сбор пользовательского ввода</h3>
+            <div className="space-y-4">
+              {/* Enable Input Collection */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
+                <div className="flex-1">
+                  <Label className="text-xs font-medium text-foreground">
+                    Включить сбор ответа
+                  </Label>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Бот будет ждать ответ пользователя после отправки этого сообщения
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <Switch
+                    checked={selectedNode.data.collectUserInput ?? false}
+                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { collectUserInput: checked })}
+                  />
+                </div>
+              </div>
+
+              {/* Input Collection Settings */}
+              {selectedNode.data.collectUserInput && (
+                <div className="space-y-4 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-4">
+                  
+                  {/* Response Type */}
+                  <div>
+                    <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                      <i className="fas fa-list mr-1"></i>
+                      Тип ответа
+                    </Label>
+                    <Select
+                      value={selectedNode.data.responseType || 'text'}
+                      onValueChange={(value: 'text' | 'buttons') => onNodeUpdate(selectedNode.id, { responseType: value })}
+                    >
+                      <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="text">Текстовый ввод</SelectItem>
+                        <SelectItem value="buttons">Кнопки выбора</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Input Type for text responses */}
+                  {selectedNode.data.responseType === 'text' && (
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-keyboard mr-1"></i>
+                        Тип ввода
+                      </Label>
+                      <Select
+                        value={selectedNode.data.inputType || 'text'}
+                        onValueChange={(value) => onNodeUpdate(selectedNode.id, { inputType: value })}
+                      >
+                        <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text">Текст</SelectItem>
+                          <SelectItem value="number">Число</SelectItem>
+                          <SelectItem value="email">Email</SelectItem>
+                          <SelectItem value="phone">Телефон</SelectItem>
+                          <SelectItem value="any">Любой</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Button Type for button responses */}
+                  {selectedNode.data.responseType === 'buttons' && (
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-mouse mr-1"></i>
+                        Тип кнопок
+                      </Label>
+                      <Select
+                        value={selectedNode.data.inputButtonType || 'inline'}
+                        onValueChange={(value: 'inline' | 'reply') => onNodeUpdate(selectedNode.id, { inputButtonType: value })}
+                      >
+                        <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="inline">Inline кнопки</SelectItem>
+                          <SelectItem value="reply">Reply кнопки</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Response Options for buttons */}
+                  {selectedNode.data.responseType === 'buttons' && (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                          <i className="fas fa-list-ul mr-1"></i>
+                          Варианты ответов
+                        </Label>
+                        <UIButton
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const newOption = {
+                              id: nanoid(),
+                              text: 'Новый вариант',
+                              value: '',
+                              action: 'goto' as const,
+                              target: ''
+                            };
+                            const updatedOptions = [...(selectedNode.data.responseOptions || []), newOption];
+                            onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+                        >
+                          + Добавить
+                        </UIButton>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {(selectedNode.data.responseOptions || []).map((option, index) => (
+                          <div key={option.id} className="bg-card/50 rounded-lg p-3 border border-border/50">
+                            <div className="flex items-center justify-between mb-2">
+                              <Input
+                                value={option.text}
+                                onChange={(e) => {
+                                  const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                  updatedOptions[index] = { ...option, text: e.target.value };
+                                  onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                }}
+                                className="flex-1 text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Текст кнопки"
+                              />
+                              <UIButton
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const updatedOptions = (selectedNode.data.responseOptions || []).filter((_, i) => i !== index);
+                                  onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                }}
+                                className="text-muted-foreground hover:text-destructive h-auto p-1"
+                              >
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                              </UIButton>
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <div>
+                                <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1 block">
+                                  Значение для сохранения
+                                </Label>
+                                <Input
+                                  value={option.value || ''}
+                                  onChange={(e) => {
+                                    const updatedOptions = [...(selectedNode.data.responseOptions || [])];
+                                    updatedOptions[index] = { ...option, value: e.target.value };
+                                    onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
+                                  }}
+                                  className="text-xs border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                                  placeholder="Значение (если пусто - используется текст кнопки)"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Variable Name */}
+                  <div>
+                    <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                      <i className="fas fa-tag mr-1"></i>
+                      Название для ответа
+                    </Label>
+                    <Input
+                      value={selectedNode.data.inputVariable || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { inputVariable: e.target.value })}
+                      className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                      placeholder="например: имя_пользователя, почта, телефон"
+                    />
+                    <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      Под этим названием будет сохранен ответ пользователя
+                    </div>
+                  </div>
+
+                  {/* Target Node */}
+                  <div>
+                    <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                      <i className="fas fa-arrow-right mr-1"></i>
+                      Куда перейти после ответа
+                    </Label>
+                    <Select
+                      value={selectedNode.data.inputTargetNodeId || ''}
+                      onValueChange={(value) => onNodeUpdate(selectedNode.id, { inputTargetNodeId: value })}
+                    >
+                      <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500">
+                        <SelectValue placeholder="Выберите следующий шаг" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Команды */}
+                        {allNodes
+                          .filter(node => node.id !== selectedNode.id && (node.type === 'start' || node.type === 'command'))
+                          .map((node) => (
+                            <SelectItem key={node.id} value={node.id}>
+                              <div className="flex items-center gap-2">
+                                <i className="fas fa-terminal text-xs text-purple-500"></i>
+                                <span>{node.data.command}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        
+                        {/* Другие узлы */}
+                        {allNodes
+                          .filter(node => node.id !== selectedNode.id && node.type !== 'start' && node.type !== 'command')
+                          .map((node) => {
+                            const nodeName = 
+                              node.type === 'message' ? 'Сообщение' :
+                              node.type === 'photo' ? 'Фото' :
+                              node.type === 'video' ? 'Видео' :
+                              node.type === 'audio' ? 'Аудио' :
+                              node.type === 'document' ? 'Документ' :
+                              node.type === 'keyboard' ? 'Клавиатура' :
+                              node.type === 'condition' ? 'Условие' :
+                              node.type === 'input' ? 'Ввод' :
+                              node.type === 'user-input' ? 'Сбор данных' :
+                              node.type === 'location' ? 'Геолокация' :
+                              node.type === 'contact' ? 'Контакт' :
+                              node.type === 'sticker' ? 'Стикер' :
+                              node.type === 'voice' ? 'Голосовое' :
+                              node.type === 'animation' ? 'Анимация' : 'Узел';
+                            
+                            const iconClass = 
+                              node.type === 'message' ? 'fas fa-comment text-blue-500' :
+                              node.type === 'photo' ? 'fas fa-image text-green-500' :
+                              node.type === 'video' ? 'fas fa-video text-red-500' :
+                              node.type === 'audio' ? 'fas fa-music text-orange-500' :
+                              node.type === 'document' ? 'fas fa-file text-gray-500' :
+                              node.type === 'keyboard' ? 'fas fa-keyboard text-yellow-500' :
+                              node.type === 'condition' ? 'fas fa-code-branch text-purple-500' :
+                              node.type === 'input' ? 'fas fa-edit text-cyan-500' :
+                              node.type === 'user-input' ? 'fas fa-user-edit text-indigo-500' :
+                              node.type === 'location' ? 'fas fa-map-marker-alt text-pink-500' :
+                              node.type === 'contact' ? 'fas fa-address-book text-teal-500' :
+                              node.type === 'sticker' ? 'fas fa-smile text-yellow-400' :
+                              node.type === 'voice' ? 'fas fa-microphone text-blue-400' :
+                              node.type === 'animation' ? 'fas fa-play-circle text-green-400' : 'fas fa-cube text-gray-400';
+                            
+                            return (
+                              <SelectItem key={node.id} value={node.id}>
+                                <div className="flex items-center gap-2">
+                                  <i className={`${iconClass} text-xs`}></i>
+                                  <span>{nodeName}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        
+                        {(!allNodes || allNodes.filter(node => node.id !== selectedNode.id).length === 0) && (
+                          <SelectItem value="no-nodes" disabled>
+                            Создайте другие части бота для выбора
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Save to Database */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        Запомнить ответ навсегда
+                      </Label>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Ответ пользователя сохранится и будет доступен в статистике
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.saveToDatabase ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { saveToDatabase: checked })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Command Advanced Settings */}
         {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
           <Accordion type="single" collapsible className="w-full">

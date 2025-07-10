@@ -1515,19 +1515,127 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            await message.answer(f"❌ Неверный выбор. Пожалуйста, выберите один из предложенных вариантов:\\n\\n{options_text}")\n';
   code += '            return\n';
   code += '    \n';
-  code += '    # Проверяем, ожидаем ли мы текстовый ввод от пользователя\n';
-  code += '    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:\n';
-  code += '        return  # Игнорируем сообщение если не ожидаем ввод\n';
-  code += '    \n';
-  code += '    input_config = user_data[user_id]["waiting_for_input"]\n';
-  code += '    user_text = message.text\n';
-  code += '    \n';
-  code += '    # Проверяем команду пропуска\n';
-  code += '    if input_config.get("allow_skip") and user_text == "/skip":\n';
-  code += '        await message.answer("⏭️ Ввод пропущен")\n';
+  code += '    # Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)\n';
+  code += '    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
+  code += '        # Обрабатываем ввод через универсальную систему\n';
+  code += '        waiting_node_id = user_data[user_id]["waiting_for_input"]\n';
+  code += '        input_type = user_data[user_id].get("input_type", "text")\n';
+  code += '        user_text = message.text\n';
+  code += '        \n';
+  code += '        # Находим узел для получения настроек\n';
+  
+  // Генерируем проверку для каждого узла с универсальным сбором ввода
+  const inputNodes = nodes.filter(node => node.data.collectUserInput);
+  inputNodes.forEach((node, index) => {
+    const condition = index === 0 ? 'if' : 'elif';
+    code += `        ${condition} waiting_node_id == "${node.id}":\n`;
+    
+    // Добавляем валидацию если есть
+    if (node.data.inputValidation) {
+      if (node.data.minLength && node.data.minLength > 0) {
+        code += `            if len(user_text) < ${node.data.minLength}:\n`;
+        code += `                await message.answer("❌ Слишком короткий ответ (минимум ${node.data.minLength} символов). Попробуйте еще раз.")\n`;
+        code += `                return\n`;
+      }
+      if (node.data.maxLength && node.data.maxLength > 0) {
+        code += `            if len(user_text) > ${node.data.maxLength}:\n`;
+        code += `                await message.answer("❌ Слишком длинный ответ (максимум ${node.data.maxLength} символов). Попробуйте еще раз.")\n`;
+        code += `                return\n`;
+      }
+    }
+    
+    // Валидация типа ввода
+    if (node.data.inputType === 'email') {
+      code += `            import re\n`;
+      code += `            email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n`;
+      code += `            if not re.match(email_pattern, user_text):\n`;
+      code += `                await message.answer("❌ Неверный формат email. Попробуйте еще раз.")\n`;
+      code += `                return\n`;
+    } else if (node.data.inputType === 'number') {
+      code += `            try:\n`;
+      code += `                float(user_text)\n`;
+      code += `            except ValueError:\n`;
+      code += `                await message.answer("❌ Введите корректное число. Попробуйте еще раз.")\n`;
+      code += `                return\n`;
+    } else if (node.data.inputType === 'phone') {
+      code += `            import re\n`;
+      code += `            phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n`;
+      code += `            if not re.match(phone_pattern, user_text):\n`;
+      code += `                await message.answer("❌ Неверный формат телефона. Попробуйте еще раз.")\n`;
+      code += `                return\n`;
+    }
+    
+    // Сохранение ответа
+    const variableName = node.data.inputVariable || 'user_response';
+    code += `            \n`;
+    code += `            # Сохраняем ответ пользователя\n`;
+    code += `            import datetime\n`;
+    code += `            timestamp = datetime.datetime.now().isoformat()\n`;
+    code += `            \n`;
+    code += `            # Создаем структурированный ответ\n`;
+    code += `            response_data = {\n`;
+    code += `                "value": user_text,\n`;
+    code += `                "type": "${node.data.inputType || 'text'}",\n`;
+    code += `                "timestamp": timestamp,\n`;
+    code += `                "nodeId": "${node.id}",\n`;
+    code += `                "variable": "${variableName}"\n`;
+    code += `            }\n`;
+    code += `            \n`;
+    code += `            # Сохраняем в пользовательские данные\n`;
+    code += `            user_data[user_id]["${variableName}"] = response_data\n`;
+    code += `            \n`;
+    
+    // Сохранение в базу данных если включено
+    if (node.data.saveToDatabase) {
+      code += `            # Сохраняем в базу данных\n`;
+      code += `            saved_to_db = await update_user_data_in_db(user_id, "${variableName}", response_data)\n`;
+      code += `            if saved_to_db:\n`;
+      code += `                logging.info(f"✅ Данные сохранены в БД: ${variableName} = {user_text} (пользователь {user_id})")\n`;
+      code += `            else:\n`;
+      code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
+      code += `            \n`;
+    }
+    
+    // Сообщение об успехе
+    code += `            await message.answer("✅ Спасибо за ваш ответ!")\n`;
+    code += `            \n`;
+    code += `            # Очищаем состояние ожидания ввода\n`;
+    code += `            del user_data[user_id]["waiting_for_input"]\n`;
+    if (node.data.inputType) {
+      code += `            if "input_type" in user_data[user_id]:\n`;
+      code += `                del user_data[user_id]["input_type"]\n`;
+    }
+    code += `            \n`;
+    code += `            logging.info(f"Получен пользовательский ввод: ${variableName} = {user_text}")\n`;
+    code += `            \n`;
+    
+    // Навигация к следующему узлу
+    if (node.data.inputTargetNodeId) {
+      code += `            # Переходим к следующему узлу\n`;
+      code += `            try:\n`;
+      
+      // Найдем целевой узел для навигации
+      const targetNode = nodes.find(n => n.id === node.data.inputTargetNodeId);
+      if (targetNode) {
+        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="input_nav", from_user=message.from_user, chat_instance="", data="${targetNode.id}", message=message))\n`;
+      }
+      
+      code += `            except Exception as e:\n`;
+      code += `                logging.error(f"Ошибка при переходе к следующему узлу: {e}")\n`;
+    }
+    
+    code += `            return\n`;
+  });
+  
+  code += '        \n';
+  code += '        # Если узел не найден\n';
+  code += '        logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")\n';
   code += '        del user_data[user_id]["waiting_for_input"]\n';
   code += '        return\n';
   code += '    \n';
+  code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
+  code += '    return\n';
   code += '    # Валидация длины текста\n';
   code += '    min_length = input_config.get("min_length", 0)\n';
   code += '    max_length = input_config.get("max_length", 0)\n';
@@ -2706,7 +2814,53 @@ function generateKeyboard(node: Node): string {
   }
   // Если formatMode === 'none' или не указан, то parseMode остается пустым
   
-  if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
+  // Проверяем, включен ли универсальный сбор ввода
+  if (node.data.collectUserInput && node.data.responseType === 'buttons' && node.data.responseOptions && node.data.responseOptions.length > 0) {
+    // Используем кнопки из системы сбора ввода
+    const buttonType = node.data.inputButtonType || 'inline';
+    
+    if (buttonType === 'reply') {
+      code += '    \n';
+      code += '    # Создаем reply клавиатуру для сбора ответов\n';
+      code += '    builder = ReplyKeyboardBuilder()\n';
+      node.data.responseOptions.forEach(option => {
+        code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
+      });
+      const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
+      const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
+      code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+      code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      
+      // Устанавливаем состояние ожидания ввода
+      code += '    \n';
+      code += '    # Устанавливаем состояние ожидания ответа\n';
+      code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
+      code += `    user_data[message.from_user.id]["waiting_for_input"] = "${node.id}"\n`;
+      
+    } else {
+      // inline кнопки
+      code += '    \n';
+      code += '    # Создаем inline клавиатуру для сбора ответов\n';
+      code += '    builder = InlineKeyboardBuilder()\n';
+      node.data.responseOptions.forEach(option => {
+        const callbackData = `input_${node.id}_${option.id}`;
+        code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="${callbackData}"))\n`;
+      });
+      code += '    keyboard = builder.as_markup()\n';
+      code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+    }
+    
+  } else if (node.data.collectUserInput && node.data.responseType === 'text') {
+    // Текстовый ввод - отправляем сообщение и ждем ответ
+    code += `    await message.answer(text${parseMode})\n`;
+    code += '    \n';
+    code += '    # Устанавливаем состояние ожидания текстового ввода\n';
+    code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
+    code += `    user_data[message.from_user.id]["waiting_for_input"] = "${node.id}"\n`;
+    code += `    user_data[message.from_user.id]["input_type"] = "${node.data.inputType || 'text'}"\n`;
+    
+  } else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
+    // Обычная reply клавиатура
     code += '    \n';
     code += '    builder = ReplyKeyboardBuilder()\n';
     node.data.buttons.forEach(button => {
@@ -2724,6 +2878,7 @@ function generateKeyboard(node: Node): string {
     code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
     code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
   } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+    // Обычная inline клавиатура
     code += '    \n';
     code += '    # Создаем inline клавиатуру с кнопками\n';
     code += '    builder = InlineKeyboardBuilder()\n';

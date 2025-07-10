@@ -345,7 +345,10 @@ export const nodeSchema = z.object({
     responseOptions: z.array(z.object({
       id: z.string(),
       text: z.string(),
-      value: z.string().optional()
+      value: z.string().optional(),
+      action: z.enum(['goto', 'command', 'url']).default('goto'),
+      target: z.string().optional(),
+      url: z.string().optional()
     })).default([]), // Варианты ответов для кнопок
     allowMultipleSelection: z.boolean().default(false), // Разрешить множественный выбор
     inputVariable: z.string().optional(), // Имя переменной для сохранения ответа
@@ -357,6 +360,11 @@ export const nodeSchema = z.object({
     inputSuccessMessage: z.string().optional(), // Сообщение при успешном вводе
     saveToDatabase: z.boolean().default(false), // Сохранять ли в базу данных
     allowSkip: z.boolean().default(false), // Разрешить пропуск ввода
+    
+    // Универсальные настройки сбора ввода для всех типов узлов
+    collectUserInput: z.boolean().default(false), // Включить сбор пользовательского ввода
+    inputTargetNodeId: z.string().optional(), // ID узла, к которому переходить после сбора ввода
+    inputButtonType: z.enum(['inline', 'reply']).default('inline'), // Тип кнопок для ответов
     minLength: z.number().optional(), // Минимальная длина текста
     maxLength: z.number().optional(), // Максимальная длина текста
     placeholder: z.string().optional(), // Подсказка для ввода
