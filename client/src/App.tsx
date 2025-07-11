@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import EditorSimple from "@/pages/editor-simple";
 import TemplatesPage from "@/pages/templates";
+import DatabaseManager from "@/pages/DatabaseManager";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -13,6 +14,7 @@ function Router() {
     <Switch>
       <Route path="/" component={EditorSimple} />
       <Route path="/templates" component={TemplatesPage} />
+      <Route path="/database" component={DatabaseManager} />
       <Route component={NotFound} />
     </Switch>
   );

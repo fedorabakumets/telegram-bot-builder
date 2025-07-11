@@ -131,7 +131,7 @@ export default function EditorSimple() {
     updateProjectMutation.mutate({});
   }, [updateProjectMutation]);
 
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections') => {
+  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database' | 'responses') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
       updateProjectMutation.mutate({});
@@ -142,8 +142,13 @@ export default function EditorSimple() {
       updateProjectMutation.mutate({});
     } else if (tab === 'connections') {
       updateProjectMutation.mutate({});
+    } else if (tab === 'database') {
+      // Перенаправляем на страницу базы данных
+      setLocation('/database');
+    } else if (tab === 'responses') {
+      updateProjectMutation.mutate({});
     }
-  }, [updateProjectMutation]);
+  }, [updateProjectMutation, setLocation]);
 
   const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
     updateNode(nodeId, { position });
