@@ -59,12 +59,14 @@ interface DatabaseStats {
 }
 
 export default function DatabaseManager() {
+  const [, navigate] = useLocation();
   const [newBackupDescription, setNewBackupDescription] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [restoreImmediately, setRestoreImmediately] = useState(false);
   const [clearExisting, setClearExisting] = useState(false);
   const [selectedBackup, setSelectedBackup] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -211,22 +213,164 @@ export default function DatabaseManager() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto p-6 space-y-6">
-        {/* Заголовок */}
+        {/* Заголовок с навигацией */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Database className="w-8 h-8" />
-              Управление базой данных
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Создание резервных копий, восстановление и мониторинг базы данных
-            </p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Назад к редактору
+            </Button>
+            <Separator orientation="vertical" className="h-6" />
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-2">
+                <Database className="w-8 h-8" />
+                Управление базой данных
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Создание резервных копий, восстановление и мониторинг базы данных
+              </p>
+            </div>
           </div>
-          <Badge variant="secondary" className="text-sm">
-            <Shield className="w-4 h-4 mr-1" />
-            Безопасность данных
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => queryClient.invalidateQueries()}
+              disabled={backupsLoading || statsLoading}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${backupsLoading || statsLoading ? 'animate-spin' : ''}`} />
+              Обновить
+            </Button>
+            <Badge variant="secondary" className="text-sm">
+              <Shield className="w-4 h-4 mr-1" />
+              Безопасность данных
+            </Badge>
+          </div>
         </div>
+
+        {/* Быстрые действия с базой данных */}
+        <Card className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+              <Database className="w-5 h-5" />
+              Быстрые действия
+            </CardTitle>
+            <CardDescription>
+              Экспорт и импорт всей базы данных одним файлом
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Экспорт базы данных */}
+              <Button
+                onClick={() => createBackupMutation.mutate('Быстрый экспорт базы данных')}
+                disabled={createBackupMutation.isPending}
+                className="flex-1"
+                variant="default"
+              >
+                {createBackupMutation.isPending ? (
+                  <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                Экспорт всей базы данных
+              </Button>
+              
+              {/* Импорт базы данных */}
+              <div className="flex-1">
+                <Input
+                  type="file"
+                  accept=".json"
+                  ref={fileInputRef}
+                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Импорт базы данных
+                </Button>
+              </div>
+            </div>
+            
+            {/* Диалог импорта */}
+            {uploadFile && (
+              <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                  <span className="font-medium text-yellow-800 dark:text-yellow-200">
+                    Файл готов к импорту
+                  </span>
+                </div>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
+                  Выбранный файл: <strong>{uploadFile.name}</strong>
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="restore-immediately-quick"
+                      checked={restoreImmediately}
+                      onCheckedChange={setRestoreImmediately}
+                    />
+                    <Label htmlFor="restore-immediately-quick" className="text-sm">
+                      Восстановить базу данных сразу
+                    </Label>
+                  </div>
+                  
+                  {restoreImmediately && (
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="clear-existing-quick"
+                        checked={clearExisting}
+                        onCheckedChange={setClearExisting}
+                      />
+                      <Label htmlFor="clear-existing-quick" className="text-sm">
+                        Очистить существующие данные
+                      </Label>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleFileUpload}
+                      disabled={isUploading}
+                      size="sm"
+                      className="flex-1"
+                    >
+                      {isUploading ? (
+                        <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                      )}
+                      Импортировать
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setUploadFile(null);
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Отмена
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Статистика базы данных */}
         <Card>
