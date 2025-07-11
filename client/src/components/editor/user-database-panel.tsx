@@ -37,6 +37,7 @@ import {
   Edit
 } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
+import { DatabaseBackupPanel } from './database-backup-panel';
 
 interface UserDatabasePanelProps {
   projectId: number;
@@ -474,10 +475,17 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
         </div>
       </div>
 
-      {/* Users Table */}
+      {/* Tabs */}
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <Table>
+        <Tabs defaultValue="users" className="h-full flex flex-col">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="users">Пользователи</TabsTrigger>
+            <TabsTrigger value="backup">Резервные копии</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="users" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Пользователь</TableHead>
@@ -647,8 +655,18 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 ))
               )}
             </TableBody>
-          </Table>
-        </ScrollArea>
+              </Table>
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="backup" className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="p-4">
+                <DatabaseBackupPanel />
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* User Details Dialog */}
