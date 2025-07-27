@@ -19,6 +19,12 @@ function formatTextForPython(text: string): string {
   }
 }
 
+// Функция для правильного экранирования строк в JSON контексте
+function escapeForJsonString(text: string): string {
+  if (!text) return '';
+  return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
+}
+
 export function generatePythonCode(botData: BotData, botName: string = "MyBot"): string {
   const { nodes, connections } = botData;
   
@@ -946,7 +952,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `        "node_id": "${targetNode.id}",\n`;
                 code += `        "variable": "${inputVariable}",\n`;
                 code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
-                code += `        "success_message": "${inputSuccessMessage}",\n`;
+                code += `        "success_message": "${escapeForJsonString(inputSuccessMessage)}",\n`;
                 code += `        "allow_multiple": ${allowMultipleSelection ? 'True' : 'False'},\n`;
                 code += `        "next_node_id": "${nextNodeId || ''}",\n`;
                 code += '        "options": [\n';
@@ -955,7 +961,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   const optionAction = option.action || 'goto';
                   const optionTarget = option.target || '';
                   const optionUrl = option.url || '';
-                  code += `            {"index": ${index}, "text": "${option.text}", "value": "${optionValue}", "action": "${optionAction}", "target": "${optionTarget}", "url": "${optionUrl}"},\n`;
+                  code += `            {"index": ${index}, "text": "${escapeForJsonString(option.text)}", "value": "${escapeForJsonString(optionValue)}", "action": "${optionAction}", "target": "${optionTarget}", "url": "${escapeForJsonString(optionUrl)}"},\n`;
                 });
                 code += '        ],\n';
                 code += `        "selected": []\n`;
@@ -993,9 +999,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `        "required": ${inputRequired ? 'True' : 'False'},\n`;
                 code += `        "allow_skip": ${allowSkip ? 'True' : 'False'},\n`;
                 code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
-                code += `        "retry_message": "${inputRetryMessage}",\n`;
-                code += `        "success_message": "${inputSuccessMessage}",\n`;
-                code += `        "prompt": "${inputPrompt}",\n`;
+                code += `        "retry_message": "${escapeForJsonString(inputRetryMessage)}",\n`;
+                code += `        "success_message": "${escapeForJsonString(inputSuccessMessage)}",\n`;
+                code += `        "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
                 code += `        "node_id": "${targetNode.id}",\n`;
                 code += `        "next_node_id": "${nextNodeId || ''}"\n`;
                 code += '    }\n';
@@ -2231,7 +2237,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
         code += '                    "selected": [],\n';
         code += '                    "success_message": "Спасибо за ваш ответ!",\n';
-        code += `                    "prompt": f"${inputPrompt}",\n`;
+        code += `                    "prompt": f"${escapeForJsonString(inputPrompt)}",\n`;
         code += '                    "options": [\n';
         
         // Добавляем каждый вариант ответа с индивидуальными настройками навигации
@@ -2242,8 +2248,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const url = option.url || '';
           
           code += '                        {\n';
-          code += `                            "text": "${option.text}",\n`;
-          code += `                            "value": "${optionValue}",\n`;
+          code += `                            "text": "${escapeForJsonString(option.text)}",\n`;
+          code += `                            "value": "${escapeForJsonString(optionValue)}",\n`;
           code += `                            "action": "${action}",\n`;
           code += `                            "target": "${target}",\n`;
           code += `                            "url": "${url}",\n`;
@@ -2282,7 +2288,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
         code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
         code += '                    "success_message": "Спасибо за ваш ответ!",\n';
-        code += `                    "prompt": f"${inputPrompt}",\n`;
+        code += `                    "prompt": f"${escapeForJsonString(inputPrompt)}",\n`;
         code += `                    "node_id": "${targetNode.id}",\n`;
         
         // Находим следующий узел для этого user-input узла
