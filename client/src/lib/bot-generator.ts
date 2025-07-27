@@ -1010,13 +1010,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             } else {
               // Generate response for target node (default text message)
               const targetText = targetNode.data.messageText || "Сообщение";
-              // Используем тройные кавычки для многострочного текста
-              if (targetText.includes('\n')) {
-                code += `    text = """${targetText}"""\n`;
-              } else {
-                const formattedTargetText = formatTextForPython(targetText);
-                code += `    text = ${formattedTargetText}\n`;
-              }
+              // Используем форматированный текст для безопасного вывода
+              const formattedTargetText = formatTextForPython(targetText);
+              code += `    text = ${formattedTargetText}\n`;
             
               // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла (основной цикл)
               if (targetNode.data.collectUserInput === true) {
@@ -2203,7 +2199,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       const allowMultipleSelection = targetNode.data.allowMultipleSelection || false;
       const allowSkip = targetNode.data.allowSkip || false;
       
-      code += `                prompt_text = f"${inputPrompt}"\n`;
+      code += `                prompt_text = "${escapeForJsonString(inputPrompt)}"\n`;
       if (placeholder) {
         code += `                placeholder_text = "${placeholder}"\n`;
         code += '                prompt_text += f"\\n\\n💡 {placeholder_text}"\n';
@@ -2237,7 +2233,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
         code += '                    "selected": [],\n';
         code += '                    "success_message": "Спасибо за ваш ответ!",\n';
-        code += `                    "prompt": f"${escapeForJsonString(inputPrompt)}",\n`;
+        code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
         code += '                    "options": [\n';
         
         // Добавляем каждый вариант ответа с индивидуальными настройками навигации
@@ -2288,7 +2284,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
         code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
         code += '                    "success_message": "Спасибо за ваш ответ!",\n';
-        code += `                    "prompt": f"${escapeForJsonString(inputPrompt)}",\n`;
+        code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
         code += `                    "node_id": "${targetNode.id}",\n`;
         
         // Находим следующий узел для этого user-input узла
@@ -3754,12 +3750,8 @@ function generateUserInputHandler(node: Node): string {
   const defaultValue = node.data.defaultValue || "";
   
   // Отправляем запрос пользователю
-  if (inputPrompt.includes('\n')) {
-    code += `    prompt_text = """${inputPrompt}"""\n`;
-  } else {
-    const escapedPrompt = inputPrompt.replace(/"/g, '\\"');
-    code += `    prompt_text = "${escapedPrompt}"\n`;
-  }
+  const formattedPrompt = formatTextForPython(inputPrompt);
+  code += `    prompt_text = ${formattedPrompt}\n`;
   
   if (placeholder) {
     code += `    placeholder_text = "${placeholder}"\n`;
