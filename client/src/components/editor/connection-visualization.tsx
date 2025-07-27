@@ -78,7 +78,7 @@ export function ConnectionVisualization({
       }
 
       // Проверка наличия кнопки
-      const relatedButton = sourceNode.data.buttons.find(b => 
+      const relatedButton = sourceNode.data.buttons?.find(b => 
         b.action === 'goto' && b.target === connection.target
       );
 
@@ -171,8 +171,19 @@ export function ConnectionVisualization({
       message: 'Сообщение',
       keyboard: 'Клавиатура',
       photo: 'Фото',
+      video: 'Видео',
+      audio: 'Аудио',
+      document: 'Документ',
       condition: 'Условие',
-      input: 'Ввод'
+      input: 'Ввод',
+      'user-input': 'Пользовательский ввод',
+      sticker: 'Стикер',
+      voice: 'Голосовое',
+      animation: 'Анимация',
+      location: 'Геолокация',
+      contact: 'Контакт',
+      poll: 'Опрос',
+      dice: 'Кубик'
     };
     
     return typeNames[node.type] || node.type;
