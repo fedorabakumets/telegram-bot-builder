@@ -259,7 +259,10 @@ async def start_handler(message: types.Message):
 Вы пришли к нам из источника: {источник}
 
 Рады видеть вас снова!"""
-        logging.info(f"Условие выполнено: переменная источник существует")
+        # Подставляем значения переменных
+        if "{источник}" in text:
+            text = text.replace("{источник}", str(user_data_dict.get("источник", "")))
+        logging.info(f"Условие выполнено: переменная источник = {user_data_dict.get('источник')}")
     else:
         text = """Привет! 🌟
 Добро пожаловать в наш бот!
@@ -329,7 +332,10 @@ async def help_handler(message: types.Message):
 
 🔄 /start - персональное приветствие
 📊 /stats - ваша статистика"""
-        logging.info(f"Условие выполнено: переменная источник существует")
+        # Подставляем значения переменных
+        if "{источник}" in text:
+            text = text.replace("{источник}", str(user_data_dict.get("источник", "")))
+        logging.info(f"Условие выполнено: переменная источник = {user_data_dict.get('источник')}")
     else:
         text = """📖 Базовая справка
 
@@ -399,7 +405,10 @@ async def stats_handler(message: types.Message):
 🔍 Источник: {источник}
 👤 Статус: Постоянный пользователь
 🎯 Персонализация: Включена"""
-        logging.info(f"Условие выполнено: переменная источник существует")
+        # Подставляем значения переменных
+        if "{источник}" in text:
+            text = text.replace("{источник}", str(user_data_dict.get("источник", "")))
+        logging.info(f"Условие выполнено: переменная источник = {user_data_dict.get('источник')}")
     else:
         text = """📊 Статистика
 
@@ -444,7 +453,7 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
     if user_id in user_data and user_data[user_id].get("input_variable"):
         variable_name = user_data[user_id]["input_variable"]
         await update_user_data_in_db(user_id, variable_name, "из инета")
-        logging.info(f"Переменная {{variable_name}} сохранена: из инета (пользователь {{user_id}})")
+        logging.info(f"Переменная {variable_name} сохранена: из инета (пользователь {user_id})")
     
     # Сохраняем в базу данных
     await update_user_data_in_db(user_id, button_text, response_data)
@@ -492,7 +501,7 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
     if user_id in user_data and user_data[user_id].get("input_variable"):
         variable_name = user_data[user_id]["input_variable"]
         await update_user_data_in_db(user_id, variable_name, "friends")
-        logging.info(f"Переменная {{variable_name}} сохранена: friends (пользователь {{user_id}})")
+        logging.info(f"Переменная {variable_name} сохранена: friends (пользователь {user_id})")
     
     # Сохраняем в базу данных
     await update_user_data_in_db(user_id, button_text, response_data)
@@ -540,7 +549,7 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
     if user_id in user_data and user_data[user_id].get("input_variable"):
         variable_name = user_data[user_id]["input_variable"]
         await update_user_data_in_db(user_id, variable_name, "ads")
-        logging.info(f"Переменная {{variable_name}} сохранена: ads (пользователь {{user_id}})")
+        logging.info(f"Переменная {variable_name} сохранена: ads (пользователь {user_id})")
     
     # Сохраняем в базу данных
     await update_user_data_in_db(user_id, button_text, response_data)
