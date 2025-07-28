@@ -47,14 +47,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}# Проверяем существование переменной с учетом структуры данных\n`;
         code += `${indentLevel}variable_exists = False\n`;
         code += `${indentLevel}variable_value = None\n`;
+        code += `${indentLevel}logging.info(f"Проверяем переменную '${condition.variableName}' в user_data_dict: {user_data_dict}")\n`;
         code += `${indentLevel}if "${condition.variableName}" in user_data_dict:\n`;
         code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
+        code += `${indentLevel}    logging.info(f"Найдена переменная '${condition.variableName}': {variable_data}")\n`;
         code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
         code += `${indentLevel}        variable_value = variable_data["value"]\n`;
         code += `${indentLevel}        variable_exists = variable_value is not None\n`;
+        code += `${indentLevel}        logging.info(f"Структура dict с value: {variable_value}")\n`;
         code += `${indentLevel}    elif variable_data is not None:\n`;
         code += `${indentLevel}        variable_value = str(variable_data)\n`;
         code += `${indentLevel}        variable_exists = True\n`;
+        code += `${indentLevel}        logging.info(f"Простое значение: {variable_value}")\n`;
+        code += `${indentLevel}else:\n`;
+        code += `${indentLevel}    logging.info(f"Переменная '${condition.variableName}' не найдена в user_data_dict")\n`;
         code += `${indentLevel}${conditionKeyword} variable_exists:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Добавляем замену переменных в тексте
@@ -504,7 +510,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             code += '    # Сохраняем правильную переменную в базу данных\n';
             code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-            code += `    logging.info(f"Переменная ${variableName} сохранена: {${variableValue}} (пользователь {user_id})")\n`;
+            code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
           } else {
             // Fallback: сохраняем кнопку как есть
             code += '    # Сохраняем кнопку в базу данных\n';
@@ -1398,7 +1404,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           code += '    # Сохраняем в базу данных с правильным именем переменной\n';
           code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-          code += `    logging.info(f"Переменная ${variableName} сохранена: {${variableValue}} (пользователь {user_id})")\n`;
+          code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
           code += '    \n';
           
           // Generate response based on node type
