@@ -244,7 +244,14 @@ async def start_handler(message: types.Message):
     if not user_record:
         user_record = user_data.get(user_id, {})
     
-    user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
+            user_data_dict = user_record["user_data"]
+        else:
+            user_data_dict = user_record
+    else:
+        user_data_dict = {}
     
     # Проверяем условие: user_data_exists
     if "источник" in user_data_dict and user_data_dict.get("источник") is not None:
@@ -310,7 +317,14 @@ async def help_handler(message: types.Message):
     if not user_record:
         user_record = user_data.get(user_id, {})
     
-    user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
+            user_data_dict = user_record["user_data"]
+        else:
+            user_data_dict = user_record
+    else:
+        user_data_dict = {}
     
     # Проверяем условие: user_data_exists
     if "источник" in user_data_dict and user_data_dict.get("источник") is not None:
@@ -374,7 +388,14 @@ async def stats_handler(message: types.Message):
     if not user_record:
         user_record = user_data.get(user_id, {})
     
-    user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
+            user_data_dict = user_record["user_data"]
+        else:
+            user_data_dict = user_record
+    else:
+        user_data_dict = {}
     
     # Проверяем условие: user_data_exists
     if "источник" in user_data_dict and user_data_dict.get("источник") is not None:

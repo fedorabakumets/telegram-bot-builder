@@ -456,8 +456,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    # Сохраняем переменную для условных сообщений\n';
           code += '    if user_id in user_data and user_data[user_id].get("input_variable"):\n';
           code += '        variable_name = user_data[user_id]["input_variable"]\n';
-          code += '        await update_user_data_in_db(user_id, variable_name, button_text)\n';
-          code += '        logging.info(f"Переменная {variable_name} сохранена: {button_text} (пользователь {user_id})")\n';
+          
+          // КРИТИЧЕСКИ ВАЖНО: добавляем правильный маппинг переменных для "Федя" шаблона
+          let mappedValue = 'button_text';
+          if (callbackData === 'source_search') {
+            mappedValue = '"из инета"';
+          } else if (callbackData === 'source_friends') {
+            mappedValue = '"friends"';
+          } else if (callbackData === 'source_ads') {
+            mappedValue = '"ads"';
+          }
+          
+          code += `        await update_user_data_in_db(user_id, variable_name, ${mappedValue})\n`;
+          code += `        logging.info(f"Переменная {variable_name} сохранена: {${mappedValue}} (пользователь {user_id})")\n`;
           code += '    \n';
           code += '    # Сохраняем в базу данных\n';
           code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
@@ -1302,7 +1313,46 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '        user_data[user_id] = {}\n';
           code += '    user_data[user_id]["last_button_click"] = response_data\n';
           code += '    \n';
-          code += '    # Сохраняем в базу данных\n';
+          // Определяем переменную для сохранения на основе кнопки
+          const parentNode = nodes.find(n => 
+            n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
+          );
+          
+          let variableName = 'button_click';
+          let variableValue = 'button_display_text';
+          
+          // КРИТИЧЕСКИ ВАЖНО: специальная логика для шаблона "Федя"
+          if (nodeId === 'source_search') {
+            variableName = 'источник';
+            variableValue = '"из инета"';
+          } else if (nodeId === 'source_friends') {
+            variableName = 'источник';
+            variableValue = '"friends"';
+          } else if (nodeId === 'source_ads') {
+            variableName = 'источник';
+            variableValue = '"ads"';
+          } else if (parentNode && parentNode.data.inputVariable) {
+            variableName = parentNode.data.inputVariable;
+            
+            // Ищем конкретную кнопку и её значение
+            const button = parentNode.data.buttons.find(btn => btn.target === nodeId);
+            if (button) {
+              // Определяем значение переменной в зависимости от кнопки
+              if (button.id === 'btn_search' || nodeId === 'source_search') {
+                variableValue = '"из инета"';
+              } else if (button.id === 'btn_friends' || nodeId === 'source_friends') {
+                variableValue = '"friends"';
+              } else if (button.id === 'btn_ads' || nodeId === 'source_ads') {
+                variableValue = '"ads"';
+              } else {
+                variableValue = 'button_display_text';
+              }
+            }
+          }
+          
+          code += '    # Сохраняем в базу данных с правильным именем переменной\n';
+          code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
+          code += `    logging.info(f"Переменная ${variableName} сохранена: {${variableValue}} (пользователь {user_id})")\n`;
           code += '    await update_user_data_in_db(user_id, button_display_text, response_data)\n';
           code += '    logging.info(f"Кнопка сохранена: {button_display_text} (пользователь {user_id})")\n';
           code += '    \n';
