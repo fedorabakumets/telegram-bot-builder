@@ -459,16 +459,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           // КРИТИЧЕСКИ ВАЖНО: добавляем правильный маппинг переменных для "Федя" шаблона
           let mappedValue = 'button_text';
+          let displayValue = 'button_text';
           if (callbackData === 'source_search') {
             mappedValue = '"из инета"';
+            displayValue = 'из инета';
           } else if (callbackData === 'source_friends') {
             mappedValue = '"friends"';
+            displayValue = 'friends';
           } else if (callbackData === 'source_ads') {
             mappedValue = '"ads"';
+            displayValue = 'ads';
           }
           
           code += `        await update_user_data_in_db(user_id, variable_name, ${mappedValue})\n`;
-          code += `        logging.info(f"Переменная {variable_name} сохранена: {${mappedValue}} (пользователь {user_id})")\n`;
+          code += `        logging.info(f"Переменная {{variable_name}} сохранена: ${displayValue} (пользователь {{user_id}})")\n`;
           code += '    \n';
           code += '    # Сохраняем в базу данных\n';
           code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
