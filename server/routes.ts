@@ -2515,12 +2515,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Определяем тип ответа по контексту
                 if (key === 'button_click') {
                   responseType = 'button';
+                  // Если это callback data (выглядит как node ID), заменяем на понятное название
+                  if (typeof responseValue === 'string' && 
+                      (responseValue.match(/^[a-zA-Z0-9_-]{15,25}$/) || 
+                       responseValue.match(/^--[a-zA-Z0-9_-]{10,}$/) ||
+                       responseValue.includes('-') && responseValue.length > 10)) {
+                    responseValue = 'Нажатие кнопки';
+                  }
                 } else if (key.includes('желание') || key.includes('пол') || key.includes('choice')) {
                   responseType = 'button';
                 } else if (typeof responseValue === 'string' && 
                           (responseValue === 'Да' || responseValue === 'Нет' || 
                            responseValue === 'Женщина' || responseValue === 'Мужчина')) {
                   responseType = 'button';
+                }
+                
+                // Дополнительная проверка для замены node IDs на понятные названия
+                if (typeof responseValue === 'string') {
+                  // Проверяем различные форматы node ID
+                  if (responseValue.match(/^--[a-zA-Z0-9_-]{10,}$/) ||
+                      responseValue.match(/^[a-zA-Z0-9_-]{15,}$/) ||
+                      responseValue.match(/^[a-zA-Z0-9-]{20,}$/)) {
+                    responseValue = 'Переход к следующему шагу';
+                    responseType = 'button';
+                  }
                 }
                 
                 // Если нет временной метки, используем последнее взаимодействие

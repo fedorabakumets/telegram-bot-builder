@@ -166,8 +166,25 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
   const formatResponseKey = (key: string, type?: string) => {
     if (key === 'button_click') return 'Нажатие кнопки';
     if (key.startsWith('response_')) return key.replace('response_', 'Ответ ');
-    if (type === 'inline_button') return 'Источник';
+    if (type === 'inline_button' || type === 'button') return 'Выбор';
+    if (key === 'источник') return 'Источник информации';
+    if (key === 'желание') return 'Желание продолжить';
+    if (key === 'пол') return 'Пол';
+    if (key === 'имя') return 'Имя';
+    if (key === 'возраст') return 'Возраст';
     return key;
+  };
+
+  const formatResponseValue = (value: string, type?: string) => {
+    // Если это похоже на node ID, заменяем на понятное значение
+    if (typeof value === 'string') {
+      if (value.match(/^--[a-zA-Z0-9_-]{10,}$/) ||
+          value.match(/^[a-zA-Z0-9_-]{15,}$/) ||
+          value.match(/^[a-zA-Z0-9-]{20,}$/)) {
+        return type === 'button' ? 'Нажатие кнопки' : 'Переход к следующему шагу';
+      }
+    }
+    return value;
   };
 
   // Get unique response types for filter
@@ -433,7 +450,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                     <CardContent>
                                       <div className="bg-muted/50 rounded p-3 mb-2">
                                         <p className="text-sm font-medium mb-1">Ответ:</p>
-                                        <p className="text-foreground">{response.value}</p>
+                                        <p className="text-foreground">{formatResponseValue(response.value, response.type)}</p>
                                       </div>
                                       {response.prompt && (
                                         <div className="text-xs text-muted-foreground">
@@ -463,7 +480,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                 {formatResponseKey(response.key, response.type)}:
                               </span>
                               <span className="text-sm text-muted-foreground truncate max-w-xs">
-                                {response.value}
+                                {formatResponseValue(response.value, response.type)}
                               </span>
                             </div>
                             <Badge 

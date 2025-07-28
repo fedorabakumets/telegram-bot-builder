@@ -1481,7 +1481,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // Сохраняем нажатие кнопки в базу данных
           code += '    # Сохраняем нажатие кнопки в базу данных\n';
           code += '    user_id = callback_query.from_user.id\n';
-          code += '    button_text = callback_query.data\n';
           code += '    \n';
           code += '    # Ищем текст кнопки по callback_data\n';
           // Генерируем код для поиска текста кнопки
@@ -1493,10 +1492,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             if (button) {
               code += `    button_display_text = "${button.text}"\n`;
             } else {
-              code += '    button_display_text = callback_query.data\n';
+              code += `    button_display_text = "Кнопка ${nodeId}"\n`;
             }
           } else {
-            code += '    button_display_text = callback_query.data\n';
+            code += `    button_display_text = "Кнопка ${nodeId}"\n`;
           }
           code += '    \n';
           code += '    # Сохраняем ответ в базу данных\n';
@@ -1505,17 +1504,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    \n';
           code += '    response_data = {\n';
           code += '        "value": button_display_text,\n';
-          code += '        "type": "inline_button",\n';
+          code += '        "type": "button",\n';
           code += '        "timestamp": timestamp,\n';
           code += `        "nodeId": "${nodeId}",\n`;
-          code += '        "variable": button_display_text,\n';
+          code += '        "variable": "button_click",\n';
           code += '        "source": "inline_button_click"\n';
           code += '    }\n';
           code += '    \n';
           code += '    # Сохраняем в пользовательские данные\n';
           code += '    if user_id not in user_data:\n';
           code += '        user_data[user_id] = {}\n';
-          code += '    user_data[user_id]["last_button_click"] = response_data\n';
+          code += '    user_data[user_id]["button_click"] = button_display_text\n';
           code += '    \n';
           // Определяем переменную для сохранения на основе кнопки
           const parentNode = nodes.find(n => 
