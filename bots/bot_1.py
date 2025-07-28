@@ -645,12 +645,6 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_help_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "stats_command":
                         await handle_callback_stats_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "callback_set_source_search":
-                        await handle_callback_callback_set_source_search(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "callback_set_source_friends":
-                        await handle_callback_callback_set_source_friends(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "callback_set_source_ads":
-                        await handle_callback_callback_set_source_ads(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -673,12 +667,6 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_help_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "stats_command":
                             await handle_callback_stats_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "callback_set_source_search":
-                            await handle_callback_callback_set_source_search(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "callback_set_source_friends":
-                            await handle_callback_callback_set_source_friends(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "callback_set_source_ads":
-                            await handle_callback_callback_set_source_ads(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -879,12 +867,6 @@ async def handle_user_input(message: types.Message):
                 logging.info(f"Переход к узлу help_command типа command")
             elif next_node_id == "stats_command":
                 logging.info(f"Переход к узлу stats_command типа command")
-            elif next_node_id == "callback_set_source_search":
-                logging.info(f"Переход к узлу callback_set_source_search типа callback")
-            elif next_node_id == "callback_set_source_friends":
-                logging.info(f"Переход к узлу callback_set_source_friends типа callback")
-            elif next_node_id == "callback_set_source_ads":
-                logging.info(f"Переход к узлу callback_set_source_ads типа callback")
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
