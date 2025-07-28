@@ -253,15 +253,16 @@ async def start_handler(message: types.Message):
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "nr3wIiTfBYYmpkkXMNH7n")
-async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "btn-1")
+async def handle_callback_btn_1(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "Да"
     
     # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "желание", "Да")
-    logging.info(f"Переменная желание сохранена: " + str("Да") + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "желание", button_text)
+    logging.info(f"Переменная желание сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
     
     text = "Какой твой пол?"
     # Подставляем все доступные переменные пользователя в текст
@@ -329,15 +330,16 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
         await callback_query.message.answer(text, reply_markup=keyboard)
     
 
-@dp.callback_query(lambda c: c.data == "1BHSLWPMao9qQvSAzuzRl")
-async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "btn-2")
+async def handle_callback_btn_2(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "Нет"
     
     # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "желание", "Нет")
-    logging.info(f"Переменная желание сохранена: " + str("Нет") + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "желание", button_text)
+    logging.info(f"Переменная желание сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
     
     # Отправляем сообщение для узла 1BHSLWPMao9qQvSAzuzRl
     text = "Печально, если что пиши старт"
@@ -359,15 +361,211 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
     except Exception:
         await callback_query.message.answer(text)
 
+@dp.callback_query(lambda c: c.data == "nr3wIiTfBYYmpkkXMNH7n")
+async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Да"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = {
+        "value": button_display_text,
+        "type": "button",
+        "timestamp": timestamp,
+        "nodeId": "nr3wIiTfBYYmpkkXMNH7n",
+        "variable": "button_click",
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "желание", button_display_text)
+    logging.info(f"Переменная желание сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    text = "Какой твой пол?"
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "nr3wIiTfBYYmpkkXMNH7n"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "пол"
+    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    
+    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Женщина", callback_data="btn-1"))
+    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="btn-2"))
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+    
+
+@dp.callback_query(lambda c: c.data == "1BHSLWPMao9qQvSAzuzRl")
+async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Нет"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = {
+        "value": button_display_text,
+        "type": "button",
+        "timestamp": timestamp,
+        "nodeId": "1BHSLWPMao9qQvSAzuzRl",
+        "variable": "button_click",
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "желание", button_display_text)
+    logging.info(f"Переменная желание сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    text = "Печально, если что пиши старт"
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text)
+
 @dp.callback_query(lambda c: c.data == "XDSrTrNly5EtDtr85nN4P")
 async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQuery):
     await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
-    button_text = "Женщина"
     
-    # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "пол", "Женщина")
-    logging.info(f"Переменная пол сохранена: " + str("Женщина") + f" (пользователь {user_id})")
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Женщина"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = {
+        "value": button_display_text,
+        "type": "button",
+        "timestamp": timestamp,
+        "nodeId": "XDSrTrNly5EtDtr85nN4P",
+        "variable": "button_click",
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "пол", button_display_text)
+    logging.info(f"Переменная пол сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
     text = "Как тебя зовут?"
     # Подставляем все доступные переменные пользователя в текст
@@ -412,7 +610,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
-    # Активируем сбор пользовательского ввода (основной цикл)
+    # Активируем сбор пользовательского ввода
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
     
@@ -515,8 +713,8 @@ async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQu
     
     # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Да", callback_data="nr3wIiTfBYYmpkkXMNH7n"))
-    builder.add(InlineKeyboardButton(text="Нет", callback_data="1BHSLWPMao9qQvSAzuzRl"))
+    builder.add(InlineKeyboardButton(text="Да", callback_data="btn-1"))
+    builder.add(InlineKeyboardButton(text="Нет", callback_data="btn-2"))
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:

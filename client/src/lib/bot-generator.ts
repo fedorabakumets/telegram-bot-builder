@@ -556,11 +556,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     code += '\n# Обработчики inline кнопок\n';
     const processedCallbacks = new Set<string>();
     
-    // First, handle inline button nodes
+    // First, handle inline button nodes - create handlers for each unique button ID
     inlineNodes.forEach(node => {
       node.data.buttons.forEach(button => {
-        if (button.action === 'goto') {
-          const callbackData = button.target || button.id || 'no_action';
+        if (button.action === 'goto' && button.id) {
+          const callbackData = button.id; // Use button ID as callback_data
           
           // Avoid duplicate handlers
           if (processedCallbacks.has(callbackData)) return;
@@ -569,45 +569,31 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // Find target node (может быть null если нет target)
           const targetNode = button.target ? nodes.find(n => n.id === button.target) : null;
           
-          // Создаем обработчик в любом случае
+          // Создаем обработчик для каждой кнопки
           code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
-          // Создаем безопасное имя функции на основе callback_data
+          // Создаем безопасное имя функции на основе button ID
           const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
           
-          // Правильная логика сохранения переменной на основе родительского узла
+          // Правильная логика сохранения переменной на основе кнопки
           code += '    user_id = callback_query.from_user.id\n';
           code += `    button_text = "${button.text}"\n`;
           code += '    \n';
           
           // Определяем переменную для сохранения на основе родительского узла
-          const parentNode = nodes.find(n => 
-            n.data.buttons && n.data.buttons.some(btn => btn.target === callbackData)
-          );
+          const parentNode = node; // Используем текущий узел как родительский
           
           if (parentNode && parentNode.data.inputVariable) {
             const variableName = parentNode.data.inputVariable;
             
-            // Определяем значение переменной в зависимости от целевого узла
-            let variableValue = 'button_text';
-            if (callbackData === 'source_search') {
-              variableValue = '"🔍 Поиск в интернете"';
-            } else if (callbackData === 'source_friends') {
-              variableValue = '"👥 Друзья"';
-            } else if (callbackData === 'source_ads') {
-              variableValue = '"📱 Реклама"';
-            } else {
-              // Найти кнопку и использовать её значение (отображаемый текст)
-              const sourceButton = parentNode.data.buttons.find(btn => btn.target === callbackData);
-              if (sourceButton && sourceButton.text) {
-                variableValue = `"${sourceButton.text}"`;
-              }
-            }
+            // Используем текст кнопки как значение переменной
+            const variableValue = 'button_text';
             
             code += '    # Сохраняем правильную переменную в базу данных\n';
             code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
             code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
+            code += '    \n';
           } else {
             // Fallback: сохраняем кнопку как есть
             code += '    # Сохраняем кнопку в базу данных\n';
@@ -1697,7 +1683,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   if (btn.action === "url") {
                     code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    // Создаем уникальный callback_data, включающий ID кнопки и текст
+                    const callbackData = btn.id || 'no_action';
                     code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -1733,7 +1720,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 if (btn.action === "url") {
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                 } else if (btn.action === 'goto') {
-                  const callbackData = btn.target || btn.id || 'no_action';
+                  // Создаем уникальный callback_data, включающий ID кнопки
+                  const callbackData = btn.id || 'no_action';
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                 }
               });
