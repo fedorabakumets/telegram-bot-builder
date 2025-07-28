@@ -2801,6 +2801,56 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
   code += '\n';
 
+  // Добавляем обработчики для кнопок команд (типа cmd_start)
+  const commandButtons = new Set<string>();
+  nodes.forEach(node => {
+    if (node.data.buttons) {
+      node.data.buttons.forEach(button => {
+        if (button.action === 'command' && button.target) {
+          const commandCallback = `cmd_${button.target.replace('/', '')}`;
+          commandButtons.add(commandCallback);
+        }
+      });
+    }
+  });
+  
+  if (commandButtons.size > 0) {
+    code += '\n# Обработчики для кнопок команд\n';
+    
+    commandButtons.forEach(commandCallback => {
+      const command = commandCallback.replace('cmd_', '');
+      code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
+      code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
+      code += '    await callback_query.answer()\n';
+      code += `    # Симулируем выполнение команды /${command}\n`;
+      code += '    \n';
+      code += '    # Создаем fake message object для команды\n';
+      code += '    from types import SimpleNamespace\n';
+      code += '    fake_message = SimpleNamespace()\n';
+      code += '    fake_message.from_user = callback_query.from_user\n';
+      code += '    fake_message.chat = callback_query.message.chat\n';
+      code += '    fake_message.date = callback_query.message.date\n';
+      code += '    fake_message.answer = callback_query.message.answer\n';
+      code += '    fake_message.edit_text = callback_query.message.edit_text\n';
+      code += '    \n';
+      
+      // Найти соответствующий обработчик команды
+      const commandNode = nodes.find(n => n.data.command === `/${command}` || n.data.command === command);
+      if (commandNode) {
+        if (commandNode.type === 'start') {
+          code += '    # Вызываем start handler\n';
+          code += '    await start_handler(fake_message)\n';
+        } else if (commandNode.type === 'command') {
+          code += `    # Вызываем ${command} handler\n`;
+          code += `    await ${command}_handler(fake_message)\n`;
+        }
+      } else {
+        code += `    await callback_query.message.answer("Команда /${command} выполнена")\n`;
+      }
+      code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
+    });
+  }
+
   code += '\n\n# Запуск бота\n';
   code += 'async def main():\n';
   code += '    global db_pool\n';
