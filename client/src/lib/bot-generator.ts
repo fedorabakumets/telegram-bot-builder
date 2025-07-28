@@ -48,8 +48,17 @@ function generateUniversalVariableReplacement(indentLevel: string): string {
   code += `${indentLevel}\n`;
   code += `${indentLevel}# Безопасно извлекаем user_data\n`;
   code += `${indentLevel}if isinstance(user_record, dict):\n`;
-  code += `${indentLevel}    if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n`;
-  code += `${indentLevel}        user_vars = user_record["user_data"]\n`;
+  code += `${indentLevel}    if "user_data" in user_record:\n`;
+  code += `${indentLevel}        if isinstance(user_record["user_data"], str):\n`;
+  code += `${indentLevel}            try:\n`;
+  code += `${indentLevel}                import json\n`;
+  code += `${indentLevel}                user_vars = json.loads(user_record["user_data"])\n`;
+  code += `${indentLevel}            except (json.JSONDecodeError, TypeError):\n`;
+  code += `${indentLevel}                user_vars = {}\n`;
+  code += `${indentLevel}        elif isinstance(user_record["user_data"], dict):\n`;
+  code += `${indentLevel}            user_vars = user_record["user_data"]\n`;
+  code += `${indentLevel}        else:\n`;
+  code += `${indentLevel}            user_vars = {}\n`;
   code += `${indentLevel}    else:\n`;
   code += `${indentLevel}        user_vars = user_record\n`;
   code += `${indentLevel}else:\n`;
@@ -543,13 +552,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             // Определяем значение переменной в зависимости от целевого узла
             let variableValue = 'button_text';
             if (callbackData === 'source_search') {
-              variableValue = '"из инета"';
+              variableValue = '"🔍 Поиск в интернете"';
             } else if (callbackData === 'source_friends') {
-              variableValue = '"friends"';
+              variableValue = '"👥 Друзья"';
             } else if (callbackData === 'source_ads') {
-              variableValue = '"ads"';
+              variableValue = '"📱 Реклама"';
             } else {
-              // Найти кнопку и использовать её значение
+              // Найти кнопку и использовать её значение (отображаемый текст)
               const sourceButton = parentNode.data.buttons.find(btn => btn.target === callbackData);
               if (sourceButton && sourceButton.text) {
                 variableValue = `"${sourceButton.text}"`;
@@ -1511,8 +1520,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    \n';
               code += '    # Безопасно извлекаем user_data\n';
               code += '    if isinstance(user_record, dict):\n';
-              code += '        if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
-              code += '            user_data_dict = user_record["user_data"]\n';
+              code += '        if "user_data" in user_record:\n';
+              code += '            if isinstance(user_record["user_data"], str):\n';
+              code += '                try:\n';
+              code += '                    import json\n';
+              code += '                    user_data_dict = json.loads(user_record["user_data"])\n';
+              code += '                except (json.JSONDecodeError, TypeError):\n';
+              code += '                    user_data_dict = {}\n';
+              code += '            elif isinstance(user_record["user_data"], dict):\n';
+              code += '                user_data_dict = user_record["user_data"]\n';
+              code += '            else:\n';
+              code += '                user_data_dict = {}\n';
               code += '        else:\n';
               code += '            user_data_dict = user_record\n';
               code += '    else:\n';

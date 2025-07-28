@@ -184,6 +184,12 @@ Changelog:
   * Fixed critical bug in conditional message logic where button responses weren't properly saving to expected variable names
   * Updated bot generator to correctly map button click data to input variables for conditional checks
   * Verified "Федя" template now properly shows personalized messages after source selection
+  * MAJOR FIX: Fixed variable replacement system for {источник} and other user variables:
+    - Added universal variable replacement function for all message types (regular, conditional, fallback, reply buttons)
+    - Fixed JSON parsing of user_data from database (was stored as string but parsed as dict)
+    - Corrected variable value storage to use display names (👥 Друзья, 🔍 Поиск в интернете, 📱 Реклама)
+    - Enhanced conditional message logic to properly handle variable substitution
+    - Now correctly shows variable values when available or variable names when missing
     - Enhanced control buttons with scale animations and color transitions
   * Enhanced advanced command settings with comprehensive dark theme support:
     - Redesigned command advanced settings accordion with gradient backgrounds and themed icons

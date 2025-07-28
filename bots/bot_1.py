@@ -276,9 +276,7 @@ async def start_handler(message: types.Message):
 Вы пришли к нам из источника: {источник}
 
 Рады видеть вас снова!"""
-        # Подставляем значения переменных
-        if "{источник}" in text and variable_value is not None:
-            text = text.replace("{источник}", str(variable_value))
+        text = replace_variables_in_text(text, user_data_dict)
         logging.info(f"Условие выполнено: переменная источник = {variable_value}")
     else:
         text = """Привет! 🌟
@@ -366,9 +364,7 @@ async def help_handler(message: types.Message):
 
 🔄 /start - персональное приветствие
 📊 /stats - ваша статистика"""
-        # Подставляем значения переменных
-        if "{источник}" in text and variable_value is not None:
-            text = text.replace("{источник}", str(variable_value))
+        text = replace_variables_in_text(text, user_data_dict)
         logging.info(f"Условие выполнено: переменная источник = {variable_value}")
     else:
         text = """📖 Базовая справка
@@ -456,9 +452,7 @@ async def stats_handler(message: types.Message):
 🔍 Источник: {источник}
 👤 Статус: Постоянный пользователь
 🎯 Персонализация: Включена"""
-        # Подставляем значения переменных
-        if "{источник}" in text and variable_value is not None:
-            text = text.replace("{источник}", str(variable_value))
+        text = replace_variables_in_text(text, user_data_dict)
         logging.info(f"Условие выполнено: переменная источник = {variable_value}")
     else:
         text = """📊 Статистика
@@ -489,6 +483,39 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
 Теперь мы знаем, что вы нашли нас через поиск.
 
 Попробуйте снова написать /start чтобы увидеть персонализированное приветствие!"""
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
+            user_vars = user_record["user_data"]
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
     builder = InlineKeyboardBuilder()
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -512,6 +539,39 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
 Значит, вас порекомендовали друзья!
 
 Теперь попробуйте /start еще раз - увидите, как изменится приветствие!"""
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
+            user_vars = user_record["user_data"]
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
     builder = InlineKeyboardBuilder()
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -535,6 +595,39 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
 Вы пришли из рекламы.
 
 Введите /start снова, чтобы увидеть персональное сообщение!"""
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
+            user_vars = user_record["user_data"]
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
     builder = InlineKeyboardBuilder()
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
