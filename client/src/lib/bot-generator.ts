@@ -44,33 +44,68 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
     
     switch (condition.condition) {
       case 'user_data_exists':
-        code += `${indentLevel}${conditionKeyword} "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
+        code += `${indentLevel}# Проверяем существование переменной с учетом структуры данных\n`;
+        code += `${indentLevel}variable_exists = False\n`;
+        code += `${indentLevel}variable_value = None\n`;
+        code += `${indentLevel}if "${condition.variableName}" in user_data_dict:\n`;
+        code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
+        code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+        code += `${indentLevel}        variable_value = variable_data["value"]\n`;
+        code += `${indentLevel}        variable_exists = variable_value is not None\n`;
+        code += `${indentLevel}    elif variable_data is not None:\n`;
+        code += `${indentLevel}        variable_value = str(variable_data)\n`;
+        code += `${indentLevel}        variable_exists = True\n`;
+        code += `${indentLevel}${conditionKeyword} variable_exists:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Добавляем замену переменных в тексте
         code += `${indentLevel}    # Подставляем значения переменных\n`;
-        code += `${indentLevel}    if "{${condition.variableName}}" in text:\n`;
-        code += `${indentLevel}        text = text.replace("{${condition.variableName}}", str(user_data_dict.get("${condition.variableName}", "")))\n`;
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {user_data_dict.get('${condition.variableName}')}")\n`;
+        code += `${indentLevel}    if "{${condition.variableName}}" in text and variable_value is not None:\n`;
+        code += `${indentLevel}        text = text.replace("{${condition.variableName}}", str(variable_value))\n`;
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {variable_value}")\n`;
         break;
         
       case 'user_data_not_exists':
-        code += `${indentLevel}${conditionKeyword} "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
+        code += `${indentLevel}# Проверяем отсутствие переменной с учетом структуры данных\n`;
+        code += `${indentLevel}variable_exists = False\n`;
+        code += `${indentLevel}if "${condition.variableName}" in user_data_dict:\n`;
+        code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
+        code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+        code += `${indentLevel}        variable_exists = variable_data["value"] is not None\n`;
+        code += `${indentLevel}    elif variable_data is not None:\n`;
+        code += `${indentLevel}        variable_exists = True\n`;
+        code += `${indentLevel}${conditionKeyword} not variable_exists:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} не существует")\n`;
         break;
         
       case 'user_data_equals':
-        code += `${indentLevel}${conditionKeyword} user_data_dict.get("${condition.variableName}") == "${condition.expectedValue || ''}":\n`;
+        code += `${indentLevel}# Проверяем значение переменной с учетом структуры данных\n`;
+        code += `${indentLevel}variable_value = None\n`;
+        code += `${indentLevel}if "${condition.variableName}" in user_data_dict:\n`;
+        code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
+        code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+        code += `${indentLevel}        variable_value = variable_data["value"]\n`;
+        code += `${indentLevel}    elif variable_data is not None:\n`;
+        code += `${indentLevel}        variable_value = str(variable_data)\n`;
+        code += `${indentLevel}${conditionKeyword} variable_value == "${condition.expectedValue || ''}":\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Добавляем замену переменных в тексте
         code += `${indentLevel}    # Подставляем значения переменных\n`;
-        code += `${indentLevel}    if "{${condition.variableName}}" in text:\n`;
-        code += `${indentLevel}        text = text.replace("{${condition.variableName}}", str(user_data_dict.get("${condition.variableName}", "")))\n`;
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {user_data_dict.get('${condition.variableName}')}")\n`;
+        code += `${indentLevel}    if "{${condition.variableName}}" in text and variable_value is not None:\n`;
+        code += `${indentLevel}        text = text.replace("{${condition.variableName}}", str(variable_value))\n`;
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {variable_value}")\n`;
         break;
         
       case 'user_data_contains':
-        code += `${indentLevel}${conditionKeyword} "${condition.expectedValue || ''}" in str(user_data_dict.get("${condition.variableName}", "")):\n`;
+        code += `${indentLevel}# Проверяем содержимое переменной с учетом структуры данных\n`;
+        code += `${indentLevel}variable_value = None\n`;
+        code += `${indentLevel}if "${condition.variableName}" in user_data_dict:\n`;
+        code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
+        code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+        code += `${indentLevel}        variable_value = variable_data["value"]\n`;
+        code += `${indentLevel}    elif variable_data is not None:\n`;
+        code += `${indentLevel}        variable_value = str(variable_data)\n`;
+        code += `${indentLevel}${conditionKeyword} variable_value is not None and "${condition.expectedValue || ''}" in str(variable_value):\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} содержит ${condition.expectedValue || ''}")\n`;
         break;
@@ -438,53 +473,52 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
           
-          // Сохраняем нажатие кнопки в базу данных
-          code += '    # Сохраняем нажатие кнопки в базу данных\n';
+          // Правильная логика сохранения переменной на основе родительского узла
           code += '    user_id = callback_query.from_user.id\n';
           code += `    button_text = "${button.text}"\n`;
           code += '    \n';
-          code += '    # Сохраняем ответ в базу данных\n';
-          code += '    import datetime\n';
-          code += '    timestamp = datetime.datetime.now().isoformat()\n';
-          code += '    \n';
-          code += '    response_data = {\n';
-          code += '        "value": button_text,\n';
-          code += '        "type": "inline_button",\n';
-          code += '        "timestamp": timestamp,\n';
-          code += `        "nodeId": "${button.target || callbackData}",\n`;
-          code += '        "variable": button_text,\n';
-          code += '        "source": "inline_button_click"\n';
-          code += '    }\n';
-          code += '    \n';
-          code += '    # Сохраняем в пользовательские данные\n';
-          code += '    if user_id not in user_data:\n';
-          code += '        user_data[user_id] = {}\n';
-          code += '    user_data[user_id]["last_button_click"] = response_data\n';
-          code += '    \n';
-          code += '    # Сохраняем переменную для условных сообщений\n';
-          code += '    if user_id in user_data and user_data[user_id].get("input_variable"):\n';
-          code += '        variable_name = user_data[user_id]["input_variable"]\n';
           
-          // КРИТИЧЕСКИ ВАЖНО: добавляем правильный маппинг переменных для "Федя" шаблона
-          let mappedValue = 'button_text';
-          let displayValue = 'button_text';
-          if (callbackData === 'source_search') {
-            mappedValue = '"из инета"';
-            displayValue = 'из инета';
-          } else if (callbackData === 'source_friends') {
-            mappedValue = '"friends"';
-            displayValue = 'friends';
-          } else if (callbackData === 'source_ads') {
-            mappedValue = '"ads"';
-            displayValue = 'ads';
+          // Определяем переменную для сохранения на основе родительского узла
+          const parentNode = nodes.find(n => 
+            n.data.buttons && n.data.buttons.some(btn => btn.target === callbackData)
+          );
+          
+          if (parentNode && parentNode.data.inputVariable) {
+            const variableName = parentNode.data.inputVariable;
+            
+            // Определяем значение переменной в зависимости от целевого узла
+            let variableValue = 'button_text';
+            if (callbackData === 'source_search') {
+              variableValue = '"из инета"';
+            } else if (callbackData === 'source_friends') {
+              variableValue = '"friends"';
+            } else if (callbackData === 'source_ads') {
+              variableValue = '"ads"';
+            } else {
+              // Найти кнопку и использовать её значение
+              const sourceButton = parentNode.data.buttons.find(btn => btn.target === callbackData);
+              if (sourceButton && sourceButton.text) {
+                variableValue = `"${sourceButton.text}"`;
+              }
+            }
+            
+            code += '    # Сохраняем правильную переменную в базу данных\n';
+            code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
+            code += `    logging.info(f"Переменная ${variableName} сохранена: {${variableValue}} (пользователь {user_id})")\n`;
+          } else {
+            // Fallback: сохраняем кнопку как есть
+            code += '    # Сохраняем кнопку в базу данных\n';
+            code += '    import datetime\n';
+            code += '    timestamp = datetime.datetime.now().isoformat()\n';
+            code += '    response_data = {\n';
+            code += '        "value": button_text,\n';
+            code += '        "type": "inline_button",\n';
+            code += '        "timestamp": timestamp,\n';
+            code += `        "nodeId": "${button.target || callbackData}"\n`;
+            code += '    }\n';
+            code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
+            code += '    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")\n';
           }
-          
-          code += `        await update_user_data_in_db(user_id, variable_name, ${mappedValue})\n`;
-          code += `        logging.info(f"Переменная {variable_name} сохранена: ${displayValue} (пользователь {user_id})")\n`;
-          code += '    \n';
-          code += '    # Сохраняем в базу данных\n';
-          code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
-          code += '    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")\n';
           code += '    \n';
           
           if (targetNode) {
@@ -1365,8 +1399,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    # Сохраняем в базу данных с правильным именем переменной\n';
           code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
           code += `    logging.info(f"Переменная ${variableName} сохранена: {${variableValue}} (пользователь {user_id})")\n`;
-          code += '    await update_user_data_in_db(user_id, button_display_text, response_data)\n';
-          code += '    logging.info(f"Кнопка сохранена: {button_display_text} (пользователь {user_id})")\n';
           code += '    \n';
           
           // Generate response based on node type
