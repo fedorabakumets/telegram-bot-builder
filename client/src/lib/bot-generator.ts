@@ -296,7 +296,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     } else if (node.type === "contact") {
       code += generateContactHandler(node);
     }
-    // Note: message nodes are handled via callback handlers, not as separate command handlers
+    // Note: user-input and message nodes are handled via callback handlers, not as separate command handlers
   });
 
   // Generate synonym handlers for commands
@@ -918,7 +918,41 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '        logging.error(f"Ошибка отправки контакта: {e}")\n';
               code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить контакт")\n';
               
-
+            } else if (targetNode.type === 'user-input') {
+              // Handle user-input nodes
+              const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
+              const responseType = targetNode.data.responseType || 'text';
+              const inputType = targetNode.data.inputType || 'text';
+              const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+              const responseOptions = targetNode.data.responseOptions || [];
+              const allowMultipleSelection = targetNode.data.allowMultipleSelection || false;
+              const inputValidation = targetNode.data.inputValidation || '';
+              const minLength = targetNode.data.minLength || 0;
+              const maxLength = targetNode.data.maxLength || 0;
+              const inputTimeout = targetNode.data.inputTimeout || 60;
+              const inputRequired = targetNode.data.inputRequired !== false;
+              const allowSkip = targetNode.data.allowSkip || false;
+              const saveToDatabase = targetNode.data.saveToDatabase || false;
+              const inputRetryMessage = targetNode.data.inputRetryMessage || "Пожалуйста, попробуйте еще раз.";
+              const inputSuccessMessage = targetNode.data.inputSuccessMessage || "Спасибо за ваш ответ!";
+              const placeholder = targetNode.data.placeholder || "";
+              
+              code += '    # Удаляем старое сообщение\n';
+              code += '    await callback_query.message.delete()\n';
+              code += '    \n';
+              
+              // Отправляем запрос пользователю
+              const formattedPrompt = formatTextForPython(inputPrompt);
+              code += `    text = ${formattedPrompt}\n`;
+              
+              if (responseType === 'buttons' && responseOptions.length > 0) {
+                // Обработка кнопочного ответа
+                const buttonType = targetNode.data.buttonType || 'inline';
+                code += '    \n';
+                code += '    # Создаем кнопки для выбора ответа\n';
+                
+                if (buttonType === 'reply') {
+                  code += '    builder = ReplyKeyboardBuilder()\n';
                   
                   responseOptions.forEach((option, index) => {
                     code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
@@ -1140,7 +1174,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
               code += `        await callback_query.message.answer(text${parseModeTarget})\n`;
             }
-              }
+              } // Закрываем else блок для обычного отображения (основной цикл)
+            } // Закрываем else блок для обычных текстовых сообщений (основной цикл)
           } else {
             // Кнопка без цели - просто уведомляем пользователя
             code += '    # Кнопка пока никуда не ведет\n';
