@@ -358,6 +358,19 @@ export const nodeSchema = z.object({
     inputTimeout: z.number().optional(), // Таймаут ожидания ввода в секундах
     inputRetryMessage: z.string().optional(), // Сообщение при неверном вводе
     inputSuccessMessage: z.string().optional(), // Сообщение при успешном вводе
+    // Условные сообщения на основе пользовательских данных
+    enableConditionalMessages: z.boolean().default(false), // Включить условные сообщения
+    conditionalMessages: z.array(z.object({
+      id: z.string(),
+      condition: z.enum(['user_data_exists', 'user_data_equals', 'user_data_not_exists', 'user_data_contains', 'first_time', 'returning_user']).default('user_data_exists'), // Тип условия
+      variableName: z.string().optional(), // Имя переменной для проверки
+      expectedValue: z.string().optional(), // Ожидаемое значение для сравнения
+      messageText: z.string(), // Текст сообщения для этого условия
+      keyboardType: z.enum(['reply', 'inline', 'none']).default('none'), // Тип клавиатуры для условного сообщения
+      buttons: z.array(buttonSchema).default([]), // Кнопки для условного сообщения
+      priority: z.number().default(0) // Приоритет проверки (чем больше, тем выше приоритет)
+    })).default([]), // Массив условных сообщений
+    fallbackMessage: z.string().optional(), // Сообщение по умолчанию, если ни одно условие не выполнено
     saveToDatabase: z.boolean().default(false), // Сохранять ли в базу данных
     allowSkip: z.boolean().default(false), // Разрешить пропуск ввода
     

@@ -1979,6 +1979,259 @@ export function PropertiesPanel({
           </div>
         </div>
 
+        {/* Conditional Messages */}
+        {(selectedNode.type === 'start' || selectedNode.type === 'command' || selectedNode.type === 'message') && (
+          <div>
+            <h3 className="text-sm font-medium text-foreground mb-3">🔄 Условные сообщения</h3>
+            <div className="space-y-4">
+              {/* Enable Conditional Messages */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
+                <div className="flex-1">
+                  <Label className="text-xs font-medium text-foreground">
+                    Включить условные сообщения
+                  </Label>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Разные сообщения в зависимости от того, отвечал ли пользователь на вопросы
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <Switch
+                    checked={selectedNode.data.enableConditionalMessages ?? false}
+                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked })}
+                  />
+                </div>
+              </div>
+
+              {/* Conditional Messages Settings */}
+              {selectedNode.data.enableConditionalMessages && (
+                <div className="space-y-4 bg-gradient-to-br from-purple-50/50 to-indigo-50/30 dark:from-purple-950/20 dark:to-indigo-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
+                  
+                  {/* Information Block */}
+                  <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/40 dark:border-blue-800/40 rounded-lg p-3">
+                    <div className="flex items-start space-x-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i className="fas fa-info text-white text-xs"></i>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">
+                          Умные сообщения
+                        </div>
+                        <div className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
+                          <div className="space-y-1">
+                            <div>✅ Для новых пользователей - одно сообщение</div>
+                            <div>✅ Для пользователей, уже отвечавших на вопросы - другое</div>
+                            <div>✅ Можно настроить проверку любой переменной</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Conditional Messages List */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                        Список условных сообщений
+                      </Label>
+                      <UIButton
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const newCondition = {
+                            id: `condition-${Date.now()}`,
+                            condition: 'user_data_exists' as const,
+                            variableName: 'source',
+                            messageText: 'Добро пожаловать обратно!',
+                            keyboardType: 'none' as const,
+                            buttons: [],
+                            priority: 0
+                          };
+                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                          onNodeUpdate(selectedNode.id, { 
+                            conditionalMessages: [...currentConditions, newCondition] 
+                          });
+                        }}
+                        className="text-xs"
+                      >
+                        <i className="fas fa-plus mr-1"></i>
+                        Добавить условие
+                      </UIButton>
+                    </div>
+
+                    <div className="space-y-3">
+                      {(selectedNode.data.conditionalMessages || []).map((condition, index) => (
+                        <div key={condition.id} className="bg-white/50 dark:bg-gray-900/30 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                              Условие #{index + 1}
+                            </div>
+                            <UIButton
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                const newConditions = currentConditions.filter(c => c.id !== condition.id);
+                                onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });
+                              }}
+                              className="text-muted-foreground hover:text-destructive h-auto p-1"
+                            >
+                              <i className="fas fa-trash text-xs"></i>
+                            </UIButton>
+                          </div>
+
+                          <div className="space-y-3">
+                            {/* Condition Type */}
+                            <div>
+                              <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                Тип условия
+                              </Label>
+                              <Select
+                                value={condition.condition}
+                                onValueChange={(value) => {
+                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                  const updatedConditions = currentConditions.map(c => 
+                                    c.id === condition.id ? { ...c, condition: value as any } : c
+                                  );
+                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                }}
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="user_data_exists">Переменная существует</SelectItem>
+                                  <SelectItem value="user_data_not_exists">Переменная не существует</SelectItem>
+                                  <SelectItem value="user_data_equals">Переменная равна значению</SelectItem>
+                                  <SelectItem value="user_data_contains">Переменная содержит значение</SelectItem>
+                                  <SelectItem value="first_time">Первое посещение</SelectItem>
+                                  <SelectItem value="returning_user">Возвращающийся пользователь</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Variable Name */}
+                            {(condition.condition === 'user_data_exists' || 
+                              condition.condition === 'user_data_not_exists' || 
+                              condition.condition === 'user_data_equals' || 
+                              condition.condition === 'user_data_contains') && (
+                              <div>
+                                <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                  Имя переменной
+                                </Label>
+                                <Input
+                                  value={condition.variableName || ''}
+                                  onChange={(e) => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, variableName: e.target.value } : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                  className="text-xs"
+                                  placeholder="source"
+                                />
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  Например: source, gender, age
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Expected Value */}
+                            {(condition.condition === 'user_data_equals' || 
+                              condition.condition === 'user_data_contains') && (
+                              <div>
+                                <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                  Ожидаемое значение
+                                </Label>
+                                <Input
+                                  value={condition.expectedValue || ''}
+                                  onChange={(e) => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, expectedValue: e.target.value } : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                  className="text-xs"
+                                  placeholder="Реклама"
+                                />
+                              </div>
+                            )}
+
+                            {/* Priority */}
+                            <div>
+                              <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                Приоритет (чем больше, тем выше)
+                              </Label>
+                              <Input
+                                type="number"
+                                value={condition.priority || 0}
+                                onChange={(e) => {
+                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                  const updatedConditions = currentConditions.map(c => 
+                                    c.id === condition.id ? { ...c, priority: parseInt(e.target.value) || 0 } : c
+                                  );
+                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                }}
+                                className="text-xs"
+                                min="0"
+                                max="100"
+                              />
+                            </div>
+
+                            {/* Message Text */}
+                            <div>
+                              <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                Текст сообщения для этого условия
+                              </Label>
+                              <Textarea
+                                value={condition.messageText}
+                                onChange={(e) => {
+                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                  const updatedConditions = currentConditions.map(c => 
+                                    c.id === condition.id ? { ...c, messageText: e.target.value } : c
+                                  );
+                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                }}
+                                className="text-xs resize-none"
+                                rows={3}
+                                placeholder="Добро пожаловать обратно! Рады вас снова видеть."
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {(selectedNode.data.conditionalMessages || []).length === 0 && (
+                        <div className="text-center py-6 text-muted-foreground">
+                          <i className="fas fa-plus-circle text-2xl mb-2"></i>
+                          <div className="text-xs">
+                            Нажмите "Добавить условие" чтобы создать первое условное сообщение
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Fallback Message */}
+                  <div>
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                      Сообщение по умолчанию
+                    </Label>
+                    <Textarea
+                      value={selectedNode.data.fallbackMessage || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { fallbackMessage: e.target.value })}
+                      className="text-xs resize-none border-purple-200 dark:border-purple-700"
+                      rows={3}
+                      placeholder="Сообщение, если ни одно условие не выполнено (по умолчанию - основной текст узла)"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Universal User Input Collection */}
         {selectedNode.type !== 'user-input' && (
           <div>
