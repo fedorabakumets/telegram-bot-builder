@@ -2478,8 +2478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           last_interaction
         FROM bot_users 
         WHERE user_data IS NOT NULL 
-          AND user_data != '{}' 
-          AND (user_data::text LIKE '%response_%' OR user_data::text LIKE '%feedback%' OR user_data::text LIKE '%answer%' OR user_data::text LIKE '%input%' OR user_data::text LIKE '%user_%')
+          AND user_data != '{}'
         ORDER BY last_interaction DESC
       `);
       
@@ -2491,21 +2490,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (user.user_data && typeof user.user_data === 'object') {
           Object.entries(user.user_data).forEach(([key, value]) => {
-            // Принимаем любые переменные с данными пользователя
-            if (key.startsWith('response_') || key.includes('feedback') || key.includes('answer') || key.includes('input') || key.includes('user_')) {
+            // Принимаем все переменные кроме служебных
+            if (!key.startsWith('input_') && !key.startsWith('waiting_') && key !== 'button_click') {
               let responseData;
               try {
                 // Если value уже объект, используем его как есть
-                responseData = typeof value === 'object' ? value : JSON.parse(value);
+                responseData = typeof value === 'object' ? value : { value: value, type: 'text' };
               } catch {
-                // Если не удается распарсить, создаем простую структуру
-                responseData = { response: value, type: 'text' };
+                // Если не удается обработать, создаем простую структуру
+                responseData = { value: value, type: 'text' };
               }
               
               responses.push({
                 key,
-                ...responseData,
-                timestamp: responseData.timestamp || null
+                value: responseData.value || value,
+                type: responseData.type || 'text',
+                timestamp: responseData.timestamp || null,
+                nodeId: responseData.nodeId || null,
+                variable: responseData.variable || key
               });
             }
           });
@@ -2523,7 +2525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ),
           responseCount: responses.length
         };
-      });
+      }).filter(user => user.responses.length > 0); // Показываем только пользователей с ответами
       
       res.json(processedResponses);
     } catch (error) {
