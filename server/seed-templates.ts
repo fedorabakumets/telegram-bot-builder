@@ -1493,8 +1493,25 @@ export async function seedDefaultTemplates() {
           },
           {
             id: "yxbKRAHB-OuKFsHRJZyiV",
-            type: "message",
+            type: "keyboard",
             position: { x: 80, y: 1580 },
+            data: {
+              messageText: "Сколько вам лет?",
+              keyboardType: "none",
+              buttons: [],
+              markdown: false,
+              inputVariable: "возраст",
+              resizeKeyboard: true,
+              enableTextInput: true,
+              oneTimeKeyboard: false,
+              collectUserInput: true,
+              inputTargetNodeId: "final-message-node"
+            }
+          },
+          {
+            id: "final-message-node",
+            type: "message",
+            position: { x: 80, y: 1900 },
             data: {
               messageText: "Спасибо за предоставленную информацию! 🎉\n\nВаш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль.",
               keyboardType: "inline",
@@ -1512,11 +1529,8 @@ export async function seedDefaultTemplates() {
                   target: "/start"
                 }
               ],
-              inputVariable: "возраст",
               resizeKeyboard: true,
-              enableTextInput: true,
               oneTimeKeyboard: false,
-              collectUserInput: true,
               markdown: false
             }
           },
