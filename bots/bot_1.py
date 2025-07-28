@@ -1,7 +1,9 @@
 """
 Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
-"""
+
+Команды для @BotFather:
+profile - С возвращением! 👋"""
 
 import asyncio
 import logging
@@ -212,6 +214,16 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
     }
 
 
+# Настройка меню команд
+async def set_bot_commands():
+    commands = [
+        BotCommand(command="profile", description="С возвращением! 👋
+
+"),
+    ]
+    await bot.set_my_commands(commands)
+
+
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
 
@@ -244,6 +256,58 @@ async def start_handler(message: types.Message):
     # Устанавливаем состояние ожидания ввода
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["waiting_for_input"] = "start_node"
+
+@dp.message(Command("profile"))
+async def profile_handler(message: types.Message):
+    logging.info(f"Команда /profile вызвана пользователем {message.from_user.id}")
+    # Сохраняем пользователя и статистику использования команд
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    
+    # Сохраняем пользователя в базу данных
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
+    
+    # Обновляем статистику команд в БД
+    if saved_to_db:
+        await update_user_data_in_db(user_id, "command_profile", datetime.now().isoformat())
+    
+    # Резервное сохранение в локальное хранилище
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    if "commands_used" not in user_data[user_id]:
+        user_data[user_id]["commands_used"] = {}
+    user_data[user_id]["commands_used"]["/profile"] = user_data[user_id]["commands_used"].get("/profile", 0) + 1
+
+    # Проверяем условные сообщения
+    text = None
+    
+    # Получаем данные пользователя для проверки условий
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
+            user_data_dict = user_record["user_data"]
+        else:
+            user_data_dict = user_record
+    else:
+        user_data_dict = {}
+    
+    # Проверяем условие: returning_user
+    if user_record.get("interaction_count", 0) > 1:
+        text = """С возвращением! 👋
+Вы пришли к нам из источника: {пол}"""
+        logging.info("Условие выполнено: возвращающийся пользователь")
+    else:
+        text = "Команда выполнена"
+        logging.info("Используется основное сообщение узла")
+    
+    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
+    await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 # Обработчики inline кнопок
 
@@ -702,6 +766,11 @@ async def handle_user_input(message: types.Message):
                         await start_handler(fake_message)
                     except Exception as e:
                         logging.error(f"Ошибка выполнения команды /start: {e}")
+                elif command == "/profile":
+                    try:
+                        await _profile_handler(fake_message)
+                    except Exception as e:
+                        logging.error(f"Ошибка выполнения команды /profile: {e}")
                 else:
                     logging.warning(f"Неизвестная команда: {command}")
             elif option_action == "goto" and option_target:
@@ -721,6 +790,8 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "yxbKRAHB-OuKFsHRJZyiV":
                         await handle_callback_yxbKRAHB_OuKFsHRJZyiV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "n8RPQH92UrXt-Yk_x15Rr":
+                        await handle_callback_n8RPQH92UrXt_Yk_x15Rr(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -743,6 +814,8 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "yxbKRAHB-OuKFsHRJZyiV":
                             await handle_callback_yxbKRAHB_OuKFsHRJZyiV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "n8RPQH92UrXt-Yk_x15Rr":
+                            await handle_callback_n8RPQH92UrXt_Yk_x15Rr(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -1069,6 +1142,8 @@ async def handle_user_input(message: types.Message):
                 text = "Какой твой возраст?"
                 parse_mode = None
                 await message.answer(text, parse_mode=parse_mode)
+            elif next_node_id == "n8RPQH92UrXt-Yk_x15Rr":
+                logging.info(f"Переход к узлу n8RPQH92UrXt-Yk_x15Rr типа command")
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
@@ -1082,6 +1157,7 @@ async def main():
     try:
         # Инициализируем базу данных
         await init_database()
+        await set_bot_commands()
         print("🤖 Бот запущен и готов к работе!")
         await dp.start_polling(bot)
     except KeyboardInterrupt:
