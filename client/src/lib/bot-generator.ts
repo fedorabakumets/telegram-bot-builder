@@ -25,6 +25,58 @@ function escapeForJsonString(text: string): string {
   return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
 
+// Функция для генерации замены переменных в тексте
+function generateVariableReplacement(variableName: string, indentLevel: string): string {
+  let code = '';
+  code += `${indentLevel}    # Подставляем значения переменных\n`;
+  code += `${indentLevel}    if "{${variableName}}" in text:\n`;
+  code += `${indentLevel}        if variable_value is not None:\n`;
+  code += `${indentLevel}            text = text.replace("{${variableName}}", str(variable_value))\n`;
+  code += `${indentLevel}        else:\n`;
+  code += `${indentLevel}            # Если переменная не найдена, отображаем как простой текст\n`;
+  code += `${indentLevel}            text = text.replace("{${variableName}}", "${variableName}")\n`;
+  return code;
+}
+
+// Функция для генерации замены всех переменных в тексте
+function generateUniversalVariableReplacement(indentLevel: string): string {
+  let code = '';
+  code += `${indentLevel}# Подставляем все доступные переменные пользователя в текст\n`;
+  code += `${indentLevel}user_record = await get_user_from_db(user_id)\n`;
+  code += `${indentLevel}if not user_record:\n`;
+  code += `${indentLevel}    user_record = user_data.get(user_id, {})\n`;
+  code += `${indentLevel}\n`;
+  code += `${indentLevel}# Безопасно извлекаем user_data\n`;
+  code += `${indentLevel}if isinstance(user_record, dict):\n`;
+  code += `${indentLevel}    if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n`;
+  code += `${indentLevel}        user_vars = user_record["user_data"]\n`;
+  code += `${indentLevel}    else:\n`;
+  code += `${indentLevel}        user_vars = user_record\n`;
+  code += `${indentLevel}else:\n`;
+  code += `${indentLevel}    user_vars = {}\n`;
+  code += `${indentLevel}\n`;
+  code += `${indentLevel}# Заменяем все переменные в тексте\n`;
+  code += `${indentLevel}import re\n`;
+  code += `${indentLevel}def replace_variables_in_text(text_content, variables_dict):\n`;
+  code += `${indentLevel}    if not text_content or not variables_dict:\n`;
+  code += `${indentLevel}        return text_content\n`;
+  code += `${indentLevel}    \n`;
+  code += `${indentLevel}    for var_name, var_data in variables_dict.items():\n`;
+  code += `${indentLevel}        placeholder = "{" + var_name + "}"\n`;
+  code += `${indentLevel}        if placeholder in text_content:\n`;
+  code += `${indentLevel}            if isinstance(var_data, dict) and "value" in var_data:\n`;
+  code += `${indentLevel}                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name\n`;
+  code += `${indentLevel}            elif var_data is not None:\n`;
+  code += `${indentLevel}                var_value = str(var_data)\n`;
+  code += `${indentLevel}            else:\n`;
+  code += `${indentLevel}                var_value = var_name  # Показываем имя переменной если значения нет\n`;
+  code += `${indentLevel}            text_content = text_content.replace(placeholder, var_value)\n`;
+  code += `${indentLevel}    return text_content\n`;
+  code += `${indentLevel}\n`;
+  code += `${indentLevel}text = replace_variables_in_text(text, user_vars)\n`;
+  return code;
+}
+
 // Функция для генерации логики условных сообщений
 function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel: string = '    '): string {
   if (!conditionalMessages || conditionalMessages.length === 0) {
@@ -63,10 +115,8 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    logging.info(f"Переменная '${condition.variableName}' не найдена в user_data_dict")\n`;
         code += `${indentLevel}${conditionKeyword} variable_exists:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        // Добавляем замену переменных в тексте
-        code += `${indentLevel}    # Подставляем значения переменных\n`;
-        code += `${indentLevel}    if "{${condition.variableName}}" in text and variable_value is not None:\n`;
-        code += `${indentLevel}        text = text.replace("{${condition.variableName}}", str(variable_value))\n`;
+        // Добавляем универсальную замену всех переменных в тексте
+        code += `${indentLevel}    text = replace_variables_in_text(text, user_data_dict)\n`;
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {variable_value}")\n`;
         break;
         
@@ -95,10 +145,8 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        variable_value = str(variable_data)\n`;
         code += `${indentLevel}${conditionKeyword} variable_value == "${condition.expectedValue || ''}":\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        // Добавляем замену переменных в тексте
-        code += `${indentLevel}    # Подставляем значения переменных\n`;
-        code += `${indentLevel}    if "{${condition.variableName}}" in text and variable_value is not None:\n`;
-        code += `${indentLevel}        text = text.replace("{${condition.variableName}}", str(variable_value))\n`;
+        // Добавляем универсальную замену всех переменных в тексте
+        code += `${indentLevel}    text = replace_variables_in_text(text, user_data_dict)\n`;
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {variable_value}")\n`;
         break;
         
@@ -549,6 +597,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   const escapedMessage = successMessage.replace(/"/g, '\\"');
                   code += `    success_text = "${escapedMessage}"\n`;
                 }
+                
+                // Добавляем замену переменных в сообщении об успехе
+                code += `    # Подставляем значения переменных в текст сообщения\n`;
+                code += `    if "{${variableName}}" in success_text:\n`;
+                code += `        success_text = success_text.replace("{${variableName}}", "${variableValue}")\n`;
                 
                 code += '    await callback_query.message.edit_text(success_text)\n';
               }
@@ -1182,6 +1235,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               // Используем форматированный текст для безопасного вывода
               const formattedTargetText = formatTextForPython(targetText);
               code += `    text = ${formattedTargetText}\n`;
+              
+              // Добавляем замену переменных в тексте
+              code += generateUniversalVariableReplacement('    ');
             
               // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла (основной цикл)
               if (targetNode.data.collectUserInput === true) {
@@ -1462,6 +1518,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    else:\n';
               code += '        user_data_dict = {}\n';
               code += '    \n';
+              code += '    # Функция для замены переменных в тексте\n';
+              code += '    def replace_variables_in_text(text_content, variables_dict):\n';
+              code += '        if not text_content or not variables_dict:\n';
+              code += '            return text_content\n';
+              code += '        \n';
+              code += '        for var_name, var_data in variables_dict.items():\n';
+              code += '            placeholder = "{" + var_name + "}"\n';
+              code += '            if placeholder in text_content:\n';
+              code += '                if isinstance(var_data, dict) and "value" in var_data:\n';
+              code += '                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name\n';
+              code += '                elif var_data is not None:\n';
+              code += '                    var_value = str(var_data)\n';
+              code += '                else:\n';
+              code += '                    var_value = var_name  # Показываем имя переменной если значения нет\n';
+              code += '                text_content = text_content.replace(placeholder, var_value)\n';
+              code += '        return text_content\n';
+              code += '    \n';
               
               // Generate conditional logic using helper function
               code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
@@ -1472,15 +1545,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetNode.data.fallbackMessage) {
                 const fallbackText = formatTextForPython(targetNode.data.fallbackMessage);
                 code += `        text = ${fallbackText}\n`;
+                code += '        text = replace_variables_in_text(text, user_data_dict)\n';
                 code += '        logging.info("Используется запасное сообщение")\n';
               } else {
                 code += `        text = ${formattedTargetText}\n`;
+                code += '        text = replace_variables_in_text(text, user_data_dict)\n';
                 code += '        logging.info("Используется основное сообщение узла")\n';
               }
               
               code += '    \n';
             } else {
               code += `    text = ${formattedTargetText}\n`;
+              
+              // Добавляем замену переменных для обычных сообщений
+              code += generateUniversalVariableReplacement('    ');
             }
             
             // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
@@ -1614,6 +1692,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             const targetText = targetNode.data.messageText || "Сообщение";
             const formattedTargetText = formatTextForPython(targetText);
             code += `    text = ${formattedTargetText}\n`;
+            
+            // Добавляем замену переменных для reply кнопок
+            code += '    user_id = message.from_user.id\n';
+            code += generateUniversalVariableReplacement('    ');
             
             // Handle keyboard for target node
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
