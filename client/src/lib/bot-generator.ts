@@ -1340,12 +1340,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    \n';
                 code += '    if text is not None:\n';
                 code += '        pass  # Условие найдено, используем это сообщение\n';
-                code += '    elif ';
+                
               }
               
               // Убираем последний 'el' и добавляем fallback
-              code = code.slice(0, -5); // Убираем последний 'elif '
-              code += 'else:\n';
+              // Fixed: Remove problematic elif logic
+              code += '    else:\n';
               
               if (targetNode.data.fallbackMessage) {
                 const fallbackText = formatTextForPython(targetNode.data.fallbackMessage);
@@ -2357,8 +2357,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
           
           // Убираем последний 'el' и добавляем fallback
-          code = code.slice(0, -5); // Убираем последний 'elif '
-          code += 'else:\n';
+          // Fixed: Remove problematic elif logic
+          code += '    else:\n';
           
           if (targetNode.data.fallbackMessage) {
             const fallbackText = formatTextForPython(targetNode.data.fallbackMessage);
@@ -2677,12 +2677,12 @@ function generateStartHandler(node: Node): string {
       code += '    \n';
       code += '    if text is not None:\n';
       code += '        pass  # Условие найдено, используем это сообщение\n';
-      code += '    elif ';
+      
     }
     
     // Убираем последний 'el' и добавляем fallback
-    code = code.slice(0, -5); // Убираем последний 'elif '
-    code += 'else:\n';
+    // Fixed: Remove problematic elif logic
+    code += '    else:\n';
     
     if (node.data.fallbackMessage) {
       const fallbackText = formatTextForPython(node.data.fallbackMessage);
@@ -2816,12 +2816,12 @@ function generateCommandHandler(node: Node): string {
       code += '    \n';
       code += '    if text is not None:\n';
       code += '        pass  # Условие найдено, используем это сообщение\n';
-      code += '    elif ';
+      
     }
     
     // Убираем последний 'el' и добавляем fallback
-    code = code.slice(0, -5); // Убираем последний 'elif '
-    code += 'else:\n';
+    // Fixed: Remove problematic elif logic
+    code += '    else:\n';
     
     if (node.data.fallbackMessage) {
       const fallbackText = formatTextForPython(node.data.fallbackMessage);

@@ -256,7 +256,6 @@ async def start_handler(message: types.Message):
     
     if text is not None:
         pass  # Условие найдено, используем это сообщение
-    # Проверяем условие: returning_user
     if user_record.get("interaction_count", 0) > 1:
         text = """Рады видеть вас снова! 🎉
 Вы уже не новичок в нашем боте."""
@@ -765,4 +764,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
