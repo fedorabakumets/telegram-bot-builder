@@ -504,7 +504,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             code += '    # Сохраняем правильную переменную в базу данных\n';
             code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-            code += `    logging.info(f"Переменная ${variableName} сохранена: ${variableValue} (пользователь {user_id})")\n`;
+            code += `    logging.info(f"Переменная ${variableName} сохранена: {${variableValue}} (пользователь {user_id})")\n`;
           } else {
             // Fallback: сохраняем кнопку как есть
             code += '    # Сохраняем кнопку в базу данных\n';
@@ -1398,7 +1398,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           code += '    # Сохраняем в базу данных с правильным именем переменной\n';
           code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-          code += `    logging.info(f"Переменная ${variableName} сохранена: ${variableValue} (пользователь {user_id})")\n`;
+          code += `    logging.info(f"Переменная ${variableName} сохранена: {${variableValue}} (пользователь {user_id})")\n`;
           code += '    \n';
           
           // Generate response based on node type
