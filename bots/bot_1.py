@@ -253,31 +253,13 @@ async def start_handler(message: types.Message):
     else:
         user_data_dict = {}
     
-    # Проверяем условие: user_data_exists
-    # Проверяем существование переменной с учетом структуры данных
-    variable_exists = False
-    variable_value = None
-    logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
-    if "источник" in user_data_dict:
-        variable_data = user_data_dict.get("источник")
-        logging.info(f"Найдена переменная 'источник': {variable_data}")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            variable_value = variable_data["value"]
-            variable_exists = variable_value is not None
-            logging.info(f"Структура dict с value: {variable_value}")
-        elif variable_data is not None:
-            variable_value = str(variable_data)
-            variable_exists = True
-            logging.info(f"Простое значение: {variable_value}")
-    else:
-        logging.info(f"Переменная 'источник' не найдена в user_data_dict")
-    if variable_exists:
+    # Проверяем условие: returning_user
+    if user_record.get("interaction_count", 0) > 1:
         text = """С возвращением! 👋
 Вы пришли к нам из источника: {источник}
 
 Рады видеть вас снова!"""
-        text = replace_variables_in_text(text, user_data_dict)
-        logging.info(f"Условие выполнено: переменная источник = {variable_value}")
+        logging.info("Условие выполнено: возвращающийся пользователь")
     else:
         text = """Привет! 🌟
 Добро пожаловать в наш бот!
@@ -476,8 +458,8 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
     button_text = "🔍 Поиск в интернете"
     
     # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "источник", "из инета")
-    logging.info(f"Переменная источник сохранена: " + str("из инета") + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "источник", "🔍 Поиск в интернете")
+    logging.info(f"Переменная источник сохранена: " + str("🔍 Поиск в интернете") + f" (пользователь {user_id})")
     
     text = """Отлично! 🎯
 Теперь мы знаем, что вы нашли нас через поиск.
@@ -490,8 +472,17 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
     
     # Безопасно извлекаем user_data
     if isinstance(user_record, dict):
-        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
-            user_vars = user_record["user_data"]
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
         else:
             user_vars = user_record
     else:
@@ -532,8 +523,8 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
     button_text = "👥 Друзья"
     
     # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "источник", "friends")
-    logging.info(f"Переменная источник сохранена: " + str("friends") + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "источник", "👥 Друзья")
+    logging.info(f"Переменная источник сохранена: " + str("👥 Друзья") + f" (пользователь {user_id})")
     
     text = """Замечательно! 👥
 Значит, вас порекомендовали друзья!
@@ -546,8 +537,17 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
     
     # Безопасно извлекаем user_data
     if isinstance(user_record, dict):
-        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
-            user_vars = user_record["user_data"]
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
         else:
             user_vars = user_record
     else:
@@ -588,8 +588,8 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
     button_text = "📱 Реклама"
     
     # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "источник", "ads")
-    logging.info(f"Переменная источник сохранена: " + str("ads") + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "источник", "📱 Реклама")
+    logging.info(f"Переменная источник сохранена: " + str("📱 Реклама") + f" (пользователь {user_id})")
     
     text = """Понятно! 📱
 Вы пришли из рекламы.
@@ -602,8 +602,17 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
     
     # Безопасно извлекаем user_data
     if isinstance(user_record, dict):
-        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
-            user_vars = user_record["user_data"]
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
         else:
             user_vars = user_record
     else:
