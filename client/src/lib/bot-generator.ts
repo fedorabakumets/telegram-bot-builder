@@ -1340,12 +1340,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    \n';
                 code += '    if text is not None:\n';
                 code += '        pass  # Условие найдено, используем это сообщение\n';
-                code += '    el';
+                code += '    elif ';
               }
               
               // Убираем последний 'el' и добавляем fallback
-              code = code.slice(0, -2); // Убираем последний 'el'
-              code += 'se:\n';
+              code = code.slice(0, -5); // Убираем последний 'elif '
+              code += 'else:\n';
               
               if (targetNode.data.fallbackMessage) {
                 const fallbackText = formatTextForPython(targetNode.data.fallbackMessage);
@@ -2357,8 +2357,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
           
           // Убираем последний 'el' и добавляем fallback
-          code = code.slice(0, -2); // Убираем последний 'el'
-          code += 'se:\n';
+          code = code.slice(0, -5); // Убираем последний 'elif '
+          code += 'else:\n';
           
           if (targetNode.data.fallbackMessage) {
             const fallbackText = formatTextForPython(targetNode.data.fallbackMessage);
@@ -2640,13 +2640,13 @@ function generateStartHandler(node: Node): string {
         case 'user_data_exists':
           code += `    if "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
           code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная {}" существует".format("' + condition.variableName + '"))\n';
+          code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' существует")\n';
           break;
           
         case 'user_data_not_exists':
           code += `    if "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
           code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная {}" не существует".format("' + condition.variableName + '"))\n';
+          code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' не существует")\n';
           break;
           
         case 'user_data_equals':
@@ -2677,12 +2677,12 @@ function generateStartHandler(node: Node): string {
       code += '    \n';
       code += '    if text is not None:\n';
       code += '        pass  # Условие найдено, используем это сообщение\n';
-      code += '    el';
+      code += '    elif ';
     }
     
     // Убираем последний 'el' и добавляем fallback
-    code = code.slice(0, -2); // Убираем последний 'el'
-    code += 'se:\n';
+    code = code.slice(0, -5); // Убираем последний 'elif '
+    code += 'else:\n';
     
     if (node.data.fallbackMessage) {
       const fallbackText = formatTextForPython(node.data.fallbackMessage);
@@ -2779,13 +2779,13 @@ function generateCommandHandler(node: Node): string {
         case 'user_data_exists':
           code += `    if "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
           code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная {}" существует".format("' + condition.variableName + '"))\n';
+          code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' существует")\n';
           break;
           
         case 'user_data_not_exists':
           code += `    if "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
           code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная {}" не существует".format("' + condition.variableName + '"))\n';
+          code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' не существует")\n';
           break;
           
         case 'user_data_equals':
@@ -2816,12 +2816,12 @@ function generateCommandHandler(node: Node): string {
       code += '    \n';
       code += '    if text is not None:\n';
       code += '        pass  # Условие найдено, используем это сообщение\n';
-      code += '    el';
+      code += '    elif ';
     }
     
     // Убираем последний 'el' и добавляем fallback
-    code = code.slice(0, -2); // Убираем последний 'el'
-    code += 'se:\n';
+    code = code.slice(0, -5); // Убираем последний 'elif '
+    code += 'else:\n';
     
     if (node.data.fallbackMessage) {
       const fallbackText = formatTextForPython(node.data.fallbackMessage);
