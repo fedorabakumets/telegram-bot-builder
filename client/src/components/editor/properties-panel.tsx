@@ -2075,8 +2075,7 @@ export function PropertiesPanel({
                             variableName: 'source',
                             messageText: 'Добро пожаловать обратно!',
                             keyboardType: 'none' as const,
-                            buttons: [],
-                            priority: 0
+                            buttons: []
                           };
                           const currentConditions = selectedNode.data.conditionalMessages || [];
                           onNodeUpdate(selectedNode.id, { 
@@ -2231,29 +2230,7 @@ export function PropertiesPanel({
                               </div>
                             )}
 
-                            {/* Priority */}
-                            <div>
-                              <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                Важность условия (0-100)
-                              </Label>
-                              <Input
-                                type="number"
-                                value={condition.priority || 0}
-                                onChange={(e) => {
-                                  const currentConditions = selectedNode.data.conditionalMessages || [];
-                                  const updatedConditions = currentConditions.map(c => 
-                                    c.id === condition.id ? { ...c, priority: parseInt(e.target.value) || 0 } : c
-                                  );
-                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                }}
-                                className="text-xs"
-                                min="0"
-                                max="100"
-                              />
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Чем выше число, тем раньше проверится условие
-                              </div>
-                            </div>
+
 
                             {/* Message Text */}
                             <div>
