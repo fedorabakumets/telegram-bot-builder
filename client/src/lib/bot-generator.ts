@@ -248,8 +248,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from aiogram.enums import ParseMode\n';
   code += 'import asyncpg\n';
-  code += 'from datetime import datetime\n';
+  code += 'from datetime import datetime, timezone, timedelta\n';
   code += 'import json\n\n';
+  
+  code += '# Функция для получения московского времени\n';
+  code += 'def get_moscow_time():\n';
+  code += '    """Возвращает текущее время в московском часовом поясе"""\n';
+  code += '    moscow_tz = timezone(timedelta(hours=3))  # UTC+3 для Москвы\n';
+  code += '    return datetime.now(moscow_tz).isoformat()\n\n';
   
   code += '# Токен вашего бота (получите у @BotFather)\n';
   code += 'BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"\n\n';
@@ -605,8 +611,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           } else {
             // Fallback: сохраняем кнопку как есть
             code += '    # Сохраняем кнопку в базу данных\n';
-            code += '    import datetime\n';
-            code += '    timestamp = datetime.datetime.now().isoformat()\n';
+            code += '    timestamp = get_moscow_time()\n';
             code += '    response_data = {\n';
             code += '        "value": button_text,\n';
             code += '        "type": "inline_button",\n';
@@ -1499,8 +1504,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
           code += '    \n';
           code += '    # Сохраняем ответ в базу данных\n';
-          code += '    import datetime\n';
-          code += '    timestamp = datetime.datetime.now().isoformat()\n';
+
+          code += '    timestamp = get_moscow_time()\n';
           code += '    \n';
           code += '    response_data = {\n';
           code += '        "value": button_display_text,\n';
@@ -1825,7 +1830,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '    user_id = message.from_user.id\n';
             code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
             code += '        import datetime\n';
-            code += '        timestamp = datetime.datetime.now().isoformat()\n';
+            code += '        timestamp = get_moscow_time()\n';
             code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
             code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
             code += '        \n';
@@ -1868,7 +1873,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '    user_id = message.from_user.id\n';
             code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
             code += '        import datetime\n';
-            code += '        timestamp = datetime.datetime.now().isoformat()\n';
+            code += '        timestamp = get_moscow_time()\n';
             code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
             code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
             code += '        \n';
@@ -1973,7 +1978,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '                # Сохраняем все выбранные элементы\n';
         code += '                variable_name = config.get("variable", "user_response")\n';
         code += '                import datetime\n';
-        code += '                timestamp = datetime.datetime.now().isoformat()\n';
+        code += '                import pytz\n';
+        code += '                timestamp = datetime.datetime.now(moscow_tz).isoformat()\n';
         code += '                node_id = config.get("node_id", "unknown")\n';
         code += '                \n';
         code += '                # Создаем структурированный ответ для множественного выбора\n';
@@ -2048,7 +2054,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '    # Сохраняем одиночный выбор\n';
         code += '    variable_name = config.get("variable", "user_response")\n';
         code += '    import datetime\n';
-        code += '    timestamp = datetime.datetime.now().isoformat()\n';
+        code += '    timestamp = get_moscow_time()\n';
         code += '    node_id = config.get("node_id", "unknown")\n';
         code += '    \n';
         code += '    # Создаем структурированный ответ\n';
@@ -2219,8 +2225,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            \n';
   code += '            # Сохраняем ответ пользователя\n';
   code += '            variable_name = config.get("variable", "button_response")\n';
-  code += '            import datetime\n';
-  code += '            timestamp = datetime.datetime.now().isoformat()\n';
+  code += '            timestamp = get_moscow_time()\n';
   code += '            node_id = config.get("node_id", "unknown")\n';
   code += '            \n';
   code += '            # Создаем структурированный ответ\n';
@@ -2398,7 +2403,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     code += `            \n`;
     code += `            # Сохраняем ответ пользователя\n`;
     code += `            import datetime\n`;
-    code += `            timestamp = datetime.datetime.now().isoformat()\n`;
+    code += `            timestamp = get_moscow_time()\n`;
     code += `            \n`;
     code += `            # Создаем структурированный ответ\n`;
     code += `            response_data = {\n`;
@@ -2480,8 +2485,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        user_text = message.text\n';
   code += '        \n';
   code += '        # Сохраняем любой текст как дополнительный ответ\n';
-  code += '        import datetime\n';
-  code += '        timestamp = datetime.datetime.now().isoformat()\n';
+  code += '        timestamp = get_moscow_time()\n';
   code += '        \n';
   code += '        response_data = {\n';
   code += '            "value": user_text,\n';
@@ -2546,8 +2550,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    \n';
   code += '    # Сохраняем ответ пользователя в структурированном формате\n';
   code += '    variable_name = input_config.get("variable", "user_response")\n';
-  code += '    import datetime\n';
-  code += '    timestamp = datetime.datetime.now().isoformat()\n';
+  code += '    timestamp = get_moscow_time()\n';
   code += '    node_id = input_config.get("node_id", "unknown")\n';
   code += '    \n';
   code += '    # Создаем структурированный ответ\n';

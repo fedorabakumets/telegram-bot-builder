@@ -12,8 +12,14 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.enums import ParseMode
 import asyncpg
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import json
+
+# Функция для получения московского времени
+def get_moscow_time():
+    """Возвращает текущее время в московском часовом поясе"""
+    moscow_tz = timezone(timedelta(hours=3))  # UTC+3 для Москвы
+    return datetime.now(moscow_tz).isoformat()
 
 # Токен вашего бота (получите у @BotFather)
 BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
@@ -429,28 +435,27 @@ async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQu
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
-    button_text = callback_query.data
     
     # Ищем текст кнопки по callback_data
-    button_display_text = callback_query.data
+    button_display_text = "Кнопка --2N9FeeykMHVVlsVnSQW"
     
     # Сохраняем ответ в базу данных
     import datetime
-    timestamp = datetime.datetime.now().isoformat()
+    timestamp = get_moscow_time()
     
     response_data = {
         "value": button_display_text,
-        "type": "inline_button",
+        "type": "button",
         "timestamp": timestamp,
         "nodeId": "--2N9FeeykMHVVlsVnSQW",
-        "variable": button_display_text,
+        "variable": "button_click",
         "source": "inline_button_click"
     }
     
     # Сохраняем в пользовательские данные
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["last_button_click"] = response_data
+    user_data[user_id]["button_click"] = button_display_text
     
     # Сохраняем в базу данных с правильным именем переменной
     await update_user_data_in_db(user_id, "button_click", button_display_text)
@@ -527,28 +532,27 @@ async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQu
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
-    button_text = callback_query.data
     
     # Ищем текст кнопки по callback_data
-    button_display_text = callback_query.data
+    button_display_text = "Кнопка yxbKRAHB-OuKFsHRJZyiV"
     
     # Сохраняем ответ в базу данных
     import datetime
-    timestamp = datetime.datetime.now().isoformat()
+    timestamp = get_moscow_time()
     
     response_data = {
         "value": button_display_text,
-        "type": "inline_button",
+        "type": "button",
         "timestamp": timestamp,
         "nodeId": "yxbKRAHB-OuKFsHRJZyiV",
-        "variable": button_display_text,
+        "variable": "button_click",
         "source": "inline_button_click"
     }
     
     # Сохраняем в пользовательские данные
     if user_id not in user_data:
         user_data[user_id] = {}
-    user_data[user_id]["last_button_click"] = response_data
+    user_data[user_id]["button_click"] = button_display_text
     
     # Сохраняем в базу данных с правильным именем переменной
     await update_user_data_in_db(user_id, "button_click", button_display_text)
@@ -639,8 +643,7 @@ async def handle_user_input(message: types.Message):
             
             # Сохраняем ответ пользователя
             variable_name = config.get("variable", "button_response")
-            import datetime
-            timestamp = datetime.datetime.now().isoformat()
+            timestamp = get_moscow_time()
             node_id = config.get("node_id", "unknown")
             
             # Создаем структурированный ответ
@@ -945,8 +948,7 @@ async def handle_user_input(message: types.Message):
         user_text = message.text
         
         # Сохраняем любой текст как дополнительный ответ
-        import datetime
-        timestamp = datetime.datetime.now().isoformat()
+        timestamp = get_moscow_time()
         
         response_data = {
             "value": user_text,
@@ -1011,8 +1013,7 @@ async def handle_user_input(message: types.Message):
     
     # Сохраняем ответ пользователя в структурированном формате
     variable_name = input_config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
+    timestamp = get_moscow_time()
     node_id = input_config.get("node_id", "unknown")
     
     # Создаем структурированный ответ
