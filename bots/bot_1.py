@@ -16,7 +16,7 @@ from datetime import datetime
 import json
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -256,13 +256,6 @@ async def start_handler(message: types.Message):
     
     if text is not None:
         pass  # Условие найдено, используем это сообщение
-    if user_record.get("interaction_count", 0) > 1:
-        text = """Рады видеть вас снова! 🎉
-Вы уже не новичок в нашем боте."""
-        logging.info("Условие выполнено: возвращающийся пользователь")
-    
-    if text is not None:
-        pass  # Условие найдено, используем это сообщение
     else:
         text = """Привет! 🌟
 Добро пожаловать в наш бот!
@@ -270,11 +263,19 @@ async def start_handler(message: types.Message):
         logging.info("Используется запасное сообщение")
     
     
-    # Создаем inline клавиатуру с кнопками
+    # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)
     builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🔍 Поиск в интернете", callback_data="source_search"))
+    builder.add(InlineKeyboardButton(text="👥 Друзья", callback_data="source_friends"))
+    builder.add(InlineKeyboardButton(text="📱 Реклама", callback_data="source_ads"))
     keyboard = builder.as_markup()
-    # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
+    
+    # Дополнительно: настраиваем сбор пользовательских ответов
+    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+    user_data[message.from_user.id]["input_collection_enabled"] = True
+    user_data[message.from_user.id]["input_node_id"] = "start_node"
+    user_data[message.from_user.id]["input_variable"] = "источник"
 
 @dp.message(Command("help"))
 async def help_handler(message: types.Message):
@@ -401,6 +402,132 @@ async def stats_handler(message: types.Message):
     await message.answer(text, reply_markup=ReplyKeyboardRemove())
 
 # Обработчики inline кнопок
+
+@dp.callback_query(lambda c: c.data == "source_search")
+async def handle_callback_source_search(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    button_text = "🔍 Поиск в интернете"
+    
+    # Сохраняем ответ в базу данных
+    import datetime
+    timestamp = datetime.datetime.now().isoformat()
+    
+    response_data = {
+        "value": button_text,
+        "type": "inline_button",
+        "timestamp": timestamp,
+        "nodeId": "source_search",
+        "variable": button_text,
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["last_button_click"] = response_data
+    
+    # Сохраняем в базу данных
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    text = """Отлично! 🎯
+Теперь мы знаем, что вы нашли нас через поиск.
+
+Попробуйте снова написать /start чтобы увидеть персонализированное приветствие!"""
+    builder = InlineKeyboardBuilder()
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+
+@dp.callback_query(lambda c: c.data == "source_friends")
+async def handle_callback_source_friends(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    button_text = "👥 Друзья"
+    
+    # Сохраняем ответ в базу данных
+    import datetime
+    timestamp = datetime.datetime.now().isoformat()
+    
+    response_data = {
+        "value": button_text,
+        "type": "inline_button",
+        "timestamp": timestamp,
+        "nodeId": "source_friends",
+        "variable": button_text,
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["last_button_click"] = response_data
+    
+    # Сохраняем в базу данных
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    text = """Замечательно! 👥
+Значит, вас порекомендовали друзья!
+
+Теперь попробуйте /start еще раз - увидите, как изменится приветствие!"""
+    builder = InlineKeyboardBuilder()
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+
+@dp.callback_query(lambda c: c.data == "source_ads")
+async def handle_callback_source_ads(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    button_text = "📱 Реклама"
+    
+    # Сохраняем ответ в базу данных
+    import datetime
+    timestamp = datetime.datetime.now().isoformat()
+    
+    response_data = {
+        "value": button_text,
+        "type": "inline_button",
+        "timestamp": timestamp,
+        "nodeId": "source_ads",
+        "variable": button_text,
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["last_button_click"] = response_data
+    
+    # Сохраняем в базу данных
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    text = """Понятно! 📱
+Вы пришли из рекламы.
+
+Введите /start снова, чтобы увидеть персональное сообщение!"""
+    builder = InlineKeyboardBuilder()
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -572,6 +699,39 @@ async def handle_user_input(message: types.Message):
         user_text = message.text
         
         # Находим узел для получения настроек
+        if waiting_node_id == "start_node":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = datetime.datetime.now().isoformat()
+            
+            # Создаем структурированный ответ
+            response_data = {
+                "value": user_text,
+                "type": "text",
+                "timestamp": timestamp,
+                "nodeId": "start_node",
+                "variable": "источник"
+            }
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["источник"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "источник", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: источник = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: источник = {user_text}")
+            
+            return
         
         # Если узел не найден
         logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")
