@@ -1440,9 +1440,22 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 440, y: 460 },
             data: {
-              messageText: "Печально, если что пиши старт",
-              keyboardType: "none",
-              buttons: [],
+              messageText: "Печально, если что напиши /start или /profile для просмотра профиля",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-restart-no",
+                  text: "🔄 Начать заново",
+                  action: "command",
+                  target: "/start"
+                },
+                {
+                  id: "btn-profile-no",
+                  text: "👤 Профиль",
+                  action: "command",
+                  target: "/profile"
+                }
+              ],
               markdown: false,
               resizeKeyboard: true,
               oneTimeKeyboard: false
@@ -1483,15 +1496,84 @@ export async function seedDefaultTemplates() {
             type: "message",
             position: { x: 80, y: 1580 },
             data: {
-              messageText: "Какой твой возраст?",
-              keyboardType: "none",
-              buttons: [],
-              markdown: false,
+              messageText: "Спасибо за предоставленную информацию! 🎉\n\nВаш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-view-profile",
+                  text: "👤 Посмотреть профиль",
+                  action: "command",
+                  target: "/profile"
+                },
+                {
+                  id: "btn-restart",
+                  text: "🔄 Начать заново",
+                  action: "command", 
+                  target: "/start"
+                }
+              ],
               inputVariable: "возраст",
               resizeKeyboard: true,
               enableTextInput: true,
               oneTimeKeyboard: false,
-              collectUserInput: true
+              collectUserInput: true,
+              markdown: false
+            }
+          },
+          {
+            id: "profile_command",
+            type: "command",
+            position: { x: 700, y: 100 },
+            data: {
+              command: "/profile",
+              description: "Показать профиль пользователя с собранными данными",
+              messageText: "👤 Профиль недоступен\n\nПохоже, вы еще не прошли опрос. Пожалуйста, введите /start чтобы заполнить профиль.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-start-survey",
+                  text: "📝 Пройти опрос",
+                  action: "command",
+                  target: "/start"
+                }
+              ],
+              fallbackMessage: "👤 Профиль недоступен\n\nПохоже, вы еще не прошли опрос. Пожалуйста, введите /start чтобы заполнить профиль.",
+              conditionalMessages: [
+                {
+                  id: "profile_with_all_data",
+                  priority: 50,
+                  condition: "user_data_exists",
+                  variableNames: ["источник", "желание", "пол", "имя", "возраст"],
+                  logicOperator: "AND",
+                  messageText: "👤 Ваш профиль:\n\n🔍 Источник: {источник}\n💭 Желание продолжить: {желание}\n⚧️ Пол: {пол}\n👋 Имя: {имя}\n🎂 Возраст: {возраст}\n\nПрофиль полностью заполнен! ✅"
+                },
+                {
+                  id: "profile_basic_info",
+                  priority: 40,
+                  condition: "user_data_exists",
+                  variableNames: ["имя", "возраст"],
+                  logicOperator: "AND",
+                  messageText: "👤 Ваш профиль:\n\n👋 Имя: {имя}\n🎂 Возраст: {возраст}\n\nОсновная информация заполнена. Хотите пройти полный опрос?"
+                },
+                {
+                  id: "profile_partial",
+                  priority: 30,
+                  condition: "user_data_exists",
+                  variableNames: ["источник"],
+                  logicOperator: "OR",
+                  messageText: "👤 Частичный профиль:\n\n🔍 Источник: {источник}\n\nПрофиль заполнен частично. Пройдите полный опрос для получения более детальной информации."
+                },
+                {
+                  id: "profile_any_data",
+                  priority: 10,
+                  condition: "user_data_exists", 
+                  variableNames: ["источник", "желание", "пол", "имя", "возраст"],
+                  logicOperator: "OR",
+                  messageText: "👤 Ваш профиль:\n\nУ нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.\n\nИмеющиеся данные:\n🔍 Источник: {источник}\n💭 Желание: {желание}\n⚧️ Пол: {пол}\n👋 Имя: {имя}\n🎂 Возраст: {возраст}"
+                }
+              ],
+              enableConditionalMessages: true,
+              markdown: false
             }
           }
         ],
