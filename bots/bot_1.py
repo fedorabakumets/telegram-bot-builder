@@ -229,29 +229,29 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = "Привет! Добро пожаловать! Откуда вы?"
+    text = "Привет! Добро пожаловать!Откуда вы?"
     
     # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="ОТ пети", callback_data="2L1Ozt0GXRq9hm5-OqmY8"))
-    builder.add(InlineKeyboardButton(text="от саши", callback_data="2L1Ozt0GXRq9hm5-OqmY8"))
+    builder.add(InlineKeyboardButton(text="ОТ саши", callback_data="MqVWkZdb-tUroJNGs8KlV"))
+    builder.add(InlineKeyboardButton(text="От ксюши", callback_data="MqVWkZdb-tUroJNGs8KlV"))
     keyboard = builder.as_markup()
     await message.answer(text, reply_markup=keyboard)
     
     # Дополнительно: настраиваем сбор пользовательских ответов
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
     user_data[message.from_user.id]["input_collection_enabled"] = True
-    user_data[message.from_user.id]["input_node_id"] = "m0B-jJMKYQyq8WPUSFZ2a"
-    user_data[message.from_user.id]["input_variable"] = "источник2"
+    user_data[message.from_user.id]["input_node_id"] = "CpQmikCKa310nCCr8kuPX"
+    user_data[message.from_user.id]["input_variable"] = "источник3"
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "2L1Ozt0GXRq9hm5-OqmY8")
-async def handle_callback_2L1Ozt0GXRq9hm5_OqmY8(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "MqVWkZdb-tUroJNGs8KlV")
+async def handle_callback_MqVWkZdb_tUroJNGs8KlV(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
-    button_text = "ОТ пети"
+    button_text = "ОТ саши"
     
     # Сохраняем ответ в базу данных
     import datetime
@@ -261,7 +261,7 @@ async def handle_callback_2L1Ozt0GXRq9hm5_OqmY8(callback_query: types.CallbackQu
         "value": button_text,
         "type": "inline_button",
         "timestamp": timestamp,
-        "nodeId": "2L1Ozt0GXRq9hm5-OqmY8",
+        "nodeId": "MqVWkZdb-tUroJNGs8KlV",
         "variable": "button_click",
         "source": "inline_button_click"
     }
@@ -275,7 +275,7 @@ async def handle_callback_2L1Ozt0GXRq9hm5_OqmY8(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, "button_click", response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
-    text = "ОТлично, вот ссылка"
+    text = "Новое сообщение"
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
         await callback_query.message.edit_text(text)
@@ -377,10 +377,10 @@ async def handle_user_input(message: types.Message):
                 target_node_id = option_target
                 try:
                     # Вызываем обработчик для целевого узла
-                    if target_node_id == "m0B-jJMKYQyq8WPUSFZ2a":
-                        await handle_callback_m0B_jJMKYQyq8WPUSFZ2a(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "2L1Ozt0GXRq9hm5-OqmY8":
-                        await handle_callback_2L1Ozt0GXRq9hm5_OqmY8(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    if target_node_id == "CpQmikCKa310nCCr8kuPX":
+                        await handle_callback_CpQmikCKa310nCCr8kuPX(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "MqVWkZdb-tUroJNGs8KlV":
+                        await handle_callback_MqVWkZdb_tUroJNGs8KlV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -391,10 +391,10 @@ async def handle_user_input(message: types.Message):
                 if next_node_id:
                     try:
                         # Вызываем обработчик для следующего узла
-                        if next_node_id == "m0B-jJMKYQyq8WPUSFZ2a":
-                            await handle_callback_m0B_jJMKYQyq8WPUSFZ2a(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "2L1Ozt0GXRq9hm5-OqmY8":
-                            await handle_callback_2L1Ozt0GXRq9hm5_OqmY8(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        if next_node_id == "CpQmikCKa310nCCr8kuPX":
+                            await handle_callback_CpQmikCKa310nCCr8kuPX(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "MqVWkZdb-tUroJNGs8KlV":
+                            await handle_callback_MqVWkZdb_tUroJNGs8KlV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -415,7 +415,7 @@ async def handle_user_input(message: types.Message):
         user_text = message.text
         
         # Находим узел для получения настроек
-        if waiting_node_id == "m0B-jJMKYQyq8WPUSFZ2a":
+        if waiting_node_id == "CpQmikCKa310nCCr8kuPX":
             
             # Сохраняем ответ пользователя
             import datetime
@@ -426,26 +426,19 @@ async def handle_user_input(message: types.Message):
                 "value": user_text,
                 "type": "text",
                 "timestamp": timestamp,
-                "nodeId": "m0B-jJMKYQyq8WPUSFZ2a",
-                "variable": "источник2"
+                "nodeId": "CpQmikCKa310nCCr8kuPX",
+                "variable": "источник3"
             }
             
             # Сохраняем в пользовательские данные
-            user_data[user_id]["источник2"] = response_data
-            
-            # Сохраняем в базу данных
-            saved_to_db = await update_user_data_in_db(user_id, "источник2", response_data)
-            if saved_to_db:
-                logging.info(f"✅ Данные сохранены в БД: источник2 = {user_text} (пользователь {user_id})")
-            else:
-                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            user_data[user_id]["источник3"] = response_data
             
             await message.answer("✅ Спасибо за ваш ответ!")
             
             # Очищаем состояние ожидания ввода
             del user_data[user_id]["waiting_for_input"]
             
-            logging.info(f"Получен пользовательский ввод: источник2 = {user_text}")
+            logging.info(f"Получен пользовательский ввод: источник3 = {user_text}")
             
             return
         
@@ -569,10 +562,10 @@ async def handle_user_input(message: types.Message):
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
             
             # Находим узел по ID и выполняем соответствующее действие
-            if next_node_id == "m0B-jJMKYQyq8WPUSFZ2a":
-                logging.info(f"Переход к узлу m0B-jJMKYQyq8WPUSFZ2a типа start")
-            elif next_node_id == "2L1Ozt0GXRq9hm5-OqmY8":
-                text = "ОТлично, вот ссылка"
+            if next_node_id == "CpQmikCKa310nCCr8kuPX":
+                logging.info(f"Переход к узлу CpQmikCKa310nCCr8kuPX типа start")
+            elif next_node_id == "MqVWkZdb-tUroJNGs8KlV":
+                text = "Новое сообщение"
                 parse_mode = None
                 await message.answer(text, parse_mode=parse_mode)
             else:

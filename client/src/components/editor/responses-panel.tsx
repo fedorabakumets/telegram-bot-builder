@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,8 +62,14 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
   // Fetch responses data
   const { data: responsesData = [], isLoading, refetch } = useQuery<ResponsesData[]>({
     queryKey: [`/api/projects/${projectId}/responses`],
-    staleTime: 30000, // 30 seconds
+    staleTime: 0, // Always fresh data
+    refetchInterval: 5000, // Refresh every 5 seconds
   });
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('Responses data updated:', responsesData);
+  }, [responsesData]);
 
   // Filter and sort responses
   const filteredAndSortedResponses = useMemo(() => {
