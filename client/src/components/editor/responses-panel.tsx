@@ -161,9 +161,10 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
     }
   };
 
-  const formatResponseKey = (key: string) => {
+  const formatResponseKey = (key: string, type?: string) => {
     if (key === 'button_click') return 'Нажатие кнопки';
     if (key.startsWith('response_')) return key.replace('response_', 'Ответ ');
+    if (type === 'inline_button') return 'Источник';
     return key;
   };
 
@@ -186,7 +187,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
           user.user_id,
           `"${formatUserName(user)}"`,
           user.username || '',
-          response.key,
+          formatResponseKey(response.key, response.type),
           `"${response.value}"`,
           response.type,
           response.timestamp || '',
@@ -404,7 +405,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                           <span className="font-medium">
-                                            {formatResponseKey(response.key)}
+                                            {formatResponseKey(response.key, response.type)}
                                           </span>
                                           <Badge 
                                             variant="outline" 
@@ -455,7 +456,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                           <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium">
-                                {formatResponseKey(response.key)}:
+                                {formatResponseKey(response.key, response.type)}:
                               </span>
                               <span className="text-sm text-muted-foreground truncate max-w-xs">
                                 {response.value}
