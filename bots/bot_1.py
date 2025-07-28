@@ -1,7 +1,9 @@
 """
 Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
-"""
+
+Команды для @BotFather:
+start - Запустить бота"""
 
 import asyncio
 import logging
@@ -195,6 +197,91 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
     }
 
 
+# Настройка меню команд
+async def set_bot_commands():
+    commands = [
+        BotCommand(command="start", description="Запустить бота"),
+    ]
+    await bot.set_my_commands(commands)
+
+
+@dp.message(CommandStart())
+async def start_handler(message: types.Message):
+
+    # Регистрируем пользователя в системе
+    user_id = message.from_user.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
+    
+    # Сохраняем пользователя в базу данных
+    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
+    
+    # Резервное сохранение в локальное хранилище
+    if not saved_to_db:
+        user_data[user_id] = {
+            "username": username,
+            "first_name": first_name,
+            "last_name": last_name,
+            "registered_at": message.date
+        }
+        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")
+    else:
+        logging.info(f"Пользователь {user_id} сохранен в базу данных")
+
+    text = "Привет! Добро пожаловать!"
+    
+    # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="kjkbkbj", callback_data="BH8SaEZHcAFjtOnQi60xo"))
+    keyboard = builder.as_markup()
+    await message.answer(text, reply_markup=keyboard)
+    
+    # Дополнительно: настраиваем сбор пользовательских ответов
+    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+    user_data[message.from_user.id]["input_collection_enabled"] = True
+    user_data[message.from_user.id]["input_node_id"] = "SXminKF4f7NoQB-rdIBxw"
+    user_data[message.from_user.id]["input_variable"] = "jlkgihoh"
+
+# Обработчики inline кнопок
+
+@dp.callback_query(lambda c: c.data == "BH8SaEZHcAFjtOnQi60xo")
+async def handle_callback_BH8SaEZHcAFjtOnQi60xo(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    button_text = "kjkbkbj"
+    
+    # Сохраняем ответ в базу данных
+    import datetime
+    timestamp = datetime.datetime.now().isoformat()
+    
+    response_data = {
+        "value": button_text,
+        "type": "inline_button",
+        "timestamp": timestamp,
+        "nodeId": "BH8SaEZHcAFjtOnQi60xo",
+        "variable": button_text,
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["last_button_click"] = response_data
+    
+    # Сохраняем в базу данных
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    text = "Новое сообщение"
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text)
+
 
 # Универсальный обработчик пользовательского ввода
 @dp.message(F.text)
@@ -277,12 +364,24 @@ async def handle_user_input(message: types.Message):
                     message_id=message.message_id
                 )
                 
+                if command == "/start":
+                    try:
+                        await start_handler(fake_message)
+                    except Exception as e:
+                        logging.error(f"Ошибка выполнения команды /start: {e}")
+                else:
+                    logging.warning(f"Неизвестная команда: {command}")
             elif option_action == "goto" and option_target:
                 # Переход к узлу
                 target_node_id = option_target
                 try:
                     # Вызываем обработчик для целевого узла
-                    pass  # No nodes to handle
+                    if target_node_id == "SXminKF4f7NoQB-rdIBxw":
+                        await handle_callback_SXminKF4f7NoQB_rdIBxw(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "BH8SaEZHcAFjtOnQi60xo":
+                        await handle_callback_BH8SaEZHcAFjtOnQi60xo(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    else:
+                        logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
                     logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")
             else:
@@ -291,7 +390,12 @@ async def handle_user_input(message: types.Message):
                 if next_node_id:
                     try:
                         # Вызываем обработчик для следующего узла
-                        pass  # No nodes to handle
+                        if next_node_id == "SXminKF4f7NoQB-rdIBxw":
+                            await handle_callback_SXminKF4f7NoQB_rdIBxw(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "BH8SaEZHcAFjtOnQi60xo":
+                            await handle_callback_BH8SaEZHcAFjtOnQi60xo(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
                         logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
             return
@@ -310,6 +414,39 @@ async def handle_user_input(message: types.Message):
         user_text = message.text
         
         # Находим узел для получения настроек
+        if waiting_node_id == "SXminKF4f7NoQB-rdIBxw":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = datetime.datetime.now().isoformat()
+            
+            # Создаем структурированный ответ
+            response_data = {
+                "value": user_text,
+                "type": "text",
+                "timestamp": timestamp,
+                "nodeId": "SXminKF4f7NoQB-rdIBxw",
+                "variable": "jlkgihoh"
+            }
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["jlkgihoh"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "jlkgihoh", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: jlkgihoh = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: jlkgihoh = {user_text}")
+            
+            return
         
         # Если узел не найден
         logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")
@@ -431,8 +568,14 @@ async def handle_user_input(message: types.Message):
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
             
             # Находим узел по ID и выполняем соответствующее действие
-            # No nodes available for navigation
-            logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")
+            if next_node_id == "SXminKF4f7NoQB-rdIBxw":
+                logging.info(f"Переход к узлу SXminKF4f7NoQB-rdIBxw типа start")
+            elif next_node_id == "BH8SaEZHcAFjtOnQi60xo":
+                text = "Новое сообщение"
+                parse_mode = None
+                await message.answer(text, parse_mode=parse_mode)
+            else:
+                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
             logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
@@ -444,6 +587,7 @@ async def main():
     try:
         # Инициализируем базу данных
         await init_database()
+        await set_bot_commands()
         print("🤖 Бот запущен и готов к работе!")
         await dp.start_polling(bot)
     except KeyboardInterrupt:
