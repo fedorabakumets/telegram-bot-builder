@@ -622,7 +622,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "имя"
-    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -809,7 +809,7 @@ async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["waiting_for_input"] = "yxbKRAHB-OuKFsHRJZyiV"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "возраст"
-    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = ""
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -1086,6 +1086,13 @@ async def handle_user_input(message: types.Message):
             # Сохраняем в пользовательские данные
             user_data[user_id]["имя"] = response_data
             
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "имя", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: имя = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
             await message.answer("✅ Спасибо за ваш ответ!")
             
             # Очищаем состояние ожидания ввода
@@ -1127,6 +1134,13 @@ async def handle_user_input(message: types.Message):
             
             # Сохраняем в пользовательские данные
             user_data[user_id]["возраст"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "возраст", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: возраст = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
             
             await message.answer("✅ Спасибо за ваш ответ!")
             
@@ -1266,7 +1280,9 @@ async def handle_user_input(message: types.Message):
                 parse_mode = None
                 await message.answer(text, parse_mode=parse_mode)
             elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-                logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа keyboard")
+                text = "Как тебя зовут?"
+                parse_mode = None
+                await message.answer(text, parse_mode=parse_mode)
             elif next_node_id == "yxbKRAHB-OuKFsHRJZyiV":
                 text = "Какой твой возраст?"
                 parse_mode = None
