@@ -639,6 +639,59 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    await callback_query.message.edit_text(success_text)\n';
               }
             }
+            // Handle regular message nodes (like source_friends, source_search, etc.)
+            else if (targetNode.type === 'message') {
+              const messageText = targetNode.data.messageText || "Сообщение";
+              const formattedText = formatTextForPython(messageText);
+              const parseMode = getParseMode(targetNode.data.formatMode);
+              
+              code += `    # Отправляем сообщение для узла ${targetNode.id}\n`;
+              code += `    text = ${formattedText}\n`;
+              
+              // Применяем замену переменных в тексте сообщения
+              code += `    # Подставляем значения переменных в текст сообщения\n`;
+              code += `    user_id = callback_query.from_user.id\n`;
+              code += `    user_record = await get_user_from_db(user_id)\n`;
+              code += `    if user_record and user_record.get("user_data"):\n`;
+              code += `        try:\n`;
+              code += `            import json\n`;
+              code += `            user_vars = json.loads(user_record["user_data"]) if isinstance(user_record["user_data"], str) else user_record["user_data"]\n`;
+              code += `            for var_name, var_value in user_vars.items():\n`;
+              code += `                if "{" + var_name + "}" in text:\n`;
+              code += `                    text = text.replace("{" + var_name + "}", str(var_value))\n`;
+              code += `        except (json.JSONDecodeError, TypeError):\n`;
+              code += `            pass\n`;
+              code += `    \n`;
+              
+              // Проверяем, есть ли у узла inline кнопки
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+                code += '    # Создаем inline клавиатуру для целевого узла\n';
+                code += '    builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach(btn => {
+                  if (btn.action === "url") {
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    const callbackData = btn.target || btn.id || 'no_action';
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command') {
+                    // Для кнопок команд создаем специальную callback_data
+                    const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+                  }
+                });
+                code += '    keyboard = builder.as_markup()\n';
+                code += '    try:\n';
+                code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseMode})\n`;
+                code += '    except Exception:\n';
+                code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
+              } else {
+                // Нет кнопок, отправляем просто текст
+                code += '    try:\n';
+                code += `        await callback_query.message.edit_text(text${parseMode})\n`;
+                code += '    except Exception:\n';
+                code += `        await callback_query.message.answer(text${parseMode})\n`;
+              }
+            }
             // Handle different target node types
             else if (targetNode.type === 'photo') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📸 Фото";

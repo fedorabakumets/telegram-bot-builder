@@ -258,9 +258,24 @@ async def start_handler(message: types.Message):
     variable_exists = False
     variable_value = None
     logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
-    if "источник" in user_data_dict:
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            logging.info(f"Parsed user_data: {parsed_data}")
+            if "источник" in parsed_data:
+                variable_value = parsed_data["источник"]
+                variable_exists = True
+                logging.info(f"Переменная 'источник' найдена в БД: {variable_value}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not variable_exists and "источник" in user_data_dict:
         variable_data = user_data_dict.get("источник")
-        logging.info(f"Найдена переменная 'источник': {variable_data}")
+        logging.info(f"Найдена переменная 'источник' локально: {variable_data}")
         if isinstance(variable_data, dict) and "value" in variable_data:
             variable_value = variable_data["value"]
             variable_exists = variable_value is not None
@@ -269,8 +284,9 @@ async def start_handler(message: types.Message):
             variable_value = str(variable_data)
             variable_exists = True
             logging.info(f"Простое значение: {variable_value}")
-    else:
-        logging.info(f"Переменная 'источник' не найдена в user_data_dict")
+    
+    if not variable_exists:
+        logging.info(f"Переменная 'источник' не найдена ни в БД, ни локально")
     if variable_exists:
         text = """С возвращением! 👋
 Вы пришли к нам из источника: {источник}
@@ -353,9 +369,24 @@ async def help_handler(message: types.Message):
     variable_exists = False
     variable_value = None
     logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
-    if "источник" in user_data_dict:
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            logging.info(f"Parsed user_data: {parsed_data}")
+            if "источник" in parsed_data:
+                variable_value = parsed_data["источник"]
+                variable_exists = True
+                logging.info(f"Переменная 'источник' найдена в БД: {variable_value}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not variable_exists and "источник" in user_data_dict:
         variable_data = user_data_dict.get("источник")
-        logging.info(f"Найдена переменная 'источник': {variable_data}")
+        logging.info(f"Найдена переменная 'источник' локально: {variable_data}")
         if isinstance(variable_data, dict) and "value" in variable_data:
             variable_value = variable_data["value"]
             variable_exists = variable_value is not None
@@ -364,8 +395,9 @@ async def help_handler(message: types.Message):
             variable_value = str(variable_data)
             variable_exists = True
             logging.info(f"Простое значение: {variable_value}")
-    else:
-        logging.info(f"Переменная 'источник' не найдена в user_data_dict")
+    
+    if not variable_exists:
+        logging.info(f"Переменная 'источник' не найдена ни в БД, ни локально")
     if variable_exists:
         text = """📖 Расширенная справка
 
@@ -446,9 +478,24 @@ async def stats_handler(message: types.Message):
     variable_exists = False
     variable_value = None
     logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
-    if "источник" in user_data_dict:
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            logging.info(f"Parsed user_data: {parsed_data}")
+            if "источник" in parsed_data:
+                variable_value = parsed_data["источник"]
+                variable_exists = True
+                logging.info(f"Переменная 'источник' найдена в БД: {variable_value}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not variable_exists and "источник" in user_data_dict:
         variable_data = user_data_dict.get("источник")
-        logging.info(f"Найдена переменная 'источник': {variable_data}")
+        logging.info(f"Найдена переменная 'источник' локально: {variable_data}")
         if isinstance(variable_data, dict) and "value" in variable_data:
             variable_value = variable_data["value"]
             variable_exists = variable_value is not None
@@ -457,8 +504,9 @@ async def stats_handler(message: types.Message):
             variable_value = str(variable_data)
             variable_exists = True
             logging.info(f"Простое значение: {variable_value}")
-    else:
-        logging.info(f"Переменная 'источник' не найдена в user_data_dict")
+    
+    if not variable_exists:
+        logging.info(f"Переменная 'источник' не найдена ни в БД, ни локально")
     if variable_exists:
         text = """📊 Ваша статистика:
 
