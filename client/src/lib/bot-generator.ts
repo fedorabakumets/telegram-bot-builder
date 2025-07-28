@@ -333,6 +333,13 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info("Условие выполнено: возвращающийся пользователь")\n`;
         break;
+        
+      default:
+        code += `${indentLevel}# Неизвестное условие: ${condition.condition}\n`;
+        code += `${indentLevel}${conditionKeyword} False:\n`;
+        code += `${indentLevel}    text = ${conditionText}\n`;
+        code += `${indentLevel}    logging.warning("Неизвестное условие: ${condition.condition}")\n`;
+        break;
     }
   }
   

@@ -1,5 +1,5 @@
 """
-Мой первый бот - исправлен выбор пола - Telegram Bot
+Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
 """
 
@@ -242,97 +242,18 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    # Проверяем условные сообщения
-    text = None
-    
-    # Получаем данные пользователя для проверки условий
-    user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
-    
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
-            user_data_dict = user_record["user_data"]
-        else:
-            user_data_dict = user_record
-    else:
-        user_data_dict = {}
-    
-    # Проверяем условие: user_data_exists
-    # Проверяем существование переменной с учетом структуры данных
-    variable_exists = False
-    variable_value = None
-    logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            logging.info(f"Parsed user_data: {parsed_data}")
-            if "источник" in parsed_data:
-                variable_value = parsed_data["источник"]
-                variable_exists = True
-                logging.info(f"Переменная 'источник' найдена в БД: {variable_value}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not variable_exists and "источник" in user_data_dict:
-        variable_data = user_data_dict.get("источник")
-        logging.info(f"Найдена переменная 'источник' локально: {variable_data}")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            variable_value = variable_data["value"]
-            variable_exists = variable_value is not None
-            logging.info(f"Структура dict с value: {variable_value}")
-        elif variable_data is not None:
-            variable_value = str(variable_data)
-            variable_exists = True
-            logging.info(f"Простое значение: {variable_value}")
-    
-    if not variable_exists:
-        logging.info(f"Переменная 'источник' не найдена ни в БД, ни локально")
-    if variable_exists:
-        text = """С возвращением! 👋
-Вы пришли к нам из источника: {источник}
-
-Рады видеть вас снова!"""
-        if "{источник}" in text:
-            if variable_value is not None:
-                text = text.replace("{источник}", str(variable_value))
-            else:
-                text = text.replace("{источник}", "источник")
-        logging.info(f"Условие выполнено: переменная источник = {variable_value}")
-    # Проверяем условие: returning_user
-    elif user_record.get("interaction_count", 0) > 1:
-        text = """Рады видеть вас снова! 🎉
-Вы уже не новичок в нашем боте."""
-        logging.info("Условие выполнено: возвращающийся пользователь")
-    else:
-        text = """Привет! 🌟
+    text = """Привет! 🌟
 Добро пожаловать в наш бот!
 Откуда вы узнали о нас?"""
-        logging.info("Используется основное сообщение узла")
+    await message.answer(text)
     
-    
-    # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🔍 Поиск в интернете", callback_data="source_search"))
-    builder.add(InlineKeyboardButton(text="👥 Друзья", callback_data="source_friends"))
-    builder.add(InlineKeyboardButton(text="📱 Реклама", callback_data="source_ads"))
-    keyboard = builder.as_markup()
-    await message.answer(text, reply_markup=keyboard)
-    
-    # Дополнительно: настраиваем сбор пользовательских ответов
+    # Устанавливаем состояние ожидания ввода
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-    user_data[message.from_user.id]["input_collection_enabled"] = True
-    user_data[message.from_user.id]["input_node_id"] = "start_node"
-    user_data[message.from_user.id]["input_variable"] = "источник"
+    user_data[message.from_user.id]["waiting_for_input"] = "start_node"
 
-@dp.message(Command("help"))
-async def help_handler(message: types.Message):
-    logging.info(f"Команда /help вызвана пользователем {message.from_user.id}")
+@dp.message(Command("profile"))
+async def profile_handler(message: types.Message):
+    logging.info(f"Команда /profile вызвана пользователем {message.from_user.id}")
     # Сохраняем пользователя и статистику использования команд
     user_id = message.from_user.id
     username = message.from_user.username
@@ -344,14 +265,14 @@ async def help_handler(message: types.Message):
     
     # Обновляем статистику команд в БД
     if saved_to_db:
-        await update_user_data_in_db(user_id, "command_help", datetime.now().isoformat())
+        await update_user_data_in_db(user_id, "command_profile", datetime.now().isoformat())
     
     # Резервное сохранение в локальное хранилище
     if user_id not in user_data:
         user_data[user_id] = {}
     if "commands_used" not in user_data[user_id]:
         user_data[user_id]["commands_used"] = {}
-    user_data[user_id]["commands_used"]["/help"] = user_data[user_id]["commands_used"].get("/help", 0) + 1
+    user_data[user_id]["commands_used"]["/profile"] = user_data[user_id]["commands_used"].get("/profile", 0) + 1
 
     # Проверяем условные сообщения
     text = None
@@ -370,10 +291,101 @@ async def help_handler(message: types.Message):
     else:
         user_data_dict = {}
     
-    # Проверяем условие: user_data_exists
-    # Проверяем существование переменной с учетом структуры данных
-    variable_exists = False
-    variable_value = None
+    # Проверяем условие: user_data_exists для переменных: возраст, желание, имя, источник, пол
+    # Проверяем существование переменных с учетом структуры данных
+    variables_exist = []
+    variable_values = {}
+    
+    # Проверяем переменную 'возраст'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "возраст" in parsed_data:
+                var_value________ = parsed_data["возраст"]
+                var_exists________ = True
+                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "возраст" in user_data_dict:
+        variable_data = user_data_dict.get("возраст")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["возраст"] = var_value________
+    # Проверяем переменную 'желание'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'желание' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "желание" in parsed_data:
+                var_value________ = parsed_data["желание"]
+                var_exists________ = True
+                logging.info(f"Переменная 'желание' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "желание" in user_data_dict:
+        variable_data = user_data_dict.get("желание")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["желание"] = var_value________
+    # Проверяем переменную 'имя'
+    var_exists____ = False
+    var_value____ = None
+    logging.info(f"Проверяем переменную 'имя' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "имя" in parsed_data:
+                var_value____ = parsed_data["имя"]
+                var_exists____ = True
+                logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists____ and "имя" in user_data_dict:
+        variable_data = user_data_dict.get("имя")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value____ = variable_data["value"]
+            var_exists____ = var_value____ is not None
+        elif variable_data is not None:
+            var_value____ = str(variable_data)
+            var_exists____ = True
+    
+    variables_exist.append(var_exists____)
+    variable_values["имя"] = var_value____
+    # Проверяем переменную 'источник'
+    var_exists_________ = False
+    var_value_________ = None
     logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
     
     # Проверяем в базе данных через parsed user_data
@@ -381,55 +393,412 @@ async def help_handler(message: types.Message):
         try:
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            logging.info(f"Parsed user_data: {parsed_data}")
             if "источник" in parsed_data:
-                variable_value = parsed_data["источник"]
-                variable_exists = True
-                logging.info(f"Переменная 'источник' найдена в БД: {variable_value}")
+                var_value_________ = parsed_data["источник"]
+                var_exists_________ = True
+                logging.info(f"Переменная 'источник' найдена в БД: {var_value_________}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
     
     # Проверяем в локальных данных если не найдено в БД
-    if not variable_exists and "источник" in user_data_dict:
+    if not var_exists_________ and "источник" in user_data_dict:
         variable_data = user_data_dict.get("источник")
-        logging.info(f"Найдена переменная 'источник' локально: {variable_data}")
         if isinstance(variable_data, dict) and "value" in variable_data:
-            variable_value = variable_data["value"]
-            variable_exists = variable_value is not None
-            logging.info(f"Структура dict с value: {variable_value}")
+            var_value_________ = variable_data["value"]
+            var_exists_________ = var_value_________ is not None
         elif variable_data is not None:
-            variable_value = str(variable_data)
-            variable_exists = True
-            logging.info(f"Простое значение: {variable_value}")
+            var_value_________ = str(variable_data)
+            var_exists_________ = True
     
-    if not variable_exists:
-        logging.info(f"Переменная 'источник' не найдена ни в БД, ни локально")
-    if variable_exists:
-        text = """📖 Расширенная справка
+    variables_exist.append(var_exists_________)
+    variable_values["источник"] = var_value_________
+    # Проверяем переменную 'пол'
+    var_exists____ = False
+    var_value____ = None
+    logging.info(f"Проверяем переменную 'пол' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "пол" in parsed_data:
+                var_value____ = parsed_data["пол"]
+                var_exists____ = True
+                logging.info(f"Переменная 'пол' найдена в БД: {var_value____}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists____ and "пол" in user_data_dict:
+        variable_data = user_data_dict.get("пол")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value____ = variable_data["value"]
+            var_exists____ = var_value____ is not None
+        elif variable_data is not None:
+            var_value____ = str(variable_data)
+            var_exists____ = True
+    
+    variables_exist.append(var_exists____)
+    variable_values["пол"] = var_value____
+    condition_met = all(variables_exist)
+    if condition_met:
+        text = """👤 Ваш профиль:
 
-Вы уже знакомы с ботом! Вот дополнительные возможности:
+🔍 Источник: {источник}
+💭 Желание продолжить: {желание}
+⚧️ Пол: {пол}
+👋 Имя: {имя}
+🎂 Возраст: {возраст}
 
-🔄 /start - персональное приветствие
-📊 /stats - ваша статистика"""
+Профиль полностью заполнен! ✅"""
+        if "{возраст}" in text:
+            if variable_values["возраст"] is not None:
+                text = text.replace("{возраст}", str(variable_values["возраст"]))
+            else:
+                text = text.replace("{возраст}", "возраст")
+        if "{желание}" in text:
+            if variable_values["желание"] is not None:
+                text = text.replace("{желание}", str(variable_values["желание"]))
+            else:
+                text = text.replace("{желание}", "желание")
+        if "{имя}" in text:
+            if variable_values["имя"] is not None:
+                text = text.replace("{имя}", str(variable_values["имя"]))
+            else:
+                text = text.replace("{имя}", "имя")
         if "{источник}" in text:
-            if variable_value is not None:
-                text = text.replace("{источник}", str(variable_value))
+            if variable_values["источник"] is not None:
+                text = text.replace("{источник}", str(variable_values["источник"]))
             else:
                 text = text.replace("{источник}", "источник")
-        logging.info(f"Условие выполнено: переменная источник = {variable_value}")
+        if "{пол}" in text:
+            if variable_values["пол"] is not None:
+                text = text.replace("{пол}", str(variable_values["пол"]))
+            else:
+                text = text.replace("{пол}", "пол")
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    # Проверяем условие: user_data_exists для переменных: возраст, имя
+    # Проверяем существование переменных с учетом структуры данных
+    variables_exist = []
+    variable_values = {}
+    
+    # Проверяем переменную 'возраст'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "возраст" in parsed_data:
+                var_value________ = parsed_data["возраст"]
+                var_exists________ = True
+                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "возраст" in user_data_dict:
+        variable_data = user_data_dict.get("возраст")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["возраст"] = var_value________
+    # Проверяем переменную 'имя'
+    var_exists____ = False
+    var_value____ = None
+    logging.info(f"Проверяем переменную 'имя' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "имя" in parsed_data:
+                var_value____ = parsed_data["имя"]
+                var_exists____ = True
+                logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists____ and "имя" in user_data_dict:
+        variable_data = user_data_dict.get("имя")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value____ = variable_data["value"]
+            var_exists____ = var_value____ is not None
+        elif variable_data is not None:
+            var_value____ = str(variable_data)
+            var_exists____ = True
+    
+    variables_exist.append(var_exists____)
+    variable_values["имя"] = var_value____
+    condition_met = all(variables_exist)
+    elif condition_met:
+        text = """👤 Ваш профиль:
+
+👋 Имя: {имя}
+🎂 Возраст: {возраст}
+
+Основная информация заполнена. Хотите пройти полный опрос?"""
+        if "{возраст}" in text:
+            if variable_values["возраст"] is not None:
+                text = text.replace("{возраст}", str(variable_values["возраст"]))
+            else:
+                text = text.replace("{возраст}", "возраст")
+        if "{имя}" in text:
+            if variable_values["имя"] is not None:
+                text = text.replace("{имя}", str(variable_values["имя"]))
+            else:
+                text = text.replace("{имя}", "имя")
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    # Проверяем условие: user_data_exists для переменных: источник
+    # Проверяем существование переменных с учетом структуры данных
+    variables_exist = []
+    variable_values = {}
+    
+    # Проверяем переменную 'источник'
+    var_exists_________ = False
+    var_value_________ = None
+    logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "источник" in parsed_data:
+                var_value_________ = parsed_data["источник"]
+                var_exists_________ = True
+                logging.info(f"Переменная 'источник' найдена в БД: {var_value_________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists_________ and "источник" in user_data_dict:
+        variable_data = user_data_dict.get("источник")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value_________ = variable_data["value"]
+            var_exists_________ = var_value_________ is not None
+        elif variable_data is not None:
+            var_value_________ = str(variable_data)
+            var_exists_________ = True
+    
+    variables_exist.append(var_exists_________)
+    variable_values["источник"] = var_value_________
+    condition_met = any(variables_exist)
+    elif condition_met:
+        text = """👤 Частичный профиль:
+
+🔍 Источник: {источник}
+
+Профиль заполнен частично. Пройдите полный опрос для получения более детальной информации."""
+        if "{источник}" in text:
+            if variable_values["источник"] is not None:
+                text = text.replace("{источник}", str(variable_values["источник"]))
+            else:
+                text = text.replace("{источник}", "источник")
+        logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
+    # Проверяем условие: user_data_exists для переменных: возраст, желание, имя, источник, пол
+    # Проверяем существование переменных с учетом структуры данных
+    variables_exist = []
+    variable_values = {}
+    
+    # Проверяем переменную 'возраст'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "возраст" in parsed_data:
+                var_value________ = parsed_data["возраст"]
+                var_exists________ = True
+                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "возраст" in user_data_dict:
+        variable_data = user_data_dict.get("возраст")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["возраст"] = var_value________
+    # Проверяем переменную 'желание'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'желание' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "желание" in parsed_data:
+                var_value________ = parsed_data["желание"]
+                var_exists________ = True
+                logging.info(f"Переменная 'желание' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "желание" in user_data_dict:
+        variable_data = user_data_dict.get("желание")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["желание"] = var_value________
+    # Проверяем переменную 'имя'
+    var_exists____ = False
+    var_value____ = None
+    logging.info(f"Проверяем переменную 'имя' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "имя" in parsed_data:
+                var_value____ = parsed_data["имя"]
+                var_exists____ = True
+                logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists____ and "имя" in user_data_dict:
+        variable_data = user_data_dict.get("имя")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value____ = variable_data["value"]
+            var_exists____ = var_value____ is not None
+        elif variable_data is not None:
+            var_value____ = str(variable_data)
+            var_exists____ = True
+    
+    variables_exist.append(var_exists____)
+    variable_values["имя"] = var_value____
+    # Проверяем переменную 'источник'
+    var_exists_________ = False
+    var_value_________ = None
+    logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "источник" in parsed_data:
+                var_value_________ = parsed_data["источник"]
+                var_exists_________ = True
+                logging.info(f"Переменная 'источник' найдена в БД: {var_value_________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists_________ and "источник" in user_data_dict:
+        variable_data = user_data_dict.get("источник")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value_________ = variable_data["value"]
+            var_exists_________ = var_value_________ is not None
+        elif variable_data is not None:
+            var_value_________ = str(variable_data)
+            var_exists_________ = True
+    
+    variables_exist.append(var_exists_________)
+    variable_values["источник"] = var_value_________
+    # Проверяем переменную 'пол'
+    var_exists____ = False
+    var_value____ = None
+    logging.info(f"Проверяем переменную 'пол' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "пол" in parsed_data:
+                var_value____ = parsed_data["пол"]
+                var_exists____ = True
+                logging.info(f"Переменная 'пол' найдена в БД: {var_value____}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists____ and "пол" in user_data_dict:
+        variable_data = user_data_dict.get("пол")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value____ = variable_data["value"]
+            var_exists____ = var_value____ is not None
+        elif variable_data is not None:
+            var_value____ = str(variable_data)
+            var_exists____ = True
+    
+    variables_exist.append(var_exists____)
+    variable_values["пол"] = var_value____
+    condition_met = any(variables_exist)
+    elif condition_met:
+        text = """👤 Ваш профиль:
+
+У нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.
+
+Имеющиеся данные:
+🔍 Источник: {источник}
+💭 Желание: {желание}
+⚧️ Пол: {пол}
+👋 Имя: {имя}
+🎂 Возраст: {возраст}"""
+        if "{возраст}" in text:
+            if variable_values["возраст"] is not None:
+                text = text.replace("{возраст}", str(variable_values["возраст"]))
+            else:
+                text = text.replace("{возраст}", "возраст")
+        if "{желание}" in text:
+            if variable_values["желание"] is not None:
+                text = text.replace("{желание}", str(variable_values["желание"]))
+            else:
+                text = text.replace("{желание}", "желание")
+        if "{имя}" in text:
+            if variable_values["имя"] is not None:
+                text = text.replace("{имя}", str(variable_values["имя"]))
+            else:
+                text = text.replace("{имя}", "имя")
+        if "{источник}" in text:
+            if variable_values["источник"] is not None:
+                text = text.replace("{источник}", str(variable_values["источник"]))
+            else:
+                text = text.replace("{источник}", "источник")
+        if "{пол}" in text:
+            if variable_values["пол"] is not None:
+                text = text.replace("{пол}", str(variable_values["пол"]))
+            else:
+                text = text.replace("{пол}", "пол")
+        logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
     else:
-        text = """📖 Базовая справка
+        text = """👤 Профиль недоступен
 
-Этот бот показывает, как работают условные сообщения:
-
-1. При первом /start вы увидите обычное приветствие
-2. Выберите источник
-3. При повторном /start - персональное сообщение
-
-Команды:
-🔄 /start - запуск
-❓ /help - эта справка
-📊 /stats - статистика"""
+Похоже, вы еще не прошли опрос. Пожалуйста, введите /start чтобы заполнить профиль."""
         logging.info("Используется запасное сообщение")
     
     
@@ -439,123 +808,98 @@ async def help_handler(message: types.Message):
     # Отправляем сообщение с прикрепленными inline кнопками
     await message.answer(text, reply_markup=keyboard)
 
-@dp.message(Command("stats"))
-async def stats_handler(message: types.Message):
-    logging.info(f"Команда /stats вызвана пользователем {message.from_user.id}")
-    # Сохраняем пользователя и статистику использования команд
-    user_id = message.from_user.id
-    username = message.from_user.username
-    first_name = message.from_user.first_name
-    last_name = message.from_user.last_name
-    
-    # Сохраняем пользователя в базу данных
-    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
-    
-    # Обновляем статистику команд в БД
-    if saved_to_db:
-        await update_user_data_in_db(user_id, "command_stats", datetime.now().isoformat())
-    
-    # Резервное сохранение в локальное хранилище
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "commands_used" not in user_data[user_id]:
-        user_data[user_id]["commands_used"] = {}
-    user_data[user_id]["commands_used"]["/stats"] = user_data[user_id]["commands_used"].get("/stats", 0) + 1
-
-    # Проверяем условные сообщения
-    text = None
-    
-    # Получаем данные пользователя для проверки условий
-    user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
-    
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record and isinstance(user_record["user_data"], dict):
-            user_data_dict = user_record["user_data"]
-        else:
-            user_data_dict = user_record
-    else:
-        user_data_dict = {}
-    
-    # Проверяем условие: user_data_exists
-    # Проверяем существование переменной с учетом структуры данных
-    variable_exists = False
-    variable_value = None
-    logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            logging.info(f"Parsed user_data: {parsed_data}")
-            if "источник" in parsed_data:
-                variable_value = parsed_data["источник"]
-                variable_exists = True
-                logging.info(f"Переменная 'источник' найдена в БД: {variable_value}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not variable_exists and "источник" in user_data_dict:
-        variable_data = user_data_dict.get("источник")
-        logging.info(f"Найдена переменная 'источник' локально: {variable_data}")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            variable_value = variable_data["value"]
-            variable_exists = variable_value is not None
-            logging.info(f"Структура dict с value: {variable_value}")
-        elif variable_data is not None:
-            variable_value = str(variable_data)
-            variable_exists = True
-            logging.info(f"Простое значение: {variable_value}")
-    
-    if not variable_exists:
-        logging.info(f"Переменная 'источник' не найдена ни в БД, ни локально")
-    if variable_exists:
-        text = """📊 Ваша статистика:
-
-🔍 Источник: {источник}
-👤 Статус: Постоянный пользователь
-🎯 Персонализация: Включена"""
-        if "{источник}" in text:
-            if variable_value is not None:
-                text = text.replace("{источник}", str(variable_value))
-            else:
-                text = text.replace("{источник}", "источник")
-        logging.info(f"Условие выполнено: переменная источник = {variable_value}")
-    else:
-        text = """📊 Статистика
-
-👤 Статус: Новый пользователь
-🔍 Источник: Не указан
-🎯 Персонализация: Отключена
-
-Выберите источник в /start для активации персонализации!"""
-        logging.info("Используется запасное сообщение")
-    
-    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
-    await message.answer(text, reply_markup=ReplyKeyboardRemove())
-
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "btn_search")
-async def handle_callback_btn_search(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "btn-1")
+async def handle_callback_btn_1(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    button_text = "🔍 Поиск в интернете"
+    button_text = "Да"
     
     # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "источник", button_text)
-    logging.info(f"Переменная источник сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "желание", button_text)
+    logging.info(f"Переменная желание сохранена: " + str(button_text) + f" (пользователь {user_id})")
     
     
-    # Отправляем сообщение для узла source_search
-    text = """Отлично! 🎯
-Теперь мы знаем, что вы нашли нас через поиск.
+    text = "Какой твой пол?"
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода (основной цикл)
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "nr3wIiTfBYYmpkkXMNH7n"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "пол"
+    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    
+    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Женщина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_0_btn_0"))
+    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_1_btn_1"))
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+    
 
-Попробуйте снова написать /start чтобы увидеть персонализированное приветствие!"""
+@dp.callback_query(lambda c: c.data == "btn-2")
+async def handle_callback_btn_2(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Нет"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "желание", button_text)
+    logging.info(f"Переменная желание сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла 1BHSLWPMao9qQvSAzuzRl
+    text = "Печально, если что напиши /start или /profile для просмотра профиля"
     # Подставляем значения переменных в текст сообщения
     user_id = callback_query.from_user.id
     user_record = await get_user_from_db(user_id)
@@ -571,97 +915,166 @@ async def handle_callback_btn_search(callback_query: types.CallbackQuery):
     
     # Создаем inline клавиатуру для целевого узла
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🔄 Попробовать /start снова", callback_data="cmd_start"))
+    builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+    builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
     keyboard = builder.as_markup()
     try:
         await callback_query.message.edit_text(text, reply_markup=keyboard)
     except Exception:
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_friends")
-async def handle_callback_btn_friends(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "btn-female")
+async def handle_callback_btn_female(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    button_text = "👥 Друзья"
+    button_text = "Женщина"
     
     # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "источник", button_text)
-    logging.info(f"Переменная источник сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "пол", button_text)
+    logging.info(f"Переменная пол сохранена: " + str(button_text) + f" (пользователь {user_id})")
     
     
-    # Отправляем сообщение для узла source_friends
-    text = """Замечательно! 👥
-Значит, вас порекомендовали друзья!
-
-Теперь попробуйте /start еще раз - увидите, как изменится приветствие!"""
-    # Подставляем значения переменных в текст сообщения
-    user_id = callback_query.from_user.id
+    text = "Как тебя зовут?"
+    # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
-    if user_record and user_record.get("user_data"):
-        try:
-            import json
-            user_vars = json.loads(user_record["user_data"]) if isinstance(user_record["user_data"], str) else user_record["user_data"]
-            for var_name, var_value in user_vars.items():
-                if "{" + var_name + "}" in text:
-                    text = text.replace("{" + var_name + "}", str(var_value))
-        except (json.JSONDecodeError, TypeError):
-            pass
+    if not user_record:
+        user_record = user_data.get(user_id, {})
     
-    # Создаем inline клавиатуру для целевого узла
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🔄 Попробовать /start снова", callback_data="cmd_start"))
-    keyboard = builder.as_markup()
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода (основной цикл)
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "имя"
+    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
+    
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception:
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        await callback_query.message.edit_text(text)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text)
+    
 
-@dp.callback_query(lambda c: c.data == "btn_ads")
-async def handle_callback_btn_ads(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "btn-male")
+async def handle_callback_btn_male(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    button_text = "📱 Реклама"
+    button_text = "Мужчина"
     
     # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "источник", button_text)
-    logging.info(f"Переменная источник сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "пол", button_text)
+    logging.info(f"Переменная пол сохранена: " + str(button_text) + f" (пользователь {user_id})")
     
     
-    # Отправляем сообщение для узла source_ads
-    text = """Понятно! 📱
-Вы пришли из рекламы.
-
-Введите /start снова, чтобы увидеть персональное сообщение!"""
-    # Подставляем значения переменных в текст сообщения
-    user_id = callback_query.from_user.id
+    text = "Как тебя зовут?"
+    # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
-    if user_record and user_record.get("user_data"):
-        try:
-            import json
-            user_vars = json.loads(user_record["user_data"]) if isinstance(user_record["user_data"], str) else user_record["user_data"]
-            for var_name, var_value in user_vars.items():
-                if "{" + var_name + "}" in text:
-                    text = text.replace("{" + var_name + "}", str(var_value))
-        except (json.JSONDecodeError, TypeError):
-            pass
+    if not user_record:
+        user_record = user_data.get(user_id, {})
     
-    # Создаем inline клавиатуру для целевого узла
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🔄 Попробовать /start снова", callback_data="cmd_start"))
-    keyboard = builder.as_markup()
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода (основной цикл)
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "имя"
+    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
+    
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception:
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        await callback_query.message.edit_text(text)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text)
+    
 
-@dp.callback_query(lambda c: c.data == "source_search" or c.data.startswith("source_search_btn_"))
-async def handle_callback_source_search(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "nr3wIiTfBYYmpkkXMNH7n" or c.data.startswith("nr3wIiTfBYYmpkkXMNH7n_btn_"))
+async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
     
     # Ищем текст кнопки по callback_data
-    button_display_text = "🔍 Поиск в интернете"
+    button_display_text = "Да"
     
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
@@ -670,7 +1083,7 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
         "value": button_display_text,
         "type": "button",
         "timestamp": timestamp,
-        "nodeId": "source_search",
+        "nodeId": "nr3wIiTfBYYmpkkXMNH7n",
         "variable": "button_click",
         "source": "inline_button_click"
     }
@@ -681,13 +1094,106 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
     user_data[user_id]["button_click"] = button_display_text
     
     # Сохраняем в базу данных с правильным именем переменной
-    await update_user_data_in_db(user_id, "источник", "🔍 Поиск в интернете")
-    logging.info(f"Переменная источник сохранена: " + str("🔍 Поиск в интернете") + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "желание", button_display_text)
+    logging.info(f"Переменная желание сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
-    text = """Отлично! 🎯
-Теперь мы знаем, что вы нашли нас через поиск.
+    text = "Какой твой пол?"
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "nr3wIiTfBYYmpkkXMNH7n"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "пол"
+    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    
+    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Женщина", callback_data="btn-female"))
+    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="btn-male"))
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+    
 
-Попробуйте снова написать /start чтобы увидеть персонализированное приветствие!"""
+@dp.callback_query(lambda c: c.data == "1BHSLWPMao9qQvSAzuzRl" or c.data.startswith("1BHSLWPMao9qQvSAzuzRl_btn_"))
+async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Нет"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = {
+        "value": button_display_text,
+        "type": "button",
+        "timestamp": timestamp,
+        "nodeId": "1BHSLWPMao9qQvSAzuzRl",
+        "variable": "button_click",
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "желание", button_display_text)
+    logging.info(f"Переменная желание сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    text = "Печально, если что напиши /start или /profile для просмотра профиля"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -739,14 +1245,19 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "source_friends" or c.data.startswith("source_friends_btn_"))
-async def handle_callback_source_friends(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "XDSrTrNly5EtDtr85nN4P" or c.data.startswith("XDSrTrNly5EtDtr85nN4P_btn_"))
+async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
     
     # Ищем текст кнопки по callback_data
-    button_display_text = "👥 Друзья"
+    # Определяем текст кнопки по callback_data
+    button_display_text = "Неизвестная кнопка"
+    if callback_query.data.endswith("_btn_0"):
+        button_display_text = "Женщина"
+    if callback_query.data.endswith("_btn_1"):
+        button_display_text = "Мужчина"
     
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
@@ -755,7 +1266,7 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
         "value": button_display_text,
         "type": "button",
         "timestamp": timestamp,
-        "nodeId": "source_friends",
+        "nodeId": "XDSrTrNly5EtDtr85nN4P",
         "variable": "button_click",
         "source": "inline_button_click"
     }
@@ -766,13 +1277,10 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
     user_data[user_id]["button_click"] = button_display_text
     
     # Сохраняем в базу данных с правильным именем переменной
-    await update_user_data_in_db(user_id, "источник", "👥 Друзья")
-    logging.info(f"Переменная источник сохранена: " + str("👥 Друзья") + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "пол", button_display_text)
+    logging.info(f"Переменная пол сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
-    text = """Замечательно! 👥
-Значит, вас порекомендовали друзья!
-
-Теперь попробуйте /start еще раз - увидите, как изменится приветствие!"""
+    text = "Как тебя зовут?"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -815,23 +1323,32 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
-    builder = InlineKeyboardBuilder()
-    keyboard = builder.as_markup()
+    # Активируем сбор пользовательского ввода
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "имя"
+    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
+    
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
+        await callback_query.message.edit_text(text)
     except Exception as e:
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        await callback_query.message.answer(text)
+    
 
-@dp.callback_query(lambda c: c.data == "source_ads" or c.data.startswith("source_ads_btn_"))
-async def handle_callback_source_ads(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "--2N9FeeykMHVVlsVnSQW" or c.data.startswith("--2N9FeeykMHVVlsVnSQW_btn_"))
+async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
     
     # Ищем текст кнопки по callback_data
-    button_display_text = "📱 Реклама"
+    button_display_text = "Кнопка --2N9FeeykMHVVlsVnSQW"
     
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
@@ -840,7 +1357,7 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
         "value": button_display_text,
         "type": "button",
         "timestamp": timestamp,
-        "nodeId": "source_ads",
+        "nodeId": "--2N9FeeykMHVVlsVnSQW",
         "variable": "button_click",
         "source": "inline_button_click"
     }
@@ -851,13 +1368,10 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
     user_data[user_id]["button_click"] = button_display_text
     
     # Сохраняем в базу данных с правильным именем переменной
-    await update_user_data_in_db(user_id, "источник", "📱 Реклама")
-    logging.info(f"Переменная источник сохранена: " + str("📱 Реклама") + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "button_click", button_display_text)
+    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
-    text = """Понятно! 📱
-Вы пришли из рекламы.
-
-Введите /start снова, чтобы увидеть персональное сообщение!"""
+    text = "Ты хочешься продолжить свою жизнь с чатом?"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -900,6 +1414,115 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "--2N9FeeykMHVVlsVnSQW"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "желание"
+    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    
+    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Да", callback_data="btn-1"))
+    builder.add(InlineKeyboardButton(text="Нет", callback_data="btn-2"))
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+    
+
+@dp.callback_query(lambda c: c.data == "yxbKRAHB-OuKFsHRJZyiV" or c.data.startswith("yxbKRAHB-OuKFsHRJZyiV_btn_"))
+async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Кнопка yxbKRAHB-OuKFsHRJZyiV"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = {
+        "value": button_display_text,
+        "type": "button",
+        "timestamp": timestamp,
+        "nodeId": "yxbKRAHB-OuKFsHRJZyiV",
+        "variable": "button_click",
+        "source": "inline_button_click"
+    }
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "button_click", button_display_text)
+    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    text = """Спасибо за предоставленную информацию! 🎉
+
+Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "yxbKRAHB-OuKFsHRJZyiV"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "возраст"
+    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    
+    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
     builder = InlineKeyboardBuilder()
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -908,6 +1531,7 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
     except Exception as e:
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
+    
 
 
 # Универсальный обработчик пользовательского ввода
@@ -995,16 +1619,11 @@ async def handle_user_input(message: types.Message):
                         await start_handler(fake_message)
                     except Exception as e:
                         logging.error(f"Ошибка выполнения команды /start: {e}")
-                elif command == "/help":
+                elif command == "/profile":
                     try:
-                        await _help_handler(fake_message)
+                        await _profile_handler(fake_message)
                     except Exception as e:
-                        logging.error(f"Ошибка выполнения команды /help: {e}")
-                elif command == "/stats":
-                    try:
-                        await _stats_handler(fake_message)
-                    except Exception as e:
-                        logging.error(f"Ошибка выполнения команды /stats: {e}")
+                        logging.error(f"Ошибка выполнения команды /profile: {e}")
                 else:
                     logging.warning(f"Неизвестная команда: {command}")
             elif option_action == "goto" and option_target:
@@ -1014,16 +1633,18 @@ async def handle_user_input(message: types.Message):
                     # Вызываем обработчик для целевого узла
                     if target_node_id == "start_node":
                         await handle_callback_start_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "source_search":
-                        await handle_callback_source_search(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "source_friends":
-                        await handle_callback_source_friends(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "source_ads":
-                        await handle_callback_source_ads(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "help_command":
-                        await handle_callback_help_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "stats_command":
-                        await handle_callback_stats_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "--2N9FeeykMHVVlsVnSQW":
+                        await handle_callback___2N9FeeykMHVVlsVnSQW(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "nr3wIiTfBYYmpkkXMNH7n":
+                        await handle_callback_nr3wIiTfBYYmpkkXMNH7n(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "1BHSLWPMao9qQvSAzuzRl":
+                        await handle_callback_1BHSLWPMao9qQvSAzuzRl(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "XDSrTrNly5EtDtr85nN4P":
+                        await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "yxbKRAHB-OuKFsHRJZyiV":
+                        await handle_callback_yxbKRAHB_OuKFsHRJZyiV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "profile_command":
+                        await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -1036,16 +1657,18 @@ async def handle_user_input(message: types.Message):
                         # Вызываем обработчик для следующего узла
                         if next_node_id == "start_node":
                             await handle_callback_start_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "source_search":
-                            await handle_callback_source_search(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "source_friends":
-                            await handle_callback_source_friends(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "source_ads":
-                            await handle_callback_source_ads(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "help_command":
-                            await handle_callback_help_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "stats_command":
-                            await handle_callback_stats_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
+                            await handle_callback___2N9FeeykMHVVlsVnSQW(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
+                            await handle_callback_nr3wIiTfBYYmpkkXMNH7n(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
+                            await handle_callback_1BHSLWPMao9qQvSAzuzRl(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+                            await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "yxbKRAHB-OuKFsHRJZyiV":
+                            await handle_callback_yxbKRAHB_OuKFsHRJZyiV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "profile_command":
+                            await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -1097,6 +1720,142 @@ async def handle_user_input(message: types.Message):
             del user_data[user_id]["waiting_for_input"]
             
             logging.info(f"Получен пользовательский ввод: источник = {user_text}")
+            
+            # Переходим к следующему узлу
+            try:
+                # Создаем фиктивный callback_query для навигации
+                import types as aiogram_types
+                import asyncio
+                fake_callback = aiogram_types.SimpleNamespace(
+                    id="input_nav",
+                    from_user=message.from_user,
+                    chat_instance="",
+                    data="--2N9FeeykMHVVlsVnSQW",
+                    message=message,
+                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
+                )
+                await handle_callback___2N9FeeykMHVVlsVnSQW(fake_callback)
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
+            return
+        elif waiting_node_id == "--2N9FeeykMHVVlsVnSQW":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Создаем структурированный ответ
+            response_data = {
+                "value": user_text,
+                "type": "text",
+                "timestamp": timestamp,
+                "nodeId": "--2N9FeeykMHVVlsVnSQW",
+                "variable": "желание"
+            }
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["желание"] = response_data
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: желание = {user_text}")
+            
+            return
+        elif waiting_node_id == "nr3wIiTfBYYmpkkXMNH7n":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Создаем структурированный ответ
+            response_data = {
+                "value": user_text,
+                "type": "text",
+                "timestamp": timestamp,
+                "nodeId": "nr3wIiTfBYYmpkkXMNH7n",
+                "variable": "пол"
+            }
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["пол"] = response_data
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: пол = {user_text}")
+            
+            return
+        elif waiting_node_id == "XDSrTrNly5EtDtr85nN4P":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Создаем структурированный ответ
+            response_data = {
+                "value": user_text,
+                "type": "text",
+                "timestamp": timestamp,
+                "nodeId": "XDSrTrNly5EtDtr85nN4P",
+                "variable": "имя"
+            }
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["имя"] = response_data
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: имя = {user_text}")
+            
+            # Переходим к следующему узлу
+            try:
+                # Создаем фиктивный callback_query для навигации
+                import types as aiogram_types
+                import asyncio
+                fake_callback = aiogram_types.SimpleNamespace(
+                    id="input_nav",
+                    from_user=message.from_user,
+                    chat_instance="",
+                    data="yxbKRAHB-OuKFsHRJZyiV",
+                    message=message,
+                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
+                )
+                await handle_callback_yxbKRAHB_OuKFsHRJZyiV(fake_callback)
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
+            return
+        elif waiting_node_id == "yxbKRAHB-OuKFsHRJZyiV":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Создаем структурированный ответ
+            response_data = {
+                "value": user_text,
+                "type": "text",
+                "timestamp": timestamp,
+                "nodeId": "yxbKRAHB-OuKFsHRJZyiV",
+                "variable": "возраст"
+            }
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["возраст"] = response_data
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: возраст = {user_text}")
             
             return
         
@@ -1220,37 +1979,28 @@ async def handle_user_input(message: types.Message):
             # Находим узел по ID и выполняем соответствующее действие
             if next_node_id == "start_node":
                 logging.info(f"Переход к узлу start_node типа start")
-            elif next_node_id == "source_search":
-                text = """Отлично! 🎯
-Теперь мы знаем, что вы нашли нас через поиск.
-
-Попробуйте снова написать /start чтобы увидеть персонализированное приветствие!"""
+            elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
+                logging.info(f"Переход к узлу --2N9FeeykMHVVlsVnSQW типа keyboard")
+            elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
+                logging.info(f"Переход к узлу nr3wIiTfBYYmpkkXMNH7n типа keyboard")
+            elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
+                text = "Печально, если что напиши /start или /profile для просмотра профиля"
                 parse_mode = None
                 builder = InlineKeyboardBuilder()
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "source_friends":
-                text = """Замечательно! 👥
-Значит, вас порекомендовали друзья!
+            elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+                logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа keyboard")
+            elif next_node_id == "yxbKRAHB-OuKFsHRJZyiV":
+                text = """Спасибо за предоставленную информацию! 🎉
 
-Теперь попробуйте /start еще раз - увидите, как изменится приветствие!"""
+Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
                 parse_mode = None
                 builder = InlineKeyboardBuilder()
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "source_ads":
-                text = """Понятно! 📱
-Вы пришли из рекламы.
-
-Введите /start снова, чтобы увидеть персональное сообщение!"""
-                parse_mode = None
-                builder = InlineKeyboardBuilder()
-                keyboard = builder.as_markup()
-                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "help_command":
-                logging.info(f"Переход к узлу help_command типа command")
-            elif next_node_id == "stats_command":
-                logging.info(f"Переход к узлу stats_command типа command")
+            elif next_node_id == "profile_command":
+                logging.info(f"Переход к узлу profile_command типа command")
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
@@ -1276,6 +2026,24 @@ async def handle_cmd_start(callback_query: types.CallbackQuery):
     # Вызываем start handler
     await start_handler(fake_message)
     logging.info(f"Команда /start выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
+
+@dp.callback_query(lambda c: c.data == "cmd_profile")
+async def handle_cmd_profile(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Симулируем выполнение команды /profile
+    
+    # Создаем fake message object для команды
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.date = callback_query.message.date
+    fake_message.answer = callback_query.message.answer
+    fake_message.edit_text = callback_query.message.edit_text
+    
+    # Вызываем profile handler
+    await profile_handler(fake_message)
+    logging.info(f"Команда /profile выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
 
 
 # Запуск бота
