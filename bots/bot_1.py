@@ -257,14 +257,20 @@ async def start_handler(message: types.Message):
     # Проверяем существование переменной с учетом структуры данных
     variable_exists = False
     variable_value = None
+    logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
     if "источник" in user_data_dict:
         variable_data = user_data_dict.get("источник")
+        logging.info(f"Найдена переменная 'источник': {variable_data}")
         if isinstance(variable_data, dict) and "value" in variable_data:
             variable_value = variable_data["value"]
             variable_exists = variable_value is not None
+            logging.info(f"Структура dict с value: {variable_value}")
         elif variable_data is not None:
             variable_value = str(variable_data)
             variable_exists = True
+            logging.info(f"Простое значение: {variable_value}")
+    else:
+        logging.info(f"Переменная 'источник' не найдена в user_data_dict")
     if variable_exists:
         text = """С возвращением! 👋
 Вы пришли к нам из источника: {источник}
@@ -339,14 +345,20 @@ async def help_handler(message: types.Message):
     # Проверяем существование переменной с учетом структуры данных
     variable_exists = False
     variable_value = None
+    logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
     if "источник" in user_data_dict:
         variable_data = user_data_dict.get("источник")
+        logging.info(f"Найдена переменная 'источник': {variable_data}")
         if isinstance(variable_data, dict) and "value" in variable_data:
             variable_value = variable_data["value"]
             variable_exists = variable_value is not None
+            logging.info(f"Структура dict с value: {variable_value}")
         elif variable_data is not None:
             variable_value = str(variable_data)
             variable_exists = True
+            logging.info(f"Простое значение: {variable_value}")
+    else:
+        logging.info(f"Переменная 'источник' не найдена в user_data_dict")
     if variable_exists:
         text = """📖 Расширенная справка
 
@@ -424,14 +436,20 @@ async def stats_handler(message: types.Message):
     # Проверяем существование переменной с учетом структуры данных
     variable_exists = False
     variable_value = None
+    logging.info(f"Проверяем переменную 'источник' в user_data_dict: {user_data_dict}")
     if "источник" in user_data_dict:
         variable_data = user_data_dict.get("источник")
+        logging.info(f"Найдена переменная 'источник': {variable_data}")
         if isinstance(variable_data, dict) and "value" in variable_data:
             variable_value = variable_data["value"]
             variable_exists = variable_value is not None
+            logging.info(f"Структура dict с value: {variable_value}")
         elif variable_data is not None:
             variable_value = str(variable_data)
             variable_exists = True
+            logging.info(f"Простое значение: {variable_value}")
+    else:
+        logging.info(f"Переменная 'источник' не найдена в user_data_dict")
     if variable_exists:
         text = """📊 Ваша статистика:
 
