@@ -173,6 +173,15 @@ Changelog:
     - Created interactive canvas controls with backdrop blur and hover effects
     - Added visual feedback for drag-and-drop operations with animated grid
     - Implemented zoom indicator with smooth animations and transitions
+- July 28, 2025. Исправлена проблема отображения ответов пользователей:
+  * КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Убраны технические ID узлов из панели ответов пользователей
+  * Заменены непонятные значения вроде "--2N9FeeykMHVVlsVnSQW" на читаемые названия действий
+  * Добавлена фильтрация на сервере для скрытия generic button_click событий
+  * Реализована умная обработка значений ответов с заменой node ID на понятные действия
+  * Добавлен переключатель "Показать детали" для технической отладки
+  * Улучшено форматирование ключей ответов для лучшей читаемости
+  * Создана функция formatResponseValue для клиентской обработки значений
+  * Теперь пользователи видят только осмысленные ответы ("Да", "Нет", текстовые вводы)
 - July 28, 2025. Enhanced conditional messaging system:
   * Replaced outdated "user-input" elements with modern callback handlers in conditional messaging template
   * Added callback node type support in bot generator for variable saving functionality

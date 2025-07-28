@@ -21,7 +21,8 @@ import {
   FileText,
   Clock,
   Hash,
-  MessageCircle
+  MessageCircle,
+  Settings
 } from 'lucide-react';
 
 interface ResponsesData {
@@ -58,6 +59,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
   const [sortField, setSortField] = useState<SortField>('last_interaction');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [filterResponseType, setFilterResponseType] = useState<string>('all');
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState<boolean>(false);
 
   // Fetch responses data
   const { data: responsesData = [], isLoading, refetch } = useQuery<ResponsesData[]>({
@@ -164,7 +166,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
   };
 
   const formatResponseKey = (key: string, type?: string) => {
-    if (key === 'button_click') return 'Нажатие кнопки';
+    if (key === 'button_click') return 'Действие';
     if (key.startsWith('response_')) return key.replace('response_', 'Ответ ');
     if (type === 'inline_button' || type === 'button') return 'Выбор';
     if (key === 'источник') return 'Источник информации';
@@ -175,13 +177,17 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
     return key;
   };
 
-  const formatResponseValue = (value: string, type?: string) => {
+  const formatResponseValue = (value: string, type?: string, key?: string) => {
     // Если это похоже на node ID, заменяем на понятное значение
     if (typeof value === 'string') {
       if (value.match(/^--[a-zA-Z0-9_-]{10,}$/) ||
           value.match(/^[a-zA-Z0-9_-]{15,}$/) ||
           value.match(/^[a-zA-Z0-9-]{20,}$/)) {
-        return type === 'button' ? 'Нажатие кнопки' : 'Переход к следующему шагу';
+        return 'Продолжил диалог';
+      }
+      // Улучшаем отображение для специфических значений
+      if ((value === 'Нажатие кнопки' || value === 'Переход к следующему шагу') && key === 'button_click') {
+        return 'Продолжил диалог';
       }
     }
     return value;
@@ -255,6 +261,14 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
               <Button onClick={exportResponses} variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-1" />
                 Экспорт CSV
+              </Button>
+              <Button 
+                onClick={() => setShowTechnicalDetails(!showTechnicalDetails)} 
+                variant={showTechnicalDetails ? "default" : "outline"} 
+                size="sm"
+              >
+                <Settings className="w-4 h-4 mr-1" />
+                {showTechnicalDetails ? 'Скрыть детали' : 'Показать детали'}
               </Button>
             </div>
           </div>
@@ -450,16 +464,22 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                     <CardContent>
                                       <div className="bg-muted/50 rounded p-3 mb-2">
                                         <p className="text-sm font-medium mb-1">Ответ:</p>
-                                        <p className="text-foreground">{formatResponseValue(response.value, response.type)}</p>
+                                        <p className="text-foreground">{formatResponseValue(response.value, response.type, response.key)}</p>
                                       </div>
                                       {response.prompt && (
                                         <div className="text-xs text-muted-foreground">
                                           <strong>Вопрос:</strong> {response.prompt}
                                         </div>
                                       )}
-                                      {response.nodeId && (
-                                        <div className="text-xs text-muted-foreground mt-1">
-                                          <strong>ID узла:</strong> {response.nodeId}
+                                      {showTechnicalDetails && (
+                                        <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted/30 rounded border-l-2 border-primary/50">
+                                          <div className="space-y-1">
+                                            <div><strong>Ключ переменной:</strong> {response.key}</div>
+                                            <div><strong>Тип ответа:</strong> {response.type}</div>
+                                            {response.nodeId && <div><strong>ID узла:</strong> {response.nodeId}</div>}
+                                            {response.variable && <div><strong>Переменная:</strong> {response.variable}</div>}
+                                            <div><strong>Исходное значение:</strong> {response.value}</div>
+                                          </div>
                                         </div>
                                       )}
                                     </CardContent>
@@ -480,7 +500,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                 {formatResponseKey(response.key, response.type)}:
                               </span>
                               <span className="text-sm text-muted-foreground truncate max-w-xs">
-                                {formatResponseValue(response.value, response.type)}
+                                {formatResponseValue(response.value, response.type, response.key)}
                               </span>
                             </div>
                             <Badge 

@@ -2490,8 +2490,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (user.user_data && typeof user.user_data === 'object') {
           Object.entries(user.user_data).forEach(([key, value]) => {
-            // Принимаем все переменные кроме служебных
-            if (!key.startsWith('input_') && !key.startsWith('waiting_')) {
+            // Принимаем все переменные кроме служебных и generic button clicks
+            if (!key.startsWith('input_') && !key.startsWith('waiting_') && key !== 'button_click' && key !== 'last_button_click') {
               let responseData;
               let responseType = 'text';
               let timestamp = null;
@@ -2520,7 +2520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       (responseValue.match(/^[a-zA-Z0-9_-]{15,25}$/) || 
                        responseValue.match(/^--[a-zA-Z0-9_-]{10,}$/) ||
                        responseValue.includes('-') && responseValue.length > 10)) {
-                    responseValue = 'Нажатие кнопки';
+                    responseValue = 'Переход к следующему шагу';
                   }
                 } else if (key.includes('желание') || key.includes('пол') || key.includes('choice')) {
                   responseType = 'button';
