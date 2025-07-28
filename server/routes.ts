@@ -2491,7 +2491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (user.user_data && typeof user.user_data === 'object') {
           Object.entries(user.user_data).forEach(([key, value]) => {
             // Принимаем все переменные кроме служебных
-            if (!key.startsWith('input_') && !key.startsWith('waiting_') && key !== 'button_click') {
+            if (!key.startsWith('input_') && !key.startsWith('waiting_')) {
               let responseData;
               try {
                 // Если value уже объект, используем его как есть

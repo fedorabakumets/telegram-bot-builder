@@ -148,8 +148,17 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
       case 'number': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'email': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
       case 'phone': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      case 'inline_button': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
+      case 'reply_button': return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200';
+      case 'button_choice': return 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
+  };
+
+  const formatResponseKey = (key: string) => {
+    if (key === 'button_click') return 'Нажатие кнопки';
+    if (key.startsWith('response_')) return key.replace('response_', 'Ответ ');
+    return key;
   };
 
   // Get unique response types for filter
@@ -294,6 +303,9 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                        type === 'number' ? 'Число' :
                        type === 'email' ? 'Email' :
                        type === 'phone' ? 'Телефон' :
+                       type === 'inline_button' ? 'Инлайн кнопка' :
+                       type === 'reply_button' ? 'Reply кнопка' :
+                       type === 'button_choice' ? 'Выбор кнопки' :
                        type}
                     </SelectItem>
                   ))}
@@ -386,7 +398,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                           <span className="font-medium">
-                                            {response.key.replace('response_', 'Ответ ')}
+                                            {formatResponseKey(response.key)}
                                           </span>
                                           <Badge 
                                             variant="outline" 
@@ -396,6 +408,9 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                              response.type === 'number' ? 'Число' :
                                              response.type === 'email' ? 'Email' :
                                              response.type === 'phone' ? 'Телефон' :
+                                             response.type === 'inline_button' ? 'Инлайн кнопка' :
+                                             response.type === 'reply_button' ? 'Reply кнопка' :
+                                             response.type === 'button_choice' ? 'Выбор кнопки' :
                                              response.type}
                                           </Badge>
                                         </div>
@@ -434,7 +449,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                           <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium">
-                                {response.key.replace('response_', '')}:
+                                {formatResponseKey(response.key)}:
                               </span>
                               <span className="text-sm text-muted-foreground truncate max-w-xs">
                                 {response.value}
