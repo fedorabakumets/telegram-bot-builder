@@ -5,7 +5,7 @@ import { writeFileSync, existsSync, mkdirSync, unlinkSync, createWriteStream } f
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, botDataSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema } from "@shared/schema";
+import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, nodeSchema, connectionSchema, botDataSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 import https from "https";
@@ -1026,7 +1026,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             exitCode: null,
             kill: (signal: any) => {
               try {
-                process.kill(parseInt(instance.processId), signal);
+                process.kill(parseInt(instance.processId!), signal);
                 return true;
               } catch {
                 return false;
@@ -1059,7 +1059,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               exitCode: null,
               kill: (signal: any) => {
                 try {
-                  process.kill(parseInt(instance.processId), signal);
+                  process.kill(parseInt(instance.processId!), signal);
                   return true;
                 } catch {
                   return false;
@@ -1674,7 +1674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         autoTags.push('большой_файл');
       }
       
-      const finalTags = [...new Set([...processedTags, ...autoTags])];
+      const finalTags = Array.from(new Set([...processedTags, ...autoTags]));
       
       // Сохраняем информацию о файле в базе данных
       const mediaFile = await storage.createMediaFile({
@@ -1753,7 +1753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const uploadedFiles = [];
       const errors = [];
-      const warnings = [];
+      const warnings: string[] = [];
       
       // Группируем файлы по типам для статистики
       const fileStats = {
@@ -2019,7 +2019,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         autoTags.push('большой_файл');
       }
 
-      const finalTags = [...new Set([...processedTags, ...autoTags])];
+      const finalTags = Array.from(new Set([...processedTags, ...autoTags]));
 
       // Сохраняем информацию о файле в базе данных
       const mediaFile = await storage.createMediaFile({
@@ -2373,7 +2373,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching user data:", error);
       // Fallback to storage interface if bot_users table doesn't exist
       try {
-        const users = await storage.getUserBotDataByProject(projectId);
+        const users = await storage.getUserBotDataByProject(parseInt(req.params.id));
+        const projectId = parseInt(req.params.id);
         console.log(`Found ${users.length} users for project ${projectId} from fallback`);
         res.json(users);
       } catch (fallbackError) {
@@ -2411,8 +2412,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = result.rows[0];
       // Convert strings to numbers
       Object.keys(stats).forEach(key => {
-        if (typeof stats[key] === 'string' && !isNaN(stats[key])) {
-          stats[key] = parseInt(stats[key]);
+        if (typeof stats[key] === 'string' && !isNaN(stats[key] as any)) {
+          stats[key] = parseInt(stats[key] as any);
         }
       });
       
@@ -2438,14 +2439,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             COALESCE(AVG(interaction_count), 0) as "avgInteractionsPerUser"
           FROM user_bot_data
           WHERE project_id = $1
-        `, [projectId]);
+        `, [req.params.id]);
         
         await pool.end();
         
         const stats = result.rows[0];
         Object.keys(stats).forEach(key => {
-          if (typeof stats[key] === 'string' && !isNaN(stats[key])) {
-            stats[key] = parseInt(stats[key]);
+          if (typeof stats[key] === 'string' && !isNaN(stats[key] as any)) {
+            stats[key] = parseInt(stats[key] as any);
           }
         });
         
@@ -2486,7 +2487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Обрабатываем и структурируем ответы
       const processedResponses = result.rows.map(user => {
-        const responses = [];
+        const responses: any[] = [];
         
         if (user.user_data && typeof user.user_data === 'object') {
           Object.entries(user.user_data).forEach(([key, value]) => {
@@ -2501,7 +2502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               try {
                 // Если value является объектом, извлекаем данные
                 if (typeof value === 'object' && value !== null) {
-                  responseData = value;
+                  responseData = value as any;
                   responseValue = responseData.value || value;
                   responseType = responseData.type || 'text';
                   timestamp = responseData.timestamp;
@@ -2760,7 +2761,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalDeleted += deleteResult.rowCount || 0;
         console.log(`Deleted ${deleteResult.rowCount || 0} users from bot_users for project ${projectId}`);
       } catch (dbError) {
-        console.log("bot_users table not found or error:", dbError.message);
+        console.log("bot_users table not found or error:", (dbError as any).message);
       }
 
       await pool.end();
