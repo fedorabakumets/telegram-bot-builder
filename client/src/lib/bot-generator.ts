@@ -105,11 +105,12 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   let code = '';
   const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
   
-  // Create proper if-elif-else chain
+  // Всегда используем отдельные if блоки для каждого условия, чтобы избежать синтаксических ошибок
   for (let i = 0; i < sortedConditions.length; i++) {
     const condition = sortedConditions[i];
     const conditionText = formatTextForPython(condition.messageText);
-    const conditionKeyword = i === 0 ? 'if' : 'elif';
+    // Всегда используем if для каждого условия, чтобы избежать синтаксических ошибок с elif
+    const conditionKeyword = 'if';
     
     // Get variable names - support both new array format and legacy single variable
     const variableNames = condition.variableNames && condition.variableNames.length > 0 
@@ -124,7 +125,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
       case 'user_data_exists':
         if (variableNames.length === 0) {
           code += `${indentLevel}# Ошибка: не указаны переменные для проверки\n`;
-          code += `${indentLevel}${conditionKeyword} False:  # Skip this condition\n`;
+          code += `${indentLevel}if False:  # Skip this condition\n`;
           break;
         }
         
@@ -173,7 +174,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}condition_met = any(variables_exist)\n`;
         }
         
-        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
+        code += `${indentLevel}if condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         
         // Replace variables in text
@@ -191,7 +192,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
       case 'user_data_not_exists':
         if (variableNames.length === 0) {
           code += `${indentLevel}# Ошибка: не указаны переменные для проверки\n`;
-          code += `${indentLevel}${conditionKeyword} False:  # Skip this condition\n`;
+          code += `${indentLevel}if False:  # Skip this condition\n`;
           break;
         }
         
@@ -219,7 +220,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}condition_met = not any(variables_exist)  # At least one variable should not exist\n`;
         }
         
-        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
+        code += `${indentLevel}if condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
         break;
@@ -227,7 +228,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
       case 'user_data_equals':
         if (variableNames.length === 0) {
           code += `${indentLevel}# Ошибка: не указаны переменные для проверки\n`;
-          code += `${indentLevel}${conditionKeyword} False:  # Skip this condition\n`;
+          code += `${indentLevel}if False:  # Skip this condition\n`;
           break;
         }
         
@@ -258,7 +259,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}condition_met = any(variables_match)\n`;
         }
         
-        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
+        code += `${indentLevel}if condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         
         // Replace variables in text
@@ -276,7 +277,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
       case 'user_data_contains':
         if (variableNames.length === 0) {
           code += `${indentLevel}# Ошибка: не указаны переменные для проверки\n`;
-          code += `${indentLevel}${conditionKeyword} False:  # Skip this condition\n`;
+          code += `${indentLevel}if False:  # Skip this condition\n`;
           break;
         }
         
@@ -307,7 +308,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}condition_met = any(variables_contain)\n`;
         }
         
-        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
+        code += `${indentLevel}if condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         
         // Replace variables in text
@@ -323,20 +324,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         break;
         
       case 'first_time':
-        code += `${indentLevel}${conditionKeyword} user_record.get("interaction_count", 0) <= 1:\n`;
+        code += `${indentLevel}if user_record.get("interaction_count", 0) <= 1:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info("Условие выполнено: первое посещение пользователя")\n`;
         break;
         
       case 'returning_user':
-        code += `${indentLevel}${conditionKeyword} user_record.get("interaction_count", 0) > 1:\n`;
+        code += `${indentLevel}if user_record.get("interaction_count", 0) > 1:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info("Условие выполнено: возвращающийся пользователь")\n`;
         break;
         
       default:
         code += `${indentLevel}# Неизвестное условие: ${condition.condition}\n`;
-        code += `${indentLevel}${conditionKeyword} False:\n`;
+        code += `${indentLevel}if False:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.warning("Неизвестное условие: ${condition.condition}")\n`;
         break;
@@ -369,6 +370,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from aiogram.enums import ParseMode\n';
+  code += 'from typing import Optional\n';
   code += 'import asyncpg\n';
   code += 'from datetime import datetime, timezone, timedelta\n';
   code += 'import json\n\n';
@@ -428,7 +430,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")\n';
   code += '        db_pool = None\n\n';
 
-  code += 'async def save_user_to_db(user_id: int, username: str = None, first_name: str = None, last_name: str = None):\n';
+  code += 'async def save_user_to_db(user_id: int, username: Optional[str] = None, first_name: Optional[str] = None, last_name: Optional[str] = None):\n';
   code += '    """Сохраняет пользователя в базу данных"""\n';
   code += '    if not db_pool:\n';
   code += '        return False\n';

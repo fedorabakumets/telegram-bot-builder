@@ -11,6 +11,7 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.enums import ParseMode
+from typing import Optional
 import asyncpg
 from datetime import datetime, timezone, timedelta
 import json
@@ -70,7 +71,7 @@ async def init_database():
         logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")
         db_pool = None
 
-async def save_user_to_db(user_id: int, username: str = None, first_name: str = None, last_name: str = None):
+async def save_user_to_db(user_id: int, username: Optional[str] = None, first_name: Optional[str] = None, last_name: Optional[str] = None):
     """Сохраняет пользователя в базу данных"""
     if not db_pool:
         return False
@@ -542,7 +543,7 @@ async def profile_handler(message: types.Message):
     variables_exist.append(var_exists________)
     variable_values["возраст"] = var_value________
     condition_met = all(variables_exist)
-    elif condition_met:
+    if condition_met:
         text = """👤 Ваш профиль:
 
 👋 Имя: {имя}
@@ -595,7 +596,7 @@ async def profile_handler(message: types.Message):
     variables_exist.append(var_exists_________)
     variable_values["источник"] = var_value_________
     condition_met = any(variables_exist)
-    elif condition_met:
+    if condition_met:
         text = """👤 Частичный профиль:
 
 🔍 Источник: {источник}
@@ -758,7 +759,7 @@ async def profile_handler(message: types.Message):
     variables_exist.append(var_exists________)
     variable_values["возраст"] = var_value________
     condition_met = any(variables_exist)
-    elif condition_met:
+    if condition_met:
         text = """👤 Ваш профиль:
 
 У нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.
