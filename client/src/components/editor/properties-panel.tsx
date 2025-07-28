@@ -103,6 +103,141 @@ export function PropertiesPanel({
     return uniqueQuestions;
   }, [allNodes]);
 
+  // Function to detect conflicts between conditional message rules
+  const detectRuleConflicts = useMemo(() => {
+    if (!selectedNode?.data.conditionalMessages) return [];
+    
+    const rules = selectedNode.data.conditionalMessages || [];
+    const conflicts: Array<{
+      ruleIndex: number;
+      conflictType: string;
+      description: string;
+      severity: 'warning' | 'error';
+      suggestion: string;
+    }> = [];
+    
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i];
+      const ruleVariables = rule.variableNames || (rule.variableName ? [rule.variableName] : []);
+      
+      // Check for duplicate rules
+      for (let j = i + 1; j < rules.length; j++) {
+        const otherRule = rules[j];
+        const otherVariables = otherRule.variableNames || (otherRule.variableName ? [otherRule.variableName] : []);
+        
+        // Same condition type with same variables
+        if (rule.condition === otherRule.condition && 
+            JSON.stringify(ruleVariables.sort()) === JSON.stringify(otherVariables.sort()) &&
+            rule.expectedValue === otherRule.expectedValue &&
+            rule.logicOperator === otherRule.logicOperator) {
+          conflicts.push({
+            ruleIndex: i,
+            conflictType: 'duplicate',
+            description: `Правило ${i + 1} дублирует правило ${j + 1}`,
+            severity: 'error',
+            suggestion: 'Удалите одно из дублирующихся правил или измените условия'
+          });
+        }
+        
+        // Contradictory rules
+        if ((rule.condition === 'user_data_exists' && otherRule.condition === 'user_data_not_exists') ||
+            (rule.condition === 'user_data_not_exists' && otherRule.condition === 'user_data_exists')) {
+          const hasCommonVariables = ruleVariables.some(v => otherVariables.includes(v));
+          if (hasCommonVariables) {
+            conflicts.push({
+              ruleIndex: i,
+              conflictType: 'contradiction',
+              description: `Правило ${i + 1} противоречит правилу ${j + 1}`,
+              severity: 'warning',
+              suggestion: 'Проверьте логику: одно правило проверяет существование переменной, другое - отсутствие'
+            });
+          }
+        }
+      }
+      
+      // Check for unreachable rules due to priority
+      const higherPriorityRules = rules.filter((r, idx) => 
+        idx < i && (r.priority || 0) >= (rule.priority || 0)
+      );
+      
+      for (const higherRule of higherPriorityRules) {
+        const higherVariables = higherRule.variableNames || (higherRule.variableName ? [higherRule.variableName] : []);
+        if (higherRule.condition === 'first_time' || higherRule.condition === 'returning_user') {
+          // These conditions might make subsequent rules unreachable
+          conflicts.push({
+            ruleIndex: i,
+            conflictType: 'unreachable',
+            description: `Правило ${i + 1} может быть недостижимо из-за правила выше`,
+            severity: 'warning',
+            suggestion: 'Проверьте порядок правил и их приоритеты'
+          });
+        }
+      }
+      
+      // Check for empty variable names
+      if ((rule.condition.includes('user_data') || rule.condition.includes('equals') || rule.condition.includes('contains')) && 
+          ruleVariables.length === 0) {
+        conflicts.push({
+          ruleIndex: i,
+          conflictType: 'missing_variables',
+          description: `Правило ${i + 1} не имеет указанных переменных для проверки`,
+          severity: 'error',
+          suggestion: 'Выберите хотя бы одну переменную для проверки условия'
+        });
+      }
+      
+      // Check for missing expected values
+      if ((rule.condition === 'user_data_equals' || rule.condition === 'user_data_contains') && 
+          !rule.expectedValue) {
+        conflicts.push({
+          ruleIndex: i,
+          conflictType: 'missing_value',
+          description: `Правило ${i + 1} требует указания ожидаемого значения`,
+          severity: 'error',
+          suggestion: 'Укажите значение для сравнения'
+        });
+      }
+    }
+    
+    return conflicts;
+  }, [selectedNode?.data.conditionalMessages]);
+
+  // Function to auto-fix rule priorities
+  const autoFixPriorities = () => {
+    if (!selectedNode?.data.conditionalMessages) return;
+    
+    const rules = [...selectedNode.data.conditionalMessages];
+    
+    // Assign priorities based on logical order
+    rules.forEach((rule, index) => {
+      // Higher priority for more specific conditions
+      let priority = 0;
+      
+      if (rule.condition === 'first_time' || rule.condition === 'returning_user') {
+        priority = 100; // Highest priority for user type checks
+      } else if (rule.condition === 'user_data_equals') {
+        priority = 80; // High priority for exact matches
+      } else if (rule.condition === 'user_data_contains') {
+        priority = 60; // Medium priority for contains checks
+      } else if (rule.condition === 'user_data_exists') {
+        priority = 40; // Lower priority for existence checks
+      } else if (rule.condition === 'user_data_not_exists') {
+        priority = 20; // Lowest priority for non-existence checks
+      }
+      
+      // Add bonus for multiple variables (more specific)
+      const variableCount = rule.variableNames?.length || (rule.variableName ? 1 : 0);
+      priority += variableCount * 5;
+      
+      rule.priority = priority;
+    });
+    
+    // Sort by priority (highest first)
+    rules.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    
+    onNodeUpdate(selectedNode.id, { conditionalMessages: rules });
+  };
+
   // Валидация команды
   const commandValidation = useMemo(() => {
     if (selectedNode && (selectedNode.type === 'start' || selectedNode.type === 'command')) {
@@ -2059,61 +2194,195 @@ export function PropertiesPanel({
                     </div>
                   </div>
 
+                  {/* Rule Conflicts and Validation */}
+                  {detectRuleConflicts.length > 0 && (
+                    <div className="bg-red-50/50 dark:bg-red-950/20 border border-red-200/40 dark:border-red-800/40 rounded-lg p-3 mb-4">
+                      <div className="flex items-start space-x-2">
+                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <i className="fas fa-exclamation text-white text-xs"></i>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-red-700 dark:text-red-300 mb-2">
+                            Обнаружены проблемы с правилами ({detectRuleConflicts.length}):
+                          </div>
+                          <div className="space-y-1">
+                            {detectRuleConflicts.map((conflict, idx) => (
+                              <div key={idx} className={`text-xs p-2 rounded ${
+                                conflict.severity === 'error' 
+                                  ? 'bg-red-100/50 dark:bg-red-900/20 text-red-700 dark:text-red-300' 
+                                  : 'bg-yellow-100/50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300'
+                              }`}>
+                                <div className="font-medium flex items-center space-x-1">
+                                  <i className={`fas ${conflict.severity === 'error' ? 'fa-times-circle' : 'fa-exclamation-triangle'} text-xs`}></i>
+                                  <span>{conflict.description}</span>
+                                </div>
+                                <div className="text-xs opacity-75 mt-1">{conflict.suggestion}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex space-x-2 mt-3">
+                            <UIButton
+                              size="sm"
+                              variant="ghost"
+                              onClick={autoFixPriorities}
+                              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                            >
+                              <i className="fas fa-magic mr-1"></i>
+                              Автоисправление приоритетов
+                            </UIButton>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Conditional Messages List */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
                         Настройка правил для показа сообщений
                       </Label>
-                      <UIButton
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          const newCondition = {
-                            id: `condition-${Date.now()}`,
-                            condition: 'user_data_exists' as const,
-                            variableName: 'source',
-                            variableNames: ['source'],
-                            logicOperator: 'AND' as const,
-                            messageText: 'Добро пожаловать обратно!',
-                            keyboardType: 'none' as const,
-                            buttons: [],
-                            priority: 0
-                          };
-                          const currentConditions = selectedNode.data.conditionalMessages || [];
-                          onNodeUpdate(selectedNode.id, { 
-                            conditionalMessages: [...currentConditions, newCondition] 
-                          });
-                        }}
-                        className="text-xs"
-                      >
-                        <i className="fas fa-plus mr-1"></i>
-                        Добавить правило
-                      </UIButton>
+                      <div className="flex space-x-2">
+                        <UIButton
+                          size="sm"
+                          variant="ghost"
+                          onClick={autoFixPriorities}
+                          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                          title="Автоматически расставить приоритеты для избежания конфликтов"
+                        >
+                          <i className="fas fa-sort-amount-down mr-1"></i>
+                          Приоритеты
+                        </UIButton>
+                        <UIButton
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                            const nextPriority = Math.max(0, ...currentConditions.map(c => c.priority || 0)) + 10;
+                            
+                            const newCondition = {
+                              id: `condition-${Date.now()}`,
+                              condition: 'user_data_exists' as const,
+                              variableName: 'source',
+                              variableNames: ['source'],
+                              logicOperator: 'AND' as const,
+                              messageText: 'Добро пожаловать обратно!',
+                              keyboardType: 'none' as const,
+                              buttons: [],
+                              priority: nextPriority
+                            };
+                            onNodeUpdate(selectedNode.id, { 
+                              conditionalMessages: [...currentConditions, newCondition] 
+                            });
+                          }}
+                          className="text-xs"
+                        >
+                          <i className="fas fa-plus mr-1"></i>
+                          Добавить правило
+                        </UIButton>
+                      </div>
                     </div>
 
                     <div className="space-y-3">
-                      {(selectedNode.data.conditionalMessages || []).map((condition, index) => (
-                        <div key={condition.id} className="bg-white/50 dark:bg-gray-900/30 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-3">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                              Правило #{index + 1}
-                            </div>
-                            <UIButton
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                const currentConditions = selectedNode.data.conditionalMessages || [];
-                                const newConditions = currentConditions.filter(c => c.id !== condition.id);
-                                onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });
-                              }}
-                              className="text-muted-foreground hover:text-destructive h-auto p-1"
-                            >
-                              <i className="fas fa-trash text-xs"></i>
-                            </UIButton>
-                          </div>
+                      {(selectedNode.data.conditionalMessages || [])
+                        .sort((a, b) => (b.priority || 0) - (a.priority || 0))
+                        .map((condition, index) => {
+                          // Check if this rule has conflicts
+                          const ruleConflicts = detectRuleConflicts.filter(c => c.ruleIndex === index);
+                          const hasErrors = ruleConflicts.some(c => c.severity === 'error');
+                          const hasWarnings = ruleConflicts.some(c => c.severity === 'warning');
+                          
+                          return (
+                            <div key={condition.id} className={`bg-white/50 dark:bg-gray-900/30 border rounded-lg p-3 ${
+                              hasErrors 
+                                ? 'border-red-300 dark:border-red-700 bg-red-50/20 dark:bg-red-950/10' 
+                                : hasWarnings 
+                                  ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50/20 dark:bg-yellow-950/10'
+                                  : 'border-purple-200/30 dark:border-purple-800/30'
+                            }`}>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                                    Правило #{index + 1}
+                                  </div>
+                                  {hasErrors && (
+                                    <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                                      <i className="fas fa-times text-white text-xs"></i>
+                                    </div>
+                                  )}
+                                  {hasWarnings && !hasErrors && (
+                                    <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
+                                      <i className="fas fa-exclamation text-white text-xs"></i>
+                                    </div>
+                                  )}
+                                  <div className="text-xs text-muted-foreground">
+                                    Приоритет: {condition.priority || 0}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  {/* Priority controls */}
+                                  <UIButton
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id 
+                                          ? { ...c, priority: (c.priority || 0) + 10 } 
+                                          : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                    className="text-muted-foreground hover:text-blue-600 h-auto p-1"
+                                    title="Повысить приоритет"
+                                  >
+                                    <i className="fas fa-arrow-up text-xs"></i>
+                                  </UIButton>
+                                  <UIButton
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id 
+                                          ? { ...c, priority: Math.max(0, (c.priority || 0) - 10) } 
+                                          : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                    className="text-muted-foreground hover:text-blue-600 h-auto p-1"
+                                    title="Понизить приоритет"
+                                  >
+                                    <i className="fas fa-arrow-down text-xs"></i>
+                                  </UIButton>
+                                  <UIButton
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const newConditions = currentConditions.filter(c => c.id !== condition.id);
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });
+                                    }}
+                                    className="text-muted-foreground hover:text-destructive h-auto p-1"
+                                  >
+                                    <i className="fas fa-trash text-xs"></i>
+                                  </UIButton>
+                                </div>
+                              </div>
 
-                          <div className="space-y-3">
+                              {/* Show conflicts for this rule */}
+                              {ruleConflicts.length > 0 && (
+                                <div className="mb-3 p-2 bg-red-50/50 dark:bg-red-950/20 border border-red-200/40 dark:border-red-800/40 rounded text-xs">
+                                  {ruleConflicts.map((conflict, idx) => (
+                                    <div key={idx} className="text-red-700 dark:text-red-300">
+                                      <i className={`fas ${conflict.severity === 'error' ? 'fa-times-circle' : 'fa-exclamation-triangle'} mr-1`}></i>
+                                      {conflict.description}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              <div className="space-y-3">
                             {/* Condition Type */}
                             <div>
                               <Label className="text-xs font-medium text-muted-foreground mb-1 block">
@@ -2351,7 +2620,9 @@ export function PropertiesPanel({
                             </div>
                           </div>
                         </div>
-                      ))}
+                          );
+                        }
+                      )}
 
                       {(selectedNode.data.conditionalMessages || []).length === 0 && (
                         <div className="text-center py-6 text-muted-foreground">
