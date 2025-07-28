@@ -544,59 +544,31 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, "источник", "🔍 Поиск в интернете")
     logging.info(f"Переменная источник сохранена: " + str("🔍 Поиск в интернете") + f" (пользователь {user_id})")
     
+    # Отправляем сообщение для узла source_search
     text = """Отлично! 🎯
 Теперь мы знаем, что вы нашли нас через поиск.
 
 Попробуйте снова написать /start чтобы увидеть персонализированное приветствие!"""
-    # Подставляем все доступные переменные пользователя в текст
+    # Подставляем значения переменных в текст сообщения
+    user_id = callback_query.from_user.id
     user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
+    if user_record and user_record.get("user_data"):
+        try:
+            import json
+            user_vars = json.loads(user_record["user_data"]) if isinstance(user_record["user_data"], str) else user_record["user_data"]
+            for var_name, var_value in user_vars.items():
+                if "{" + var_name + "}" in text:
+                    text = text.replace("{" + var_name + "}", str(var_value))
+        except (json.JSONDecodeError, TypeError):
+            pass
     
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record:
-            if isinstance(user_record["user_data"], str):
-                try:
-                    import json
-                    user_vars = json.loads(user_record["user_data"])
-                except (json.JSONDecodeError, TypeError):
-                    user_vars = {}
-            elif isinstance(user_record["user_data"], dict):
-                user_vars = user_record["user_data"]
-            else:
-                user_vars = {}
-        else:
-            user_vars = user_record
-    else:
-        user_vars = {}
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        if not text_content or not variables_dict:
-            return text_content
-        
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                text_content = text_content.replace(placeholder, var_value)
-        return text_content
-    
-    text = replace_variables_in_text(text, user_vars)
+    # Создаем inline клавиатуру для целевого узла
     builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🔄 Попробовать /start снова", callback_data="cmd_start"))
     keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
         await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+    except Exception:
         await callback_query.message.answer(text, reply_markup=keyboard)
 
 @dp.callback_query(lambda c: c.data == "source_friends")
@@ -609,59 +581,31 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, "источник", "👥 Друзья")
     logging.info(f"Переменная источник сохранена: " + str("👥 Друзья") + f" (пользователь {user_id})")
     
+    # Отправляем сообщение для узла source_friends
     text = """Замечательно! 👥
 Значит, вас порекомендовали друзья!
 
 Теперь попробуйте /start еще раз - увидите, как изменится приветствие!"""
-    # Подставляем все доступные переменные пользователя в текст
+    # Подставляем значения переменных в текст сообщения
+    user_id = callback_query.from_user.id
     user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
+    if user_record and user_record.get("user_data"):
+        try:
+            import json
+            user_vars = json.loads(user_record["user_data"]) if isinstance(user_record["user_data"], str) else user_record["user_data"]
+            for var_name, var_value in user_vars.items():
+                if "{" + var_name + "}" in text:
+                    text = text.replace("{" + var_name + "}", str(var_value))
+        except (json.JSONDecodeError, TypeError):
+            pass
     
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record:
-            if isinstance(user_record["user_data"], str):
-                try:
-                    import json
-                    user_vars = json.loads(user_record["user_data"])
-                except (json.JSONDecodeError, TypeError):
-                    user_vars = {}
-            elif isinstance(user_record["user_data"], dict):
-                user_vars = user_record["user_data"]
-            else:
-                user_vars = {}
-        else:
-            user_vars = user_record
-    else:
-        user_vars = {}
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        if not text_content or not variables_dict:
-            return text_content
-        
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                text_content = text_content.replace(placeholder, var_value)
-        return text_content
-    
-    text = replace_variables_in_text(text, user_vars)
+    # Создаем inline клавиатуру для целевого узла
     builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🔄 Попробовать /start снова", callback_data="cmd_start"))
     keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
         await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+    except Exception:
         await callback_query.message.answer(text, reply_markup=keyboard)
 
 @dp.callback_query(lambda c: c.data == "source_ads")
@@ -674,59 +618,31 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, "источник", "📱 Реклама")
     logging.info(f"Переменная источник сохранена: " + str("📱 Реклама") + f" (пользователь {user_id})")
     
+    # Отправляем сообщение для узла source_ads
     text = """Понятно! 📱
 Вы пришли из рекламы.
 
 Введите /start снова, чтобы увидеть персональное сообщение!"""
-    # Подставляем все доступные переменные пользователя в текст
+    # Подставляем значения переменных в текст сообщения
+    user_id = callback_query.from_user.id
     user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
+    if user_record and user_record.get("user_data"):
+        try:
+            import json
+            user_vars = json.loads(user_record["user_data"]) if isinstance(user_record["user_data"], str) else user_record["user_data"]
+            for var_name, var_value in user_vars.items():
+                if "{" + var_name + "}" in text:
+                    text = text.replace("{" + var_name + "}", str(var_value))
+        except (json.JSONDecodeError, TypeError):
+            pass
     
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record:
-            if isinstance(user_record["user_data"], str):
-                try:
-                    import json
-                    user_vars = json.loads(user_record["user_data"])
-                except (json.JSONDecodeError, TypeError):
-                    user_vars = {}
-            elif isinstance(user_record["user_data"], dict):
-                user_vars = user_record["user_data"]
-            else:
-                user_vars = {}
-        else:
-            user_vars = user_record
-    else:
-        user_vars = {}
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        if not text_content or not variables_dict:
-            return text_content
-        
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                text_content = text_content.replace(placeholder, var_value)
-        return text_content
-    
-    text = replace_variables_in_text(text, user_vars)
+    # Создаем inline клавиатуру для целевого узла
     builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🔄 Попробовать /start снова", callback_data="cmd_start"))
     keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
         await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+    except Exception:
         await callback_query.message.answer(text, reply_markup=keyboard)
 
 
