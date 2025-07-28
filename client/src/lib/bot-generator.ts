@@ -368,7 +368,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '        "type": "inline_button",\n';
           code += '        "timestamp": timestamp,\n';
           code += `        "nodeId": "${button.target || callbackData}",\n`;
-          code += '        "variable": "button_click",\n';
+          code += '        "variable": button_text,\n';
           code += '        "source": "inline_button_click"\n';
           code += '    }\n';
           code += '    \n';
@@ -378,7 +378,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    user_data[user_id]["last_button_click"] = response_data\n';
           code += '    \n';
           code += '    # Сохраняем в базу данных\n';
-          code += '    await update_user_data_in_db(user_id, "button_click", response_data)\n';
+          code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
           code += '    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")\n';
           code += '    \n';
           
@@ -1187,7 +1187,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '        "type": "inline_button",\n';
           code += '        "timestamp": timestamp,\n';
           code += `        "nodeId": "${nodeId}",\n`;
-          code += '        "variable": "button_click",\n';
+          code += '        "variable": button_display_text,\n';
           code += '        "source": "inline_button_click"\n';
           code += '    }\n';
           code += '    \n';
@@ -1197,7 +1197,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    user_data[user_id]["last_button_click"] = response_data\n';
           code += '    \n';
           code += '    # Сохраняем в базу данных\n';
-          code += '    await update_user_data_in_db(user_id, "button_click", response_data)\n';
+          code += '    await update_user_data_in_db(user_id, button_display_text, response_data)\n';
           code += '    logging.info(f"Кнопка сохранена: {button_display_text} (пользователь {user_id})")\n';
           code += '    \n';
           
