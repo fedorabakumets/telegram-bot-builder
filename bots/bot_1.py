@@ -230,18 +230,11 @@ async def start_handler(message: types.Message):
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
     text = "Привет! Добро пожаловать!Откуда ты?"
+    await message.answer(text)
     
-    # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="От феди", callback_data="pgev27ln6Hs3ol6hTxee6"))
-    keyboard = builder.as_markup()
-    await message.answer(text, reply_markup=keyboard)
-    
-    # Дополнительно: настраиваем сбор пользовательских ответов
+    # Устанавливаем состояние ожидания ввода
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-    user_data[message.from_user.id]["input_collection_enabled"] = True
-    user_data[message.from_user.id]["input_node_id"] = "kKT-wfU3CKp9cc87PWOOj"
-    user_data[message.from_user.id]["input_variable"] = "источник"
+    user_data[message.from_user.id]["waiting_for_input"] = "kKT-wfU3CKp9cc87PWOOj"
 
 # Обработчики inline кнопок
 
@@ -250,18 +243,21 @@ async def handle_callback_pgev27ln6Hs3ol6hTxee6(callback_query: types.CallbackQu
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
-    button_text = "От феди"
+    button_text = callback_query.data
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = callback_query.data
     
     # Сохраняем ответ в базу данных
     import datetime
     timestamp = datetime.datetime.now().isoformat()
     
     response_data = {
-        "value": button_text,
+        "value": button_display_text,
         "type": "inline_button",
         "timestamp": timestamp,
         "nodeId": "pgev27ln6Hs3ol6hTxee6",
-        "variable": button_text,
+        "variable": button_display_text,
         "source": "inline_button_click"
     }
     
@@ -271,8 +267,8 @@ async def handle_callback_pgev27ln6Hs3ol6hTxee6(callback_query: types.CallbackQu
     user_data[user_id]["last_button_click"] = response_data
     
     # Сохраняем в базу данных
-    await update_user_data_in_db(user_id, button_text, response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    await update_user_data_in_db(user_id, button_display_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_display_text} (пользователь {user_id})")
     
     text = "Отлично вот ссыока"
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -446,6 +442,22 @@ async def handle_user_input(message: types.Message):
             
             logging.info(f"Получен пользовательский ввод: источник = {user_text}")
             
+            # Переходим к следующему узлу
+            try:
+                # Создаем фиктивный callback_query для навигации
+                import types as aiogram_types
+                import asyncio
+                fake_callback = aiogram_types.SimpleNamespace(
+                    id="input_nav",
+                    from_user=message.from_user,
+                    chat_instance="",
+                    data="pgev27ln6Hs3ol6hTxee6",
+                    message=message,
+                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
+                )
+                await handle_callback_pgev27ln6Hs3ol6hTxee6(fake_callback)
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
             return
         
         # Если узел не найден

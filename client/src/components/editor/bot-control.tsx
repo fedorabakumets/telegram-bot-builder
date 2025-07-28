@@ -594,11 +594,11 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         {botStatus?.instance && (
           <div className="text-xs text-muted-foreground space-y-1">
             <p>
-              <strong>Запущен:</strong> {new Date(botStatus.instance.startedAt).toLocaleString('ru-RU')}
+              <strong>Запущен:</strong> {new Date(botStatus.instance.startedAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}
             </p>
             {botStatus.instance.stoppedAt && (
               <p>
-                <strong>Остановлен:</strong> {new Date(botStatus.instance.stoppedAt).toLocaleString('ru-RU')}
+                <strong>Остановлен:</strong> {new Date(botStatus.instance.stoppedAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}
               </p>
             )}
           </div>

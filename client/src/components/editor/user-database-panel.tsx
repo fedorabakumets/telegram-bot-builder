@@ -269,6 +269,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const formatDate = (date: string | Date | null) => {
     if (!date) return 'Никогда';
     return new Date(date).toLocaleString('ru-RU', {
+      timeZone: 'Europe/Moscow',
       year: 'numeric',
       month: 'short',
       day: 'numeric',

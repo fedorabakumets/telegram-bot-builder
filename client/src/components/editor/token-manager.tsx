@@ -351,7 +351,7 @@ export function TokenManager({ projectId, onTokenSelect, selectedTokenId }: Toke
                     
                     {token.lastUsedAt && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Последнее использование: {new Date(token.lastUsedAt).toLocaleString()}
+                        Последнее использование: {new Date(token.lastUsedAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}
                       </p>
                     )}
                   </div>

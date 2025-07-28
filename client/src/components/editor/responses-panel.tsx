@@ -133,6 +133,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
   const formatDate = (date: string | null) => {
     if (!date) return 'Никогда';
     return new Date(date).toLocaleString('ru-RU', {
+      timeZone: 'Europe/Moscow',
       year: 'numeric',
       month: 'short',
       day: 'numeric',
