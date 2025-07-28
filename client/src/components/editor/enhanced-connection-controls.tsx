@@ -148,7 +148,8 @@ export function EnhancedConnectionControls({
         }
 
         if (rule.requiresButton) {
-          const hasButton = sourceNode.data.buttons.some(b => 
+          const buttons = sourceNode.data.buttons || [];
+          const hasButton = buttons.some(b => 
             b.action === 'goto' && b.target === connection.target
           );
           if (!hasButton) {
@@ -198,7 +199,8 @@ export function EnhancedConnectionControls({
     const invalid = total - valid;
     const withButtons = connectionAnalysis.filter(a => {
       const sourceNode = nodes.find(n => n.id === a.connection.source);
-      return sourceNode?.data.buttons?.some(b => 
+      const buttons = sourceNode?.data.buttons || [];
+      return buttons.some(b => 
         b.action === 'goto' && b.target === a.connection.target
       );
     }).length;
@@ -250,7 +252,8 @@ export function EnhancedConnectionControls({
     );
 
     if (needsButton) {
-      const hasButton = sourceNode.data.buttons?.some(b => 
+      const buttons = sourceNode.data.buttons || [];
+      const hasButton = buttons.some(b => 
         b.action === 'goto' && b.target === connection.target
       );
 

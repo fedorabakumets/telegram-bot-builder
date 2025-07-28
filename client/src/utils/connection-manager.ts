@@ -135,11 +135,12 @@ export class ConnectionManager {
   private addButtonToNode(nodes: Node[], nodeId: string, button: Button): Node[] {
     return nodes.map(node => {
       if (node.id === nodeId) {
+        const existingButtons = node.data.buttons || [];
         return {
           ...node,
           data: {
             ...node.data,
-            buttons: [...node.data.buttons, button]
+            buttons: [...existingButtons, button]
           }
         };
       }
@@ -210,7 +211,8 @@ export class ConnectionManager {
     }
 
     // Штраф за слишком много кнопок
-    const buttonCount = sourceNode.data.buttons.length;
+    const buttons = sourceNode.data.buttons || [];
+    const buttonCount = buttons.length;
     if (buttonCount > 4) confidence -= 0.1;
     if (buttonCount > 8) confidence -= 0.2;
 
