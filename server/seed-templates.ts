@@ -7,7 +7,7 @@ export async function seedDefaultTemplates() {
     
     // Проверяем, есть ли уже системные шаблоны
     const systemTemplates = existingTemplates.filter(t => t.authorName === 'Система');
-    if (systemTemplates.length >= 8) {
+    if (systemTemplates.length >= 9) {
       console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
@@ -1340,6 +1340,162 @@ export async function seedDefaultTemplates() {
             targetHandle: null
           }
         ]
+      }
+    });
+
+    // Шаблон "Саша" - сбор информации о пользователе
+    await storage.createBotTemplate({
+      name: "Опрос пользователей",
+      description: "Интерактивный бот для сбора информации о пользователях с условными переходами",
+      category: "business",
+      tags: ["опрос", "сбор данных", "интерактив"],
+      isPublic: 1,
+      difficulty: "medium",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 5,
+      estimatedTime: 15,
+      data: {
+        nodes: [
+          {
+            id: "start_node",
+            type: "start",
+            position: { x: 60, y: 100 },
+            data: {
+              command: "/start",
+              description: "Запуск бота с условными сообщениями",
+              messageText: "Привет! 🌟\nДобро пожаловать в наш бот!\nОткуда вы узнали о нас?",
+              keyboardType: "none",
+              buttons: [],
+              inputVariable: "источник",
+              saveToDatabase: true,
+              enableTextInput: true,
+              fallbackMessage: "",
+              collectUserInput: true,
+              inputTargetNodeId: "--2N9FeeykMHVVlsVnSQW",
+              conditionalMessages: [],
+              enableConditionalMessages: false
+            }
+          },
+          {
+            id: "--2N9FeeykMHVVlsVnSQW",
+            type: "keyboard",
+            position: { x: 60, y: 420 },
+            data: {
+              messageText: "Ты хочешься продолжить свою жизнь с чатом?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-1",
+                  text: "Да",
+                  action: "goto",
+                  target: "nr3wIiTfBYYmpkkXMNH7n"
+                },
+                {
+                  id: "btn-2",
+                  text: "Нет",
+                  action: "goto",
+                  target: "1BHSLWPMao9qQvSAzuzRl"
+                }
+              ],
+              markdown: false,
+              inputVariable: "желание",
+              resizeKeyboard: true,
+              oneTimeKeyboard: false,
+              collectUserInput: true
+            }
+          },
+          {
+            id: "nr3wIiTfBYYmpkkXMNH7n",
+            type: "keyboard",
+            position: { x: 60, y: 800 },
+            data: {
+              messageText: "Какой твой пол?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-1",
+                  text: "Женщина",
+                  action: "goto",
+                  target: "XDSrTrNly5EtDtr85nN4P"
+                },
+                {
+                  id: "btn-2",
+                  text: "Мужчина",
+                  action: "goto",
+                  target: "XDSrTrNly5EtDtr85nN4P"
+                }
+              ],
+              markdown: false,
+              inputVariable: "пол",
+              resizeKeyboard: true,
+              oneTimeKeyboard: false,
+              collectUserInput: true
+            }
+          },
+          {
+            id: "1BHSLWPMao9qQvSAzuzRl",
+            type: "message",
+            position: { x: 440, y: 460 },
+            data: {
+              messageText: "Печально, если что пиши старт",
+              keyboardType: "none",
+              buttons: [],
+              markdown: false,
+              resizeKeyboard: true,
+              oneTimeKeyboard: false
+            }
+          },
+          {
+            id: "XDSrTrNly5EtDtr85nN4P",
+            type: "keyboard",
+            position: { x: 60, y: 1120 },
+            data: {
+              messageText: "Как тебя зовут?",
+              keyboardType: "none",
+              buttons: [
+                {
+                  id: "btn-1",
+                  text: "Кнопка 1",
+                  action: "goto",
+                  target: ""
+                },
+                {
+                  id: "btn-2",
+                  text: "Кнопка 2",
+                  action: "goto",
+                  target: ""
+                }
+              ],
+              markdown: false,
+              inputVariable: "имя",
+              resizeKeyboard: true,
+              enableTextInput: true,
+              oneTimeKeyboard: false,
+              collectUserInput: true,
+              inputTargetNodeId: "yxbKRAHB-OuKFsHRJZyiV"
+            }
+          },
+          {
+            id: "yxbKRAHB-OuKFsHRJZyiV",
+            type: "message",
+            position: { x: 80, y: 1580 },
+            data: {
+              messageText: "Какой твой возраст?",
+              keyboardType: "none",
+              buttons: [],
+              markdown: false,
+              inputVariable: "возраст",
+              resizeKeyboard: true,
+              enableTextInput: true,
+              oneTimeKeyboard: false,
+              collectUserInput: true
+            }
+          }
+        ],
+        connections: []
       }
     });
 
