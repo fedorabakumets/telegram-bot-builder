@@ -7,7 +7,7 @@ export async function seedDefaultTemplates() {
     
     // Проверяем, есть ли уже системные шаблоны
     const systemTemplates = existingTemplates.filter(t => t.authorName === 'Система');
-    if (systemTemplates.length >= 7) {
+    if (systemTemplates.length >= 8) {
       console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
@@ -916,7 +916,7 @@ export async function seedDefaultTemplates() {
     await storage.createBotTemplate({
       name: "Персональные приветствия",
       description: "Демонстрирует условные сообщения - бот запоминает источник пользователя и показывает разные приветствия для новых и постоянных пользователей",
-      category: "educational",
+      category: "education",
       tags: ["условные сообщения", "персонализация", "обучение"],
       isPublic: 1,
       difficulty: "medium",
@@ -1137,6 +1137,205 @@ export async function seedDefaultTemplates() {
             id: "conn3",
             source: "start_node",
             target: "source_ads", 
+            sourceHandle: "btn_ads",
+            targetHandle: null
+          }
+        ]
+      }
+    });
+
+    // Шаблон "Федя" - бот с условными сообщениями
+    await storage.createBotTemplate({
+      name: "Федя",
+      description: "Умный бот с условными сообщениями и персонализацией на основе источника трафика",
+      category: "business",
+      tags: ["условные сообщения", "персонализация", "умный бот"],
+      isPublic: 1,
+      difficulty: "hard",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 8,
+      estimatedTime: 30,
+      data: {
+        nodes: [
+          {
+            id: "start_node",
+            type: "start",
+            position: { x: 60, y: 100 },
+            data: {
+              command: "/start",
+              description: "Запуск бота с условными сообщениями",
+              messageText: "Привет! 🌟\nДобро пожаловать в наш бот!\nОткуда вы узнали о нас?",
+              keyboardType: "inline",
+              inputVariable: "источник",
+              saveToDatabase: true,
+              fallbackMessage: "",
+              collectUserInput: true,
+              conditionalMessages: [
+                {
+                  id: "returning_with_source",
+                  priority: 10,
+                  condition: "user_data_exists",
+                  messageText: "С возвращением! 👋\nВы пришли к нам из источника: {источник}\n\nРады видеть вас снова!",
+                  variableName: "источник"
+                },
+                {
+                  id: "returning_user",
+                  priority: 5,
+                  condition: "returning_user",
+                  messageText: "Рады видеть вас снова! 🎉\nВы уже не новичок в нашем боте."
+                }
+              ],
+              enableConditionalMessages: true,
+              buttons: [
+                {
+                  id: "btn_search",
+                  text: "🔍 Поиск в интернете",
+                  action: "goto",
+                  target: "source_search",
+                  callback_data: "set_source_search"
+                },
+                {
+                  id: "btn_friends",
+                  text: "👥 Друзья",
+                  action: "goto",
+                  target: "source_friends",
+                  callback_data: "set_source_friends"
+                },
+                {
+                  id: "btn_ads",
+                  text: "📱 Реклама",
+                  action: "goto",
+                  target: "source_ads",
+                  callback_data: "set_source_ads"
+                }
+              ]
+            }
+          },
+          {
+            id: "source_search",
+            type: "message",
+            position: { x: 400, y: 80 },
+            data: {
+              messageText: "Отлично! 🎯\nТеперь мы знаем, что вы нашли нас через поиск.\n\nПопробуйте снова написать /start чтобы увидеть персонализированное приветствие!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_try_again",
+                  text: "🔄 Попробовать /start снова",
+                  action: "command",
+                  target: "/start"
+                }
+              ]
+            }
+          },
+          {
+            id: "source_friends",
+            type: "message",
+            position: { x: 400, y: 480 },
+            data: {
+              messageText: "Замечательно! 👥\nЗначит, вас порекомендовали друзья!\n\nТеперь попробуйте /start еще раз - увидите, как изменится приветствие!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_try_again2",
+                  text: "🔄 Попробовать /start снова",
+                  action: "command",
+                  target: "/start"
+                }
+              ]
+            }
+          },
+          {
+            id: "source_ads",
+            type: "message",
+            position: { x: 380, y: 860 },
+            data: {
+              messageText: "Понятно! 📱\nВы пришли из рекламы.\n\nВведите /start снова, чтобы увидеть персональное сообщение!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_try_again3",
+                  text: "🔄 Попробовать /start снова",
+                  action: "command",
+                  target: "/start"
+                }
+              ]
+            }
+          },
+          {
+            id: "help_command",
+            type: "command",
+            position: { x: 786, y: 120 },
+            data: {
+              command: "/help",
+              description: "Помощь по условным сообщениям",
+              messageText: "📖 Базовая справка",
+              keyboardType: "inline",
+              fallbackMessage: "📖 Базовая справка\n\nЭтот бот показывает, как работают условные сообщения:\n\n1. При первом /start вы увидите обычное приветствие\n2. Выберите источник\n3. При повторном /start - персональное сообщение\n\nКоманды:\n🔄 /start - запуск\n❓ /help - эта справка\n📊 /stats - статистика",
+              conditionalMessages: [
+                {
+                  id: "help_for_experienced",
+                  priority: 10,
+                  condition: "user_data_exists",
+                  messageText: "📖 Расширенная справка\n\nВы уже знакомы с ботом! Вот дополнительные возможности:\n\n🔄 /start - персональное приветствие\n📊 /stats - ваша статистика",
+                  variableName: "источник"
+                }
+              ],
+              enableConditionalMessages: true,
+              buttons: [
+                {
+                  id: "btn_back_to_start",
+                  text: "◀️ Назад к началу",
+                  action: "command",
+                  target: "/start"
+                }
+              ]
+            }
+          },
+          {
+            id: "stats_command",
+            type: "command",
+            position: { x: 760, y: 400 },
+            data: {
+              command: "/stats",
+              description: "Статистика пользователя",
+              messageText: "📊 Статистика недоступна",
+              fallbackMessage: "📊 Статистика\n\n👤 Статус: Новый пользователь\n🔍 Источник: Не указан\n🎯 Персонализация: Отключена\n\nВыберите источник в /start для активации персонализации!",
+              conditionalMessages: [
+                {
+                  id: "stats_available",
+                  priority: 10,
+                  condition: "user_data_exists",
+                  messageText: "📊 Ваша статистика:\n\n🔍 Источник: {источник}\n👤 Статус: Постоянный пользователь\n🎯 Персонализация: Включена",
+                  variableName: "источник"
+                }
+              ],
+              enableConditionalMessages: true
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn1",
+            source: "start_node",
+            target: "source_search",
+            sourceHandle: "btn_search",
+            targetHandle: null
+          },
+          {
+            id: "conn2",
+            source: "start_node",
+            target: "source_friends",
+            sourceHandle: "btn_friends",
+            targetHandle: null
+          },
+          {
+            id: "conn3",
+            source: "start_node",
+            target: "source_ads",
             sourceHandle: "btn_ads",
             targetHandle: null
           }
