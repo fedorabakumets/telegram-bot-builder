@@ -109,9 +109,24 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}variable_exists = False\n`;
         code += `${indentLevel}variable_value = None\n`;
         code += `${indentLevel}logging.info(f"Проверяем переменную '${condition.variableName}' в user_data_dict: {user_data_dict}")\n`;
-        code += `${indentLevel}if "${condition.variableName}" in user_data_dict:\n`;
+        code += `${indentLevel}\n`;
+        code += `${indentLevel}# Проверяем в базе данных через parsed user_data\n`;
+        code += `${indentLevel}if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
+        code += `${indentLevel}    try:\n`;
+        code += `${indentLevel}        import json\n`;
+        code += `${indentLevel}        parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
+        code += `${indentLevel}        logging.info(f"Parsed user_data: {parsed_data}")\n`;
+        code += `${indentLevel}        if "${condition.variableName}" in parsed_data:\n`;
+        code += `${indentLevel}            variable_value = parsed_data["${condition.variableName}"]\n`;
+        code += `${indentLevel}            variable_exists = True\n`;
+        code += `${indentLevel}            logging.info(f"Переменная '${condition.variableName}' найдена в БД: {variable_value}")\n`;
+        code += `${indentLevel}    except (json.JSONDecodeError, TypeError) as e:\n`;
+        code += `${indentLevel}        logging.warning(f"Ошибка парсинга user_data: {e}")\n`;
+        code += `${indentLevel}\n`;
+        code += `${indentLevel}# Проверяем в локальных данных если не найдено в БД\n`;
+        code += `${indentLevel}if not variable_exists and "${condition.variableName}" in user_data_dict:\n`;
         code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
-        code += `${indentLevel}    logging.info(f"Найдена переменная '${condition.variableName}': {variable_data}")\n`;
+        code += `${indentLevel}    logging.info(f"Найдена переменная '${condition.variableName}' локально: {variable_data}")\n`;
         code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
         code += `${indentLevel}        variable_value = variable_data["value"]\n`;
         code += `${indentLevel}        variable_exists = variable_value is not None\n`;
@@ -120,8 +135,9 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        variable_value = str(variable_data)\n`;
         code += `${indentLevel}        variable_exists = True\n`;
         code += `${indentLevel}        logging.info(f"Простое значение: {variable_value}")\n`;
-        code += `${indentLevel}else:\n`;
-        code += `${indentLevel}    logging.info(f"Переменная '${condition.variableName}' не найдена в user_data_dict")\n`;
+        code += `${indentLevel}\n`;
+        code += `${indentLevel}if not variable_exists:\n`;
+        code += `${indentLevel}    logging.info(f"Переменная '${condition.variableName}' не найдена ни в БД, ни локально")\n`;
         code += `${indentLevel}${conditionKeyword} variable_exists:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         // Добавляем замену переменной прямо в тексте
@@ -1449,13 +1465,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // КРИТИЧЕСКИ ВАЖНО: специальная логика для шаблона "Федя"
           if (nodeId === 'source_search') {
             variableName = 'источник';
-            variableValue = '"из инета"';
+            variableValue = '"🔍 Поиск в интернете"';
           } else if (nodeId === 'source_friends') {
             variableName = 'источник';
-            variableValue = '"friends"';
+            variableValue = '"👥 Друзья"';
           } else if (nodeId === 'source_ads') {
             variableName = 'источник';
-            variableValue = '"ads"';
+            variableValue = '"📱 Реклама"';
           } else if (parentNode && parentNode.data.inputVariable) {
             variableName = parentNode.data.inputVariable;
             
