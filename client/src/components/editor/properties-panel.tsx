@@ -2073,9 +2073,12 @@ export function PropertiesPanel({
                             id: `condition-${Date.now()}`,
                             condition: 'user_data_exists' as const,
                             variableName: 'source',
+                            variableNames: ['source'],
+                            logicOperator: 'AND' as const,
                             messageText: 'Добро пожаловать обратно!',
                             keyboardType: 'none' as const,
-                            buttons: []
+                            buttons: [],
+                            priority: 0
                           };
                           const currentConditions = selectedNode.data.conditionalMessages || [];
                           onNodeUpdate(selectedNode.id, { 
@@ -2140,64 +2143,156 @@ export function PropertiesPanel({
                               </Select>
                             </div>
 
-                            {/* Variable Name */}
+                            {/* Variable Names - Multiple Question Selection */}
                             {(condition.condition === 'user_data_exists' || 
                               condition.condition === 'user_data_not_exists' || 
                               condition.condition === 'user_data_equals' || 
                               condition.condition === 'user_data_contains') && (
                               <div>
-                                <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                  На какой вопрос должен был ответить пользователь?
+                                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                  На какие вопросы должен был ответить пользователь?
                                 </Label>
-                                <div className="space-y-2">
-                                  <Select
-                                    value={condition.variableName || ''}
-                                    onValueChange={(value) => {
-                                      const currentConditions = selectedNode.data.conditionalMessages || [];
-                                      const updatedConditions = currentConditions.map(c => 
-                                        c.id === condition.id ? { ...c, variableName: value } : c
-                                      );
-                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                    }}
-                                  >
-                                    <SelectTrigger className="text-xs">
-                                      <SelectValue placeholder="Выберите вопрос из клавиатуры" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {availableQuestions.length > 0 ? (
-                                        availableQuestions.map((question) => (
-                                          <SelectItem key={`${question.nodeId}-${question.name}`} value={question.name}>
-                                            <div className="flex items-center space-x-2">
-                                              <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
-                                                {question.nodeType}
-                                              </span>
-                                              <span>{question.name}</span>
+                                
+                                {/* Multiple Question Selection with Checkboxes */}
+                                {availableQuestions.length > 0 ? (
+                                  <div className="space-y-3">
+                                    <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
+                                      <div className="text-xs font-medium text-muted-foreground mb-2">
+                                        Выберите вопросы из списка:
+                                      </div>
+                                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                                        {availableQuestions.map((question) => {
+                                          const currentVariableNames = condition.variableNames || [];
+                                          const isSelected = currentVariableNames.includes(question.name);
+                                          
+                                          return (
+                                            <div key={`${question.nodeId}-${question.name}`} className="flex items-center space-x-2">
+                                              <input
+                                                type="checkbox"
+                                                id={`question-${condition.id}-${question.name}`}
+                                                checked={isSelected}
+                                                onChange={(e) => {
+                                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                  const currentVariableNames = condition.variableNames || [];
+                                                  
+                                                  let updatedVariableNames;
+                                                  if (e.target.checked) {
+                                                    updatedVariableNames = [...currentVariableNames, question.name];
+                                                  } else {
+                                                    updatedVariableNames = currentVariableNames.filter(name => name !== question.name);
+                                                  }
+                                                  
+                                                  const updatedConditions = currentConditions.map(c => 
+                                                    c.id === condition.id ? { 
+                                                      ...c, 
+                                                      variableNames: updatedVariableNames,
+                                                      // Update legacy variableName for backward compatibility
+                                                      variableName: updatedVariableNames.length > 0 ? updatedVariableNames[0] : ''
+                                                    } : c
+                                                  );
+                                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                }}
+                                                className="w-3 h-3 text-primary focus:ring-primary border-border rounded"
+                                              />
+                                              <label 
+                                                htmlFor={`question-${condition.id}-${question.name}`}
+                                                className="flex items-center space-x-2 cursor-pointer flex-1"
+                                              >
+                                                <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                                                  {question.nodeType}
+                                                </span>
+                                                <span className="text-xs">{question.name}</span>
+                                              </label>
                                             </div>
-                                          </SelectItem>
-                                        ))
-                                      ) : (
-                                        <SelectItem value="no-questions" disabled>
-                                          Нет доступных вопросов
-                                        </SelectItem>
-                                      )}
-                                    </SelectContent>
-                                  </Select>
-                                  <Input
-                                    value={condition.variableName || ''}
-                                    onChange={(e) => {
-                                      const currentConditions = selectedNode.data.conditionalMessages || [];
-                                      const updatedConditions = currentConditions.map(c => 
-                                        c.id === condition.id ? { ...c, variableName: e.target.value } : c
-                                      );
-                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                    }}
-                                    className="text-xs"
-                                    placeholder="Или введите название вручную: source, пол, возраст"
-                                  />
-                                </div>
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  Выберите из списка или введите название вопроса вручную
-                                </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Logic Operator Selection for Multiple Questions */}
+                                    {(condition.variableNames?.length || 0) > 1 && (
+                                      <div>
+                                        <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                          Логика проверки нескольких вопросов:
+                                        </Label>
+                                        <Select
+                                          value={condition.logicOperator || 'AND'}
+                                          onValueChange={(value: 'AND' | 'OR') => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, logicOperator: value } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        >
+                                          <SelectTrigger className="text-xs">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="AND">И (AND) - все выбранные вопросы</SelectItem>
+                                            <SelectItem value="OR">ИЛИ (OR) - любой из выбранных вопросов</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                        <div className="text-xs text-muted-foreground mt-1">
+                                          {condition.logicOperator === 'AND' 
+                                            ? 'Пользователь должен ответить на ВСЕ выбранные вопросы'
+                                            : 'Пользователь должен ответить на ЛЮБОЙ из выбранных вопросов'
+                                          }
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Manual Input for Additional Questions */}
+                                    <div>
+                                      <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                        Или добавьте вопросы вручную:
+                                      </Label>
+                                      <Input
+                                        value={(condition.variableNames || []).join(', ')}
+                                        onChange={(e) => {
+                                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                                          const variableNames = e.target.value.split(',').map(name => name.trim()).filter(name => name);
+                                          const updatedConditions = currentConditions.map(c => 
+                                            c.id === condition.id ? { 
+                                              ...c, 
+                                              variableNames: variableNames,
+                                              variableName: variableNames.length > 0 ? variableNames[0] : ''
+                                            } : c
+                                          );
+                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                        }}
+                                        className="text-xs"
+                                        placeholder="source, пол, возраст (через запятую)"
+                                      />
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        Введите названия вопросов через запятую
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-4 text-muted-foreground bg-muted/30 rounded-lg border border-border/50">
+                                    <i className="fas fa-question-circle text-lg mb-2"></i>
+                                    <div className="text-xs">
+                                      Нет доступных вопросов. Создайте узлы с пользовательским вводом.
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Display Selected Questions */}
+                                {(condition.variableNames?.length || 0) > 0 && (
+                                  <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/40 rounded-lg p-2">
+                                    <div className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">
+                                      Выбранные вопросы ({condition.variableNames?.length || 0}):
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {(condition.variableNames || []).map((name, idx) => (
+                                        <span key={idx} className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
+                                          {name}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
 

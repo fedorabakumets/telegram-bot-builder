@@ -363,7 +363,9 @@ export const nodeSchema = z.object({
     conditionalMessages: z.array(z.object({
       id: z.string(),
       condition: z.enum(['user_data_exists', 'user_data_equals', 'user_data_not_exists', 'user_data_contains', 'first_time', 'returning_user']).default('user_data_exists'), // Тип условия
-      variableName: z.string().optional(), // Имя переменной для проверки
+      variableName: z.string().optional(), // Имя переменной для проверки (для обратной совместимости)
+      variableNames: z.array(z.string()).default([]), // Массив имен переменных для проверки нескольких вопросов
+      logicOperator: z.enum(['AND', 'OR']).default('AND'), // Логический оператор для проверки нескольких переменных
       expectedValue: z.string().optional(), // Ожидаемое значение для сравнения
       messageText: z.string(), // Текст сообщения для этого условия
       keyboardType: z.enum(['reply', 'inline', 'none']).default('none'), // Тип клавиатуры для условного сообщения

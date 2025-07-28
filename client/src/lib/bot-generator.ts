@@ -111,100 +111,215 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
     const conditionText = formatTextForPython(condition.messageText);
     const conditionKeyword = i === 0 ? 'if' : 'elif';
     
-    code += `${indentLevel}# Проверяем условие: ${condition.condition}\n`;
+    // Get variable names - support both new array format and legacy single variable
+    const variableNames = condition.variableNames && condition.variableNames.length > 0 
+      ? condition.variableNames 
+      : (condition.variableName ? [condition.variableName] : []);
+    
+    const logicOperator = condition.logicOperator || 'AND';
+    
+    code += `${indentLevel}# Проверяем условие: ${condition.condition} для переменных: ${variableNames.join(', ')}\n`;
     
     switch (condition.condition) {
       case 'user_data_exists':
-        code += `${indentLevel}# Проверяем существование переменной с учетом структуры данных\n`;
-        code += `${indentLevel}variable_exists = False\n`;
-        code += `${indentLevel}variable_value = None\n`;
-        code += `${indentLevel}logging.info(f"Проверяем переменную '${condition.variableName}' в user_data_dict: {user_data_dict}")\n`;
+        if (variableNames.length === 0) {
+          code += `${indentLevel}# Ошибка: не указаны переменные для проверки\n`;
+          code += `${indentLevel}${conditionKeyword} False:  # Skip this condition\n`;
+          break;
+        }
+        
+        code += `${indentLevel}# Проверяем существование переменных с учетом структуры данных\n`;
+        code += `${indentLevel}variables_exist = []\n`;
+        code += `${indentLevel}variable_values = {}\n`;
         code += `${indentLevel}\n`;
-        code += `${indentLevel}# Проверяем в базе данных через parsed user_data\n`;
-        code += `${indentLevel}if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
-        code += `${indentLevel}    try:\n`;
-        code += `${indentLevel}        import json\n`;
-        code += `${indentLevel}        parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
-        code += `${indentLevel}        logging.info(f"Parsed user_data: {parsed_data}")\n`;
-        code += `${indentLevel}        if "${condition.variableName}" in parsed_data:\n`;
-        code += `${indentLevel}            variable_value = parsed_data["${condition.variableName}"]\n`;
-        code += `${indentLevel}            variable_exists = True\n`;
-        code += `${indentLevel}            logging.info(f"Переменная '${condition.variableName}' найдена в БД: {variable_value}")\n`;
-        code += `${indentLevel}    except (json.JSONDecodeError, TypeError) as e:\n`;
-        code += `${indentLevel}        logging.warning(f"Ошибка парсинга user_data: {e}")\n`;
-        code += `${indentLevel}\n`;
-        code += `${indentLevel}# Проверяем в локальных данных если не найдено в БД\n`;
-        code += `${indentLevel}if not variable_exists and "${condition.variableName}" in user_data_dict:\n`;
-        code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
-        code += `${indentLevel}    logging.info(f"Найдена переменная '${condition.variableName}' локально: {variable_data}")\n`;
-        code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
-        code += `${indentLevel}        variable_value = variable_data["value"]\n`;
-        code += `${indentLevel}        variable_exists = variable_value is not None\n`;
-        code += `${indentLevel}        logging.info(f"Структура dict с value: {variable_value}")\n`;
-        code += `${indentLevel}    elif variable_data is not None:\n`;
-        code += `${indentLevel}        variable_value = str(variable_data)\n`;
-        code += `${indentLevel}        variable_exists = True\n`;
-        code += `${indentLevel}        logging.info(f"Простое значение: {variable_value}")\n`;
-        code += `${indentLevel}\n`;
-        code += `${indentLevel}if not variable_exists:\n`;
-        code += `${indentLevel}    logging.info(f"Переменная '${condition.variableName}' не найдена ни в БД, ни локально")\n`;
-        code += `${indentLevel}${conditionKeyword} variable_exists:\n`;
+        
+        // Generate checks for each variable
+        for (const varName of variableNames) {
+          code += `${indentLevel}# Проверяем переменную '${varName}'\n`;
+          code += `${indentLevel}var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = False\n`;
+          code += `${indentLevel}var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = None\n`;
+          code += `${indentLevel}logging.info(f"Проверяем переменную '${varName}' в user_data_dict: {user_data_dict}")\n`;
+          code += `${indentLevel}\n`;
+          code += `${indentLevel}# Проверяем в базе данных через parsed user_data\n`;
+          code += `${indentLevel}if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
+          code += `${indentLevel}    try:\n`;
+          code += `${indentLevel}        import json\n`;
+          code += `${indentLevel}        parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
+          code += `${indentLevel}        if "${varName}" in parsed_data:\n`;
+          code += `${indentLevel}            var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = parsed_data["${varName}"]\n`;
+          code += `${indentLevel}            var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = True\n`;
+          code += `${indentLevel}            logging.info(f"Переменная '${varName}' найдена в БД: {var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')}}")\n`;
+          code += `${indentLevel}    except (json.JSONDecodeError, TypeError) as e:\n`;
+          code += `${indentLevel}        logging.warning(f"Ошибка парсинга user_data: {e}")\n`;
+          code += `${indentLevel}\n`;
+          code += `${indentLevel}# Проверяем в локальных данных если не найдено в БД\n`;
+          code += `${indentLevel}if not var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')} and "${varName}" in user_data_dict:\n`;
+          code += `${indentLevel}    variable_data = user_data_dict.get("${varName}")\n`;
+          code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+          code += `${indentLevel}        var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = variable_data["value"]\n`;
+          code += `${indentLevel}        var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} is not None\n`;
+          code += `${indentLevel}    elif variable_data is not None:\n`;
+          code += `${indentLevel}        var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = str(variable_data)\n`;
+          code += `${indentLevel}        var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = True\n`;
+          code += `${indentLevel}\n`;
+          code += `${indentLevel}variables_exist.append(var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
+          code += `${indentLevel}variable_values["${varName}"] = var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')}\n`;
+        }
+        
+        // Apply logic operator
+        if (logicOperator === 'AND') {
+          code += `${indentLevel}condition_met = all(variables_exist)\n`;
+        } else {
+          code += `${indentLevel}condition_met = any(variables_exist)\n`;
+        }
+        
+        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        // Добавляем замену переменной прямо в тексте
-        code += `${indentLevel}    if "{${condition.variableName}}" in text:\n`;
-        code += `${indentLevel}        if variable_value is not None:\n`;
-        code += `${indentLevel}            text = text.replace("{${condition.variableName}}", str(variable_value))\n`;
-        code += `${indentLevel}        else:\n`;
-        code += `${indentLevel}            text = text.replace("{${condition.variableName}}", "${condition.variableName}")\n`;
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {variable_value}")\n`;
+        
+        // Replace variables in text
+        for (const varName of variableNames) {
+          code += `${indentLevel}    if "{${varName}}" in text:\n`;
+          code += `${indentLevel}        if variable_values["${varName}"] is not None:\n`;
+          code += `${indentLevel}            text = text.replace("{${varName}}", str(variable_values["${varName}"]))\n`;
+          code += `${indentLevel}        else:\n`;
+          code += `${indentLevel}            text = text.replace("{${varName}}", "${varName}")\n`;
+        }
+        
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} (${logicOperator})")\n`;
         break;
         
       case 'user_data_not_exists':
-        code += `${indentLevel}# Проверяем отсутствие переменной с учетом структуры данных\n`;
-        code += `${indentLevel}variable_exists = False\n`;
-        code += `${indentLevel}if "${condition.variableName}" in user_data_dict:\n`;
-        code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
-        code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
-        code += `${indentLevel}        variable_exists = variable_data["value"] is not None\n`;
-        code += `${indentLevel}    elif variable_data is not None:\n`;
-        code += `${indentLevel}        variable_exists = True\n`;
-        code += `${indentLevel}${conditionKeyword} not variable_exists:\n`;
+        if (variableNames.length === 0) {
+          code += `${indentLevel}# Ошибка: не указаны переменные для проверки\n`;
+          code += `${indentLevel}${conditionKeyword} False:  # Skip this condition\n`;
+          break;
+        }
+        
+        code += `${indentLevel}# Проверяем отсутствие переменных с учетом структуры данных\n`;
+        code += `${indentLevel}variables_exist = []\n`;
+        code += `${indentLevel}\n`;
+        
+        // Generate checks for each variable
+        for (const varName of variableNames) {
+          code += `${indentLevel}# Проверяем переменную '${varName}'\n`;
+          code += `${indentLevel}var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = False\n`;
+          code += `${indentLevel}if "${varName}" in user_data_dict:\n`;
+          code += `${indentLevel}    variable_data = user_data_dict.get("${varName}")\n`;
+          code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+          code += `${indentLevel}        var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = variable_data["value"] is not None\n`;
+          code += `${indentLevel}    elif variable_data is not None:\n`;
+          code += `${indentLevel}        var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = True\n`;
+          code += `${indentLevel}variables_exist.append(var_exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
+        }
+        
+        // Apply logic operator (for NOT_EXISTS we want the inverse)
+        if (logicOperator === 'AND') {
+          code += `${indentLevel}condition_met = not all(variables_exist)  # None of the variables should exist\n`;
+        } else {
+          code += `${indentLevel}condition_met = not any(variables_exist)  # At least one variable should not exist\n`;
+        }
+        
+        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} не существует")\n`;
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
         break;
         
       case 'user_data_equals':
-        code += `${indentLevel}# Проверяем значение переменной с учетом структуры данных\n`;
-        code += `${indentLevel}variable_value = None\n`;
-        code += `${indentLevel}if "${condition.variableName}" in user_data_dict:\n`;
-        code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
-        code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
-        code += `${indentLevel}        variable_value = variable_data["value"]\n`;
-        code += `${indentLevel}    elif variable_data is not None:\n`;
-        code += `${indentLevel}        variable_value = str(variable_data)\n`;
-        code += `${indentLevel}${conditionKeyword} variable_value == "${condition.expectedValue || ''}":\n`;
+        if (variableNames.length === 0) {
+          code += `${indentLevel}# Ошибка: не указаны переменные для проверки\n`;
+          code += `${indentLevel}${conditionKeyword} False:  # Skip this condition\n`;
+          break;
+        }
+        
+        code += `${indentLevel}# Проверяем значения переменных с учетом структуры данных\n`;
+        code += `${indentLevel}variables_match = []\n`;
+        code += `${indentLevel}variable_values = {}\n`;
+        code += `${indentLevel}\n`;
+        
+        // Generate checks for each variable
+        for (const varName of variableNames) {
+          code += `${indentLevel}# Проверяем переменную '${varName}'\n`;
+          code += `${indentLevel}var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = None\n`;
+          code += `${indentLevel}if "${varName}" in user_data_dict:\n`;
+          code += `${indentLevel}    variable_data = user_data_dict.get("${varName}")\n`;
+          code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+          code += `${indentLevel}        var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = variable_data["value"]\n`;
+          code += `${indentLevel}    elif variable_data is not None:\n`;
+          code += `${indentLevel}        var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = str(variable_data)\n`;
+          code += `${indentLevel}var_matches_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} == "${condition.expectedValue || ''}"\n`;
+          code += `${indentLevel}variables_match.append(var_matches_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
+          code += `${indentLevel}variable_values["${varName}"] = var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')}\n`;
+        }
+        
+        // Apply logic operator
+        if (logicOperator === 'AND') {
+          code += `${indentLevel}condition_met = all(variables_match)\n`;
+        } else {
+          code += `${indentLevel}condition_met = any(variables_match)\n`;
+        }
+        
+        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        // Добавляем замену переменной прямо в тексте
-        code += `${indentLevel}    if "{${condition.variableName}}" in text:\n`;
-        code += `${indentLevel}        if variable_value is not None:\n`;
-        code += `${indentLevel}            text = text.replace("{${condition.variableName}}", str(variable_value))\n`;
-        code += `${indentLevel}        else:\n`;
-        code += `${indentLevel}            text = text.replace("{${condition.variableName}}", "${condition.variableName}")\n`;
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {variable_value}")\n`;
+        
+        // Replace variables in text
+        for (const varName of variableNames) {
+          code += `${indentLevel}    if "{${varName}}" in text:\n`;
+          code += `${indentLevel}        if variable_values["${varName}"] is not None:\n`;
+          code += `${indentLevel}            text = text.replace("{${varName}}", str(variable_values["${varName}"]))\n`;
+          code += `${indentLevel}        else:\n`;
+          code += `${indentLevel}            text = text.replace("{${varName}}", "${varName}")\n`;
+        }
+        
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} равны '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
         
       case 'user_data_contains':
-        code += `${indentLevel}# Проверяем содержимое переменной с учетом структуры данных\n`;
-        code += `${indentLevel}variable_value = None\n`;
-        code += `${indentLevel}if "${condition.variableName}" in user_data_dict:\n`;
-        code += `${indentLevel}    variable_data = user_data_dict.get("${condition.variableName}")\n`;
-        code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
-        code += `${indentLevel}        variable_value = variable_data["value"]\n`;
-        code += `${indentLevel}    elif variable_data is not None:\n`;
-        code += `${indentLevel}        variable_value = str(variable_data)\n`;
-        code += `${indentLevel}${conditionKeyword} variable_value is not None and "${condition.expectedValue || ''}" in str(variable_value):\n`;
+        if (variableNames.length === 0) {
+          code += `${indentLevel}# Ошибка: не указаны переменные для проверки\n`;
+          code += `${indentLevel}${conditionKeyword} False:  # Skip this condition\n`;
+          break;
+        }
+        
+        code += `${indentLevel}# Проверяем содержимое переменных с учетом структуры данных\n`;
+        code += `${indentLevel}variables_contain = []\n`;
+        code += `${indentLevel}variable_values = {}\n`;
+        code += `${indentLevel}\n`;
+        
+        // Generate checks for each variable
+        for (const varName of variableNames) {
+          code += `${indentLevel}# Проверяем переменную '${varName}'\n`;
+          code += `${indentLevel}var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = None\n`;
+          code += `${indentLevel}if "${varName}" in user_data_dict:\n`;
+          code += `${indentLevel}    variable_data = user_data_dict.get("${varName}")\n`;
+          code += `${indentLevel}    if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+          code += `${indentLevel}        var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = variable_data["value"]\n`;
+          code += `${indentLevel}    elif variable_data is not None:\n`;
+          code += `${indentLevel}        var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = str(variable_data)\n`;
+          code += `${indentLevel}var_contains_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} is not None and "${condition.expectedValue || ''}" in str(var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
+          code += `${indentLevel}variables_contain.append(var_contains_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
+          code += `${indentLevel}variable_values["${varName}"] = var_value_${varName.replace(/[^a-zA-Z0-9]/g, '_')}\n`;
+        }
+        
+        // Apply logic operator
+        if (logicOperator === 'AND') {
+          code += `${indentLevel}condition_met = all(variables_contain)\n`;
+        } else {
+          code += `${indentLevel}condition_met = any(variables_contain)\n`;
+        }
+        
+        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} содержит ${condition.expectedValue || ''}")\n`;
+        
+        // Replace variables in text
+        for (const varName of variableNames) {
+          code += `${indentLevel}    if "{${varName}}" in text:\n`;
+          code += `${indentLevel}        if variable_values["${varName}"] is not None:\n`;
+          code += `${indentLevel}            text = text.replace("{${varName}}", str(variable_values["${varName}"]))\n`;
+          code += `${indentLevel}        else:\n`;
+          code += `${indentLevel}            text = text.replace("{${varName}}", "${varName}")\n`;
+        }
+        
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} содержат '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
         
       case 'first_time':
