@@ -2014,13 +2014,13 @@ export function PropertiesPanel({
                       </div>
                       <div>
                         <div className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">
-                          Умные сообщения
+                          Как это работает?
                         </div>
                         <div className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
                           <div className="space-y-1">
-                            <div>✅ Для новых пользователей - одно сообщение</div>
-                            <div>✅ Для пользователей, уже отвечавших на вопросы - другое</div>
-                            <div>✅ Можно настроить проверку любой переменной</div>
+                            <div>📝 Бот запомнит ответы пользователей на вопросы</div>
+                            <div>🎯 Покажет разные сообщения в зависимости от этих ответов</div>
+                            <div>⚡ Например: новым - "Добро пожаловать!", старым - "С возвращением!"</div>
                           </div>
                         </div>
                       </div>
@@ -2031,7 +2031,7 @@ export function PropertiesPanel({
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                        Список условных сообщений
+                        Настройка правил для показа сообщений
                       </Label>
                       <UIButton
                         size="sm"
@@ -2054,7 +2054,7 @@ export function PropertiesPanel({
                         className="text-xs"
                       >
                         <i className="fas fa-plus mr-1"></i>
-                        Добавить условие
+                        Добавить правило
                       </UIButton>
                     </div>
 
@@ -2063,7 +2063,7 @@ export function PropertiesPanel({
                         <div key={condition.id} className="bg-white/50 dark:bg-gray-900/30 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-3">
                           <div className="flex items-center justify-between mb-3">
                             <div className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                              Условие #{index + 1}
+                              Правило #{index + 1}
                             </div>
                             <UIButton
                               size="sm"
@@ -2099,12 +2099,12 @@ export function PropertiesPanel({
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="user_data_exists">Переменная существует</SelectItem>
-                                  <SelectItem value="user_data_not_exists">Переменная не существует</SelectItem>
-                                  <SelectItem value="user_data_equals">Переменная равна значению</SelectItem>
-                                  <SelectItem value="user_data_contains">Переменная содержит значение</SelectItem>
-                                  <SelectItem value="first_time">Первое посещение</SelectItem>
-                                  <SelectItem value="returning_user">Возвращающийся пользователь</SelectItem>
+                                  <SelectItem value="user_data_exists">Пользователь уже отвечал на вопрос</SelectItem>
+                                  <SelectItem value="user_data_not_exists">Пользователь НЕ отвечал на вопрос</SelectItem>
+                                  <SelectItem value="user_data_equals">Ответ пользователя равен определенному значению</SelectItem>
+                                  <SelectItem value="user_data_contains">Ответ пользователя содержит определенный текст</SelectItem>
+                                  <SelectItem value="first_time">Пользователь заходит впервые</SelectItem>
+                                  <SelectItem value="returning_user">Пользователь уже заходил ранее</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -2116,7 +2116,7 @@ export function PropertiesPanel({
                               condition.condition === 'user_data_contains') && (
                               <div>
                                 <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                  Имя переменной
+                                  На какой вопрос должен был ответить пользователь?
                                 </Label>
                                 <Input
                                   value={condition.variableName || ''}
@@ -2131,7 +2131,7 @@ export function PropertiesPanel({
                                   placeholder="source"
                                 />
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  Например: source, gender, age
+                                  Укажите название вопроса, например: "источник", "пол", "возраст"
                                 </div>
                               </div>
                             )}
@@ -2141,7 +2141,9 @@ export function PropertiesPanel({
                               condition.condition === 'user_data_contains') && (
                               <div>
                                 <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                  Ожидаемое значение
+                                  {condition.condition === 'user_data_equals' 
+                                    ? 'Какой должен быть точный ответ пользователя?' 
+                                    : 'Какой текст должен содержаться в ответе?'}
                                 </Label>
                                 <Input
                                   value={condition.expectedValue || ''}
@@ -2153,15 +2155,20 @@ export function PropertiesPanel({
                                     onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                   }}
                                   className="text-xs"
-                                  placeholder="Реклама"
+                                  placeholder={condition.condition === 'user_data_equals' ? 'Реклама' : 'рекл'}
                                 />
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {condition.condition === 'user_data_equals' 
+                                    ? 'Например: "Реклама", "Мужской", "25"' 
+                                    : 'Например: "рекл" найдет "Реклама", "реклама в интернете"'}
+                                </div>
                               </div>
                             )}
 
                             {/* Priority */}
                             <div>
                               <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                Приоритет (чем больше, тем выше)
+                                Важность условия (0-100)
                               </Label>
                               <Input
                                 type="number"
@@ -2177,12 +2184,15 @@ export function PropertiesPanel({
                                 min="0"
                                 max="100"
                               />
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Чем выше число, тем раньше проверится условие
+                              </div>
                             </div>
 
                             {/* Message Text */}
                             <div>
                               <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                Текст сообщения для этого условия
+                                Что показать пользователю, если условие выполнится?
                               </Label>
                               <Textarea
                                 value={condition.messageText}
@@ -2197,6 +2207,9 @@ export function PropertiesPanel({
                                 rows={3}
                                 placeholder="Добро пожаловать обратно! Рады вас снова видеть."
                               />
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Это сообщение увидит пользователь вместо основного текста
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -2216,15 +2229,18 @@ export function PropertiesPanel({
                   {/* Fallback Message */}
                   <div>
                     <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
-                      Сообщение по умолчанию
+                      Что показать, если ни одно правило не подошло?
                     </Label>
                     <Textarea
                       value={selectedNode.data.fallbackMessage || ''}
                       onChange={(e) => onNodeUpdate(selectedNode.id, { fallbackMessage: e.target.value })}
                       className="text-xs resize-none border-purple-200 dark:border-purple-700"
                       rows={3}
-                      placeholder="Сообщение, если ни одно условие не выполнено (по умолчанию - основной текст узла)"
+                      placeholder="Оставьте пустым, чтобы показать основной текст узла"
                     />
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Если не заполнить, покажется обычный текст сообщения
+                    </div>
                   </div>
                 </div>
               )}

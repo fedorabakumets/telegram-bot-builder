@@ -173,6 +173,14 @@ Changelog:
     - Created interactive canvas controls with backdrop blur and hover effects
     - Added visual feedback for drag-and-drop operations with animated grid
     - Implemented zoom indicator with smooth animations and transitions
+- July 28, 2025. Enhanced conditional messaging system:
+  * Replaced outdated "user-input" elements with modern callback handlers in conditional messaging template
+  * Added callback node type support in bot generator for variable saving functionality
+  * Implemented dedicated callback handlers for source tracking (search, friends, ads) 
+  * Added update_user_variable_in_db function for proper variable persistence in database
+  * Created comprehensive test bot demonstrating conditional messaging with working variable saving
+  * Confirmed successful bot deployment and database integration with provided token
+  * Enhanced template system to support complex conditional logic without user-input dependencies
     - Enhanced control buttons with scale animations and color transitions
   * Enhanced advanced command settings with comprehensive dark theme support:
     - Redesigned command advanced settings accordion with gradient backgrounds and themed icons

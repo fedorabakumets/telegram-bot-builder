@@ -153,6 +153,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        logging.error(f"Ошибка обновления данных пользователя: {e}")\n';
   code += '        return False\n\n';
 
+  code += 'async def update_user_variable_in_db(user_id: int, variable_name: str, variable_value: str):\n';
+  code += '    """Сохраняет переменную пользователя в базу данных"""\n';
+  code += '    if not db_pool:\n';
+  code += '        return False\n';
+  code += '    try:\n';
+  code += '        async with db_pool.acquire() as conn:\n';
+  code += '            await conn.execute("""\n';
+  code += '                UPDATE bot_users \n';
+  code += '                SET user_data = user_data || $2::jsonb,\n';
+  code += '                    last_interaction = NOW()\n';
+  code += '                WHERE user_id = $1\n';
+  code += '            """, user_id, json.dumps({variable_name: variable_value}))\n';
+  code += '        return True\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка сохранения переменной пользователя: {e}")\n';
+  code += '        return False\n\n';
+
   // Добавляем утилитарные функции
   code += '\n# Утилитарные функции\n';
   code += 'async def is_admin(user_id: int) -> bool:\n';
@@ -384,8 +401,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           if (targetNode) {
             
+            // Handle callback nodes with variable saving
+            if (targetNode.type === 'callback') {
+              const action = targetNode.data.action || 'none';
+              const variableName = targetNode.data.variableName || '';
+              const variableValue = targetNode.data.variableValue || '';
+              const successMessage = targetNode.data.successMessage || 'Успешно сохранено!';
+              
+              if (action === 'save_variable' && variableName && variableValue) {
+                code += `    # Сохраняем переменную "${variableName}" = "${variableValue}"\n`;
+                code += `    user_data[user_id]["${variableName}"] = "${variableValue}"\n`;
+                code += `    await update_user_variable_in_db(user_id, "${variableName}", "${variableValue}")\n`;
+                code += `    logging.info(f"Переменная сохранена: ${variableName} = ${variableValue} (пользователь {user_id})")\n`;
+                code += '    \n';
+                
+                if (successMessage.includes('\n')) {
+                  code += `    success_text = """${successMessage}"""\n`;
+                } else {
+                  const escapedMessage = successMessage.replace(/"/g, '\\"');
+                  code += `    success_text = "${escapedMessage}"\n`;
+                }
+                
+                code += '    await callback_query.message.edit_text(success_text)\n';
+              }
+            }
             // Handle different target node types
-            if (targetNode.type === 'photo') {
+            else if (targetNode.type === 'photo') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📸 Фото";
               const imageUrl = targetNode.data.imageUrl || "https://picsum.photos/800/600?random=1";
               
@@ -1262,13 +1303,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   case 'user_data_exists':
                     code += `    if "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
                     code += `        text = ${conditionText}\n`;
-                    code += '        logging.info(f"Условие выполнено: переменная {}" существует".format("' + condition.variableName + '"))\n';
+                    code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' существует")\n';
                     break;
                     
                   case 'user_data_not_exists':
                     code += `    if "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
                     code += `        text = ${conditionText}\n`;
-                    code += '        logging.info(f"Условие выполнено: переменная {}" не существует".format("' + condition.variableName + '"))\n';
+                    code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' не существует")\n';
                     break;
                     
                   case 'user_data_equals':
@@ -2275,13 +2316,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               case 'user_data_exists':
                 code += `                if "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
                 code += `                    text = ${conditionText}\n`;
-                code += '                    logging.info(f"Условие выполнено: переменная {}" существует".format("' + condition.variableName + '"))\n';
+                code += '                    logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' существует")\n';
                 break;
                 
               case 'user_data_not_exists':
                 code += `                if "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
                 code += `                    text = ${conditionText}\n`;
-                code += '                    logging.info(f"Условие выполнено: переменная {}" не существует".format("' + condition.variableName + '"))\n';
+                code += '                    logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' не существует")\n';
                 break;
                 
               case 'user_data_equals':
