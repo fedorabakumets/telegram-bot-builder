@@ -71,6 +71,38 @@ export function PropertiesPanel({
     }
   };
 
+  // Extract all available questions from keyboard and user-input nodes
+  const availableQuestions = useMemo(() => {
+    const questions: Array<{name: string, nodeId: string, nodeType: string}> = [];
+    
+    allNodes.forEach(node => {
+      // From user-input nodes
+      if (node.type === 'user-input' && node.data.inputVariable) {
+        questions.push({
+          name: node.data.inputVariable,
+          nodeId: node.id,
+          nodeType: 'user-input'
+        });
+      }
+      
+      // From any nodes with additional input collection that have inputVariable
+      if (node.data.collectUserInput && node.data.inputVariable) {
+        questions.push({
+          name: node.data.inputVariable,
+          nodeId: node.id,
+          nodeType: node.type
+        });
+      }
+    });
+    
+    // Remove duplicates by question name
+    const uniqueQuestions = questions.filter((question, index, self) => 
+      index === self.findIndex(q => q.name === question.name)
+    );
+    
+    return uniqueQuestions;
+  }, [allNodes]);
+
   // Валидация команды
   const commandValidation = useMemo(() => {
     if (selectedNode && (selectedNode.type === 'start' || selectedNode.type === 'command')) {
@@ -2118,20 +2150,54 @@ export function PropertiesPanel({
                                 <Label className="text-xs font-medium text-muted-foreground mb-1 block">
                                   На какой вопрос должен был ответить пользователь?
                                 </Label>
-                                <Input
-                                  value={condition.variableName || ''}
-                                  onChange={(e) => {
-                                    const currentConditions = selectedNode.data.conditionalMessages || [];
-                                    const updatedConditions = currentConditions.map(c => 
-                                      c.id === condition.id ? { ...c, variableName: e.target.value } : c
-                                    );
-                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                  }}
-                                  className="text-xs"
-                                  placeholder="source"
-                                />
+                                <div className="space-y-2">
+                                  <Select
+                                    value={condition.variableName || ''}
+                                    onValueChange={(value) => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id ? { ...c, variableName: value } : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                  >
+                                    <SelectTrigger className="text-xs">
+                                      <SelectValue placeholder="Выберите вопрос из клавиатуры" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {availableQuestions.length > 0 ? (
+                                        availableQuestions.map((question) => (
+                                          <SelectItem key={`${question.nodeId}-${question.name}`} value={question.name}>
+                                            <div className="flex items-center space-x-2">
+                                              <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                                                {question.nodeType}
+                                              </span>
+                                              <span>{question.name}</span>
+                                            </div>
+                                          </SelectItem>
+                                        ))
+                                      ) : (
+                                        <SelectItem value="no-questions" disabled>
+                                          Нет доступных вопросов
+                                        </SelectItem>
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+                                  <Input
+                                    value={condition.variableName || ''}
+                                    onChange={(e) => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id ? { ...c, variableName: e.target.value } : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                    className="text-xs"
+                                    placeholder="Или введите название вручную: source, пол, возраст"
+                                  />
+                                </div>
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  Укажите название вопроса, например: "источник", "пол", "возраст"
+                                  Выберите из списка или введите название вопроса вручную
                                 </div>
                               </div>
                             )}
