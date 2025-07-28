@@ -1353,7 +1353,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    if not user_record:\n';
               code += '        user_record = user_data.get(user_id, {})\n';
               code += '    \n';
-              code += '    user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}\n';
+              code += '    # Безопасно извлекаем user_data\n';
+              code += '    if isinstance(user_record, dict):\n';
+              code += '        if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
+              code += '            user_data_dict = user_record["user_data"]\n';
+              code += '        else:\n';
+              code += '            user_data_dict = user_record\n';
+              code += '    else:\n';
+              code += '        user_data_dict = {}\n';
               code += '    \n';
               
               // Generate conditional logic using helper function
@@ -2316,7 +2323,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '                if not user_record:\n';
           code += '                    user_record = user_data.get(user_id, {})\n';
           code += '                \n';
-          code += '                user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}\n';
+          code += '                # Безопасно извлекаем user_data\n';
+          code += '                if isinstance(user_record, dict):\n';
+          code += '                    if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
+          code += '                        user_data_dict = user_record["user_data"]\n';
+          code += '                    else:\n';
+          code += '                        user_data_dict = user_record\n';
+          code += '                else:\n';
+          code += '                    user_data_dict = {}\n';
           code += '                \n';
           
           // Generate conditional logic using helper function
@@ -2590,7 +2604,14 @@ function generateStartHandler(node: Node): string {
     code += '    if not user_record:\n';
     code += '        user_record = user_data.get(user_id, {})\n';
     code += '    \n';
-    code += '    user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}\n';
+    code += '    # Безопасно извлекаем user_data\n';
+    code += '    if isinstance(user_record, dict):\n';
+    code += '        if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
+    code += '            user_data_dict = user_record["user_data"]\n';
+    code += '        else:\n';
+    code += '            user_data_dict = user_record\n';
+    code += '    else:\n';
+    code += '        user_data_dict = {}\n';
     code += '    \n';
     
     // Generate conditional logic using helper function
@@ -2679,7 +2700,14 @@ function generateCommandHandler(node: Node): string {
     code += '    if not user_record:\n';
     code += '        user_record = user_data.get(user_id, {})\n';
     code += '    \n';
-    code += '    user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}\n';
+    code += '    # Безопасно извлекаем user_data\n';
+    code += '    if isinstance(user_record, dict):\n';
+    code += '        if "user_data" in user_record and isinstance(user_record["user_data"], dict):\n';
+    code += '            user_data_dict = user_record["user_data"]\n';
+    code += '        else:\n';
+    code += '            user_data_dict = user_record\n';
+    code += '    else:\n';
+    code += '        user_data_dict = {}\n';
     code += '    \n';
     
     // Generate conditional logic using helper function
