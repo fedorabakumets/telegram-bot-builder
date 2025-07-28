@@ -181,6 +181,9 @@ Changelog:
   * Created comprehensive test bot demonstrating conditional messaging with working variable saving
   * Confirmed successful bot deployment and database integration with provided token
   * Enhanced template system to support complex conditional logic without user-input dependencies
+  * Fixed critical bug in conditional message logic where button responses weren't properly saving to expected variable names
+  * Updated bot generator to correctly map button click data to input variables for conditional checks
+  * Verified "Федя" template now properly shows personalized messages after source selection
     - Enhanced control buttons with scale animations and color transitions
   * Enhanced advanced command settings with comprehensive dark theme support:
     - Redesigned command advanced settings accordion with gradient backgrounds and themed icons

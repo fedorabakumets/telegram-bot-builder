@@ -453,6 +453,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '        user_data[user_id] = {}\n';
           code += '    user_data[user_id]["last_button_click"] = response_data\n';
           code += '    \n';
+          code += '    # Сохраняем переменную для условных сообщений\n';
+          code += '    if user_id in user_data and user_data[user_id].get("input_variable"):\n';
+          code += '        variable_name = user_data[user_id]["input_variable"]\n';
+          code += '        await update_user_data_in_db(user_id, variable_name, button_text)\n';
+          code += '        logging.info(f"Переменная {variable_name} сохранена: {button_text} (пользователь {user_id})")\n';
+          code += '    \n';
           code += '    # Сохраняем в базу данных\n';
           code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
           code += '    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")\n';
