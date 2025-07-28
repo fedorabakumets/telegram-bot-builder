@@ -25,6 +25,65 @@ function escapeForJsonString(text: string): string {
   return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
 
+// Функция для генерации логики условных сообщений
+function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel: string = '    '): string {
+  if (!conditionalMessages || conditionalMessages.length === 0) {
+    return '';
+  }
+
+  let code = '';
+  const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+  
+  // Create proper if-elif-else chain
+  for (let i = 0; i < sortedConditions.length; i++) {
+    const condition = sortedConditions[i];
+    const conditionText = formatTextForPython(condition.messageText);
+    const conditionKeyword = i === 0 ? 'if' : 'elif';
+    
+    code += `${indentLevel}# Проверяем условие: ${condition.condition}\n`;
+    
+    switch (condition.condition) {
+      case 'user_data_exists':
+        code += `${indentLevel}${conditionKeyword} "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
+        code += `${indentLevel}    text = ${conditionText}\n`;
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} существует")\n`;
+        break;
+        
+      case 'user_data_not_exists':
+        code += `${indentLevel}${conditionKeyword} "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
+        code += `${indentLevel}    text = ${conditionText}\n`;
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} не существует")\n`;
+        break;
+        
+      case 'user_data_equals':
+        code += `${indentLevel}${conditionKeyword} user_data_dict.get("${condition.variableName}") == "${condition.expectedValue || ''}":\n`;
+        code += `${indentLevel}    text = ${conditionText}\n`;
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} равна ${condition.expectedValue || ''}")\n`;
+        break;
+        
+      case 'user_data_contains':
+        code += `${indentLevel}${conditionKeyword} "${condition.expectedValue || ''}" in str(user_data_dict.get("${condition.variableName}", "")):\n`;
+        code += `${indentLevel}    text = ${conditionText}\n`;
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} содержит ${condition.expectedValue || ''}")\n`;
+        break;
+        
+      case 'first_time':
+        code += `${indentLevel}${conditionKeyword} user_record.get("interaction_count", 0) <= 1:\n`;
+        code += `${indentLevel}    text = ${conditionText}\n`;
+        code += `${indentLevel}    logging.info("Условие выполнено: первое посещение пользователя")\n`;
+        break;
+        
+      case 'returning_user':
+        code += `${indentLevel}${conditionKeyword} user_record.get("interaction_count", 0) > 1:\n`;
+        code += `${indentLevel}    text = ${conditionText}\n`;
+        code += `${indentLevel}    logging.info("Условие выполнено: возвращающийся пользователь")\n`;
+        break;
+    }
+  }
+  
+  return code;
+}
+
 export function generatePythonCode(botData: BotData, botName: string = "MyBot"): string {
   const { nodes, connections } = botData;
   
@@ -1291,60 +1350,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}\n';
               code += '    \n';
               
-              // Сортируем условия по приоритету (от большего к меньшему)
-              const sortedConditions = [...(targetNode.data.conditionalMessages || [])].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+              // Generate conditional logic using helper function
+              code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
               
-              for (let condition of sortedConditions) {
-                const conditionText = formatTextForPython(condition.messageText);
-                
-                code += '    # Проверяем условие: ' + condition.condition + '\n';
-                
-                switch (condition.condition) {
-                  case 'user_data_exists':
-                    code += `    if "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
-                    code += `        text = ${conditionText}\n`;
-                    code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' существует")\n';
-                    break;
-                    
-                  case 'user_data_not_exists':
-                    code += `    if "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
-                    code += `        text = ${conditionText}\n`;
-                    code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' не существует")\n';
-                    break;
-                    
-                  case 'user_data_equals':
-                    code += `    if user_data_dict.get("${condition.variableName}") == "${condition.expectedValue || ''}":\n`;
-                    code += `        text = ${conditionText}\n`;
-                    code += '        logging.info(f"Условие выполнено: переменная {}" равна {}".format("' + condition.variableName + '", "' + (condition.expectedValue || '') + '"))\n';
-                    break;
-                    
-                  case 'user_data_contains':
-                    code += `    if "${condition.expectedValue || ''}" in str(user_data_dict.get("${condition.variableName}", "")):\n`;
-                    code += `        text = ${conditionText}\n`;
-                    code += '        logging.info(f"Условие выполнено: переменная {}" содержит {}".format("' + condition.variableName + '", "' + (condition.expectedValue || '') + '"))\n';
-                    break;
-                    
-                  case 'first_time':
-                    code += '    if user_record.get("interaction_count", 0) <= 1:\n';
-                    code += `        text = ${conditionText}\n`;
-                    code += '        logging.info("Условие выполнено: первое посещение пользователя")\n';
-                    break;
-                    
-                  case 'returning_user':
-                    code += '    if user_record.get("interaction_count", 0) > 1:\n';
-                    code += `        text = ${conditionText}\n`;
-                    code += '        logging.info("Условие выполнено: возвращающийся пользователь")\n';
-                    break;
-                }
-                
-                code += '    \n';
-                code += '    if text is not None:\n';
-                code += '        pass  # Условие найдено, используем это сообщение\n';
-                
-              }
-              
-              // Убираем последний 'el' и добавляем fallback
-              // Fixed: Remove problematic elif logic
+              // Add fallback
               code += '    else:\n';
               
               if (targetNode.data.fallbackMessage) {
@@ -2304,61 +2313,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '                user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}\n';
           code += '                \n';
           
-          // Сортируем условия по приоритету (от большего к меньшему)
-          const sortedConditions = [...(targetNode.data.conditionalMessages || [])].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+          // Generate conditional logic using helper function
+          code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '                ');
           
-          for (let condition of sortedConditions) {
-            const conditionText = formatTextForPython(condition.messageText);
-            
-            code += '                # Проверяем условие: ' + condition.condition + '\n';
-            
-            switch (condition.condition) {
-              case 'user_data_exists':
-                code += `                if "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
-                code += `                    text = ${conditionText}\n`;
-                code += '                    logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' существует")\n';
-                break;
-                
-              case 'user_data_not_exists':
-                code += `                if "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
-                code += `                    text = ${conditionText}\n`;
-                code += '                    logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' не существует")\n';
-                break;
-                
-              case 'user_data_equals':
-                code += `                if user_data_dict.get("${condition.variableName}") == "${condition.expectedValue || ''}":\n`;
-                code += `                    text = ${conditionText}\n`;
-                code += '                    logging.info(f"Условие выполнено: переменная {}" равна {}".format("' + condition.variableName + '", "' + (condition.expectedValue || '') + '"))\n';
-                break;
-                
-              case 'user_data_contains':
-                code += `                if "${condition.expectedValue || ''}" in str(user_data_dict.get("${condition.variableName}", "")):\n`;
-                code += `                    text = ${conditionText}\n`;
-                code += '                    logging.info(f"Условие выполнено: переменная {}" содержит {}".format("' + condition.variableName + '", "' + (condition.expectedValue || '') + '"))\n';
-                break;
-                
-              case 'first_time':
-                code += '                if user_record.get("interaction_count", 0) <= 1:\n';
-                code += `                    text = ${conditionText}\n`;
-                code += '                    logging.info("Условие выполнено: первое посещение пользователя")\n';
-                break;
-                
-              case 'returning_user':
-                code += '                if user_record.get("interaction_count", 0) > 1:\n';
-                code += `                    text = ${conditionText}\n`;
-                code += '                    logging.info("Условие выполнено: возвращающийся пользователь")\n';
-                break;
-            }
-            
-            code += '                \n';
-            code += '                if text is not None:\n';
-            code += '                    pass  # Условие найдено, используем это сообщение\n';
-            code += '                el';
-          }
-          
-          // Убираем последний 'el' и добавляем fallback
-          // Fixed: Remove problematic elif logic
-          code += '    else:\n';
+          // Add fallback
+          code += '                else:\n';
           
           if (targetNode.data.fallbackMessage) {
             const fallbackText = formatTextForPython(targetNode.data.fallbackMessage);
@@ -2628,60 +2587,10 @@ function generateStartHandler(node: Node): string {
     code += '    user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}\n';
     code += '    \n';
     
-    // Сортируем условия по приоритету (от большего к меньшему)
-    const sortedConditions = [...(node.data.conditionalMessages || [])].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    // Generate conditional logic using helper function
+    code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
     
-    for (let condition of sortedConditions) {
-      const conditionText = formatTextForPython(condition.messageText);
-      
-      code += '    # Проверяем условие: ' + condition.condition + '\n';
-      
-      switch (condition.condition) {
-        case 'user_data_exists':
-          code += `    if "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' существует")\n';
-          break;
-          
-        case 'user_data_not_exists':
-          code += `    if "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' не существует")\n';
-          break;
-          
-        case 'user_data_equals':
-          code += `    if user_data_dict.get("${condition.variableName}") == "${condition.expectedValue || ''}":\n`;
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная {}" равна {}".format("' + condition.variableName + '", "' + (condition.expectedValue || '') + '"))\n';
-          break;
-          
-        case 'user_data_contains':
-          code += `    if "${condition.expectedValue || ''}" in str(user_data_dict.get("${condition.variableName}", "")):\n`;
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная {}" содержит {}".format("' + condition.variableName + '", "' + (condition.expectedValue || '') + '"))\n';
-          break;
-          
-        case 'first_time':
-          code += '    if user_record.get("interaction_count", 0) <= 1:\n';
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info("Условие выполнено: первое посещение пользователя")\n';
-          break;
-          
-        case 'returning_user':
-          code += '    if user_record.get("interaction_count", 0) > 1:\n';
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info("Условие выполнено: возвращающийся пользователь")\n';
-          break;
-      }
-      
-      code += '    \n';
-      code += '    if text is not None:\n';
-      code += '        pass  # Условие найдено, используем это сообщение\n';
-      
-    }
-    
-    // Убираем последний 'el' и добавляем fallback
-    // Fixed: Remove problematic elif logic
+    // Add fallback
     code += '    else:\n';
     
     if (node.data.fallbackMessage) {
@@ -2767,60 +2676,10 @@ function generateCommandHandler(node: Node): string {
     code += '    user_data_dict = user_record.get("user_data", {}) if isinstance(user_record, dict) and "user_data" in user_record else {}\n';
     code += '    \n';
     
-    // Сортируем условия по приоритету (от большего к меньшему)
-    const sortedConditions = [...(node.data.conditionalMessages || [])].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    // Generate conditional logic using helper function
+    code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
     
-    for (let condition of sortedConditions) {
-      const conditionText = formatTextForPython(condition.messageText);
-      
-      code += '    # Проверяем условие: ' + condition.condition + '\n';
-      
-      switch (condition.condition) {
-        case 'user_data_exists':
-          code += `    if "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' существует")\n';
-          break;
-          
-        case 'user_data_not_exists':
-          code += `    if "${condition.variableName}" not in user_data_dict or user_data_dict.get("${condition.variableName}") is None:\n`;
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная ' + condition.variableName + ' не существует")\n';
-          break;
-          
-        case 'user_data_equals':
-          code += `    if user_data_dict.get("${condition.variableName}") == "${condition.expectedValue || ''}":\n`;
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная {}" равна {}".format("' + condition.variableName + '", "' + (condition.expectedValue || '') + '"))\n';
-          break;
-          
-        case 'user_data_contains':
-          code += `    if "${condition.expectedValue || ''}" in str(user_data_dict.get("${condition.variableName}", "")):\n`;
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info(f"Условие выполнено: переменная {}" содержит {}".format("' + condition.variableName + '", "' + (condition.expectedValue || '') + '"))\n';
-          break;
-          
-        case 'first_time':
-          code += '    if user_record.get("interaction_count", 0) <= 1:\n';
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info("Условие выполнено: первое посещение пользователя")\n';
-          break;
-          
-        case 'returning_user':
-          code += '    if user_record.get("interaction_count", 0) > 1:\n';
-          code += `        text = ${conditionText}\n`;
-          code += '        logging.info("Условие выполнено: возвращающийся пользователь")\n';
-          break;
-      }
-      
-      code += '    \n';
-      code += '    if text is not None:\n';
-      code += '        pass  # Условие найдено, используем это сообщение\n';
-      
-    }
-    
-    // Убираем последний 'el' и добавляем fallback
-    // Fixed: Remove problematic elif logic
+    // Add fallback
     code += '    else:\n';
     
     if (node.data.fallbackMessage) {
