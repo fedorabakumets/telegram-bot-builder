@@ -291,98 +291,11 @@ async def profile_handler(message: types.Message):
     else:
         user_data_dict = {}
     
-    # Проверяем условие: user_data_exists для переменных: возраст, желание, имя, источник, пол
+    # Проверяем условие: user_data_exists для переменных: источник, желание, пол, имя, возраст
     # Проверяем существование переменных с учетом структуры данных
     variables_exist = []
     variable_values = {}
     
-    # Проверяем переменную 'возраст'
-    var_exists________ = False
-    var_value________ = None
-    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "возраст" in parsed_data:
-                var_value________ = parsed_data["возраст"]
-                var_exists________ = True
-                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists________ and "возраст" in user_data_dict:
-        variable_data = user_data_dict.get("возраст")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value________ = variable_data["value"]
-            var_exists________ = var_value________ is not None
-        elif variable_data is not None:
-            var_value________ = str(variable_data)
-            var_exists________ = True
-    
-    variables_exist.append(var_exists________)
-    variable_values["возраст"] = var_value________
-    # Проверяем переменную 'желание'
-    var_exists________ = False
-    var_value________ = None
-    logging.info(f"Проверяем переменную 'желание' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "желание" in parsed_data:
-                var_value________ = parsed_data["желание"]
-                var_exists________ = True
-                logging.info(f"Переменная 'желание' найдена в БД: {var_value________}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists________ and "желание" in user_data_dict:
-        variable_data = user_data_dict.get("желание")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value________ = variable_data["value"]
-            var_exists________ = var_value________ is not None
-        elif variable_data is not None:
-            var_value________ = str(variable_data)
-            var_exists________ = True
-    
-    variables_exist.append(var_exists________)
-    variable_values["желание"] = var_value________
-    # Проверяем переменную 'имя'
-    var_exists____ = False
-    var_value____ = None
-    logging.info(f"Проверяем переменную 'имя' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "имя" in parsed_data:
-                var_value____ = parsed_data["имя"]
-                var_exists____ = True
-                logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists____ and "имя" in user_data_dict:
-        variable_data = user_data_dict.get("имя")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value____ = variable_data["value"]
-            var_exists____ = var_value____ is not None
-        elif variable_data is not None:
-            var_value____ = str(variable_data)
-            var_exists____ = True
-    
-    variables_exist.append(var_exists____)
-    variable_values["имя"] = var_value____
     # Проверяем переменную 'источник'
     var_exists_________ = False
     var_value_________ = None
@@ -412,6 +325,35 @@ async def profile_handler(message: types.Message):
     
     variables_exist.append(var_exists_________)
     variable_values["источник"] = var_value_________
+    # Проверяем переменную 'желание'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'желание' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "желание" in parsed_data:
+                var_value________ = parsed_data["желание"]
+                var_exists________ = True
+                logging.info(f"Переменная 'желание' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "желание" in user_data_dict:
+        variable_data = user_data_dict.get("желание")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["желание"] = var_value________
     # Проверяем переменную 'пол'
     var_exists____ = False
     var_value____ = None
@@ -441,77 +383,6 @@ async def profile_handler(message: types.Message):
     
     variables_exist.append(var_exists____)
     variable_values["пол"] = var_value____
-    condition_met = all(variables_exist)
-    if condition_met:
-        text = """👤 Ваш профиль:
-
-🔍 Источник: {источник}
-💭 Желание продолжить: {желание}
-⚧️ Пол: {пол}
-👋 Имя: {имя}
-🎂 Возраст: {возраст}
-
-Профиль полностью заполнен! ✅"""
-        if "{возраст}" in text:
-            if variable_values["возраст"] is not None:
-                text = text.replace("{возраст}", str(variable_values["возраст"]))
-            else:
-                text = text.replace("{возраст}", "возраст")
-        if "{желание}" in text:
-            if variable_values["желание"] is not None:
-                text = text.replace("{желание}", str(variable_values["желание"]))
-            else:
-                text = text.replace("{желание}", "желание")
-        if "{имя}" in text:
-            if variable_values["имя"] is not None:
-                text = text.replace("{имя}", str(variable_values["имя"]))
-            else:
-                text = text.replace("{имя}", "имя")
-        if "{источник}" in text:
-            if variable_values["источник"] is not None:
-                text = text.replace("{источник}", str(variable_values["источник"]))
-            else:
-                text = text.replace("{источник}", "источник")
-        if "{пол}" in text:
-            if variable_values["пол"] is not None:
-                text = text.replace("{пол}", str(variable_values["пол"]))
-            else:
-                text = text.replace("{пол}", "пол")
-        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    # Проверяем условие: user_data_exists для переменных: возраст, имя
-    # Проверяем существование переменных с учетом структуры данных
-    variables_exist = []
-    variable_values = {}
-    
-    # Проверяем переменную 'возраст'
-    var_exists________ = False
-    var_value________ = None
-    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "возраст" in parsed_data:
-                var_value________ = parsed_data["возраст"]
-                var_exists________ = True
-                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists________ and "возраст" in user_data_dict:
-        variable_data = user_data_dict.get("возраст")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value________ = variable_data["value"]
-            var_exists________ = var_value________ is not None
-        elif variable_data is not None:
-            var_value________ = str(variable_data)
-            var_exists________ = True
-    
-    variables_exist.append(var_exists________)
-    variable_values["возраст"] = var_value________
     # Проверяем переменную 'имя'
     var_exists____ = False
     var_value____ = None
@@ -541,6 +412,135 @@ async def profile_handler(message: types.Message):
     
     variables_exist.append(var_exists____)
     variable_values["имя"] = var_value____
+    # Проверяем переменную 'возраст'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "возраст" in parsed_data:
+                var_value________ = parsed_data["возраст"]
+                var_exists________ = True
+                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "возраст" in user_data_dict:
+        variable_data = user_data_dict.get("возраст")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["возраст"] = var_value________
+    condition_met = all(variables_exist)
+    if condition_met:
+        text = """👤 Ваш профиль:
+
+🔍 Источник: {источник}
+💭 Желание продолжить: {желание}
+⚧️ Пол: {пол}
+👋 Имя: {имя}
+🎂 Возраст: {возраст}
+
+Профиль полностью заполнен! ✅"""
+        if "{источник}" in text:
+            if variable_values["источник"] is not None:
+                text = text.replace("{источник}", str(variable_values["источник"]))
+            else:
+                text = text.replace("{источник}", "источник")
+        if "{желание}" in text:
+            if variable_values["желание"] is not None:
+                text = text.replace("{желание}", str(variable_values["желание"]))
+            else:
+                text = text.replace("{желание}", "желание")
+        if "{пол}" in text:
+            if variable_values["пол"] is not None:
+                text = text.replace("{пол}", str(variable_values["пол"]))
+            else:
+                text = text.replace("{пол}", "пол")
+        if "{имя}" in text:
+            if variable_values["имя"] is not None:
+                text = text.replace("{имя}", str(variable_values["имя"]))
+            else:
+                text = text.replace("{имя}", "имя")
+        if "{возраст}" in text:
+            if variable_values["возраст"] is not None:
+                text = text.replace("{возраст}", str(variable_values["возраст"]))
+            else:
+                text = text.replace("{возраст}", "возраст")
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    # Проверяем условие: user_data_exists для переменных: имя, возраст
+    # Проверяем существование переменных с учетом структуры данных
+    variables_exist = []
+    variable_values = {}
+    
+    # Проверяем переменную 'имя'
+    var_exists____ = False
+    var_value____ = None
+    logging.info(f"Проверяем переменную 'имя' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "имя" in parsed_data:
+                var_value____ = parsed_data["имя"]
+                var_exists____ = True
+                logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists____ and "имя" in user_data_dict:
+        variable_data = user_data_dict.get("имя")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value____ = variable_data["value"]
+            var_exists____ = var_value____ is not None
+        elif variable_data is not None:
+            var_value____ = str(variable_data)
+            var_exists____ = True
+    
+    variables_exist.append(var_exists____)
+    variable_values["имя"] = var_value____
+    # Проверяем переменную 'возраст'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "возраст" in parsed_data:
+                var_value________ = parsed_data["возраст"]
+                var_exists________ = True
+                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "возраст" in user_data_dict:
+        variable_data = user_data_dict.get("возраст")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["возраст"] = var_value________
     condition_met = all(variables_exist)
     elif condition_met:
         text = """👤 Ваш профиль:
@@ -549,16 +549,16 @@ async def profile_handler(message: types.Message):
 🎂 Возраст: {возраст}
 
 Основная информация заполнена. Хотите пройти полный опрос?"""
-        if "{возраст}" in text:
-            if variable_values["возраст"] is not None:
-                text = text.replace("{возраст}", str(variable_values["возраст"]))
-            else:
-                text = text.replace("{возраст}", "возраст")
         if "{имя}" in text:
             if variable_values["имя"] is not None:
                 text = text.replace("{имя}", str(variable_values["имя"]))
             else:
                 text = text.replace("{имя}", "имя")
+        if "{возраст}" in text:
+            if variable_values["возраст"] is not None:
+                text = text.replace("{возраст}", str(variable_values["возраст"]))
+            else:
+                text = text.replace("{возраст}", "возраст")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     # Проверяем условие: user_data_exists для переменных: источник
     # Проверяем существование переменных с учетом структуры данных
@@ -607,98 +607,11 @@ async def profile_handler(message: types.Message):
             else:
                 text = text.replace("{источник}", "источник")
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
-    # Проверяем условие: user_data_exists для переменных: возраст, желание, имя, источник, пол
+    # Проверяем условие: user_data_exists для переменных: источник, желание, пол, имя, возраст
     # Проверяем существование переменных с учетом структуры данных
     variables_exist = []
     variable_values = {}
     
-    # Проверяем переменную 'возраст'
-    var_exists________ = False
-    var_value________ = None
-    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "возраст" in parsed_data:
-                var_value________ = parsed_data["возраст"]
-                var_exists________ = True
-                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists________ and "возраст" in user_data_dict:
-        variable_data = user_data_dict.get("возраст")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value________ = variable_data["value"]
-            var_exists________ = var_value________ is not None
-        elif variable_data is not None:
-            var_value________ = str(variable_data)
-            var_exists________ = True
-    
-    variables_exist.append(var_exists________)
-    variable_values["возраст"] = var_value________
-    # Проверяем переменную 'желание'
-    var_exists________ = False
-    var_value________ = None
-    logging.info(f"Проверяем переменную 'желание' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "желание" in parsed_data:
-                var_value________ = parsed_data["желание"]
-                var_exists________ = True
-                logging.info(f"Переменная 'желание' найдена в БД: {var_value________}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists________ and "желание" in user_data_dict:
-        variable_data = user_data_dict.get("желание")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value________ = variable_data["value"]
-            var_exists________ = var_value________ is not None
-        elif variable_data is not None:
-            var_value________ = str(variable_data)
-            var_exists________ = True
-    
-    variables_exist.append(var_exists________)
-    variable_values["желание"] = var_value________
-    # Проверяем переменную 'имя'
-    var_exists____ = False
-    var_value____ = None
-    logging.info(f"Проверяем переменную 'имя' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "имя" in parsed_data:
-                var_value____ = parsed_data["имя"]
-                var_exists____ = True
-                logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists____ and "имя" in user_data_dict:
-        variable_data = user_data_dict.get("имя")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value____ = variable_data["value"]
-            var_exists____ = var_value____ is not None
-        elif variable_data is not None:
-            var_value____ = str(variable_data)
-            var_exists____ = True
-    
-    variables_exist.append(var_exists____)
-    variable_values["имя"] = var_value____
     # Проверяем переменную 'источник'
     var_exists_________ = False
     var_value_________ = None
@@ -728,6 +641,35 @@ async def profile_handler(message: types.Message):
     
     variables_exist.append(var_exists_________)
     variable_values["источник"] = var_value_________
+    # Проверяем переменную 'желание'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'желание' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "желание" in parsed_data:
+                var_value________ = parsed_data["желание"]
+                var_exists________ = True
+                logging.info(f"Переменная 'желание' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "желание" in user_data_dict:
+        variable_data = user_data_dict.get("желание")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["желание"] = var_value________
     # Проверяем переменную 'пол'
     var_exists____ = False
     var_value____ = None
@@ -757,6 +699,64 @@ async def profile_handler(message: types.Message):
     
     variables_exist.append(var_exists____)
     variable_values["пол"] = var_value____
+    # Проверяем переменную 'имя'
+    var_exists____ = False
+    var_value____ = None
+    logging.info(f"Проверяем переменную 'имя' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "имя" in parsed_data:
+                var_value____ = parsed_data["имя"]
+                var_exists____ = True
+                logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists____ and "имя" in user_data_dict:
+        variable_data = user_data_dict.get("имя")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value____ = variable_data["value"]
+            var_exists____ = var_value____ is not None
+        elif variable_data is not None:
+            var_value____ = str(variable_data)
+            var_exists____ = True
+    
+    variables_exist.append(var_exists____)
+    variable_values["имя"] = var_value____
+    # Проверяем переменную 'возраст'
+    var_exists________ = False
+    var_value________ = None
+    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
+    
+    # Проверяем в базе данных через parsed user_data
+    if "user_data" in user_data_dict and user_data_dict["user_data"]:
+        try:
+            import json
+            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+            if "возраст" in parsed_data:
+                var_value________ = parsed_data["возраст"]
+                var_exists________ = True
+                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
+        except (json.JSONDecodeError, TypeError) as e:
+            logging.warning(f"Ошибка парсинга user_data: {e}")
+    
+    # Проверяем в локальных данных если не найдено в БД
+    if not var_exists________ and "возраст" in user_data_dict:
+        variable_data = user_data_dict.get("возраст")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            var_value________ = variable_data["value"]
+            var_exists________ = var_value________ is not None
+        elif variable_data is not None:
+            var_value________ = str(variable_data)
+            var_exists________ = True
+    
+    variables_exist.append(var_exists________)
+    variable_values["возраст"] = var_value________
     condition_met = any(variables_exist)
     elif condition_met:
         text = """👤 Ваш профиль:
@@ -769,31 +769,31 @@ async def profile_handler(message: types.Message):
 ⚧️ Пол: {пол}
 👋 Имя: {имя}
 🎂 Возраст: {возраст}"""
-        if "{возраст}" in text:
-            if variable_values["возраст"] is not None:
-                text = text.replace("{возраст}", str(variable_values["возраст"]))
-            else:
-                text = text.replace("{возраст}", "возраст")
-        if "{желание}" in text:
-            if variable_values["желание"] is not None:
-                text = text.replace("{желание}", str(variable_values["желание"]))
-            else:
-                text = text.replace("{желание}", "желание")
-        if "{имя}" in text:
-            if variable_values["имя"] is not None:
-                text = text.replace("{имя}", str(variable_values["имя"]))
-            else:
-                text = text.replace("{имя}", "имя")
         if "{источник}" in text:
             if variable_values["источник"] is not None:
                 text = text.replace("{источник}", str(variable_values["источник"]))
             else:
                 text = text.replace("{источник}", "источник")
+        if "{желание}" in text:
+            if variable_values["желание"] is not None:
+                text = text.replace("{желание}", str(variable_values["желание"]))
+            else:
+                text = text.replace("{желание}", "желание")
         if "{пол}" in text:
             if variable_values["пол"] is not None:
                 text = text.replace("{пол}", str(variable_values["пол"]))
             else:
                 text = text.replace("{пол}", "пол")
+        if "{имя}" in text:
+            if variable_values["имя"] is not None:
+                text = text.replace("{имя}", str(variable_values["имя"]))
+            else:
+                text = text.replace("{имя}", "имя")
+        if "{возраст}" in text:
+            if variable_values["возраст"] is not None:
+                text = text.replace("{возраст}", str(variable_values["возраст"]))
+            else:
+                text = text.replace("{возраст}", "возраст")
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
     else:
         text = """👤 Профиль недоступен
