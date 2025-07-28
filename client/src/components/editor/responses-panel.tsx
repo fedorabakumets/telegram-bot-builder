@@ -152,6 +152,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
   const getResponseTypeColor = (type: string) => {
     switch (type) {
       case 'text': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'button': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       case 'number': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'email': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
       case 'phone': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
@@ -308,6 +309,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                   {responseTypes.map(type => (
                     <SelectItem key={type} value={type}>
                       {type === 'text' ? 'Текст' : 
+                       type === 'button' ? 'Кнопка' :
                        type === 'number' ? 'Число' :
                        type === 'email' ? 'Email' :
                        type === 'phone' ? 'Телефон' :
@@ -413,6 +415,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
                                             className={`text-xs ${getResponseTypeColor(response.type)}`}
                                           >
                                             {response.type === 'text' ? 'Текст' : 
+                                             response.type === 'button' ? 'Кнопка' :
                                              response.type === 'number' ? 'Число' :
                                              response.type === 'email' ? 'Email' :
                                              response.type === 'phone' ? 'Телефон' :

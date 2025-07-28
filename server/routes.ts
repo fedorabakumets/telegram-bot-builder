@@ -2493,21 +2493,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Принимаем все переменные кроме служебных
             if (!key.startsWith('input_') && !key.startsWith('waiting_')) {
               let responseData;
+              let responseType = 'text';
+              let timestamp = null;
+              let nodeId = null;
+              let responseValue = value;
+              
               try {
-                // Если value уже объект, используем его как есть
-                responseData = typeof value === 'object' ? value : { value: value, type: 'text' };
-              } catch {
+                // Если value является объектом, извлекаем данные
+                if (typeof value === 'object' && value !== null) {
+                  responseData = value;
+                  responseValue = responseData.value || value;
+                  responseType = responseData.type || 'text';
+                  timestamp = responseData.timestamp;
+                  nodeId = responseData.nodeId;
+                } else {
+                  // Простое значение
+                  responseValue = value;
+                  responseType = 'text';
+                }
+                
+                // Определяем тип ответа по контексту
+                if (key === 'button_click') {
+                  responseType = 'button';
+                } else if (key.includes('желание') || key.includes('пол') || key.includes('choice')) {
+                  responseType = 'button';
+                } else if (typeof responseValue === 'string' && 
+                          (responseValue === 'Да' || responseValue === 'Нет' || 
+                           responseValue === 'Женщина' || responseValue === 'Мужчина')) {
+                  responseType = 'button';
+                }
+                
+                // Если нет временной метки, используем последнее взаимодействие
+                if (!timestamp) {
+                  timestamp = user.last_interaction;
+                }
+                
+              } catch (error) {
                 // Если не удается обработать, создаем простую структуру
-                responseData = { value: value, type: 'text' };
+                responseValue = value;
+                responseType = 'text';
+                timestamp = user.last_interaction;
               }
               
               responses.push({
                 key,
-                value: responseData.value || value,
-                type: responseData.type || 'text',
-                timestamp: responseData.timestamp || null,
-                nodeId: responseData.nodeId || null,
-                variable: responseData.variable || key
+                value: responseValue,
+                type: responseType,
+                timestamp: timestamp,
+                nodeId: nodeId,
+                variable: key
               });
             }
           });
