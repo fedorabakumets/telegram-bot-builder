@@ -76,14 +76,7 @@ export function PropertiesPanel({
     const questions: Array<{name: string, nodeId: string, nodeType: string}> = [];
     
     allNodes.forEach(node => {
-      // From user-input nodes
-      if (node.type === 'user-input' && node.data.inputVariable) {
-        questions.push({
-          name: node.data.inputVariable,
-          nodeId: node.id,
-          nodeType: 'user-input'
-        });
-      }
+
       
       // From any nodes with additional input collection that have inputVariable
       if (node.data.collectUserInput && node.data.inputVariable) {
@@ -196,8 +189,7 @@ export function PropertiesPanel({
     contact: 'Контакт',
     keyboard: 'Клавиатура',
     condition: 'Условие',
-    input: 'Ввод данных',
-    'user-input': 'Сбор ввода пользователя'
+    input: 'Ввод данных'
   };
 
   const nodeIcons = {
@@ -215,8 +207,7 @@ export function PropertiesPanel({
     contact: 'fas fa-address-book',
     keyboard: 'fas fa-keyboard',
     condition: 'fas fa-code-branch',
-    input: 'fas fa-edit',
-    'user-input': 'fas fa-comments'
+    input: 'fas fa-edit'
   };
 
   const nodeColors = {
@@ -234,8 +225,7 @@ export function PropertiesPanel({
     contact: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
     keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
     condition: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-    input: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
-    'user-input': 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
+    input: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400'
   };
 
   const handleAddButton = () => {
