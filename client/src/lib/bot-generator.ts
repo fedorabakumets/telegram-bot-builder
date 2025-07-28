@@ -1584,15 +1584,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '                        # Вызываем обработчик для следующего узла\n';
         
         // Add navigation for done button
-        nodes.forEach((btnNode, btnIndex) => {
-          const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-          const condition = btnIndex === 0 ? 'if' : 'elif';
-          code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
-          code += `                            await handle_callback_${safeFunctionName}(callback_query)\n`;
-        });
-        
-        code += '                        else:\n';
-        code += '                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+        if (nodes.length > 0) {
+          nodes.forEach((btnNode, btnIndex) => {
+            const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            const condition = btnIndex === 0 ? 'if' : 'elif';
+            code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
+            code += `                            await handle_callback_${safeFunctionName}(callback_query)\n`;
+          });
+          
+          code += '                        else:\n';
+          code += '                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+        } else {
+          code += '                        # No nodes available for navigation\n';
+          code += '                        logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+        }
         code += '                    except Exception as e:\n';
         code += '                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
         code += '                return\n';
@@ -1704,15 +1709,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '                # Вызываем обработчик для целевого узла\n';
         
         // Generate navigation logic for button responses  
-        nodes.forEach((btnNode, btnIndex) => {
-          const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-          const condition = btnIndex === 0 ? 'if' : 'elif';
-          code += `                ${condition} target_node_id == "${btnNode.id}":\n`;
-          code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
-        });
-        
-        code += '                else:\n';
-        code += '                    logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
+        if (nodes.length > 0) {
+          nodes.forEach((btnNode, btnIndex) => {
+            const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            const condition = btnIndex === 0 ? 'if' : 'elif';
+            code += `                ${condition} target_node_id == "${btnNode.id}":\n`;
+            code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
+          });
+          code += '                else:\n';
+          code += '                    logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
+        } else {
+          code += '                pass  # No nodes to handle\n';
+        }
         code += '            except Exception as e:\n';
         code += '                logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")\n';
         code += '    else:\n';
@@ -1722,15 +1730,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '            try:\n';
         code += '                # Вызываем обработчик для следующего узла\n';
           
-          nodes.forEach((btnNode, btnIndex) => {
-            const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-            const condition = btnIndex === 0 ? 'if' : 'elif';
-            code += `                ${condition} next_node_id == "${btnNode.id}":\n`;
-            code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
-          });
-          
-          code += '                else:\n';
-          code += '                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+          if (nodes.length > 0) {
+            nodes.forEach((btnNode, btnIndex) => {
+              const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+              const condition = btnIndex === 0 ? 'if' : 'elif';
+              code += `                ${condition} next_node_id == "${btnNode.id}":\n`;
+              code += `                    await handle_callback_${safeFunctionName}(callback_query)\n`;
+            });
+            code += '                else:\n';
+            code += '                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+          } else {
+            code += '                pass  # No nodes to handle\n';
+          }
           code += '            except Exception as e:\n';
           code += '                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
       });
@@ -1859,15 +1870,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '                    # Вызываем обработчик для целевого узла\n';
 
   // Generate navigation logic for reply button responses  
-  nodes.forEach((btnNode, btnIndex) => {
-    const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-    const condition = btnIndex === 0 ? 'if' : 'elif';
-    code += `                    ${condition} target_node_id == "${btnNode.id}":\n`;
-    code += `                        await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))\n`;
-  });
-  
-  code += '                    else:\n';
-  code += '                        logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
+  if (nodes.length > 0) {
+    nodes.forEach((btnNode, btnIndex) => {
+      const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      const condition = btnIndex === 0 ? 'if' : 'elif';
+      code += `                    ${condition} target_node_id == "${btnNode.id}":\n`;
+      code += `                        await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))\n`;
+    });
+    code += '                    else:\n';
+    code += '                        logging.warning(f"Неизвестный целевой узел: {target_node_id}")\n';
+  } else {
+    code += '                    pass  # No nodes to handle\n';
+  }
   code += '                except Exception as e:\n';
   code += '                    logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")\n';
   code += '            else:\n';
@@ -1877,15 +1891,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '                    try:\n';
   code += '                        # Вызываем обработчик для следующего узла\n';
   
-  nodes.forEach((btnNode, btnIndex) => {
-    const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-    const condition = btnIndex === 0 ? 'if' : 'elif';
-    code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
-    code += `                            await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
-  });
-  
-  code += '                        else:\n';
-  code += '                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  if (nodes.length > 0) {
+    nodes.forEach((btnNode, btnIndex) => {
+      const safeFunctionName = btnNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      const condition = btnIndex === 0 ? 'if' : 'elif';
+      code += `                        ${condition} next_node_id == "${btnNode.id}":\n`;
+      code += `                            await handle_callback_${safeFunctionName}(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+    });
+    code += '                        else:\n';
+    code += '                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  } else {
+    code += '                        pass  # No nodes to handle\n';
+  }
   code += '                    except Exception as e:\n';
   code += '                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
   code += '            return\n';
@@ -2143,167 +2160,172 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            # Находим узел по ID и выполняем соответствующее действие\n';
   
   // Generate navigation logic for each node type
-  nodes.forEach((targetNode, index) => {
-    const condition = index === 0 ? 'if' : 'elif';
-    code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-    
-    if (targetNode.type === 'message') {
-      const messageText = formatTextForPython(targetNode.data.messageText || 'Сообщение');
-      code += `                text = ${messageText}\n`;
+  if (nodes.length > 0) {
+    nodes.forEach((targetNode, index) => {
+      const condition = index === 0 ? 'if' : 'elif';
+      code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
       
-      // Определяем режим форматирования
-      if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-        code += '                parse_mode = ParseMode.MARKDOWN\n';
-      } else if (targetNode.data.formatMode === 'html') {
-        code += '                parse_mode = ParseMode.HTML\n';
-      } else {
-        code += '                parse_mode = None\n';
-      }
-      
-      // Добавляем кнопки если есть
-      if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-        code += '                builder = InlineKeyboardBuilder()\n';
-        targetNode.data.buttons.forEach(button => {
-          if (button.action === "url") {
-            code += `                builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-          } else if (button.action === 'goto') {
-            const callbackData = button.target || button.id || 'no_action';
-            code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-          }
-        });
-        code += '                keyboard = builder.as_markup()\n';
-        code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
-      } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
-        code += '                builder = ReplyKeyboardBuilder()\n';
-        targetNode.data.buttons.forEach(button => {
-          code += `                builder.add(KeyboardButton(text="${button.text}"))\n`;
-        });
-        const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
-        const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
-        code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
-      } else {
-        code += '                await message.answer(text, parse_mode=parse_mode)\n';
-      }
-    } else if (targetNode.type === 'user-input') {
-      const inputPrompt = formatTextForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
-      const responseType = targetNode.data.responseType || 'text';
-      const inputType = targetNode.data.inputType || 'text';
-      const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-      const minLength = targetNode.data.minLength || 0;
-      const maxLength = targetNode.data.maxLength || 0;
-      const inputTimeout = targetNode.data.inputTimeout || 60;
-      const saveToDatabase = targetNode.data.saveToDatabase || false;
-      const placeholder = targetNode.data.placeholder || "";
-      const responseOptions = targetNode.data.responseOptions || [];
-      const allowMultipleSelection = targetNode.data.allowMultipleSelection || false;
-      const allowSkip = targetNode.data.allowSkip || false;
-      
-      code += `                prompt_text = "${escapeForJsonString(inputPrompt)}"\n`;
-      if (placeholder) {
-        code += `                placeholder_text = "${placeholder}"\n`;
-        code += '                prompt_text += f"\\n\\n💡 {placeholder_text}"\n';
-      }
-      
-      // Check if this is a button response node
-      if (responseType === 'buttons' && responseOptions.length > 0) {
-        // For button response nodes, set up button_response_config
-        code += '                \n';
-        code += '                # Создаем кнопки для выбора ответа\n';
-        code += '                builder = InlineKeyboardBuilder()\n';
+      if (targetNode.type === 'message') {
+        const messageText = formatTextForPython(targetNode.data.messageText || 'Сообщение');
+        code += `                text = ${messageText}\n`;
         
-        responseOptions.forEach((option, index) => {
-          const optionValue = option.value || option.text;
-          code += `                builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
-        });
-        
-        if (allowSkip) {
-          code += `                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="skip_${targetNode.id}"))\n`;
+        // Определяем режим форматирования
+        if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+          code += '                parse_mode = ParseMode.MARKDOWN\n';
+        } else if (targetNode.data.formatMode === 'html') {
+          code += '                parse_mode = ParseMode.HTML\n';
+        } else {
+          code += '                parse_mode = None\n';
         }
         
-        code += '                keyboard = builder.as_markup()\n';
-        code += '                await message.answer(prompt_text, reply_markup=keyboard)\n';
-        code += '                \n';
-        code += '                # Настраиваем конфигурацию кнопочного ответа\n';
-        code += '                user_data[user_id]["button_response_config"] = {\n';
-        code += `                    "variable": "${inputVariable}",\n`;
-        code += `                    "node_id": "${targetNode.id}",\n`;
-        code += `                    "timeout": ${inputTimeout},\n`;
-        code += `                    "allow_multiple": ${allowMultipleSelection ? 'True' : 'False'},\n`;
-        code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
-        code += '                    "selected": [],\n';
-        code += '                    "success_message": "Спасибо за ваш ответ!",\n';
-        code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
-        code += '                    "options": [\n';
+        // Добавляем кнопки если есть
+        if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+          code += '                builder = InlineKeyboardBuilder()\n';
+          targetNode.data.buttons.forEach(button => {
+            if (button.action === "url") {
+              code += `                builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+            } else if (button.action === 'goto') {
+              const callbackData = button.target || button.id || 'no_action';
+              code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+            }
+          });
+          code += '                keyboard = builder.as_markup()\n';
+          code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
+        } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
+          code += '                builder = ReplyKeyboardBuilder()\n';
+          targetNode.data.buttons.forEach(button => {
+            code += `                builder.add(KeyboardButton(text="${button.text}"))\n`;
+          });
+          const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
+          const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
+          code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+          code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
+        } else {
+          code += '                await message.answer(text, parse_mode=parse_mode)\n';
+        }
+      } else if (targetNode.type === 'user-input') {
+        const inputPrompt = formatTextForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
+        const responseType = targetNode.data.responseType || 'text';
+        const inputType = targetNode.data.inputType || 'text';
+        const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+        const minLength = targetNode.data.minLength || 0;
+        const maxLength = targetNode.data.maxLength || 0;
+        const inputTimeout = targetNode.data.inputTimeout || 60;
+        const saveToDatabase = targetNode.data.saveToDatabase || false;
+        const placeholder = targetNode.data.placeholder || "";
+        const responseOptions = targetNode.data.responseOptions || [];
+        const allowMultipleSelection = targetNode.data.allowMultipleSelection || false;
+        const allowSkip = targetNode.data.allowSkip || false;
         
-        // Добавляем каждый вариант ответа с индивидуальными настройками навигации
-        responseOptions.forEach((option, index) => {
-          const optionValue = option.value || option.text;
-          const action = option.action || 'goto';
-          const target = option.target || '';
-          const url = option.url || '';
+        code += `                prompt_text = "${escapeForJsonString(inputPrompt)}"\n`;
+        if (placeholder) {
+          code += `                placeholder_text = "${placeholder}"\n`;
+          code += '                prompt_text += f"\\n\\n💡 {placeholder_text}"\n';
+        }
+        
+        // Check if this is a button response node
+        if (responseType === 'buttons' && responseOptions.length > 0) {
+          // For button response nodes, set up button_response_config
+          code += '                \n';
+          code += '                # Создаем кнопки для выбора ответа\n';
+          code += '                builder = InlineKeyboardBuilder()\n';
           
-          code += '                        {\n';
-          code += `                            "text": "${escapeForJsonString(option.text)}",\n`;
-          code += `                            "value": "${escapeForJsonString(optionValue)}",\n`;
-          code += `                            "action": "${action}",\n`;
-          code += `                            "target": "${target}",\n`;
-          code += `                            "url": "${url}",\n`;
-          code += `                            "callback_data": "response_${targetNode.id}_${index}"\n`;
-          code += '                        }';
-          if (index < responseOptions.length - 1) {
-            code += ',';
+          responseOptions.forEach((option, index) => {
+            const optionValue = option.value || option.text;
+            code += `                builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
+          });
+          
+          if (allowSkip) {
+            code += `                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="skip_${targetNode.id}"))\n`;
           }
-          code += '\n';
-        });
-        
-        code += '                    ],\n';
-        
-        // Находим следующий узел для этого user-input узла (fallback)
-        const nextConnection = connections.find(conn => conn.source === targetNode.id);
-        if (nextConnection) {
-          code += `                    "next_node_id": "${nextConnection.target}"\n`;
+          
+          code += '                keyboard = builder.as_markup()\n';
+          code += '                await message.answer(prompt_text, reply_markup=keyboard)\n';
+          code += '                \n';
+          code += '                # Настраиваем конфигурацию кнопочного ответа\n';
+          code += '                user_data[user_id]["button_response_config"] = {\n';
+          code += `                    "variable": "${inputVariable}",\n`;
+          code += `                    "node_id": "${targetNode.id}",\n`;
+          code += `                    "timeout": ${inputTimeout},\n`;
+          code += `                    "allow_multiple": ${allowMultipleSelection ? 'True' : 'False'},\n`;
+          code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+          code += '                    "selected": [],\n';
+          code += '                    "success_message": "Спасибо за ваш ответ!",\n';
+          code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
+          code += '                    "options": [\n';
+          
+          // Добавляем каждый вариант ответа с индивидуальными настройками навигации
+          responseOptions.forEach((option, index) => {
+            const optionValue = option.value || option.text;
+            const action = option.action || 'goto';
+            const target = option.target || '';
+            const url = option.url || '';
+            
+            code += '                        {\n';
+            code += `                            "text": "${escapeForJsonString(option.text)}",\n`;
+            code += `                            "value": "${escapeForJsonString(optionValue)}",\n`;
+            code += `                            "action": "${action}",\n`;
+            code += `                            "target": "${target}",\n`;
+            code += `                            "url": "${url}",\n`;
+            code += `                            "callback_data": "response_${targetNode.id}_${index}"\n`;
+            code += '                        }';
+            if (index < responseOptions.length - 1) {
+              code += ',';
+            }
+            code += '\n';
+          });
+          
+          code += '                    ],\n';
+          
+          // Находим следующий узел для этого user-input узла (fallback)
+          const nextConnection = connections.find(conn => conn.source === targetNode.id);
+          if (nextConnection) {
+            code += `                    "next_node_id": "${nextConnection.target}"\n`;
+          } else {
+            code += '                    "next_node_id": None\n';
+          }
+          code += '                }\n';
         } else {
-          code += '                    "next_node_id": None\n';
+          // For text input nodes, use waiting_for_input
+          code += '                await message.answer(prompt_text)\n';
+          code += '                \n';
+          code += '                # Настраиваем ожидание ввода\n';
+          code += '                user_data[user_id]["waiting_for_input"] = {\n';
+          code += `                    "type": "${inputType}",\n`;
+          code += `                    "variable": "${inputVariable}",\n`;
+          code += '                    "validation": "",\n';
+          code += `                    "min_length": ${minLength},\n`;
+          code += `                    "max_length": ${maxLength},\n`;
+          code += `                    "timeout": ${inputTimeout},\n`;
+          code += '                    "required": True,\n';
+          code += '                    "allow_skip": False,\n';
+          code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+          code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+          code += '                    "success_message": "Спасибо за ваш ответ!",\n';
+          code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
+          code += `                    "node_id": "${targetNode.id}",\n`;
+          
+          // Находим следующий узел для этого user-input узла
+          const nextConnection = connections.find(conn => conn.source === targetNode.id);
+          if (nextConnection) {
+            code += `                    "next_node_id": "${nextConnection.target}"\n`;
+          } else {
+            code += '                    "next_node_id": None\n';
+          }
+          code += '                }\n';
         }
-        code += '                }\n';
       } else {
-        // For text input nodes, use waiting_for_input
-        code += '                await message.answer(prompt_text)\n';
-        code += '                \n';
-        code += '                # Настраиваем ожидание ввода\n';
-        code += '                user_data[user_id]["waiting_for_input"] = {\n';
-        code += `                    "type": "${inputType}",\n`;
-        code += `                    "variable": "${inputVariable}",\n`;
-        code += '                    "validation": "",\n';
-        code += `                    "min_length": ${minLength},\n`;
-        code += `                    "max_length": ${maxLength},\n`;
-        code += `                    "timeout": ${inputTimeout},\n`;
-        code += '                    "required": True,\n';
-        code += '                    "allow_skip": False,\n';
-        code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
-        code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-        code += '                    "success_message": "Спасибо за ваш ответ!",\n';
-        code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
-        code += `                    "node_id": "${targetNode.id}",\n`;
-        
-        // Находим следующий узел для этого user-input узла
-        const nextConnection = connections.find(conn => conn.source === targetNode.id);
-        if (nextConnection) {
-          code += `                    "next_node_id": "${nextConnection.target}"\n`;
-        } else {
-          code += '                    "next_node_id": None\n';
-        }
-        code += '                }\n';
+        // Для других типов узлов просто логируем
+        code += `                logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
       }
-    } else {
-      // Для других типов узлов просто логируем
-      code += `                logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
-    }
-  });
-  
-  code += '            else:\n';
-  code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    });
+    
+    code += '            else:\n';
+    code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  } else {
+    code += '            # No nodes available for navigation\n';
+    code += '            logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+  }
   code += '        except Exception as e:\n';
   code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
   code += '\n';
