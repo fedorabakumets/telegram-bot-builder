@@ -448,8 +448,8 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
     # Сохраняем переменную для условных сообщений
     if user_id in user_data and user_data[user_id].get("input_variable"):
         variable_name = user_data[user_id]["input_variable"]
-        await update_user_data_in_db(user_id, variable_name, button_text)
-        logging.info(f"Переменная {variable_name} сохранена: {button_text} (пользователь {user_id})")
+        await update_user_data_in_db(user_id, variable_name, "из инета")
+        logging.info(f"Переменная {variable_name} сохранена: {"из инета"} (пользователь {user_id})")
     
     # Сохраняем в базу данных
     await update_user_data_in_db(user_id, button_text, response_data)
@@ -496,8 +496,8 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
     # Сохраняем переменную для условных сообщений
     if user_id in user_data and user_data[user_id].get("input_variable"):
         variable_name = user_data[user_id]["input_variable"]
-        await update_user_data_in_db(user_id, variable_name, button_text)
-        logging.info(f"Переменная {variable_name} сохранена: {button_text} (пользователь {user_id})")
+        await update_user_data_in_db(user_id, variable_name, "friends")
+        logging.info(f"Переменная {variable_name} сохранена: {"friends"} (пользователь {user_id})")
     
     # Сохраняем в базу данных
     await update_user_data_in_db(user_id, button_text, response_data)
@@ -544,8 +544,8 @@ async def handle_callback_source_ads(callback_query: types.CallbackQuery):
     # Сохраняем переменную для условных сообщений
     if user_id in user_data and user_data[user_id].get("input_variable"):
         variable_name = user_data[user_id]["input_variable"]
-        await update_user_data_in_db(user_id, variable_name, button_text)
-        logging.info(f"Переменная {variable_name} сохранена: {button_text} (пользователь {user_id})")
+        await update_user_data_in_db(user_id, variable_name, "ads")
+        logging.info(f"Переменная {variable_name} сохранена: {"ads"} (пользователь {user_id})")
     
     # Сохраняем в базу данных
     await update_user_data_in_db(user_id, button_text, response_data)
