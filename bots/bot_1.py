@@ -440,7 +440,6 @@ async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQu
     button_display_text = "Кнопка --2N9FeeykMHVVlsVnSQW"
     
     # Сохраняем ответ в базу данных
-    import datetime
     timestamp = get_moscow_time()
     
     response_data = {
@@ -537,7 +536,6 @@ async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQu
     button_display_text = "Кнопка yxbKRAHB-OuKFsHRJZyiV"
     
     # Сохраняем ответ в базу данных
-    import datetime
     timestamp = get_moscow_time()
     
     response_data = {
@@ -770,7 +768,7 @@ async def handle_user_input(message: types.Message):
             
             # Сохраняем ответ пользователя
             import datetime
-            timestamp = datetime.datetime.now().isoformat()
+            timestamp = get_moscow_time()
             
             # Создаем структурированный ответ
             response_data = {
@@ -819,7 +817,7 @@ async def handle_user_input(message: types.Message):
             
             # Сохраняем ответ пользователя
             import datetime
-            timestamp = datetime.datetime.now().isoformat()
+            timestamp = get_moscow_time()
             
             # Создаем структурированный ответ
             response_data = {
@@ -845,7 +843,7 @@ async def handle_user_input(message: types.Message):
             
             # Сохраняем ответ пользователя
             import datetime
-            timestamp = datetime.datetime.now().isoformat()
+            timestamp = get_moscow_time()
             
             # Создаем структурированный ответ
             response_data = {
@@ -871,7 +869,7 @@ async def handle_user_input(message: types.Message):
             
             # Сохраняем ответ пользователя
             import datetime
-            timestamp = datetime.datetime.now().isoformat()
+            timestamp = get_moscow_time()
             
             # Создаем структурированный ответ
             response_data = {
@@ -913,7 +911,7 @@ async def handle_user_input(message: types.Message):
             
             # Сохраняем ответ пользователя
             import datetime
-            timestamp = datetime.datetime.now().isoformat()
+            timestamp = get_moscow_time()
             
             # Создаем структурированный ответ
             response_data = {
