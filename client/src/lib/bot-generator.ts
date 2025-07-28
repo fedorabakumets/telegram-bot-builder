@@ -46,7 +46,11 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
       case 'user_data_exists':
         code += `${indentLevel}${conditionKeyword} "${condition.variableName}" in user_data_dict and user_data_dict.get("${condition.variableName}") is not None:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} существует")\n`;
+        // Добавляем замену переменных в тексте
+        code += `${indentLevel}    # Подставляем значения переменных\n`;
+        code += `${indentLevel}    if "{${condition.variableName}}" in text:\n`;
+        code += `${indentLevel}        text = text.replace("{${condition.variableName}}", str(user_data_dict.get("${condition.variableName}", "")))\n`;
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {user_data_dict.get('${condition.variableName}')}")\n`;
         break;
         
       case 'user_data_not_exists':
@@ -58,7 +62,11 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
       case 'user_data_equals':
         code += `${indentLevel}${conditionKeyword} user_data_dict.get("${condition.variableName}") == "${condition.expectedValue || ''}":\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} равна ${condition.expectedValue || ''}")\n`;
+        // Добавляем замену переменных в тексте
+        code += `${indentLevel}    # Подставляем значения переменных\n`;
+        code += `${indentLevel}    if "{${condition.variableName}}" in text:\n`;
+        code += `${indentLevel}        text = text.replace("{${condition.variableName}}", str(user_data_dict.get("${condition.variableName}", "")))\n`;
+        code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {user_data_dict.get('${condition.variableName}')}")\n`;
         break;
         
       case 'user_data_contains':
@@ -472,7 +480,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
           
           code += `        await update_user_data_in_db(user_id, variable_name, ${mappedValue})\n`;
-          code += `        logging.info(f"Переменная {{variable_name}} сохранена: ${displayValue} (пользователь {{user_id}})")\n`;
+          code += `        logging.info(f"Переменная {variable_name} сохранена: ${displayValue} (пользователь {user_id})")\n`;
           code += '    \n';
           code += '    # Сохраняем в базу данных\n';
           code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
