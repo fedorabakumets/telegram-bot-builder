@@ -254,15 +254,26 @@ async def start_handler(message: types.Message):
         user_data_dict = {}
     
     # Проверяем условие: user_data_exists
-    if "источник" in user_data_dict and user_data_dict.get("источник") is not None:
+    # Проверяем существование переменной с учетом структуры данных
+    variable_exists = False
+    variable_value = None
+    if "источник" in user_data_dict:
+        variable_data = user_data_dict.get("источник")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            variable_value = variable_data["value"]
+            variable_exists = variable_value is not None
+        elif variable_data is not None:
+            variable_value = str(variable_data)
+            variable_exists = True
+    if variable_exists:
         text = """С возвращением! 👋
 Вы пришли к нам из источника: {источник}
 
 Рады видеть вас снова!"""
         # Подставляем значения переменных
-        if "{источник}" in text:
-            text = text.replace("{источник}", str(user_data_dict.get("источник", "")))
-        logging.info(f"Условие выполнено: переменная источник = {user_data_dict.get('источник')}")
+        if "{источник}" in text and variable_value is not None:
+            text = text.replace("{источник}", str(variable_value))
+        logging.info(f"Условие выполнено: переменная источник = {variable_value}")
     # Проверяем условие: returning_user
     elif user_record.get("interaction_count", 0) > 1:
         text = """Рады видеть вас снова! 🎉
@@ -330,7 +341,18 @@ async def help_handler(message: types.Message):
         user_data_dict = {}
     
     # Проверяем условие: user_data_exists
-    if "источник" in user_data_dict and user_data_dict.get("источник") is not None:
+    # Проверяем существование переменной с учетом структуры данных
+    variable_exists = False
+    variable_value = None
+    if "источник" in user_data_dict:
+        variable_data = user_data_dict.get("источник")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            variable_value = variable_data["value"]
+            variable_exists = variable_value is not None
+        elif variable_data is not None:
+            variable_value = str(variable_data)
+            variable_exists = True
+    if variable_exists:
         text = """📖 Расширенная справка
 
 Вы уже знакомы с ботом! Вот дополнительные возможности:
@@ -338,9 +360,9 @@ async def help_handler(message: types.Message):
 🔄 /start - персональное приветствие
 📊 /stats - ваша статистика"""
         # Подставляем значения переменных
-        if "{источник}" in text:
-            text = text.replace("{источник}", str(user_data_dict.get("источник", "")))
-        logging.info(f"Условие выполнено: переменная источник = {user_data_dict.get('источник')}")
+        if "{источник}" in text and variable_value is not None:
+            text = text.replace("{источник}", str(variable_value))
+        logging.info(f"Условие выполнено: переменная источник = {variable_value}")
     else:
         text = """📖 Базовая справка
 
@@ -404,16 +426,27 @@ async def stats_handler(message: types.Message):
         user_data_dict = {}
     
     # Проверяем условие: user_data_exists
-    if "источник" in user_data_dict and user_data_dict.get("источник") is not None:
+    # Проверяем существование переменной с учетом структуры данных
+    variable_exists = False
+    variable_value = None
+    if "источник" in user_data_dict:
+        variable_data = user_data_dict.get("источник")
+        if isinstance(variable_data, dict) and "value" in variable_data:
+            variable_value = variable_data["value"]
+            variable_exists = variable_value is not None
+        elif variable_data is not None:
+            variable_value = str(variable_data)
+            variable_exists = True
+    if variable_exists:
         text = """📊 Ваша статистика:
 
 🔍 Источник: {источник}
 👤 Статус: Постоянный пользователь
 🎯 Персонализация: Включена"""
         # Подставляем значения переменных
-        if "{источник}" in text:
-            text = text.replace("{источник}", str(user_data_dict.get("источник", "")))
-        logging.info(f"Условие выполнено: переменная источник = {user_data_dict.get('источник')}")
+        if "{источник}" in text and variable_value is not None:
+            text = text.replace("{источник}", str(variable_value))
+        logging.info(f"Условие выполнено: переменная источник = {variable_value}")
     else:
         text = """📊 Статистика
 
@@ -432,37 +465,12 @@ async def stats_handler(message: types.Message):
 @dp.callback_query(lambda c: c.data == "source_search")
 async def handle_callback_source_search(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
     button_text = "🔍 Поиск в интернете"
     
-    # Сохраняем ответ в базу данных
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    
-    response_data = {
-        "value": button_text,
-        "type": "inline_button",
-        "timestamp": timestamp,
-        "nodeId": "source_search",
-        "variable": button_text,
-        "source": "inline_button_click"
-    }
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["last_button_click"] = response_data
-    
-    # Сохраняем переменную для условных сообщений
-    if user_id in user_data and user_data[user_id].get("input_variable"):
-        variable_name = user_data[user_id]["input_variable"]
-        await update_user_data_in_db(user_id, variable_name, "из инета")
-        logging.info(f"Переменная {variable_name} сохранена: из инета (пользователь {user_id})")
-    
-    # Сохраняем в базу данных
-    await update_user_data_in_db(user_id, button_text, response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "источник", "из инета")
+    logging.info(f"Переменная источник сохранена: из инета (пользователь {user_id})")
     
     text = """Отлично! 🎯
 Теперь мы знаем, что вы нашли нас через поиск.
@@ -480,37 +488,12 @@ async def handle_callback_source_search(callback_query: types.CallbackQuery):
 @dp.callback_query(lambda c: c.data == "source_friends")
 async def handle_callback_source_friends(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
     button_text = "👥 Друзья"
     
-    # Сохраняем ответ в базу данных
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    
-    response_data = {
-        "value": button_text,
-        "type": "inline_button",
-        "timestamp": timestamp,
-        "nodeId": "source_friends",
-        "variable": button_text,
-        "source": "inline_button_click"
-    }
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["last_button_click"] = response_data
-    
-    # Сохраняем переменную для условных сообщений
-    if user_id in user_data and user_data[user_id].get("input_variable"):
-        variable_name = user_data[user_id]["input_variable"]
-        await update_user_data_in_db(user_id, variable_name, "friends")
-        logging.info(f"Переменная {variable_name} сохранена: friends (пользователь {user_id})")
-    
-    # Сохраняем в базу данных
-    await update_user_data_in_db(user_id, button_text, response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "источник", "friends")
+    logging.info(f"Переменная источник сохранена: friends (пользователь {user_id})")
     
     text = """Замечательно! 👥
 Значит, вас порекомендовали друзья!
@@ -528,37 +511,12 @@ async def handle_callback_source_friends(callback_query: types.CallbackQuery):
 @dp.callback_query(lambda c: c.data == "source_ads")
 async def handle_callback_source_ads(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
     button_text = "📱 Реклама"
     
-    # Сохраняем ответ в базу данных
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    
-    response_data = {
-        "value": button_text,
-        "type": "inline_button",
-        "timestamp": timestamp,
-        "nodeId": "source_ads",
-        "variable": button_text,
-        "source": "inline_button_click"
-    }
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["last_button_click"] = response_data
-    
-    # Сохраняем переменную для условных сообщений
-    if user_id in user_data and user_data[user_id].get("input_variable"):
-        variable_name = user_data[user_id]["input_variable"]
-        await update_user_data_in_db(user_id, variable_name, "ads")
-        logging.info(f"Переменная {variable_name} сохранена: ads (пользователь {user_id})")
-    
-    # Сохраняем в базу данных
-    await update_user_data_in_db(user_id, button_text, response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "источник", "ads")
+    logging.info(f"Переменная источник сохранена: ads (пользователь {user_id})")
     
     text = """Понятно! 📱
 Вы пришли из рекламы.
