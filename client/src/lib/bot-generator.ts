@@ -124,8 +124,12 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    logging.info(f"Переменная '${condition.variableName}' не найдена в user_data_dict")\n`;
         code += `${indentLevel}${conditionKeyword} variable_exists:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        // Добавляем универсальную замену всех переменных в тексте
-        code += `${indentLevel}    text = replace_variables_in_text(text, user_data_dict)\n`;
+        // Добавляем замену переменной прямо в тексте
+        code += `${indentLevel}    if "{${condition.variableName}}" in text:\n`;
+        code += `${indentLevel}        if variable_value is not None:\n`;
+        code += `${indentLevel}            text = text.replace("{${condition.variableName}}", str(variable_value))\n`;
+        code += `${indentLevel}        else:\n`;
+        code += `${indentLevel}            text = text.replace("{${condition.variableName}}", "${condition.variableName}")\n`;
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {variable_value}")\n`;
         break;
         
@@ -154,8 +158,12 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        variable_value = str(variable_data)\n`;
         code += `${indentLevel}${conditionKeyword} variable_value == "${condition.expectedValue || ''}":\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
-        // Добавляем универсальную замену всех переменных в тексте
-        code += `${indentLevel}    text = replace_variables_in_text(text, user_data_dict)\n`;
+        // Добавляем замену переменной прямо в тексте
+        code += `${indentLevel}    if "{${condition.variableName}}" in text:\n`;
+        code += `${indentLevel}        if variable_value is not None:\n`;
+        code += `${indentLevel}            text = text.replace("{${condition.variableName}}", str(variable_value))\n`;
+        code += `${indentLevel}        else:\n`;
+        code += `${indentLevel}            text = text.replace("{${condition.variableName}}", "${condition.variableName}")\n`;
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменная ${condition.variableName} = {variable_value}")\n`;
         break;
         
