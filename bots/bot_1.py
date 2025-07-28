@@ -308,8 +308,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "источник" in parsed_data:
-                var_value_________ = parsed_data["источник"]
-                var_exists_________ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["источник"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value_________ = raw_value["value"]
+                else:
+                    var_value_________ = str(raw_value) if raw_value is not None else None
+                var_exists_________ = var_value_________ is not None
                 logging.info(f"Переменная 'источник' найдена в БД: {var_value_________}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -337,8 +342,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "желание" in parsed_data:
-                var_value________ = parsed_data["желание"]
-                var_exists________ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["желание"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value________ = raw_value["value"]
+                else:
+                    var_value________ = str(raw_value) if raw_value is not None else None
+                var_exists________ = var_value________ is not None
                 logging.info(f"Переменная 'желание' найдена в БД: {var_value________}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -366,8 +376,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "пол" in parsed_data:
-                var_value____ = parsed_data["пол"]
-                var_exists____ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["пол"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value____ = raw_value["value"]
+                else:
+                    var_value____ = str(raw_value) if raw_value is not None else None
+                var_exists____ = var_value____ is not None
                 logging.info(f"Переменная 'пол' найдена в БД: {var_value____}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -395,8 +410,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "имя" in parsed_data:
-                var_value____ = parsed_data["имя"]
-                var_exists____ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["имя"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value____ = raw_value["value"]
+                else:
+                    var_value____ = str(raw_value) if raw_value is not None else None
+                var_exists____ = var_value____ is not None
                 logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -424,8 +444,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "возраст" in parsed_data:
-                var_value________ = parsed_data["возраст"]
-                var_exists________ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["возраст"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value________ = raw_value["value"]
+                else:
+                    var_value________ = str(raw_value) if raw_value is not None else None
+                var_exists________ = var_value________ is not None
                 logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -495,8 +520,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "имя" in parsed_data:
-                var_value____ = parsed_data["имя"]
-                var_exists____ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["имя"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value____ = raw_value["value"]
+                else:
+                    var_value____ = str(raw_value) if raw_value is not None else None
+                var_exists____ = var_value____ is not None
                 logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -524,8 +554,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "возраст" in parsed_data:
-                var_value________ = parsed_data["возраст"]
-                var_exists________ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["возраст"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value________ = raw_value["value"]
+                else:
+                    var_value________ = str(raw_value) if raw_value is not None else None
+                var_exists________ = var_value________ is not None
                 logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -577,8 +612,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "источник" in parsed_data:
-                var_value_________ = parsed_data["источник"]
-                var_exists_________ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["источник"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value_________ = raw_value["value"]
+                else:
+                    var_value_________ = str(raw_value) if raw_value is not None else None
+                var_exists_________ = var_value_________ is not None
                 logging.info(f"Переменная 'источник' найдена в БД: {var_value_________}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -624,8 +664,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "источник" in parsed_data:
-                var_value_________ = parsed_data["источник"]
-                var_exists_________ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["источник"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value_________ = raw_value["value"]
+                else:
+                    var_value_________ = str(raw_value) if raw_value is not None else None
+                var_exists_________ = var_value_________ is not None
                 logging.info(f"Переменная 'источник' найдена в БД: {var_value_________}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -653,8 +698,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "желание" in parsed_data:
-                var_value________ = parsed_data["желание"]
-                var_exists________ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["желание"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value________ = raw_value["value"]
+                else:
+                    var_value________ = str(raw_value) if raw_value is not None else None
+                var_exists________ = var_value________ is not None
                 logging.info(f"Переменная 'желание' найдена в БД: {var_value________}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -682,8 +732,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "пол" in parsed_data:
-                var_value____ = parsed_data["пол"]
-                var_exists____ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["пол"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value____ = raw_value["value"]
+                else:
+                    var_value____ = str(raw_value) if raw_value is not None else None
+                var_exists____ = var_value____ is not None
                 logging.info(f"Переменная 'пол' найдена в БД: {var_value____}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -711,8 +766,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "имя" in parsed_data:
-                var_value____ = parsed_data["имя"]
-                var_exists____ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["имя"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value____ = raw_value["value"]
+                else:
+                    var_value____ = str(raw_value) if raw_value is not None else None
+                var_exists____ = var_value____ is not None
                 logging.info(f"Переменная 'имя' найдена в БД: {var_value____}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -740,8 +800,13 @@ async def profile_handler(message: types.Message):
             import json
             parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
             if "возраст" in parsed_data:
-                var_value________ = parsed_data["возраст"]
-                var_exists________ = True
+                # Поддержка как простых значений, так и сложных объектов
+                raw_value = parsed_data["возраст"]
+                if isinstance(raw_value, dict) and "value" in raw_value:
+                    var_value________ = raw_value["value"]
+                else:
+                    var_value________ = str(raw_value) if raw_value is not None else None
+                var_exists________ = var_value________ is not None
                 logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
         except (json.JSONDecodeError, TypeError) as e:
             logging.warning(f"Ошибка парсинга user_data: {e}")
@@ -1080,14 +1145,7 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
     
-    response_data = {
-        "value": button_display_text,
-        "type": "button",
-        "timestamp": timestamp,
-        "nodeId": "nr3wIiTfBYYmpkkXMNH7n",
-        "variable": "button_click",
-        "source": "inline_button_click"
-    }
+    response_data = button_display_text  # Простое значение
     
     # Сохраняем в пользовательские данные
     if user_id not in user_data:
@@ -1176,14 +1234,7 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
     
-    response_data = {
-        "value": button_display_text,
-        "type": "button",
-        "timestamp": timestamp,
-        "nodeId": "1BHSLWPMao9qQvSAzuzRl",
-        "variable": "button_click",
-        "source": "inline_button_click"
-    }
+    response_data = button_display_text  # Простое значение
     
     # Сохраняем в пользовательские данные
     if user_id not in user_data:
@@ -1263,14 +1314,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
     
-    response_data = {
-        "value": button_display_text,
-        "type": "button",
-        "timestamp": timestamp,
-        "nodeId": "XDSrTrNly5EtDtr85nN4P",
-        "variable": "button_click",
-        "source": "inline_button_click"
-    }
+    response_data = button_display_text  # Простое значение
     
     # Сохраняем в пользовательские данные
     if user_id not in user_data:
@@ -1354,14 +1398,7 @@ async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQu
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
     
-    response_data = {
-        "value": button_display_text,
-        "type": "button",
-        "timestamp": timestamp,
-        "nodeId": "--2N9FeeykMHVVlsVnSQW",
-        "variable": "button_click",
-        "source": "inline_button_click"
-    }
+    response_data = button_display_text  # Простое значение
     
     # Сохраняем в пользовательские данные
     if user_id not in user_data:
@@ -1450,14 +1487,7 @@ async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQu
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
     
-    response_data = {
-        "value": button_display_text,
-        "type": "button",
-        "timestamp": timestamp,
-        "nodeId": "yxbKRAHB-OuKFsHRJZyiV",
-        "variable": "button_click",
-        "source": "inline_button_click"
-    }
+    response_data = button_display_text  # Простое значение
     
     # Сохраняем в пользовательские данные
     if user_id not in user_data:
@@ -1696,14 +1726,8 @@ async def handle_user_input(message: types.Message):
             import datetime
             timestamp = get_moscow_time()
             
-            # Создаем структурированный ответ
-            response_data = {
-                "value": user_text,
-                "type": "text",
-                "timestamp": timestamp,
-                "nodeId": "start_node",
-                "variable": "источник"
-            }
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
             
             # Сохраняем в пользовательские данные
             user_data[user_id]["источник"] = response_data
@@ -1745,14 +1769,8 @@ async def handle_user_input(message: types.Message):
             import datetime
             timestamp = get_moscow_time()
             
-            # Создаем структурированный ответ
-            response_data = {
-                "value": user_text,
-                "type": "text",
-                "timestamp": timestamp,
-                "nodeId": "--2N9FeeykMHVVlsVnSQW",
-                "variable": "желание"
-            }
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
             
             # Сохраняем в пользовательские данные
             user_data[user_id]["желание"] = response_data
@@ -1771,14 +1789,8 @@ async def handle_user_input(message: types.Message):
             import datetime
             timestamp = get_moscow_time()
             
-            # Создаем структурированный ответ
-            response_data = {
-                "value": user_text,
-                "type": "text",
-                "timestamp": timestamp,
-                "nodeId": "nr3wIiTfBYYmpkkXMNH7n",
-                "variable": "пол"
-            }
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
             
             # Сохраняем в пользовательские данные
             user_data[user_id]["пол"] = response_data
@@ -1797,14 +1809,8 @@ async def handle_user_input(message: types.Message):
             import datetime
             timestamp = get_moscow_time()
             
-            # Создаем структурированный ответ
-            response_data = {
-                "value": user_text,
-                "type": "text",
-                "timestamp": timestamp,
-                "nodeId": "XDSrTrNly5EtDtr85nN4P",
-                "variable": "имя"
-            }
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
             
             # Сохраняем в пользовательские данные
             user_data[user_id]["имя"] = response_data
@@ -1839,14 +1845,8 @@ async def handle_user_input(message: types.Message):
             import datetime
             timestamp = get_moscow_time()
             
-            # Создаем структурированный ответ
-            response_data = {
-                "value": user_text,
-                "type": "text",
-                "timestamp": timestamp,
-                "nodeId": "yxbKRAHB-OuKFsHRJZyiV",
-                "variable": "возраст"
-            }
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
             
             # Сохраняем в пользовательские данные
             user_data[user_id]["возраст"] = response_data
@@ -1874,14 +1874,7 @@ async def handle_user_input(message: types.Message):
         # Сохраняем любой текст как дополнительный ответ
         timestamp = get_moscow_time()
         
-        response_data = {
-            "value": user_text,
-            "type": "text_addition",
-            "timestamp": timestamp,
-            "nodeId": input_node_id,
-            "variable": input_variable,
-            "source": "additional_text_input"
-        }
+        response_data = user_text  # Простое значение
         
         # Сохраняем в пользовательские данные
         user_data[user_id][f"{input_variable}_additional"] = response_data
@@ -1935,20 +1928,13 @@ async def handle_user_input(message: types.Message):
             await message.answer(f"❌ Неверный формат телефона. {retry_message}")
             return
     
-    # Сохраняем ответ пользователя в структурированном формате
+    # Сохраняем ответ пользователя простым значением
     variable_name = input_config.get("variable", "user_response")
     timestamp = get_moscow_time()
     node_id = input_config.get("node_id", "unknown")
     
-    # Создаем структурированный ответ
-    response_data = {
-        "value": user_text,
-        "type": input_type,
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "prompt": input_config.get("prompt", ""),
-        "variable": variable_name
-    }
+    # Простое значение вместо сложного объекта
+    response_data = user_text
     
     # Сохраняем в пользовательские данные
     user_data[user_id][variable_name] = response_data
