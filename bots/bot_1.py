@@ -1,5 +1,5 @@
 """
-Мой первый бот - Telegram Bot
+Мой первый бот - исправлен выбор пола - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
 """
 
@@ -319,8 +319,8 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
     
     # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Женщина", callback_data="XDSrTrNly5EtDtr85nN4P"))
-    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="XDSrTrNly5EtDtr85nN4P"))
+    builder.add(InlineKeyboardButton(text="Женщина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_0_btn_0"))
+    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_1_btn_1"))
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -361,7 +361,7 @@ async def handle_callback_btn_2(callback_query: types.CallbackQuery):
     except Exception:
         await callback_query.message.answer(text)
 
-@dp.callback_query(lambda c: c.data == "nr3wIiTfBYYmpkkXMNH7n")
+@dp.callback_query(lambda c: c.data == "nr3wIiTfBYYmpkkXMNH7n" or c.data.startswith("nr3wIiTfBYYmpkkXMNH7n_btn_"))
 async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
@@ -457,7 +457,7 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
         await callback_query.message.answer(text, reply_markup=keyboard)
     
 
-@dp.callback_query(lambda c: c.data == "1BHSLWPMao9qQvSAzuzRl")
+@dp.callback_query(lambda c: c.data == "1BHSLWPMao9qQvSAzuzRl" or c.data.startswith("1BHSLWPMao9qQvSAzuzRl_btn_"))
 async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
@@ -537,14 +537,19 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text)
 
-@dp.callback_query(lambda c: c.data == "XDSrTrNly5EtDtr85nN4P")
+@dp.callback_query(lambda c: c.data == "XDSrTrNly5EtDtr85nN4P" or c.data.startswith("XDSrTrNly5EtDtr85nN4P_btn_"))
 async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
     
     # Ищем текст кнопки по callback_data
-    button_display_text = "Женщина"
+    # Определяем текст кнопки по callback_data
+    button_display_text = "Неизвестная кнопка"
+    if callback_query.data.endswith("_btn_0"):
+        button_display_text = "Женщина"
+    if callback_query.data.endswith("_btn_1"):
+        button_display_text = "Мужчина"
     
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
@@ -628,7 +633,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
         await callback_query.message.answer(text)
     
 
-@dp.callback_query(lambda c: c.data == "--2N9FeeykMHVVlsVnSQW")
+@dp.callback_query(lambda c: c.data == "--2N9FeeykMHVVlsVnSQW" or c.data.startswith("--2N9FeeykMHVVlsVnSQW_btn_"))
 async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
@@ -724,7 +729,7 @@ async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQu
         await callback_query.message.answer(text, reply_markup=keyboard)
     
 
-@dp.callback_query(lambda c: c.data == "yxbKRAHB-OuKFsHRJZyiV")
+@dp.callback_query(lambda c: c.data == "yxbKRAHB-OuKFsHRJZyiV" or c.data.startswith("yxbKRAHB-OuKFsHRJZyiV_btn_"))
 async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных

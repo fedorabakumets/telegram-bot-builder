@@ -1416,13 +1416,13 @@ export async function seedDefaultTemplates() {
               keyboardType: "inline",
               buttons: [
                 {
-                  id: "btn-1",
+                  id: "btn-female",
                   text: "Женщина",
                   action: "goto",
                   target: "XDSrTrNly5EtDtr85nN4P"
                 },
                 {
-                  id: "btn-2",
+                  id: "btn-male",
                   text: "Мужчина",
                   action: "goto",
                   target: "XDSrTrNly5EtDtr85nN4P"

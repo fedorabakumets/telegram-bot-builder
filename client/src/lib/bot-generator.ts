@@ -668,11 +668,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += '    # Создаем inline клавиатуру для целевого узла\n';
                 code += '    builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    // Создаем уникальный callback_data для каждой кнопки
+                    const baseCallbackData = btn.target || btn.id || 'no_action';
+                    const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   } else if (btn.action === 'command') {
                     // Для кнопок команд создаем специальную callback_data
@@ -722,11 +724,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -770,11 +772,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -818,11 +820,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -868,11 +870,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -908,11 +910,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -950,11 +952,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -998,11 +1000,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -1121,11 +1123,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '        \n';
                 code += '        # Отправляем дополнительные кнопки\n';
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -1154,11 +1156,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                 code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
-                    const callbackData = btn.target || btn.id || 'no_action';
+                    const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
@@ -1349,12 +1351,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                   code += '    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
                   code += '    builder = InlineKeyboardBuilder()\n';
-                  targetNode.data.buttons.forEach(btn => {
+                  targetNode.data.buttons.forEach((btn, index) => {
                     if (btn.action === "url") {
                       code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                     } else if (btn.action === 'goto') {
-                      const callbackData = btn.target || btn.id || 'no_action';
-                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                      // Создаем уникальный callback_data для каждой кнопки
+                      const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
+                      const uniqueCallbackData = `${callbackData}_btn_${targetNode.data.buttons.indexOf(btn)}`;
+                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${uniqueCallbackData}"))\n`;
                     }
                   });
                   code += '    keyboard = builder.as_markup()\n';
@@ -1386,12 +1390,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 // Handle keyboard for target node
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach(btn => {
+              targetNode.data.buttons.forEach((btn, index) => {
                 if (btn.action === "url") {
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                 } else if (btn.action === 'goto') {
                   // Если есть target, используем его, иначе используем ID кнопки как callback_data
-                  const callbackData = btn.target || btn.id || 'no_action';
+                  const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                 }
               });
@@ -1411,7 +1415,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
             } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
               code += '    builder = ReplyKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach(btn => {
+              targetNode.data.buttons.forEach((btn, index) => {
                 code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
               });
               const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
@@ -1463,9 +1467,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         if (targetNode) {
           processedCallbacks.add(nodeId);
           
-          // Create callback handler for this node
+          // Create callback handler for this node that can handle multiple buttons
           const safeFunctionName = nodeId.replace(/[^a-zA-Z0-9]/g, '_');
-          code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}")\n`;
+          code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startswith("${nodeId}_btn_"))\n`;
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
           
@@ -1478,7 +1482,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const sourceNode = nodes.find(n => 
             n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
           );
+          
+          // Если к узлу ведут несколько кнопок, нужно определить, какую именно нажали
+          let buttonsToTargetNode = [];
           if (sourceNode) {
+            buttonsToTargetNode = sourceNode.data.buttons.filter(btn => btn.target === nodeId);
+          }
+          
+          if (buttonsToTargetNode.length > 1) {
+            // Несколько кнопок ведут к одному узлу - создаем логику определения по callback_data
+            code += `    # Определяем текст кнопки по callback_data\n`;
+            code += `    button_display_text = "Неизвестная кнопка"\n`;
+            buttonsToTargetNode.forEach((button, index) => {
+              // Проверяем по суффиксу _btn_index в callback_data
+              code += `    if callback_query.data.endswith("_btn_${index}"):\n`;
+              code += `        button_display_text = "${button.text}"\n`;
+            });
+          } else if (sourceNode) {
             const button = sourceNode.data.buttons.find(btn => btn.target === nodeId);
             if (button) {
               code += `    button_display_text = "${button.text}"\n`;
@@ -1679,7 +1699,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += '    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
                 code += '    builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach(btn => {
+                targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
                     code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
@@ -1716,7 +1736,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               // Handle keyboard for target node
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach(btn => {
+              targetNode.data.buttons.forEach((btn, index) => {
                 if (btn.action === "url") {
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                 } else if (btn.action === 'goto') {
@@ -1797,7 +1817,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             // Handle keyboard for target node
             if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
               code += '    builder = ReplyKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach(btn => {
+              targetNode.data.buttons.forEach((btn, index) => {
                 code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
               });
               const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
@@ -1836,12 +1856,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
               code += '    builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach(btn => {
+              targetNode.data.buttons.forEach((btn, index) => {
                 if (btn.action === "url") {
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                 } else if (btn.action === 'goto') {
                   // Если есть target, используем его, иначе используем ID кнопки как callback_data
-                  const callbackData = btn.target || btn.id || 'no_action';
+                  const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                 }
               });
