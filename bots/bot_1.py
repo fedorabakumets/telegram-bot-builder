@@ -1498,9 +1498,7 @@ async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, "button_click", button_display_text)
     logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
-    text = """Спасибо за предоставленную информацию! 🎉
-
-Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
+    text = "Сколько вам лет?"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -1551,9 +1549,84 @@ async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "возраст"
     user_data[callback_query.from_user.id]["save_to_database"] = False
-    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "final-message-node"
     
-    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text)
+    
+
+@dp.callback_query(lambda c: c.data == "final-message-node" or c.data.startswith("final-message-node_btn_"))
+async def handle_callback_final_message_node(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Кнопка final-message-node"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "button_click", button_display_text)
+    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    text = """Спасибо за предоставленную информацию! 🎉
+
+Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
     builder = InlineKeyboardBuilder()
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -1562,7 +1635,6 @@ async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQu
     except Exception as e:
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
-    
 
 
 # Универсальный обработчик пользовательского ввода
@@ -1674,6 +1746,8 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "yxbKRAHB-OuKFsHRJZyiV":
                         await handle_callback_yxbKRAHB_OuKFsHRJZyiV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "final-message-node":
+                        await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "profile_command":
                         await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
@@ -1698,6 +1772,8 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "yxbKRAHB-OuKFsHRJZyiV":
                             await handle_callback_yxbKRAHB_OuKFsHRJZyiV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "final-message-node":
+                            await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "profile_command":
                             await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
@@ -1858,6 +1934,22 @@ async def handle_user_input(message: types.Message):
             
             logging.info(f"Получен пользовательский ввод: возраст = {user_text}")
             
+            # Переходим к следующему узлу
+            try:
+                # Создаем фиктивный callback_query для навигации
+                import types as aiogram_types
+                import asyncio
+                fake_callback = aiogram_types.SimpleNamespace(
+                    id="input_nav",
+                    from_user=message.from_user,
+                    chat_instance="",
+                    data="final-message-node",
+                    message=message,
+                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
+                )
+                await handle_callback_final_message_node(fake_callback)
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
             return
         
         # Если узел не найден
@@ -1979,6 +2071,8 @@ async def handle_user_input(message: types.Message):
             elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
                 logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа keyboard")
             elif next_node_id == "yxbKRAHB-OuKFsHRJZyiV":
+                logging.info(f"Переход к узлу yxbKRAHB-OuKFsHRJZyiV типа keyboard")
+            elif next_node_id == "final-message-node":
                 text = """Спасибо за предоставленную информацию! 🎉
 
 Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
