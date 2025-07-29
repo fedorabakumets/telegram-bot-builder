@@ -133,7 +133,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   code += `${indentLevel}    return False, None\n`;
   code += `${indentLevel}\n`;
   
-  // Единая if/elif/else структура для всех условий
+  // Создаем единую if/elif/else структуру для всех условий
   for (let i = 0; i < sortedConditions.length; i++) {
     const condition = sortedConditions[i];
     const conditionText = formatTextForPython(condition.messageText);
@@ -156,20 +156,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           break;
         }
         
-        // Генерируем проверки для всех переменных в одном блоке с if/elif
-        code += `${indentLevel}variable_checks = []\n`;
-        code += `${indentLevel}variable_values = {}\n`;
-        for (const varName of variableNames) {
-          code += `${indentLevel}exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')}, value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = check_user_variable("${varName}", user_data_dict)\n`;
-          code += `${indentLevel}variable_checks.append(exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
-          code += `${indentLevel}variable_values["${varName}"] = value_${varName.replace(/[^a-zA-Z0-9]/g, '_')}\n`;
+        // Создаем единый блок условия с проверками ВНУТРИ
+        code += `${indentLevel}${conditionKeyword} (\n`;
+        for (let j = 0; j < variableNames.length; j++) {
+          const varName = variableNames[j];
+          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
+          code += `${indentLevel}    check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
         }
+        code += `${indentLevel}):\n`;
         
-        // Применяем логический оператор
-        if (logicOperator === 'AND') {
-          code += `${indentLevel}${conditionKeyword} all(variable_checks):\n`;
-        } else {
-          code += `${indentLevel}${conditionKeyword} any(variable_checks):\n`;
+        // Внутри блока условия собираем значения переменных
+        code += `${indentLevel}    # Собираем значения переменных\n`;
+        code += `${indentLevel}    variable_values = {}\n`;
+        for (const varName of variableNames) {
+          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
         }
         
         code += `${indentLevel}    text = ${conditionText}\n`;
@@ -190,19 +190,18 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           break;
         }
         
-        // Генерируем проверки для всех переменных в одном блоке с if/elif
-        code += `${indentLevel}variable_checks = []\n`;
-        for (const varName of variableNames) {
-          code += `${indentLevel}exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')}, value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = check_user_variable("${varName}", user_data_dict)\n`;
-          code += `${indentLevel}variable_checks.append(exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
+        // Создаем единый блок условия с проверками ВНУТРИ (инвертированными)
+        code += `${indentLevel}${conditionKeyword} (\n`;
+        for (let j = 0; j < variableNames.length; j++) {
+          const varName = variableNames[j];
+          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
+          if (logicOperator === 'AND') {
+            code += `${indentLevel}    not check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
+          } else {
+            code += `${indentLevel}    not check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
+          }
         }
-        
-        // Применяем логический оператор (для NOT_EXISTS инвертируем)
-        if (logicOperator === 'AND') {
-          code += `${indentLevel}${conditionKeyword} not all(variable_checks):\n`;
-        } else {
-          code += `${indentLevel}${conditionKeyword} not any(variable_checks):\n`;
-        }
+        code += `${indentLevel}):\n`;
         
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
@@ -215,21 +214,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           break;
         }
         
-        // Генерируем проверки для всех переменных в одном блоке с if/elif
-        code += `${indentLevel}variable_checks = []\n`;
-        code += `${indentLevel}variable_values = {}\n`;
-        for (const varName of variableNames) {
-          code += `${indentLevel}exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')}, value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = check_user_variable("${varName}", user_data_dict)\n`;
-          code += `${indentLevel}matches_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} == "${condition.expectedValue || ''}"\n`;
-          code += `${indentLevel}variable_checks.append(matches_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
-          code += `${indentLevel}variable_values["${varName}"] = value_${varName.replace(/[^a-zA-Z0-9]/g, '_')}\n`;
+        // Создаем единый блок условия с проверками равенства ВНУТРИ
+        code += `${indentLevel}${conditionKeyword} (\n`;
+        for (let j = 0; j < variableNames.length; j++) {
+          const varName = variableNames[j];
+          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
+          code += `${indentLevel}    check_user_variable("${varName}", user_data_dict)[1] == "${condition.expectedValue || ''}"${operator}\n`;
         }
+        code += `${indentLevel}):\n`;
         
-        // Применяем логический оператор
-        if (logicOperator === 'AND') {
-          code += `${indentLevel}${conditionKeyword} all(variable_checks):\n`;
-        } else {
-          code += `${indentLevel}${conditionKeyword} any(variable_checks):\n`;
+        // Внутри блока условия собираем значения переменных
+        code += `${indentLevel}    # Собираем значения переменных\n`;
+        code += `${indentLevel}    variable_values = {}\n`;
+        for (const varName of variableNames) {
+          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
         }
         
         code += `${indentLevel}    text = ${conditionText}\n`;
@@ -250,21 +248,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           break;
         }
         
-        // Генерируем проверки для всех переменных в одном блоке с if/elif
-        code += `${indentLevel}variable_checks = []\n`;
-        code += `${indentLevel}variable_values = {}\n`;
-        for (const varName of variableNames) {
-          code += `${indentLevel}exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')}, value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = check_user_variable("${varName}", user_data_dict)\n`;
-          code += `${indentLevel}contains_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} is not None and "${condition.expectedValue || ''}" in str(value_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
-          code += `${indentLevel}variable_checks.append(contains_${varName.replace(/[^a-zA-Z0-9]/g, '_')})\n`;
-          code += `${indentLevel}variable_values["${varName}"] = value_${varName.replace(/[^a-zA-Z0-9]/g, '_')}\n`;
+        // Создаем единый блок условия с проверками содержания ВНУТРИ
+        code += `${indentLevel}${conditionKeyword} (\n`;
+        for (let j = 0; j < variableNames.length; j++) {
+          const varName = variableNames[j];
+          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
+          code += `${indentLevel}    (check_user_variable("${varName}", user_data_dict)[1] is not None and "${condition.expectedValue || ''}" in str(check_user_variable("${varName}", user_data_dict)[1]))${operator}\n`;
         }
+        code += `${indentLevel}):\n`;
         
-        // Применяем логический оператор
-        if (logicOperator === 'AND') {
-          code += `${indentLevel}${conditionKeyword} all(variable_checks):\n`;
-        } else {
-          code += `${indentLevel}${conditionKeyword} any(variable_checks):\n`;
+        // Внутри блока условия собираем значения переменных
+        code += `${indentLevel}    # Собираем значения переменных\n`;
+        code += `${indentLevel}    variable_values = {}\n`;
+        for (const varName of variableNames) {
+          code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
         }
         
         code += `${indentLevel}    text = ${conditionText}\n`;
@@ -297,13 +294,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
     }
   }
   
-  // Добавляем else блок для fallback сообщения
-  if (sortedConditions.length > 0) {
-    code += `${indentLevel}else:\n`;
-    code += `${indentLevel}    # Fallback сообщение если ни одно условие не выполнено\n`;
-    code += `${indentLevel}    pass  # Используем исходный текст\n`;
-  }
-  
+  // НЕ добавляем else блок здесь - он будет добавлен основной функцией
   return code;
 }
 

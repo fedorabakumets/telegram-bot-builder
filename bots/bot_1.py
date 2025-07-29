@@ -339,21 +339,18 @@ async def profile_handler(message: types.Message):
         return False, None
     
     # Условие 1: user_data_exists для переменных: источник, желание, пол, имя
-    variable_checks = []
-    variable_values = {}
-    exists_________, value_________ = check_user_variable("источник", user_data_dict)
-    variable_checks.append(exists_________)
-    variable_values["источник"] = value_________
-    exists________, value________ = check_user_variable("желание", user_data_dict)
-    variable_checks.append(exists________)
-    variable_values["желание"] = value________
-    exists____, value____ = check_user_variable("пол", user_data_dict)
-    variable_checks.append(exists____)
-    variable_values["пол"] = value____
-    exists____, value____ = check_user_variable("имя", user_data_dict)
-    variable_checks.append(exists____)
-    variable_values["имя"] = value____
-    if all(variable_checks):
+    if (
+        check_user_variable("источник", user_data_dict)[0] and
+        check_user_variable("желание", user_data_dict)[0] and
+        check_user_variable("пол", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
+        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 🔍 Источник: {источник}
@@ -372,12 +369,12 @@ async def profile_handler(message: types.Message):
             text = text.replace("{имя}", variable_values["имя"])
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     # Условие 2: user_data_exists для переменных: имя
-    variable_checks = []
-    variable_values = {}
-    exists____, value____ = check_user_variable("имя", user_data_dict)
-    variable_checks.append(exists____)
-    variable_values["имя"] = value____
-    elif all(variable_checks):
+    elif (
+        check_user_variable("имя", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 👋 Имя: {имя}
@@ -387,12 +384,12 @@ async def profile_handler(message: types.Message):
             text = text.replace("{имя}", variable_values["имя"])
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     # Условие 3: user_data_exists для переменных: источник
-    variable_checks = []
-    variable_values = {}
-    exists_________, value_________ = check_user_variable("источник", user_data_dict)
-    variable_checks.append(exists_________)
-    variable_values["источник"] = value_________
-    elif any(variable_checks):
+    elif (
+        check_user_variable("источник", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
         text = """👤 Частичный профиль:
 
 🔍 Источник: {источник}
@@ -402,21 +399,18 @@ async def profile_handler(message: types.Message):
             text = text.replace("{источник}", variable_values["источник"])
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
     # Условие 4: user_data_exists для переменных: источник, желание, пол, имя
-    variable_checks = []
-    variable_values = {}
-    exists_________, value_________ = check_user_variable("источник", user_data_dict)
-    variable_checks.append(exists_________)
-    variable_values["источник"] = value_________
-    exists________, value________ = check_user_variable("желание", user_data_dict)
-    variable_checks.append(exists________)
-    variable_values["желание"] = value________
-    exists____, value____ = check_user_variable("пол", user_data_dict)
-    variable_checks.append(exists____)
-    variable_values["пол"] = value____
-    exists____, value____ = check_user_variable("имя", user_data_dict)
-    variable_checks.append(exists____)
-    variable_values["имя"] = value____
-    elif any(variable_checks):
+    elif (
+        check_user_variable("источник", user_data_dict)[0] or
+        check_user_variable("желание", user_data_dict)[0] or
+        check_user_variable("пол", user_data_dict)[0] or
+        check_user_variable("имя", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
+        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 У нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.
@@ -435,9 +429,6 @@ async def profile_handler(message: types.Message):
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
-    else:
-        # Fallback сообщение если ни одно условие не выполнено
-        pass  # Используем исходный текст
     else:
         text = """👤 Профиль недоступен
 
