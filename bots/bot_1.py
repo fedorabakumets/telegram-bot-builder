@@ -266,7 +266,12 @@ async def start_handler(message: types.Message):
     text = """Привет! 🌟
 Добро пожаловать в наш бот!
 Откуда вы узнали о нас?"""
-    await message.answer(text)
+    # Определяем режим форматирования (приоритет у условного сообщения)
+    if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+        current_parse_mode = conditional_parse_mode
+    else:
+        current_parse_mode = None
+    await message.answer(text, parse_mode=current_parse_mode if current_parse_mode else None)
     
     # Устанавливаем состояние ожидания ввода
     user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
@@ -339,21 +344,21 @@ async def profile_handler(message: types.Message):
         
         return False, None
     
-    # Условие 1: user_data_exists для переменных: источник, желание, пол, имя, возраст
+    # Условие 1: user_data_exists для переменных: возраст, желание, имя, источник, пол
     if (
-        check_user_variable("источник", user_data_dict)[0] and
+        check_user_variable("возраст", user_data_dict)[0] and
         check_user_variable("желание", user_data_dict)[0] and
-        check_user_variable("пол", user_data_dict)[0] and
         check_user_variable("имя", user_data_dict)[0] and
-        check_user_variable("возраст", user_data_dict)[0]
+        check_user_variable("источник", user_data_dict)[0] and
+        check_user_variable("пол", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
-        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["возраст"] = check_user_variable("возраст", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
         text = """👤 Полный профиль:
 
 🔍 Источник: {источник}
@@ -364,30 +369,30 @@ async def profile_handler(message: types.Message):
 
 Профиль полностью заполнен! ✅ Все данные собраны."""
         conditional_parse_mode = None
-        if "{источник}" in text and variable_values["источник"] is not None:
-            text = text.replace("{источник}", variable_values["источник"])
-        if "{желание}" in text and variable_values["желание"] is not None:
-            text = text.replace("{желание}", variable_values["желание"])
-        if "{пол}" in text and variable_values["пол"] is not None:
-            text = text.replace("{пол}", variable_values["пол"])
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{возраст}" in text and variable_values["возраст"] is not None:
             text = text.replace("{возраст}", variable_values["возраст"])
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
+        if "{источник}" in text and variable_values["источник"] is not None:
+            text = text.replace("{источник}", variable_values["источник"])
+        if "{пол}" in text and variable_values["пол"] is not None:
+            text = text.replace("{пол}", variable_values["пол"])
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    # Условие 2: user_data_exists для переменных: источник, желание, пол, имя
+    # Условие 2: user_data_exists для переменных: желание, имя, источник, пол
     elif (
-        check_user_variable("источник", user_data_dict)[0] and
         check_user_variable("желание", user_data_dict)[0] and
-        check_user_variable("пол", user_data_dict)[0] and
-        check_user_variable("имя", user_data_dict)[0]
+        check_user_variable("имя", user_data_dict)[0] and
+        check_user_variable("источник", user_data_dict)[0] and
+        check_user_variable("пол", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
         _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
         text = """👤 Ваш профиль:
 
 🔍 Источник: {источник}
@@ -397,24 +402,24 @@ async def profile_handler(message: types.Message):
 
 Основная информация собрана! Хотите добавить возраст?"""
         conditional_parse_mode = None
-        if "{источник}" in text and variable_values["источник"] is not None:
-            text = text.replace("{источник}", variable_values["источник"])
         if "{желание}" in text and variable_values["желание"] is not None:
             text = text.replace("{желание}", variable_values["желание"])
-        if "{пол}" in text and variable_values["пол"] is not None:
-            text = text.replace("{пол}", variable_values["пол"])
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
+        if "{источник}" in text and variable_values["источник"] is not None:
+            text = text.replace("{источник}", variable_values["источник"])
+        if "{пол}" in text and variable_values["пол"] is not None:
+            text = text.replace("{пол}", variable_values["пол"])
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    # Условие 3: user_data_exists для переменных: имя, возраст
+    # Условие 3: user_data_exists для переменных: возраст, имя
     elif (
-        check_user_variable("имя", user_data_dict)[0] and
-        check_user_variable("возраст", user_data_dict)[0]
+        check_user_variable("возраст", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["возраст"] = check_user_variable("возраст", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 👋 Имя: {имя}
@@ -422,10 +427,10 @@ async def profile_handler(message: types.Message):
 
 Имя и возраст указаны. Пройдите полный опрос для заполнения остальных данных."""
         conditional_parse_mode = None
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{возраст}" in text and variable_values["возраст"] is not None:
             text = text.replace("{возраст}", variable_values["возраст"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     # Условие 4: user_data_exists для переменных: имя
     elif (
@@ -481,12 +486,17 @@ async def profile_handler(message: types.Message):
 Похоже, вы еще не прошли опрос. Пожалуйста, введите /start чтобы заполнить профиль."""
         logging.info("Используется запасное сообщение")
     
+    # Определяем режим форматирования (приоритет у условного сообщения)
+    if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+        current_parse_mode = conditional_parse_mode
+    else:
+        current_parse_mode = None
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
     keyboard = builder.as_markup()
     # Отправляем сообщение с прикрепленными inline кнопками
-    await message.answer(text, reply_markup=keyboard)
+    await message.answer(text, reply_markup=keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
 
 # Обработчики inline кнопок
 
@@ -1823,7 +1833,11 @@ async def handle_user_input(message: types.Message):
                 logging.info(f"Переход к узлу nr3wIiTfBYYmpkkXMNH7n типа keyboard")
             elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
                 text = "Печально, если что напиши /start или /profile для просмотра профиля"
-                parse_mode = None
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
                 builder = InlineKeyboardBuilder()
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
@@ -1835,7 +1849,11 @@ async def handle_user_input(message: types.Message):
                 text = """Спасибо за предоставленную информацию! 🎉
 
 Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
-                parse_mode = None
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
                 builder = InlineKeyboardBuilder()
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
