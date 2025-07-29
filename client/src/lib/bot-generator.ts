@@ -2604,7 +2604,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '                        user_data[user_id]["waiting_for_input"] = {\n';
         code += `                            "type": "${targetNode.data.inputType || 'text'}",\n`;
         code += `                            "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
-        code += `                            "save_to_database": ${targetNode.data.saveToDatabase ? 'True' : 'False'},\n`;
+        code += `                            "save_to_database": True,\n`;
         code += `                            "node_id": "${targetNode.id}",\n`;
         const nextConnection = connections.find(conn => conn.source === targetNode.id);
         if (nextConnection) {
@@ -2692,16 +2692,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     code += `            user_data[user_id]["${variableName}"] = response_data\n`;
     code += `            \n`;
     
-    // Сохранение в базу данных если включено
-    if (node.data.saveToDatabase) {
-      code += `            # Сохраняем в базу данных\n`;
-      code += `            saved_to_db = await update_user_data_in_db(user_id, "${variableName}", response_data)\n`;
-      code += `            if saved_to_db:\n`;
-      code += `                logging.info(f"✅ Данные сохранены в БД: ${variableName} = {user_text} (пользователь {user_id})")\n`;
-      code += `            else:\n`;
-      code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
-      code += `            \n`;
-    }
+    // Сохранение в базу данных (всегда включено для collectUserInput)
+    code += `            # Сохраняем в базу данных\n`;
+    code += `            saved_to_db = await update_user_data_in_db(user_id, "${variableName}", response_data)\n`;
+    code += `            if saved_to_db:\n`;
+    code += `                logging.info(f"✅ Данные сохранены в БД: ${variableName} = {user_text} (пользователь {user_id})")\n`;
+    code += `            else:\n`;
+    code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
+    code += `            \n`;
     
     // Сообщение об успехе
     code += `            await message.answer("✅ Спасибо за ваш ответ!")\n`;
