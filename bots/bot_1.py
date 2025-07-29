@@ -312,7 +312,7 @@ async def profile_handler(message: types.Message):
     else:
         user_data_dict = {}
     
-    # Проверяем условие: user_data_exists для переменных: источник, желание, пол, имя, возраст
+    # Проверяем условие: user_data_exists для переменных: источник, желание, пол, имя
     # Проверяем существование переменных с учетом структуры данных
     variables_exist = []
     variable_values = {}
@@ -453,40 +453,6 @@ async def profile_handler(message: types.Message):
     
     variables_exist.append(var_exists____)
     variable_values["имя"] = var_value____
-    # Проверяем переменную 'возраст'
-    var_exists________ = False
-    var_value________ = None
-    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "возраст" in parsed_data:
-                # Поддержка как простых значений, так и сложных объектов
-                raw_value = parsed_data["возраст"]
-                if isinstance(raw_value, dict) and "value" in raw_value:
-                    var_value________ = raw_value["value"]
-                else:
-                    var_value________ = str(raw_value) if raw_value is not None else None
-                var_exists________ = var_value________ is not None
-                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists________ and "возраст" in user_data_dict:
-        variable_data = user_data_dict.get("возраст")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value________ = variable_data["value"]
-            var_exists________ = var_value________ is not None
-        elif variable_data is not None:
-            var_value________ = str(variable_data)
-            var_exists________ = True
-    
-    variables_exist.append(var_exists________)
-    variable_values["возраст"] = var_value________
     condition_met = all(variables_exist)
     if condition_met:
         text = """👤 Ваш профиль:
@@ -495,7 +461,6 @@ async def profile_handler(message: types.Message):
 💭 Желание продолжить: {желание}
 ⚧️ Пол: {пол}
 👋 Имя: {имя}
-🎂 Возраст: {возраст}
 
 Профиль полностью заполнен! ✅"""
         if "{источник}" in text:
@@ -518,13 +483,8 @@ async def profile_handler(message: types.Message):
                 text = text.replace("{имя}", str(variable_values["имя"]))
             else:
                 text = text.replace("{имя}", "имя")
-        if "{возраст}" in text:
-            if variable_values["возраст"] is not None:
-                text = text.replace("{возраст}", str(variable_values["возраст"]))
-            else:
-                text = text.replace("{возраст}", "возраст")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    # Проверяем условие: user_data_exists для переменных: имя, возраст
+    # Проверяем условие: user_data_exists для переменных: имя
     # Проверяем существование переменных с учетом структуры данных
     variables_exist = []
     variable_values = {}
@@ -563,46 +523,11 @@ async def profile_handler(message: types.Message):
     
     variables_exist.append(var_exists____)
     variable_values["имя"] = var_value____
-    # Проверяем переменную 'возраст'
-    var_exists________ = False
-    var_value________ = None
-    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "возраст" in parsed_data:
-                # Поддержка как простых значений, так и сложных объектов
-                raw_value = parsed_data["возраст"]
-                if isinstance(raw_value, dict) and "value" in raw_value:
-                    var_value________ = raw_value["value"]
-                else:
-                    var_value________ = str(raw_value) if raw_value is not None else None
-                var_exists________ = var_value________ is not None
-                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists________ and "возраст" in user_data_dict:
-        variable_data = user_data_dict.get("возраст")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value________ = variable_data["value"]
-            var_exists________ = var_value________ is not None
-        elif variable_data is not None:
-            var_value________ = str(variable_data)
-            var_exists________ = True
-    
-    variables_exist.append(var_exists________)
-    variable_values["возраст"] = var_value________
     condition_met = all(variables_exist)
     if condition_met:
         text = """👤 Ваш профиль:
 
 👋 Имя: {имя}
-🎂 Возраст: {возраст}
 
 Основная информация заполнена. Хотите пройти полный опрос?"""
         if "{имя}" in text:
@@ -610,11 +535,6 @@ async def profile_handler(message: types.Message):
                 text = text.replace("{имя}", str(variable_values["имя"]))
             else:
                 text = text.replace("{имя}", "имя")
-        if "{возраст}" in text:
-            if variable_values["возраст"] is not None:
-                text = text.replace("{возраст}", str(variable_values["возраст"]))
-            else:
-                text = text.replace("{возраст}", "возраст")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     # Проверяем условие: user_data_exists для переменных: источник
     # Проверяем существование переменных с учетом структуры данных
@@ -668,7 +588,7 @@ async def profile_handler(message: types.Message):
             else:
                 text = text.replace("{источник}", "источник")
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
-    # Проверяем условие: user_data_exists для переменных: источник, желание, пол, имя, возраст
+    # Проверяем условие: user_data_exists для переменных: источник, желание, пол, имя
     # Проверяем существование переменных с учетом структуры данных
     variables_exist = []
     variable_values = {}
@@ -809,40 +729,6 @@ async def profile_handler(message: types.Message):
     
     variables_exist.append(var_exists____)
     variable_values["имя"] = var_value____
-    # Проверяем переменную 'возраст'
-    var_exists________ = False
-    var_value________ = None
-    logging.info(f"Проверяем переменную 'возраст' в user_data_dict: {user_data_dict}")
-    
-    # Проверяем в базе данных через parsed user_data
-    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-        try:
-            import json
-            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-            if "возраст" in parsed_data:
-                # Поддержка как простых значений, так и сложных объектов
-                raw_value = parsed_data["возраст"]
-                if isinstance(raw_value, dict) and "value" in raw_value:
-                    var_value________ = raw_value["value"]
-                else:
-                    var_value________ = str(raw_value) if raw_value is not None else None
-                var_exists________ = var_value________ is not None
-                logging.info(f"Переменная 'возраст' найдена в БД: {var_value________}")
-        except (json.JSONDecodeError, TypeError) as e:
-            logging.warning(f"Ошибка парсинга user_data: {e}")
-    
-    # Проверяем в локальных данных если не найдено в БД
-    if not var_exists________ and "возраст" in user_data_dict:
-        variable_data = user_data_dict.get("возраст")
-        if isinstance(variable_data, dict) and "value" in variable_data:
-            var_value________ = variable_data["value"]
-            var_exists________ = var_value________ is not None
-        elif variable_data is not None:
-            var_value________ = str(variable_data)
-            var_exists________ = True
-    
-    variables_exist.append(var_exists________)
-    variable_values["возраст"] = var_value________
     condition_met = any(variables_exist)
     if condition_met:
         text = """👤 Ваш профиль:
@@ -853,8 +739,7 @@ async def profile_handler(message: types.Message):
 🔍 Источник: {источник}
 💭 Желание: {желание}
 ⚧️ Пол: {пол}
-👋 Имя: {имя}
-🎂 Возраст: {возраст}"""
+👋 Имя: {имя}"""
         if "{источник}" in text:
             if variable_values["источник"] is not None:
                 text = text.replace("{источник}", str(variable_values["источник"]))
@@ -875,11 +760,6 @@ async def profile_handler(message: types.Message):
                 text = text.replace("{имя}", str(variable_values["имя"]))
             else:
                 text = text.replace("{имя}", "имя")
-        if "{возраст}" in text:
-            if variable_values["возраст"] is not None:
-                text = text.replace("{возраст}", str(variable_values["возраст"]))
-            else:
-                text = text.replace("{возраст}", "возраст")
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
     else:
         text = """👤 Профиль недоступен
@@ -1071,7 +951,7 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "имя"
     user_data[callback_query.from_user.id]["save_to_database"] = True
-    user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "final-message-node"
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -1143,7 +1023,7 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "имя"
     user_data[callback_query.from_user.id]["save_to_database"] = True
-    user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "final-message-node"
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -1396,7 +1276,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "имя"
     user_data[callback_query.from_user.id]["save_to_database"] = True
-    user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "final-message-node"
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -1493,90 +1373,6 @@ async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQu
     except Exception as e:
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
-    
-
-@dp.callback_query(lambda c: c.data == "yxbKRAHB-OuKFsHRJZyiV" or c.data.startswith("yxbKRAHB-OuKFsHRJZyiV_btn_"))
-async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
-    user_id = callback_query.from_user.id
-    
-    # Ищем текст кнопки по callback_data
-    button_display_text = "Кнопка yxbKRAHB-OuKFsHRJZyiV"
-    
-    # Сохраняем ответ в базу данных
-    timestamp = get_moscow_time()
-    
-    response_data = button_display_text  # Простое значение
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["button_click"] = button_display_text
-    
-    # Сохраняем в базу данных с правильным именем переменной
-    await update_user_data_in_db(user_id, "button_click", button_display_text)
-    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
-    
-    text = "Сколько вам лет?"
-    # Подставляем все доступные переменные пользователя в текст
-    user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
-    
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record:
-            if isinstance(user_record["user_data"], str):
-                try:
-                    import json
-                    user_vars = json.loads(user_record["user_data"])
-                except (json.JSONDecodeError, TypeError):
-                    user_vars = {}
-            elif isinstance(user_record["user_data"], dict):
-                user_vars = user_record["user_data"]
-            else:
-                user_vars = {}
-        else:
-            user_vars = user_record
-    else:
-        user_vars = {}
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        if not text_content or not variables_dict:
-            return text_content
-        
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                text_content = text_content.replace(placeholder, var_value)
-        return text_content
-    
-    text = replace_variables_in_text(text, user_vars)
-    # Активируем сбор пользовательского ввода
-    if callback_query.from_user.id not in user_data:
-        user_data[callback_query.from_user.id] = {}
-    
-    user_data[callback_query.from_user.id]["waiting_for_input"] = "yxbKRAHB-OuKFsHRJZyiV"
-    user_data[callback_query.from_user.id]["input_type"] = "text"
-    user_data[callback_query.from_user.id]["input_variable"] = "возраст"
-    user_data[callback_query.from_user.id]["save_to_database"] = True
-    user_data[callback_query.from_user.id]["input_target_node_id"] = "final-message-node"
-    
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
-    try:
-        await callback_query.message.edit_text(text)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text)
     
 
 @dp.callback_query(lambda c: c.data == "final-message-node" or c.data.startswith("final-message-node_btn_"))
@@ -1764,8 +1560,6 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_1BHSLWPMao9qQvSAzuzRl(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "XDSrTrNly5EtDtr85nN4P":
                         await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "yxbKRAHB-OuKFsHRJZyiV":
-                        await handle_callback_yxbKRAHB_OuKFsHRJZyiV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "final-message-node":
                         await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "profile_command":
@@ -1790,8 +1584,6 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_1BHSLWPMao9qQvSAzuzRl(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
                             await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "yxbKRAHB-OuKFsHRJZyiV":
-                            await handle_callback_yxbKRAHB_OuKFsHRJZyiV(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "final-message-node":
                             await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "profile_command":
@@ -1910,8 +1702,6 @@ async def handle_user_input(message: types.Message):
                         await message.answer(text)
                     elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
                         logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа keyboard")
-                    elif next_node_id == "yxbKRAHB-OuKFsHRJZyiV":
-                        logging.info(f"Переход к узлу yxbKRAHB-OuKFsHRJZyiV типа keyboard")
                     elif next_node_id == "final-message-node":
                         text = """Спасибо за предоставленную информацию! 🎉
 
@@ -2060,49 +1850,6 @@ async def handle_user_input(message: types.Message):
                     id="input_nav",
                     from_user=message.from_user,
                     chat_instance="",
-                    data="yxbKRAHB-OuKFsHRJZyiV",
-                    message=message,
-                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
-                )
-                await handle_callback_yxbKRAHB_OuKFsHRJZyiV(fake_callback)
-            except Exception as e:
-                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
-            return
-        elif waiting_node_id == "yxbKRAHB-OuKFsHRJZyiV":
-            
-            # Сохраняем ответ пользователя
-            import datetime
-            timestamp = get_moscow_time()
-            
-            # Сохраняем простое значение для совместимости с логикой профиля
-            response_data = user_text  # Простое значение вместо сложного объекта
-            
-            # Сохраняем в пользовательские данные
-            user_data[user_id]["возраст"] = response_data
-            
-            # Сохраняем в базу данных
-            saved_to_db = await update_user_data_in_db(user_id, "возраст", response_data)
-            if saved_to_db:
-                logging.info(f"✅ Данные сохранены в БД: возраст = {user_text} (пользователь {user_id})")
-            else:
-                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-            
-            await message.answer("✅ Спасибо за ваш ответ!")
-            
-            # Очищаем состояние ожидания ввода
-            del user_data[user_id]["waiting_for_input"]
-            
-            logging.info(f"Получен пользовательский ввод: возраст = {user_text}")
-            
-            # Переходим к следующему узлу
-            try:
-                # Создаем фиктивный callback_query для навигации
-                import types as aiogram_types
-                import asyncio
-                fake_callback = aiogram_types.SimpleNamespace(
-                    id="input_nav",
-                    from_user=message.from_user,
-                    chat_instance="",
                     data="final-message-node",
                     message=message,
                     answer=lambda text="", show_alert=False: asyncio.sleep(0)
@@ -2230,8 +1977,6 @@ async def handle_user_input(message: types.Message):
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
                 logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа keyboard")
-            elif next_node_id == "yxbKRAHB-OuKFsHRJZyiV":
-                logging.info(f"Переход к узлу yxbKRAHB-OuKFsHRJZyiV типа keyboard")
             elif next_node_id == "final-message-node":
                 text = """Спасибо за предоставленную информацию! 🎉
 
