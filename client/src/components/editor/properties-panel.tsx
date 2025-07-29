@@ -332,7 +332,9 @@ export function PropertiesPanel({
     keyboard: 'Клавиатура',
     condition: 'Условие',
     input: 'Ввод данных',
-    'user-input': 'Сбор ввода пользователя'
+    'user-input': 'Сбор ввода пользователя',
+    poll: 'Опрос',
+    dice: 'Кости'
   };
 
   const nodeIcons = {
@@ -351,7 +353,9 @@ export function PropertiesPanel({
     keyboard: 'fas fa-keyboard',
     condition: 'fas fa-code-branch',
     input: 'fas fa-edit',
-    'user-input': 'fas fa-comments'
+    'user-input': 'fas fa-comments',
+    poll: 'fas fa-poll',
+    dice: 'fas fa-dice'
   };
 
   const nodeColors = {
@@ -370,7 +374,9 @@ export function PropertiesPanel({
     keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
     condition: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
     input: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
-    'user-input': 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
+    'user-input': 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+    poll: 'bg-lime-100 text-lime-600 dark:bg-lime-900/30 dark:text-lime-400',
+    dice: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400'
   };
 
   const handleAddButton = () => {
@@ -876,10 +882,10 @@ export function PropertiesPanel({
                           Тип файла
                         </Label>
                         <Input
-                          value={selectedNode.data.mimeType || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { mimeType: e.target.value })}
+                          value={selectedNode.data.fileSize ? selectedNode.data.fileSize.toString() : ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { fileSize: parseInt(e.target.value) || 0 })}
                           className="border-slate-200 dark:border-slate-700 focus:border-slate-500 focus:ring-slate-200"
-                          placeholder="application/pdf"
+                          placeholder="1024"
                         />
                       </div>
                     </div>
@@ -923,10 +929,10 @@ export function PropertiesPanel({
                         Набор стикеров
                       </Label>
                       <Input
-                        value={selectedNode.data.stickerSetName || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { stickerSetName: e.target.value })}
+                        value={selectedNode.data.stickerFileId || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { stickerFileId: e.target.value })}
                         className="border-yellow-200 dark:border-yellow-700 focus:border-yellow-500 focus:ring-yellow-200"
-                        placeholder="mystickerpack_by_mybot"
+                        placeholder="BQACAgIAAxkDAAICxmF4..."
                       />
                       <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
                         Название набора стикеров (опционально)
@@ -1095,8 +1101,8 @@ export function PropertiesPanel({
                         Название файла
                       </Label>
                       <Input
-                        value={selectedNode.data.fileName || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { fileName: e.target.value })}
+                        value={selectedNode.data.filename || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { filename: e.target.value })}
                         className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
                         placeholder="animation.gif"
                       />
@@ -1140,12 +1146,10 @@ export function PropertiesPanel({
                                   onNodeUpdate(selectedNode.id, {
                                     title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                     address: locationInfo.address || selectedNode.data.address,
-                                    city: locationInfo.city || selectedNode.data.city,
-                                    country: locationInfo.country || selectedNode.data.country
                                   });
                                   toast({
                                     title: "Информация обновлена",
-                                    description: `Автоматически определены: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
+                                    description: `Координаты установлены`
                                   });
                                 }
                               })
@@ -1177,12 +1181,10 @@ export function PropertiesPanel({
                                   onNodeUpdate(selectedNode.id, {
                                     title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                     address: locationInfo.address || selectedNode.data.address,
-                                    city: locationInfo.city || selectedNode.data.city,
-                                    country: locationInfo.country || selectedNode.data.country
                                   });
                                   toast({
                                     title: "Информация обновлена",
-                                    description: `Автоматически определены: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
+                                    description: `Координаты установлены`
                                   });
                                 }
                               })
@@ -1236,31 +1238,18 @@ export function PropertiesPanel({
                       />
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                          <i className="fas fa-city mr-1"></i>
-                          Город
-                        </Label>
-                        <Input
-                          value={selectedNode.data.city || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { city: e.target.value })}
-                          className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
-                          placeholder="Москва"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                          <i className="fas fa-flag mr-1"></i>
-                          Страна
-                        </Label>
-                        <Input
-                          value={selectedNode.data.country || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { country: e.target.value })}
-                          className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
-                          placeholder="Россия"
-                        />
-                      </div>
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-info-circle mr-1"></i>
+                        Дополнительная информация
+                      </Label>
+                      <Textarea
+                        value={selectedNode.data.address || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { address: e.target.value })}
+                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                        placeholder="Дополнительное описание местоположения"
+                        rows={2}
+                      />
                     </div>
                   </div>
                 </div>
@@ -1323,7 +1312,7 @@ export function PropertiesPanel({
                       </Label>
                       <select
                         value={selectedNode.data.mapService || 'custom'}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { mapService: e.target.value })}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { mapService: e.target.value as 'yandex' | 'google' | '2gis' | 'custom' })}
                         className="w-full px-3 py-2 border border-orange-200 dark:border-orange-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:border-orange-500 focus:ring-orange-200"
                       >
                         <option value="custom">Пользовательские координаты</option>
@@ -1365,12 +1354,10 @@ export function PropertiesPanel({
                                       onNodeUpdate(selectedNode.id, {
                                         title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                         address: locationInfo.address || selectedNode.data.address,
-                                        city: locationInfo.city || selectedNode.data.city,
-                                        country: locationInfo.country || selectedNode.data.country
                                       });
                                       toast({
                                         title: "Координаты обновлены",
-                                        description: `Из Яндекс.Карт: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
+                                        description: `Из Яндекс.Карт`
                                       });
                                     }
                                   })
@@ -1425,12 +1412,10 @@ export function PropertiesPanel({
                                       onNodeUpdate(selectedNode.id, {
                                         title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                         address: locationInfo.address || selectedNode.data.address,
-                                        city: locationInfo.city || selectedNode.data.city,
-                                        country: locationInfo.country || selectedNode.data.country
                                       });
                                       toast({
                                         title: "Координаты обновлены",
-                                        description: `Из Google Maps: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
+                                        description: `Из Google Maps`
                                       });
                                     }
                                   })
@@ -1485,12 +1470,10 @@ export function PropertiesPanel({
                                       onNodeUpdate(selectedNode.id, {
                                         title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                         address: locationInfo.address || selectedNode.data.address,
-                                        city: locationInfo.city || selectedNode.data.city,
-                                        country: locationInfo.country || selectedNode.data.country
                                       });
                                       toast({
                                         title: "Координаты обновлены",
-                                        description: `Из 2ГИС: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
+                                        description: `Из 2ГИС`
                                       });
                                     }
                                   })
@@ -1705,8 +1688,8 @@ export function PropertiesPanel({
                       </div>
                       <div className="ml-4">
                         <Switch
-                          checked={selectedNode.data.enableTextInput ?? false}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableTextInput: checked })}
+                          checked={selectedNode.data.resizeKeyboard ?? true}
+                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
                         />
                       </div>
                     </div>
@@ -2169,49 +2152,21 @@ export function PropertiesPanel({
                 </div>
               </div>
 
-
-
-
-
-                            {/* Message Text */}
-                            <div>
-                              <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                Что показать пользователю, если условие выполнится?
-                              </Label>
-                              <Textarea
-                                value={condition.messageText}
-                                onChange={(e) => {
-                                  const currentConditions = selectedNode.data.conditionalMessages || [];
-                                  const updatedConditions = currentConditions.map(c => 
-                                    c.id === condition.id ? { ...c, messageText: e.target.value } : c
-                                  );
-                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                }}
-                                className="text-xs resize-none"
-                                rows={3}
-                                placeholder="Добро пожаловать обратно! Рады вас снова видеть."
-                              />
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Это сообщение увидит пользователь вместо основного текста
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                          );
-                        }
-                      )}
-
-                      {(selectedNode.data.conditionalMessages || []).length === 0 && (
-                        <div className="text-center py-6 text-muted-foreground">
-                          <i className="fas fa-plus-circle text-2xl mb-2"></i>
-                          <div className="text-xs">
-                            Нажмите "Добавить условие" чтобы создать первое условное сообщение
-                          </div>
-                        </div>
-                      )}
+              {selectedNode.data.enableConditionalMessages && (
+                <div>
+                  {(selectedNode.data.conditionalMessages || []).length === 0 && (
+                    <div className="text-center py-6 text-muted-foreground">
+                      <i className="fas fa-plus-circle text-2xl mb-2"></i>
+                      <div className="text-xs">
+                        Нажмите "Добавить условие" чтобы создать первое условное сообщение
+                      </div>
                     </div>
-                  </div>
+                  )}
+                </div>
+              )}
 
+              {selectedNode.data.enableConditionalMessages && (
+                <div>
                   {/* Fallback Message */}
                   <div>
                     <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
@@ -2295,8 +2250,8 @@ export function PropertiesPanel({
                     </div>
                     <div className="ml-4">
                       <Switch
-                        checked={selectedNode.data.enableTextInput ?? false}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableTextInput: checked })}
+                        checked={selectedNode.data.resizeKeyboard ?? true}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
                       />
                     </div>
                   </div>
