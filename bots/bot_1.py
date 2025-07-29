@@ -23,7 +23,7 @@ def get_moscow_time():
     return datetime.now(moscow_tz).isoformat()
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "8082906513:AAHEn_TdO4S7Qv9HQ8lqlbSBz3Y5xnQLLvQ"
+BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
