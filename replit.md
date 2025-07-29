@@ -25,7 +25,7 @@ This is a visual Telegram bot builder application that allows users to create Te
 
 ### Database Layer
 - **ORM**: Drizzle ORM for type-safe database operations
-- **Database**: PostgreSQL (configured for Neon serverless)
+- **Database**: PostgreSQL (using standard node-postgres driver)
 - **Schema**: Comprehensive schema with multiple tables:
   - botProjects: Core bot project data with JSON flow storage
   - botInstances: Bot execution instances with status tracking
@@ -870,6 +870,16 @@ Changelog:
   * Пользователи могут взаимодействовать с ботом через inline кнопки, при этом сохраняется функциональность сбора ввода
   * Проблема полностью решена: все 5 автоматических тестов пройдены, бот функционирует как ожидается
 ```
+
+## Recent Changes
+
+### January 29, 2025 - Critical Database Connection Fix
+- **FIXED**: Resolved startup failure due to database connection issues
+- **Database Driver Change**: Switched from Neon serverless client to standard PostgreSQL node-postgres driver for better compatibility
+- **Database Provisioning**: Created new PostgreSQL database with proper environment variables
+- **Schema Migration**: Successfully ran `npm run db:push` to create all required database tables
+- **Verification**: Application now starts successfully with all database operations working
+- **Status**: App running on port 5000 with full functionality restored
 
 ## User Preferences
 
