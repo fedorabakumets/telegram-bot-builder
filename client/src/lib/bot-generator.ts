@@ -156,7 +156,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           break;
         }
         
-        // Генерируем проверки для всех переменных
+        // Генерируем проверки для всех переменных в одном блоке с if/elif
         code += `${indentLevel}variable_checks = []\n`;
         code += `${indentLevel}variable_values = {}\n`;
         for (const varName of variableNames) {
@@ -190,7 +190,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           break;
         }
         
-        // Генерируем проверки для всех переменных
+        // Генерируем проверки для всех переменных в одном блоке с if/elif
         code += `${indentLevel}variable_checks = []\n`;
         for (const varName of variableNames) {
           code += `${indentLevel}exists_${varName.replace(/[^a-zA-Z0-9]/g, '_')}, value_${varName.replace(/[^a-zA-Z0-9]/g, '_')} = check_user_variable("${varName}", user_data_dict)\n`;
@@ -215,7 +215,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           break;
         }
         
-        // Генерируем проверки для всех переменных
+        // Генерируем проверки для всех переменных в одном блоке с if/elif
         code += `${indentLevel}variable_checks = []\n`;
         code += `${indentLevel}variable_values = {}\n`;
         for (const varName of variableNames) {
@@ -250,7 +250,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           break;
         }
         
-        // Генерируем проверки для всех переменных
+        // Генерируем проверки для всех переменных в одном блоке с if/elif
         code += `${indentLevel}variable_checks = []\n`;
         code += `${indentLevel}variable_values = {}\n`;
         for (const varName of variableNames) {
