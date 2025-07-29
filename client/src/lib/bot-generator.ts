@@ -475,13 +475,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    if not db_pool:\n';
   code += '        return False\n';
   code += '    try:\n';
+  code += '        import json\n';
   code += '        async with db_pool.acquire() as conn:\n';
+  code += '            # Сначала создаём или получаем существующую запись\n';
+  code += '            await conn.execute("""\n';
+  code += '                INSERT INTO bot_users (user_id) \n';
+  code += '                VALUES ($1) \n';
+  code += '                ON CONFLICT (user_id) DO NOTHING\n';
+  code += '            """, user_id)\n';
+  code += '            \n';
+  code += '            # Обновляем данные пользователя\n';
+  code += '            update_data = {data_key: data_value}\n';
   code += '            await conn.execute("""\n';
   code += '                UPDATE bot_users \n';
-  code += '                SET user_data = user_data || $2::jsonb,\n';
+  code += '                SET user_data = COALESCE(user_data, \'{}\'::jsonb) || $2::jsonb,\n';
   code += '                    last_interaction = NOW()\n';
   code += '                WHERE user_id = $1\n';
-  code += '            """, user_id, json.dumps({data_key: data_value}))\n';
+  code += '            """, user_id, json.dumps(update_data))\n';
   code += '        return True\n';
   code += '    except Exception as e:\n';
   code += '        logging.error(f"Ошибка обновления данных пользователя: {e}")\n';
@@ -492,13 +502,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    if not db_pool:\n';
   code += '        return False\n';
   code += '    try:\n';
+  code += '        import json\n';
   code += '        async with db_pool.acquire() as conn:\n';
+  code += '            # Сначала создаём или получаем существующую запись\n';
+  code += '            await conn.execute("""\n';
+  code += '                INSERT INTO bot_users (user_id) \n';
+  code += '                VALUES ($1) \n';
+  code += '                ON CONFLICT (user_id) DO NOTHING\n';
+  code += '            """, user_id)\n';
+  code += '            \n';
+  code += '            # Обновляем переменную пользователя\n';
+  code += '            update_data = {variable_name: variable_value}\n';
   code += '            await conn.execute("""\n';
   code += '                UPDATE bot_users \n';
-  code += '                SET user_data = user_data || $2::jsonb,\n';
+  code += '                SET user_data = COALESCE(user_data, \'{}\'::jsonb) || $2::jsonb,\n';
   code += '                    last_interaction = NOW()\n';
   code += '                WHERE user_id = $1\n';
-  code += '            """, user_id, json.dumps({variable_name: variable_value}))\n';
+  code += '            """, user_id, json.dumps(update_data))\n';
   code += '        return True\n';
   code += '    except Exception as e:\n';
   code += '        logging.error(f"Ошибка сохранения переменной пользователя: {e}")\n';
@@ -2476,10 +2496,145 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    # Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)\n';
   code += '    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
   code += '        # Обрабатываем ввод через универсальную систему\n';
-  code += '        waiting_node_id = user_data[user_id]["waiting_for_input"]\n';
-  code += '        input_type = user_data[user_id].get("input_type", "text")\n';
+  code += '        waiting_config = user_data[user_id]["waiting_for_input"]\n';
+  code += '        \n';
+  code += '        # Проверяем формат конфигурации - новый (словарь) или старый (строка)\n';
+  code += '        if isinstance(waiting_config, dict):\n';
+  code += '            # Новый формат - извлекаем данные из словаря\n';
+  code += '            waiting_node_id = waiting_config.get("node_id")\n';
+  code += '            input_type = waiting_config.get("type", "text")\n';
+  code += '            variable_name = waiting_config.get("variable", "user_response")\n';
+  code += '            save_to_database = waiting_config.get("save_to_database", False)\n';
+  code += '            min_length = waiting_config.get("min_length", 0)\n';
+  code += '            max_length = waiting_config.get("max_length", 0)\n';
+  code += '            next_node_id = waiting_config.get("next_node_id")\n';
+  code += '        else:\n';
+  code += '            # Старый формат - waiting_config это строка с node_id\n';
+  code += '            waiting_node_id = waiting_config\n';
+  code += '            input_type = user_data[user_id].get("input_type", "text")\n';
+  code += '            variable_name = "user_response"\n';
+  code += '            save_to_database = False\n';
+  code += '            min_length = 0\n';
+  code += '            max_length = 0\n';
+  code += '            next_node_id = None\n';
+  code += '        \n';
   code += '        user_text = message.text\n';
   code += '        \n';
+  code += '        # Валидация для нового формата\n';
+  code += '        if isinstance(waiting_config, dict):\n';
+  code += '            # Валидация длины\n';
+  code += '            if min_length > 0 and len(user_text) < min_length:\n';
+  code += '                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")\n';
+  code += '                return\n';
+  code += '            \n';
+  code += '            if max_length > 0 and len(user_text) > max_length:\n';
+  code += '                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")\n';
+  code += '                return\n';
+  code += '            \n';
+  code += '            # Валидация типа ввода\n';
+  code += '            if input_type == "email":\n';
+  code += '                import re\n';
+  code += '                email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"\n';
+  code += '                if not re.match(email_pattern, user_text):\n';
+  code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                    await message.answer(f"❌ Неверный формат email. {retry_message}")\n';
+  code += '                    return\n';
+  code += '            elif input_type == "number":\n';
+  code += '                try:\n';
+  code += '                    float(user_text)\n';
+  code += '                except ValueError:\n';
+  code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                    await message.answer(f"❌ Введите корректное число. {retry_message}")\n';
+  code += '                    return\n';
+  code += '            elif input_type == "phone":\n';
+  code += '                import re\n';
+  code += '                phone_pattern = r"^[+]?[0-9\\s\\-\\(\\)]{10,}$"\n';
+  code += '                if not re.match(phone_pattern, user_text):\n';
+  code += '                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")\n';
+  code += '                    await message.answer(f"❌ Неверный формат телефона. {retry_message}")\n';
+  code += '                    return\n';
+  code += '            \n';
+  code += '            # Сохраняем ответ для нового формата\n';
+  code += '            timestamp = get_moscow_time()\n';
+  code += '            response_data = user_text\n';
+  code += '            \n';
+  code += '            # Сохраняем в пользовательские данные\n';
+  code += '            user_data[user_id][variable_name] = response_data\n';
+  code += '            \n';
+  code += '            # Сохраняем в базу данных если включено\n';
+  code += '            if save_to_database:\n';
+  code += '                saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)\n';
+  code += '                if saved_to_db:\n';
+  code += '                    logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+  code += '                else:\n';
+  code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '            \n';
+  code += '            # Отправляем сообщение об успехе\n';
+  code += '            success_message = waiting_config.get("success_message", "Спасибо за ваш ответ!")\n';
+  code += '            await message.answer(success_message)\n';
+  code += '            \n';
+  code += '            # Очищаем состояние ожидания ввода\n';
+  code += '            del user_data[user_id]["waiting_for_input"]\n';
+  code += '            \n';
+  code += '            logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")\n';
+  code += '            \n';
+  code += '            # Навигация к следующему узлу для нового формата\n';
+  code += '            if next_node_id:\n';
+  code += '                try:\n';
+  code += '                    logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+  
+  // Добавляем навигацию для каждого узла
+  if (nodes.length > 0) {
+    nodes.forEach((targetNode, index) => {
+      const condition = index === 0 ? 'if' : 'elif';
+      code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
+      
+      if (targetNode.type === 'message') {
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        code += `                        text = ${formattedText}\n`;
+        code += '                        await message.answer(text)\n';
+      } else if (targetNode.type === 'user-input') {
+        const inputPrompt = formatTextForPython(targetNode.data.messageText || "Введите ваш ответ:");
+        code += `                        prompt_text = ${inputPrompt}\n`;
+        code += '                        await message.answer(prompt_text)\n';
+        code += '                        # Устанавливаем новое ожидание ввода\n';
+        code += '                        user_data[user_id]["waiting_for_input"] = {\n';
+        code += `                            "type": "${targetNode.data.inputType || 'text'}",\n`;
+        code += `                            "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
+        code += `                            "save_to_database": ${targetNode.data.saveToDatabase ? 'True' : 'False'},\n`;
+        code += `                            "node_id": "${targetNode.id}",\n`;
+        const nextConnection = connections.find(conn => conn.source === targetNode.id);
+        if (nextConnection) {
+          code += `                            "next_node_id": "${nextConnection.target}",\n`;
+        } else {
+          code += '                            "next_node_id": None,\n';
+        }
+        code += `                            "min_length": ${targetNode.data.minLength || 0},\n`;
+        code += `                            "max_length": ${targetNode.data.maxLength || 0},\n`;
+        code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+        code += '                            "success_message": "Спасибо за ваш ответ!"\n';
+        code += '                        }\n';
+      } else {
+        code += `                        logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
+      }
+    });
+    
+    code += '                    else:\n';
+    code += '                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  } else {
+    code += '                    # No nodes available for navigation\n';
+    code += '                    logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+  }
+  
+  code += '                except Exception as e:\n';
+  code += '                    logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+  code += '            \n';
+  code += '            return  # Завершаем обработку для нового формата\n';
+  code += '        \n';
+  code += '        # Обработка старого формата (для совместимости)\n';
   code += '        # Находим узел для получения настроек\n';
   
   // Генерируем проверку для каждого узла с универсальным сбором ввода
