@@ -957,7 +957,7 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
     user_data[callback_query.from_user.id]["waiting_for_input"] = "nr3wIiTfBYYmpkkXMNH7n"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "пол"
-    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = ""
     
     # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
@@ -1070,7 +1070,7 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
     user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "имя"
-    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -1142,7 +1142,7 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
     user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "имя"
-    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -1226,7 +1226,7 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["waiting_for_input"] = "nr3wIiTfBYYmpkkXMNH7n"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "пол"
-    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = ""
     
     # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
@@ -1395,7 +1395,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "имя"
-    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = "yxbKRAHB-OuKFsHRJZyiV"
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -1479,7 +1479,7 @@ async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["waiting_for_input"] = "--2N9FeeykMHVVlsVnSQW"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "желание"
-    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = ""
     
     # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
@@ -1568,7 +1568,7 @@ async def handle_callback_yxbKRAHB_OuKFsHRJZyiV(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["waiting_for_input"] = "yxbKRAHB-OuKFsHRJZyiV"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "возраст"
-    user_data[callback_query.from_user.id]["save_to_database"] = False
+    user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = "final-message-node"
     
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
@@ -1983,6 +1983,13 @@ async def handle_user_input(message: types.Message):
             # Сохраняем в пользовательские данные
             user_data[user_id]["желание"] = response_data
             
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "желание", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: желание = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
             await message.answer("✅ Спасибо за ваш ответ!")
             
             # Очищаем состояние ожидания ввода
@@ -2003,6 +2010,13 @@ async def handle_user_input(message: types.Message):
             # Сохраняем в пользовательские данные
             user_data[user_id]["пол"] = response_data
             
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "пол", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: пол = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
             await message.answer("✅ Спасибо за ваш ответ!")
             
             # Очищаем состояние ожидания ввода
@@ -2022,6 +2036,13 @@ async def handle_user_input(message: types.Message):
             
             # Сохраняем в пользовательские данные
             user_data[user_id]["имя"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "имя", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: имя = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
             
             await message.answer("✅ Спасибо за ваш ответ!")
             
@@ -2058,6 +2079,13 @@ async def handle_user_input(message: types.Message):
             
             # Сохраняем в пользовательские данные
             user_data[user_id]["возраст"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "возраст", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: возраст = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
             
             await message.answer("✅ Спасибо за ваш ответ!")
             

@@ -105,12 +105,12 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   let code = '';
   const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
   
-  // Всегда используем отдельные if блоки для каждого условия, чтобы избежать синтаксических ошибок
+  // ИСПРАВЛЕНИЕ: Используем if/elif структуру для приоритетной логики
   for (let i = 0; i < sortedConditions.length; i++) {
     const condition = sortedConditions[i];
     const conditionText = formatTextForPython(condition.messageText);
-    // Всегда используем if для каждого условия, чтобы избежать синтаксических ошибок с elif
-    const conditionKeyword = 'if';
+    // Используем if для первого условия, elif для остальных
+    const conditionKeyword = i === 0 ? 'if' : 'elif';
     
     // Get variable names - support both new array format and legacy single variable
     const variableNames = condition.variableNames && condition.variableNames.length > 0 
