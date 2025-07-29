@@ -1477,7 +1477,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 // Настраиваем сбор пользовательского ввода
                 const inputType = targetNode.data.inputType || 'text';
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                const saveToDatabase = targetNode.data.saveToDatabase || false;
+                const saveToDatabase = targetNode.data.saveToDatabase !== false; // По умолчанию true для collectUserInput
                 const inputTargetNodeId = targetNode.data.inputTargetNodeId;
                 
                 code += '    # Активируем сбор пользовательского ввода (основной цикл)\n';
@@ -1818,7 +1818,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               // Настраиваем сбор пользовательского ввода
               const inputType = targetNode.data.inputType || 'text';
               const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-              const saveToDatabase = targetNode.data.saveToDatabase || false;
+              const saveToDatabase = targetNode.data.saveToDatabase !== false; // По умолчанию true для collectUserInput
               const inputTargetNodeId = targetNode.data.inputTargetNodeId;
               
               code += '    # Активируем сбор пользовательского ввода\n';
