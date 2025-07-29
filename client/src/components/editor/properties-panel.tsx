@@ -332,9 +332,7 @@ export function PropertiesPanel({
     keyboard: 'Клавиатура',
     condition: 'Условие',
     input: 'Ввод данных',
-    'user-input': 'Сбор ввода пользователя',
-    poll: 'Опрос',
-    dice: 'Кости'
+    'user-input': 'Сбор ввода пользователя'
   };
 
   const nodeIcons = {
@@ -353,9 +351,7 @@ export function PropertiesPanel({
     keyboard: 'fas fa-keyboard',
     condition: 'fas fa-code-branch',
     input: 'fas fa-edit',
-    'user-input': 'fas fa-comments',
-    poll: 'fas fa-poll',
-    dice: 'fas fa-dice'
+    'user-input': 'fas fa-comments'
   };
 
   const nodeColors = {
@@ -374,9 +370,7 @@ export function PropertiesPanel({
     keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
     condition: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
     input: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
-    'user-input': 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-    poll: 'bg-lime-100 text-lime-600 dark:bg-lime-900/30 dark:text-lime-400',
-    dice: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400'
+    'user-input': 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
   };
 
   const handleAddButton = () => {
@@ -882,10 +876,10 @@ export function PropertiesPanel({
                           Тип файла
                         </Label>
                         <Input
-                          value={selectedNode.data.fileSize ? selectedNode.data.fileSize.toString() : ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { fileSize: parseInt(e.target.value) || 0 })}
+                          value={selectedNode.data.mimeType || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { mimeType: e.target.value })}
                           className="border-slate-200 dark:border-slate-700 focus:border-slate-500 focus:ring-slate-200"
-                          placeholder="1024"
+                          placeholder="application/pdf"
                         />
                       </div>
                     </div>
@@ -929,10 +923,10 @@ export function PropertiesPanel({
                         Набор стикеров
                       </Label>
                       <Input
-                        value={selectedNode.data.stickerFileId || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { stickerFileId: e.target.value })}
+                        value={selectedNode.data.stickerSetName || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { stickerSetName: e.target.value })}
                         className="border-yellow-200 dark:border-yellow-700 focus:border-yellow-500 focus:ring-yellow-200"
-                        placeholder="BQACAgIAAxkDAAICxmF4..."
+                        placeholder="mystickerpack_by_mybot"
                       />
                       <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
                         Название набора стикеров (опционально)
@@ -1101,8 +1095,8 @@ export function PropertiesPanel({
                         Название файла
                       </Label>
                       <Input
-                        value={selectedNode.data.filename || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { filename: e.target.value })}
+                        value={selectedNode.data.fileName || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { fileName: e.target.value })}
                         className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
                         placeholder="animation.gif"
                       />
@@ -1146,10 +1140,12 @@ export function PropertiesPanel({
                                   onNodeUpdate(selectedNode.id, {
                                     title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                     address: locationInfo.address || selectedNode.data.address,
+                                    city: locationInfo.city || selectedNode.data.city,
+                                    country: locationInfo.country || selectedNode.data.country
                                   });
                                   toast({
                                     title: "Информация обновлена",
-                                    description: `Координаты установлены`
+                                    description: `Автоматически определены: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                   });
                                 }
                               })
@@ -1181,10 +1177,12 @@ export function PropertiesPanel({
                                   onNodeUpdate(selectedNode.id, {
                                     title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                     address: locationInfo.address || selectedNode.data.address,
+                                    city: locationInfo.city || selectedNode.data.city,
+                                    country: locationInfo.country || selectedNode.data.country
                                   });
                                   toast({
                                     title: "Информация обновлена",
-                                    description: `Координаты установлены`
+                                    description: `Автоматически определены: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                   });
                                 }
                               })
@@ -1238,18 +1236,31 @@ export function PropertiesPanel({
                       />
                     </div>
                     
-                    <div>
-                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                        <i className="fas fa-info-circle mr-1"></i>
-                        Дополнительная информация
-                      </Label>
-                      <Textarea
-                        value={selectedNode.data.address || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { address: e.target.value })}
-                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
-                        placeholder="Дополнительное описание местоположения"
-                        rows={2}
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                          <i className="fas fa-city mr-1"></i>
+                          Город
+                        </Label>
+                        <Input
+                          value={selectedNode.data.city || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { city: e.target.value })}
+                          className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                          placeholder="Москва"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                          <i className="fas fa-flag mr-1"></i>
+                          Страна
+                        </Label>
+                        <Input
+                          value={selectedNode.data.country || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { country: e.target.value })}
+                          className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                          placeholder="Россия"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1312,7 +1323,7 @@ export function PropertiesPanel({
                       </Label>
                       <select
                         value={selectedNode.data.mapService || 'custom'}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { mapService: e.target.value as 'yandex' | 'google' | '2gis' | 'custom' })}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { mapService: e.target.value })}
                         className="w-full px-3 py-2 border border-orange-200 dark:border-orange-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:border-orange-500 focus:ring-orange-200"
                       >
                         <option value="custom">Пользовательские координаты</option>
@@ -1354,10 +1365,12 @@ export function PropertiesPanel({
                                       onNodeUpdate(selectedNode.id, {
                                         title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                         address: locationInfo.address || selectedNode.data.address,
+                                        city: locationInfo.city || selectedNode.data.city,
+                                        country: locationInfo.country || selectedNode.data.country
                                       });
                                       toast({
                                         title: "Координаты обновлены",
-                                        description: `Из Яндекс.Карт`
+                                        description: `Из Яндекс.Карт: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                       });
                                     }
                                   })
@@ -1412,10 +1425,12 @@ export function PropertiesPanel({
                                       onNodeUpdate(selectedNode.id, {
                                         title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                         address: locationInfo.address || selectedNode.data.address,
+                                        city: locationInfo.city || selectedNode.data.city,
+                                        country: locationInfo.country || selectedNode.data.country
                                       });
                                       toast({
                                         title: "Координаты обновлены",
-                                        description: `Из Google Maps`
+                                        description: `Из Google Maps: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                       });
                                     }
                                   })
@@ -1470,10 +1485,12 @@ export function PropertiesPanel({
                                       onNodeUpdate(selectedNode.id, {
                                         title: locationInfo.title || selectedNode.data.title || 'Местоположение',
                                         address: locationInfo.address || selectedNode.data.address,
+                                        city: locationInfo.city || selectedNode.data.city,
+                                        country: locationInfo.country || selectedNode.data.country
                                       });
                                       toast({
                                         title: "Координаты обновлены",
-                                        description: `Из 2ГИС`
+                                        description: `Из 2ГИС: ${locationInfo.city || 'город'}, ${locationInfo.country || 'страна'}`
                                       });
                                     }
                                   })
@@ -1688,8 +1705,8 @@ export function PropertiesPanel({
                       </div>
                       <div className="ml-4">
                         <Switch
-                          checked={selectedNode.data.resizeKeyboard ?? true}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
+                          checked={selectedNode.data.enableTextInput ?? false}
+                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableTextInput: checked })}
                         />
                       </div>
                     </div>
@@ -2152,21 +2169,472 @@ export function PropertiesPanel({
                 </div>
               </div>
 
+              {/* Conditional Messages Settings */}
               {selectedNode.data.enableConditionalMessages && (
-                <div>
-                  {(selectedNode.data.conditionalMessages || []).length === 0 && (
-                    <div className="text-center py-6 text-muted-foreground">
-                      <i className="fas fa-plus-circle text-2xl mb-2"></i>
-                      <div className="text-xs">
-                        Нажмите "Добавить условие" чтобы создать первое условное сообщение
+                <div className="space-y-4 bg-gradient-to-br from-purple-50/50 to-indigo-50/30 dark:from-purple-950/20 dark:to-indigo-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
+                  
+                  {/* Information Block */}
+                  <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/40 dark:border-blue-800/40 rounded-lg p-3">
+                    <div className="flex items-start space-x-2">
+                      <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i className="fas fa-info text-white text-xs"></i>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">
+                          Как это работает?
+                        </div>
+                        <div className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
+                          <div className="space-y-1">
+                            <div>📝 Бот запомнит ответы пользователей на вопросы</div>
+                            <div>🎯 Покажет разные сообщения в зависимости от этих ответов</div>
+                            <div>⚡ Например: новым - "Добро пожаловать!", старым - "С возвращением!"</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Rule Conflicts and Validation */}
+                  {detectRuleConflicts.length > 0 && (
+                    <div className="bg-red-50/50 dark:bg-red-950/20 border border-red-200/40 dark:border-red-800/40 rounded-lg p-3 mb-4">
+                      <div className="flex items-start space-x-2">
+                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <i className="fas fa-exclamation text-white text-xs"></i>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-xs font-medium text-red-700 dark:text-red-300 mb-2">
+                            Обнаружены проблемы с правилами ({detectRuleConflicts.length}):
+                          </div>
+                          <div className="space-y-1">
+                            {detectRuleConflicts.map((conflict, idx) => (
+                              <div key={idx} className={`text-xs p-2 rounded ${
+                                conflict.severity === 'error' 
+                                  ? 'bg-red-100/50 dark:bg-red-900/20 text-red-700 dark:text-red-300' 
+                                  : 'bg-yellow-100/50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300'
+                              }`}>
+                                <div className="font-medium flex items-center space-x-1">
+                                  <i className={`fas ${conflict.severity === 'error' ? 'fa-times-circle' : 'fa-exclamation-triangle'} text-xs`}></i>
+                                  <span>{conflict.description}</span>
+                                </div>
+                                <div className="text-xs opacity-75 mt-1">{conflict.suggestion}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex space-x-2 mt-3">
+                            <UIButton
+                              size="sm"
+                              variant="ghost"
+                              onClick={autoFixPriorities}
+                              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                            >
+                              <i className="fas fa-magic mr-1"></i>
+                              Автоисправление приоритетов
+                            </UIButton>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
-                </div>
-              )}
 
-              {selectedNode.data.enableConditionalMessages && (
-                <div>
+                  {/* Conditional Messages List */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                        Настройка правил для показа сообщений
+                      </Label>
+                      <div className="flex space-x-2">
+                        <UIButton
+                          size="sm"
+                          variant="ghost"
+                          onClick={autoFixPriorities}
+                          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                          title="Автоматически расставить приоритеты для избежания конфликтов"
+                        >
+                          <i className="fas fa-sort-amount-down mr-1"></i>
+                          Приоритеты
+                        </UIButton>
+                        <UIButton
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                            const nextPriority = Math.max(0, ...currentConditions.map(c => c.priority || 0)) + 10;
+                            
+                            const newCondition = {
+                              id: `condition-${Date.now()}`,
+                              condition: 'user_data_exists' as const,
+                              variableName: 'source',
+                              variableNames: ['source'],
+                              logicOperator: 'AND' as const,
+                              messageText: 'Добро пожаловать обратно!',
+                              keyboardType: 'none' as const,
+                              buttons: [],
+                              priority: nextPriority
+                            };
+                            onNodeUpdate(selectedNode.id, { 
+                              conditionalMessages: [...currentConditions, newCondition] 
+                            });
+                          }}
+                          className="text-xs"
+                        >
+                          <i className="fas fa-plus mr-1"></i>
+                          Добавить правило
+                        </UIButton>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {(selectedNode.data.conditionalMessages || [])
+                        .sort((a, b) => (b.priority || 0) - (a.priority || 0))
+                        .map((condition, index) => {
+                          // Check if this rule has conflicts
+                          const ruleConflicts = detectRuleConflicts.filter(c => c.ruleIndex === index);
+                          const hasErrors = ruleConflicts.some(c => c.severity === 'error');
+                          const hasWarnings = ruleConflicts.some(c => c.severity === 'warning');
+                          
+                          return (
+                            <div key={condition.id} className={`bg-white/50 dark:bg-gray-900/30 border rounded-lg p-3 ${
+                              hasErrors 
+                                ? 'border-red-300 dark:border-red-700 bg-red-50/20 dark:bg-red-950/10' 
+                                : hasWarnings 
+                                  ? 'border-yellow-300 dark:border-yellow-700 bg-yellow-50/20 dark:bg-yellow-950/10'
+                                  : 'border-purple-200/30 dark:border-purple-800/30'
+                            }`}>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                                    Правило #{index + 1}
+                                  </div>
+                                  {hasErrors && (
+                                    <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                                      <i className="fas fa-times text-white text-xs"></i>
+                                    </div>
+                                  )}
+                                  {hasWarnings && !hasErrors && (
+                                    <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
+                                      <i className="fas fa-exclamation text-white text-xs"></i>
+                                    </div>
+                                  )}
+                                  <div className="text-xs text-muted-foreground">
+                                    Приоритет: {condition.priority || 0}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  {/* Priority controls */}
+                                  <UIButton
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id 
+                                          ? { ...c, priority: (c.priority || 0) + 10 } 
+                                          : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                    className="text-muted-foreground hover:text-blue-600 h-auto p-1"
+                                    title="Повысить приоритет"
+                                  >
+                                    <i className="fas fa-arrow-up text-xs"></i>
+                                  </UIButton>
+                                  <UIButton
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id 
+                                          ? { ...c, priority: Math.max(0, (c.priority || 0) - 10) } 
+                                          : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                    className="text-muted-foreground hover:text-blue-600 h-auto p-1"
+                                    title="Понизить приоритет"
+                                  >
+                                    <i className="fas fa-arrow-down text-xs"></i>
+                                  </UIButton>
+                                  <UIButton
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const newConditions = currentConditions.filter(c => c.id !== condition.id);
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: newConditions });
+                                    }}
+                                    className="text-muted-foreground hover:text-destructive h-auto p-1"
+                                  >
+                                    <i className="fas fa-trash text-xs"></i>
+                                  </UIButton>
+                                </div>
+                              </div>
+
+                              {/* Show conflicts for this rule */}
+                              {ruleConflicts.length > 0 && (
+                                <div className="mb-3 p-2 bg-red-50/50 dark:bg-red-950/20 border border-red-200/40 dark:border-red-800/40 rounded text-xs">
+                                  {ruleConflicts.map((conflict, idx) => (
+                                    <div key={idx} className="text-red-700 dark:text-red-300">
+                                      <i className={`fas ${conflict.severity === 'error' ? 'fa-times-circle' : 'fa-exclamation-triangle'} mr-1`}></i>
+                                      {conflict.description}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              <div className="space-y-3">
+                            {/* Condition Type */}
+                            <div>
+                              <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                Тип условия
+                              </Label>
+                              <Select
+                                value={condition.condition}
+                                onValueChange={(value) => {
+                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                  const updatedConditions = currentConditions.map(c => 
+                                    c.id === condition.id ? { ...c, condition: value as any } : c
+                                  );
+                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                }}
+                              >
+                                <SelectTrigger className="text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="user_data_exists">Пользователь уже отвечал на вопрос</SelectItem>
+                                  <SelectItem value="user_data_not_exists">Пользователь НЕ отвечал на вопрос</SelectItem>
+                                  <SelectItem value="user_data_equals">Ответ пользователя равен определенному значению</SelectItem>
+                                  <SelectItem value="user_data_contains">Ответ пользователя содержит определенный текст</SelectItem>
+                                  <SelectItem value="first_time">Пользователь заходит впервые</SelectItem>
+                                  <SelectItem value="returning_user">Пользователь уже заходил ранее</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Variable Names - Multiple Question Selection */}
+                            {(condition.condition === 'user_data_exists' || 
+                              condition.condition === 'user_data_not_exists' || 
+                              condition.condition === 'user_data_equals' || 
+                              condition.condition === 'user_data_contains') && (
+                              <div>
+                                <Label className="text-xs font-medium text-muted-foreground mb-2 block">
+                                  На какие вопросы должен был ответить пользователь?
+                                </Label>
+                                
+                                {/* Multiple Question Selection with Checkboxes */}
+                                {availableQuestions.length > 0 ? (
+                                  <div className="space-y-3">
+                                    <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
+                                      <div className="text-xs font-medium text-muted-foreground mb-2">
+                                        Выберите вопросы из списка:
+                                      </div>
+                                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                                        {availableQuestions.map((question) => {
+                                          const currentVariableNames = condition.variableNames || [];
+                                          const isSelected = currentVariableNames.includes(question.name);
+                                          
+                                          return (
+                                            <div key={`${question.nodeId}-${question.name}`} className="flex items-center space-x-2">
+                                              <input
+                                                type="checkbox"
+                                                id={`question-${condition.id}-${question.name}`}
+                                                checked={isSelected}
+                                                onChange={(e) => {
+                                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                  const currentVariableNames = condition.variableNames || [];
+                                                  
+                                                  let updatedVariableNames;
+                                                  if (e.target.checked) {
+                                                    updatedVariableNames = [...currentVariableNames, question.name];
+                                                  } else {
+                                                    updatedVariableNames = currentVariableNames.filter(name => name !== question.name);
+                                                  }
+                                                  
+                                                  const updatedConditions = currentConditions.map(c => 
+                                                    c.id === condition.id ? { 
+                                                      ...c, 
+                                                      variableNames: updatedVariableNames,
+                                                      // Update legacy variableName for backward compatibility
+                                                      variableName: updatedVariableNames.length > 0 ? updatedVariableNames[0] : ''
+                                                    } : c
+                                                  );
+                                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                }}
+                                                className="w-3 h-3 text-primary focus:ring-primary border-border rounded"
+                                              />
+                                              <label 
+                                                htmlFor={`question-${condition.id}-${question.name}`}
+                                                className="flex items-center space-x-2 cursor-pointer flex-1"
+                                              >
+                                                <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                                                  {question.nodeType}
+                                                </span>
+                                                <span className="text-xs">{question.name}</span>
+                                              </label>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Logic Operator Selection for Multiple Questions */}
+                                    {(condition.variableNames?.length || 0) > 1 && (
+                                      <div>
+                                        <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                          Логика проверки нескольких вопросов:
+                                        </Label>
+                                        <Select
+                                          value={condition.logicOperator || 'AND'}
+                                          onValueChange={(value: 'AND' | 'OR') => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, logicOperator: value } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        >
+                                          <SelectTrigger className="text-xs">
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="AND">И (AND) - все выбранные вопросы</SelectItem>
+                                            <SelectItem value="OR">ИЛИ (OR) - любой из выбранных вопросов</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                        <div className="text-xs text-muted-foreground mt-1">
+                                          {condition.logicOperator === 'AND' 
+                                            ? 'Пользователь должен ответить на ВСЕ выбранные вопросы'
+                                            : 'Пользователь должен ответить на ЛЮБОЙ из выбранных вопросов'
+                                          }
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Manual Input for Additional Questions */}
+                                    <div>
+                                      <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                        Или добавьте вопросы вручную:
+                                      </Label>
+                                      <Input
+                                        value={(condition.variableNames || []).join(', ')}
+                                        onChange={(e) => {
+                                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                                          const variableNames = e.target.value.split(',').map(name => name.trim()).filter(name => name);
+                                          const updatedConditions = currentConditions.map(c => 
+                                            c.id === condition.id ? { 
+                                              ...c, 
+                                              variableNames: variableNames,
+                                              variableName: variableNames.length > 0 ? variableNames[0] : ''
+                                            } : c
+                                          );
+                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                        }}
+                                        className="text-xs"
+                                        placeholder="source, пол, возраст (через запятую)"
+                                      />
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        Введите названия вопросов через запятую
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-4 text-muted-foreground bg-muted/30 rounded-lg border border-border/50">
+                                    <i className="fas fa-question-circle text-lg mb-2"></i>
+                                    <div className="text-xs">
+                                      Нет доступных вопросов. Создайте узлы с пользовательским вводом.
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Display Selected Questions */}
+                                {(condition.variableNames?.length || 0) > 0 && (
+                                  <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/40 rounded-lg p-2">
+                                    <div className="text-xs font-medium text-green-700 dark:text-green-300 mb-1">
+                                      Выбранные вопросы ({condition.variableNames?.length || 0}):
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {(condition.variableNames || []).map((name, idx) => (
+                                        <span key={idx} className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">
+                                          {name}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Expected Value */}
+                            {(condition.condition === 'user_data_equals' || 
+                              condition.condition === 'user_data_contains') && (
+                              <div>
+                                <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                  {condition.condition === 'user_data_equals' 
+                                    ? 'Какой должен быть точный ответ пользователя?' 
+                                    : 'Какой текст должен содержаться в ответе?'}
+                                </Label>
+                                <Input
+                                  value={condition.expectedValue || ''}
+                                  onChange={(e) => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, expectedValue: e.target.value } : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                  className="text-xs"
+                                  placeholder={condition.condition === 'user_data_equals' ? 'Реклама' : 'рекл'}
+                                />
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {condition.condition === 'user_data_equals' 
+                                    ? 'Например: "Реклама", "Мужской", "25"' 
+                                    : 'Например: "рекл" найдет "Реклама", "реклама в интернете"'}
+                                </div>
+                              </div>
+                            )}
+
+
+
+                            {/* Message Text */}
+                            <div>
+                              <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                Что показать пользователю, если условие выполнится?
+                              </Label>
+                              <Textarea
+                                value={condition.messageText}
+                                onChange={(e) => {
+                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                  const updatedConditions = currentConditions.map(c => 
+                                    c.id === condition.id ? { ...c, messageText: e.target.value } : c
+                                  );
+                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                }}
+                                className="text-xs resize-none"
+                                rows={3}
+                                placeholder="Добро пожаловать обратно! Рады вас снова видеть."
+                              />
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Это сообщение увидит пользователь вместо основного текста
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                          );
+                        }
+                      )}
+
+                      {(selectedNode.data.conditionalMessages || []).length === 0 && (
+                        <div className="text-center py-6 text-muted-foreground">
+                          <i className="fas fa-plus-circle text-2xl mb-2"></i>
+                          <div className="text-xs">
+                            Нажмите "Добавить условие" чтобы создать первое условное сообщение
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Fallback Message */}
                   <div>
                     <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
@@ -2250,8 +2718,8 @@ export function PropertiesPanel({
                     </div>
                     <div className="ml-4">
                       <Switch
-                        checked={selectedNode.data.resizeKeyboard ?? true}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { resizeKeyboard: checked })}
+                        checked={selectedNode.data.enableTextInput ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableTextInput: checked })}
                       />
                     </div>
                   </div>
