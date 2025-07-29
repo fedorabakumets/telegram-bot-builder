@@ -368,6 +368,7 @@ export const nodeSchema = z.object({
       logicOperator: z.enum(['AND', 'OR']).default('AND'), // Логический оператор для проверки нескольких переменных
       expectedValue: z.string().optional(), // Ожидаемое значение для сравнения
       messageText: z.string(), // Текст сообщения для этого условия
+      formatMode: z.enum(['text', 'markdown', 'html']).default('text'), // Режим форматирования текста условного сообщения
       keyboardType: z.enum(['reply', 'inline', 'none']).default('none'), // Тип клавиатуры для условного сообщения
       buttons: z.array(buttonSchema).default([]), // Кнопки для условного сообщения
       priority: z.number().default(0) // Приоритет проверки (чем больше, тем выше приоритет)

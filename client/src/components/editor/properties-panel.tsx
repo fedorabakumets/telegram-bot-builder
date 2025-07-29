@@ -17,7 +17,6 @@ import { useState, useMemo } from 'react';
 
 import { InlineRichEditor } from './inline-rich-editor';
 import { EmojiPicker } from './emoji-picker';
-import { QuickFormatToolbar } from './quick-format-toolbar';
 
 interface PropertiesPanelProps {
   projectId: number;
@@ -2596,24 +2595,53 @@ export function PropertiesPanel({
 
 
 
-                            {/* Message Text */}
+                            {/* Message Text with Formatting */}
                             <div>
                               <Label className="text-xs font-medium text-muted-foreground mb-1 block">
                                 Что показать пользователю, если условие выполнится?
                               </Label>
-                              <Textarea
+                              
+                              {/* Format Mode Selection */}
+                              <div className="mb-2">
+                                <Select
+                                  value={condition.formatMode || 'text'}
+                                  onValueChange={(value: 'text' | 'markdown' | 'html') => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, formatMode: value } : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                >
+                                  <SelectTrigger className="text-xs h-7">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="text">Обычный текст</SelectItem>
+                                    <SelectItem value="markdown">Markdown форматирование</SelectItem>
+                                    <SelectItem value="html">HTML форматирование</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Rich Text Editor for conditional message */}
+                              <InlineRichEditor
                                 value={condition.messageText}
-                                onChange={(e) => {
+                                onChange={(value) => {
                                   const currentConditions = selectedNode.data.conditionalMessages || [];
                                   const updatedConditions = currentConditions.map(c => 
-                                    c.id === condition.id ? { ...c, messageText: e.target.value } : c
+                                    c.id === condition.id ? { ...c, messageText: value } : c
                                   );
                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                 }}
-                                className="text-xs resize-none"
-                                rows={3}
+                                formatMode={condition.formatMode || 'text'}
                                 placeholder="Добро пожаловать обратно! Рады вас снова видеть."
+                                className="text-xs"
+                                rows={3}
                               />
+                              
+
+                              
                               <div className="text-xs text-muted-foreground mt-1">
                                 Это сообщение увидит пользователь вместо основного текста
                               </div>

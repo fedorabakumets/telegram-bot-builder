@@ -105,6 +105,9 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   let code = '';
   const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
   
+  // Add variable to track conditional parse mode
+  code += `${indentLevel}conditional_parse_mode = None\n`;
+  
   // Генерируем единую функцию проверки переменных
   code += `${indentLevel}# Функция для проверки переменных пользователя\n`;
   code += `${indentLevel}def check_user_variable(var_name, user_data_dict):\n`;
@@ -173,6 +176,13 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         code += `${indentLevel}    text = ${conditionText}\n`;
+        // Устанавливаем parse_mode для условного сообщения
+        const parseMode1 = getParseMode(condition.formatMode || 'text');
+        if (parseMode1) {
+          code += `${indentLevel}    conditional_parse_mode = "${parseMode1}"\n`;
+        } else {
+          code += `${indentLevel}    conditional_parse_mode = None\n`;
+        }
         
         // Заменяем переменные в тексте
         for (const varName of variableNames) {
@@ -204,6 +214,13 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}):\n`;
         
         code += `${indentLevel}    text = ${conditionText}\n`;
+        // Устанавливаем parse_mode для условного сообщения
+        const parseMode2 = getParseMode(condition.formatMode || 'text');
+        if (parseMode2) {
+          code += `${indentLevel}    conditional_parse_mode = "${parseMode2}"\n`;
+        } else {
+          code += `${indentLevel}    conditional_parse_mode = None\n`;
+        }
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
         break;
         
@@ -231,6 +248,13 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         code += `${indentLevel}    text = ${conditionText}\n`;
+        // Устанавливаем parse_mode для условного сообщения
+        const parseMode3 = getParseMode(condition.formatMode || 'text');
+        if (parseMode3) {
+          code += `${indentLevel}    conditional_parse_mode = "${parseMode3}"\n`;
+        } else {
+          code += `${indentLevel}    conditional_parse_mode = None\n`;
+        }
         
         // Заменяем переменные в тексте
         for (const varName of variableNames) {
@@ -265,6 +289,13 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         code += `${indentLevel}    text = ${conditionText}\n`;
+        // Устанавливаем parse_mode для условного сообщения
+        const parseMode4 = getParseMode(condition.formatMode || 'text');
+        if (parseMode4) {
+          code += `${indentLevel}    conditional_parse_mode = "${parseMode4}"\n`;
+        } else {
+          code += `${indentLevel}    conditional_parse_mode = None\n`;
+        }
         
         // Заменяем переменные в тексте
         for (const varName of variableNames) {
@@ -278,12 +309,26 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
       case 'first_time':
         code += `${indentLevel}${conditionKeyword} user_record.get("interaction_count", 0) <= 1:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
+        // Устанавливаем parse_mode для условного сообщения
+        const parseMode5 = getParseMode(condition.formatMode || 'text');
+        if (parseMode5) {
+          code += `${indentLevel}    conditional_parse_mode = "${parseMode5}"\n`;
+        } else {
+          code += `${indentLevel}    conditional_parse_mode = None\n`;
+        }
         code += `${indentLevel}    logging.info("Условие выполнено: первое посещение пользователя")\n`;
         break;
         
       case 'returning_user':
         code += `${indentLevel}${conditionKeyword} user_record.get("interaction_count", 0) > 1:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
+        // Устанавливаем parse_mode для условного сообщения
+        const parseMode6 = getParseMode(condition.formatMode || 'text');
+        if (parseMode6) {
+          code += `${indentLevel}    conditional_parse_mode = "${parseMode6}"\n`;
+        } else {
+          code += `${indentLevel}    conditional_parse_mode = None\n`;
+        }
         code += `${indentLevel}    logging.info("Условие выполнено: возвращающийся пользователь")\n`;
         break;
         
@@ -2846,13 +2891,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `                text = ${formattedText}\n`;
         }
         
-        // Определяем режим форматирования
+        // Определяем режим форматирования (приоритет у условного сообщения)
+        code += '                # Используем parse_mode условного сообщения если он установлен\n';
+        code += '                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:\n';
+        code += '                    parse_mode = conditional_parse_mode\n';
+        code += '                else:\n';
         if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-          code += '                parse_mode = ParseMode.MARKDOWN\n';
+          code += '                    parse_mode = ParseMode.MARKDOWN\n';
         } else if (targetNode.data.formatMode === 'html') {
-          code += '                parse_mode = ParseMode.HTML\n';
+          code += '                    parse_mode = ParseMode.HTML\n';
         } else {
-          code += '                parse_mode = None\n';
+          code += '                    parse_mode = None\n';
         }
         
         // Добавляем кнопки если есть
@@ -4076,14 +4125,27 @@ function generateSynonymHandler(node: Node, synonym: string): string {
 function generateKeyboard(node: Node): string {
   let code = '';
   
-  // Определяем режим форматирования
-  let parseMode = '';
+  // Определяем режим форматирования (приоритет у условного сообщения)
+  code += '    # Определяем режим форматирования (приоритет у условного сообщения)\n';
+  code += '    if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:\n';
+  code += '        current_parse_mode = conditional_parse_mode\n';
+  code += '    else:\n';
   if (node.data.formatMode === 'markdown' || node.data.markdown === true) {
-    parseMode = ', parse_mode=ParseMode.MARKDOWN';
+    code += '        current_parse_mode = ParseMode.MARKDOWN\n';
   } else if (node.data.formatMode === 'html') {
-    parseMode = ', parse_mode=ParseMode.HTML';
+    code += '        current_parse_mode = ParseMode.HTML\n';
+  } else {
+    code += '        current_parse_mode = None\n';
   }
-  // Если formatMode === 'none' или не указан, то parseMode остается пустым
+  
+  // Генерируем parseMode строку для использования в коде
+  let parseMode = '';
+  if (node.data.formatMode === 'markdown' || node.data.markdown === true || node.data.formatMode === 'html') {
+    parseMode = ', parse_mode=current_parse_mode';
+  } else {
+    // Для текстового режима добавляем parse_mode только если он установлен
+    parseMode = ', parse_mode=current_parse_mode if current_parse_mode else None';
+  }
   
   // НОВАЯ ЛОГИКА: Сбор ввода как дополнительная функциональность к обычным кнопкам
   
