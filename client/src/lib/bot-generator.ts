@@ -179,7 +179,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}condition_met = any(variables_exist)\n`;
         }
         
-        code += `${indentLevel}if condition_met:\n`;
+        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         
         // Replace variables in text
@@ -225,7 +225,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}condition_met = not any(variables_exist)  # At least one variable should not exist\n`;
         }
         
-        code += `${indentLevel}if condition_met:\n`;
+        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
         break;
@@ -264,7 +264,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}condition_met = any(variables_match)\n`;
         }
         
-        code += `${indentLevel}if condition_met:\n`;
+        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         
         // Replace variables in text
@@ -313,7 +313,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}condition_met = any(variables_contain)\n`;
         }
         
-        code += `${indentLevel}if condition_met:\n`;
+        code += `${indentLevel}${conditionKeyword} condition_met:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         
         // Replace variables in text
@@ -329,20 +329,20 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         break;
         
       case 'first_time':
-        code += `${indentLevel}if user_record.get("interaction_count", 0) <= 1:\n`;
+        code += `${indentLevel}${conditionKeyword} user_record.get("interaction_count", 0) <= 1:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info("Условие выполнено: первое посещение пользователя")\n`;
         break;
         
       case 'returning_user':
-        code += `${indentLevel}if user_record.get("interaction_count", 0) > 1:\n`;
+        code += `${indentLevel}${conditionKeyword} user_record.get("interaction_count", 0) > 1:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.info("Условие выполнено: возвращающийся пользователь")\n`;
         break;
         
       default:
         code += `${indentLevel}# Неизвестное условие: ${condition.condition}\n`;
-        code += `${indentLevel}if False:\n`;
+        code += `${indentLevel}${conditionKeyword} False:\n`;
         code += `${indentLevel}    text = ${conditionText}\n`;
         code += `${indentLevel}    logging.warning("Неизвестное условие: ${condition.condition}")\n`;
         break;
