@@ -1,9 +1,7 @@
 """
 Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
-
-Команды для @BotFather:
-hello - Новая команда"""
+"""
 
 import asyncio
 import logging
@@ -241,14 +239,6 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
     }
 
 
-# Настройка меню команд
-async def set_bot_commands():
-    commands = [
-        BotCommand(command="hello", description="Новая команда"),
-    ]
-    await bot.set_my_commands(commands)
-
-
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
 
@@ -328,6 +318,7 @@ async def profile_handler(message: types.Message):
         user_data_dict = {}
     
     conditional_parse_mode = None
+    conditional_keyboard = None
     # Функция для проверки переменных пользователя
     def check_user_variable(var_name, user_data_dict):
         """Проверяет существование и получает значение переменной пользователя"""
@@ -455,44 +446,6 @@ async def profile_handler(message: types.Message):
 Похоже, вы еще не прошли опрос. Пожалуйста, введите /start чтобы заполнить профиль."""
         logging.info("Используется запасное сообщение")
     
-    # Определяем режим форматирования (приоритет у условного сообщения)
-    if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
-        current_parse_mode = conditional_parse_mode
-    else:
-        current_parse_mode = None
-    
-    # Создаем inline клавиатуру с кнопками
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Редактировать профиль", callback_data="IFxfIAHrLGDHLDWW-KoKg"))
-    keyboard = builder.as_markup()
-    # Отправляем сообщение с прикрепленными inline кнопками
-    await message.answer(text, reply_markup=keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
-
-@dp.message(Command("hello"))
-async def hello_handler(message: types.Message):
-    logging.info(f"Команда /hello вызвана пользователем {message.from_user.id}")
-    # Сохраняем пользователя и статистику использования команд
-    user_id = message.from_user.id
-    username = message.from_user.username
-    first_name = message.from_user.first_name
-    last_name = message.from_user.last_name
-    
-    # Сохраняем пользователя в базу данных
-    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
-    
-    # Обновляем статистику команд в БД
-    if saved_to_db:
-        await update_user_data_in_db(user_id, "command_hello", datetime.now().isoformat())
-    
-    # Резервное сохранение в локальное хранилище
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    if "commands_used" not in user_data[user_id]:
-        user_data[user_id]["commands_used"] = {}
-    user_data[user_id]["commands_used"]["/hello"] = user_data[user_id]["commands_used"].get("/hello", 0) + 1
-
-    text = "ПРивет {имя}"
-    
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -535,13 +488,165 @@ async def hello_handler(message: types.Message):
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Проверка условных сообщений для клавиатуры
+    user_data_dict = user_record if user_record else user_data.get(user_id, {})
+    conditional_parse_mode = None
+    conditional_keyboard = None
+    # Функция для проверки переменных пользователя
+    def check_user_variable(var_name, user_data_dict):
+        """Проверяет существование и получает значение переменной пользователя"""
+        if "user_data" in user_data_dict and user_data_dict["user_data"]:
+            try:
+                import json
+                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                if var_name in parsed_data:
+                    raw_value = parsed_data[var_name]
+                    if isinstance(raw_value, dict) and "value" in raw_value:
+                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                    else:
+                        return True, str(raw_value) if raw_value is not None else None
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Проверяем в локальных данных
+        if var_name in user_data_dict:
+            variable_data = user_data_dict.get(var_name)
+            if isinstance(variable_data, dict) and "value" in variable_data:
+                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
+            elif variable_data is not None:
+                return True, str(variable_data)
+        
+        return False, None
+    
+    # Условие 1: user_data_exists для переменных: желание, имя, источник, пол
+    if (
+        check_user_variable("желание", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0] and
+        check_user_variable("источник", user_data_dict)[0] and
+        check_user_variable("пол", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        text = """👤 Ваш профиль:
+
+🔍 Источник: {источник}
+💭 Желание продолжить: {желание}
+⚧️ Пол: {пол}
+👋 Имя: {имя}
+
+Профиль полностью заполнен! ✅"""
+        conditional_parse_mode = None
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
+        if "{источник}" in text and variable_values["источник"] is not None:
+            text = text.replace("{источник}", variable_values["источник"])
+        if "{пол}" in text and variable_values["пол"] is not None:
+            text = text.replace("{пол}", variable_values["пол"])
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    # Условие 2: user_data_exists для переменных: имя
+    elif (
+        check_user_variable("имя", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+        text = """👤 Ваш профиль:
+
+👋 Имя: {имя}
+
+Основная информация заполнена. Хотите пройти полный опрос?"""
+        conditional_parse_mode = None
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    # Условие 3: user_data_exists для переменных: источник
+    elif (
+        check_user_variable("источник", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        text = """👤 Частичный профиль:
+
+🔍 Источник: {источник}
+
+Профиль заполнен частично. Пройдите полный опрос для получения более детальной информации."""
+        conditional_parse_mode = None
+        if "{источник}" in text and variable_values["источник"] is not None:
+            text = text.replace("{источник}", variable_values["источник"])
+        logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
+    # Условие 4: user_data_exists для переменных: желание, имя, источник, пол
+    elif (
+        check_user_variable("желание", user_data_dict)[0] or
+        check_user_variable("имя", user_data_dict)[0] or
+        check_user_variable("источник", user_data_dict)[0] or
+        check_user_variable("пол", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+        _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        text = """👤 Ваш профиль:
+
+У нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.
+
+Имеющиеся данные:
+🔍 Источник: {источник}
+💭 Желание: {желание}
+⚧️ Пол: {пол}
+👋 Имя: {имя}"""
+        conditional_parse_mode = None
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
+        if "{источник}" in text and variable_values["источник"] is not None:
+            text = text.replace("{источник}", variable_values["источник"])
+        if "{пол}" in text and variable_values["пол"] is not None:
+            text = text.replace("{пол}", variable_values["пол"])
+        logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
+    
+    # Используем условное сообщение если есть подходящее условие
+    if "text" not in locals():
+        # Используем исходный текст клавиатуры если условие не сработало
+        pass  # text уже установлен выше
+    
+    # Используем условную клавиатуру если есть
+    conditional_keyboard_for_element = conditional_keyboard
     # Определяем режим форматирования (приоритет у условного сообщения)
     if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
         current_parse_mode = conditional_parse_mode
     else:
         current_parse_mode = None
-    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)
-    await message.answer(text, reply_markup=ReplyKeyboardRemove(), parse_mode=current_parse_mode if current_parse_mode else None)
+    
+    # Создаем inline клавиатуру с кнопками
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Редактировать профиль", callback_data="M-zKR_b8lKSQ0hPrO6vm5"))
+    keyboard = builder.as_markup()
+    
+    # Отправляем сообщение с клавиатурой (приоритет у условной клавиатуры)
+    if conditional_keyboard_for_element is not None:
+        # Используем условную клавиатуру для элемента клавиатуры
+        await message.answer(text, reply_markup=conditional_keyboard_for_element, parse_mode=current_parse_mode if current_parse_mode else None)
+    elif "conditional_keyboard" in locals() and conditional_keyboard is not None:
+        # Используем общую условную клавиатуру
+        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
+    elif keyboard is not None:
+        # Используем обычную клавиатуру
+        await message.answer(text, reply_markup=keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
+    else:
+        # Отправляем сообщение без клавиатуры
+        await message.answer(text, parse_mode=current_parse_mode if current_parse_mode else None)
 
 # Обработчики inline кнопок
 
@@ -678,15 +783,24 @@ async def handle_callback_btn_2(callback_query: types.CallbackQuery):
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
-    # Создаем inline клавиатуру для целевого узла
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
-    builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
-    keyboard = builder.as_markup()
+    
+    # Без условных сообщений - используем обычную клавиатуру
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+        builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
     except Exception:
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
 
 @dp.callback_query(lambda c: c.data == "btn-female")
 async def handle_callback_btn_female(callback_query: types.CallbackQuery):
@@ -832,8 +946,8 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
         await callback_query.message.answer(text)
     
 
-@dp.callback_query(lambda c: c.data == "4Hllfrm0NcFxNsZsletYY")
-async def handle_callback_4Hllfrm0NcFxNsZsletYY(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "KXqspqE1qqm-dgg_qsCD1")
+async def handle_callback_KXqspqE1qqm_dgg_qsCD1(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "Редактировать профиль"
@@ -844,7 +958,7 @@ async def handle_callback_4Hllfrm0NcFxNsZsletYY(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
-    text = "Что вы хотите редактировать?"
+    text = "Что хотите редактировать?"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -921,8 +1035,10 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, "желание", button_display_text)
     logging.info(f"Переменная желание сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
-    text = "Какой твой пол?"
-    # Подставляем все доступные переменные пользователя в текст
+    # Проверяем условные сообщения
+    text = None
+    
+    # Получаем данные пользователя для проверки условий
     user_record = await get_user_from_db(user_id)
     if not user_record:
         user_record = user_data.get(user_id, {})
@@ -933,20 +1049,19 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
             if isinstance(user_record["user_data"], str):
                 try:
                     import json
-                    user_vars = json.loads(user_record["user_data"])
+                    user_data_dict = json.loads(user_record["user_data"])
                 except (json.JSONDecodeError, TypeError):
-                    user_vars = {}
+                    user_data_dict = {}
             elif isinstance(user_record["user_data"], dict):
-                user_vars = user_record["user_data"]
+                user_data_dict = user_record["user_data"]
             else:
-                user_vars = {}
+                user_data_dict = {}
         else:
-            user_vars = user_record
+            user_data_dict = user_record
     else:
-        user_vars = {}
+        user_data_dict = {}
     
-    # Заменяем все переменные в тексте
-    import re
+    # Функция для замены переменных в тексте
     def replace_variables_in_text(text_content, variables_dict):
         if not text_content or not variables_dict:
             return text_content
@@ -963,7 +1078,61 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
                 text_content = text_content.replace(placeholder, var_value)
         return text_content
     
-    text = replace_variables_in_text(text, user_vars)
+    conditional_parse_mode = None
+    conditional_keyboard = None
+    # Функция для проверки переменных пользователя
+    def check_user_variable(var_name, user_data_dict):
+        """Проверяет существование и получает значение переменной пользователя"""
+        if "user_data" in user_data_dict and user_data_dict["user_data"]:
+            try:
+                import json
+                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                if var_name in parsed_data:
+                    raw_value = parsed_data[var_name]
+                    if isinstance(raw_value, dict) and "value" in raw_value:
+                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                    else:
+                        return True, str(raw_value) if raw_value is not None else None
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Проверяем в локальных данных
+        if var_name in user_data_dict:
+            variable_data = user_data_dict.get(var_name)
+            if isinstance(variable_data, dict) and "value" in variable_data:
+                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
+            elif variable_data is not None:
+                return True, str(variable_data)
+        
+        return False, None
+    
+    # Условие 1: user_data_exists для переменных: source, пол
+    if (
+        check_user_variable("source", user_data_dict)[0] and
+        check_user_variable("пол", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["source"] = check_user_variable("source", user_data_dict)
+        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        text = "Какой твой пол?"
+        conditional_parse_mode = None
+        if "{source}" in text and variable_values["source"] is not None:
+            text = text.replace("{source}", variable_values["source"])
+        if "{пол}" in text and variable_values["пол"] is not None:
+            text = text.replace("{пол}", variable_values["пол"])
+        # Создаем inline клавиатуру для условного сообщения
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Женщина", callback_data="XDSrTrNly5EtDtr85nN4P"))
+        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="XDSrTrNly5EtDtr85nN4P"))
+        keyboard = builder.as_markup()
+        conditional_keyboard = keyboard
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    else:
+        text = "Какой твой пол?"
+        text = replace_variables_in_text(text, user_data_dict)
+        logging.info("Используется основное сообщение узла")
+    
     # Активируем сбор пользовательского ввода
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
@@ -1090,8 +1259,10 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, "пол", button_display_text)
     logging.info(f"Переменная пол сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
-    text = "Как тебя зовут?"
-    # Подставляем все доступные переменные пользователя в текст
+    # Проверяем условные сообщения
+    text = None
+    
+    # Получаем данные пользователя для проверки условий
     user_record = await get_user_from_db(user_id)
     if not user_record:
         user_record = user_data.get(user_id, {})
@@ -1102,20 +1273,19 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
             if isinstance(user_record["user_data"], str):
                 try:
                     import json
-                    user_vars = json.loads(user_record["user_data"])
+                    user_data_dict = json.loads(user_record["user_data"])
                 except (json.JSONDecodeError, TypeError):
-                    user_vars = {}
+                    user_data_dict = {}
             elif isinstance(user_record["user_data"], dict):
-                user_vars = user_record["user_data"]
+                user_data_dict = user_record["user_data"]
             else:
-                user_vars = {}
+                user_data_dict = {}
         else:
-            user_vars = user_record
+            user_data_dict = user_record
     else:
-        user_vars = {}
+        user_data_dict = {}
     
-    # Заменяем все переменные в тексте
-    import re
+    # Функция для замены переменных в тексте
     def replace_variables_in_text(text_content, variables_dict):
         if not text_content or not variables_dict:
             return text_content
@@ -1132,7 +1302,55 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
                 text_content = text_content.replace(placeholder, var_value)
         return text_content
     
-    text = replace_variables_in_text(text, user_vars)
+    conditional_parse_mode = None
+    conditional_keyboard = None
+    # Функция для проверки переменных пользователя
+    def check_user_variable(var_name, user_data_dict):
+        """Проверяет существование и получает значение переменной пользователя"""
+        if "user_data" in user_data_dict and user_data_dict["user_data"]:
+            try:
+                import json
+                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                if var_name in parsed_data:
+                    raw_value = parsed_data[var_name]
+                    if isinstance(raw_value, dict) and "value" in raw_value:
+                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                    else:
+                        return True, str(raw_value) if raw_value is not None else None
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Проверяем в локальных данных
+        if var_name in user_data_dict:
+            variable_data = user_data_dict.get(var_name)
+            if isinstance(variable_data, dict) and "value" in variable_data:
+                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
+            elif variable_data is not None:
+                return True, str(variable_data)
+        
+        return False, None
+    
+    # Условие 1: user_data_exists для переменных: source, имя
+    if (
+        check_user_variable("source", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["source"] = check_user_variable("source", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+        text = "Как тебя зовут?"
+        conditional_parse_mode = None
+        if "{source}" in text and variable_values["source"] is not None:
+            text = text.replace("{source}", variable_values["source"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    else:
+        text = "Как тебя зовут?"
+        text = replace_variables_in_text(text, user_data_dict)
+        logging.info("Используется основное сообщение узла")
+    
     # Активируем сбор пользовательского ввода
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
@@ -1151,8 +1369,8 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
         await callback_query.message.answer(text)
     
 
-@dp.callback_query(lambda c: c.data == "IFxfIAHrLGDHLDWW-KoKg" or c.data.startswith("IFxfIAHrLGDHLDWW-KoKg_btn_"))
-async def handle_callback_IFxfIAHrLGDHLDWW_KoKg(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "M-zKR_b8lKSQ0hPrO6vm5" or c.data.startswith("M-zKR_b8lKSQ0hPrO6vm5_btn_"))
+async def handle_callback_M_zKR_b8lKSQ0hPrO6vm5(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
@@ -1174,7 +1392,7 @@ async def handle_callback_IFxfIAHrLGDHLDWW_KoKg(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, "button_click", button_display_text)
     logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
-    text = "Что вы хотите редактировать?"
+    text = "Что хотите редактировать?"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -1485,11 +1703,6 @@ async def handle_user_input(message: types.Message):
                         await _profile_handler(fake_message)
                     except Exception as e:
                         logging.error(f"Ошибка выполнения команды /profile: {e}")
-                elif command == "/hello":
-                    try:
-                        await _hello_handler(fake_message)
-                    except Exception as e:
-                        logging.error(f"Ошибка выполнения команды /hello: {e}")
                 else:
                     logging.warning(f"Неизвестная команда: {command}")
             elif option_action == "goto" and option_target:
@@ -1511,10 +1724,8 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "profile_command":
                         await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "x6ANrUHMXH5yaoUfYP3Dz":
-                        await handle_callback_x6ANrUHMXH5yaoUfYP3Dz(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "IFxfIAHrLGDHLDWW-KoKg":
-                        await handle_callback_IFxfIAHrLGDHLDWW_KoKg(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "M-zKR_b8lKSQ0hPrO6vm5":
+                        await handle_callback_M_zKR_b8lKSQ0hPrO6vm5(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -1539,10 +1750,8 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "profile_command":
                             await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "x6ANrUHMXH5yaoUfYP3Dz":
-                            await handle_callback_x6ANrUHMXH5yaoUfYP3Dz(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "IFxfIAHrLGDHLDWW-KoKg":
-                            await handle_callback_IFxfIAHrLGDHLDWW_KoKg(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "M-zKR_b8lKSQ0hPrO6vm5":
+                            await handle_callback_M_zKR_b8lKSQ0hPrO6vm5(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -1664,10 +1873,8 @@ async def handle_user_input(message: types.Message):
                         await message.answer(text)
                     elif next_node_id == "profile_command":
                         logging.info(f"Переход к узлу profile_command типа command")
-                    elif next_node_id == "x6ANrUHMXH5yaoUfYP3Dz":
-                        logging.info(f"Переход к узлу x6ANrUHMXH5yaoUfYP3Dz типа command")
-                    elif next_node_id == "IFxfIAHrLGDHLDWW-KoKg":
-                        logging.info(f"Переход к узлу IFxfIAHrLGDHLDWW-KoKg типа keyboard")
+                    elif next_node_id == "M-zKR_b8lKSQ0hPrO6vm5":
+                        logging.info(f"Переход к узлу M-zKR_b8lKSQ0hPrO6vm5 типа keyboard")
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                 except Exception as e:
@@ -1954,10 +2161,8 @@ async def handle_user_input(message: types.Message):
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "profile_command":
                 logging.info(f"Переход к узлу profile_command типа command")
-            elif next_node_id == "x6ANrUHMXH5yaoUfYP3Dz":
-                logging.info(f"Переход к узлу x6ANrUHMXH5yaoUfYP3Dz типа command")
-            elif next_node_id == "IFxfIAHrLGDHLDWW-KoKg":
-                logging.info(f"Переход к узлу IFxfIAHrLGDHLDWW-KoKg типа keyboard")
+            elif next_node_id == "M-zKR_b8lKSQ0hPrO6vm5":
+                logging.info(f"Переход к узлу M-zKR_b8lKSQ0hPrO6vm5 типа keyboard")
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
@@ -2009,7 +2214,6 @@ async def main():
     try:
         # Инициализируем базу данных
         await init_database()
-        await set_bot_commands()
         print("🤖 Бот запущен и готов к работе!")
         await dp.start_polling(bot)
     except KeyboardInterrupt:
