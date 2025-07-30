@@ -6,6 +6,12 @@ function escapeForPython(text: string): string {
   return text.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
 
+// Функция для удаления HTML тегов из текста
+function stripHtmlTags(text: string): string {
+  if (!text) return text;
+  return text.replace(/<[^>]*>/g, '');
+}
+
 // Функция для правильного форматирования текста с поддержкой многострочности
 function formatTextForPython(text: string): string {
   if (!text) return '""';
@@ -139,7 +145,8 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   // Создаем единую if/elif/else структуру для всех условий
   for (let i = 0; i < sortedConditions.length; i++) {
     const condition = sortedConditions[i];
-    const conditionText = formatTextForPython(condition.messageText);
+    const cleanedConditionText = stripHtmlTags(condition.messageText);
+    const conditionText = formatTextForPython(cleanedConditionText);
     const conditionKeyword = i === 0 ? 'if' : 'elif';
     
     // Get variable names - support both new array format and legacy single variable
@@ -778,7 +785,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             // Handle regular message nodes (like source_friends, source_search, etc.)
             else if (targetNode.type === 'message') {
               const messageText = targetNode.data.messageText || "Сообщение";
-              const formattedText = formatTextForPython(messageText);
+              const cleanedMessageText = stripHtmlTags(messageText);
+              const formattedText = formatTextForPython(cleanedMessageText);
               const parseMode = getParseMode(targetNode.data.formatMode);
               
               code += `    # Отправляем сообщение для узла ${targetNode.id}\n`;
@@ -3270,7 +3278,8 @@ function generateCommandHandler(node: Node): string {
 
   // Добавляем обработку условных сообщений
   const messageText = node.data.messageText || "Команда выполнена";
-  const formattedText = formatTextForPython(messageText);
+  const cleanedMessageText = stripHtmlTags(messageText); // Удаляем HTML теги
+  const formattedText = formatTextForPython(cleanedMessageText);
   
   if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
     code += '\n    # Проверяем условные сообщения\n';
@@ -3298,7 +3307,8 @@ function generateCommandHandler(node: Node): string {
     code += '    else:\n';
     
     if (node.data.fallbackMessage) {
-      const fallbackText = formatTextForPython(node.data.fallbackMessage);
+      const cleanedFallbackText = stripHtmlTags(node.data.fallbackMessage);
+      const fallbackText = formatTextForPython(cleanedFallbackText);
       code += `        text = ${fallbackText}\n`;
       code += '        logging.info("Используется запасное сообщение")\n';
     } else {

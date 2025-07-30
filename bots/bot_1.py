@@ -490,7 +490,50 @@ async def hello_handler(message: types.Message):
         user_data[user_id]["commands_used"] = {}
     user_data[user_id]["commands_used"]["/hello"] = user_data[user_id]["commands_used"].get("/hello", 0) + 1
 
-    text = "ПРивет {имя}"
+    text = "<span style=\"color: rgb(250, 250, 250);\">ПРивет {имя}</span>"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
     # Определяем режим форматирования (приоритет у условного сообщения)
     if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
         current_parse_mode = conditional_parse_mode
@@ -591,19 +634,49 @@ async def handle_callback_btn_2(callback_query: types.CallbackQuery):
     
     # Отправляем сообщение для узла 1BHSLWPMao9qQvSAzuzRl
     text = "Печально, если что напиши /start или /profile для просмотра профиля"
-    # Подставляем значения переменных в текст сообщения
-    user_id = callback_query.from_user.id
-    user_record = await get_user_from_db(user_id)
-    if user_record and user_record.get("user_data"):
-        try:
-            import json
-            user_vars = json.loads(user_record["user_data"]) if isinstance(user_record["user_data"], str) else user_record["user_data"]
-            for var_name, var_value in user_vars.items():
-                if "{" + var_name + "}" in text:
-                    text = text.replace("{" + var_name + "}", str(var_value))
-        except (json.JSONDecodeError, TypeError):
-            pass
     
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
     # Создаем inline клавиатуру для целевого узла
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
@@ -1294,8 +1367,8 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "profile_command":
                         await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "uKdZAL-djozwxGfVad1zP":
-                        await handle_callback_uKdZAL_djozwxGfVad1zP(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "x6ANrUHMXH5yaoUfYP3Dz":
+                        await handle_callback_x6ANrUHMXH5yaoUfYP3Dz(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -1320,8 +1393,8 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "profile_command":
                             await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "uKdZAL-djozwxGfVad1zP":
-                            await handle_callback_uKdZAL_djozwxGfVad1zP(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "x6ANrUHMXH5yaoUfYP3Dz":
+                            await handle_callback_x6ANrUHMXH5yaoUfYP3Dz(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -1443,8 +1516,8 @@ async def handle_user_input(message: types.Message):
                         await message.answer(text)
                     elif next_node_id == "profile_command":
                         logging.info(f"Переход к узлу profile_command типа command")
-                    elif next_node_id == "uKdZAL-djozwxGfVad1zP":
-                        logging.info(f"Переход к узлу uKdZAL-djozwxGfVad1zP типа command")
+                    elif next_node_id == "x6ANrUHMXH5yaoUfYP3Dz":
+                        logging.info(f"Переход к узлу x6ANrUHMXH5yaoUfYP3Dz типа command")
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                 except Exception as e:
@@ -1731,8 +1804,8 @@ async def handle_user_input(message: types.Message):
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "profile_command":
                 logging.info(f"Переход к узлу profile_command типа command")
-            elif next_node_id == "uKdZAL-djozwxGfVad1zP":
-                logging.info(f"Переход к узлу uKdZAL-djozwxGfVad1zP типа command")
+            elif next_node_id == "x6ANrUHMXH5yaoUfYP3Dz":
+                logging.info(f"Переход к узлу x6ANrUHMXH5yaoUfYP3Dz типа command")
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
