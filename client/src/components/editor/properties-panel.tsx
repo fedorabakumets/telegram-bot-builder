@@ -2646,6 +2646,251 @@ export function PropertiesPanel({
                                 Это сообщение увидит пользователь вместо основного текста
                               </div>
                             </div>
+
+                            {/* Keyboard Configuration for Conditional Messages */}
+                            <div className="space-y-3 border-t border-purple-200/30 dark:border-purple-800/30 pt-3">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                                  <i className="fas fa-keyboard mr-1"></i>
+                                  Кнопки для условного сообщения
+                                </Label>
+                                <Select
+                                  value={condition.keyboardType || 'none'}
+                                  onValueChange={(value: 'none' | 'inline' | 'reply') => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, keyboardType: value } : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                >
+                                  <SelectTrigger className="text-xs h-7 w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">Без кнопок</SelectItem>
+                                    <SelectItem value="inline">Inline кнопки</SelectItem>
+                                    <SelectItem value="reply">Reply кнопки</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {/* Buttons Configuration */}
+                              {condition.keyboardType && condition.keyboardType !== 'none' && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-purple-600 dark:text-purple-400">
+                                      Кнопки ({(condition.buttons || []).length})
+                                    </span>
+                                    <UIButton
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const newButton = {
+                                          id: nanoid(),
+                                          text: 'Новая кнопка',
+                                          action: 'goto' as const,
+                                          target: '',
+                                          url: ''
+                                        };
+                                        const currentConditions = selectedNode.data.conditionalMessages || [];
+                                        const updatedConditions = currentConditions.map(c => 
+                                          c.id === condition.id ? { 
+                                            ...c, 
+                                            buttons: [...(c.buttons || []), newButton] 
+                                          } : c
+                                        );
+                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                      }}
+                                      className="text-xs text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200"
+                                    >
+                                      + Добавить кнопку
+                                    </UIButton>
+                                  </div>
+
+                                  {/* Buttons List */}
+                                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {(condition.buttons || []).map((button, buttonIndex) => (
+                                      <div key={button.id} className="bg-white/50 dark:bg-gray-900/30 rounded-lg p-2 border border-purple-200/30 dark:border-purple-800/30">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <Input
+                                            value={button.text}
+                                            onChange={(e) => {
+                                              const currentConditions = selectedNode.data.conditionalMessages || [];
+                                              const updatedConditions = currentConditions.map(c => 
+                                                c.id === condition.id ? {
+                                                  ...c,
+                                                  buttons: (c.buttons || []).map((b, i) => 
+                                                    i === buttonIndex ? { ...b, text: e.target.value } : b
+                                                  )
+                                                } : c
+                                              );
+                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                            }}
+                                            className="flex-1 text-xs mr-2"
+                                            placeholder="Текст кнопки"
+                                          />
+                                          <UIButton
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => {
+                                              const currentConditions = selectedNode.data.conditionalMessages || [];
+                                              const updatedConditions = currentConditions.map(c => 
+                                                c.id === condition.id ? {
+                                                  ...c,
+                                                  buttons: (c.buttons || []).filter((_, i) => i !== buttonIndex)
+                                                } : c
+                                              );
+                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                            }}
+                                            className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                                          >
+                                            <i className="fas fa-trash"></i>
+                                          </UIButton>
+                                        </div>
+
+                                        {/* Button Action Configuration */}
+                                        <div className="space-y-2">
+                                          <Select
+                                            value={button.action || 'goto'}
+                                            onValueChange={(value: 'goto' | 'url' | 'command') => {
+                                              const currentConditions = selectedNode.data.conditionalMessages || [];
+                                              const updatedConditions = currentConditions.map(c => 
+                                                c.id === condition.id ? {
+                                                  ...c,
+                                                  buttons: (c.buttons || []).map((b, i) => 
+                                                    i === buttonIndex ? { ...b, action: value } : b
+                                                  )
+                                                } : c
+                                              );
+                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                            }}
+                                          >
+                                            <SelectTrigger className="text-xs h-7">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="goto">Перейти к узлу</SelectItem>
+                                              <SelectItem value="url">Открыть ссылку</SelectItem>
+                                              <SelectItem value="command">Выполнить команду</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+
+                                          {button.action === 'goto' && (
+                                            <Select
+                                              value={button.target || ''}
+                                              onValueChange={(value) => {
+                                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                const updatedConditions = currentConditions.map(c => 
+                                                  c.id === condition.id ? {
+                                                    ...c,
+                                                    buttons: (c.buttons || []).map((b, i) => 
+                                                      i === buttonIndex ? { ...b, target: value } : b
+                                                    )
+                                                  } : c
+                                                );
+                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                              }}
+                                            >
+                                              <SelectTrigger className="text-xs h-7">
+                                                <SelectValue placeholder="Выберите узел" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {allNodes
+                                                  .filter(node => node.id !== selectedNode.id)
+                                                  .map((node) => {
+                                                    const nodeName = 
+                                                      node.type === 'start' ? node.data.command :
+                                                      node.type === 'command' ? node.data.command :
+                                                      node.data.messageText?.slice(0, 30) + '...' || `${node.type} ${node.id}`;
+                                                    return (
+                                                      <SelectItem key={node.id} value={node.id}>
+                                                        {nodeName}
+                                                      </SelectItem>
+                                                    );
+                                                  })}
+                                              </SelectContent>
+                                            </Select>
+                                          )}
+
+                                          {button.action === 'url' && (
+                                            <Input
+                                              value={button.url || ''}
+                                              onChange={(e) => {
+                                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                const updatedConditions = currentConditions.map(c => 
+                                                  c.id === condition.id ? {
+                                                    ...c,
+                                                    buttons: (c.buttons || []).map((b, i) => 
+                                                      i === buttonIndex ? { ...b, url: e.target.value } : b
+                                                    )
+                                                  } : c
+                                                );
+                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                              }}
+                                              className="text-xs"
+                                              placeholder="https://example.com"
+                                            />
+                                          )}
+
+                                          {button.action === 'command' && (
+                                            <Input
+                                              value={button.target || ''}
+                                              onChange={(e) => {
+                                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                const updatedConditions = currentConditions.map(c => 
+                                                  c.id === condition.id ? {
+                                                    ...c,
+                                                    buttons: (c.buttons || []).map((b, i) => 
+                                                      i === buttonIndex ? { ...b, target: e.target.value } : b
+                                                    )
+                                                  } : c
+                                                );
+                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                              }}
+                                              className="text-xs"
+                                              placeholder="/help"
+                                            />
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Reply Keyboard Settings */}
+                                  {condition.keyboardType === 'reply' && (
+                                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-purple-200/20 dark:border-purple-800/20">
+                                      <div className="flex items-center space-x-2">
+                                        <Switch
+                                          checked={condition.resizeKeyboard ?? true}
+                                          onCheckedChange={(checked) => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, resizeKeyboard: checked } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        />
+                                        <Label className="text-xs text-purple-600 dark:text-purple-400">Авто-размер</Label>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <Switch
+                                          checked={condition.oneTimeKeyboard ?? false}
+                                          onCheckedChange={(checked) => {
+                                            const currentConditions = selectedNode.data.conditionalMessages || [];
+                                            const updatedConditions = currentConditions.map(c => 
+                                              c.id === condition.id ? { ...c, oneTimeKeyboard: checked } : c
+                                            );
+                                            onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                          }}
+                                        />
+                                        <Label className="text-xs text-purple-600 dark:text-purple-400">Скрыть после использования</Label>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                           );
