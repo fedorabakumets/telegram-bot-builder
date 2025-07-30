@@ -102,6 +102,51 @@ function generateUniversalVariableReplacement(indentLevel: string): string {
   return code;
 }
 
+// Функция для генерации клавиатуры для условного сообщения
+function generateConditionalKeyboard(condition: any, indentLevel: string): string {
+  if (!condition.keyboardType || condition.keyboardType === 'none' || !condition.buttons || condition.buttons.length === 0) {
+    return '';
+  }
+
+  let code = '';
+  
+  if (condition.keyboardType === 'inline') {
+    code += `${indentLevel}# Создаем inline клавиатуру для условного сообщения\n`;
+    code += `${indentLevel}builder = InlineKeyboardBuilder()\n`;
+    
+    condition.buttons.forEach((button: any) => {
+      if (button.action === "url") {
+        code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+      } else {
+        const callbackData = button.target || button.id || 'no_action';
+        code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      }
+    });
+    
+    code += `${indentLevel}keyboard = builder.as_markup()\n`;
+    code += `${indentLevel}conditional_keyboard = keyboard\n`;
+    
+  } else if (condition.keyboardType === 'reply') {
+    code += `${indentLevel}# Создаем reply клавиатуру для условного сообщения\n`;
+    code += `${indentLevel}builder = ReplyKeyboardBuilder()\n`;
+    
+    condition.buttons.forEach((button: any) => {
+      if (button.action === "contact" && button.requestContact) {
+        code += `${indentLevel}builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+      } else if (button.action === "location" && button.requestLocation) {
+        code += `${indentLevel}builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+      } else {
+        code += `${indentLevel}builder.add(KeyboardButton(text="${button.text}"))\n`;
+      }
+    });
+    
+    code += `${indentLevel}keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)\n`;
+    code += `${indentLevel}conditional_keyboard = keyboard\n`;
+  }
+  
+  return code;
+}
+
 // Функция для генерации логики условных сообщений
 function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel: string = '    '): string {
   if (!conditionalMessages || conditionalMessages.length === 0) {
@@ -111,8 +156,9 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   let code = '';
   const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
   
-  // Add variable to track conditional parse mode
+  // Add variables to track conditional parse mode and keyboard
   code += `${indentLevel}conditional_parse_mode = None\n`;
+  code += `${indentLevel}conditional_keyboard = None\n`;
   
   // Генерируем единую функцию проверки переменных
   code += `${indentLevel}# Функция для проверки переменных пользователя\n`;
@@ -197,6 +243,9 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
         }
         
+        // Добавляем генерацию клавиатуры для условного сообщения
+        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} (${logicOperator})")\n`;
         break;
         
@@ -228,6 +277,10 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         } else {
           code += `${indentLevel}    conditional_parse_mode = None\n`;
         }
+        
+        // Добавляем генерацию клавиатуры для условного сообщения
+        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
         break;
         
@@ -268,6 +321,9 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}    if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
           code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
         }
+        
+        // Добавляем генерацию клавиатуры для условного сообщения
+        code += generateConditionalKeyboard(condition, indentLevel + '    ');
         
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} равны '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
@@ -310,6 +366,9 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}        text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
         }
         
+        // Добавляем генерацию клавиатуры для условного сообщения
+        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} содержат '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
         
@@ -323,6 +382,10 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         } else {
           code += `${indentLevel}    conditional_parse_mode = None\n`;
         }
+        
+        // Добавляем генерацию клавиатуры для условного сообщения
+        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        
         code += `${indentLevel}    logging.info("Условие выполнено: первое посещение пользователя")\n`;
         break;
         
@@ -336,6 +399,10 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         } else {
           code += `${indentLevel}    conditional_parse_mode = None\n`;
         }
+        
+        // Добавляем генерацию клавиатуры для условного сообщения
+        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        
         code += `${indentLevel}    logging.info("Условие выполнено: возвращающийся пользователь")\n`;
         break;
         
@@ -4301,14 +4368,22 @@ function generateKeyboard(node: Node): string {
     });
     
     code += '    keyboard = builder.as_markup()\n';
-    code += '    # Отправляем сообщение с прикрепленными inline кнопками\n';
-    code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
-  } else if (node.data.keyboardType === "none" || !node.data.keyboardType) {
-    code += '    # Отправляем сообщение без клавиатуры (удаляем reply клавиатуру если была)\n';
-    code += `    await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseMode})\n`;
   } else {
-    code += `    await message.answer(text${parseMode})\n`;
+    code += '    keyboard = None\n';
   }
+  
+  // Отправляем сообщение с правильной клавиатурой (приоритет у условной)
+  code += '    \n';
+  code += '    # Отправляем сообщение с клавиатурой (приоритет у условной клавиатуры)\n';
+  code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+  code += '        # Используем условную клавиатуру\n';
+  code += `        await message.answer(text, reply_markup=conditional_keyboard${parseMode})\n`;
+  code += '    elif keyboard is not None:\n';
+  code += '        # Используем обычную клавиатуру\n';
+  code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+  code += '    else:\n';
+  code += '        # Отправляем сообщение без клавиатуры\n';
+  code += `        await message.answer(text${parseMode})\n`;
   
   return code;
 }
