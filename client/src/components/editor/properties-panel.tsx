@@ -2146,7 +2146,7 @@ export function PropertiesPanel({
         </div>
 
         {/* Conditional Messages */}
-        {(selectedNode.type === 'start' || selectedNode.type === 'command' || selectedNode.type === 'message') && (
+        {(selectedNode.type === 'start' || selectedNode.type === 'command' || selectedNode.type === 'message' || selectedNode.type === 'keyboard') && (
           <div>
             <h3 className="text-sm font-medium text-foreground mb-3">🔄 Условные сообщения</h3>
             <div className="space-y-4">

@@ -863,47 +863,103 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    \n';
               code += generateUniversalVariableReplacement('    ');
               
+              // Добавляем поддержку условных сообщений
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    \n';
+                code += '    # Проверка условных сообщений\n';
+                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                code += '    \n';
+                
+                // Use conditional message if available, otherwise use default
+                code += '    # Используем условное сообщение если есть подходящее условие\n';
+                code += '    if "text" not in locals():\n';
+                code += `        text = ${formattedText}\n`;
+                code += '    \n';
+                code += '    # Используем условную клавиатуру если есть\n';
+                code += '    if conditional_keyboard is not None:\n';
+                code += '        keyboard = conditional_keyboard\n';
+                code += '    else:\n';
+              } else {
+                code += '    \n';
+                code += '    # Без условных сообщений - используем обычную клавиатуру\n';
+              }
+              
               // Проверяем, есть ли у узла inline кнопки
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                code += '    # Создаем inline клавиатуру для целевого узла\n';
-                code += '    builder = InlineKeyboardBuilder()\n';
+                code += '        # Создаем inline клавиатуру для целевого узла\n';
+                code += '        builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
-                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
                     // Создаем уникальный callback_data для каждой кнопки
                     const baseCallbackData = btn.target || btn.id || 'no_action';
                     const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   } else if (btn.action === 'command') {
                     // Для кнопок команд создаем специальную callback_data
                     const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
-                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
-                code += '    keyboard = builder.as_markup()\n';
-                code += '    try:\n';
-                code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseMode})\n`;
-                code += '    except Exception:\n';
-                code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
+                code += '        keyboard = builder.as_markup()\n';
               } else {
-                // Нет кнопок, отправляем просто текст
-                code += '    try:\n';
-                code += `        await callback_query.message.edit_text(text${parseMode})\n`;
-                code += '    except Exception:\n';
-                code += `        await callback_query.message.answer(text${parseMode})\n`;
+                code += '        keyboard = None\n';
               }
+              
+              // Закрываем условный блок if есть условные сообщения
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    \n';
+              }
+              
+              // Отправляем сообщение с учетом всех условий
+              code += '    # Отправляем сообщение\n';
+              code += '    try:\n';
+              code += '        if keyboard is not None:\n';
+              code += `            await callback_query.message.edit_text(text, reply_markup=keyboard${parseMode})\n`;
+              code += '        else:\n';
+              code += `            await callback_query.message.edit_text(text${parseMode})\n`;
+              code += '    except Exception:\n';
+              code += '        if keyboard is not None:\n';
+              code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
+              code += '        else:\n';
+              code += `            await callback_query.message.answer(text${parseMode})\n`;
             }
             // Handle different target node types
             else if (targetNode.type === 'photo') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📸 Фото";
               const imageUrl = targetNode.data.imageUrl || "https://picsum.photos/800/600?random=1";
               
+              code += `    # Отправляем фото для узла ${targetNode.id}\n`;
+              
               if (caption.includes('\n')) {
                 code += `    caption = """${caption}"""\n`;
               } else {
                 const escapedCaption = caption.replace(/"/g, '\\"');
                 code += `    caption = "${escapedCaption}"\n`;
+              }
+              
+              // Применяем универсальную замену переменных для подписи
+              code += '    \n';
+              code += generateUniversalVariableReplacement('    ');
+              code += '    caption = replace_variables_in_text(caption, user_vars)\n';
+              
+              // Добавляем поддержку условных сообщений для фото
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    \n';
+                code += '    # Проверка условных сообщений для фото\n';
+                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                code += '    \n';
+                
+                // Use conditional message if available, otherwise use default caption
+                code += '    # Используем условное сообщение как подпись если есть подходящее условие\n';
+                code += '    if "text" in locals():\n';
+                code += '        caption = text\n';
+                code += '    \n';
+                code += '    # Используем условную клавиатуру если есть\n';
+                code += '    conditional_keyboard_for_photo = conditional_keyboard\n';
               }
               
               code += `    photo_url = "${imageUrl}"\n`;
@@ -921,23 +977,41 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '            photo_file = photo_url\n';
               code += '        \n';
               
+              // Проверяем условную клавиатуру или обычную
+              code += '        # Определяем клавиатуру для фото\n';
+              code += '        keyboard = None\n';
+              
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '        if conditional_keyboard_for_photo is not None:\n';
+                code += '            keyboard = conditional_keyboard_for_photo\n';
+                code += '        elif '
+              } else {
+                code += '        if ';
+              }
+              
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-                code += '        builder = InlineKeyboardBuilder()\n';
+                code += 'True:  # У узла есть обычные кнопки\n';
+                code += '            builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                    code += `            builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    code += `            builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
-                code += '        keyboard = builder.as_markup()\n';
-                code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_photo(callback_query.from_user.id, photo_file, caption=caption, reply_markup=keyboard)\n';
+                code += '            keyboard = builder.as_markup()\n';
               } else {
-                code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_photo(callback_query.from_user.id, photo_file, caption=caption)\n';
+                code += 'False:  # Нет кнопок\n';
+                code += '            pass\n';
               }
+              
+              code += '        \n';
+              code += '        await callback_query.message.delete()\n';
+              code += '        if keyboard is not None:\n';
+              code += '            await bot.send_photo(callback_query.from_user.id, photo_file, caption=caption, reply_markup=keyboard)\n';
+              code += '        else:\n';
+              code += '            await bot.send_photo(callback_query.from_user.id, photo_file, caption=caption)\n';
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки фото: {e}")\n';
@@ -947,11 +1021,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎥 Видео";
               const videoUrl = targetNode.data.videoUrl || "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4";
               
+              code += `    # Отправляем видео для узла ${targetNode.id}\n`;
+              
               if (caption.includes('\n')) {
                 code += `    caption = """${caption}"""\n`;
               } else {
                 const escapedCaption = caption.replace(/"/g, '\\"');
                 code += `    caption = "${escapedCaption}"\n`;
+              }
+              
+              // Применяем универсальную замену переменных для подписи
+              code += '    \n';
+              code += generateUniversalVariableReplacement('    ');
+              code += '    caption = replace_variables_in_text(caption, user_vars)\n';
+              
+              // Добавляем поддержку условных сообщений для видео
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    \n';
+                code += '    # Проверка условных сообщений для видео\n';
+                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                code += '    \n';
+                
+                // Use conditional message if available, otherwise use default caption
+                code += '    # Используем условное сообщение как подпись если есть подходящее условие\n';
+                code += '    if "text" in locals():\n';
+                code += '        caption = text\n';
+                code += '    \n';
+                code += '    # Используем условную клавиатуру если есть\n';
+                code += '    conditional_keyboard_for_video = conditional_keyboard\n';
               }
               
               code += `    video_url = "${videoUrl}"\n`;
@@ -969,23 +1067,41 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '            video_file = video_url\n';
               code += '        \n';
               
+              // Проверяем условную клавиатуру или обычную
+              code += '        # Определяем клавиатуру для видео\n';
+              code += '        keyboard = None\n';
+              
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '        if conditional_keyboard_for_video is not None:\n';
+                code += '            keyboard = conditional_keyboard_for_video\n';
+                code += '        elif '
+              } else {
+                code += '        if ';
+              }
+              
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-                code += '        builder = InlineKeyboardBuilder()\n';
+                code += 'True:  # У узла есть обычные кнопки\n';
+                code += '            builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                    code += `            builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    code += `            builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
-                code += '        keyboard = builder.as_markup()\n';
-                code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_video(callback_query.from_user.id, video_file, caption=caption, reply_markup=keyboard)\n';
+                code += '            keyboard = builder.as_markup()\n';
               } else {
-                code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_video(callback_query.from_user.id, video_file, caption=caption)\n';
+                code += 'False:  # Нет кнопок\n';
+                code += '            pass\n';
               }
+              
+              code += '        \n';
+              code += '        await callback_query.message.delete()\n';
+              code += '        if keyboard is not None:\n';
+              code += '            await bot.send_video(callback_query.from_user.id, video_file, caption=caption, reply_markup=keyboard)\n';
+              code += '        else:\n';
+              code += '            await bot.send_video(callback_query.from_user.id, video_file, caption=caption)\n';
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки видео: {e}")\n';
@@ -995,11 +1111,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎵 Аудио";
               const audioUrl = targetNode.data.audioUrl || "https://www.soundjay.com/misc/beep-07a.wav";
               
+              code += `    # Отправляем аудио для узла ${targetNode.id}\n`;
+              
               if (caption.includes('\n')) {
                 code += `    caption = """${caption}"""\n`;
               } else {
                 const escapedCaption = caption.replace(/"/g, '\\"');
                 code += `    caption = "${escapedCaption}"\n`;
+              }
+              
+              // Применяем универсальную замену переменных для подписи
+              code += '    \n';
+              code += generateUniversalVariableReplacement('    ');
+              code += '    caption = replace_variables_in_text(caption, user_vars)\n';
+              
+              // Добавляем поддержку условных сообщений для аудио
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    \n';
+                code += '    # Проверка условных сообщений для аудио\n';
+                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                code += '    \n';
+                
+                // Use conditional message if available, otherwise use default caption
+                code += '    # Используем условное сообщение как подпись если есть подходящее условие\n';
+                code += '    if "text" in locals():\n';
+                code += '        caption = text\n';
+                code += '    \n';
+                code += '    # Используем условную клавиатуру если есть\n';
+                code += '    conditional_keyboard_for_audio = conditional_keyboard\n';
               }
               
               code += `    audio_url = "${audioUrl}"\n`;
@@ -1017,23 +1157,41 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '            audio_file = audio_url\n';
               code += '        \n';
               
+              // Проверяем условную клавиатуру или обычную
+              code += '        # Определяем клавиатуру для аудио\n';
+              code += '        keyboard = None\n';
+              
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '        if conditional_keyboard_for_audio is not None:\n';
+                code += '            keyboard = conditional_keyboard_for_audio\n';
+                code += '        elif '
+              } else {
+                code += '        if ';
+              }
+              
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-                code += '        builder = InlineKeyboardBuilder()\n';
+                code += 'True:  # У узла есть обычные кнопки\n';
+                code += '            builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                    code += `            builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    code += `            builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
-                code += '        keyboard = builder.as_markup()\n';
-                code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_audio(callback_query.from_user.id, audio_file, caption=caption, reply_markup=keyboard)\n';
+                code += '            keyboard = builder.as_markup()\n';
               } else {
-                code += '        await callback_query.message.delete()\n';
-                code += '        await bot.send_audio(callback_query.from_user.id, audio_file, caption=caption)\n';
+                code += 'False:  # Нет кнопок\n';
+                code += '            pass\n';
               }
+              
+              code += '        \n';
+              code += '        await callback_query.message.delete()\n';
+              code += '        if keyboard is not None:\n';
+              code += '            await bot.send_audio(callback_query.from_user.id, audio_file, caption=caption, reply_markup=keyboard)\n';
+              code += '        else:\n';
+              code += '            await bot.send_audio(callback_query.from_user.id, audio_file, caption=caption)\n';
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки аудио: {e}")\n';
@@ -4202,6 +4360,26 @@ function generateSynonymHandler(node: Node, synonym: string): string {
 function generateKeyboard(node: Node): string {
   let code = '';
   
+  // Добавляем поддержку условных сообщений для клавиатуры
+  if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
+    code += generateUniversalVariableReplacement('    ');
+    code += '    text = replace_variables_in_text(text, user_vars)\n';
+    code += '    \n';
+    code += '    # Проверка условных сообщений для клавиатуры\n';
+    code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+    code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
+    code += '    \n';
+    
+    // Use conditional message if available, otherwise use default text
+    code += '    # Используем условное сообщение если есть подходящее условие\n';
+    code += '    if "text" not in locals():\n';
+    code += '        # Используем исходный текст клавиатуры если условие не сработало\n';
+    code += '        pass  # text уже установлен выше\n';
+    code += '    \n';
+    code += '    # Используем условную клавиатуру если есть\n';
+    code += '    conditional_keyboard_for_element = conditional_keyboard\n';
+  }
+  
   // Определяем режим форматирования (приоритет у условного сообщения)
   code += '    # Определяем режим форматирования (приоритет у условного сообщения)\n';
   code += '    if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:\n';
@@ -4375,15 +4553,31 @@ function generateKeyboard(node: Node): string {
   // Отправляем сообщение с правильной клавиатурой (приоритет у условной)
   code += '    \n';
   code += '    # Отправляем сообщение с клавиатурой (приоритет у условной клавиатуры)\n';
-  code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
-  code += '        # Используем условную клавиатуру\n';
-  code += `        await message.answer(text, reply_markup=conditional_keyboard${parseMode})\n`;
-  code += '    elif keyboard is not None:\n';
-  code += '        # Используем обычную клавиатуру\n';
-  code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
-  code += '    else:\n';
-  code += '        # Отправляем сообщение без клавиатуры\n';
-  code += `        await message.answer(text${parseMode})\n`;
+  
+  if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
+    code += '    if conditional_keyboard_for_element is not None:\n';
+    code += '        # Используем условную клавиатуру для элемента клавиатуры\n';
+    code += `        await message.answer(text, reply_markup=conditional_keyboard_for_element${parseMode})\n`;
+    code += '    elif "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+    code += '        # Используем общую условную клавиатуру\n';
+    code += `        await message.answer(text, reply_markup=conditional_keyboard${parseMode})\n`;
+    code += '    elif keyboard is not None:\n';
+    code += '        # Используем обычную клавиатуру\n';
+    code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+    code += '    else:\n';
+    code += '        # Отправляем сообщение без клавиатуры\n';
+    code += `        await message.answer(text${parseMode})\n`;
+  } else {
+    code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+    code += '        # Используем условную клавиатуру\n';
+    code += `        await message.answer(text, reply_markup=conditional_keyboard${parseMode})\n`;
+    code += '    elif keyboard is not None:\n';
+    code += '        # Используем обычную клавиатуру\n';
+    code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+    code += '    else:\n';
+    code += '        # Отправляем сообщение без клавиатуры\n';
+    code += `        await message.answer(text${parseMode})\n`;
+  }
   
   return code;
 }
