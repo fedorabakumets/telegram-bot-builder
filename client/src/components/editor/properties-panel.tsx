@@ -2690,6 +2690,36 @@ export function PropertiesPanel({
                                       Если не указать, будет использовано автоматическое имя переменной
                                     </div>
                                   </div>
+                                  <div>
+                                    <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                      Куда перейти после ответа
+                                    </Label>
+                                    <Select
+                                      value={condition.nextNodeAfterInput || ''}
+                                      onValueChange={(value) => {
+                                        const currentConditions = selectedNode.data.conditionalMessages || [];
+                                        const updatedConditions = currentConditions.map(c => 
+                                          c.id === condition.id ? { ...c, nextNodeAfterInput: value || undefined } : c
+                                        );
+                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                      }}
+                                    >
+                                      <SelectTrigger className="text-xs h-7">
+                                        <SelectValue placeholder="Выберите узел" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="">Не переходить</SelectItem>
+                                        {allNodes.filter(n => n.id !== selectedNode.id).map(node => (
+                                          <SelectItem key={node.id} value={node.id}>
+                                            {node.data.label || `${node.type} (${node.id.slice(-8)})`}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Узел, к которому перейти после получения ответа пользователя
+                                    </div>
+                                  </div>
                                 </div>
                               )}
                             </div>

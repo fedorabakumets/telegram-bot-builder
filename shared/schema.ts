@@ -373,6 +373,7 @@ export const nodeSchema = z.object({
       buttons: z.array(buttonSchema).default([]), // Кнопки для условного сообщения
       waitForTextInput: z.boolean().default(false), // Ожидание текстового ввода после показа сообщения
       textInputVariable: z.string().optional(), // Переменная для сохранения текстового ввода
+      nextNodeAfterInput: z.string().optional(), // ID узла, к которому перейти после получения ввода
       priority: z.number().default(0) // Приоритет проверки (чем больше, тем выше приоритет)
     })).default([]), // Массив условных сообщений
     fallbackMessage: z.string().optional(), // Сообщение по умолчанию, если ни одно условие не выполнено
