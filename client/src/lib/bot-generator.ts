@@ -253,6 +253,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ');
         
+        // Добавляем логику для настройки ожидания текстового ввода
+        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        code += `${indentLevel}    conditional_message_config = {\n`;
+        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
+        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}    }\n`;
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} (${logicOperator})")\n`;
         break;
         
@@ -287,6 +296,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        
+        // Добавляем логику для настройки ожидания текстового ввода
+        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        code += `${indentLevel}    conditional_message_config = {\n`;
+        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
+        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}    }\n`;
         
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
         break;
@@ -332,6 +350,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ');
         
+        // Добавляем логику для настройки ожидания текстового ввода
+        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        code += `${indentLevel}    conditional_message_config = {\n`;
+        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
+        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}    }\n`;
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} равны '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
         
@@ -376,6 +403,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ');
         
+        // Добавляем логику для настройки ожидания текстового ввода
+        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        code += `${indentLevel}    conditional_message_config = {\n`;
+        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
+        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}    }\n`;
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} содержат '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
         
@@ -393,6 +429,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ');
         
+        // Добавляем логику для настройки ожидания текстового ввода
+        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        code += `${indentLevel}    conditional_message_config = {\n`;
+        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
+        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}    }\n`;
+        
         code += `${indentLevel}    logging.info("Условие выполнено: первое посещение пользователя")\n`;
         break;
         
@@ -409,6 +454,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         
         // Добавляем генерацию клавиатуры для условного сообщения
         code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        
+        // Добавляем логику для настройки ожидания текстового ввода
+        code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+        code += `${indentLevel}    conditional_message_config = {\n`;
+        code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
+        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "source_type": "conditional_message"\n`;
+        code += `${indentLevel}    }\n`;
         
         code += `${indentLevel}    logging.info("Условие выполнено: возвращающийся пользователь")\n`;
         break;
@@ -915,8 +969,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    keyboard = None\n';
               }
               
-              // Закрываем условный блок if есть условные сообщения
+              // Добавляем настройку ожидания текстового ввода для условных сообщений
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    # Настраиваем ожидание текстового ввода для условных сообщений\n';
+                code += '    if "conditional_message_config" in locals():\n';
+                code += '        # Проверяем, включено ли ожидание текстового ввода\n';
+                code += '        wait_for_input = conditional_message_config.get("wait_for_input", False)\n';
+                code += '        if wait_for_input:\n';
+                code += '            # Получаем следующий узел\n';
+                const currentNodeConnections = connections.filter(conn => conn.source === targetNode.id);
+                if (currentNodeConnections.length > 0) {
+                  const nextNodeId = currentNodeConnections[0].target;
+                  code += `            next_node_id = "${nextNodeId}"\n`;
+                } else {
+                  code += '            next_node_id = None\n';
+                }
+                code += '            # Получаем переменную для сохранения ввода\n';
+                code += '            input_variable = conditional_message_config.get("input_variable")\n';
+                code += '            if not input_variable:\n';
+                code += '                input_variable = f"conditional_response_{conditional_message_config["condition_id"]}"\n';
+                code += '            \n';
+                code += '            # Устанавливаем состояние ожидания текстового ввода\n';
+                code += '            user_data[user_id]["waiting_for_conditional_input"] = {\n';
+                code += '                "node_id": callback_query.data,\n';
+                code += '                "condition_id": conditional_message_config["condition_id"],\n';
+                code += '                "next_node_id": next_node_id,\n';
+                code += '                "input_variable": input_variable,\n';
+                code += '                "source_type": "conditional_message"\n';
+                code += '            }\n';
+                code += '            logging.info(f"Установлено ожидание ввода для условного сообщения: {conditional_message_config}")\n';
                 code += '    \n';
               }
               
@@ -2593,6 +2674,77 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '@dp.message(F.text)\n';
   code += 'async def handle_user_input(message: types.Message):\n';
   code += '    user_id = message.from_user.id\n';
+  code += '    \n';
+  code += '    # Проверяем, ожидаем ли мы ввод для условного сообщения\n';
+  code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
+  code += '        config = user_data[user_id]["waiting_for_conditional_input"]\n';
+  code += '        user_text = message.text\n';
+  code += '        \n';
+  code += '        # Сохраняем текстовый ввод для условного сообщения\n';
+  code += '        condition_id = config.get("condition_id", "unknown")\n';
+  code += '        next_node_id = config.get("next_node_id")\n';
+  code += '        \n';
+  code += '        # Сохраняем ответ пользователя\n';
+  code += '        timestamp = get_moscow_time()\n';
+  code += '        # Используем переменную из конфигурации или создаем автоматическую\n';
+  code += '        input_variable = config.get("input_variable", "")\n';
+  code += '        if input_variable:\n';
+  code += '            variable_name = input_variable\n';
+  code += '        else:\n';
+  code += '            variable_name = f"conditional_response_{condition_id}"\n';
+  code += '        \n';
+  code += '        # Сохраняем в пользовательские данные\n';
+  code += '        user_data[user_id][variable_name] = user_text\n';
+  code += '        \n';
+  code += '        # Сохраняем в базу данных\n';
+  code += '        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)\n';
+  code += '        if saved_to_db:\n';
+  code += '            logging.info(f"✅ Условный ответ сохранен в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
+  code += '        else:\n';
+  code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '        \n';
+  code += '        # Отправляем подтверждение\n';
+  code += '        await message.answer("✅ Спасибо за ваш ответ! Обрабатываю...")\n';
+  code += '        \n';
+  code += '        # Очищаем состояние ожидания\n';
+  code += '        del user_data[user_id]["waiting_for_conditional_input"]\n';
+  code += '        \n';
+  code += '        logging.info(f"Получен ответ на условное сообщение: {variable_name} = {user_text}")\n';
+  code += '        \n';
+  code += '        # Переходим к следующему узлу если указан\n';
+  code += '        if next_node_id:\n';
+  code += '            try:\n';
+  code += '                logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+  code += '                # Создаем фиктивный callback для навигации\n';
+  code += '                import types as aiogram_types\n';
+  code += '                fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                    id="conditional_nav",\n';
+  code += '                    from_user=message.from_user,\n';
+  code += '                    chat_instance="",\n';
+  code += '                    data=next_node_id,\n';
+  code += '                    message=message,\n';
+  code += '                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                )\n';
+  code += '                \n';
+  
+  if (nodes.length > 0) {
+    nodes.forEach((targetNode, index) => {
+      const condition = index === 0 ? 'if' : 'elif';
+      const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `                ${condition} next_node_id == "${targetNode.id}":\n`;
+      code += `                    await handle_callback_${safeFunctionName}(fake_callback)\n`;
+    });
+    code += '                else:\n';
+    code += '                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+  } else {
+    code += '                # No nodes available for navigation\n';
+    code += '                logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+  }
+  
+  code += '            except Exception as e:\n';
+  code += '                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+  code += '        \n';
+  code += '        return  # Завершаем обработку для условного сообщения\n';
   code += '    \n';
   code += '    # Проверяем, ожидаем ли мы кнопочный ответ через reply клавиатуру\n';
   code += '    if user_id in user_data and "button_response_config" in user_data[user_id]:\n';

@@ -254,6 +254,16 @@ Changelog:
   * Implemented cursor state changes for better user interaction feedback
   * Added smooth cubic-bezier transitions throughout all canvas elements
   * Created multi-layered visual effects with proper z-indexing and performance optimization
+- July 30, 2025. НОВАЯ ФУНКЦИОНАЛЬНОСТЬ: Поддержка текстового ввода для условных сообщений:
+  * Добавлена возможность ожидания текстового ввода от пользователя в условных сообщениях
+  * Реализована логика установки состояния ожидания ввода (waiting_for_conditional_input) при показе условного сообщения
+  * Добавлен универсальный обработчик текстового ввода для условных сообщений в handle_user_input
+  * Реализовано сохранение пользовательского ввода в переменные вида conditional_response_{condition_id}
+  * Добавлена автоматическая навигация к следующему узлу после получения текстового ввода
+  * Улучшена логика генерации условных сообщений с установкой конфигурации ожидания
+  * Добавлено создание фиктивных callback для навигации между узлами после ввода текста
+  * Система теперь поддерживает полный цикл: показ условного сообщения → ожидание ввода → сохранение → переход к следующему узлу
+  * Все изменения интегрированы в client/src/lib/bot-generator.ts для полной совместимости
 - July 06, 2025. Comprehensive template system enhancement:
   * Extended database schema with advanced template metadata:
     - Added difficulty levels (easy, medium, hard) for better categorization

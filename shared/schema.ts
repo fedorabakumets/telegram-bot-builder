@@ -371,6 +371,8 @@ export const nodeSchema = z.object({
       formatMode: z.enum(['text', 'markdown', 'html']).default('text'), // Режим форматирования текста условного сообщения
       keyboardType: z.enum(['reply', 'inline', 'none']).default('none'), // Тип клавиатуры для условного сообщения
       buttons: z.array(buttonSchema).default([]), // Кнопки для условного сообщения
+      waitForTextInput: z.boolean().default(false), // Ожидание текстового ввода после показа сообщения
+      textInputVariable: z.string().optional(), // Переменная для сохранения текстового ввода
       priority: z.number().default(0) // Приоритет проверки (чем больше, тем выше приоритет)
     })).default([]), // Массив условных сообщений
     fallbackMessage: z.string().optional(), // Сообщение по умолчанию, если ни одно условие не выполнено

@@ -2647,6 +2647,53 @@ export function PropertiesPanel({
                               </div>
                             </div>
 
+                            {/* Text Input Configuration */}
+                            <div className="border border-blue-200/50 dark:border-blue-800/50 rounded-lg p-3 bg-blue-50/30 dark:bg-blue-950/20">
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center">
+                                  <i className="fas fa-keyboard mr-1"></i>
+                                  Ожидание текстового ввода
+                                </Label>
+                                <Switch
+                                  checked={condition.waitForTextInput ?? false}
+                                  onCheckedChange={(checked) => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, waitForTextInput: checked } : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                />
+                              </div>
+                              {condition.waitForTextInput && (
+                                <div className="space-y-2">
+                                  <div className="text-xs text-blue-600 dark:text-blue-400">
+                                    После показа этого сообщения бот будет ждать текстовый ответ от пользователя
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                      Переменная для сохранения ответа (необязательно)
+                                    </Label>
+                                    <Input
+                                      value={condition.textInputVariable || ''}
+                                      onChange={(e) => {
+                                        const currentConditions = selectedNode.data.conditionalMessages || [];
+                                        const updatedConditions = currentConditions.map(c => 
+                                          c.id === condition.id ? { ...c, textInputVariable: e.target.value } : c
+                                        );
+                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                      }}
+                                      className="text-xs"
+                                      placeholder="conditional_answer"
+                                    />
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Если не указать, будет использовано автоматическое имя переменной
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
                             {/* Keyboard Configuration for Conditional Messages */}
                             <div className="space-y-3 border-t border-purple-200/30 dark:border-purple-800/30 pt-3">
                               <div className="flex items-center justify-between">
