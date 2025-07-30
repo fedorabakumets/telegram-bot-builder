@@ -236,6 +236,16 @@ Changelog:
   * Исправлены все локации генерации inline кнопок: фото, видео, аудио, сообщения
   * Подтверждено: inline кнопки теперь генерируются с callback_data="cmd_start/cmd_profile"
   * Верифицировано: callback handlers правильно обрабатывают нажатия кнопок команд
+- July 30, 2025. CRITICAL FIX: Исправлена основная проблема с JavaScript boolean в Python коде:
+  * РЕШЕНА КРИТИЧЕСКАЯ ПРОБЛЕМА: Генератор создавал JavaScript boolean (false/true) вместо Python boolean (False/True)
+  * Добавлена функция toPythonBoolean() для корректной конвертации boolean значений
+  * Исправлены все места с conditional_message_config["wait_for_input"] в генераторе
+  * Заменены все тернарные операторы JavaScript boolean на функцию toPythonBoolean
+  * Исправлены resize_keyboard и one_time_keyboard значения для reply клавиатур
+  * Исправлены все saveToDatabase, allowMultipleSelection, inputRequired, allowSkip boolean поля
+  * Генератор теперь создает синтаксически корректный Python код без ошибок
+  * Команда /profile теперь работает без SyntaxError и корректно отображает профиль пользователя
+  * Боты успешно запускаются и инициализируют базу данных без синтаксических ошибок
 - July 05, 2025. Comprehensive canvas dark theme enhancement:
   * Enhanced canvas background with sophisticated gradient overlay system for dark theme
   * Improved grid pattern visibility with better contrast and opacity in dark mode

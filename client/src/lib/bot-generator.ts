@@ -35,6 +35,11 @@ function getParseMode(formatMode: string): string {
   return '';
 }
 
+// Функция для конвертации JavaScript boolean в Python boolean
+function toPythonBoolean(value: any): string {
+  return value ? 'True' : 'False';
+}
+
 // Функция для правильного экранирования строк в JSON контексте
 function escapeForJsonString(text: string): string {
   if (!text) return '';
@@ -257,7 +262,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
@@ -301,7 +306,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
@@ -354,7 +359,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
@@ -408,7 +413,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
@@ -435,7 +440,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
@@ -462,7 +467,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
-        code += `${indentLevel}        "wait_for_input": ${condition.waitForTextInput || false},\n`;
+        code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
@@ -1719,9 +1724,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    user_data[callback_query.from_user.id]["button_response_config"] = {\n';
                 code += `        "node_id": "${targetNode.id}",\n`;
                 code += `        "variable": "${inputVariable}",\n`;
-                code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+                code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
                 code += `        "success_message": "${escapeForJsonString(inputSuccessMessage)}",\n`;
-                code += `        "allow_multiple": ${allowMultipleSelection ? 'True' : 'False'},\n`;
+                code += `        "allow_multiple": ${toPythonBoolean(allowMultipleSelection)},\n`;
                 code += `        "next_node_id": "${nextNodeId || ''}",\n`;
                 code += '        "options": [\n';
                 responseOptions.forEach((option, index) => {
@@ -1764,9 +1769,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `        "min_length": ${minLength},\n`;
                 code += `        "max_length": ${maxLength},\n`;
                 code += `        "timeout": ${inputTimeout},\n`;
-                code += `        "required": ${inputRequired ? 'True' : 'False'},\n`;
-                code += `        "allow_skip": ${allowSkip ? 'True' : 'False'},\n`;
-                code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+                code += `        "required": ${toPythonBoolean(inputRequired)},\n`;
+                code += `        "allow_skip": ${toPythonBoolean(allowSkip)},\n`;
+                code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
                 code += `        "retry_message": "${escapeForJsonString(inputRetryMessage)}",\n`;
                 code += `        "success_message": "${escapeForJsonString(inputSuccessMessage)}",\n`;
                 code += `        "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
@@ -1800,7 +1805,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `    user_data[callback_query.from_user.id]["waiting_for_input"] = "${targetNode.id}"\n`;
                 code += `    user_data[callback_query.from_user.id]["input_type"] = "${inputType}"\n`;
                 code += `    user_data[callback_query.from_user.id]["input_variable"] = "${inputVariable}"\n`;
-                code += `    user_data[callback_query.from_user.id]["save_to_database"] = ${saveToDatabase ? 'True' : 'False'}\n`;
+                code += `    user_data[callback_query.from_user.id]["save_to_database"] = ${toPythonBoolean(saveToDatabase)}\n`;
                 code += `    user_data[callback_query.from_user.id]["input_target_node_id"] = "${inputTargetNodeId || ''}"\n`;
                 code += '    \n';
                 
@@ -1874,8 +1879,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   targetNode.data.buttons.forEach((btn, index) => {
                     code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
                   });
-                  const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
-                  const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
+                  const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+                  const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
                   code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                   code += '    # Для reply клавиатуры отправляем новое сообщение и удаляем старое\n';
                   code += '    try:\n';
@@ -2043,7 +2048,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
               code += `        "type": "${inputType}",\n`;
               code += `        "variable": "${inputVariable}",\n`;
-              code += `        "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+              code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
               code += `        "node_id": "${targetNode.id}",\n`;
               code += `        "next_node_id": "${nextNodeId || ''}"\n`;
               code += '    }\n';
@@ -2140,7 +2145,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `    user_data[callback_query.from_user.id]["waiting_for_input"] = "${targetNode.id}"\n`;
               code += `    user_data[callback_query.from_user.id]["input_type"] = "${inputType}"\n`;
               code += `    user_data[callback_query.from_user.id]["input_variable"] = "${inputVariable}"\n`;
-              code += `    user_data[callback_query.from_user.id]["save_to_database"] = ${saveToDatabase ? 'True' : 'False'}\n`;
+              code += `    user_data[callback_query.from_user.id]["save_to_database"] = ${toPythonBoolean(saveToDatabase)}\n`;
               code += `    user_data[callback_query.from_user.id]["input_target_node_id"] = "${inputTargetNodeId || ''}"\n`;
               code += '    \n';
               
@@ -2279,8 +2284,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               targetNode.data.buttons.forEach((btn, index) => {
                 code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
               });
-              const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
-              const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
+              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
               code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
               // Определяем режим форматирования для целевого узла
               let parseModeTarget = '';
@@ -3333,8 +3338,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           targetNode.data.buttons.forEach(button => {
             code += `                builder.add(KeyboardButton(text="${button.text}"))\n`;
           });
-          const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
-          const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
+          const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+          const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
           code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
           code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
         } else {
@@ -3384,8 +3389,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `                    "variable": "${inputVariable}",\n`;
           code += `                    "node_id": "${targetNode.id}",\n`;
           code += `                    "timeout": ${inputTimeout},\n`;
-          code += `                    "allow_multiple": ${allowMultipleSelection ? 'True' : 'False'},\n`;
-          code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+          code += `                    "allow_multiple": ${toPythonBoolean(allowMultipleSelection)},\n`;
+          code += `                    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
           code += '                    "selected": [],\n';
           code += '                    "success_message": "Спасибо за ваш ответ!",\n';
           code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
@@ -3436,7 +3441,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `                    "timeout": ${inputTimeout},\n`;
           code += '                    "required": True,\n';
           code += '                    "allow_skip": False,\n';
-          code += `                    "save_to_database": ${saveToDatabase ? 'True' : 'False'},\n`;
+          code += `                    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
           code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
           code += '                    "success_message": "Спасибо за ваш ответ!",\n';
           code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
@@ -3827,8 +3832,8 @@ function generatePhotoHandler(node: Node): string {
           code += `        builder.add(KeyboardButton(text="${button.text}"))\n`;
         }
       });
-      const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
-      const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
+      const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
+      const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
       code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
       code += '        # Отправляем фото с подписью и reply клавиатурой\n';
       code += '        await message.answer_photo(photo_file, caption=caption, reply_markup=keyboard)\n';
@@ -4616,8 +4621,8 @@ function generateKeyboard(node: Node): string {
         }
       });
       
-      const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
-      const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
+      const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
+      const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
       code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
       code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       
@@ -4665,8 +4670,8 @@ function generateKeyboard(node: Node): string {
         node.data.responseOptions.forEach(option => {
           code += `    builder.add(KeyboardButton(text="${option.text}"))\n`;
         });
-        const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
-        const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
+        const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
+        const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
         code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
         code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
         
@@ -4715,8 +4720,8 @@ function generateKeyboard(node: Node): string {
       }
     });
     
-    const resizeKeyboard = node.data.resizeKeyboard === true ? 'True' : 'False';
-    const oneTimeKeyboard = node.data.oneTimeKeyboard === true ? 'True' : 'False';
+    const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
+    const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
     code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
     code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
   } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
@@ -5137,9 +5142,9 @@ function generateUserInputHandler(node: Node): string {
   code += `        "min_length": ${minLength},\n`;
   code += `        "max_length": ${maxLength},\n`;
   code += `        "timeout": ${inputTimeout},\n`;
-  code += `        "required": ${inputRequired ? 'True' : 'False'},\n`;
-  code += `        "allow_skip": ${allowSkip ? 'True' : 'False'},\n`;
-  code += `        "save_to_db": ${saveToDatabase ? 'True' : 'False'},\n`;
+  code += `        "required": ${toPythonBoolean(inputRequired)},\n`;
+  code += `        "allow_skip": ${toPythonBoolean(allowSkip)},\n`;
+  code += `        "save_to_db": ${toPythonBoolean(saveToDatabase)},\n`;
   code += `        "retry_message": "${inputRetryMessage}",\n`;
   code += `        "success_message": "${inputSuccessMessage}",\n`;
   code += `        "default_value": "${defaultValue}",\n`;
