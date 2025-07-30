@@ -2691,32 +2691,59 @@ export function PropertiesPanel({
                                     </div>
                                   </div>
                                   <div>
-                                    <Label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                    <Label className="text-xs font-medium text-muted-foreground mb-2 block">
                                       Куда перейти после ответа
                                     </Label>
-                                    <Select
-                                      value={condition.nextNodeAfterInput || 'no-transition'}
-                                      onValueChange={(value) => {
-                                        const currentConditions = selectedNode.data.conditionalMessages || [];
-                                        const updatedConditions = currentConditions.map(c => 
-                                          c.id === condition.id ? { ...c, nextNodeAfterInput: value === 'no-transition' ? undefined : value } : c
-                                        );
-                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                      }}
-                                    >
-                                      <SelectTrigger className="text-xs h-7">
-                                        <SelectValue placeholder="Выберите узел" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="no-transition">Не переходить</SelectItem>
-                                        {allNodes.filter(n => n.id !== selectedNode.id).map(node => (
-                                          <SelectItem key={node.id} value={node.id}>
-                                            {node.data.label || `${node.type} (${node.id.slice(-8)})`}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <div className="text-xs text-muted-foreground mt-1">
+                                    <div className="space-y-2">
+                                      <Select
+                                        value={condition.nextNodeAfterInput || 'no-transition'}
+                                        onValueChange={(value) => {
+                                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                                          const updatedConditions = currentConditions.map(c => 
+                                            c.id === condition.id ? { ...c, nextNodeAfterInput: value === 'no-transition' ? undefined : value } : c
+                                          );
+                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                        }}
+                                      >
+                                        <SelectTrigger className="text-xs h-8">
+                                          <SelectValue placeholder="Выберите следующий шаг" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="no-transition">Не переходить</SelectItem>
+                                          {allNodes.filter(n => n.id !== selectedNode.id).map(node => {
+                                            const nodeLabel = node.data.label || 
+                                              (node.type === 'command' ? `Команда: ${node.data.command}` : 
+                                               node.type === 'message' ? `Сообщение: ${(node.data.messageText || '').slice(0, 30)}...` :
+                                               `${node.type} (${node.id.slice(-8)})`);
+                                            return (
+                                              <SelectItem key={node.id} value={node.id}>
+                                                <div className="flex items-center gap-2">
+                                                  <span className="text-xs text-muted-foreground">{node.type}</span>
+                                                  <span>{nodeLabel}</span>
+                                                </div>
+                                              </SelectItem>
+                                            );
+                                          })}
+                                        </SelectContent>
+                                      </Select>
+                                      
+                                      <div className="text-xs text-muted-foreground mb-1">
+                                        Или введите ID узла вручную (например: ylObKToWFsIl-opIcowPZ)
+                                      </div>
+                                      <Input
+                                        value={condition.nextNodeAfterInput && condition.nextNodeAfterInput !== 'no-transition' ? condition.nextNodeAfterInput : ''}
+                                        onChange={(e) => {
+                                          const currentConditions = selectedNode.data.conditionalMessages || [];
+                                          const updatedConditions = currentConditions.map(c => 
+                                            c.id === condition.id ? { ...c, nextNodeAfterInput: e.target.value || undefined } : c
+                                          );
+                                          onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                        }}
+                                        className="text-xs h-8"
+                                        placeholder="Введите ID узла вручную"
+                                      />
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-2">
                                       Узел, к которому перейти после получения ответа пользователя
                                     </div>
                                   </div>
