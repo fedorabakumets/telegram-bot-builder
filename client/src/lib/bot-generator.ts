@@ -3020,6 +3020,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
         code += '                            "success_message": "Спасибо за ваш ответ!"\n';
         code += '                        }\n';
+      } else if (targetNode.type === 'command') {
+        // Для узлов команд вызываем соответствующий обработчик
+        const commandName = targetNode.data.command?.replace('/', '') || 'unknown';
+        const handlerName = `${commandName}_handler`;
+        code += `                        # Выполняем команду ${targetNode.data.command}\n`;
+        code += '                        from types import SimpleNamespace\n';
+        code += '                        fake_message = SimpleNamespace()\n';
+        code += '                        fake_message.from_user = message.from_user\n';
+        code += '                        fake_message.chat = message.chat\n';
+        code += '                        fake_message.date = message.date\n';
+        code += '                        fake_message.answer = message.answer\n';
+        code += `                        await ${handlerName}(fake_message)\n`;
       } else {
         code += `                        logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
       }
