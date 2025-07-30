@@ -2222,6 +2222,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   // Если есть target, используем его, иначе используем ID кнопки как callback_data
                   const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                   code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                } else if (btn.action === 'command') {
+                  // Для команд создаем специальный callback_data с префиксом cmd_
+                  const commandName = btn.target ? btn.target.replace('/', '') : 'unknown';
+                  const callbackData = `cmd_${commandName}`;
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                 }
               });
               code += '    keyboard = builder.as_markup()\n';

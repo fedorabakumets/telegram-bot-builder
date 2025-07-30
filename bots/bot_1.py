@@ -345,19 +345,19 @@ async def profile_handler(message: types.Message):
         
         return False, None
     
-    # Условие 1: user_data_exists для переменных: желание, имя, источник, пол
+    # Условие 1: user_data_exists для переменных: источник, желание, пол, имя
     if (
-        check_user_variable("желание", user_data_dict)[0] and
-        check_user_variable("имя", user_data_dict)[0] and
         check_user_variable("источник", user_data_dict)[0] and
-        check_user_variable("пол", user_data_dict)[0]
+        check_user_variable("желание", user_data_dict)[0] and
+        check_user_variable("пол", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 🔍 Источник: {источник}
@@ -367,14 +367,14 @@ async def profile_handler(message: types.Message):
 
 Профиль полностью заполнен! ✅"""
         conditional_parse_mode = None
-        if "{желание}" in text and variable_values["желание"] is not None:
-            text = text.replace("{желание}", variable_values["желание"])
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     # Условие 2: user_data_exists для переменных: имя
     elif (
@@ -408,19 +408,19 @@ async def profile_handler(message: types.Message):
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
-    # Условие 4: user_data_exists для переменных: желание, имя, источник, пол
+    # Условие 4: user_data_exists для переменных: источник, желание, пол, имя
     elif (
-        check_user_variable("желание", user_data_dict)[0] or
-        check_user_variable("имя", user_data_dict)[0] or
         check_user_variable("источник", user_data_dict)[0] or
-        check_user_variable("пол", user_data_dict)[0]
+        check_user_variable("желание", user_data_dict)[0] or
+        check_user_variable("пол", user_data_dict)[0] or
+        check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 У нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.
@@ -431,14 +431,14 @@ async def profile_handler(message: types.Message):
 ⚧️ Пол: {пол}
 👋 Имя: {имя}"""
         conditional_parse_mode = None
-        if "{желание}" in text and variable_values["желание"] is not None:
-            text = text.replace("{желание}", variable_values["желание"])
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
     else:
         text = """👤 Профиль недоступен
@@ -520,19 +520,19 @@ async def profile_handler(message: types.Message):
         
         return False, None
     
-    # Условие 1: user_data_exists для переменных: желание, имя, источник, пол
+    # Условие 1: user_data_exists для переменных: источник, желание, пол, имя
     if (
-        check_user_variable("желание", user_data_dict)[0] and
-        check_user_variable("имя", user_data_dict)[0] and
         check_user_variable("источник", user_data_dict)[0] and
-        check_user_variable("пол", user_data_dict)[0]
+        check_user_variable("желание", user_data_dict)[0] and
+        check_user_variable("пол", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 🔍 Источник: {источник}
@@ -542,14 +542,14 @@ async def profile_handler(message: types.Message):
 
 Профиль полностью заполнен! ✅"""
         conditional_parse_mode = None
-        if "{желание}" in text and variable_values["желание"] is not None:
-            text = text.replace("{желание}", variable_values["желание"])
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     # Условие 2: user_data_exists для переменных: имя
     elif (
@@ -583,19 +583,19 @@ async def profile_handler(message: types.Message):
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
-    # Условие 4: user_data_exists для переменных: желание, имя, источник, пол
+    # Условие 4: user_data_exists для переменных: источник, желание, пол, имя
     elif (
-        check_user_variable("желание", user_data_dict)[0] or
-        check_user_variable("имя", user_data_dict)[0] or
         check_user_variable("источник", user_data_dict)[0] or
-        check_user_variable("пол", user_data_dict)[0]
+        check_user_variable("желание", user_data_dict)[0] or
+        check_user_variable("пол", user_data_dict)[0] or
+        check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 У нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.
@@ -606,14 +606,14 @@ async def profile_handler(message: types.Message):
 ⚧️ Пол: {пол}
 👋 Имя: {имя}"""
         conditional_parse_mode = None
-        if "{желание}" in text and variable_values["желание"] is not None:
-            text = text.replace("{желание}", variable_values["желание"])
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
     
     # Используем условное сообщение если есть подходящее условие
@@ -1100,6 +1100,9 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+    builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -1354,6 +1357,9 @@ async def handle_callback_final_message_node(callback_query: types.CallbackQuery
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="👤 Посмотреть профиль", callback_data="cmd_profile"))
+    builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
