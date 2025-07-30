@@ -117,6 +117,13 @@ function generateConditionalKeyboard(condition: any, indentLevel: string): strin
     condition.buttons.forEach((button: any) => {
       if (button.action === "url") {
         code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+      } else if (button.action === 'goto') {
+        const callbackData = button.target || button.id || 'no_action';
+        code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      } else if (button.action === 'command') {
+        // Для кнопок команд создаем специальную callback_data
+        const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+        code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
       } else {
         const callbackData = button.target || button.id || 'no_action';
         code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
@@ -998,6 +1005,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `            builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command') {
+                    // Для кнопок команд создаем специальную callback_data
+                    const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
+                    code += `            builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
                 code += '            keyboard = builder.as_markup()\n';
@@ -1088,6 +1099,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `            builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command') {
+                    // Для кнопок команд создаем специальную callback_data
+                    const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
+                    code += `            builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
                 code += '            keyboard = builder.as_markup()\n';
@@ -3149,6 +3164,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             } else if (button.action === 'goto') {
               const callbackData = button.target || button.id || 'no_action';
               code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+            } else if (button.action === 'command') {
+              // Для кнопок команд создаем специальную callback_data
+              const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+              code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
             }
           });
           code += '                keyboard = builder.as_markup()\n';
@@ -4556,6 +4575,10 @@ function generateKeyboard(node: Node): string {
         // Если есть target, используем его, иначе используем ID кнопки как callback_data
         const callbackData = button.target || button.id || 'no_action';
         code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      } else if (button.action === 'command') {
+        // Для кнопок команд создаем специальную callback_data
+        const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
       }
     });
     

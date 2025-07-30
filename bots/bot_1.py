@@ -631,6 +631,7 @@ async def profile_handler(message: types.Message):
     
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="cmd_start"))
     keyboard = builder.as_markup()
     
     # Отправляем сообщение с клавиатурой (приоритет у условной клавиатуры)
@@ -1893,6 +1894,8 @@ async def handle_user_input(message: types.Message):
                 else:
                     parse_mode = None
                 builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+                builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
@@ -1907,6 +1910,8 @@ async def handle_user_input(message: types.Message):
                 else:
                     parse_mode = None
                 builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="👤 Посмотреть профиль", callback_data="cmd_profile"))
+                builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "profile_command":
