@@ -2695,11 +2695,11 @@ export function PropertiesPanel({
                                       Куда перейти после ответа
                                     </Label>
                                     <Select
-                                      value={condition.nextNodeAfterInput || ''}
+                                      value={condition.nextNodeAfterInput || 'no-transition'}
                                       onValueChange={(value) => {
                                         const currentConditions = selectedNode.data.conditionalMessages || [];
                                         const updatedConditions = currentConditions.map(c => 
-                                          c.id === condition.id ? { ...c, nextNodeAfterInput: value || undefined } : c
+                                          c.id === condition.id ? { ...c, nextNodeAfterInput: value === 'no-transition' ? undefined : value } : c
                                         );
                                         onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                       }}
@@ -2708,7 +2708,7 @@ export function PropertiesPanel({
                                         <SelectValue placeholder="Выберите узел" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        <SelectItem value="">Не переходить</SelectItem>
+                                        <SelectItem value="no-transition">Не переходить</SelectItem>
                                         {allNodes.filter(n => n.id !== selectedNode.id).map(node => (
                                           <SelectItem key={node.id} value={node.id}>
                                             {node.data.label || `${node.type} (${node.id.slice(-8)})`}
