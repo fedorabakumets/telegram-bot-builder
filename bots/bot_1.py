@@ -785,11 +785,11 @@ async def handle_callback_btn_2(callback_query: types.CallbackQuery):
     text = replace_variables_in_text(text, user_vars)
     
     # Без условных сообщений - используем обычную клавиатуру
-        # Создаем inline клавиатуру для целевого узла
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
-        builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
-        keyboard = builder.as_markup()
+    # Создаем inline клавиатуру для целевого узла
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+    builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
+    keyboard = builder.as_markup()
     # Отправляем сообщение
     try:
         if keyboard is not None:
@@ -1001,7 +1001,6 @@ async def handle_callback_KXqspqE1qqm_dgg_qsCD1(callback_query: types.CallbackQu
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
-    builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Имя", callback_data="XDSrTrNly5EtDtr85nN4P_btn_0"))
     builder.add(InlineKeyboardButton(text="Пол", callback_data="nr3wIiTfBYYmpkkXMNH7n_btn_1"))
     keyboard = builder.as_markup()
@@ -1222,7 +1221,6 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
-    builder = InlineKeyboardBuilder()
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -1435,7 +1433,6 @@ async def handle_callback_M_zKR_b8lKSQ0hPrO6vm5(callback_query: types.CallbackQu
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
-    builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="Имя", callback_data="btn-1"))
     builder.add(InlineKeyboardButton(text="Пол", callback_data="btn-2"))
     keyboard = builder.as_markup()
@@ -1603,7 +1600,6 @@ async def handle_callback_final_message_node(callback_query: types.CallbackQuery
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
-    builder = InlineKeyboardBuilder()
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:

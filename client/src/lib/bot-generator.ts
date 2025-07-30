@@ -887,25 +887,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               // Проверяем, есть ли у узла inline кнопки
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                code += '        # Создаем inline клавиатуру для целевого узла\n';
-                code += '        builder = InlineKeyboardBuilder()\n';
+                code += '    # Создаем inline клавиатуру для целевого узла\n';
+                code += '    builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
                     // Создаем уникальный callback_data для каждой кнопки
                     const baseCallbackData = btn.target || btn.id || 'no_action';
                     const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   } else if (btn.action === 'command') {
                     // Для кнопок команд создаем специальную callback_data
                     const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
-                code += '        keyboard = builder.as_markup()\n';
+                code += '    keyboard = builder.as_markup()\n';
               } else {
-                code += '        keyboard = None\n';
+                code += '    keyboard = None\n';
               }
               
               // Закрываем условный блок if есть условные сообщения
@@ -1746,66 +1746,65 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 
                 // Handle keyboard for target node
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-              code += '    builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn, index) => {
-                if (btn.action === "url") {
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
-                } else if (btn.action === 'goto') {
-                  // Если есть target, используем его, иначе используем ID кнопки как callback_data
-                  const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  targetNode.data.buttons.forEach((btn, index) => {
+                    if (btn.action === "url") {
+                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                    } else if (btn.action === 'goto') {
+                      // Если есть target, используем его, иначе используем ID кнопки как callback_data
+                      const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
+                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    }
+                  });
+                  code += '    keyboard = builder.as_markup()\n';
+                  // Определяем режим форматирования для целевого узла
+                  let parseModeTarget = '';
+                  if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                    parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                  } else if (targetNode.data.formatMode === 'html') {
+                    parseModeTarget = ', parse_mode=ParseMode.HTML';
+                  }
+                  code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
+                  code += `    try:\n`;
+                  code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
+                  code += `    except Exception as e:\n`;
+                  code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
+                  code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+                } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
+                  code += '    builder = ReplyKeyboardBuilder()\n';
+                  targetNode.data.buttons.forEach((btn, index) => {
+                    code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
+                  });
+                  const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
+                  const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
+                  code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                  code += '    # Для reply клавиатуры отправляем новое сообщение и удаляем старое\n';
+                  code += '    try:\n';
+                  code += '        await callback_query.message.delete()\n';
+                  code += '    except:\n';
+                  code += '        pass  # Игнорируем ошибки удаления\n';
+                  // Определяем режим форматирования для целевого узла
+                  let parseModeTarget = '';
+                  if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                    parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                  } else if (targetNode.data.formatMode === 'html') {
+                    parseModeTarget = ', parse_mode=ParseMode.HTML';
+                  }
+                  code += `    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})\n`;
+                } else {
+                  // Определяем режим форматирования для целевого узла
+                  let parseModeTarget = '';
+                  if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                    parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                  } else if (targetNode.data.formatMode === 'html') {
+                    parseModeTarget = ', parse_mode=ParseMode.HTML';
+                  }
+                  code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
+                  code += `    try:\n`;
+                  code += `        await callback_query.message.edit_text(text${parseModeTarget})\n`;
+                  code += `    except Exception as e:\n`;
+                  code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
+                  code += `        await callback_query.message.answer(text${parseModeTarget})\n`;
                 }
-              });
-              code += '    keyboard = builder.as_markup()\n';
-              // Определяем режим форматирования для целевого узла
-              let parseModeTarget = '';
-              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-              } else if (targetNode.data.formatMode === 'html') {
-                parseModeTarget = ', parse_mode=ParseMode.HTML';
-              }
-              code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-              code += `    try:\n`;
-              code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
-              code += `    except Exception as e:\n`;
-              code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-              code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
-            } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
-              code += '    builder = ReplyKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn, index) => {
-                code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
-              });
-              const resizeKeyboard = targetNode.data.resizeKeyboard === true ? 'True' : 'False';
-              const oneTimeKeyboard = targetNode.data.oneTimeKeyboard === true ? 'True' : 'False';
-              code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-              code += '    # Для reply клавиатуры отправляем новое сообщение и удаляем старое\n';
-              code += '    try:\n';
-              code += '        await callback_query.message.delete()\n';
-              code += '    except:\n';
-              code += '        pass  # Игнорируем ошибки удаления\n';
-              // Определяем режим форматирования для целевого узла
-              let parseModeTarget = '';
-              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-              } else if (targetNode.data.formatMode === 'html') {
-                parseModeTarget = ', parse_mode=ParseMode.HTML';
-              }
-              code += `    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard${parseModeTarget})\n`;
-            } else {
-              // Определяем режим форматирования для целевого узла
-              let parseModeTarget = '';
-              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-              } else if (targetNode.data.formatMode === 'html') {
-                parseModeTarget = ', parse_mode=ParseMode.HTML';
-              }
-              code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-              code += `    try:\n`;
-              code += `        await callback_query.message.edit_text(text${parseModeTarget})\n`;
-              code += `    except Exception as e:\n`;
-              code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-              code += `        await callback_query.message.answer(text${parseModeTarget})\n`;
-            }
               } // Закрываем else блок для обычного отображения (основной цикл)
             } // Закрываем else блок для обычных текстовых сообщений (основной цикл)
           } else {
@@ -2085,43 +2084,42 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               // Handle keyboard for target node
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-              code += '    builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn, index) => {
-                if (btn.action === "url") {
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
-                } else if (btn.action === 'goto') {
-                  // Создаем уникальный callback_data, включающий ID кнопки
-                  const callbackData = btn.id || 'no_action';
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                targetNode.data.buttons.forEach((btn, index) => {
+                  if (btn.action === "url") {
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    // Создаем уникальный callback_data, включающий ID кнопки
+                    const callbackData = btn.id || 'no_action';
+                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  }
+                });
+                code += '    keyboard = builder.as_markup()\n';
+                let parseModeTarget = '';
+                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                } else if (targetNode.data.formatMode === 'html') {
+                  parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
-              });
-              code += '    keyboard = builder.as_markup()\n';
-              let parseModeTarget = '';
-              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-              } else if (targetNode.data.formatMode === 'html') {
-                parseModeTarget = ', parse_mode=ParseMode.HTML';
+                code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
+                code += `    try:\n`;
+                code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
+                code += `    except Exception as e:\n`;
+                code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
+                code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+              } else {
+                let parseModeTarget = '';
+                if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
+                  parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
+                } else if (targetNode.data.formatMode === 'html') {
+                  parseModeTarget = ', parse_mode=ParseMode.HTML';
+                }
+                code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
+                code += `    try:\n`;
+                code += `        await callback_query.message.edit_text(text${parseModeTarget})\n`;
+                code += `    except Exception as e:\n`;
+                code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
+                code += `        await callback_query.message.answer(text${parseModeTarget})\n`;
               }
-              code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-              code += `    try:\n`;
-              code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
-              code += `    except Exception as e:\n`;
-              code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-              code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
-            } else {
-              let parseModeTarget = '';
-              if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
-                parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
-              } else if (targetNode.data.formatMode === 'html') {
-                parseModeTarget = ', parse_mode=ParseMode.HTML';
-              }
-              code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
-              code += `    try:\n`;
-              code += `        await callback_query.message.edit_text(text${parseModeTarget})\n`;
-              code += `    except Exception as e:\n`;
-              code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
-              code += `        await callback_query.message.answer(text${parseModeTarget})\n`;
-            }
             } // Закрываем else блок для обычного отображения
           } // Закрываем else блок для regular message nodes
         }

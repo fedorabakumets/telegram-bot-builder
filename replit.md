@@ -217,6 +217,15 @@ Changelog:
   * Updated warning and information sections with dark theme color schemes
   * Improved mobile export interface with consistent dark theme styling
   * Added proper theme transitions for all interactive file elements
+- July 30, 2025. CRITICAL FIX: Исправлена ошибка IndentationError в генераторе Python кода:
+  * Обнаружена и исправлена проблема неправильных отступов в генераторе ботов (client/src/lib/bot-generator.ts)
+  * Исправлены неправильные отступы (8 пробелов вместо 4) в секциях генерации inline клавиатур
+  * Устранены проблемы с отступами в условных блоках обработки сообщений и кнопок
+  * Исправлены неправильные отступы в блоках генерации reply клавиатур
+  * Проблема проявлялась как IndentationError: unexpected indent на строке 789 в сгенерированном Python коде
+  * Боты теперь запускаются успешно без синтаксических ошибок Python
+  * Подтверждено корректное выполнение: бот успешно инициализирует базу данных и начинает polling
+  * Исправления применены к нескольким местам в генераторе для обеспечения консистентности отступов
 - July 05, 2025. Comprehensive canvas dark theme enhancement:
   * Enhanced canvas background with sophisticated gradient overlay system for dark theme
   * Improved grid pattern visibility with better contrast and opacity in dark mode
