@@ -1637,7 +1637,7 @@ export async function seedDefaultTemplates(force = false) {
                   messageText: "У вас уже есть имя: {имя}. Введите новое имя:",
                   waitForTextInput: true,
                   textInputVariable: "имя",
-                  nextNodeAfterInput: "final-message-node",
+                  nextNodeAfterInput: "profile_command",
                   formatMode: "text"
                 }
               ]
