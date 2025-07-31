@@ -1418,21 +1418,36 @@ export async function seedDefaultTemplates() {
                 {
                   id: "btn-female",
                   text: "Женщина",
-                  action: "command",
-                  target: "/profile"
+                  action: "goto",
+                  target: "XDSrTrNly5EtDtr85nN4P"
                 },
                 {
                   id: "btn-male",
                   text: "Мужчина",
-                  action: "command",
-                  target: "/profile"
+                  action: "goto", 
+                  target: "XDSrTrNly5EtDtr85nN4P"
                 }
               ],
               markdown: false,
               inputVariable: "пол",
               resizeKeyboard: true,
               oneTimeKeyboard: false,
-              collectUserInput: true
+              collectUserInput: true,
+              enableConditionalMessages: true,
+              fallbackMessage: "Какой твой пол?",
+              conditionalMessages: [
+                {
+                  id: "gender_already_exists",
+                  priority: 50,
+                  condition: "user_data_exists",
+                  variableNames: ["пол"],
+                  logicOperator: "AND",
+                  messageText: "",
+                  nextNodeAfterInput: "profile_command",
+                  formatMode: "text",
+                  skipMessage: true
+                }
+              ]
             }
           },
           {
