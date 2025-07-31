@@ -913,6 +913,69 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    
+    # Проверка условных сообщений для keyboard узла
+    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    conditional_parse_mode = None
+    conditional_keyboard = None
+    # Функция для проверки переменных пользователя
+    def check_user_variable(var_name, user_data_dict):
+        """Проверяет существование и получает значение переменной пользователя"""
+        if "user_data" in user_data_dict and user_data_dict["user_data"]:
+            try:
+                import json
+                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                if var_name in parsed_data:
+                    raw_value = parsed_data[var_name]
+                    if isinstance(raw_value, dict) and "value" in raw_value:
+                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                    else:
+                        return True, str(raw_value) if raw_value is not None else None
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Проверяем в локальных данных
+        if var_name in user_data_dict:
+            variable_data = user_data_dict.get(var_name)
+            if isinstance(variable_data, dict) and "value" in variable_data:
+                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
+            elif variable_data is not None:
+                return True, str(variable_data)
+        
+        return False, None
+    
+    # Условие 1: user_data_exists для переменных: source, имя
+    if (
+        check_user_variable("source", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["source"] = check_user_variable("source", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+        text = "Введите новое имя"
+        conditional_parse_mode = None
+        if "{source}" in text and variable_values["source"] is not None:
+            text = text.replace("{source}", variable_values["source"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
+        # Настраиваем ожидание текстового ввода для условного сообщения
+        conditional_message_config = {
+            "condition_id": "condition-1753968903746",
+            "wait_for_input": True,
+            "input_variable": "имя",
+            "source_type": "conditional_message"
+        }
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    
+    # Используем условное сообщение если есть подходящее условие
+    if "text" not in locals():
+        text = "Как тебя зовут?"
+    
+    # Используем условную клавиатуру если есть
+    if conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+    
     # Активируем сбор пользовательского ввода (основной цикл)
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
@@ -985,6 +1048,69 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    
+    # Проверка условных сообщений для keyboard узла
+    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    conditional_parse_mode = None
+    conditional_keyboard = None
+    # Функция для проверки переменных пользователя
+    def check_user_variable(var_name, user_data_dict):
+        """Проверяет существование и получает значение переменной пользователя"""
+        if "user_data" in user_data_dict and user_data_dict["user_data"]:
+            try:
+                import json
+                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                if var_name in parsed_data:
+                    raw_value = parsed_data[var_name]
+                    if isinstance(raw_value, dict) and "value" in raw_value:
+                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                    else:
+                        return True, str(raw_value) if raw_value is not None else None
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Проверяем в локальных данных
+        if var_name in user_data_dict:
+            variable_data = user_data_dict.get(var_name)
+            if isinstance(variable_data, dict) and "value" in variable_data:
+                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
+            elif variable_data is not None:
+                return True, str(variable_data)
+        
+        return False, None
+    
+    # Условие 1: user_data_exists для переменных: source, имя
+    if (
+        check_user_variable("source", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["source"] = check_user_variable("source", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+        text = "Введите новое имя"
+        conditional_parse_mode = None
+        if "{source}" in text and variable_values["source"] is not None:
+            text = text.replace("{source}", variable_values["source"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
+        # Настраиваем ожидание текстового ввода для условного сообщения
+        conditional_message_config = {
+            "condition_id": "condition-1753968903746",
+            "wait_for_input": True,
+            "input_variable": "имя",
+            "source_type": "conditional_message"
+        }
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    
+    # Используем условное сообщение если есть подходящее условие
+    if "text" not in locals():
+        text = "Как тебя зовут?"
+    
+    # Используем условную клавиатуру если есть
+    if conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+    
     # Активируем сбор пользовательского ввода (основной цикл)
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
@@ -1058,6 +1184,69 @@ async def handle_callback_jZwglyg2qtS6fpSsPyCyN(callback_query: types.CallbackQu
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    
+    # Проверка условных сообщений для keyboard узла
+    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    conditional_parse_mode = None
+    conditional_keyboard = None
+    # Функция для проверки переменных пользователя
+    def check_user_variable(var_name, user_data_dict):
+        """Проверяет существование и получает значение переменной пользователя"""
+        if "user_data" in user_data_dict and user_data_dict["user_data"]:
+            try:
+                import json
+                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                if var_name in parsed_data:
+                    raw_value = parsed_data[var_name]
+                    if isinstance(raw_value, dict) and "value" in raw_value:
+                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                    else:
+                        return True, str(raw_value) if raw_value is not None else None
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Проверяем в локальных данных
+        if var_name in user_data_dict:
+            variable_data = user_data_dict.get(var_name)
+            if isinstance(variable_data, dict) and "value" in variable_data:
+                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
+            elif variable_data is not None:
+                return True, str(variable_data)
+        
+        return False, None
+    
+    # Условие 1: user_data_exists для переменных: source, имя
+    if (
+        check_user_variable("source", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["source"] = check_user_variable("source", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+        text = "Введите новое имя"
+        conditional_parse_mode = None
+        if "{source}" in text and variable_values["source"] is not None:
+            text = text.replace("{source}", variable_values["source"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
+        # Настраиваем ожидание текстового ввода для условного сообщения
+        conditional_message_config = {
+            "condition_id": "condition-1753968903746",
+            "wait_for_input": True,
+            "input_variable": "имя",
+            "source_type": "conditional_message"
+        }
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    
+    # Используем условное сообщение если есть подходящее условие
+    if "text" not in locals():
+        text = "Как тебя зовут?"
+    
+    # Используем условную клавиатуру если есть
+    if conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+    
     # Активируем сбор пользовательского ввода (основной цикл)
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
