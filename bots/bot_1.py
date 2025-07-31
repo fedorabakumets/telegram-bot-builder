@@ -1514,6 +1514,45 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, "желание", button_display_text)
     logging.info(f"Переменная желание сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
+    next_node_id = "nr3wIiTfBYYmpkkXMNH7n"
+    try:
+        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
+        if next_node_id == "start_node":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
+            text = "Печально, если что напиши /start или /profile для просмотра профиля"
+            await callback_query.message.edit_text(text)
+        elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "final-message-node":
+            text = """Спасибо за предоставленную информацию! 🎉
+
+Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
+            await callback_query.message.edit_text(text)
+        elif next_node_id == "profile_command":
+            # Выполняем команду /profile
+            from types import SimpleNamespace
+            fake_message = SimpleNamespace()
+            fake_message.from_user = callback_query.from_user
+            fake_message.chat = callback_query.message.chat
+            fake_message.date = callback_query.message.date
+            fake_message.answer = callback_query.message.answer
+            await profile_handler(fake_message)
+        else:
+            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+    except Exception as e:
+        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    
+    return  # Завершаем обработку после переадресации
+    
     # Проверяем условные сообщения
     text = None
     
@@ -1662,6 +1701,45 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, "желание", button_display_text)
     logging.info(f"Переменная желание сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
+    next_node_id = "nr3wIiTfBYYmpkkXMNH7n"
+    try:
+        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
+        if next_node_id == "start_node":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
+            text = "Печально, если что напиши /start или /profile для просмотра профиля"
+            await callback_query.message.edit_text(text)
+        elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "final-message-node":
+            text = """Спасибо за предоставленную информацию! 🎉
+
+Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
+            await callback_query.message.edit_text(text)
+        elif next_node_id == "profile_command":
+            # Выполняем команду /profile
+            from types import SimpleNamespace
+            fake_message = SimpleNamespace()
+            fake_message.from_user = callback_query.from_user
+            fake_message.chat = callback_query.message.chat
+            fake_message.date = callback_query.message.date
+            fake_message.answer = callback_query.message.answer
+            await profile_handler(fake_message)
+        else:
+            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+    except Exception as e:
+        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    
+    return  # Завершаем обработку после переадресации
+    
     text = "Печально, если что напиши /start или /profile для просмотра профиля"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -1748,6 +1826,45 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
     # Сохраняем в базу данных с правильным именем переменной
     await update_user_data_in_db(user_id, "пол", "Женщина")
     logging.info(f"Переменная пол сохранена: " + str("Женщина") + f" (пользователь {user_id})")
+    
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
+    next_node_id = "XDSrTrNly5EtDtr85nN4P"
+    try:
+        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
+        if next_node_id == "start_node":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
+            text = "Печально, если что напиши /start или /profile для просмотра профиля"
+            await callback_query.message.edit_text(text)
+        elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+        elif next_node_id == "final-message-node":
+            text = """Спасибо за предоставленную информацию! 🎉
+
+Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
+            await callback_query.message.edit_text(text)
+        elif next_node_id == "profile_command":
+            # Выполняем команду /profile
+            from types import SimpleNamespace
+            fake_message = SimpleNamespace()
+            fake_message.from_user = callback_query.from_user
+            fake_message.chat = callback_query.message.chat
+            fake_message.date = callback_query.message.date
+            fake_message.answer = callback_query.message.answer
+            await profile_handler(fake_message)
+        else:
+            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+    except Exception as e:
+        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    
+    return  # Завершаем обработку после переадресации
     
     # Проверяем условные сообщения
     text = None
@@ -1891,6 +2008,10 @@ async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, "button_click", button_display_text)
     logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
     
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
+    
     text = "Ты хочешься продолжить свою жизнь с чатом?"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -1979,6 +2100,10 @@ async def handle_callback_final_message_node(callback_query: types.CallbackQuery
     # Сохраняем в базу данных с правильным именем переменной
     await update_user_data_in_db(user_id, "button_click", button_display_text)
     logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
     
     text = """Спасибо за предоставленную информацию! 🎉
 

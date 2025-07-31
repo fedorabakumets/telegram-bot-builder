@@ -2122,6 +2122,83 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
           code += '    \n';
           
+          // КРИТИЧЕСКИ ВАЖНО: Добавляем показ сообщения "✅ Спасибо за ваш ответ! Обрабатываю..." для кнопок
+          code += '    # Показываем сообщение об обработке\n';
+          code += '    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")\n';
+          code += '    \n';
+          
+          // ДОБАВЛЯЕМ ПЕРЕАДРЕСАЦИЮ: Проверяем, нужно ли перейти к следующему узлу
+          const sourceNodeForRedirect = nodes.find(n => 
+            n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
+          );
+          
+          // Ищем настройки переадресации в родительском узле
+          let shouldRedirect = false;
+          let redirectTarget = null;
+          
+          if (sourceNodeForRedirect) {
+            // Проверяем, есть ли у родительского узла настройка переадресации
+            if (sourceNodeForRedirect.data.inputTargetNodeId) {
+              shouldRedirect = true;
+              redirectTarget = sourceNodeForRedirect.data.inputTargetNodeId;
+            } else {
+              // Ищем связь от родительского узла
+              const connectionFromSource = connections.find(conn => conn.source === sourceNodeForRedirect.id);
+              if (connectionFromSource) {
+                shouldRedirect = true;
+                redirectTarget = connectionFromSource.target;
+              }
+            }
+          }
+          
+          if (shouldRedirect && redirectTarget) {
+            code += '    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных\n';
+            code += `    next_node_id = "${redirectTarget}"\n`;
+            code += '    try:\n';
+            code += '        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")\n';
+            
+            // Добавляем навигацию для каждого узла
+            if (nodes.length > 0) {
+              nodes.forEach((navTargetNode, index) => {
+                const condition = index === 0 ? 'if' : 'elif';
+                code += `        ${condition} next_node_id == "${navTargetNode.id}":\n`;
+                
+                if (navTargetNode.type === 'message') {
+                  const messageText = navTargetNode.data.messageText || 'Сообщение';
+                  const formattedText = formatTextForPython(messageText);
+                  code += `            text = ${formattedText}\n`;
+                  code += '            await callback_query.message.edit_text(text)\n';
+                } else if (navTargetNode.type === 'command') {
+                  // Для узлов команд вызываем соответствующий обработчик
+                  const commandName = navTargetNode.data.command?.replace('/', '') || 'unknown';
+                  const handlerName = `${commandName}_handler`;
+                  code += `            # Выполняем команду ${navTargetNode.data.command}\n`;
+                  code += '            from types import SimpleNamespace\n';
+                  code += '            fake_message = SimpleNamespace()\n';
+                  code += '            fake_message.from_user = callback_query.from_user\n';
+                  code += '            fake_message.chat = callback_query.message.chat\n';
+                  code += '            fake_message.date = callback_query.message.date\n';
+                  code += '            fake_message.answer = callback_query.message.answer\n';
+                  code += `            await ${handlerName}(fake_message)\n`;
+                } else {
+                  code += `            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")\n`;
+                }
+              });
+              
+              code += '        else:\n';
+              code += '            logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+            } else {
+              code += '        # No nodes available for navigation\n';
+              code += '        logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+            }
+            
+            code += '    except Exception as e:\n';
+            code += '        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+            code += '    \n';
+            code += '    return  # Завершаем обработку после переадресации\n';
+          }
+          code += '    \n';
+          
           // Generate response based on node type
           if (targetNode.type === 'user-input') {
             // Handle user-input nodes
