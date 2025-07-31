@@ -2166,8 +2166,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 if (navTargetNode.type === 'message') {
                   const messageText = navTargetNode.data.messageText || 'Сообщение';
                   const formattedText = formatTextForPython(messageText);
-                  code += `            text = ${formattedText}\n`;
-                  code += '            await callback_query.message.edit_text(text)\n';
+                  code += `            nav_text = ${formattedText}\n`;
+                  code += '            await callback_query.message.edit_text(nav_text)\n';
                 } else if (navTargetNode.type === 'command') {
                   // Для узлов команд вызываем соответствующий обработчик
                   const commandName = navTargetNode.data.command?.replace('/', '') || 'unknown';
@@ -2181,7 +2181,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   code += '            fake_message.answer = callback_query.message.answer\n';
                   code += `            await ${handlerName}(fake_message)\n`;
                 } else {
-                  code += `            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")\n`;
+                  code += `            logging.info(f"Переход к узлу ${navTargetNode.id} типа {navTargetNode.type}")\n`;
                 }
               });
               
