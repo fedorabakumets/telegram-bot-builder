@@ -696,7 +696,7 @@ async def profile_handler(message: types.Message):
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="cmd_start"))
-    builder.add(InlineKeyboardButton(text="ИМя", callback_data="GKHFz-VCKt9tgoCVgXiBP"))
+    builder.add(InlineKeyboardButton(text="Редактировать имя", callback_data="H7Sfc4w0d6izui3NABl6m"))
     keyboard = builder.as_markup()
     
     # Отправляем сообщение с клавиатурой (приоритет у условной клавиатуры)
@@ -781,8 +781,8 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
     
     # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Женщина", callback_data="GKHFz-VCKt9tgoCVgXiBP_btn_0_btn_0"))
-    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="GKHFz-VCKt9tgoCVgXiBP_btn_1_btn_1"))
+    builder.add(InlineKeyboardButton(text="Женщина", callback_data="H7Sfc4w0d6izui3NABl6m_btn_0_btn_0"))
+    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="H7Sfc4w0d6izui3NABl6m_btn_1_btn_1"))
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -878,7 +878,7 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
     logging.info(f"Переменная пол сохранена: " + str(button_text) + f" (пользователь {user_id})")
     
     
-    # Отправляем сообщение для узла GKHFz-VCKt9tgoCVgXiBP
+    # Отправляем сообщение для узла H7Sfc4w0d6izui3NABl6m
     text = "Как тебя зовут?"
     
     # Подставляем все доступные переменные пользователя в текст
@@ -967,7 +967,7 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753978759529",
+            "condition_id": "condition-1753979634576",
             "wait_for_input": True,
             "input_variable": "имя",
             "next_node_id": "profile_command",
@@ -1039,7 +1039,7 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
     logging.info(f"Переменная пол сохранена: " + str(button_text) + f" (пользователь {user_id})")
     
     
-    # Отправляем сообщение для узла GKHFz-VCKt9tgoCVgXiBP
+    # Отправляем сообщение для узла H7Sfc4w0d6izui3NABl6m
     text = "Как тебя зовут?"
     
     # Подставляем все доступные переменные пользователя в текст
@@ -1128,7 +1128,7 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753978759529",
+            "condition_id": "condition-1753979634576",
             "wait_for_input": True,
             "input_variable": "имя",
             "next_node_id": "profile_command",
@@ -1189,11 +1189,11 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.answer(text)
 
-@dp.callback_query(lambda c: c.data == "huw0IUm0SHKEEr1090_EP")
-async def handle_callback_huw0IUm0SHKEEr1090_EP(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "jOgdJhBUBFASDWSVb8LTI")
+async def handle_callback_jOgdJhBUBFASDWSVb8LTI(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    button_text = "ИМя"
+    button_text = "Редактировать имя"
     
     # Сохраняем кнопку в базу данных
     timestamp = get_moscow_time()
@@ -1201,7 +1201,7 @@ async def handle_callback_huw0IUm0SHKEEr1090_EP(callback_query: types.CallbackQu
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
-    # Отправляем сообщение для узла GKHFz-VCKt9tgoCVgXiBP
+    # Отправляем сообщение для узла H7Sfc4w0d6izui3NABl6m
     text = "Как тебя зовут?"
     
     # Подставляем все доступные переменные пользователя в текст
@@ -1290,7 +1290,7 @@ async def handle_callback_huw0IUm0SHKEEr1090_EP(callback_query: types.CallbackQu
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753978759529",
+            "condition_id": "condition-1753979634576",
             "wait_for_input": True,
             "input_variable": "имя",
             "next_node_id": "profile_command",
@@ -1517,8 +1517,8 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "GKHFz-VCKt9tgoCVgXiBP" or c.data.startswith("GKHFz-VCKt9tgoCVgXiBP_btn_"))
-async def handle_callback_GKHFz_VCKt9tgoCVgXiBP(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "H7Sfc4w0d6izui3NABl6m" or c.data.startswith("H7Sfc4w0d6izui3NABl6m_btn_"))
+async def handle_callback_H7Sfc4w0d6izui3NABl6m(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
@@ -1629,7 +1629,7 @@ async def handle_callback_GKHFz_VCKt9tgoCVgXiBP(callback_query: types.CallbackQu
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753978759529",
+            "condition_id": "condition-1753979634576",
             "wait_for_input": True,
             "input_variable": "имя",
             "next_node_id": "profile_command",
@@ -1650,7 +1650,7 @@ async def handle_callback_GKHFz_VCKt9tgoCVgXiBP(callback_query: types.CallbackQu
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
     
-    user_data[callback_query.from_user.id]["waiting_for_input"] = "GKHFz-VCKt9tgoCVgXiBP"
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "H7Sfc4w0d6izui3NABl6m"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "имя"
     user_data[callback_query.from_user.id]["save_to_database"] = True
@@ -1907,8 +1907,8 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_final_message_node(fake_callback)
                     elif next_node_id == "profile_command":
                         await handle_callback_profile_command(fake_callback)
-                    elif next_node_id == "GKHFz-VCKt9tgoCVgXiBP":
-                        await handle_callback_GKHFz_VCKt9tgoCVgXiBP(fake_callback)
+                    elif next_node_id == "H7Sfc4w0d6izui3NABl6m":
+                        await handle_callback_H7Sfc4w0d6izui3NABl6m(fake_callback)
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
             except Exception as e:
@@ -2020,8 +2020,8 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "profile_command":
                         await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "GKHFz-VCKt9tgoCVgXiBP":
-                        await handle_callback_GKHFz_VCKt9tgoCVgXiBP(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "H7Sfc4w0d6izui3NABl6m":
+                        await handle_callback_H7Sfc4w0d6izui3NABl6m(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -2044,8 +2044,8 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "profile_command":
                             await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "GKHFz-VCKt9tgoCVgXiBP":
-                            await handle_callback_GKHFz_VCKt9tgoCVgXiBP(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "H7Sfc4w0d6izui3NABl6m":
+                            await handle_callback_H7Sfc4w0d6izui3NABl6m(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -2172,7 +2172,7 @@ async def handle_user_input(message: types.Message):
                         fake_message.date = message.date
                         fake_message.answer = message.answer
                         await profile_handler(fake_message)
-                    elif next_node_id == "GKHFz-VCKt9tgoCVgXiBP":
+                    elif next_node_id == "H7Sfc4w0d6izui3NABl6m":
                         text = "Как тебя зовут?"
                         await message.answer(text)
                     else:
@@ -2281,7 +2281,7 @@ async def handle_user_input(message: types.Message):
             logging.info(f"Получен пользовательский ввод: пол = {user_text}")
             
             return
-        elif waiting_node_id == "GKHFz-VCKt9tgoCVgXiBP":
+        elif waiting_node_id == "H7Sfc4w0d6izui3NABl6m":
             
             # Сохраняем ответ пользователя
             import datetime
@@ -2463,7 +2463,7 @@ async def handle_user_input(message: types.Message):
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "profile_command":
                 logging.info(f"Переход к узлу profile_command типа command")
-            elif next_node_id == "GKHFz-VCKt9tgoCVgXiBP":
+            elif next_node_id == "H7Sfc4w0d6izui3NABl6m":
                 # Проверяем условные сообщения
                 text = None
                 
@@ -2522,7 +2522,7 @@ async def handle_user_input(message: types.Message):
                         text = text.replace("{имя}", variable_values["имя"])
                     # Настраиваем ожидание текстового ввода для условного сообщения
                     conditional_message_config = {
-                        "condition_id": "condition-1753978759529",
+                        "condition_id": "condition-1753979634576",
                         "wait_for_input": True,
                         "input_variable": "имя",
                         "next_node_id": "profile_command",
