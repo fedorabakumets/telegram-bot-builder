@@ -808,19 +808,19 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
-        text = "Укажи новый пол"
+        text = "Вебери новый пол"
         conditional_parse_mode = None
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
         # Создаем inline клавиатуру для условного сообщения
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Женщина", callback_data="cmd_profile_command"))
-        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="cmd_profile_command"))
+        builder.add(InlineKeyboardButton(text="цкетке", callback_data="profile_command"))
+        builder.add(InlineKeyboardButton(text="Новая еткттке", callback_data="profile_command"))
         keyboard = builder.as_markup()
         conditional_keyboard = keyboard
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753983797637",
+            "condition_id": "condition-1753985172957",
             "wait_for_input": False,
             "input_variable": "",
             "next_node_id": "",
@@ -1209,8 +1209,8 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
         await callback_query.message.answer(text)
     
 
-@dp.callback_query(lambda c: c.data == "Sz7kbrQ5LJ98_2-v9st1i")
-async def handle_callback_Sz7kbrQ5LJ98_2_v9st1i(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "VwDZbZgFkDu0QBiLXId_F")
+async def handle_callback_VwDZbZgFkDu0QBiLXId_F(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "имя"
@@ -1347,8 +1347,8 @@ async def handle_callback_Sz7kbrQ5LJ98_2_v9st1i(callback_query: types.CallbackQu
         await callback_query.message.answer(text)
     
 
-@dp.callback_query(lambda c: c.data == "a9Z4JL5dqXhuvhrAX8gEo")
-async def handle_callback_a9Z4JL5dqXhuvhrAX8gEo(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "uHKPpBC9CfAG4BHpKTe6v")
+async def handle_callback_uHKPpBC9CfAG4BHpKTe6v(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "пол"
@@ -1440,19 +1440,19 @@ async def handle_callback_a9Z4JL5dqXhuvhrAX8gEo(callback_query: types.CallbackQu
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
-        text = "Укажи новый пол"
+        text = "Вебери новый пол"
         conditional_parse_mode = None
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
         # Создаем inline клавиатуру для условного сообщения
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Женщина", callback_data="cmd_profile_command"))
-        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="cmd_profile_command"))
+        builder.add(InlineKeyboardButton(text="цкетке", callback_data="profile_command"))
+        builder.add(InlineKeyboardButton(text="Новая еткттке", callback_data="profile_command"))
         keyboard = builder.as_markup()
         conditional_keyboard = keyboard
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753983797637",
+            "condition_id": "condition-1753985172957",
             "wait_for_input": False,
             "input_variable": "",
             "next_node_id": "",
@@ -1592,19 +1592,19 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
-        text = "Укажи новый пол"
+        text = "Вебери новый пол"
         conditional_parse_mode = None
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
         # Создаем inline клавиатуру для условного сообщения
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Женщина", callback_data="cmd_profile_command"))
-        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="cmd_profile_command"))
+        builder.add(InlineKeyboardButton(text="цкетке", callback_data="profile_command"))
+        builder.add(InlineKeyboardButton(text="Новая еткттке", callback_data="profile_command"))
         keyboard = builder.as_markup()
         conditional_keyboard = keyboard
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753983797637",
+            "condition_id": "condition-1753985172957",
             "wait_for_input": False,
             "input_variable": "",
             "next_node_id": "",
