@@ -1576,6 +1576,8 @@ export async function seedDefaultTemplates(force = false) {
                   id: "gender_already_set",
                   condition: "user_data_exists",
                   variableName: "пол",
+                  variableNames: ["пол"],
+                  logicOperator: "AND",
                   messageText: "Вы уже указали свой пол: {пол}\n\nВаш профиль заполнен. Посмотреть профиль?",
                   priority: 10,
                   buttons: [
@@ -1591,7 +1593,8 @@ export async function seedDefaultTemplates(force = false) {
                       action: "goto",
                       target: "XDSrTrNly5EtDtr85nN4P"
                     }
-                  ]
+                  ],
+                  formatMode: "text"
                 }
               ],
               fallbackMessage: "Какой твой пол?"
