@@ -1272,6 +1272,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Template management endpoints
   
+  // Force update templates
+  app.post("/api/templates/refresh", async (req, res) => {
+    try {
+      console.log('🔄 Принудительное обновление шаблонов по API запросу');
+      await seedDefaultTemplates(true);
+      res.json({ message: "Templates refreshed successfully" });
+    } catch (error) {
+      console.error('❌ Ошибка обновления шаблонов:', error);
+      res.status(500).json({ message: "Failed to refresh templates" });
+    }
+  });
+  
   // Get all templates
   app.get("/api/templates", async (req, res) => {
     try {
