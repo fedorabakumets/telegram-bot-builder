@@ -1006,9 +1006,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    if conditional_keyboard is not None:\n';
                 code += '        keyboard = conditional_keyboard\n';
                 code += '    else:\n';
+                code += '        keyboard = None\n';
               } else {
                 code += '    \n';
                 code += '    # Без условных сообщений - используем обычную клавиатуру\n';
+                code += '    keyboard = None\n';
               }
               
               // Проверяем, есть ли у узла inline кнопки
