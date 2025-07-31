@@ -163,6 +163,10 @@ export function parseCommandFromText(text: string): string | null {
 
 // Генерация BotFather команд для настройки меню
 export function generateBotFatherCommands(nodes: any[]): string {
+  if (!nodes || !Array.isArray(nodes)) {
+    return '';
+  }
+  
   const commandNodes = nodes.filter(node => 
     (node.type === 'start' || node.type === 'command') && 
     node.data.showInMenu && 

@@ -322,6 +322,7 @@ async def profile_handler(message: types.Message):
     # Функция для проверки переменных пользователя
     def check_user_variable(var_name, user_data_dict):
         """Проверяет существование и получает значение переменной пользователя"""
+        # Сначала проверяем в поле user_data (из БД)
         if "user_data" in user_data_dict and user_data_dict["user_data"]:
             try:
                 import json
@@ -329,18 +330,26 @@ async def profile_handler(message: types.Message):
                 if var_name in parsed_data:
                     raw_value = parsed_data[var_name]
                     if isinstance(raw_value, dict) and "value" in raw_value:
-                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                        var_value = raw_value["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
                     else:
-                        return True, str(raw_value) if raw_value is not None else None
+                        # Проверяем, что значение действительно существует и не пустое
+                        if raw_value is not None and str(raw_value).strip() != "":
+                            return True, str(raw_value)
             except (json.JSONDecodeError, TypeError):
                 pass
         
-        # Проверяем в локальных данных
+        # Проверяем в локальных данных (без вложенности user_data)
         if var_name in user_data_dict:
             variable_data = user_data_dict.get(var_name)
             if isinstance(variable_data, dict) and "value" in variable_data:
-                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-            elif variable_data is not None:
+                var_value = variable_data["value"]
+                # Проверяем, что значение действительно существует и не пустое
+                if var_value is not None and str(var_value).strip() != "":
+                    return True, str(var_value)
+            elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
         return False, None
@@ -529,6 +538,7 @@ async def profile_handler(message: types.Message):
     # Функция для проверки переменных пользователя
     def check_user_variable(var_name, user_data_dict):
         """Проверяет существование и получает значение переменной пользователя"""
+        # Сначала проверяем в поле user_data (из БД)
         if "user_data" in user_data_dict and user_data_dict["user_data"]:
             try:
                 import json
@@ -536,18 +546,26 @@ async def profile_handler(message: types.Message):
                 if var_name in parsed_data:
                     raw_value = parsed_data[var_name]
                     if isinstance(raw_value, dict) and "value" in raw_value:
-                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                        var_value = raw_value["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
                     else:
-                        return True, str(raw_value) if raw_value is not None else None
+                        # Проверяем, что значение действительно существует и не пустое
+                        if raw_value is not None and str(raw_value).strip() != "":
+                            return True, str(raw_value)
             except (json.JSONDecodeError, TypeError):
                 pass
         
-        # Проверяем в локальных данных
+        # Проверяем в локальных данных (без вложенности user_data)
         if var_name in user_data_dict:
             variable_data = user_data_dict.get(var_name)
             if isinstance(variable_data, dict) and "value" in variable_data:
-                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-            elif variable_data is not None:
+                var_value = variable_data["value"]
+                # Проверяем, что значение действительно существует и не пустое
+                if var_value is not None and str(var_value).strip() != "":
+                    return True, str(var_value)
+            elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
         return False, None
@@ -930,6 +948,7 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
     # Функция для проверки переменных пользователя
     def check_user_variable(var_name, user_data_dict):
         """Проверяет существование и получает значение переменной пользователя"""
+        # Сначала проверяем в поле user_data (из БД)
         if "user_data" in user_data_dict and user_data_dict["user_data"]:
             try:
                 import json
@@ -937,18 +956,26 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
                 if var_name in parsed_data:
                     raw_value = parsed_data[var_name]
                     if isinstance(raw_value, dict) and "value" in raw_value:
-                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                        var_value = raw_value["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
                     else:
-                        return True, str(raw_value) if raw_value is not None else None
+                        # Проверяем, что значение действительно существует и не пустое
+                        if raw_value is not None and str(raw_value).strip() != "":
+                            return True, str(raw_value)
             except (json.JSONDecodeError, TypeError):
                 pass
         
-        # Проверяем в локальных данных
+        # Проверяем в локальных данных (без вложенности user_data)
         if var_name in user_data_dict:
             variable_data = user_data_dict.get(var_name)
             if isinstance(variable_data, dict) and "value" in variable_data:
-                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-            elif variable_data is not None:
+                var_value = variable_data["value"]
+                # Проверяем, что значение действительно существует и не пустое
+                if var_value is not None and str(var_value).strip() != "":
+                    return True, str(var_value)
+            elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
         return False, None
@@ -960,7 +987,7 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "Введите новое имя:"
+        text = "У вас уже есть имя: {имя}. Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
@@ -969,7 +996,7 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
-            "next_node_id": "profile_command",
+            "next_node_id": "final-message-node",
             "source_type": "conditional_message"
         }
         
@@ -1067,6 +1094,7 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
     # Функция для проверки переменных пользователя
     def check_user_variable(var_name, user_data_dict):
         """Проверяет существование и получает значение переменной пользователя"""
+        # Сначала проверяем в поле user_data (из БД)
         if "user_data" in user_data_dict and user_data_dict["user_data"]:
             try:
                 import json
@@ -1074,18 +1102,26 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
                 if var_name in parsed_data:
                     raw_value = parsed_data[var_name]
                     if isinstance(raw_value, dict) and "value" in raw_value:
-                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                        var_value = raw_value["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
                     else:
-                        return True, str(raw_value) if raw_value is not None else None
+                        # Проверяем, что значение действительно существует и не пустое
+                        if raw_value is not None and str(raw_value).strip() != "":
+                            return True, str(raw_value)
             except (json.JSONDecodeError, TypeError):
                 pass
         
-        # Проверяем в локальных данных
+        # Проверяем в локальных данных (без вложенности user_data)
         if var_name in user_data_dict:
             variable_data = user_data_dict.get(var_name)
             if isinstance(variable_data, dict) and "value" in variable_data:
-                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-            elif variable_data is not None:
+                var_value = variable_data["value"]
+                # Проверяем, что значение действительно существует и не пустое
+                if var_value is not None and str(var_value).strip() != "":
+                    return True, str(var_value)
+            elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
         return False, None
@@ -1097,7 +1133,7 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "Введите новое имя:"
+        text = "У вас уже есть имя: {имя}. Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
@@ -1106,7 +1142,7 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
-            "next_node_id": "profile_command",
+            "next_node_id": "final-message-node",
             "source_type": "conditional_message"
         }
         
@@ -1205,6 +1241,7 @@ async def handle_callback_btn_edit_name_default(callback_query: types.CallbackQu
     # Функция для проверки переменных пользователя
     def check_user_variable(var_name, user_data_dict):
         """Проверяет существование и получает значение переменной пользователя"""
+        # Сначала проверяем в поле user_data (из БД)
         if "user_data" in user_data_dict and user_data_dict["user_data"]:
             try:
                 import json
@@ -1212,18 +1249,26 @@ async def handle_callback_btn_edit_name_default(callback_query: types.CallbackQu
                 if var_name in parsed_data:
                     raw_value = parsed_data[var_name]
                     if isinstance(raw_value, dict) and "value" in raw_value:
-                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                        var_value = raw_value["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
                     else:
-                        return True, str(raw_value) if raw_value is not None else None
+                        # Проверяем, что значение действительно существует и не пустое
+                        if raw_value is not None and str(raw_value).strip() != "":
+                            return True, str(raw_value)
             except (json.JSONDecodeError, TypeError):
                 pass
         
-        # Проверяем в локальных данных
+        # Проверяем в локальных данных (без вложенности user_data)
         if var_name in user_data_dict:
             variable_data = user_data_dict.get(var_name)
             if isinstance(variable_data, dict) and "value" in variable_data:
-                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-            elif variable_data is not None:
+                var_value = variable_data["value"]
+                # Проверяем, что значение действительно существует и не пустое
+                if var_value is not None and str(var_value).strip() != "":
+                    return True, str(var_value)
+            elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
         return False, None
@@ -1235,7 +1280,7 @@ async def handle_callback_btn_edit_name_default(callback_query: types.CallbackQu
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "Введите новое имя:"
+        text = "У вас уже есть имя: {имя}. Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
@@ -1244,7 +1289,7 @@ async def handle_callback_btn_edit_name_default(callback_query: types.CallbackQu
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
-            "next_node_id": "profile_command",
+            "next_node_id": "final-message-node",
             "source_type": "conditional_message"
         }
         
@@ -1321,17 +1366,77 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
             await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
             await callback_query.message.delete()
-            nav_text = "Как тебя зовут?"
-            # Настраиваем ожидание ввода
-            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
-            user_data[callback_query.from_user.id]["waiting_for_input"] = {
-                "type": "text",
-                "variable": "имя",
-                "save_to_database": True,
-                "node_id": "XDSrTrNly5EtDtr85nN4P",
-                "next_node_id": "final-message-node"
-            }
-            await bot.send_message(callback_query.from_user.id, nav_text)
+            # Узел с условными сообщениями - проверяем условия
+            user_id = callback_query.from_user.id
+            user_data_dict = await get_user_from_db(user_id) or {}
+            user_data_dict.update(user_data.get(user_id, {}))
+
+            # Функция для проверки переменных пользователя
+            def check_user_variable(var_name, user_data_dict):
+                """Проверяет существование и получает значение переменной пользователя"""
+                # Сначала проверяем в поле user_data (из БД)
+                if "user_data" in user_data_dict and user_data_dict["user_data"]:
+                    try:
+                        import json
+                        parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                        if var_name in parsed_data:
+                            raw_value = parsed_data[var_name]
+                            if isinstance(raw_value, dict) and "value" in raw_value:
+                                var_value = raw_value["value"]
+                                # Проверяем, что значение действительно существует и не пустое
+                                if var_value is not None and str(var_value).strip() != "":
+                                    return True, str(var_value)
+                            else:
+                                # Проверяем, что значение действительно существует и не пустое
+                                if raw_value is not None and str(raw_value).strip() != "":
+                                    return True, str(raw_value)
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                
+                # Проверяем в локальных данных (без вложенности user_data)
+                if var_name in user_data_dict:
+                    variable_data = user_data_dict.get(var_name)
+                    if isinstance(variable_data, dict) and "value" in variable_data:
+                        var_value = variable_data["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
+                    elif variable_data is not None and str(variable_data).strip() != "":
+                        return True, str(variable_data)
+                
+                return False, None
+
+            # Условие 1: user_data_exists для переменных: имя
+            if (
+                check_user_variable("имя", user_data_dict)[0]
+            ):
+                # Собираем значения переменных
+                variable_values = {}
+                _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+                text = "У вас уже есть имя: {имя}. Введите новое имя:"
+                if "{имя}" in text and variable_values["имя"] is not None:
+                    text = text.replace("{имя}", variable_values["имя"])
+                # Настраиваем ожидание текстового ввода для условного сообщения
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "имя",
+                    "save_to_database": True,
+                    "node_id": "XDSrTrNly5EtDtr85nN4P",
+                    "next_node_id": "final-message-node"
+                }
+                await bot.send_message(user_id, text)
+            else:
+                # Fallback сообщение
+                nav_text = "Как тебя зовут?"
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "имя",
+                    "save_to_database": True,
+                    "node_id": "XDSrTrNly5EtDtr85nN4P",
+                    "next_node_id": "final-message-node"
+                }
+                await bot.send_message(user_id, nav_text)
         elif next_node_id == "final-message-node":
             nav_text = """Спасибо за предоставленную информацию! 🎉
 
@@ -1460,17 +1565,77 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
             await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
             await callback_query.message.delete()
-            nav_text = "Как тебя зовут?"
-            # Настраиваем ожидание ввода
-            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
-            user_data[callback_query.from_user.id]["waiting_for_input"] = {
-                "type": "text",
-                "variable": "имя",
-                "save_to_database": True,
-                "node_id": "XDSrTrNly5EtDtr85nN4P",
-                "next_node_id": "final-message-node"
-            }
-            await bot.send_message(callback_query.from_user.id, nav_text)
+            # Узел с условными сообщениями - проверяем условия
+            user_id = callback_query.from_user.id
+            user_data_dict = await get_user_from_db(user_id) or {}
+            user_data_dict.update(user_data.get(user_id, {}))
+
+            # Функция для проверки переменных пользователя
+            def check_user_variable(var_name, user_data_dict):
+                """Проверяет существование и получает значение переменной пользователя"""
+                # Сначала проверяем в поле user_data (из БД)
+                if "user_data" in user_data_dict and user_data_dict["user_data"]:
+                    try:
+                        import json
+                        parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                        if var_name in parsed_data:
+                            raw_value = parsed_data[var_name]
+                            if isinstance(raw_value, dict) and "value" in raw_value:
+                                var_value = raw_value["value"]
+                                # Проверяем, что значение действительно существует и не пустое
+                                if var_value is not None and str(var_value).strip() != "":
+                                    return True, str(var_value)
+                            else:
+                                # Проверяем, что значение действительно существует и не пустое
+                                if raw_value is not None and str(raw_value).strip() != "":
+                                    return True, str(raw_value)
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                
+                # Проверяем в локальных данных (без вложенности user_data)
+                if var_name in user_data_dict:
+                    variable_data = user_data_dict.get(var_name)
+                    if isinstance(variable_data, dict) and "value" in variable_data:
+                        var_value = variable_data["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
+                    elif variable_data is not None and str(variable_data).strip() != "":
+                        return True, str(variable_data)
+                
+                return False, None
+
+            # Условие 1: user_data_exists для переменных: имя
+            if (
+                check_user_variable("имя", user_data_dict)[0]
+            ):
+                # Собираем значения переменных
+                variable_values = {}
+                _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+                text = "У вас уже есть имя: {имя}. Введите новое имя:"
+                if "{имя}" in text and variable_values["имя"] is not None:
+                    text = text.replace("{имя}", variable_values["имя"])
+                # Настраиваем ожидание текстового ввода для условного сообщения
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "имя",
+                    "save_to_database": True,
+                    "node_id": "XDSrTrNly5EtDtr85nN4P",
+                    "next_node_id": "final-message-node"
+                }
+                await bot.send_message(user_id, text)
+            else:
+                # Fallback сообщение
+                nav_text = "Как тебя зовут?"
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "имя",
+                    "save_to_database": True,
+                    "node_id": "XDSrTrNly5EtDtr85nN4P",
+                    "next_node_id": "final-message-node"
+                }
+                await bot.send_message(user_id, nav_text)
         elif next_node_id == "final-message-node":
             nav_text = """Спасибо за предоставленную информацию! 🎉
 
@@ -1597,17 +1762,77 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
             await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
             await callback_query.message.delete()
-            nav_text = "Как тебя зовут?"
-            # Настраиваем ожидание ввода
-            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
-            user_data[callback_query.from_user.id]["waiting_for_input"] = {
-                "type": "text",
-                "variable": "имя",
-                "save_to_database": True,
-                "node_id": "XDSrTrNly5EtDtr85nN4P",
-                "next_node_id": "final-message-node"
-            }
-            await bot.send_message(callback_query.from_user.id, nav_text)
+            # Узел с условными сообщениями - проверяем условия
+            user_id = callback_query.from_user.id
+            user_data_dict = await get_user_from_db(user_id) or {}
+            user_data_dict.update(user_data.get(user_id, {}))
+
+            # Функция для проверки переменных пользователя
+            def check_user_variable(var_name, user_data_dict):
+                """Проверяет существование и получает значение переменной пользователя"""
+                # Сначала проверяем в поле user_data (из БД)
+                if "user_data" in user_data_dict and user_data_dict["user_data"]:
+                    try:
+                        import json
+                        parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                        if var_name in parsed_data:
+                            raw_value = parsed_data[var_name]
+                            if isinstance(raw_value, dict) and "value" in raw_value:
+                                var_value = raw_value["value"]
+                                # Проверяем, что значение действительно существует и не пустое
+                                if var_value is not None and str(var_value).strip() != "":
+                                    return True, str(var_value)
+                            else:
+                                # Проверяем, что значение действительно существует и не пустое
+                                if raw_value is not None and str(raw_value).strip() != "":
+                                    return True, str(raw_value)
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                
+                # Проверяем в локальных данных (без вложенности user_data)
+                if var_name in user_data_dict:
+                    variable_data = user_data_dict.get(var_name)
+                    if isinstance(variable_data, dict) and "value" in variable_data:
+                        var_value = variable_data["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
+                    elif variable_data is not None and str(variable_data).strip() != "":
+                        return True, str(variable_data)
+                
+                return False, None
+
+            # Условие 1: user_data_exists для переменных: имя
+            if (
+                check_user_variable("имя", user_data_dict)[0]
+            ):
+                # Собираем значения переменных
+                variable_values = {}
+                _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
+                text = "У вас уже есть имя: {имя}. Введите новое имя:"
+                if "{имя}" in text and variable_values["имя"] is not None:
+                    text = text.replace("{имя}", variable_values["имя"])
+                # Настраиваем ожидание текстового ввода для условного сообщения
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "имя",
+                    "save_to_database": True,
+                    "node_id": "XDSrTrNly5EtDtr85nN4P",
+                    "next_node_id": "final-message-node"
+                }
+                await bot.send_message(user_id, text)
+            else:
+                # Fallback сообщение
+                nav_text = "Как тебя зовут?"
+                # Настраиваем ожидание ввода
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "имя",
+                    "save_to_database": True,
+                    "node_id": "XDSrTrNly5EtDtr85nN4P",
+                    "next_node_id": "final-message-node"
+                }
+                await bot.send_message(user_id, nav_text)
         elif next_node_id == "final-message-node":
             nav_text = """Спасибо за предоставленную информацию! 🎉
 
@@ -1677,6 +1902,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
     # Функция для проверки переменных пользователя
     def check_user_variable(var_name, user_data_dict):
         """Проверяет существование и получает значение переменной пользователя"""
+        # Сначала проверяем в поле user_data (из БД)
         if "user_data" in user_data_dict and user_data_dict["user_data"]:
             try:
                 import json
@@ -1684,18 +1910,26 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
                 if var_name in parsed_data:
                     raw_value = parsed_data[var_name]
                     if isinstance(raw_value, dict) and "value" in raw_value:
-                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
+                        var_value = raw_value["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
                     else:
-                        return True, str(raw_value) if raw_value is not None else None
+                        # Проверяем, что значение действительно существует и не пустое
+                        if raw_value is not None and str(raw_value).strip() != "":
+                            return True, str(raw_value)
             except (json.JSONDecodeError, TypeError):
                 pass
         
-        # Проверяем в локальных данных
+        # Проверяем в локальных данных (без вложенности user_data)
         if var_name in user_data_dict:
             variable_data = user_data_dict.get(var_name)
             if isinstance(variable_data, dict) and "value" in variable_data:
-                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-            elif variable_data is not None:
+                var_value = variable_data["value"]
+                # Проверяем, что значение действительно существует и не пустое
+                if var_value is not None and str(var_value).strip() != "":
+                    return True, str(var_value)
+            elif variable_data is not None and str(variable_data).strip() != "":
                 return True, str(variable_data)
         
         return False, None
@@ -1707,7 +1941,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "Введите новое имя:"
+        text = "У вас уже есть имя: {имя}. Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
@@ -1716,7 +1950,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
-            "next_node_id": "profile_command",
+            "next_node_id": "final-message-node",
             "source_type": "conditional_message"
         }
         

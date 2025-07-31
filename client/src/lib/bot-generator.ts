@@ -804,7 +804,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    }\n\n';
 
   // Настройка меню команд для BotFather
-  const menuCommands = nodes.filter(node => 
+  const menuCommands = (nodes || []).filter(node => 
     (node.type === 'start' || node.type === 'command') && 
     node.data.showInMenu && 
     node.data.command
@@ -826,7 +826,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   }
 
   // Generate handlers for each node
-  nodes.forEach((node: Node) => {
+  (nodes || []).forEach((node: Node) => {
     if (node.type === "start") {
       code += generateStartHandler(node);
     } else if (node.type === "command") {
@@ -854,7 +854,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   });
 
   // Generate synonym handlers for commands
-  const nodesWithSynonyms = nodes.filter(node => 
+  const nodesWithSynonyms = (nodes || []).filter(node => 
     (node.type === 'start' || node.type === 'command') && 
     node.data.synonyms && 
     node.data.synonyms.length > 0
@@ -2190,24 +2190,147 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   code += '            fake_message.answer = callback_query.message.answer\n';
                   code += `            await ${handlerName}(fake_message)\n`;
                 } else if (navTargetNode.type === 'keyboard' && navTargetNode.data.enableTextInput) {
-                  // Обрабатываем узлы ввода текста
+                  // Обрабатываем узлы ввода текста с поддержкой условных сообщений
                   const messageText = navTargetNode.data.messageText || 'Введите ваш ответ:';
                   const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                   const inputTargetNodeId = navTargetNode.data.inputTargetNodeId || '';
-                  const formattedText = formatTextForPython(messageText);
                   
-                  code += '            await callback_query.message.delete()\n';
-                  code += `            nav_text = ${formattedText}\n`;
-                  code += '            # Настраиваем ожидание ввода\n';
-                  code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
-                  code += '            user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-                  code += '                "type": "text",\n';
-                  code += `                "variable": "${inputVariable}",\n`;
-                  code += '                "save_to_database": True,\n';
-                  code += `                "node_id": "${navTargetNode.id}",\n`;
-                  code += `                "next_node_id": "${inputTargetNodeId}"\n`;
-                  code += '            }\n';
-                  code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
+                  // Проверяем, есть ли условные сообщения для этого узла
+                  const hasConditionalMessages = navTargetNode.data.enableConditionalMessages && 
+                                                navTargetNode.data.conditionalMessages && 
+                                                navTargetNode.data.conditionalMessages.length > 0;
+                  
+                  if (hasConditionalMessages) {
+                    // Если есть условные сообщения, генерируем их обработку
+                    code += '            await callback_query.message.delete()\n';
+                    code += '            # Узел с условными сообщениями - проверяем условия\n';
+                    code += '            user_id = callback_query.from_user.id\n';
+                    code += '            user_data_dict = await get_user_from_db(user_id) or {}\n';
+                    code += '            user_data_dict.update(user_data.get(user_id, {}))\n\n';
+                    
+                    // Добавляем определение функции check_user_variable в локальную область видимости
+                    code += '            # Функция для проверки переменных пользователя\n';
+                    code += '            def check_user_variable(var_name, user_data_dict):\n';
+                    code += '                """Проверяет существование и получает значение переменной пользователя"""\n';
+                    code += '                # Сначала проверяем в поле user_data (из БД)\n';
+                    code += '                if "user_data" in user_data_dict and user_data_dict["user_data"]:\n';
+                    code += '                    try:\n';
+                    code += '                        import json\n';
+                    code += '                        parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n';
+                    code += '                        if var_name in parsed_data:\n';
+                    code += '                            raw_value = parsed_data[var_name]\n';
+                    code += '                            if isinstance(raw_value, dict) and "value" in raw_value:\n';
+                    code += '                                var_value = raw_value["value"]\n';
+                    code += '                                # Проверяем, что значение действительно существует и не пустое\n';
+                    code += '                                if var_value is not None and str(var_value).strip() != "":\n';
+                    code += '                                    return True, str(var_value)\n';
+                    code += '                            else:\n';
+                    code += '                                # Проверяем, что значение действительно существует и не пустое\n';
+                    code += '                                if raw_value is not None and str(raw_value).strip() != "":\n';
+                    code += '                                    return True, str(raw_value)\n';
+                    code += '                    except (json.JSONDecodeError, TypeError):\n';
+                    code += '                        pass\n';
+                    code += '                \n';
+                    code += '                # Проверяем в локальных данных (без вложенности user_data)\n';
+                    code += '                if var_name in user_data_dict:\n';
+                    code += '                    variable_data = user_data_dict.get(var_name)\n';
+                    code += '                    if isinstance(variable_data, dict) and "value" in variable_data:\n';
+                    code += '                        var_value = variable_data["value"]\n';
+                    code += '                        # Проверяем, что значение действительно существует и не пустое\n';
+                    code += '                        if var_value is not None and str(var_value).strip() != "":\n';
+                    code += '                            return True, str(var_value)\n';
+                    code += '                    elif variable_data is not None and str(variable_data).strip() != "":\n';
+                    code += '                        return True, str(variable_data)\n';
+                    code += '                \n';
+                    code += '                return False, None\n\n';
+                    
+                    // Генерируем условную логику для этого узла
+                    const conditionalMessages = navTargetNode.data.conditionalMessages.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+                    
+                    // Создаем единую if/elif/else структуру для всех условий
+                    for (let i = 0; i < conditionalMessages.length; i++) {
+                      const condition = conditionalMessages[i];
+                      const cleanedConditionText = stripHtmlTags(condition.messageText);
+                      const conditionText = formatTextForPython(cleanedConditionText);
+                      const conditionKeyword = i === 0 ? 'if' : 'elif';
+                      
+                      // Get variable names - support both new array format and legacy single variable
+                      const variableNames = condition.variableNames && condition.variableNames.length > 0 
+                        ? condition.variableNames 
+                        : (condition.variableName ? [condition.variableName] : []);
+                      
+                      const logicOperator = condition.logicOperator || 'AND';
+                      
+                      code += `            # Условие ${i + 1}: ${condition.condition} для переменных: ${variableNames.join(', ')}\n`;
+                      
+                      if (condition.condition === 'user_data_exists' && variableNames.length > 0) {
+                        // Создаем единый блок условия с проверками ВНУТРИ
+                        code += `            ${conditionKeyword} (\n`;
+                        for (let j = 0; j < variableNames.length; j++) {
+                          const varName = variableNames[j];
+                          const operator = (j === variableNames.length - 1) ? '' : (logicOperator === 'AND' ? ' and' : ' or');
+                          code += `                check_user_variable("${varName}", user_data_dict)[0]${operator}\n`;
+                        }
+                        code += `            ):\n`;
+                        
+                        // Внутри блока условия собираем значения переменных
+                        code += `                # Собираем значения переменных\n`;
+                        code += `                variable_values = {}\n`;
+                        for (const varName of variableNames) {
+                          code += `                _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
+                        }
+                        
+                        code += `                text = ${conditionText}\n`;
+                        
+                        // Заменяем переменные в тексте
+                        for (const varName of variableNames) {
+                          code += `                if "{${varName}}" in text and variable_values["${varName}"] is not None:\n`;
+                          code += `                    text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
+                        }
+                        
+                        // Настраиваем ожидание текстового ввода для условного сообщения
+                        code += `                # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+                        code += `                user_data[user_id]["waiting_for_input"] = {\n`;
+                        code += `                    "type": "text",\n`;
+                        code += `                    "variable": "${condition.textInputVariable || inputVariable}",\n`;
+                        code += `                    "save_to_database": True,\n`;
+                        code += `                    "node_id": "${navTargetNode.id}",\n`;
+                        code += `                    "next_node_id": "${condition.nextNodeAfterInput || inputTargetNodeId}"\n`;
+                        code += `                }\n`;
+                        code += `                await bot.send_message(user_id, text)\n`;
+                      }
+                    }
+                    
+                    // Fallback сообщение
+                    code += `            else:\n`;
+                    const formattedText = formatTextForPython(messageText);
+                    code += `                # Fallback сообщение\n`;
+                    code += `                nav_text = ${formattedText}\n`;
+                    code += `                # Настраиваем ожидание ввода\n`;
+                    code += `                user_data[user_id]["waiting_for_input"] = {\n`;
+                    code += `                    "type": "text",\n`;
+                    code += `                    "variable": "${inputVariable}",\n`;
+                    code += `                    "save_to_database": True,\n`;
+                    code += `                    "node_id": "${navTargetNode.id}",\n`;
+                    code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
+                    code += `                }\n`;
+                    code += `                await bot.send_message(user_id, nav_text)\n`;
+                  } else {
+                    // Обычный узел без условных сообщений
+                    const formattedText = formatTextForPython(messageText);
+                    code += '            await callback_query.message.delete()\n';
+                    code += `            nav_text = ${formattedText}\n`;
+                    code += '            # Настраиваем ожидание ввода\n';
+                    code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
+                    code += '            user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+                    code += '                "type": "text",\n';
+                    code += `                "variable": "${inputVariable}",\n`;
+                    code += '                "save_to_database": True,\n';
+                    code += `                "node_id": "${navTargetNode.id}",\n`;
+                    code += `                "next_node_id": "${inputTargetNodeId}"\n`;
+                    code += '            }\n';
+                    code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
+                  }
                 } else {
                   code += `            logging.info("Переход к узлу ${navTargetNode.id}")\n`;
                 }
