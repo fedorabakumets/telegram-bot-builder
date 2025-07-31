@@ -911,8 +911,38 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
         </div>
       )}
       
+      {/* Text Input Indicator for keyboard type 'none' */}
+      {node.type === 'keyboard' && node.data.keyboardType === 'none' && node.data.enableTextInput && (
+        <div className="bg-gradient-to-br from-cyan-50/70 to-blue-50/70 dark:from-cyan-900/30 dark:to-blue-900/30 rounded-xl p-4 mb-4 border border-cyan-200 dark:border-cyan-800/30">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">
+              <i className="fas fa-keyboard text-cyan-600 dark:text-cyan-400 text-sm"></i>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-cyan-800 dark:text-cyan-200 mb-1">
+                Текстовый ввод
+              </div>
+              <div className="text-xs text-cyan-600 dark:text-cyan-400 space-y-1">
+                {node.data.inputVariable && (
+                  <div className="flex items-center space-x-1">
+                    <i className="fas fa-tag text-xs"></i>
+                    <span>Сохранить в: <code className="bg-cyan-100 dark:bg-cyan-900/50 px-1 py-0.5 rounded text-xs">{node.data.inputVariable}</code></span>
+                  </div>
+                )}
+                {node.data.inputTargetNodeId && (
+                  <div className="flex items-center space-x-1">
+                    <i className="fas fa-arrow-right text-xs"></i>
+                    <span>Следующий узел: {node.data.inputTargetNodeId}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Buttons preview */}
-      {node.data.buttons && node.data.buttons.length > 0 && (
+      {node.data.buttons && node.data.buttons.length > 0 && node.data.keyboardType !== 'none' && (
         <div className="space-y-3">
           <div className="flex items-center space-x-2 mb-3">
             <div className="w-1 h-4 bg-amber-500 dark:bg-amber-400 rounded-full"></div>
