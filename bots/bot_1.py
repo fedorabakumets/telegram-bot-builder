@@ -23,7 +23,7 @@ def get_moscow_time():
     return datetime.now(moscow_tz).isoformat()
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -768,72 +768,6 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
-    
-    # Проверка условных сообщений для keyboard узла
-    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
-    conditional_parse_mode = None
-    conditional_keyboard = None
-    # Функция для проверки переменных пользователя
-    def check_user_variable(var_name, user_data_dict):
-        """Проверяет существование и получает значение переменной пользователя"""
-        if "user_data" in user_data_dict and user_data_dict["user_data"]:
-            try:
-                import json
-                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-                if var_name in parsed_data:
-                    raw_value = parsed_data[var_name]
-                    if isinstance(raw_value, dict) and "value" in raw_value:
-                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
-                    else:
-                        return True, str(raw_value) if raw_value is not None else None
-            except (json.JSONDecodeError, TypeError):
-                pass
-        
-        # Проверяем в локальных данных
-        if var_name in user_data_dict:
-            variable_data = user_data_dict.get(var_name)
-            if isinstance(variable_data, dict) and "value" in variable_data:
-                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-            elif variable_data is not None:
-                return True, str(variable_data)
-        
-        return False, None
-    
-    # Условие 1: user_data_exists для переменных: пол
-    if (
-        check_user_variable("пол", user_data_dict)[0]
-    ):
-        # Собираем значения переменных
-        variable_values = {}
-        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
-        text = "Введите новый пол"
-        conditional_parse_mode = None
-        if "{пол}" in text and variable_values["пол"] is not None:
-            text = text.replace("{пол}", variable_values["пол"])
-        # Создаем inline клавиатуру для условного сообщения
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="profile_command"))
-        builder.add(InlineKeyboardButton(text="Женщина", callback_data="profile_command"))
-        keyboard = builder.as_markup()
-        conditional_keyboard = keyboard
-        # Настраиваем ожидание текстового ввода для условного сообщения
-        conditional_message_config = {
-            "condition_id": "condition-1753986392384",
-            "wait_for_input": False,
-            "input_variable": "",
-            "next_node_id": "",
-            "source_type": "conditional_message"
-        }
-        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    
-    # Используем условное сообщение если есть подходящее условие
-    if "text" not in locals():
-        text = "Какой твой пол?"
-    
-    # Используем условную клавиатуру если есть
-    if conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-    
     # Активируем сбор пользовательского ввода (основной цикл)
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
@@ -1238,16 +1172,16 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start_node":
-            logging.info(f"Переход к узлу start_node типа {navTargetNode.type}")
+            logging.info("Переход к узлу start_node")
         elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
-            logging.info(f"Переход к узлу --2N9FeeykMHVVlsVnSQW типа {navTargetNode.type}")
+            logging.info("Переход к узлу --2N9FeeykMHVVlsVnSQW")
         elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
-            logging.info(f"Переход к узлу nr3wIiTfBYYmpkkXMNH7n типа {navTargetNode.type}")
+            logging.info("Переход к узлу nr3wIiTfBYYmpkkXMNH7n")
         elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
             nav_text = "Печально, если что напиши /start или /profile для просмотра профиля"
             await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-            logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа {navTargetNode.type}")
+            logging.info("Переход к узлу XDSrTrNly5EtDtr85nN4P")
         elif next_node_id == "final-message-node":
             nav_text = """Спасибо за предоставленную информацию! 🎉
 
@@ -1269,10 +1203,8 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
     
     return  # Завершаем обработку после переадресации
     
-    # Проверяем условные сообщения
-    text = None
-    
-    # Получаем данные пользователя для проверки условий
+    text = "Какой твой пол?"
+    # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
         user_record = user_data.get(user_id, {})
@@ -1283,19 +1215,20 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
             if isinstance(user_record["user_data"], str):
                 try:
                     import json
-                    user_data_dict = json.loads(user_record["user_data"])
+                    user_vars = json.loads(user_record["user_data"])
                 except (json.JSONDecodeError, TypeError):
-                    user_data_dict = {}
+                    user_vars = {}
             elif isinstance(user_record["user_data"], dict):
-                user_data_dict = user_record["user_data"]
+                user_vars = user_record["user_data"]
             else:
-                user_data_dict = {}
+                user_vars = {}
         else:
-            user_data_dict = user_record
+            user_vars = user_record
     else:
-        user_data_dict = {}
+        user_vars = {}
     
-    # Функция для замены переменных в тексте
+    # Заменяем все переменные в тексте
+    import re
     def replace_variables_in_text(text_content, variables_dict):
         if not text_content or not variables_dict:
             return text_content
@@ -1312,65 +1245,7 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
                 text_content = text_content.replace(placeholder, var_value)
         return text_content
     
-    conditional_parse_mode = None
-    conditional_keyboard = None
-    # Функция для проверки переменных пользователя
-    def check_user_variable(var_name, user_data_dict):
-        """Проверяет существование и получает значение переменной пользователя"""
-        if "user_data" in user_data_dict and user_data_dict["user_data"]:
-            try:
-                import json
-                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-                if var_name in parsed_data:
-                    raw_value = parsed_data[var_name]
-                    if isinstance(raw_value, dict) and "value" in raw_value:
-                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
-                    else:
-                        return True, str(raw_value) if raw_value is not None else None
-            except (json.JSONDecodeError, TypeError):
-                pass
-        
-        # Проверяем в локальных данных
-        if var_name in user_data_dict:
-            variable_data = user_data_dict.get(var_name)
-            if isinstance(variable_data, dict) and "value" in variable_data:
-                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-            elif variable_data is not None:
-                return True, str(variable_data)
-        
-        return False, None
-    
-    # Условие 1: user_data_exists для переменных: пол
-    if (
-        check_user_variable("пол", user_data_dict)[0]
-    ):
-        # Собираем значения переменных
-        variable_values = {}
-        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
-        text = "Введите новый пол"
-        conditional_parse_mode = None
-        if "{пол}" in text and variable_values["пол"] is not None:
-            text = text.replace("{пол}", variable_values["пол"])
-        # Создаем inline клавиатуру для условного сообщения
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="profile_command"))
-        builder.add(InlineKeyboardButton(text="Женщина", callback_data="profile_command"))
-        keyboard = builder.as_markup()
-        conditional_keyboard = keyboard
-        # Настраиваем ожидание текстового ввода для условного сообщения
-        conditional_message_config = {
-            "condition_id": "condition-1753986392384",
-            "wait_for_input": False,
-            "input_variable": "",
-            "next_node_id": "",
-            "source_type": "conditional_message"
-        }
-        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    else:
-        text = "Какой твой пол?"
-        text = replace_variables_in_text(text, user_data_dict)
-        logging.info("Используется основное сообщение узла")
-    
+    text = replace_variables_in_text(text, user_vars)
     # Активируем сбор пользовательского ввода
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
@@ -1425,16 +1300,16 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start_node":
-            logging.info(f"Переход к узлу start_node типа {navTargetNode.type}")
+            logging.info("Переход к узлу start_node")
         elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
-            logging.info(f"Переход к узлу --2N9FeeykMHVVlsVnSQW типа {navTargetNode.type}")
+            logging.info("Переход к узлу --2N9FeeykMHVVlsVnSQW")
         elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
-            logging.info(f"Переход к узлу nr3wIiTfBYYmpkkXMNH7n типа {navTargetNode.type}")
+            logging.info("Переход к узлу nr3wIiTfBYYmpkkXMNH7n")
         elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
             nav_text = "Печально, если что напиши /start или /profile для просмотра профиля"
             await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-            logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа {navTargetNode.type}")
+            logging.info("Переход к узлу XDSrTrNly5EtDtr85nN4P")
         elif next_node_id == "final-message-node":
             nav_text = """Спасибо за предоставленную информацию! 🎉
 
@@ -1547,20 +1422,20 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
     await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
     
     # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
-    next_node_id = "profile_command"
+    next_node_id = "XDSrTrNly5EtDtr85nN4P"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start_node":
-            logging.info(f"Переход к узлу start_node типа {navTargetNode.type}")
+            logging.info("Переход к узлу start_node")
         elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
-            logging.info(f"Переход к узлу --2N9FeeykMHVVlsVnSQW типа {navTargetNode.type}")
+            logging.info("Переход к узлу --2N9FeeykMHVVlsVnSQW")
         elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
-            logging.info(f"Переход к узлу nr3wIiTfBYYmpkkXMNH7n типа {navTargetNode.type}")
+            logging.info("Переход к узлу nr3wIiTfBYYmpkkXMNH7n")
         elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
             nav_text = "Печально, если что напиши /start или /profile для просмотра профиля"
             await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-            logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа {navTargetNode.type}")
+            logging.info("Переход к узлу XDSrTrNly5EtDtr85nN4P")
         elif next_node_id == "final-message-node":
             nav_text = """Спасибо за предоставленную информацию! 🎉
 

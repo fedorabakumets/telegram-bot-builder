@@ -2181,7 +2181,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   code += '            fake_message.answer = callback_query.message.answer\n';
                   code += `            await ${handlerName}(fake_message)\n`;
                 } else {
-                  code += `            logging.info(f"Переход к узлу ${navTargetNode.id} типа {navTargetNode.type}")\n`;
+                  code += `            logging.info("Переход к узлу ${navTargetNode.id}")\n`;
                 }
               });
               
