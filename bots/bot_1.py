@@ -1886,7 +1886,7 @@ async def handle_user_input(message: types.Message):
                 # Проверяем, является ли это командой
                 if next_node_id == "profile_command":
                     logging.info("Переход к команде /profile")
-                    await handle_profile_command(message)
+                    await profile_handler(message)
                 else:
                     # Создаем фиктивный callback для навигации к обычному узлу
                     import types as aiogram_types
