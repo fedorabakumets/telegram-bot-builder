@@ -1569,7 +1569,18 @@ export async function seedDefaultTemplates(force = false) {
               inputVariable: "пол",
               resizeKeyboard: true,
               oneTimeKeyboard: false,
-              collectUserInput: true
+              collectUserInput: true,
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "gender_already_set",
+                  condition: "user_data_exists",
+                  variableName: "пол",
+                  messageText: "Вы уже указали свой пол: {пол}\n\nХотите изменить эту информацию?",
+                  priority: 10
+                }
+              ],
+              fallbackMessage: "Какой твой пол?"
             }
           },
           {
