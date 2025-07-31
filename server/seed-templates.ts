@@ -14,47 +14,47 @@ export async function seedDefaultTemplates() {
 
     // Простой информационный бот
     await storage.createBotTemplate({
-      name: "Простой информационный бот",
-      description: "Базовый бот для предоставления информации с главным меню и командами",
+      name: "Базовый шаблон бота",
+      description: "Современный базовый шаблон с улучшенной навигацией и сбором пользовательских данных",
       category: "business",
-      tags: ["информация", "меню", "базовый"],
+      tags: ["базовый", "навигация", "данные"],
       isPublic: 1,
       difficulty: "easy",
       authorName: "Система",
-      version: "1.0.0",
+      version: "2.0.0",
       featured: 1,
       language: "ru",
-      complexity: 3,
-      estimatedTime: 10,
+      complexity: 4,
+      estimatedTime: 12,
       data: {
         nodes: [
           {
-            id: "start-1",
+            id: "start-node",
             type: "start",
             position: { x: 100, y: 100 },
             data: {
               command: "/start",
-              description: "Приветствие пользователя",
-              messageText: "Добро пожаловать! 👋\n\nЯ информационный бот. Выберите, что вас интересует:",
-              keyboardType: "reply",
+              description: "Начальный узел бота",
+              messageText: "Добро пожаловать! 👋\n\nЯ ваш помощник. Выберите действие:",
+              keyboardType: "inline",
               buttons: [
                 {
-                  id: "btn-1",
+                  id: "btn-info",
                   text: "📋 Информация",
                   action: "goto",
-                  target: "info-1"
+                  target: "info-node"
                 },
                 {
-                  id: "btn-2",
-                  text: "📞 Контакты",
+                  id: "btn-survey",
+                  text: "📝 Заполнить анкету",
                   action: "goto",
-                  target: "contacts-1"
+                  target: "survey-start"
                 },
                 {
-                  id: "btn-3",
-                  text: "❓ Помощь",
+                  id: "btn-profile",
+                  text: "👤 Мой профиль",
                   action: "command",
-                  target: "/help"
+                  target: "/profile"
                 }
               ],
               markdown: false,
@@ -63,41 +63,168 @@ export async function seedDefaultTemplates() {
             }
           },
           {
-            id: "info-1",
+            id: "info-node",
             type: "message",
-            position: { x: 350, y: 100 },
+            position: { x: 400, y: 100 },
             data: {
-              messageText: "ℹ️ Информация о нас\n\nМы предоставляем качественные услуги и всегда готовы помочь нашим клиентам.",
-              keyboardType: "reply",
+              messageText: "ℹ️ Информация о сервисе\n\nМы предоставляем качественные услуги и помогаем пользователям решать их задачи.\n\nВыберите раздел для получения подробной информации:",
+              keyboardType: "inline",
               buttons: [
                 {
-                  id: "btn-back-1",
-                  text: "◀️ Назад",
+                  id: "btn-contacts",
+                  text: "📞 Контакты",
                   action: "goto",
-                  target: "start-1"
+                  target: "contacts-node"
+                },
+                {
+                  id: "btn-services",
+                  text: "🛍️ Услуги",
+                  action: "goto",
+                  target: "services-node"
+                },
+                {
+                  id: "btn-back-main",
+                  text: "◀️ Главное меню",
+                  action: "goto",
+                  target: "start-node"
                 }
               ],
-              formatMode: "none",
+              markdown: false,
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
           },
           {
-            id: "contacts-1",
+            id: "contacts-node",
             type: "message",
-            position: { x: 350, y: 250 },
+            position: { x: 700, y: 50 },
             data: {
-              messageText: "📞 Наши контакты:\n\n📧 Email: info@example.com\n📱 Телефон: +7 (999) 123-45-67\n🌐 Сайт: example.com",
-              keyboardType: "reply",
+              messageText: "📞 Контактная информация:\n\n📧 Email: support@example.com\n📱 Телефон: +7 (999) 123-45-67\n🌐 Сайт: www.example.com\n💬 Telegram: @support_bot",
+              keyboardType: "inline",
               buttons: [
                 {
-                  id: "btn-back-2",
-                  text: "◀️ Назад",
+                  id: "btn-back-info",
+                  text: "◀️ Назад к информации",
                   action: "goto",
-                  target: "start-1"
+                  target: "info-node"
+                },
+                {
+                  id: "btn-main-menu",
+                  text: "🏠 Главное меню",
+                  action: "goto",
+                  target: "start-node"
                 }
               ],
-              formatMode: "none",
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "services-node",
+            type: "message",
+            position: { x: 700, y: 200 },
+            data: {
+              messageText: "🛍️ Наши услуги:\n\n• Консультации\n• Техническая поддержка\n• Обучение\n• Индивидуальные решения\n\nВсе услуги предоставляются профессиональными специалистами.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-back-info-2",
+                  text: "◀️ Назад к информации",
+                  action: "goto",
+                  target: "info-node"
+                },
+                {
+                  id: "btn-contact-us",
+                  text: "📞 Связаться с нами",
+                  action: "goto",
+                  target: "contacts-node"
+                }
+              ],
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "survey-start",
+            type: "keyboard",
+            position: { x: 100, y: 400 },
+            data: {
+              messageText: "📝 Давайте познакомимся!\n\nКак вас зовут?",
+              keyboardType: "none",
+              buttons: [],
+              markdown: false,
+              inputVariable: "имя",
+              enableTextInput: true,
+              collectUserInput: true,
+              inputTargetNodeId: "survey-age",
+              resizeKeyboard: true,
+              oneTimeKeyboard: false
+            }
+          },
+          {
+            id: "survey-age",
+            type: "keyboard",
+            position: { x: 400, y: 400 },
+            data: {
+              messageText: "Приятно познакомиться! 😊\n\nСколько вам лет?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-age-18-25",
+                  text: "18-25",
+                  action: "goto",
+                  target: "survey-complete"
+                },
+                {
+                  id: "btn-age-26-35",
+                  text: "26-35",
+                  action: "goto",
+                  target: "survey-complete"
+                },
+                {
+                  id: "btn-age-36-50",
+                  text: "36-50",
+                  action: "goto",
+                  target: "survey-complete"
+                },
+                {
+                  id: "btn-age-50+",
+                  text: "50+",
+                  action: "goto",
+                  target: "survey-complete"
+                }
+              ],
+              markdown: false,
+              inputVariable: "возраст",
+              collectUserInput: true,
+              resizeKeyboard: true,
+              oneTimeKeyboard: false
+            }
+          },
+          {
+            id: "survey-complete",
+            type: "message",
+            position: { x: 700, y: 400 },
+            data: {
+              messageText: "Спасибо за заполнение анкеты! 🎉\n\nВаши данные сохранены. Теперь вы можете воспользоваться всеми функциями бота.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-view-profile",
+                  text: "👤 Посмотреть профиль",
+                  action: "command",
+                  target: "/profile"
+                },
+                {
+                  id: "btn-main-menu-final",
+                  text: "🏠 Главное меню",
+                  action: "goto",
+                  target: "start-node"
+                }
+              ],
+              markdown: false,
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
