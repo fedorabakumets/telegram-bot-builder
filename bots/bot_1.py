@@ -806,22 +806,16 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
-        text = "Введите новый пол"
+        text = ""
         conditional_parse_mode = None
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
-        # Создаем inline клавиатуру для условного сообщения
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="profile_command"))
-        builder.add(InlineKeyboardButton(text="Женщина", callback_data="profile_command"))
-        keyboard = builder.as_markup()
-        conditional_keyboard = keyboard
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753986392384",
+            "condition_id": "gender_exists_redirect",
             "wait_for_input": False,
             "input_variable": "",
-            "next_node_id": "",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
@@ -1347,22 +1341,16 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
-        text = "Введите новый пол"
+        text = ""
         conditional_parse_mode = None
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
-        # Создаем inline клавиатуру для условного сообщения
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="profile_command"))
-        builder.add(InlineKeyboardButton(text="Женщина", callback_data="profile_command"))
-        keyboard = builder.as_markup()
-        conditional_keyboard = keyboard
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753986392384",
+            "condition_id": "gender_exists_redirect",
             "wait_for_input": False,
             "input_variable": "",
-            "next_node_id": "",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
