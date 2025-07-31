@@ -1534,6 +1534,11 @@ async def handle_callback_tsSItnybr5r5klZsmq4gN(callback_query: types.CallbackQu
         button_display_text = "Женщина"
     if callback_query.data.endswith("_btn_1"):
         button_display_text = "Мужчина"
+    # Дополнительная проверка по точному соответствию callback_data
+    if callback_query.data == "tsSItnybr5r5klZsmq4gN":
+        button_display_text = "Женщина"
+    if callback_query.data == "tsSItnybr5r5klZsmq4gN":
+        button_display_text = "Мужчина"
     
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
@@ -1546,8 +1551,8 @@ async def handle_callback_tsSItnybr5r5klZsmq4gN(callback_query: types.CallbackQu
     user_data[user_id]["button_click"] = button_display_text
     
     # Сохраняем в базу данных с правильным именем переменной
-    await update_user_data_in_db(user_id, "пол", button_display_text)
-    logging.info(f"Переменная пол сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    await update_user_data_in_db(user_id, "пол", "Женщина")
+    logging.info(f"Переменная пол сохранена: " + str("Женщина") + f" (пользователь {user_id})")
     
     # Проверяем условные сообщения
     text = None

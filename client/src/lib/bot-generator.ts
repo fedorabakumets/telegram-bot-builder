@@ -2041,6 +2041,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `    if callback_query.data.endswith("_btn_${index}"):\n`;
               code += `        button_display_text = "${button.text}"\n`;
             });
+            
+            // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: ищем кнопку по точному соответствию callback_data с nodeId
+            code += `    # Дополнительная проверка по точному соответствию callback_data\n`;
+            buttonsToTargetNode.forEach((button) => {
+              code += `    if callback_query.data == "${nodeId}":\n`;
+              // Для случая когда несколько кнопок ведут к одному узлу, используем первую найденную
+              code += `        button_display_text = "${button.text}"\n`;
+            });
           } else if (sourceNode) {
             const button = sourceNode.data.buttons.find(btn => btn.target === nodeId);
             if (button) {
@@ -2094,6 +2102,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 variableValue = '"friends"';
               } else if (button.id === 'btn_ads' || nodeId === 'source_ads') {
                 variableValue = '"ads"';
+              } else if (variableName === 'пол') {
+                // Специальная логика для переменной "пол"
+                if (button.text === 'Мужчина' || button.text === '👨 Мужчина') {
+                  variableValue = '"Мужчина"';
+                } else if (button.text === 'Женщина' || button.text === '👩 Женщина') {
+                  variableValue = '"Женщина"';
+                } else {
+                  variableValue = `"${button.text}"`;
+                }
               } else {
                 variableValue = 'button_display_text';
               }
