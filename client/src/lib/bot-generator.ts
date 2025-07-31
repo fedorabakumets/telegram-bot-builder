@@ -2288,16 +2288,59 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                           code += `                    text = text.replace("{${varName}}", variable_values["${varName}"])\n`;
                         }
                         
-                        // Настраиваем ожидание текстового ввода для условного сообщения
-                        code += `                # Настраиваем ожидание текстового ввода для условного сообщения\n`;
-                        code += `                user_data[user_id]["waiting_for_input"] = {\n`;
-                        code += `                    "type": "text",\n`;
-                        code += `                    "variable": "${condition.textInputVariable || inputVariable}",\n`;
-                        code += `                    "save_to_database": True,\n`;
-                        code += `                    "node_id": "${navTargetNode.id}",\n`;
-                        code += `                    "next_node_id": "${condition.nextNodeAfterInput || inputTargetNodeId}"\n`;
-                        code += `                }\n`;
-                        code += `                await bot.send_message(user_id, text)\n`;
+                        // Генерируем клавиатуру для условного сообщения если она есть
+                        if (condition.keyboardType && condition.keyboardType !== 'none' && condition.buttons && condition.buttons.length > 0) {
+                          code += '                # Создаем клавиатуру для условного сообщения\n';
+                          
+                          if (condition.keyboardType === 'inline') {
+                            code += '                builder = InlineKeyboardBuilder()\n';
+                            condition.buttons.forEach((button: any) => {
+                              if (button.action === "url") {
+                                code += `                builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+                              } else if (button.action === 'goto') {
+                                const callbackData = button.target || button.id || 'no_action';
+                                code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+                              } else if (button.action === 'command') {
+                                // Для кнопок команд создаем специальную callback_data
+                                const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+                                code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+                              } else {
+                                const callbackData = button.target || button.id || 'no_action';
+                                code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+                              }
+                            });
+                            code += '                conditional_keyboard = builder.as_markup()\n';
+                            code += '                await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n';
+                          } else if (condition.keyboardType === 'reply') {
+                            code += '                builder = ReplyKeyboardBuilder()\n';
+                            condition.buttons.forEach((button: any) => {
+                              if (button.action === "contact" && button.requestContact) {
+                                code += `                builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+                              } else if (button.action === "location" && button.requestLocation) {
+                                code += `                builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+                              } else {
+                                code += `                builder.add(KeyboardButton(text="${button.text}"))\n`;
+                              }
+                            });
+                            code += '                conditional_keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)\n';
+                            code += '                await bot.send_message(user_id, text, reply_markup=conditional_keyboard)\n';
+                          }
+                        } else {
+                          // Нет клавиатуры - отправляем только текст
+                          code += '                await bot.send_message(user_id, text)\n';
+                        }
+                        
+                        // Настраиваем ожидание текстового ввода для условного сообщения (если нужно)
+                        if (condition.waitForTextInput) {
+                          code += `                # Настраиваем ожидание текстового ввода для условного сообщения\n`;
+                          code += `                user_data[user_id]["waiting_for_input"] = {\n`;
+                          code += `                    "type": "text",\n`;
+                          code += `                    "variable": "${condition.textInputVariable || inputVariable}",\n`;
+                          code += `                    "save_to_database": True,\n`;
+                          code += `                    "node_id": "${navTargetNode.id}",\n`;
+                          code += `                    "next_node_id": "${condition.nextNodeAfterInput || inputTargetNodeId}"\n`;
+                          code += `                }\n`;
+                        }
                       }
                     }
                     

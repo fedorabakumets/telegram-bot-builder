@@ -1493,6 +1493,7 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
                 text = "У вас уже есть имя: {имя}. Введите новое имя:"
                 if "{имя}" in text and variable_values["имя"] is not None:
                     text = text.replace("{имя}", variable_values["имя"])
+                await bot.send_message(user_id, text)
                 # Настраиваем ожидание текстового ввода для условного сообщения
                 user_data[user_id]["waiting_for_input"] = {
                     "type": "text",
@@ -1501,7 +1502,6 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
                     "node_id": "XDSrTrNly5EtDtr85nN4P",
                     "next_node_id": "profile_command"
                 }
-                await bot.send_message(user_id, text)
             else:
                 # Fallback сообщение
                 nav_text = "Как тебя зовут?"
@@ -1762,6 +1762,7 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
                 text = "У вас уже есть имя: {имя}. Введите новое имя:"
                 if "{имя}" in text and variable_values["имя"] is not None:
                     text = text.replace("{имя}", variable_values["имя"])
+                await bot.send_message(user_id, text)
                 # Настраиваем ожидание текстового ввода для условного сообщения
                 user_data[user_id]["waiting_for_input"] = {
                     "type": "text",
@@ -1770,7 +1771,6 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
                     "node_id": "XDSrTrNly5EtDtr85nN4P",
                     "next_node_id": "profile_command"
                 }
-                await bot.send_message(user_id, text)
             else:
                 # Fallback сообщение
                 nav_text = "Как тебя зовут?"
@@ -1959,6 +1959,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
                 text = "У вас уже есть имя: {имя}. Введите новое имя:"
                 if "{имя}" in text and variable_values["имя"] is not None:
                     text = text.replace("{имя}", variable_values["имя"])
+                await bot.send_message(user_id, text)
                 # Настраиваем ожидание текстового ввода для условного сообщения
                 user_data[user_id]["waiting_for_input"] = {
                     "type": "text",
@@ -1967,7 +1968,6 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
                     "node_id": "XDSrTrNly5EtDtr85nN4P",
                     "next_node_id": "profile_command"
                 }
-                await bot.send_message(user_id, text)
             else:
                 # Fallback сообщение
                 nav_text = "Как тебя зовут?"
