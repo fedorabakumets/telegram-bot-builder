@@ -380,6 +380,7 @@ async def profile_handler(message: types.Message):
             "condition_id": "profile_with_all_data",
             "wait_for_input": False,
             "input_variable": "",
+            "next_node_id": "",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
@@ -403,6 +404,7 @@ async def profile_handler(message: types.Message):
             "condition_id": "profile_basic_info",
             "wait_for_input": False,
             "input_variable": "",
+            "next_node_id": "",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
@@ -426,6 +428,7 @@ async def profile_handler(message: types.Message):
             "condition_id": "profile_partial",
             "wait_for_input": False,
             "input_variable": "",
+            "next_node_id": "",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
@@ -465,6 +468,7 @@ async def profile_handler(message: types.Message):
             "condition_id": "profile_any_data",
             "wait_for_input": False,
             "input_variable": "",
+            "next_node_id": "",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
@@ -583,6 +587,7 @@ async def profile_handler(message: types.Message):
             "condition_id": "profile_with_all_data",
             "wait_for_input": False,
             "input_variable": "",
+            "next_node_id": "",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
@@ -606,6 +611,7 @@ async def profile_handler(message: types.Message):
             "condition_id": "profile_basic_info",
             "wait_for_input": False,
             "input_variable": "",
+            "next_node_id": "",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
@@ -629,6 +635,7 @@ async def profile_handler(message: types.Message):
             "condition_id": "profile_partial",
             "wait_for_input": False,
             "input_variable": "",
+            "next_node_id": "",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
@@ -668,6 +675,7 @@ async def profile_handler(message: types.Message):
             "condition_id": "profile_any_data",
             "wait_for_input": False,
             "input_variable": "",
+            "next_node_id": "",
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
@@ -960,8 +968,14 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
+        
+        # Если есть условное сообщение с ожиданием ввода
+        if conditional_message_config and conditional_message_config.get("wait_for_input"):
+            user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
+            logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Используем условное сообщение если есть подходящее условие
@@ -1091,8 +1105,14 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
+        
+        # Если есть условное сообщение с ожиданием ввода
+        if conditional_message_config and conditional_message_config.get("wait_for_input"):
+            user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
+            logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Используем условное сообщение если есть подходящее условие
@@ -1223,8 +1243,14 @@ async def handle_callback_huw0IUm0SHKEEr1090_EP(callback_query: types.CallbackQu
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
+        
+        # Если есть условное сообщение с ожиданием ввода
+        if conditional_message_config and conditional_message_config.get("wait_for_input"):
+            user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
+            logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     
     # Используем условное сообщение если есть подходящее условие
@@ -1534,8 +1560,14 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
+        
+        # Если есть условное сообщение с ожиданием ввода
+        if conditional_message_config and conditional_message_config.get("wait_for_input"):
+            user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
+            logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     else:
         text = "Как тебя зовут?"

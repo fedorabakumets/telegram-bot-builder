@@ -264,8 +264,18 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
+        
+        // Добавляем код для активации состояния условного ввода
+        if (condition.waitForTextInput) {
+          code += `${indentLevel}    \n`;
+          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
+          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
+          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
+          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+        }
         
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} (${logicOperator})")\n`;
         break;
@@ -308,8 +318,18 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
         code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
+        
+        // Добавляем код для активации состояния условного ввода для user_data_not_exists
+        if (condition.waitForTextInput) {
+          code += `${indentLevel}    \n`;
+          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
+          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
+          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
+          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+        }
         
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные ${variableNames} не существуют (${logicOperator})")\n`;
         break;
@@ -365,6 +385,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
         
+        // Добавляем код для активации состояния условного ввода для user_data_equals
+        if (condition.waitForTextInput) {
+          code += `${indentLevel}    \n`;
+          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
+          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
+          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
+          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+        }
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} равны '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
         
@@ -419,6 +448,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
         
+        // Добавляем код для активации состояния условного ввода для user_data_contains
+        if (condition.waitForTextInput) {
+          code += `${indentLevel}    \n`;
+          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
+          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
+          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
+          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+        }
+        
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} содержат '${condition.expectedValue || ''}' (${logicOperator})")\n`;
         break;
         
@@ -446,6 +484,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
         
+        // Добавляем код для активации состояния условного ввода для first_time
+        if (condition.waitForTextInput) {
+          code += `${indentLevel}    \n`;
+          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
+          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
+          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
+          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+        }
+        
         code += `${indentLevel}    logging.info("Условие выполнено: первое посещение пользователя")\n`;
         break;
         
@@ -472,6 +519,15 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
+        
+        // Добавляем код для активации состояния условного ввода для returning_user
+        if (condition.waitForTextInput) {
+          code += `${indentLevel}    \n`;
+          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
+          code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
+          code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
+          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+        }
         
         code += `${indentLevel}    logging.info("Условие выполнено: возвращающийся пользователь")\n`;
         break;
