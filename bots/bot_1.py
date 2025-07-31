@@ -944,19 +944,15 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
         
         return False, None
     
-    # Условие 1: user_data_exists для переменных: source, имя
+    # Условие 1: user_data_exists для переменных: имя
     if (
-        check_user_variable("source", user_data_dict)[0] and
         check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["source"] = check_user_variable("source", user_data_dict)
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = "Введите новое имя"
         conditional_parse_mode = None
-        if "{source}" in text and variable_values["source"] is not None:
-            text = text.replace("{source}", variable_values["source"])
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
@@ -1079,19 +1075,15 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
         
         return False, None
     
-    # Условие 1: user_data_exists для переменных: source, имя
+    # Условие 1: user_data_exists для переменных: имя
     if (
-        check_user_variable("source", user_data_dict)[0] and
         check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["source"] = check_user_variable("source", user_data_dict)
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = "Введите новое имя"
         conditional_parse_mode = None
-        if "{source}" in text and variable_values["source"] is not None:
-            text = text.replace("{source}", variable_values["source"])
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
@@ -1215,19 +1207,15 @@ async def handle_callback_jZwglyg2qtS6fpSsPyCyN(callback_query: types.CallbackQu
         
         return False, None
     
-    # Условие 1: user_data_exists для переменных: source, имя
+    # Условие 1: user_data_exists для переменных: имя
     if (
-        check_user_variable("source", user_data_dict)[0] and
         check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["source"] = check_user_variable("source", user_data_dict)
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = "Введите новое имя"
         conditional_parse_mode = None
-        if "{source}" in text and variable_values["source"] is not None:
-            text = text.replace("{source}", variable_values["source"])
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
@@ -1530,19 +1518,15 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
         
         return False, None
     
-    # Условие 1: user_data_exists для переменных: source, имя
+    # Условие 1: user_data_exists для переменных: имя
     if (
-        check_user_variable("source", user_data_dict)[0] and
         check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["source"] = check_user_variable("source", user_data_dict)
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = "Введите новое имя"
         conditional_parse_mode = None
-        if "{source}" in text and variable_values["source"] is not None:
-            text = text.replace("{source}", variable_values["source"])
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
