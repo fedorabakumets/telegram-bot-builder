@@ -1580,6 +1580,7 @@ export async function seedDefaultTemplates(force = false) {
                   logicOperator: "AND",
                   messageText: "Вы уже указали свой пол: {пол}\n\nВаш профиль заполнен. Посмотреть профиль?",
                   priority: 10,
+                  keyboardType: "inline",
                   buttons: [
                     {
                       id: "btn-view-profile-gender",
