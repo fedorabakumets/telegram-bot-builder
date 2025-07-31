@@ -1547,9 +1547,29 @@ export async function seedDefaultTemplates() {
                   text: "📝 Пройти опрос",
                   action: "command",
                   target: "/start"
+                },
+                {
+                  id: "btn-edit-name-default",
+                  text: "✏️ Редактировать имя",
+                  action: "goto",
+                  target: "XDSrTrNly5EtDtr85nN4P"
                 }
               ],
               fallbackMessage: "👤 Профиль недоступен\n\nПохоже, вы еще не прошли опрос. Пожалуйста, введите /start чтобы заполнить профиль.",
+              fallbackButtons: [
+                {
+                  id: "btn-start-survey-fallback",
+                  text: "📝 Пройти опрос",
+                  action: "command",
+                  target: "/start"
+                },
+                {
+                  id: "btn-edit-name-fallback",
+                  text: "✏️ Редактировать имя",
+                  action: "goto",
+                  target: "XDSrTrNly5EtDtr85nN4P"
+                }
+              ],
               conditionalMessages: [
                 {
                   id: "profile_with_all_data",
@@ -1601,7 +1621,21 @@ export async function seedDefaultTemplates() {
                   condition: "user_data_exists",
                   variableNames: ["источник"],
                   logicOperator: "OR",
-                  messageText: "👤 Частичный профиль:\n\n🔍 Источник: {источник}\n\nПрофиль заполнен частично. Пройдите полный опрос для получения более детальной информации."
+                  messageText: "👤 Частичный профиль:\n\n🔍 Источник: {источник}\n\nПрофиль заполнен частично. Пройдите полный опрос для получения более детальной информации.",
+                  buttons: [
+                    {
+                      id: "btn-edit-name-partial",
+                      text: "✏️ Редактировать имя",
+                      action: "goto",
+                      target: "XDSrTrNly5EtDtr85nN4P"
+                    },
+                    {
+                      id: "btn-complete-survey-partial",
+                      text: "📝 Завершить опрос",
+                      action: "command",
+                      target: "/start"
+                    }
+                  ]
                 },
                 {
                   id: "profile_any_data",
