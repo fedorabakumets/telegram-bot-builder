@@ -353,36 +353,46 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
       <div className="flex items-start mb-6 relative">
         <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mr-4 shadow-sm relative", nodeColors[node.type])}>
           <i className={cn(nodeIcons[node.type], "text-lg")}></i>
-          {/* Status indicator */}
-          {(() => {
-            const hasRequiredFields = (() => {
-              switch (node.type) {
-                case 'photo': return !!node.data.imageUrl;
-                case 'video': return !!node.data.videoUrl;
-                case 'audio': return !!node.data.audioUrl;
-                case 'document': return !!node.data.documentUrl;
-                case 'sticker': return !!(node.data.stickerUrl || node.data.stickerFileId);
-                case 'voice': return !!node.data.voiceUrl;
-                case 'animation': return !!node.data.animationUrl;
-                case 'location': return !!(node.data.latitude && node.data.longitude);
-                case 'contact': return !!(node.data.phoneNumber && node.data.firstName);
-                case 'poll': return !!(node.data.question && node.data.options?.length);
-                case 'command': return !!node.data.command;
-                case 'user-input': return !!(node.data.inputType && node.data.variableName);
-                default: return !!node.data.messageText;
-              }
-            })();
+          {/* Status indicators */}
+          <div className="absolute -top-1 -right-1 flex items-center space-x-1">
+            {/* Conditional messages indicator */}
+            {node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0 && (
+              <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900" title={`Условные сообщения: ${node.data.conditionalMessages.length}`}>
+                <i className="fas fa-code-branch text-white text-xs"></i>
+              </div>
+            )}
             
-            return hasRequiredFields ? (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
-                <i className="fas fa-check text-white text-xs"></i>
-              </div>
-            ) : (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
-                <i className="fas fa-exclamation text-white text-xs"></i>
-              </div>
-            );
-          })()}
+            {/* Main status indicator */}
+            {(() => {
+              const hasRequiredFields = (() => {
+                switch (node.type) {
+                  case 'photo': return !!node.data.imageUrl;
+                  case 'video': return !!node.data.videoUrl;
+                  case 'audio': return !!node.data.audioUrl;
+                  case 'document': return !!node.data.documentUrl;
+                  case 'sticker': return !!(node.data.stickerUrl || node.data.stickerFileId);
+                  case 'voice': return !!node.data.voiceUrl;
+                  case 'animation': return !!node.data.animationUrl;
+                  case 'location': return !!(node.data.latitude && node.data.longitude);
+                  case 'contact': return !!(node.data.phoneNumber && node.data.firstName);
+                  case 'poll': return !!(node.data.question && node.data.options?.length);
+                  case 'command': return !!node.data.command;
+                  case 'user-input': return !!(node.data.inputType && node.data.variableName);
+                  default: return !!node.data.messageText;
+                }
+              })();
+              
+              return hasRequiredFields ? (
+                <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
+                  <i className="fas fa-check text-white text-xs"></i>
+                </div>
+              ) : (
+                <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
+                  <i className="fas fa-exclamation text-white text-xs"></i>
+                </div>
+              );
+            })()}
+          </div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
@@ -854,6 +864,53 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
           </div>
         </div>
       )}
+      
+      {/* Conditional Messages Indicator */}
+      {node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0 && (
+        <div className="bg-gradient-to-br from-purple-50/80 to-indigo-50/80 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-3 mb-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+              <i className="fas fa-code-branch text-purple-600 dark:text-purple-400 text-xs"></i>
+            </div>
+            <div className="text-xs font-medium text-purple-700 dark:text-purple-300">
+              Условные сообщения ({node.data.conditionalMessages.length})
+            </div>
+          </div>
+          <div className="space-y-1">
+            {node.data.conditionalMessages.slice(0, 2).map((condition, index) => (
+              <div key={condition.id || index} className="text-xs text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-950/30 rounded px-2 py-1 border border-purple-200/20 dark:border-purple-800/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1">
+                    <i className="fas fa-filter text-xs opacity-70"></i>
+                    <span className="truncate max-w-[120px]">
+                      {condition.condition === 'user_data_equals' ? 'Точное совпадение' : 
+                       condition.condition === 'user_data_contains' ? 'Содержит текст' :
+                       condition.condition === 'user_data_exists' ? 'Данные существуют' :
+                       condition.condition === 'user_data_not_exists' ? 'Данных нет' :
+                       condition.condition === 'first_time' ? 'Первый раз' :
+                       condition.condition === 'returning_user' ? 'Возвращающийся' : 'Условие'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-xs opacity-70">#{condition.priority || 0}</span>
+                  </div>
+                </div>
+                {condition.messageText && (
+                  <div className="text-xs opacity-80 truncate mt-1 max-w-[180px]">
+                    "{condition.messageText.substring(0, 30)}{condition.messageText.length > 30 ? '...' : ''}"
+                  </div>
+                )}
+              </div>
+            ))}
+            {node.data.conditionalMessages.length > 2 && (
+              <div className="text-xs text-purple-500 dark:text-purple-400 text-center py-1 opacity-70">
+                +{node.data.conditionalMessages.length - 2} еще
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
       {/* Buttons preview */}
       {node.data.buttons && node.data.buttons.length > 0 && (
         <div className="space-y-3">
