@@ -1962,7 +1962,14 @@ async def handle_user_input(message: types.Message):
 Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
                         await message.answer(text)
                     elif next_node_id == "profile_command":
-                        logging.info(f"Переход к узлу profile_command типа command")
+                        # Выполняем команду /profile
+                        from types import SimpleNamespace
+                        fake_message = SimpleNamespace()
+                        fake_message.from_user = message.from_user
+                        fake_message.chat = message.chat
+                        fake_message.date = message.date
+                        fake_message.answer = message.answer
+                        await profile_handler(fake_message)
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                 except Exception as e:
