@@ -1022,27 +1022,31 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    keyboard = None\n';
               }
               
-              // Проверяем, есть ли у узла inline кнопки
+              // Проверяем, есть ли у узла inline кнопки (только если нет условной клавиатуры)
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                code += '    # Создаем inline клавиатуру для целевого узла\n';
-                code += '    builder = InlineKeyboardBuilder()\n';
+                code += '    # Проверяем, есть ли условная клавиатура\n';
+                code += '    if keyboard is None:\n';
+                code += '        # Создаем inline клавиатуру для целевого узла\n';
+                code += '        builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
-                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
                     // Создаем уникальный callback_data для каждой кнопки
                     const baseCallbackData = btn.target || btn.id || 'no_action';
                     const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   } else if (btn.action === 'command') {
                     // Для кнопок команд создаем специальную callback_data
                     const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
-                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
-                code += '    keyboard = builder.as_markup()\n';
-              } else {
-                code += '    keyboard = None\n';
+                code += '        keyboard = builder.as_markup()\n';
+              } else if (targetNode.data.keyboardType !== "inline") {
+                // Сохраняем keyboard = None только если это не inline клавиатура
+                code += '    if keyboard is None:\n';
+                code += '        keyboard = None\n';
               }
               
               // Добавляем настройку ожидания текстового ввода для условных сообщений
@@ -1900,21 +1904,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `    user_data[callback_query.from_user.id]["input_target_node_id"] = "${inputTargetNodeId || ''}"\n`;
                 code += '    \n';
                 
-                // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок даже при включенном сборе ввода
+                // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок с проверкой условной клавиатуры
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                  code += '    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
-                  code += '    builder = InlineKeyboardBuilder()\n';
+                  code += '    # Проверяем, есть ли условная клавиатуря для этого узла\n';
+                  code += '    if "keyboard" not in locals() or keyboard is None:\n';
+                  code += '        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
+                  code += '        builder = InlineKeyboardBuilder()\n';
                   targetNode.data.buttons.forEach((btn, index) => {
                     if (btn.action === "url") {
-                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                      code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                     } else if (btn.action === 'goto') {
                       // Создаем уникальный callback_data для каждой кнопки
                       const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                       const uniqueCallbackData = `${callbackData}_btn_${targetNode.data.buttons.indexOf(btn)}`;
-                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${uniqueCallbackData}"))\n`;
+                      code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${uniqueCallbackData}"))\n`;
                     }
                   });
-                  code += '    keyboard = builder.as_markup()\n';
+                  code += '        keyboard = builder.as_markup()\n';
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';
                   if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -2519,25 +2525,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `    user_data[callback_query.from_user.id]["input_target_node_id"] = "${inputTargetNodeId || ''}"\n`;
               code += '    \n';
               
-              // ИСПРАВЛЕНИЕ: Добавляем поддержку inline кнопок даже при включенном сборе ввода
+              // ИСПРАВЛЕНИЕ: Добавляем поддержку inline кнопок с проверкой условной клавиатуры
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                code += '    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
-                code += '    builder = InlineKeyboardBuilder()\n';
+                code += '    # Проверяем, есть ли условная клавиатура\n';
+                code += '    if "keyboard" not in locals() or keyboard is None:\n';
+                code += '        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)\n';
+                code += '        builder = InlineKeyboardBuilder()\n';
                 targetNode.data.buttons.forEach((btn, index) => {
                   if (btn.action === "url") {
-                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                   } else if (btn.action === 'goto') {
                     // Создаем уникальный callback_data, включающий ID кнопки и текст
                     const callbackData = btn.id || 'no_action';
-                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   } else if (btn.action === 'command') {
                     // Для команд создаем специальный callback_data с префиксом cmd_
                     const commandName = btn.target ? btn.target.replace('/', '') : 'unknown';
                     const callbackData = `cmd_${commandName}`;
-                    code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                   }
                 });
-                code += '    keyboard = builder.as_markup()\n';
+                code += '        keyboard = builder.as_markup()\n';
                 let parseModeTarget = '';
                 if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
                   parseModeTarget = ', parse_mode=ParseMode.MARKDOWN';
@@ -2689,22 +2697,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")\n';
             
             } else if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-              code += '    builder = InlineKeyboardBuilder()\n';
-              targetNode.data.buttons.forEach((btn, index) => {
-                if (btn.action === "url") {
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
-                } else if (btn.action === 'goto') {
-                  // Если есть target, используем его, иначе используем ID кнопки как callback_data
-                  const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
-                } else if (btn.action === 'command') {
-                  // Для команд создаем специальный callback_data с префиксом cmd_
-                  const commandName = btn.target ? btn.target.replace('/', '') : 'unknown';
-                  const callbackData = `cmd_${commandName}`;
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
-                }
-              });
-              code += '    keyboard = builder.as_markup()\n';
+              // Добавляем поддержку условных сообщений для целевого узла
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    # Проверка условных сообщений для целевого узла\n';
+                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                code += '    \n';
+                code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+                code += '    use_conditional_keyboard = conditional_keyboard is not None\n';
+              } else {
+                code += '    # Инициализируем переменную для проверки условной клавиатуры\n';
+                code += '    use_conditional_keyboard = False\n';
+                code += '    conditional_keyboard = None\n';
+              }
+              
+              code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+              code += '    if use_conditional_keyboard:\n';
               // Определяем режим форматирования для целевого узла
               let parseModeTarget = '';
               if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -2712,7 +2720,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               } else if (targetNode.data.formatMode === 'html') {
                 parseModeTarget = ', parse_mode=ParseMode.HTML';
               }
-              code += `    await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
+              code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              code += '    else:\n';
+              code += '        builder = InlineKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach((btn, index) => {
+                if (btn.action === "url") {
+                  code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                } else if (btn.action === 'goto') {
+                  // Если есть target, используем его, иначе используем ID кнопки как callback_data
+                  const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
+                  code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                } else if (btn.action === 'command') {
+                  // Для команд создаем специальный callback_data с префиксом cmd_
+                  const commandName = btn.target ? btn.target.replace('/', '') : 'unknown';
+                  const callbackData = `cmd_${commandName}`;
+                  code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                }
+              });
+              code += '        keyboard = builder.as_markup()\n';
+              code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
             
             // Дополнительно: сохраняем нажатие reply кнопки если включен сбор ответов
             code += '    \n';
@@ -4958,8 +4984,8 @@ function generateKeyboard(node: Node): string {
     code += '        # Используем исходный текст клавиатуры если условие не сработало\n';
     code += '        pass  # text уже установлен выше\n';
     code += '    \n';
-    code += '    # Используем условную клавиатуру если есть\n';
-    code += '    conditional_keyboard_for_element = conditional_keyboard\n';
+    code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+    code += '    use_conditional_keyboard = conditional_keyboard is not None\n';
   }
   
   // Определяем режим форматирования (приоритет у условного сообщения)
@@ -4984,6 +5010,13 @@ function generateKeyboard(node: Node): string {
     parseMode = ', parse_mode=current_parse_mode if current_parse_mode else None';
   }
   
+  // Инициализируем use_conditional_keyboard для всех случаев
+  if (!node.data.enableConditionalMessages || !node.data.conditionalMessages || node.data.conditionalMessages.length === 0) {
+    code += '    # Инициализируем переменную для проверки условной клавиатуры\n';
+    code += '    use_conditional_keyboard = False\n';
+    code += '    conditional_keyboard = None\n';
+  }
+
   // НОВАЯ ЛОГИКА: Сбор ввода как дополнительная функциональность к обычным кнопкам
   
   // Определяем есть ли обычные кнопки у узла
@@ -4994,41 +5027,46 @@ function generateKeyboard(node: Node): string {
   
   // CASE 1: Есть обычные кнопки + сбор ввода = обычные кнопки работают + дополнительно сохраняются как ответы
   if (hasRegularButtons && hasInputCollection) {
+    // Проверяем, есть ли условная клавиатура
+    code += '    \n';
+    code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+    code += '    if use_conditional_keyboard:\n';
+    code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+    code += '    else:\n';
+    
     // Отправляем обычные кнопки как обычно
     if (node.data.keyboardType === "reply") {
-      code += '    \n';
-      code += '    # Создаем reply клавиатуру (+ дополнительный сбор ответов включен)\n';
-      code += '    builder = ReplyKeyboardBuilder()\n';
+      code += '        # Создаем reply клавиатуру (+ дополнительный сбор ответов включен)\n';
+      code += '        builder = ReplyKeyboardBuilder()\n';
       node.data.buttons.forEach(button => {
         if (button.action === "contact" && button.requestContact) {
-          code += `    builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+          code += `        builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
         } else if (button.action === "location" && button.requestLocation) {
-          code += `    builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+          code += `        builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
         } else {
-          code += `    builder.add(KeyboardButton(text="${button.text}"))\n`;
+          code += `        builder.add(KeyboardButton(text="${button.text}"))\n`;
         }
       });
       
       const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
       const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
-      code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-      code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+      code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       
     } else if (node.data.keyboardType === "inline") {
-      code += '    \n';
-      code += '    # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n';
-      code += '    builder = InlineKeyboardBuilder()\n';
+      code += '        # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n';
+      code += '        builder = InlineKeyboardBuilder()\n';
       node.data.buttons.forEach(button => {
         if (button.action === "url") {
-          code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
         } else if (button.action === 'goto') {
           const callbackData = button.target || button.id || 'no_action';
-          code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
         }
       });
       
-      code += '    keyboard = builder.as_markup()\n';
-      code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      code += '        keyboard = builder.as_markup()\n';
+      code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
     }
     
     // Дополнительно настраиваем сбор ответов
@@ -5094,75 +5132,55 @@ function generateKeyboard(node: Node): string {
   }
   
   // CASE 3: Только обычные кнопки БЕЗ сбора ввода = работает как раньше
-  else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
-    // Обычная reply клавиатура
+  else {
+    // Проверяем, есть ли условная клавиатура
     code += '    \n';
-    code += '    builder = ReplyKeyboardBuilder()\n';
-    node.data.buttons.forEach(button => {
-      if (button.action === "contact" && button.requestContact) {
-        code += `    builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
-      } else if (button.action === "location" && button.requestLocation) {
-        code += `    builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
-      } else {
-        code += `    builder.add(KeyboardButton(text="${button.text}"))\n`;
-      }
-    });
-    
-    const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
-    const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
-    code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-    code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
-  } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-    // Обычная inline клавиатура
-    code += '    \n';
-    code += '    # Создаем inline клавиатуру с кнопками\n';
-    code += '    builder = InlineKeyboardBuilder()\n';
-    node.data.buttons.forEach(button => {
-      if (button.action === "url") {
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-      } else if (button.action === 'goto') {
-        // Если есть target, используем его, иначе используем ID кнопки как callback_data
-        const callbackData = button.target || button.id || 'no_action';
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-      } else if (button.action === 'command') {
-        // Для кнопок команд создаем специальную callback_data
-        const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
-      }
-    });
-    
-    code += '    keyboard = builder.as_markup()\n';
-  } else {
-    code += '    keyboard = None\n';
-  }
-  
-  // Отправляем сообщение с правильной клавиатурой (приоритет у условной)
-  code += '    \n';
-  code += '    # Отправляем сообщение с клавиатурой (приоритет у условной клавиатуры)\n';
-  
-  if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
-    code += '    if conditional_keyboard_for_element is not None:\n';
-    code += '        # Используем условную клавиатуру для элемента клавиатуры\n';
-    code += `        await message.answer(text, reply_markup=conditional_keyboard_for_element${parseMode})\n`;
-    code += '    elif "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
-    code += '        # Используем общую условную клавиатуру\n';
-    code += `        await message.answer(text, reply_markup=conditional_keyboard${parseMode})\n`;
-    code += '    elif keyboard is not None:\n';
-    code += '        # Используем обычную клавиатуру\n';
-    code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+    code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+    code += '    if use_conditional_keyboard:\n';
+    code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
     code += '    else:\n';
-    code += '        # Отправляем сообщение без клавиатуры\n';
-    code += `        await message.answer(text${parseMode})\n`;
-  } else {
-    code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
-    code += '        # Используем условную клавиатуру\n';
-    code += `        await message.answer(text, reply_markup=conditional_keyboard${parseMode})\n`;
-    code += '    elif keyboard is not None:\n';
-    code += '        # Используем обычную клавиатуру\n';
-    code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
-    code += '    else:\n';
-    code += '        # Отправляем сообщение без клавиатуры\n';
-    code += `        await message.answer(text${parseMode})\n`;
+    
+    if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
+      // Обычная reply клавиатура
+      code += '        builder = ReplyKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "contact" && button.requestContact) {
+          code += `        builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+        } else if (button.action === "location" && button.requestLocation) {
+          code += `        builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+        } else {
+          code += `        builder.add(KeyboardButton(text="${button.text}"))\n`;
+        }
+      });
+      
+      const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
+      const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
+      code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+      code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+    } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
+      // Обычная inline клавиатура
+      code += '        # Создаем inline клавиатуру с кнопками\n';
+      code += '        builder = InlineKeyboardBuilder()\n';
+      node.data.buttons.forEach(button => {
+        if (button.action === "url") {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'goto') {
+          // Если есть target, используем его, иначе используем ID кнопки как callback_data
+          const callbackData = button.target || button.id || 'no_action';
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        } else if (button.action === 'command') {
+          // Для кнопок команд создаем специальную callback_data
+          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+        }
+      });
+      
+      code += '        keyboard = builder.as_markup()\n';
+      code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+    } else {
+      // Без клавиатуры
+      code += `        await message.answer(text${parseMode})\n`;
+    }
   }
   
   return code;

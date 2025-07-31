@@ -271,6 +271,9 @@ async def start_handler(message: types.Message):
         current_parse_mode = conditional_parse_mode
     else:
         current_parse_mode = None
+    # Инициализируем переменную для проверки условной клавиатуры
+    use_conditional_keyboard = False
+    conditional_keyboard = None
     await message.answer(text, parse_mode=current_parse_mode if current_parse_mode else None)
     
     # Устанавливаем состояние ожидания ввода
@@ -703,33 +706,24 @@ async def profile_handler(message: types.Message):
         # Используем исходный текст клавиатуры если условие не сработало
         pass  # text уже установлен выше
     
-    # Используем условную клавиатуру если есть
-    conditional_keyboard_for_element = conditional_keyboard
+    # Проверяем, нужно ли использовать условную клавиатуру
+    use_conditional_keyboard = conditional_keyboard is not None
     # Определяем режим форматирования (приоритет у условного сообщения)
     if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
         current_parse_mode = conditional_parse_mode
     else:
         current_parse_mode = None
     
-    # Создаем inline клавиатуру с кнопками
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="cmd_start"))
-    builder.add(InlineKeyboardButton(text="✏️ Редактировать имя", callback_data="XDSrTrNly5EtDtr85nN4P"))
-    keyboard = builder.as_markup()
-    
-    # Отправляем сообщение с клавиатурой (приоритет у условной клавиатуры)
-    if conditional_keyboard_for_element is not None:
-        # Используем условную клавиатуру для элемента клавиатуры
-        await message.answer(text, reply_markup=conditional_keyboard_for_element, parse_mode=current_parse_mode if current_parse_mode else None)
-    elif "conditional_keyboard" in locals() and conditional_keyboard is not None:
-        # Используем общую условную клавиатуру
+    # Проверяем, нужно ли использовать условную клавиатуру
+    if use_conditional_keyboard:
         await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
-    elif keyboard is not None:
-        # Используем обычную клавиатуру
-        await message.answer(text, reply_markup=keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
     else:
-        # Отправляем сообщение без клавиатуры
-        await message.answer(text, parse_mode=current_parse_mode if current_parse_mode else None)
+        # Создаем inline клавиатуру с кнопками
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="cmd_start"))
+        builder.add(InlineKeyboardButton(text="✏️ Редактировать имя", callback_data="XDSrTrNly5EtDtr85nN4P"))
+        keyboard = builder.as_markup()
+        await message.answer(text, reply_markup=keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
 
 # Обработчики inline кнопок
 
@@ -874,11 +868,13 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
     user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = ""
     
-    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Женщина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_0_btn_0"))
-    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_1_btn_1"))
-    keyboard = builder.as_markup()
+    # Проверяем, есть ли условная клавиатуря для этого узла
+    if "keyboard" not in locals() or keyboard is None:
+        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Женщина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_0_btn_0"))
+        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_1_btn_1"))
+        keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
         await callback_query.message.edit_text(text, reply_markup=keyboard)
@@ -946,11 +942,13 @@ async def handle_callback_btn_2(callback_query: types.CallbackQuery):
     
     # Без условных сообщений - используем обычную клавиатуру
     keyboard = None
-    # Создаем inline клавиатуру для целевого узла
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
-    builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
-    keyboard = builder.as_markup()
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+        builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
+        keyboard = builder.as_markup()
     # Отправляем сообщение
     try:
         if keyboard is not None:
@@ -1658,11 +1656,13 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = ""
     
-    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Женщина", callback_data="btn-female"))
-    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="btn-male"))
-    keyboard = builder.as_markup()
+    # Проверяем, есть ли условная клавиатура
+    if "keyboard" not in locals() or keyboard is None:
+        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Женщина", callback_data="btn-female"))
+        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="btn-male"))
+        keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
         await callback_query.message.edit_text(text, reply_markup=keyboard)
@@ -2209,11 +2209,13 @@ async def handle_callback___2N9FeeykMHVVlsVnSQW(callback_query: types.CallbackQu
     user_data[callback_query.from_user.id]["save_to_database"] = True
     user_data[callback_query.from_user.id]["input_target_node_id"] = ""
     
-    # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Да", callback_data="btn-1"))
-    builder.add(InlineKeyboardButton(text="Нет", callback_data="btn-2"))
-    keyboard = builder.as_markup()
+    # Проверяем, есть ли условная клавиатура
+    if "keyboard" not in locals() or keyboard is None:
+        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Да", callback_data="btn-1"))
+        builder.add(InlineKeyboardButton(text="Нет", callback_data="btn-2"))
+        keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
         await callback_query.message.edit_text(text, reply_markup=keyboard)
