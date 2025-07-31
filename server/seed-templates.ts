@@ -1809,9 +1809,9 @@ export async function seedDefaultTemplates() {
             target: "1BHSLWPMao9qQvSAzuzRl"
           },
           {
-            id: "conn-gender-to-profile",
+            id: "conn-gender-to-name",
             source: "nr3wIiTfBYYmpkkXMNH7n",
-            target: "profile_command"
+            target: "XDSrTrNly5EtDtr85nN4P"
           },
           {
             id: "conn-name-to-final",
