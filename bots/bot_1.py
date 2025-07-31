@@ -345,19 +345,19 @@ async def profile_handler(message: types.Message):
         
         return False, None
     
-    # Условие 1: user_data_exists для переменных: желание, имя, источник, пол
+    # Условие 1: user_data_exists для переменных: источник, желание, пол, имя
     if (
-        check_user_variable("желание", user_data_dict)[0] and
-        check_user_variable("имя", user_data_dict)[0] and
         check_user_variable("источник", user_data_dict)[0] and
-        check_user_variable("пол", user_data_dict)[0]
+        check_user_variable("желание", user_data_dict)[0] and
+        check_user_variable("пол", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 🔍 Источник: {источник}
@@ -367,14 +367,14 @@ async def profile_handler(message: types.Message):
 
 Профиль полностью заполнен! ✅"""
         conditional_parse_mode = None
-        if "{желание}" in text and variable_values["желание"] is not None:
-            text = text.replace("{желание}", variable_values["желание"])
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "profile_with_all_data",
@@ -432,19 +432,19 @@ async def profile_handler(message: types.Message):
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
-    # Условие 4: user_data_exists для переменных: желание, имя, источник, пол
+    # Условие 4: user_data_exists для переменных: источник, желание, пол, имя
     elif (
-        check_user_variable("желание", user_data_dict)[0] or
-        check_user_variable("имя", user_data_dict)[0] or
         check_user_variable("источник", user_data_dict)[0] or
-        check_user_variable("пол", user_data_dict)[0]
+        check_user_variable("желание", user_data_dict)[0] or
+        check_user_variable("пол", user_data_dict)[0] or
+        check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 У нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.
@@ -455,14 +455,14 @@ async def profile_handler(message: types.Message):
 ⚧️ Пол: {пол}
 👋 Имя: {имя}"""
         conditional_parse_mode = None
-        if "{желание}" in text and variable_values["желание"] is not None:
-            text = text.replace("{желание}", variable_values["желание"])
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "profile_any_data",
@@ -552,19 +552,19 @@ async def profile_handler(message: types.Message):
         
         return False, None
     
-    # Условие 1: user_data_exists для переменных: желание, имя, источник, пол
+    # Условие 1: user_data_exists для переменных: источник, желание, пол, имя
     if (
-        check_user_variable("желание", user_data_dict)[0] and
-        check_user_variable("имя", user_data_dict)[0] and
         check_user_variable("источник", user_data_dict)[0] and
-        check_user_variable("пол", user_data_dict)[0]
+        check_user_variable("желание", user_data_dict)[0] and
+        check_user_variable("пол", user_data_dict)[0] and
+        check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 🔍 Источник: {источник}
@@ -574,14 +574,14 @@ async def profile_handler(message: types.Message):
 
 Профиль полностью заполнен! ✅"""
         conditional_parse_mode = None
-        if "{желание}" in text and variable_values["желание"] is not None:
-            text = text.replace("{желание}", variable_values["желание"])
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "profile_with_all_data",
@@ -639,19 +639,19 @@ async def profile_handler(message: types.Message):
             "source_type": "conditional_message"
         }
         logging.info(f"Условие выполнено: переменные {variable_values} (OR)")
-    # Условие 4: user_data_exists для переменных: желание, имя, источник, пол
+    # Условие 4: user_data_exists для переменных: источник, желание, пол, имя
     elif (
-        check_user_variable("желание", user_data_dict)[0] or
-        check_user_variable("имя", user_data_dict)[0] or
         check_user_variable("источник", user_data_dict)[0] or
-        check_user_variable("пол", user_data_dict)[0]
+        check_user_variable("желание", user_data_dict)[0] or
+        check_user_variable("пол", user_data_dict)[0] or
+        check_user_variable("имя", user_data_dict)[0]
     ):
         # Собираем значения переменных
         variable_values = {}
-        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         _, variable_values["источник"] = check_user_variable("источник", user_data_dict)
+        _, variable_values["желание"] = check_user_variable("желание", user_data_dict)
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
         text = """👤 Ваш профиль:
 
 У нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.
@@ -662,14 +662,14 @@ async def profile_handler(message: types.Message):
 ⚧️ Пол: {пол}
 👋 Имя: {имя}"""
         conditional_parse_mode = None
-        if "{желание}" in text and variable_values["желание"] is not None:
-            text = text.replace("{желание}", variable_values["желание"])
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
         if "{источник}" in text and variable_values["источник"] is not None:
             text = text.replace("{источник}", variable_values["источник"])
+        if "{желание}" in text and variable_values["желание"] is not None:
+            text = text.replace("{желание}", variable_values["желание"])
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
+        if "{имя}" in text and variable_values["имя"] is not None:
+            text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
             "condition_id": "profile_any_data",
@@ -696,7 +696,6 @@ async def profile_handler(message: types.Message):
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="cmd_start"))
-    builder.add(InlineKeyboardButton(text="имя", callback_data="tsSItnybr5r5klZsmq4gN"))
     keyboard = builder.as_markup()
     
     # Отправляем сообщение с клавиатурой (приоритет у условной клавиатуры)
@@ -781,8 +780,8 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
     
     # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="Женщина", callback_data="tsSItnybr5r5klZsmq4gN_btn_0_btn_0"))
-    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="tsSItnybr5r5klZsmq4gN_btn_1_btn_1"))
+    builder.add(InlineKeyboardButton(text="Женщина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_0_btn_0"))
+    builder.add(InlineKeyboardButton(text="Мужчина", callback_data="XDSrTrNly5EtDtr85nN4P_btn_1_btn_1"))
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -879,9 +878,7 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
     logging.info(f"Переменная пол сохранена: " + str(button_text) + f" (пользователь {user_id})")
     
     
-    # Отправляем сообщение для узла tsSItnybr5r5klZsmq4gN
-    text = "Имя"
-    
+    text = "Как тебя зовут?"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -925,8 +922,8 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
     
     text = replace_variables_in_text(text, user_vars)
     
-    # Проверка условных сообщений
-    user_data_dict = user_record if user_record else user_data.get(user_id, {})
+    # Проверка условных сообщений для keyboard узла
+    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
     conditional_parse_mode = None
     conditional_keyboard = None
     # Функция для проверки переменных пользователя
@@ -962,13 +959,13 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "новое имя"
+        text = "Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753980522113",
+            "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
             "next_node_id": "profile_command",
@@ -983,52 +980,29 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
     
     # Используем условное сообщение если есть подходящее условие
     if "text" not in locals():
-        text = "Имя"
+        text = "Как тебя зовут?"
     
     # Используем условную клавиатуру если есть
     if conditional_keyboard is not None:
         keyboard = conditional_keyboard
-    else:
-        keyboard = None
-    keyboard = None
-    # Настраиваем ожидание текстового ввода для условных сообщений
-    if "conditional_message_config" in locals():
-        # Проверяем, включено ли ожидание текстового ввода
-        wait_for_input = conditional_message_config.get("wait_for_input", False)
-        if wait_for_input:
-            # Получаем следующий узел из условного сообщения или подключений
-            conditional_next_node = conditional_message_config.get("next_node_id")
-            if conditional_next_node:
-                next_node_id = conditional_next_node
-            else:
-                next_node_id = None
-            
-            # Получаем переменную для сохранения ввода
-            input_variable = conditional_message_config.get("input_variable")
-            if not input_variable:
-                input_variable = f"conditional_response_{conditional_message_config.get('condition_id', 'unknown')}"
-            
-            # Устанавливаем состояние ожидания текстового ввода
-            user_data[user_id]["waiting_for_conditional_input"] = {
-                "node_id": callback_query.data,
-                "condition_id": conditional_message_config.get("condition_id"),
-                "next_node_id": next_node_id,
-                "input_variable": input_variable,
-                "source_type": "conditional_message"
-            }
-            logging.info(f"Установлено ожидание ввода для условного сообщения: {conditional_message_config}")
     
-    # Отправляем сообщение
+    # Активируем сбор пользовательского ввода (основной цикл)
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "имя"
+    user_data[callback_query.from_user.id]["save_to_database"] = True
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "final-message-node"
+    
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
-        if keyboard is not None:
-            await callback_query.message.edit_text(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.edit_text(text)
-    except Exception:
-        if keyboard is not None:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
+        await callback_query.message.edit_text(text)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text)
+    
 
 @dp.callback_query(lambda c: c.data == "btn-male")
 async def handle_callback_btn_male(callback_query: types.CallbackQuery):
@@ -1041,9 +1015,7 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
     logging.info(f"Переменная пол сохранена: " + str(button_text) + f" (пользователь {user_id})")
     
     
-    # Отправляем сообщение для узла tsSItnybr5r5klZsmq4gN
-    text = "Имя"
-    
+    text = "Как тебя зовут?"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -1087,8 +1059,8 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
     
     text = replace_variables_in_text(text, user_vars)
     
-    # Проверка условных сообщений
-    user_data_dict = user_record if user_record else user_data.get(user_id, {})
+    # Проверка условных сообщений для keyboard узла
+    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
     conditional_parse_mode = None
     conditional_keyboard = None
     # Функция для проверки переменных пользователя
@@ -1124,13 +1096,13 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "новое имя"
+        text = "Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753980522113",
+            "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
             "next_node_id": "profile_command",
@@ -1145,215 +1117,29 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
     
     # Используем условное сообщение если есть подходящее условие
     if "text" not in locals():
-        text = "Имя"
+        text = "Как тебя зовут?"
     
     # Используем условную клавиатуру если есть
     if conditional_keyboard is not None:
         keyboard = conditional_keyboard
-    else:
-        keyboard = None
-    keyboard = None
-    # Настраиваем ожидание текстового ввода для условных сообщений
-    if "conditional_message_config" in locals():
-        # Проверяем, включено ли ожидание текстового ввода
-        wait_for_input = conditional_message_config.get("wait_for_input", False)
-        if wait_for_input:
-            # Получаем следующий узел из условного сообщения или подключений
-            conditional_next_node = conditional_message_config.get("next_node_id")
-            if conditional_next_node:
-                next_node_id = conditional_next_node
-            else:
-                next_node_id = None
-            
-            # Получаем переменную для сохранения ввода
-            input_variable = conditional_message_config.get("input_variable")
-            if not input_variable:
-                input_variable = f"conditional_response_{conditional_message_config.get('condition_id', 'unknown')}"
-            
-            # Устанавливаем состояние ожидания текстового ввода
-            user_data[user_id]["waiting_for_conditional_input"] = {
-                "node_id": callback_query.data,
-                "condition_id": conditional_message_config.get("condition_id"),
-                "next_node_id": next_node_id,
-                "input_variable": input_variable,
-                "source_type": "conditional_message"
-            }
-            logging.info(f"Установлено ожидание ввода для условного сообщения: {conditional_message_config}")
     
-    # Отправляем сообщение
+    # Активируем сбор пользовательского ввода (основной цикл)
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "имя"
+    user_data[callback_query.from_user.id]["save_to_database"] = True
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "final-message-node"
+    
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
-        if keyboard is not None:
-            await callback_query.message.edit_text(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.edit_text(text)
-    except Exception:
-        if keyboard is not None:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
-
-@dp.callback_query(lambda c: c.data == "jJVkcga4s73MhLe4ujiSq")
-async def handle_callback_jJVkcga4s73MhLe4ujiSq(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    user_id = callback_query.from_user.id
-    button_text = "имя"
+        await callback_query.message.edit_text(text)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text)
     
-    # Сохраняем кнопку в базу данных
-    timestamp = get_moscow_time()
-    response_data = button_text  # Простое значение
-    await update_user_data_in_db(user_id, button_text, response_data)
-    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
-    
-    # Отправляем сообщение для узла tsSItnybr5r5klZsmq4gN
-    text = "Имя"
-    
-    # Подставляем все доступные переменные пользователя в текст
-    user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
-    
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record:
-            if isinstance(user_record["user_data"], str):
-                try:
-                    import json
-                    user_vars = json.loads(user_record["user_data"])
-                except (json.JSONDecodeError, TypeError):
-                    user_vars = {}
-            elif isinstance(user_record["user_data"], dict):
-                user_vars = user_record["user_data"]
-            else:
-                user_vars = {}
-        else:
-            user_vars = user_record
-    else:
-        user_vars = {}
-    
-    # Заменяем все переменные в тексте
-    import re
-    def replace_variables_in_text(text_content, variables_dict):
-        if not text_content or not variables_dict:
-            return text_content
-        
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                text_content = text_content.replace(placeholder, var_value)
-        return text_content
-    
-    text = replace_variables_in_text(text, user_vars)
-    
-    # Проверка условных сообщений
-    user_data_dict = user_record if user_record else user_data.get(user_id, {})
-    conditional_parse_mode = None
-    conditional_keyboard = None
-    # Функция для проверки переменных пользователя
-    def check_user_variable(var_name, user_data_dict):
-        """Проверяет существование и получает значение переменной пользователя"""
-        if "user_data" in user_data_dict and user_data_dict["user_data"]:
-            try:
-                import json
-                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-                if var_name in parsed_data:
-                    raw_value = parsed_data[var_name]
-                    if isinstance(raw_value, dict) and "value" in raw_value:
-                        return True, str(raw_value["value"]) if raw_value["value"] is not None else None
-                    else:
-                        return True, str(raw_value) if raw_value is not None else None
-            except (json.JSONDecodeError, TypeError):
-                pass
-        
-        # Проверяем в локальных данных
-        if var_name in user_data_dict:
-            variable_data = user_data_dict.get(var_name)
-            if isinstance(variable_data, dict) and "value" in variable_data:
-                return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-            elif variable_data is not None:
-                return True, str(variable_data)
-        
-        return False, None
-    
-    # Условие 1: user_data_exists для переменных: имя
-    if (
-        check_user_variable("имя", user_data_dict)[0]
-    ):
-        # Собираем значения переменных
-        variable_values = {}
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "новое имя"
-        conditional_parse_mode = None
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
-        # Настраиваем ожидание текстового ввода для условного сообщения
-        conditional_message_config = {
-            "condition_id": "condition-1753980522113",
-            "wait_for_input": True,
-            "input_variable": "имя",
-            "next_node_id": "profile_command",
-            "source_type": "conditional_message"
-        }
-        
-        # Если есть условное сообщение с ожиданием ввода
-        if conditional_message_config and conditional_message_config.get("wait_for_input"):
-            user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-            logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")
-        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    
-    # Используем условное сообщение если есть подходящее условие
-    if "text" not in locals():
-        text = "Имя"
-    
-    # Используем условную клавиатуру если есть
-    if conditional_keyboard is not None:
-        keyboard = conditional_keyboard
-    else:
-        keyboard = None
-    keyboard = None
-    # Настраиваем ожидание текстового ввода для условных сообщений
-    if "conditional_message_config" in locals():
-        # Проверяем, включено ли ожидание текстового ввода
-        wait_for_input = conditional_message_config.get("wait_for_input", False)
-        if wait_for_input:
-            # Получаем следующий узел из условного сообщения или подключений
-            conditional_next_node = conditional_message_config.get("next_node_id")
-            if conditional_next_node:
-                next_node_id = conditional_next_node
-            else:
-                next_node_id = None
-            
-            # Получаем переменную для сохранения ввода
-            input_variable = conditional_message_config.get("input_variable")
-            if not input_variable:
-                input_variable = f"conditional_response_{conditional_message_config.get('condition_id', 'unknown')}"
-            
-            # Устанавливаем состояние ожидания текстового ввода
-            user_data[user_id]["waiting_for_conditional_input"] = {
-                "node_id": callback_query.data,
-                "condition_id": conditional_message_config.get("condition_id"),
-                "next_node_id": next_node_id,
-                "input_variable": input_variable,
-                "source_type": "conditional_message"
-            }
-            logging.info(f"Установлено ожидание ввода для условного сообщения: {conditional_message_config}")
-    
-    # Отправляем сообщение
-    try:
-        if keyboard is not None:
-            await callback_query.message.edit_text(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.edit_text(text)
-    except Exception:
-        if keyboard is not None:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
 
 @dp.callback_query(lambda c: c.data == "nr3wIiTfBYYmpkkXMNH7n" or c.data.startswith("nr3wIiTfBYYmpkkXMNH7n_btn_"))
 async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQuery):
@@ -1521,8 +1307,8 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "tsSItnybr5r5klZsmq4gN" or c.data.startswith("tsSItnybr5r5klZsmq4gN_btn_"))
-async def handle_callback_tsSItnybr5r5klZsmq4gN(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "XDSrTrNly5EtDtr85nN4P" or c.data.startswith("XDSrTrNly5EtDtr85nN4P_btn_"))
+async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQuery):
     await callback_query.answer()
     # Сохраняем нажатие кнопки в базу данных
     user_id = callback_query.from_user.id
@@ -1535,9 +1321,9 @@ async def handle_callback_tsSItnybr5r5klZsmq4gN(callback_query: types.CallbackQu
     if callback_query.data.endswith("_btn_1"):
         button_display_text = "Мужчина"
     # Дополнительная проверка по точному соответствию callback_data
-    if callback_query.data == "tsSItnybr5r5klZsmq4gN":
+    if callback_query.data == "XDSrTrNly5EtDtr85nN4P":
         button_display_text = "Женщина"
-    if callback_query.data == "tsSItnybr5r5klZsmq4gN":
+    if callback_query.data == "XDSrTrNly5EtDtr85nN4P":
         button_display_text = "Мужчина"
     
     # Сохраняем ответ в базу данных
@@ -1632,13 +1418,13 @@ async def handle_callback_tsSItnybr5r5klZsmq4gN(callback_query: types.CallbackQu
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "новое имя"
+        text = "Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753980522113",
+            "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
             "next_node_id": "profile_command",
@@ -1651,7 +1437,7 @@ async def handle_callback_tsSItnybr5r5klZsmq4gN(callback_query: types.CallbackQu
             logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")
         logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
     else:
-        text = "Имя"
+        text = "Как тебя зовут?"
         text = replace_variables_in_text(text, user_data_dict)
         logging.info("Используется основное сообщение узла")
     
@@ -1659,7 +1445,7 @@ async def handle_callback_tsSItnybr5r5klZsmq4gN(callback_query: types.CallbackQu
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
     
-    user_data[callback_query.from_user.id]["waiting_for_input"] = "tsSItnybr5r5klZsmq4gN"
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "XDSrTrNly5EtDtr85nN4P"
     user_data[callback_query.from_user.id]["input_type"] = "text"
     user_data[callback_query.from_user.id]["input_variable"] = "имя"
     user_data[callback_query.from_user.id]["save_to_database"] = True
@@ -1912,12 +1698,12 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_nr3wIiTfBYYmpkkXMNH7n(fake_callback)
                     elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
                         await handle_callback_1BHSLWPMao9qQvSAzuzRl(fake_callback)
+                    elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+                        await handle_callback_XDSrTrNly5EtDtr85nN4P(fake_callback)
                     elif next_node_id == "final-message-node":
                         await handle_callback_final_message_node(fake_callback)
                     elif next_node_id == "profile_command":
                         await handle_callback_profile_command(fake_callback)
-                    elif next_node_id == "tsSItnybr5r5klZsmq4gN":
-                        await handle_callback_tsSItnybr5r5klZsmq4gN(fake_callback)
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
             except Exception as e:
@@ -2025,12 +1811,12 @@ async def handle_user_input(message: types.Message):
                         await handle_callback_nr3wIiTfBYYmpkkXMNH7n(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "1BHSLWPMao9qQvSAzuzRl":
                         await handle_callback_1BHSLWPMao9qQvSAzuzRl(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "XDSrTrNly5EtDtr85nN4P":
+                        await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "final-message-node":
                         await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     elif target_node_id == "profile_command":
                         await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "tsSItnybr5r5klZsmq4gN":
-                        await handle_callback_tsSItnybr5r5klZsmq4gN(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -2049,12 +1835,12 @@ async def handle_user_input(message: types.Message):
                             await handle_callback_nr3wIiTfBYYmpkkXMNH7n(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
                             await handle_callback_1BHSLWPMao9qQvSAzuzRl(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+                            await handle_callback_XDSrTrNly5EtDtr85nN4P(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "final-message-node":
                             await handle_callback_final_message_node(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         elif next_node_id == "profile_command":
                             await handle_callback_profile_command(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "tsSItnybr5r5klZsmq4gN":
-                            await handle_callback_tsSItnybr5r5klZsmq4gN(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -2167,6 +1953,8 @@ async def handle_user_input(message: types.Message):
                     elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
                         text = "Печально, если что напиши /start или /profile для просмотра профиля"
                         await message.answer(text)
+                    elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+                        logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа keyboard")
                     elif next_node_id == "final-message-node":
                         text = """Спасибо за предоставленную информацию! 🎉
 
@@ -2181,9 +1969,6 @@ async def handle_user_input(message: types.Message):
                         fake_message.date = message.date
                         fake_message.answer = message.answer
                         await profile_handler(fake_message)
-                    elif next_node_id == "tsSItnybr5r5klZsmq4gN":
-                        text = "Имя"
-                        await message.answer(text)
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                 except Exception as e:
@@ -2290,7 +2075,7 @@ async def handle_user_input(message: types.Message):
             logging.info(f"Получен пользовательский ввод: пол = {user_text}")
             
             return
-        elif waiting_node_id == "tsSItnybr5r5klZsmq4gN":
+        elif waiting_node_id == "XDSrTrNly5EtDtr85nN4P":
             
             # Сохраняем ответ пользователя
             import datetime
@@ -2456,6 +2241,8 @@ async def handle_user_input(message: types.Message):
                 builder.add(InlineKeyboardButton(text="👤 Профиль", callback_data="cmd_profile"))
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+                logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа keyboard")
             elif next_node_id == "final-message-node":
                 text = """Спасибо за предоставленную информацию! 🎉
 
@@ -2472,87 +2259,6 @@ async def handle_user_input(message: types.Message):
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             elif next_node_id == "profile_command":
                 logging.info(f"Переход к узлу profile_command типа command")
-            elif next_node_id == "tsSItnybr5r5klZsmq4gN":
-                # Проверяем условные сообщения
-                text = None
-                
-                # Получаем данные пользователя для проверки условий
-                user_record = await get_user_from_db(user_id)
-                if not user_record:
-                    user_record = user_data.get(user_id, {})
-                
-                # Безопасно извлекаем user_data
-                if isinstance(user_record, dict):
-                    if "user_data" in user_record and isinstance(user_record["user_data"], dict):
-                        user_data_dict = user_record["user_data"]
-                    else:
-                        user_data_dict = user_record
-                else:
-                    user_data_dict = {}
-                
-                conditional_parse_mode = None
-                conditional_keyboard = None
-                # Функция для проверки переменных пользователя
-                def check_user_variable(var_name, user_data_dict):
-                    """Проверяет существование и получает значение переменной пользователя"""
-                    if "user_data" in user_data_dict and user_data_dict["user_data"]:
-                        try:
-                            import json
-                            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-                            if var_name in parsed_data:
-                                raw_value = parsed_data[var_name]
-                                if isinstance(raw_value, dict) and "value" in raw_value:
-                                    return True, str(raw_value["value"]) if raw_value["value"] is not None else None
-                                else:
-                                    return True, str(raw_value) if raw_value is not None else None
-                        except (json.JSONDecodeError, TypeError):
-                            pass
-                    
-                    # Проверяем в локальных данных
-                    if var_name in user_data_dict:
-                        variable_data = user_data_dict.get(var_name)
-                        if isinstance(variable_data, dict) and "value" in variable_data:
-                            return True, str(variable_data["value"]) if variable_data["value"] is not None else None
-                        elif variable_data is not None:
-                            return True, str(variable_data)
-                    
-                    return False, None
-                
-                # Условие 1: user_data_exists для переменных: имя
-                if (
-                    check_user_variable("имя", user_data_dict)[0]
-                ):
-                    # Собираем значения переменных
-                    variable_values = {}
-                    _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-                    text = "новое имя"
-                    conditional_parse_mode = None
-                    if "{имя}" in text and variable_values["имя"] is not None:
-                        text = text.replace("{имя}", variable_values["имя"])
-                    # Настраиваем ожидание текстового ввода для условного сообщения
-                    conditional_message_config = {
-                        "condition_id": "condition-1753980522113",
-                        "wait_for_input": True,
-                        "input_variable": "имя",
-                        "next_node_id": "profile_command",
-                        "source_type": "conditional_message"
-                    }
-                    
-                    # Если есть условное сообщение с ожиданием ввода
-                    if conditional_message_config and conditional_message_config.get("wait_for_input"):
-                        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config
-                        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")
-                    logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-                else:
-                    text = "Имя"
-                    logging.info("Используется основное сообщение узла")
-                
-                # Используем parse_mode условного сообщения если он установлен
-                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
-                    parse_mode = conditional_parse_mode
-                else:
-                    parse_mode = None
-                await message.answer(text, parse_mode=parse_mode)
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
