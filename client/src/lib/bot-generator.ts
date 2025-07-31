@@ -1059,12 +1059,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '            # Получаем переменную для сохранения ввода\n';
                 code += '            input_variable = conditional_message_config.get("input_variable")\n';
                 code += '            if not input_variable:\n';
-                code += '                input_variable = f"conditional_response_{conditional_message_config["condition_id"]}"\n';
+                code += '                input_variable = f"conditional_response_{conditional_message_config.get(\'condition_id\', \'unknown\')}"\n';
                 code += '            \n';
                 code += '            # Устанавливаем состояние ожидания текстового ввода\n';
                 code += '            user_data[user_id]["waiting_for_conditional_input"] = {\n';
                 code += '                "node_id": callback_query.data,\n';
-                code += '                "condition_id": conditional_message_config["condition_id"],\n';
+                code += '                "condition_id": conditional_message_config.get("condition_id"),\n';
                 code += '                "next_node_id": next_node_id,\n';
                 code += '                "input_variable": input_variable,\n';
                 code += '                "source_type": "conditional_message"\n';
