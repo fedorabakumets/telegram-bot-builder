@@ -1418,14 +1418,14 @@ export async function seedDefaultTemplates() {
                 {
                   id: "btn-female",
                   text: "Женщина",
-                  action: "goto",
-                  target: "XDSrTrNly5EtDtr85nN4P"
+                  action: "command",
+                  target: "/profile"
                 },
                 {
                   id: "btn-male",
                   text: "Мужчина",
-                  action: "goto",
-                  target: "XDSrTrNly5EtDtr85nN4P"
+                  action: "command",
+                  target: "/profile"
                 }
               ],
               markdown: false,
@@ -1606,9 +1606,9 @@ export async function seedDefaultTemplates() {
             target: "1BHSLWPMao9qQvSAzuzRl"
           },
           {
-            id: "conn-gender-to-name",
+            id: "conn-gender-to-profile",
             source: "nr3wIiTfBYYmpkkXMNH7n",
-            target: "XDSrTrNly5EtDtr85nN4P"
+            target: "profile_command"
           },
           {
             id: "conn-name-to-final",
