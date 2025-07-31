@@ -2262,8 +2262,8 @@ export function PropertiesPanel({
                             const newCondition = {
                               id: `condition-${Date.now()}`,
                               condition: 'user_data_exists' as const,
-                              variableName: 'source',
-                              variableNames: ['source'],
+                              variableName: '',
+                              variableNames: [],
                               logicOperator: 'AND' as const,
                               messageText: 'Добро пожаловать обратно!',
                               keyboardType: 'none' as const,
@@ -2530,7 +2530,7 @@ export function PropertiesPanel({
                                           onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                         }}
                                         className="text-xs"
-                                        placeholder="source, пол, возраст (через запятую)"
+                                        placeholder="имя, пол, возраст (через запятую)"
                                       />
                                       <div className="text-xs text-muted-foreground mt-1">
                                         Введите названия вопросов через запятую
