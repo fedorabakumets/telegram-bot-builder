@@ -2939,11 +2939,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            # Старый формат - waiting_config это строка с node_id\n';
   code += '            waiting_node_id = waiting_config\n';
   code += '            input_type = user_data[user_id].get("input_type", "text")\n';
-  code += '            variable_name = "user_response"\n';
-  code += '            save_to_database = False\n';
+  code += '            variable_name = user_data[user_id].get("input_variable", "user_response")\n';
+  code += '            save_to_database = user_data[user_id].get("save_to_database", False)\n';
   code += '            min_length = 0\n';
   code += '            max_length = 0\n';
-  code += '            next_node_id = None\n';
+  code += '            next_node_id = user_data[user_id].get("input_target_node_id")\n';
   code += '        \n';
   code += '        user_text = message.text\n';
   code += '        \n';

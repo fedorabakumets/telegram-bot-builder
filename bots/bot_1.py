@@ -688,7 +688,7 @@ async def profile_handler(message: types.Message):
     # Создаем inline клавиатуру с кнопками
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="📝 Пройти опрос", callback_data="cmd_start"))
-    builder.add(InlineKeyboardButton(text="Редактировать имя", callback_data="XDSrTrNly5EtDtr85nN4P"))
+    builder.add(InlineKeyboardButton(text="ИМя", callback_data="XDSrTrNly5EtDtr85nN4P"))
     keyboard = builder.as_markup()
     
     # Отправляем сообщение с клавиатурой (приоритет у условной клавиатуры)
@@ -951,13 +951,13 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "Введите новое имя"
+        text = "Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753968903746",
+            "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
             "source_type": "conditional_message"
@@ -1082,13 +1082,13 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "Введите новое имя"
+        text = "Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753968903746",
+            "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
             "source_type": "conditional_message"
@@ -1121,11 +1121,11 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
         await callback_query.message.answer(text)
     
 
-@dp.callback_query(lambda c: c.data == "jZwglyg2qtS6fpSsPyCyN")
-async def handle_callback_jZwglyg2qtS6fpSsPyCyN(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "huw0IUm0SHKEEr1090_EP")
+async def handle_callback_huw0IUm0SHKEEr1090_EP(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    button_text = "Редактировать имя"
+    button_text = "ИМя"
     
     # Сохраняем кнопку в базу данных
     timestamp = get_moscow_time()
@@ -1214,13 +1214,13 @@ async def handle_callback_jZwglyg2qtS6fpSsPyCyN(callback_query: types.CallbackQu
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "Введите новое имя"
+        text = "Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753968903746",
+            "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
             "source_type": "conditional_message"
@@ -1525,13 +1525,13 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
         # Собираем значения переменных
         variable_values = {}
         _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = "Введите новое имя"
+        text = "Введите новое имя:"
         conditional_parse_mode = None
         if "{имя}" in text and variable_values["имя"] is not None:
             text = text.replace("{имя}", variable_values["имя"])
         # Настраиваем ожидание текстового ввода для условного сообщения
         conditional_message_config = {
-            "condition_id": "condition-1753968903746",
+            "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
             "source_type": "conditional_message"
