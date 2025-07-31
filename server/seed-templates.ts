@@ -1418,14 +1418,14 @@ export async function seedDefaultTemplates() {
                 {
                   id: "btn-female",
                   text: "Женщина",
-                  action: "command",
-                  target: "/profile"
+                  action: "goto",
+                  target: "XDSrTrNly5EtDtr85nN4P"
                 },
                 {
                   id: "btn-male",
                   text: "Мужчина",
-                  action: "command",
-                  target: "/profile"
+                  action: "goto",
+                  target: "XDSrTrNly5EtDtr85nN4P"
                 }
               ],
               markdown: false,
