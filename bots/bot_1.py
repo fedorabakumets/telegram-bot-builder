@@ -1774,33 +1774,39 @@ async def handle_user_input(message: types.Message):
         if next_node_id:
             try:
                 logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
-                # Создаем фиктивный callback для навигации
-                import types as aiogram_types
-                fake_callback = aiogram_types.SimpleNamespace(
-                    id="conditional_nav",
-                    from_user=message.from_user,
-                    chat_instance="",
-                    data=next_node_id,
-                    message=message,
-                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
-                )
                 
-                if next_node_id == "start_node":
-                    await handle_callback_start_node(fake_callback)
-                elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
-                    await handle_callback___2N9FeeykMHVVlsVnSQW(fake_callback)
-                elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
-                    await handle_callback_nr3wIiTfBYYmpkkXMNH7n(fake_callback)
-                elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
-                    await handle_callback_1BHSLWPMao9qQvSAzuzRl(fake_callback)
-                elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-                    await handle_callback_XDSrTrNly5EtDtr85nN4P(fake_callback)
-                elif next_node_id == "final-message-node":
-                    await handle_callback_final_message_node(fake_callback)
-                elif next_node_id == "profile_command":
-                    await handle_callback_profile_command(fake_callback)
+                # Проверяем, является ли это командой
+                if next_node_id == "profile_command":
+                    logging.info("Переход к команде /profile")
+                    await handle_profile_command(message)
                 else:
-                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    # Создаем фиктивный callback для навигации к обычному узлу
+                    import types as aiogram_types
+                    fake_callback = aiogram_types.SimpleNamespace(
+                        id="conditional_nav",
+                        from_user=message.from_user,
+                        chat_instance="",
+                        data=next_node_id,
+                        message=message,
+                        answer=lambda text="", show_alert=False: asyncio.sleep(0)
+                    )
+                    
+                    if next_node_id == "start_node":
+                        await handle_callback_start_node(fake_callback)
+                    elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
+                        await handle_callback___2N9FeeykMHVVlsVnSQW(fake_callback)
+                    elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
+                        await handle_callback_nr3wIiTfBYYmpkkXMNH7n(fake_callback)
+                    elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
+                        await handle_callback_1BHSLWPMao9qQvSAzuzRl(fake_callback)
+                    elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
+                        await handle_callback_XDSrTrNly5EtDtr85nN4P(fake_callback)
+                    elif next_node_id == "final-message-node":
+                        await handle_callback_final_message_node(fake_callback)
+                    elif next_node_id == "profile_command":
+                        await handle_callback_profile_command(fake_callback)
+                    else:
+                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")
             except Exception as e:
                 logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
         
@@ -1967,11 +1973,11 @@ async def handle_user_input(message: types.Message):
             # Старый формат - waiting_config это строка с node_id
             waiting_node_id = waiting_config
             input_type = user_data[user_id].get("input_type", "text")
-            variable_name = "user_response"
-            save_to_database = False
+            variable_name = user_data[user_id].get("input_variable", "user_response")
+            save_to_database = user_data[user_id].get("save_to_database", False)
             min_length = 0
             max_length = 0
-            next_node_id = None
+            next_node_id = user_data[user_id].get("input_target_node_id")
         
         user_text = message.text
         
