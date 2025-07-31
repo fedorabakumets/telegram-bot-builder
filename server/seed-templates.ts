@@ -1624,10 +1624,10 @@ export async function seedDefaultTemplates() {
                   condition: "user_data_exists",
                   variableNames: ["имя"],
                   logicOperator: "AND",
-                  messageText: "Введите новое имя:",
+                  messageText: "У вас уже есть имя: {имя}. Введите новое имя:",
                   waitForTextInput: true,
                   textInputVariable: "имя",
-                  nextNodeAfterInput: "profile_command",
+                  nextNodeAfterInput: "final-message-node",
                   formatMode: "text"
                 }
               ]
