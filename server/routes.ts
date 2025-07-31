@@ -2839,6 +2839,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Force update templates - Admin endpoint to refresh all system templates
+  app.post("/api/templates/refresh", async (req, res) => {
+    try {
+      console.log("🔄 Принудительное обновление шаблонов...");
+      await seedDefaultTemplates(true); // force = true
+      console.log("✅ Шаблоны обновлены успешно");
+      res.json({ 
+        message: "Templates updated successfully",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("❌ Ошибка обновления шаблонов:", error);
+      res.status(500).json({ 
+        message: "Failed to update templates",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
