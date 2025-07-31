@@ -996,7 +996,7 @@ async def handle_callback_btn_female(callback_query: types.CallbackQuery):
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
-            "next_node_id": "final-message-node",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
         
@@ -1142,7 +1142,7 @@ async def handle_callback_btn_male(callback_query: types.CallbackQuery):
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
-            "next_node_id": "final-message-node",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
         
@@ -1289,7 +1289,7 @@ async def handle_callback_btn_edit_name_default(callback_query: types.CallbackQu
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
-            "next_node_id": "final-message-node",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
         
@@ -1422,7 +1422,7 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
                     "variable": "имя",
                     "save_to_database": True,
                     "node_id": "XDSrTrNly5EtDtr85nN4P",
-                    "next_node_id": "final-message-node"
+                    "next_node_id": "profile_command"
                 }
                 await bot.send_message(user_id, text)
             else:
@@ -1621,7 +1621,7 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
                     "variable": "имя",
                     "save_to_database": True,
                     "node_id": "XDSrTrNly5EtDtr85nN4P",
-                    "next_node_id": "final-message-node"
+                    "next_node_id": "profile_command"
                 }
                 await bot.send_message(user_id, text)
             else:
@@ -1818,7 +1818,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
                     "variable": "имя",
                     "save_to_database": True,
                     "node_id": "XDSrTrNly5EtDtr85nN4P",
-                    "next_node_id": "final-message-node"
+                    "next_node_id": "profile_command"
                 }
                 await bot.send_message(user_id, text)
             else:
@@ -1950,7 +1950,7 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
             "condition_id": "name_already_exists",
             "wait_for_input": True,
             "input_variable": "имя",
-            "next_node_id": "final-message-node",
+            "next_node_id": "profile_command",
             "source_type": "conditional_message"
         }
         
