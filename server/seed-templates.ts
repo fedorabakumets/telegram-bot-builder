@@ -1589,7 +1589,38 @@ export async function seedDefaultTemplates() {
             }
           }
         ],
-        connections: []
+        connections: [
+          {
+            id: "conn-start-to-survey",
+            source: "start-survey-node",
+            target: "--2N9FeeykMHVVlsVnSQW"
+          },
+          {
+            id: "conn-survey-to-gender-yes",
+            source: "--2N9FeeykMHVVlsVnSQW",
+            target: "nr3wIiTfBYYmpkkXMNH7n"
+          },
+          {
+            id: "conn-survey-to-sad-no",
+            source: "--2N9FeeykMHVVlsVnSQW",
+            target: "1BHSLWPMao9qQvSAzuzRl"
+          },
+          {
+            id: "conn-gender-to-name",
+            source: "nr3wIiTfBYYmpkkXMNH7n",
+            target: "XDSrTrNly5EtDtr85nN4P"
+          },
+          {
+            id: "conn-name-to-final",
+            source: "XDSrTrNly5EtDtr85nN4P",
+            target: "final-message-node"
+          },
+          {
+            id: "conn-name-to-profile",
+            source: "XDSrTrNly5EtDtr85nN4P",
+            target: "profile_command"
+          }
+        ]
       }
     });
 

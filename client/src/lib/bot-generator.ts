@@ -985,14 +985,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '        # Проверяем, включено ли ожидание текстового ввода\n';
                 code += '        wait_for_input = conditional_message_config.get("wait_for_input", False)\n';
                 code += '        if wait_for_input:\n';
-                code += '            # Получаем следующий узел\n';
+                code += '            # Получаем следующий узел из условного сообщения или подключений\n';
+                code += '            conditional_next_node = conditional_message_config.get("next_node_id")\n';
+                code += '            if conditional_next_node:\n';
+                code += '                next_node_id = conditional_next_node\n';
+                code += '            else:\n';
                 const currentNodeConnections = connections.filter(conn => conn.source === targetNode.id);
                 if (currentNodeConnections.length > 0) {
                   const nextNodeId = currentNodeConnections[0].target;
-                  code += `            next_node_id = "${nextNodeId}"\n`;
+                  code += `                next_node_id = "${nextNodeId}"\n`;
                 } else {
-                  code += '            next_node_id = None\n';
+                  code += '                next_node_id = None\n';
                 }
+                code += '            \n';
                 code += '            # Получаем переменную для сохранения ввода\n';
                 code += '            input_variable = conditional_message_config.get("input_variable")\n';
                 code += '            if not input_variable:\n';
