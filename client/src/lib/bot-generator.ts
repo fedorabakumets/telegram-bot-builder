@@ -2180,6 +2180,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   code += '            fake_message.date = callback_query.message.date\n';
                   code += '            fake_message.answer = callback_query.message.answer\n';
                   code += `            await ${handlerName}(fake_message)\n`;
+                } else if (navTargetNode.type === 'keyboard' && navTargetNode.data.enableTextInput) {
+                  // Обрабатываем узлы ввода текста
+                  const messageText = navTargetNode.data.messageText || 'Введите ваш ответ:';
+                  const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
+                  const inputTargetNodeId = navTargetNode.data.inputTargetNodeId || '';
+                  const formattedText = formatTextForPython(messageText);
+                  
+                  code += '            await callback_query.message.delete()\n';
+                  code += `            nav_text = ${formattedText}\n`;
+                  code += '            # Настраиваем ожидание ввода\n';
+                  code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
+                  code += '            user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+                  code += '                "type": "text",\n';
+                  code += `                "variable": "${inputVariable}",\n`;
+                  code += '                "save_to_database": True,\n';
+                  code += `                "node_id": "${navTargetNode.id}",\n`;
+                  code += `                "next_node_id": "${inputTargetNodeId}"\n`;
+                  code += '            }\n';
+                  code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
                 } else {
                   code += `            logging.info("Переход к узлу ${navTargetNode.id}")\n`;
                 }

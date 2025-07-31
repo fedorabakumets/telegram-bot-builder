@@ -8,6 +8,18 @@ This application provides a visual Telegram bot builder, enabling users to creat
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (July 31, 2025)
+
+### Bot Generator Critical Fixes
+- **Fixed navTargetNode Error**: Removed JavaScript variable references (`navTargetNode.type`) in generated Python code that caused runtime errors
+- **Enhanced Navigation Logic**: Added proper handling for `keyboard` nodes with `enableTextInput: true` 
+- **Text Input Processing**: Improved code generation for user input collection nodes
+
+### Template Navigation Fixes  
+- **"Опрос пользователей" Template**: Fixed navigation flow where gender selection now correctly leads to name input instead of profile command
+- **Database Updates**: Updated both active projects and base templates with corrected navigation paths
+- **Node Relationships**: Corrected button actions from "command" type to "goto" type with proper target node IDs
+
 ## System Architecture
 
 ### Frontend

@@ -23,7 +23,7 @@ def get_moscow_time():
     return datetime.now(moscow_tz).isoformat()
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -1181,7 +1181,18 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
             nav_text = "Печально, если что напиши /start или /profile для просмотра профиля"
             await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-            logging.info("Переход к узлу XDSrTrNly5EtDtr85nN4P")
+            await callback_query.message.delete()
+            nav_text = "Как тебя зовут?"
+            # Настраиваем ожидание ввода
+            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
+            user_data[callback_query.from_user.id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "имя",
+                "save_to_database": True,
+                "node_id": "XDSrTrNly5EtDtr85nN4P",
+                "next_node_id": "final-message-node"
+            }
+            await bot.send_message(callback_query.from_user.id, nav_text)
         elif next_node_id == "final-message-node":
             nav_text = """Спасибо за предоставленную информацию! 🎉
 
@@ -1309,7 +1320,18 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
             nav_text = "Печально, если что напиши /start или /profile для просмотра профиля"
             await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-            logging.info("Переход к узлу XDSrTrNly5EtDtr85nN4P")
+            await callback_query.message.delete()
+            nav_text = "Как тебя зовут?"
+            # Настраиваем ожидание ввода
+            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
+            user_data[callback_query.from_user.id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "имя",
+                "save_to_database": True,
+                "node_id": "XDSrTrNly5EtDtr85nN4P",
+                "next_node_id": "final-message-node"
+            }
+            await bot.send_message(callback_query.from_user.id, nav_text)
         elif next_node_id == "final-message-node":
             nav_text = """Спасибо за предоставленную информацию! 🎉
 
@@ -1435,7 +1457,18 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
             nav_text = "Печально, если что напиши /start или /profile для просмотра профиля"
             await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-            logging.info("Переход к узлу XDSrTrNly5EtDtr85nN4P")
+            await callback_query.message.delete()
+            nav_text = "Как тебя зовут?"
+            # Настраиваем ожидание ввода
+            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})
+            user_data[callback_query.from_user.id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "имя",
+                "save_to_database": True,
+                "node_id": "XDSrTrNly5EtDtr85nN4P",
+                "next_node_id": "final-message-node"
+            }
+            await bot.send_message(callback_query.from_user.id, nav_text)
         elif next_node_id == "final-message-node":
             nav_text = """Спасибо за предоставленную информацию! 🎉
 
