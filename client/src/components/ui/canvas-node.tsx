@@ -377,7 +377,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
                   case 'contact': return !!(node.data.phoneNumber && node.data.firstName);
                   case 'poll': return !!(node.data.question && node.data.options?.length);
                   case 'command': return !!node.data.command;
-                  case 'user-input': return !!(node.data.inputType && node.data.variableName);
+                  case 'user-input': return !!((node.data as any).inputType && (node.data as any).variableName);
                   default: return !!node.data.messageText;
                 }
               })();
@@ -656,7 +656,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
               <div className="flex items-center justify-center space-x-1">
                 <i className="fas fa-crosshairs text-xs"></i>
                 <span className="font-mono text-xs">
-                  {parseFloat(node.data.latitude).toFixed(4)}, {parseFloat(node.data.longitude).toFixed(4)}
+                  {parseFloat(node.data.latitude as string).toFixed(4)}, {parseFloat(node.data.longitude as string).toFixed(4)}
                 </span>
               </div>
             )}
@@ -773,9 +773,9 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
                   )}
                 </div>
               </div>
-              {node.data.variableName && (
+              {(node.data as any).variableName && (
                 <div className="text-xs font-mono text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded">
-                  ${node.data.variableName}
+                  ${(node.data as any).variableName}
                 </div>
               )}
             </div>
@@ -821,31 +821,31 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
             )}
 
             {/* Validation info */}
-            {(node.data.minLength || node.data.maxLength || node.data.timeout) && (
+            {((node.data as any).minLength || (node.data as any).maxLength || (node.data as any).timeout) && (
               <div className="flex items-center space-x-3 text-xs text-gray-600 dark:text-gray-400">
-                {node.data.minLength && (
+                {(node.data as any).minLength && (
                   <div className="flex items-center space-x-1">
                     <i className="fas fa-arrow-up text-xs"></i>
-                    <span>Мин: {node.data.minLength}</span>
+                    <span>Мин: {(node.data as any).minLength}</span>
                   </div>
                 )}
-                {node.data.maxLength && (
+                {(node.data as any).maxLength && (
                   <div className="flex items-center space-x-1">
                     <i className="fas fa-arrow-down text-xs"></i>
-                    <span>Макс: {node.data.maxLength}</span>
+                    <span>Макс: {(node.data as any).maxLength}</span>
                   </div>
                 )}
-                {node.data.timeout && (
+                {(node.data as any).timeout && (
                   <div className="flex items-center space-x-1">
                     <i className="fas fa-clock text-xs"></i>
-                    <span>{node.data.timeout}с</span>
+                    <span>{(node.data as any).timeout}с</span>
                   </div>
                 )}
               </div>
             )}
 
             {/* Save to database indicator */}
-            {node.data.saveToDatabase && (
+            {(node.data as any).saveToDatabase && (
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
                   <i className="fas fa-database text-green-600 dark:text-green-400 text-xs"></i>
@@ -855,7 +855,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
             )}
 
             {/* Configuration status */}
-            {!(node.data.inputType && node.data.variableName) && (
+            {!((node.data as any).inputType && (node.data as any).variableName) && (
               <div className="flex items-center space-x-2 text-orange-600 dark:text-orange-400">
                 <i className="fas fa-exclamation-triangle text-xs"></i>
                 <div className="text-xs">Требуется настройка</div>
@@ -867,44 +867,112 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
       
       {/* Conditional Messages Indicator */}
       {node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0 && (
-        <div className="bg-gradient-to-br from-purple-50/80 to-indigo-50/80 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-3 mb-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-              <i className="fas fa-code-branch text-purple-600 dark:text-purple-400 text-xs"></i>
+        <div className="bg-gradient-to-br from-purple-50/90 to-indigo-50/90 dark:from-purple-900/25 dark:to-indigo-900/25 border border-purple-200/50 dark:border-purple-800/40 rounded-xl p-4 mb-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center">
+                <i className="fas fa-code-branch text-purple-600 dark:text-purple-400 text-sm"></i>
+              </div>
+              <div className="text-sm font-semibold text-purple-800 dark:text-purple-200">
+                Условные сообщения
+              </div>
             </div>
-            <div className="text-xs font-medium text-purple-700 dark:text-purple-300">
-              Условные сообщения ({node.data.conditionalMessages.length})
+            <div className="text-xs text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded-full font-medium">
+              {node.data.conditionalMessages.length} правил{node.data.conditionalMessages.length === 1 ? 'о' : node.data.conditionalMessages.length < 5 ? 'а' : ''}
             </div>
           </div>
-          <div className="space-y-1">
-            {node.data.conditionalMessages.slice(0, 2).map((condition, index) => (
-              <div key={condition.id || index} className="text-xs text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-950/30 rounded px-2 py-1 border border-purple-200/20 dark:border-purple-800/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1">
-                    <i className="fas fa-filter text-xs opacity-70"></i>
-                    <span className="truncate max-w-[120px]">
-                      {condition.condition === 'user_data_equals' ? 'Точное совпадение' : 
-                       condition.condition === 'user_data_contains' ? 'Содержит текст' :
-                       condition.condition === 'user_data_exists' ? 'Данные существуют' :
-                       condition.condition === 'user_data_not_exists' ? 'Данных нет' :
-                       condition.condition === 'first_time' ? 'Первый раз' :
-                       condition.condition === 'returning_user' ? 'Возвращающийся' : 'Условие'}
-                    </span>
+          
+          <div className="space-y-2">
+            {node.data.conditionalMessages
+              .sort((a, b) => (b.priority || 0) - (a.priority || 0))
+              .slice(0, 3)
+              .map((condition, index) => {
+                const getConditionIcon = (conditionType: string) => {
+                  switch(conditionType) {
+                    case 'user_data_equals': return 'fas fa-equals';
+                    case 'user_data_contains': return 'fas fa-search';
+                    case 'user_data_exists': return 'fas fa-check-circle';
+                    case 'user_data_not_exists': return 'fas fa-times-circle';
+                    case 'first_time': return 'fas fa-user-plus';
+                    case 'returning_user': return 'fas fa-user-check';
+                    default: return 'fas fa-filter';
+                  }
+                };
+
+                const getConditionColor = (conditionType: string) => {
+                  switch(conditionType) {
+                    case 'user_data_equals': return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30';
+                    case 'user_data_contains': return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30';
+                    case 'user_data_exists': return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30';
+                    case 'user_data_not_exists': return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30';
+                    case 'first_time': return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30';
+                    case 'returning_user': return 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/30';
+                    default: return 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30';
+                  }
+                };
+
+                const conditionName = {
+                  'user_data_equals': 'Точное совпадение',
+                  'user_data_contains': 'Содержит текст',
+                  'user_data_exists': 'Имя введено ранее',
+                  'user_data_not_exists': 'Имя не введено',
+                  'first_time': 'Первое посещение',
+                  'returning_user': 'Возвращающийся пользователь'
+                }[condition.condition] || 'Условие';
+
+                return (
+                  <div key={condition.id || index} className="bg-white/60 dark:bg-slate-900/40 rounded-lg border border-purple-100 dark:border-purple-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center space-x-2 flex-1">
+                        <div className={cn("w-5 h-5 rounded-full flex items-center justify-center text-xs", getConditionColor(condition.condition))}>
+                          <i className={getConditionIcon(condition.condition)}></i>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
+                            {conditionName}
+                          </div>
+                          {(condition as any).variableName && (
+                            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
+                              <i className="fas fa-tag text-xs"></i>
+                              <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded text-xs">{(condition as any).variableName}</code>
+                              {(condition as any).value && (
+                                <>
+                                  <span>=</span>
+                                  <span className="truncate max-w-[60px]">"{(condition as any).value}"</span>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 ml-2">
+                        <div className="text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded">
+                          #{condition.priority || 0}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {condition.messageText && (
+                      <div className="bg-slate-50/70 dark:bg-slate-800/50 rounded p-2 border border-slate-200/50 dark:border-slate-700/50">
+                        <div className="text-xs text-slate-600 dark:text-slate-400 mb-1 flex items-center space-x-1">
+                          <i className="fas fa-comment text-xs"></i>
+                          <span className="font-medium">Сообщение:</span>
+                        </div>
+                        <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-2">
+                          {condition.messageText}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-xs opacity-70">#{condition.priority || 0}</span>
-                  </div>
+                );
+              })}
+            
+            {node.data.conditionalMessages.length > 3 && (
+              <div className="text-center py-2">
+                <div className="text-xs text-purple-600 dark:text-purple-400 bg-purple-100/70 dark:bg-purple-900/30 px-3 py-2 rounded-lg border border-purple-200/30 dark:border-purple-800/30 inline-flex items-center space-x-1">
+                  <i className="fas fa-ellipsis-h text-xs"></i>
+                  <span>Еще {node.data.conditionalMessages.length - 3} условий</span>
                 </div>
-                {condition.messageText && (
-                  <div className="text-xs opacity-80 truncate mt-1 max-w-[180px]">
-                    "{condition.messageText.substring(0, 30)}{condition.messageText.length > 30 ? '...' : ''}"
-                  </div>
-                )}
-              </div>
-            ))}
-            {node.data.conditionalMessages.length > 2 && (
-              <div className="text-xs text-purple-500 dark:text-purple-400 text-center py-1 opacity-70">
-                +{node.data.conditionalMessages.length - 2} еще
               </div>
             )}
           </div>
@@ -912,7 +980,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
       )}
       
       {/* Text Input Indicator for keyboard type 'none' */}
-      {node.type === 'keyboard' && node.data.keyboardType === 'none' && node.data.enableTextInput && (
+      {node.type === 'keyboard' && node.data.keyboardType === 'none' && (node.data as any).enableTextInput && (
         <div className="bg-gradient-to-br from-cyan-50/70 to-blue-50/70 dark:from-cyan-900/30 dark:to-blue-900/30 rounded-xl p-4 mb-4 border border-cyan-200 dark:border-cyan-800/30">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">
@@ -923,16 +991,16 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
                 Текстовый ввод
               </div>
               <div className="text-xs text-cyan-600 dark:text-cyan-400 space-y-1">
-                {node.data.inputVariable && (
+                {(node.data as any).inputVariable && (
                   <div className="flex items-center space-x-1">
                     <i className="fas fa-tag text-xs"></i>
-                    <span>Сохранить в: <code className="bg-cyan-100 dark:bg-cyan-900/50 px-1 py-0.5 rounded text-xs">{node.data.inputVariable}</code></span>
+                    <span>Сохранить в: <code className="bg-cyan-100 dark:bg-cyan-900/50 px-1 py-0.5 rounded text-xs">{(node.data as any).inputVariable}</code></span>
                   </div>
                 )}
-                {node.data.inputTargetNodeId && (
+                {(node.data as any).inputTargetNodeId && (
                   <div className="flex items-center space-x-1">
                     <i className="fas fa-arrow-right text-xs"></i>
-                    <span>Следующий узел: {node.data.inputTargetNodeId}</span>
+                    <span>Следующий узел: {(node.data as any).inputTargetNodeId}</span>
                   </div>
                 )}
               </div>
