@@ -1576,8 +1576,22 @@ export async function seedDefaultTemplates(force = false) {
                   id: "gender_already_set",
                   condition: "user_data_exists",
                   variableName: "пол",
-                  messageText: "Вы уже указали свой пол: {пол}\n\nХотите изменить эту информацию?",
-                  priority: 10
+                  messageText: "Вы уже указали свой пол: {пол}\n\nВаш профиль заполнен. Посмотреть профиль?",
+                  priority: 10,
+                  buttons: [
+                    {
+                      id: "btn-view-profile-gender",
+                      text: "👤 Посмотреть профиль",
+                      action: "command",
+                      target: "/profile"
+                    },
+                    {
+                      id: "btn-change-gender",
+                      text: "✏️ Изменить пол",
+                      action: "goto",
+                      target: "XDSrTrNly5EtDtr85nN4P"
+                    }
+                  ]
                 }
               ],
               fallbackMessage: "Какой твой пол?"
