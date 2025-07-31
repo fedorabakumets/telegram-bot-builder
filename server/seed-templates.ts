@@ -1488,7 +1488,22 @@ export async function seedDefaultTemplates() {
               enableTextInput: true,
               oneTimeKeyboard: false,
               collectUserInput: true,
-              inputTargetNodeId: "final-message-node"
+              inputTargetNodeId: "final-message-node",
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "name_already_exists",
+                  priority: 60,
+                  condition: "user_data_exists",
+                  variableNames: ["имя"],
+                  logicOperator: "AND",
+                  messageText: "Введите новое имя:",
+                  waitForTextInput: true,
+                  textInputVariable: "имя",
+                  nextNodeAfterInput: "profile_command",
+                  formatMode: "text"
+                }
+              ]
             }
           },
           {

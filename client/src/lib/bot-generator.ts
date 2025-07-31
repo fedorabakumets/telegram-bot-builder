@@ -1789,6 +1789,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               
               // Добавляем замену переменных в тексте
               code += generateUniversalVariableReplacement('    ');
+              
+              // Добавляем поддержку условных сообщений для keyboard узлов с collectUserInput
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    \n';
+                code += '    # Проверка условных сообщений для keyboard узла\n';
+                code += '    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})\n';
+                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                code += '    \n';
+                
+                // Use conditional message if available, otherwise use default
+                code += '    # Используем условное сообщение если есть подходящее условие\n';
+                code += '    if "text" not in locals():\n';
+                code += `        text = ${formattedTargetText}\n`;
+                code += '    \n';
+                code += '    # Используем условную клавиатуру если есть\n';
+                code += '    if conditional_keyboard is not None:\n';
+                code += '        keyboard = conditional_keyboard\n';
+                code += '    \n';
+              }
             
               // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла (основной цикл)
               if (targetNode.data.collectUserInput === true) {
