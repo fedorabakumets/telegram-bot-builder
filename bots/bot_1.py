@@ -787,6 +787,77 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    
+    # Проверка условных сообщений для keyboard узла
+    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    conditional_parse_mode = None
+    conditional_keyboard = None
+    # Функция для проверки переменных пользователя
+    def check_user_variable(var_name, user_data_dict):
+        """Проверяет существование и получает значение переменной пользователя"""
+        # Сначала проверяем в поле user_data (из БД)
+        if "user_data" in user_data_dict and user_data_dict["user_data"]:
+            try:
+                import json
+                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                if var_name in parsed_data:
+                    raw_value = parsed_data[var_name]
+                    if isinstance(raw_value, dict) and "value" in raw_value:
+                        var_value = raw_value["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
+                    else:
+                        # Проверяем, что значение действительно существует и не пустое
+                        if raw_value is not None and str(raw_value).strip() != "":
+                            return True, str(raw_value)
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Проверяем в локальных данных (без вложенности user_data)
+        if var_name in user_data_dict:
+            variable_data = user_data_dict.get(var_name)
+            if isinstance(variable_data, dict) and "value" in variable_data:
+                var_value = variable_data["value"]
+                # Проверяем, что значение действительно существует и не пустое
+                if var_value is not None and str(var_value).strip() != "":
+                    return True, str(var_value)
+            elif variable_data is not None and str(variable_data).strip() != "":
+                return True, str(variable_data)
+        
+        return False, None
+    
+    # Условие 1: user_data_exists для переменных: пол
+    if (
+        check_user_variable("пол", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        text = """Вы уже указали свой пол: {пол}
+
+Хотите изменить эту информацию?"""
+        conditional_parse_mode = None
+        if "{пол}" in text and variable_values["пол"] is not None:
+            text = text.replace("{пол}", variable_values["пол"])
+        # Настраиваем ожидание текстового ввода для условного сообщения
+        conditional_message_config = {
+            "condition_id": "gender_already_set",
+            "wait_for_input": False,
+            "input_variable": "",
+            "next_node_id": "",
+            "source_type": "conditional_message"
+        }
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    
+    # Используем условное сообщение если есть подходящее условие
+    if "text" not in locals():
+        text = "Какой твой пол?"
+    
+    # Используем условную клавиатуру если есть
+    if conditional_keyboard is not None:
+        keyboard = conditional_keyboard
+    
     # Активируем сбор пользовательского ввода (основной цикл)
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
@@ -1458,8 +1529,10 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
     
     return  # Завершаем обработку после переадресации
     
-    text = "Какой твой пол?"
-    # Подставляем все доступные переменные пользователя в текст
+    # Проверяем условные сообщения
+    text = None
+    
+    # Получаем данные пользователя для проверки условий
     user_record = await get_user_from_db(user_id)
     if not user_record:
         user_record = user_data.get(user_id, {})
@@ -1470,20 +1543,19 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
             if isinstance(user_record["user_data"], str):
                 try:
                     import json
-                    user_vars = json.loads(user_record["user_data"])
+                    user_data_dict = json.loads(user_record["user_data"])
                 except (json.JSONDecodeError, TypeError):
-                    user_vars = {}
+                    user_data_dict = {}
             elif isinstance(user_record["user_data"], dict):
-                user_vars = user_record["user_data"]
+                user_data_dict = user_record["user_data"]
             else:
-                user_vars = {}
+                user_data_dict = {}
         else:
-            user_vars = user_record
+            user_data_dict = user_record
     else:
-        user_vars = {}
+        user_data_dict = {}
     
-    # Заменяем все переменные в тексте
-    import re
+    # Функция для замены переменных в тексте
     def replace_variables_in_text(text_content, variables_dict):
         if not text_content or not variables_dict:
             return text_content
@@ -1500,7 +1572,70 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
                 text_content = text_content.replace(placeholder, var_value)
         return text_content
     
-    text = replace_variables_in_text(text, user_vars)
+    conditional_parse_mode = None
+    conditional_keyboard = None
+    # Функция для проверки переменных пользователя
+    def check_user_variable(var_name, user_data_dict):
+        """Проверяет существование и получает значение переменной пользователя"""
+        # Сначала проверяем в поле user_data (из БД)
+        if "user_data" in user_data_dict and user_data_dict["user_data"]:
+            try:
+                import json
+                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
+                if var_name in parsed_data:
+                    raw_value = parsed_data[var_name]
+                    if isinstance(raw_value, dict) and "value" in raw_value:
+                        var_value = raw_value["value"]
+                        # Проверяем, что значение действительно существует и не пустое
+                        if var_value is not None and str(var_value).strip() != "":
+                            return True, str(var_value)
+                    else:
+                        # Проверяем, что значение действительно существует и не пустое
+                        if raw_value is not None and str(raw_value).strip() != "":
+                            return True, str(raw_value)
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Проверяем в локальных данных (без вложенности user_data)
+        if var_name in user_data_dict:
+            variable_data = user_data_dict.get(var_name)
+            if isinstance(variable_data, dict) and "value" in variable_data:
+                var_value = variable_data["value"]
+                # Проверяем, что значение действительно существует и не пустое
+                if var_value is not None and str(var_value).strip() != "":
+                    return True, str(var_value)
+            elif variable_data is not None and str(variable_data).strip() != "":
+                return True, str(variable_data)
+        
+        return False, None
+    
+    # Условие 1: user_data_exists для переменных: пол
+    if (
+        check_user_variable("пол", user_data_dict)[0]
+    ):
+        # Собираем значения переменных
+        variable_values = {}
+        _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
+        text = """Вы уже указали свой пол: {пол}
+
+Хотите изменить эту информацию?"""
+        conditional_parse_mode = None
+        if "{пол}" in text and variable_values["пол"] is not None:
+            text = text.replace("{пол}", variable_values["пол"])
+        # Настраиваем ожидание текстового ввода для условного сообщения
+        conditional_message_config = {
+            "condition_id": "gender_already_set",
+            "wait_for_input": False,
+            "input_variable": "",
+            "next_node_id": "",
+            "source_type": "conditional_message"
+        }
+        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
+    else:
+        text = "Какой твой пол?"
+        text = replace_variables_in_text(text, user_data_dict)
+        logging.info("Используется запасное сообщение")
+    
     # Активируем сбор пользовательского ввода
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
