@@ -1557,7 +1557,21 @@ export async function seedDefaultTemplates() {
                   condition: "user_data_exists",
                   variableNames: ["источник", "желание", "пол", "имя"],
                   logicOperator: "AND",
-                  messageText: "👤 Ваш профиль:\n\n🔍 Источник: {источник}\n💭 Желание продолжить: {желание}\n⚧️ Пол: {пол}\n👋 Имя: {имя}\n\nПрофиль полностью заполнен! ✅"
+                  messageText: "👤 Ваш профиль:\n\n🔍 Источник: {источник}\n💭 Желание продолжить: {желание}\n⚧️ Пол: {пол}\n👋 Имя: {имя}\n\nПрофиль полностью заполнен! ✅",
+                  buttons: [
+                    {
+                      id: "btn-edit-name-full",
+                      text: "✏️ Редактировать имя",
+                      action: "goto",
+                      target: "XDSrTrNly5EtDtr85nN4P"
+                    },
+                    {
+                      id: "btn-restart-full",
+                      text: "🔄 Пройти опрос заново",
+                      action: "command",
+                      target: "/start"
+                    }
+                  ]
                 },
                 {
                   id: "profile_basic_info",
@@ -1565,7 +1579,21 @@ export async function seedDefaultTemplates() {
                   condition: "user_data_exists",
                   variableNames: ["имя"],
                   logicOperator: "AND",
-                  messageText: "👤 Ваш профиль:\n\n👋 Имя: {имя}\n\nОсновная информация заполнена. Хотите пройти полный опрос?"
+                  messageText: "👤 Ваш профиль:\n\n👋 Имя: {имя}\n\nОсновная информация заполнена. Хотите пройти полный опрос?",
+                  buttons: [
+                    {
+                      id: "btn-edit-name-basic",
+                      text: "✏️ Редактировать имя",
+                      action: "goto",
+                      target: "XDSrTrNly5EtDtr85nN4P"
+                    },
+                    {
+                      id: "btn-full-survey-basic",
+                      text: "📝 Полный опрос",
+                      action: "command",
+                      target: "/start"
+                    }
+                  ]
                 },
                 {
                   id: "profile_partial",
@@ -1581,7 +1609,21 @@ export async function seedDefaultTemplates() {
                   condition: "user_data_exists", 
                   variableNames: ["источник", "желание", "пол", "имя"],
                   logicOperator: "OR",
-                  messageText: "👤 Ваш профиль:\n\nУ нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.\n\nИмеющиеся данные:\n🔍 Источник: {источник}\n💭 Желание: {желание}\n⚧️ Пол: {пол}\n👋 Имя: {имя}"
+                  messageText: "👤 Ваш профиль:\n\nУ нас есть некоторая информация о вас. Пройдите полный опрос чтобы заполнить профиль полностью.\n\nИмеющиеся данные:\n🔍 Источник: {источник}\n💭 Желание: {желание}\n⚧️ Пол: {пол}\n👋 Имя: {имя}",
+                  buttons: [
+                    {
+                      id: "btn-edit-name-any",
+                      text: "✏️ Редактировать имя",
+                      action: "goto",
+                      target: "XDSrTrNly5EtDtr85nN4P"
+                    },
+                    {
+                      id: "btn-complete-survey-any",
+                      text: "📝 Завершить опрос",
+                      action: "command",
+                      target: "/start"
+                    }
+                  ]
                 }
               ],
               enableConditionalMessages: true,
@@ -1619,6 +1661,11 @@ export async function seedDefaultTemplates() {
             id: "conn-name-to-profile",
             source: "XDSrTrNly5EtDtr85nN4P",
             target: "profile_command"
+          },
+          {
+            id: "conn-profile-to-name-edit",
+            source: "profile_command",
+            target: "XDSrTrNly5EtDtr85nN4P"
           }
         ]
       }
