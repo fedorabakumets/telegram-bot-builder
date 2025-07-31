@@ -2748,30 +2748,36 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        if next_node_id:\n';
   code += '            try:\n';
   code += '                logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-  code += '                # Создаем фиктивный callback для навигации\n';
-  code += '                import types as aiogram_types\n';
-  code += '                fake_callback = aiogram_types.SimpleNamespace(\n';
-  code += '                    id="conditional_nav",\n';
-  code += '                    from_user=message.from_user,\n';
-  code += '                    chat_instance="",\n';
-  code += '                    data=next_node_id,\n';
-  code += '                    message=message,\n';
-  code += '                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
-  code += '                )\n';
   code += '                \n';
+  code += '                # Проверяем, является ли это командой\n';
+  code += '                if next_node_id == "profile_command":\n';
+  code += '                    logging.info("Переход к команде /profile")\n';
+  code += '                    await handle_profile_command(message)\n';
+  code += '                else:\n';
+  code += '                    # Создаем фиктивный callback для навигации к обычному узлу\n';
+  code += '                    import types as aiogram_types\n';
+  code += '                    fake_callback = aiogram_types.SimpleNamespace(\n';
+  code += '                        id="conditional_nav",\n';
+  code += '                        from_user=message.from_user,\n';
+  code += '                        chat_instance="",\n';
+  code += '                        data=next_node_id,\n';
+  code += '                        message=message,\n';
+  code += '                        answer=lambda text="", show_alert=False: asyncio.sleep(0)\n';
+  code += '                    )\n';
+  code += '                    \n';
   
   if (nodes.length > 0) {
     nodes.forEach((targetNode, index) => {
       const condition = index === 0 ? 'if' : 'elif';
       const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-      code += `                ${condition} next_node_id == "${targetNode.id}":\n`;
-      code += `                    await handle_callback_${safeFunctionName}(fake_callback)\n`;
+      code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
+      code += `                        await handle_callback_${safeFunctionName}(fake_callback)\n`;
     });
-    code += '                else:\n';
-    code += '                    logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    code += '                    else:\n';
+    code += '                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
   } else {
-    code += '                # No nodes available for navigation\n';
-    code += '                logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+    code += '                    # No nodes available for navigation\n';
+    code += '                    logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
   }
   
   code += '            except Exception as e:\n';
