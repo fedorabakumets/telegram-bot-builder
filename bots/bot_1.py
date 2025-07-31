@@ -1522,21 +1522,21 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start_node":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу start_node типа {navTargetNode.type}")
         elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу --2N9FeeykMHVVlsVnSQW типа {navTargetNode.type}")
         elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу nr3wIiTfBYYmpkkXMNH7n типа {navTargetNode.type}")
         elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
-            text = "Печально, если что напиши /start или /profile для просмотра профиля"
-            await callback_query.message.edit_text(text)
+            nav_text = "Печально, если что напиши /start или /profile для просмотра профиля"
+            await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа {navTargetNode.type}")
         elif next_node_id == "final-message-node":
-            text = """Спасибо за предоставленную информацию! 🎉
+            nav_text = """Спасибо за предоставленную информацию! 🎉
 
 Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
-            await callback_query.message.edit_text(text)
+            await callback_query.message.edit_text(nav_text)
         elif next_node_id == "profile_command":
             # Выполняем команду /profile
             from types import SimpleNamespace
@@ -1709,21 +1709,21 @@ async def handle_callback_1BHSLWPMao9qQvSAzuzRl(callback_query: types.CallbackQu
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start_node":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу start_node типа {navTargetNode.type}")
         elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу --2N9FeeykMHVVlsVnSQW типа {navTargetNode.type}")
         elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу nr3wIiTfBYYmpkkXMNH7n типа {navTargetNode.type}")
         elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
-            text = "Печально, если что напиши /start или /profile для просмотра профиля"
-            await callback_query.message.edit_text(text)
+            nav_text = "Печально, если что напиши /start или /profile для просмотра профиля"
+            await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа {navTargetNode.type}")
         elif next_node_id == "final-message-node":
-            text = """Спасибо за предоставленную информацию! 🎉
+            nav_text = """Спасибо за предоставленную информацию! 🎉
 
 Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
-            await callback_query.message.edit_text(text)
+            await callback_query.message.edit_text(nav_text)
         elif next_node_id == "profile_command":
             # Выполняем команду /profile
             from types import SimpleNamespace
@@ -1835,21 +1835,21 @@ async def handle_callback_XDSrTrNly5EtDtr85nN4P(callback_query: types.CallbackQu
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start_node":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу start_node типа {navTargetNode.type}")
         elif next_node_id == "--2N9FeeykMHVVlsVnSQW":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу --2N9FeeykMHVVlsVnSQW типа {navTargetNode.type}")
         elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу nr3wIiTfBYYmpkkXMNH7n типа {navTargetNode.type}")
         elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
-            text = "Печально, если что напиши /start или /profile для просмотра профиля"
-            await callback_query.message.edit_text(text)
+            nav_text = "Печально, если что напиши /start или /profile для просмотра профиля"
+            await callback_query.message.edit_text(nav_text)
         elif next_node_id == "XDSrTrNly5EtDtr85nN4P":
-            logging.info(f"Переход к узлу {navTargetNode.id} типа {navTargetNode.type}")
+            logging.info(f"Переход к узлу XDSrTrNly5EtDtr85nN4P типа {navTargetNode.type}")
         elif next_node_id == "final-message-node":
-            text = """Спасибо за предоставленную информацию! 🎉
+            nav_text = """Спасибо за предоставленную информацию! 🎉
 
 Ваш профиль сохранен. Теперь вы можете воспользоваться командой /profile чтобы посмотреть свой профиль."""
-            await callback_query.message.edit_text(text)
+            await callback_query.message.edit_text(nav_text)
         elif next_node_id == "profile_command":
             # Выполняем команду /profile
             from types import SimpleNamespace
