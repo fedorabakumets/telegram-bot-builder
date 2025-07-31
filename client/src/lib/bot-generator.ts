@@ -2810,7 +2810,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '                # Проверяем, является ли это командой\n';
   code += '                if next_node_id == "profile_command":\n';
   code += '                    logging.info("Переход к команде /profile")\n';
-  code += '                    await handle_profile_command(message)\n';
+  code += '                    await profile_handler(message)\n';
   code += '                else:\n';
   code += '                    # Создаем фиктивный callback для навигации к обычному узлу\n';
   code += '                    import types as aiogram_types\n';
