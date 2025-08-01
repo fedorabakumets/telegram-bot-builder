@@ -1578,7 +1578,7 @@ export async function seedDefaultTemplates(force = false) {
                   variableName: "пол",
                   variableNames: ["пол"],
                   logicOperator: "AND",
-                  messageText: "Вы уже указали свой пол: {пол}\n\nВаш профиль заполнен. Посмотреть профиль?",
+                  messageText: "Ваш пол: {пол}\n\nВыберите действие:",
                   priority: 10,
                   keyboardType: "inline",
                   buttons: [
