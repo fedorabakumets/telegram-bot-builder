@@ -1583,16 +1583,16 @@ export async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   buttons: [
                     {
-                      id: "btn-view-profile-gender",
-                      text: "👤 Посмотреть профиль",
+                      id: "btn-female-profile",
+                      text: "Женщина",
                       action: "command",
                       target: "/profile"
                     },
                     {
-                      id: "btn-change-gender",
-                      text: "✏️ Изменить пол",
-                      action: "goto",
-                      target: "XDSrTrNly5EtDtr85nN4P"
+                      id: "btn-male-profile",
+                      text: "Мужчина",
+                      action: "command",
+                      target: "/profile"
                     }
                   ],
                   formatMode: "text"
