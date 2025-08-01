@@ -836,8 +836,8 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
             text = text.replace("{пол}", variable_values["пол"])
         # Создаем inline клавиатуру для условного сообщения
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Женщина", callback_data="cmd_profile"))
-        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="cmd_profile"))
+        builder.add(InlineKeyboardButton(text="Женщина", callback_data="conditional_пол_Женщина"))
+        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="conditional_пол_Мужчина"))
         keyboard = builder.as_markup()
         conditional_keyboard = keyboard
         # Настраиваем ожидание текстового ввода для условного сообщения
@@ -1628,8 +1628,8 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
             text = text.replace("{пол}", variable_values["пол"])
         # Создаем inline клавиатуру для условного сообщения
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="Женщина", callback_data="cmd_profile"))
-        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="cmd_profile"))
+        builder.add(InlineKeyboardButton(text="Женщина", callback_data="conditional_пол_Женщина"))
+        builder.add(InlineKeyboardButton(text="Мужчина", callback_data="conditional_пол_Мужчина"))
         keyboard = builder.as_markup()
         conditional_keyboard = keyboard
         # Настраиваем ожидание текстового ввода для условного сообщения
