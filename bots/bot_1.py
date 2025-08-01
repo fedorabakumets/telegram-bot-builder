@@ -2945,6 +2945,52 @@ async def handle_user_input(message: types.Message):
             logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 
+# Обработчик для условных кнопок
+@dp.callback_query(lambda c: c.data.startswith("conditional_"))
+async def handle_conditional_button(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    
+    # Парсим callback_data: conditional_variableName_value
+    callback_parts = callback_query.data.split("_", 2)
+    if len(callback_parts) >= 3:
+        variable_name = callback_parts[1]
+        variable_value = callback_parts[2]
+        
+        user_id = callback_query.from_user.id
+        
+        # Сохраняем значение в базу данных
+        await update_user_data_in_db(user_id, variable_name, variable_value)
+        
+        # Сохраняем в локальные данные
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        user_data[user_id][variable_name] = variable_value
+        
+        logging.info(f"Условная кнопка: {variable_name} = {variable_value} (пользователь {user_id})")
+        
+        # Выполняем команду из callback_data (если есть)
+        # Для условных кнопок обычно это команда /profile
+        if "profile" in callback_query.data:
+            from types import SimpleNamespace
+            fake_message = SimpleNamespace()
+            fake_message.from_user = callback_query.from_user
+            fake_message.chat = callback_query.message.chat
+            fake_message.date = callback_query.message.date
+            fake_message.answer = callback_query.message.answer
+            fake_message.edit_text = callback_query.message.edit_text
+            
+            # Вызываем обработчик профиля
+            try:
+                await profile_handler(fake_message)
+            except NameError:
+                await callback_query.message.answer("👤 Функция профиля недоступна")
+        else:
+            await callback_query.message.answer(f"✅ Значение {variable_name} обновлено")
+    else:
+        logging.warning(f"Неверный формат условной кнопки: {callback_query.data}")
+        await callback_query.answer("❌ Ошибка обработки кнопки", show_alert=True)
+
+
 # Обработчики для кнопок команд
 
 @dp.callback_query(lambda c: c.data == "cmd_start")
