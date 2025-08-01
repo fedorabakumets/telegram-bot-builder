@@ -108,7 +108,7 @@ function generateUniversalVariableReplacement(indentLevel: string): string {
 }
 
 // Функция для генерации клавиатуры для условного сообщения
-function generateConditionalKeyboard(condition: any, indentLevel: string): string {
+function generateConditionalKeyboard(condition: any, indentLevel: string, nodeData?: any): string {
   if (!condition.keyboardType || condition.keyboardType === 'none' || !condition.buttons || condition.buttons.length === 0) {
     return '';
   }
@@ -126,9 +126,15 @@ function generateConditionalKeyboard(condition: any, indentLevel: string): strin
         const callbackData = button.target || button.id || 'no_action';
         code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
       } else if (button.action === 'command') {
-        // Для кнопок команд создаем специальную callback_data
-        const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-        code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+        // Для кнопок команд в условных сообщениях, которые должны сохранять данные
+        // Создаем специальную callback_data с переменной и значением
+        if (nodeData && nodeData.inputVariable) {
+          const conditionalCallback = `conditional_${nodeData.inputVariable}_${button.text}`;
+          code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${conditionalCallback}"))\n`;
+        } else {
+          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+          code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+        }
       } else {
         const callbackData = button.target || button.id || 'no_action';
         code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
@@ -160,7 +166,7 @@ function generateConditionalKeyboard(condition: any, indentLevel: string): strin
 }
 
 // Функция для генерации логики условных сообщений
-function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel: string = '    '): string {
+function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel: string = '    ', nodeData?: any): string {
   if (!conditionalMessages || conditionalMessages.length === 0) {
     return '';
   }
@@ -265,7 +271,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
@@ -319,7 +325,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
@@ -382,7 +388,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
@@ -445,7 +451,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
@@ -481,7 +487,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
@@ -517,7 +523,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         }
         
         // Добавляем генерацию клавиатуры для условного сообщения
-        code += generateConditionalKeyboard(condition, indentLevel + '    ');
+        code += generateConditionalKeyboard(condition, indentLevel + '    ', nodeData);
         
         // Добавляем логику для настройки ожидания текстового ввода
         code += `${indentLevel}    # Настраиваем ожидание текстового ввода для условного сообщения\n`;
@@ -3884,6 +3890,53 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   }
   code += '        except Exception as e:\n';
   code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+  code += '\n';
+
+  // Добавляем обработчик для условных кнопок (conditional_variableName_value)
+  code += '\n# Обработчик для условных кнопок\n';
+  code += '@dp.callback_query(lambda c: c.data.startswith("conditional_"))\n';
+  code += 'async def handle_conditional_button(callback_query: types.CallbackQuery):\n';
+  code += '    await callback_query.answer()\n';
+  code += '    \n';
+  code += '    # Парсим callback_data: conditional_variableName_value\n';
+  code += '    callback_parts = callback_query.data.split("_", 2)\n';
+  code += '    if len(callback_parts) >= 3:\n';
+  code += '        variable_name = callback_parts[1]\n';
+  code += '        variable_value = callback_parts[2]\n';
+  code += '        \n';
+  code += '        user_id = callback_query.from_user.id\n';
+  code += '        \n';
+  code += '        # Сохраняем значение в базу данных\n';
+  code += '        await update_user_data_in_db(user_id, variable_name, variable_value)\n';
+  code += '        \n';
+  code += '        # Сохраняем в локальные данные\n';
+  code += '        if user_id not in user_data:\n';
+  code += '            user_data[user_id] = {}\n';
+  code += '        user_data[user_id][variable_name] = variable_value\n';
+  code += '        \n';
+  code += '        logging.info(f"Условная кнопка: {variable_name} = {variable_value} (пользователь {user_id})")\n';
+  code += '        \n';
+  code += '        # Выполняем команду из callback_data (если есть)\n';
+  code += '        # Для условных кнопок обычно это команда /profile\n';
+  code += '        if "profile" in callback_query.data:\n';
+  code += '            from types import SimpleNamespace\n';
+  code += '            fake_message = SimpleNamespace()\n';
+  code += '            fake_message.from_user = callback_query.from_user\n';
+  code += '            fake_message.chat = callback_query.message.chat\n';
+  code += '            fake_message.date = callback_query.message.date\n';
+  code += '            fake_message.answer = callback_query.message.answer\n';
+  code += '            fake_message.edit_text = callback_query.message.edit_text\n';
+  code += '            \n';
+  code += '            # Вызываем обработчик профиля\n';
+  code += '            try:\n';
+  code += '                await profile_handler(fake_message)\n';
+  code += '            except NameError:\n';
+  code += '                await callback_query.message.answer("👤 Функция профиля недоступна")\n';
+  code += '        else:\n';
+  code += '            await callback_query.message.answer(f"✅ Значение {variable_name} обновлено")\n';
+  code += '    else:\n';
+  code += '        logging.warning(f"Неверный формат условной кнопки: {callback_query.data}")\n';
+  code += '        await callback_query.answer("❌ Ошибка обработки кнопки", show_alert=True)\n';
   code += '\n';
 
   // Добавляем обработчики для кнопок команд (типа cmd_start)
