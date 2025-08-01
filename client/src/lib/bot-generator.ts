@@ -127,9 +127,10 @@ function generateConditionalKeyboard(condition: any, indentLevel: string, nodeDa
         code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
       } else if (button.action === 'command') {
         // Для кнопок команд в условных сообщениях, которые должны сохранять данные
-        // Создаем специальную callback_data с переменной и значением
-        if (nodeData && nodeData.inputVariable) {
-          const conditionalCallback = `conditional_${nodeData.inputVariable}_${button.text}`;
+        // Создаем специальную callback_data с переменной и значением из условного сообщения
+        const conditionalVariableName = condition.variableName || condition.variableNames?.[0] || (nodeData && nodeData.inputVariable);
+        if (conditionalVariableName) {
+          const conditionalCallback = `conditional_${conditionalVariableName}_${button.text}`;
           code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${conditionalCallback}"))\n`;
         } else {
           const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
