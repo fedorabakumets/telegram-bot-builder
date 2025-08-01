@@ -830,14 +830,14 @@ async def handle_callback_btn_1(callback_query: types.CallbackQuery):
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
         text = """Вы уже указали свой пол: {пол}
 
-Ваш профиль заполнен. Посмотреть профиль?"""
+обновите пол"""
         conditional_parse_mode = None
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
         # Создаем inline клавиатуру для условного сообщения
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="👤 Посмотреть профиль", callback_data="cmd_profile"))
-        builder.add(InlineKeyboardButton(text="✏️ Изменить пол", callback_data="XDSrTrNly5EtDtr85nN4P"))
+        builder.add(InlineKeyboardButton(text="мужчина", callback_data="cmd_profile"))
+        builder.add(InlineKeyboardButton(text="женища", callback_data="profile_command"))
         keyboard = builder.as_markup()
         conditional_keyboard = keyboard
         # Настраиваем ожидание текстового ввода для условного сообщения
@@ -1622,14 +1622,14 @@ async def handle_callback_nr3wIiTfBYYmpkkXMNH7n(callback_query: types.CallbackQu
         _, variable_values["пол"] = check_user_variable("пол", user_data_dict)
         text = """Вы уже указали свой пол: {пол}
 
-Ваш профиль заполнен. Посмотреть профиль?"""
+обновите пол"""
         conditional_parse_mode = None
         if "{пол}" in text and variable_values["пол"] is not None:
             text = text.replace("{пол}", variable_values["пол"])
         # Создаем inline клавиатуру для условного сообщения
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="👤 Посмотреть профиль", callback_data="cmd_profile"))
-        builder.add(InlineKeyboardButton(text="✏️ Изменить пол", callback_data="XDSrTrNly5EtDtr85nN4P"))
+        builder.add(InlineKeyboardButton(text="мужчина", callback_data="cmd_profile"))
+        builder.add(InlineKeyboardButton(text="женища", callback_data="profile_command"))
         keyboard = builder.as_markup()
         conditional_keyboard = keyboard
         # Настраиваем ожидание текстового ввода для условного сообщения
