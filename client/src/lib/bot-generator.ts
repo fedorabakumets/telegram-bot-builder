@@ -3843,6 +3843,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        try:\n';
   code += '            logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
   code += '            \n';
+  code += '            # Создаем фейковое сообщение для навигации\n';
+  code += '            fake_message = type("FakeMessage", (), {})()\n';
+  code += '            fake_message.from_user = message.from_user\n';
+  code += '            fake_message.answer = message.answer\n';
+  code += '            fake_message.delete = lambda: None\n';
+  code += '            \n';
   code += '            # Находим узел по ID и выполняем соответствующее действие\n';
   
   // Generate navigation logic for each node type
@@ -3851,7 +3857,66 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       const condition = index === 0 ? 'if' : 'elif';
       code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
       
-      if (targetNode.type === 'message') {
+      if (targetNode.type === 'keyboard') {
+        // Обработка узлов клавиатуры
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        
+        if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+          code += `                text = ${formattedText}\n`;
+          code += '                builder = InlineKeyboardBuilder()\n';
+          targetNode.data.buttons.forEach((button: any, buttonIndex: number) => {
+            if (button.action === "url") {
+              code += `                builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+            } else if (button.action === 'goto') {
+              const callbackData = button.target || button.id || 'no_action';
+              code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+            } else if (button.action === 'command') {
+              const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+              code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+            } else {
+              const callbackData = button.target || button.id || 'no_action';
+              code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+            }
+          });
+          code += '                keyboard = builder.as_markup()\n';
+          code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
+        } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+          code += `                text = ${formattedText}\n`;
+          code += '                builder = ReplyKeyboardBuilder()\n';
+          targetNode.data.buttons.forEach((button: any) => {
+            if (button.action === "contact" && button.requestContact) {
+              code += `                builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+            } else if (button.action === "location" && button.requestLocation) {
+              code += `                builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+            } else {
+              code += `                builder.add(KeyboardButton(text="${button.text}"))\n`;
+            }
+          });
+          const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+          const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+          code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+          code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
+        } else {
+          code += `                text = ${formattedText}\n`;
+          code += '                await fake_message.answer(text)\n';
+        }
+        
+        // Проверяем, нужно ли настроить ожидание текстового ввода
+        if (targetNode.data.enableTextInput) {
+          const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
+          
+          code += '                # Настраиваем ожидание текстового ввода\n';
+          code += '                user_data[user_id]["waiting_for_input"] = {\n';
+          code += '                    "type": "text",\n';
+          code += `                    "variable": "${inputVariable}",\n`;
+          code += '                    "save_to_database": True,\n';
+          code += `                    "node_id": "${targetNode.id}",\n`;
+          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
+          code += '                }\n';
+        }
+      } else if (targetNode.type === 'message') {
         // Добавляем поддержку условных сообщений для узлов сообщений
         const messageText = targetNode.data.messageText || 'Сообщение';
         const formattedText = formatTextForPython(messageText);
