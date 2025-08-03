@@ -549,8 +549,250 @@ async def start_handler(message: types.Message):
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "btn_catalog")
-async def handle_callback_btn_catalog(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "vip_offers")
+async def handle_conditional_vip_offers(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: vip_offers by user {user_id}")
+    await callback_query.message.edit_text("Функция vip_offers будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "personal_manager")
+async def handle_conditional_personal_manager(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: personal_manager by user {user_id}")
+    await callback_query.message.edit_text("Функция personal_manager будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "repeat_order")
+async def handle_conditional_repeat_order(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: repeat_order by user {user_id}")
+    await callback_query.message.edit_text("Функция repeat_order будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "new_products")
+async def handle_conditional_new_products(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: new_products by user {user_id}")
+    
+    # Отправляем содержимое целевого узла
+    text = "🆕 Новинки нашего магазина:"
+    await callback_query.message.edit_text(text)
+
+@dp.callback_query(lambda c: c.data == "bonus_shop")
+async def handle_conditional_bonus_shop(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: bonus_shop by user {user_id}")
+    
+    # Отправляем содержимое целевого узла
+    await callback_query.message.edit_text("Функция bonus_shop будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "recommendations")
+async def handle_conditional_recommendations(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: recommendations by user {user_id}")
+    await callback_query.message.edit_text("Функция recommendations будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "favorites")
+async def handle_conditional_favorites(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: favorites by user {user_id}")
+    await callback_query.message.edit_text("Функция favorites будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "catalog_main")
+async def handle_conditional_catalog_main(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: catalog_main by user {user_id}")
+    
+    # Отправляем содержимое целевого узла
+    await callback_query.message.edit_text("Функция catalog_main будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "premium_electronics")
+async def handle_conditional_premium_electronics(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: premium_electronics by user {user_id}")
+    await callback_query.message.edit_text("Функция premium_electronics будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "preorders")
+async def handle_conditional_preorders(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: preorders by user {user_id}")
+    await callback_query.message.edit_text("Функция preorders будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "compatible_accessories")
+async def handle_conditional_compatible_accessories(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: compatible_accessories by user {user_id}")
+    await callback_query.message.edit_text("Функция compatible_accessories будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "trade_in")
+async def handle_conditional_trade_in(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: trade_in by user {user_id}")
+    await callback_query.message.edit_text("Функция trade_in будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "vip_support")
+async def handle_conditional_vip_support(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: vip_support by user {user_id}")
+    await callback_query.message.edit_text("Функция vip_support будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "exclusive_catalog")
+async def handle_conditional_exclusive_catalog(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: exclusive_catalog by user {user_id}")
+    await callback_query.message.edit_text("Функция exclusive_catalog будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "achievements")
+async def handle_conditional_achievements(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: achievements by user {user_id}")
+    await callback_query.message.edit_text("Функция achievements будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "referral_program")
+async def handle_conditional_referral_program(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: referral_program by user {user_id}")
+    await callback_query.message.edit_text("Функция referral_program будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "registration")
+async def handle_conditional_registration(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: registration by user {user_id}")
+    await callback_query.message.edit_text("Функция registration будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "start_store")
+async def handle_conditional_start_store(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: start_store by user {user_id}")
+    
+    # Отправляем содержимое целевого узла
+    await callback_query.message.edit_text("Функция start_store будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "apply_discount")
+async def handle_conditional_apply_discount(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: apply_discount by user {user_id}")
+    await callback_query.message.edit_text("Функция apply_discount будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "save_discount")
+async def handle_conditional_save_discount(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: save_discount by user {user_id}")
+    await callback_query.message.edit_text("Функция save_discount будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "checkout")
+async def handle_conditional_checkout(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: checkout by user {user_id}")
+    await callback_query.message.edit_text("Функция checkout будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "edit_cart")
+async def handle_conditional_edit_cart(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: edit_cart by user {user_id}")
+    await callback_query.message.edit_text("Функция edit_cart будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "save_cart")
+async def handle_conditional_save_cart(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: save_cart by user {user_id}")
+    await callback_query.message.edit_text("Функция save_cart будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "personal_manager_contact")
+async def handle_conditional_personal_manager_contact(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: personal_manager_contact by user {user_id}")
+    await callback_query.message.edit_text("Функция personal_manager_contact будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "priority_support")
+async def handle_conditional_priority_support(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: priority_support by user {user_id}")
+    await callback_query.message.edit_text("Функция priority_support будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "order_status")
+async def handle_conditional_order_status(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: order_status by user {user_id}")
+    await callback_query.message.edit_text("Функция order_status будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "change_order")
+async def handle_conditional_change_order(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: change_order by user {user_id}")
+    await callback_query.message.edit_text("Функция change_order будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "support_center")
+async def handle_conditional_support_center(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: support_center by user {user_id}")
+    
+    # Отправляем содержимое целевого узла
+    await callback_query.message.edit_text("Функция support_center будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "special_bonus_offers")
+async def handle_conditional_special_bonus_offers(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: special_bonus_offers by user {user_id}")
+    await callback_query.message.edit_text("Функция special_bonus_offers будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "bonus_history")
+async def handle_conditional_bonus_history(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: bonus_history by user {user_id}")
+    await callback_query.message.edit_text("Функция bonus_history будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "earn_bonuses")
+async def handle_conditional_earn_bonuses(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: earn_bonuses by user {user_id}")
+    await callback_query.message.edit_text("Функция earn_bonuses будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "personal_new_products")
+async def handle_conditional_personal_new_products(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: personal_new_products by user {user_id}")
+    await callback_query.message.edit_text("Функция personal_new_products будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "preference_notifications")
+async def handle_conditional_preference_notifications(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    logging.info(f"Conditional button pressed: preference_notifications by user {user_id}")
+    await callback_query.message.edit_text("Функция preference_notifications будет добавлена позже")
+
+@dp.callback_query(lambda c: c.data == "catalog_main")
+async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "📱 Каталог товаров"
@@ -694,8 +936,8 @@ async def handle_callback_btn_catalog(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_profile")
-async def handle_callback_btn_profile(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "user_profile")
+async def handle_callback_user_profile(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "👤 Мой профиль"
@@ -892,8 +1134,8 @@ async def handle_callback_btn_profile(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_cart")
-async def handle_callback_btn_cart(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "shopping_cart")
+async def handle_callback_shopping_cart(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "🛒 Корзина"
@@ -1065,8 +1307,8 @@ async def handle_callback_btn_cart(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_support")
-async def handle_callback_btn_support(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "support_center")
+async def handle_callback_support_center(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "💬 Поддержка"
@@ -1242,8 +1484,8 @@ async def handle_callback_btn_support(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_electronics")
-async def handle_callback_btn_electronics(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "electronics_category")
+async def handle_callback_electronics_category(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "📱 Электроника"
@@ -1415,8 +1657,8 @@ async def handle_callback_btn_electronics(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_clothing")
-async def handle_callback_btn_clothing(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "clothing_category")
+async def handle_callback_clothing_category(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "👕 Одежда"
@@ -1430,8 +1672,8 @@ async def handle_callback_btn_clothing(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_home")
-async def handle_callback_btn_home(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "home_category")
+async def handle_callback_home_category(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "🏠 Дом и сад"
@@ -1445,8 +1687,8 @@ async def handle_callback_btn_home(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_back_main")
-async def handle_callback_btn_back_main(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "start_store")
+async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "◀️ Главная"
@@ -1619,8 +1861,8 @@ async def handle_callback_btn_back_main(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_smartphones")
-async def handle_callback_btn_smartphones(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "smartphones_list")
+async def handle_callback_smartphones_list(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "📱 Смартфоны"
@@ -1634,8 +1876,8 @@ async def handle_callback_btn_smartphones(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_laptops")
-async def handle_callback_btn_laptops(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "laptops_list")
+async def handle_callback_laptops_list(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "💻 Ноутбуки"
@@ -1649,8 +1891,8 @@ async def handle_callback_btn_laptops(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_accessories")
-async def handle_callback_btn_accessories(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "accessories_list")
+async def handle_callback_accessories_list(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "🎧 Аксессуары"
@@ -1664,8 +1906,8 @@ async def handle_callback_btn_accessories(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_back_catalog")
-async def handle_callback_btn_back_catalog(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "catalog_main")
+async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "◀️ К каталогу"
@@ -1809,8 +2051,8 @@ async def handle_callback_btn_back_catalog(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_edit_profile")
-async def handle_callback_btn_edit_profile(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "edit_profile")
+async def handle_callback_edit_profile(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "✏️ Редактировать"
@@ -1824,8 +2066,8 @@ async def handle_callback_btn_edit_profile(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_orders_history")
-async def handle_callback_btn_orders_history(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "orders_history")
+async def handle_callback_orders_history(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "📦 История заказов"
@@ -1839,8 +2081,8 @@ async def handle_callback_btn_orders_history(callback_query: types.CallbackQuery
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_bonus_info")
-async def handle_callback_btn_bonus_info(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "bonus_info")
+async def handle_callback_bonus_info(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "🎁 Бонусы"
@@ -1854,8 +2096,8 @@ async def handle_callback_btn_bonus_info(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_back_main_profile")
-async def handle_callback_btn_back_main_profile(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "start_store")
+async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "◀️ Главная"
@@ -2028,8 +2270,8 @@ async def handle_callback_btn_back_main_profile(callback_query: types.CallbackQu
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_continue_shopping")
-async def handle_callback_btn_continue_shopping(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "catalog_main")
+async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "🛍️ Продолжить покупки"
@@ -2173,8 +2415,8 @@ async def handle_callback_btn_continue_shopping(callback_query: types.CallbackQu
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_wishlist")
-async def handle_callback_btn_wishlist(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "wishlist")
+async def handle_callback_wishlist(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "❤️ Список желаний"
@@ -2188,8 +2430,8 @@ async def handle_callback_btn_wishlist(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_back_main_cart")
-async def handle_callback_btn_back_main_cart(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "start_store")
+async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "◀️ Главная"
@@ -2362,8 +2604,8 @@ async def handle_callback_btn_back_main_cart(callback_query: types.CallbackQuery
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_faq")
-async def handle_callback_btn_faq(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "faq")
+async def handle_callback_faq(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "❓ Частые вопросы"
@@ -2377,8 +2619,8 @@ async def handle_callback_btn_faq(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_chat_support")
-async def handle_callback_btn_chat_support(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "chat_support")
+async def handle_callback_chat_support(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "💬 Чат с оператором"
@@ -2392,8 +2634,8 @@ async def handle_callback_btn_chat_support(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_callback")
-async def handle_callback_btn_callback(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "callback_request")
+async def handle_callback_callback_request(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "📞 Обратный звонок"
@@ -2407,8 +2649,8 @@ async def handle_callback_btn_callback(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_back_main_support")
-async def handle_callback_btn_back_main_support(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "start_store")
+async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "◀️ Главная"
@@ -2581,8 +2823,8 @@ async def handle_callback_btn_back_main_support(callback_query: types.CallbackQu
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_bonus_products")
-async def handle_callback_btn_bonus_products(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "bonus_products")
+async def handle_callback_bonus_products(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "🛍️ Товары за бонусы"
@@ -2596,8 +2838,8 @@ async def handle_callback_btn_bonus_products(callback_query: types.CallbackQuery
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_bonus_discounts")
-async def handle_callback_btn_bonus_discounts(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "bonus_discounts")
+async def handle_callback_bonus_discounts(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "💰 Скидки за бонусы"
@@ -2611,8 +2853,8 @@ async def handle_callback_btn_bonus_discounts(callback_query: types.CallbackQuer
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_bonus_rules")
-async def handle_callback_btn_bonus_rules(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "bonus_rules")
+async def handle_callback_bonus_rules(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "📋 Правила программы"
@@ -2626,8 +2868,8 @@ async def handle_callback_btn_bonus_rules(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_back_main_bonus")
-async def handle_callback_btn_back_main_bonus(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "start_store")
+async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "◀️ Главная"
@@ -2800,8 +3042,8 @@ async def handle_callback_btn_back_main_bonus(callback_query: types.CallbackQuer
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "btn_this_week")
-async def handle_callback_btn_this_week(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "weekly_new")
+async def handle_callback_weekly_new(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "📅 Новинки недели"
@@ -2815,8 +3057,8 @@ async def handle_callback_btn_this_week(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_this_month")
-async def handle_callback_btn_this_month(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "monthly_new")
+async def handle_callback_monthly_new(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "📆 Новинки месяца"
@@ -2830,8 +3072,8 @@ async def handle_callback_btn_this_month(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_subscribe_new")
-async def handle_callback_btn_subscribe_new(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "subscribe_notifications")
+async def handle_callback_subscribe_notifications(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "🔔 Подписаться на новинки"
@@ -2845,8 +3087,8 @@ async def handle_callback_btn_subscribe_new(callback_query: types.CallbackQuery)
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "btn_back_main_new")
-async def handle_callback_btn_back_main_new(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "start_store")
+async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     button_text = "◀️ Главная"
@@ -3011,187 +3253,6 @@ async def handle_callback_btn_back_main_new(callback_query: types.CallbackQuery)
     builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="user_profile_btn_1"))
     builder.add(InlineKeyboardButton(text="🛒 Корзина", callback_data="shopping_cart_btn_2"))
     builder.add(InlineKeyboardButton(text="💬 Поддержка", callback_data="support_center_btn_3"))
-    keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
-    try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
-
-@dp.callback_query(lambda c: c.data == "catalog_main" or c.data.startswith("catalog_main_btn_"))
-async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
-    user_id = callback_query.from_user.id
-    
-    # Ищем текст кнопки по callback_data
-    button_display_text = "📱 Каталог товаров"
-    
-    # Сохраняем ответ в базу данных
-    timestamp = get_moscow_time()
-    
-    response_data = button_display_text  # Простое значение
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["button_click"] = button_display_text
-    
-    # Сохраняем в базу данных с правильным именем переменной
-    await update_user_data_in_db(user_id, "button_click", button_display_text)
-    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
-    
-    # Показываем сообщение об обработке
-    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
-    
-    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
-    next_node_id = "catalog_main"
-    try:
-        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
-        if next_node_id == "start_store":
-            logging.info("Переход к узлу start_store")
-        elif next_node_id == "catalog_main":
-            logging.info("Переход к узлу catalog_main")
-        elif next_node_id == "electronics_category":
-            logging.info("Переход к узлу electronics_category")
-        elif next_node_id == "user_profile":
-            logging.info("Переход к узлу user_profile")
-        elif next_node_id == "shopping_cart":
-            logging.info("Переход к узлу shopping_cart")
-        elif next_node_id == "support_center":
-            logging.info("Переход к узлу support_center")
-        elif next_node_id == "bonus_shop":
-            logging.info("Переход к узлу bonus_shop")
-        elif next_node_id == "new_products":
-            nav_text = "🆕 Новинки нашего магазина:"
-            await callback_query.message.edit_text(nav_text)
-        else:
-            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-    except Exception as e:
-        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-    
-    return  # Завершаем обработку после переадресации
-    
-    # Проверяем условные сообщения
-    text = None
-    
-    # Получаем данные пользователя для проверки условий
-    user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
-    
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record:
-            if isinstance(user_record["user_data"], str):
-                try:
-                    import json
-                    user_data_dict = json.loads(user_record["user_data"])
-                except (json.JSONDecodeError, TypeError):
-                    user_data_dict = {}
-            elif isinstance(user_record["user_data"], dict):
-                user_data_dict = user_record["user_data"]
-            else:
-                user_data_dict = {}
-        else:
-            user_data_dict = user_record
-    else:
-        user_data_dict = {}
-    
-    # Функция для замены переменных в тексте
-    def replace_variables_in_text(text_content, variables_dict):
-        if not text_content or not variables_dict:
-            return text_content
-        
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                text_content = text_content.replace(placeholder, var_value)
-        return text_content
-    
-    conditional_parse_mode = None
-    conditional_keyboard = None
-    # Функция для проверки переменных пользователя
-    def check_user_variable(var_name, user_data_dict):
-        """Проверяет существование и получает значение переменной пользователя"""
-        # Сначала проверяем в поле user_data (из БД)
-        if "user_data" in user_data_dict and user_data_dict["user_data"]:
-            try:
-                import json
-                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-                if var_name in parsed_data:
-                    raw_value = parsed_data[var_name]
-                    if isinstance(raw_value, dict) and "value" in raw_value:
-                        var_value = raw_value["value"]
-                        # Проверяем, что значение действительно существует и не пустое
-                        if var_value is not None and str(var_value).strip() != "":
-                            return True, str(var_value)
-                    else:
-                        # Проверяем, что значение действительно существует и не пустое
-                        if raw_value is not None and str(raw_value).strip() != "":
-                            return True, str(raw_value)
-            except (json.JSONDecodeError, TypeError):
-                pass
-        
-        # Проверяем в локальных данных (без вложенности user_data)
-        if var_name in user_data_dict:
-            variable_data = user_data_dict.get(var_name)
-            if isinstance(variable_data, dict) and "value" in variable_data:
-                var_value = variable_data["value"]
-                # Проверяем, что значение действительно существует и не пустое
-                if var_value is not None and str(var_value).strip() != "":
-                    return True, str(var_value)
-            elif variable_data is not None and str(variable_data).strip() != "":
-                return True, str(variable_data)
-        
-        return False, None
-    
-    # Условие 1: user_data_exists для переменных: предпочтения
-    if (
-        check_user_variable("предпочтения", user_data_dict)[0]
-    ):
-        # Собираем значения переменных
-        variable_values = {}
-        _, variable_values["предпочтения"] = check_user_variable("предпочтения", user_data_dict)
-        text = """📱 Персональные рекомендации для вас:
-
-Основано на ваших предпочтениях: {предпочтения}"""
-        conditional_parse_mode = None
-        if "{предпочтения}" in text and variable_values["предпочтения"] is not None:
-            text = text.replace("{предпочтения}", variable_values["предпочтения"])
-        # Создаем inline клавиатуру для условного сообщения
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="⭐ Рекомендованное", callback_data="recommendations"))
-        builder.add(InlineKeyboardButton(text="❤️ Избранное", callback_data="favorites"))
-        builder.add(InlineKeyboardButton(text="📋 Все категории", callback_data="catalog_main"))
-        keyboard = builder.as_markup()
-        conditional_keyboard = keyboard
-        # Настраиваем ожидание текстового ввода для условного сообщения
-        conditional_message_config = {
-            "condition_id": "personalized_catalog",
-            "wait_for_input": False,
-            "input_variable": "",
-            "next_node_id": "",
-            "source_type": "conditional_message"
-        }
-        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    else:
-        text = "📱 Выберите категорию товаров:"
-        text = replace_variables_in_text(text, user_data_dict)
-        logging.info("Используется основное сообщение узла")
-    
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📱 Электроника", callback_data="btn_electronics"))
-    builder.add(InlineKeyboardButton(text="👕 Одежда", callback_data="btn_clothing"))
-    builder.add(InlineKeyboardButton(text="🏠 Дом и сад", callback_data="btn_home"))
-    builder.add(InlineKeyboardButton(text="◀️ Главная", callback_data="btn_back_main"))
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -3227,7 +3288,7 @@ async def handle_callback_user_profile(callback_query: types.CallbackQuery):
     await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
     
     # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
-    next_node_id = "catalog_main"
+    next_node_id = "user_profile"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start_store":
@@ -3461,7 +3522,7 @@ async def handle_callback_shopping_cart(callback_query: types.CallbackQuery):
     await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
     
     # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
-    next_node_id = "catalog_main"
+    next_node_id = "shopping_cart"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start_store":
@@ -3635,217 +3696,6 @@ async def handle_callback_shopping_cart(callback_query: types.CallbackQuery):
     builder.add(InlineKeyboardButton(text="🛍️ Продолжить покупки", callback_data="btn_continue_shopping"))
     builder.add(InlineKeyboardButton(text="❤️ Список желаний", callback_data="btn_wishlist"))
     builder.add(InlineKeyboardButton(text="◀️ Главная", callback_data="btn_back_main_cart"))
-    keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
-    try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
-
-@dp.callback_query(lambda c: c.data == "support_center" or c.data.startswith("support_center_btn_"))
-async def handle_callback_support_center(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
-    user_id = callback_query.from_user.id
-    
-    # Ищем текст кнопки по callback_data
-    button_display_text = "💬 Поддержка"
-    
-    # Сохраняем ответ в базу данных
-    timestamp = get_moscow_time()
-    
-    response_data = button_display_text  # Простое значение
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["button_click"] = button_display_text
-    
-    # Сохраняем в базу данных с правильным именем переменной
-    await update_user_data_in_db(user_id, "button_click", button_display_text)
-    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
-    
-    # Показываем сообщение об обработке
-    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
-    
-    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
-    next_node_id = "catalog_main"
-    try:
-        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
-        if next_node_id == "start_store":
-            logging.info("Переход к узлу start_store")
-        elif next_node_id == "catalog_main":
-            logging.info("Переход к узлу catalog_main")
-        elif next_node_id == "electronics_category":
-            logging.info("Переход к узлу electronics_category")
-        elif next_node_id == "user_profile":
-            logging.info("Переход к узлу user_profile")
-        elif next_node_id == "shopping_cart":
-            logging.info("Переход к узлу shopping_cart")
-        elif next_node_id == "support_center":
-            logging.info("Переход к узлу support_center")
-        elif next_node_id == "bonus_shop":
-            logging.info("Переход к узлу bonus_shop")
-        elif next_node_id == "new_products":
-            nav_text = "🆕 Новинки нашего магазина:"
-            await callback_query.message.edit_text(nav_text)
-        else:
-            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-    except Exception as e:
-        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-    
-    return  # Завершаем обработку после переадресации
-    
-    # Проверяем условные сообщения
-    text = None
-    
-    # Получаем данные пользователя для проверки условий
-    user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
-    
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record:
-            if isinstance(user_record["user_data"], str):
-                try:
-                    import json
-                    user_data_dict = json.loads(user_record["user_data"])
-                except (json.JSONDecodeError, TypeError):
-                    user_data_dict = {}
-            elif isinstance(user_record["user_data"], dict):
-                user_data_dict = user_record["user_data"]
-            else:
-                user_data_dict = {}
-        else:
-            user_data_dict = user_record
-    else:
-        user_data_dict = {}
-    
-    # Функция для замены переменных в тексте
-    def replace_variables_in_text(text_content, variables_dict):
-        if not text_content or not variables_dict:
-            return text_content
-        
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                text_content = text_content.replace(placeholder, var_value)
-        return text_content
-    
-    conditional_parse_mode = None
-    conditional_keyboard = None
-    # Функция для проверки переменных пользователя
-    def check_user_variable(var_name, user_data_dict):
-        """Проверяет существование и получает значение переменной пользователя"""
-        # Сначала проверяем в поле user_data (из БД)
-        if "user_data" in user_data_dict and user_data_dict["user_data"]:
-            try:
-                import json
-                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-                if var_name in parsed_data:
-                    raw_value = parsed_data[var_name]
-                    if isinstance(raw_value, dict) and "value" in raw_value:
-                        var_value = raw_value["value"]
-                        # Проверяем, что значение действительно существует и не пустое
-                        if var_value is not None and str(var_value).strip() != "":
-                            return True, str(var_value)
-                    else:
-                        # Проверяем, что значение действительно существует и не пустое
-                        if raw_value is not None and str(raw_value).strip() != "":
-                            return True, str(raw_value)
-            except (json.JSONDecodeError, TypeError):
-                pass
-        
-        # Проверяем в локальных данных (без вложенности user_data)
-        if var_name in user_data_dict:
-            variable_data = user_data_dict.get(var_name)
-            if isinstance(variable_data, dict) and "value" in variable_data:
-                var_value = variable_data["value"]
-                # Проверяем, что значение действительно существует и не пустое
-                if var_value is not None and str(var_value).strip() != "":
-                    return True, str(var_value)
-            elif variable_data is not None and str(variable_data).strip() != "":
-                return True, str(variable_data)
-        
-        return False, None
-    
-    # Условие 1: user_data_exists для переменных: статус
-    if (
-        check_user_variable("статус", user_data_dict)[0]
-    ):
-        # Собираем значения переменных
-        variable_values = {}
-        _, variable_values["статус"] = check_user_variable("статус", user_data_dict)
-        text = """👑 VIP поддержка
-
-Приоритетное обслуживание и персональный менеджер"""
-        conditional_parse_mode = None
-        if "{статус}" in text and variable_values["статус"] is not None:
-            text = text.replace("{статус}", variable_values["статус"])
-        # Создаем inline клавиатуру для условного сообщения
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="👨‍💼 Связаться с менеджером", callback_data="personal_manager_contact"))
-        builder.add(InlineKeyboardButton(text="⚡ Приоритетная поддержка", callback_data="priority_support"))
-        keyboard = builder.as_markup()
-        conditional_keyboard = keyboard
-        # Настраиваем ожидание текстового ввода для условного сообщения
-        conditional_message_config = {
-            "condition_id": "support_vip",
-            "wait_for_input": False,
-            "input_variable": "",
-            "next_node_id": "",
-            "source_type": "conditional_message"
-        }
-        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    # Условие 2: user_data_exists для переменных: активный_заказ
-    elif (
-        check_user_variable("активный_заказ", user_data_dict)[0]
-    ):
-        # Собираем значения переменных
-        variable_values = {}
-        _, variable_values["активный_заказ"] = check_user_variable("активный_заказ", user_data_dict)
-        text = """📦 У вас есть активный заказ #{номер_заказа}
-
-Вопрос касается этого заказа?"""
-        conditional_parse_mode = None
-        if "{активный_заказ}" in text and variable_values["активный_заказ"] is not None:
-            text = text.replace("{активный_заказ}", variable_values["активный_заказ"])
-        # Создаем inline клавиатуру для условного сообщения
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="📍 Статус заказа", callback_data="order_status"))
-        builder.add(InlineKeyboardButton(text="✏️ Изменить заказ", callback_data="change_order"))
-        builder.add(InlineKeyboardButton(text="❓ Другой вопрос", callback_data="support_center"))
-        keyboard = builder.as_markup()
-        conditional_keyboard = keyboard
-        # Настраиваем ожидание текстового ввода для условного сообщения
-        conditional_message_config = {
-            "condition_id": "support_order_issue",
-            "wait_for_input": False,
-            "input_variable": "",
-            "next_node_id": "",
-            "source_type": "conditional_message"
-        }
-        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    else:
-        text = """💬 Центр поддержки
-
-Выберите способ получения помощи:"""
-        text = replace_variables_in_text(text, user_data_dict)
-        logging.info("Используется основное сообщение узла")
-    
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="❓ Частые вопросы", callback_data="btn_faq"))
-    builder.add(InlineKeyboardButton(text="💬 Чат с оператором", callback_data="btn_chat_support"))
-    builder.add(InlineKeyboardButton(text="📞 Обратный звонок", callback_data="btn_callback"))
-    builder.add(InlineKeyboardButton(text="◀️ Главная", callback_data="btn_back_main_support"))
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
@@ -4055,216 +3905,6 @@ async def handle_callback_electronics_category(callback_query: types.CallbackQue
     builder.add(InlineKeyboardButton(text="💻 Ноутбуки", callback_data="btn_laptops"))
     builder.add(InlineKeyboardButton(text="🎧 Аксессуары", callback_data="btn_accessories"))
     builder.add(InlineKeyboardButton(text="◀️ К каталогу", callback_data="btn_back_catalog"))
-    keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
-    try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
-
-@dp.callback_query(lambda c: c.data == "start_store" or c.data.startswith("start_store_btn_"))
-async def handle_callback_start_store(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
-    user_id = callback_query.from_user.id
-    
-    # Ищем текст кнопки по callback_data
-    button_display_text = "◀️ Главная"
-    
-    # Сохраняем ответ в базу данных
-    timestamp = get_moscow_time()
-    
-    response_data = button_display_text  # Простое значение
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["button_click"] = button_display_text
-    
-    # Сохраняем в базу данных с правильным именем переменной
-    await update_user_data_in_db(user_id, "button_click", button_display_text)
-    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
-    
-    # Показываем сообщение об обработке
-    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
-    
-    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
-    next_node_id = "electronics_category"
-    try:
-        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
-        if next_node_id == "start_store":
-            logging.info("Переход к узлу start_store")
-        elif next_node_id == "catalog_main":
-            logging.info("Переход к узлу catalog_main")
-        elif next_node_id == "electronics_category":
-            logging.info("Переход к узлу electronics_category")
-        elif next_node_id == "user_profile":
-            logging.info("Переход к узлу user_profile")
-        elif next_node_id == "shopping_cart":
-            logging.info("Переход к узлу shopping_cart")
-        elif next_node_id == "support_center":
-            logging.info("Переход к узлу support_center")
-        elif next_node_id == "bonus_shop":
-            logging.info("Переход к узлу bonus_shop")
-        elif next_node_id == "new_products":
-            nav_text = "🆕 Новинки нашего магазина:"
-            await callback_query.message.edit_text(nav_text)
-        else:
-            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-    except Exception as e:
-        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-    
-    return  # Завершаем обработку после переадресации
-    
-    # Проверяем условные сообщения
-    text = None
-    
-    # Получаем данные пользователя для проверки условий
-    user_record = await get_user_from_db(user_id)
-    if not user_record:
-        user_record = user_data.get(user_id, {})
-    
-    # Безопасно извлекаем user_data
-    if isinstance(user_record, dict):
-        if "user_data" in user_record:
-            if isinstance(user_record["user_data"], str):
-                try:
-                    import json
-                    user_data_dict = json.loads(user_record["user_data"])
-                except (json.JSONDecodeError, TypeError):
-                    user_data_dict = {}
-            elif isinstance(user_record["user_data"], dict):
-                user_data_dict = user_record["user_data"]
-            else:
-                user_data_dict = {}
-        else:
-            user_data_dict = user_record
-    else:
-        user_data_dict = {}
-    
-    # Функция для замены переменных в тексте
-    def replace_variables_in_text(text_content, variables_dict):
-        if not text_content or not variables_dict:
-            return text_content
-        
-        for var_name, var_data in variables_dict.items():
-            placeholder = "{" + var_name + "}"
-            if placeholder in text_content:
-                if isinstance(var_data, dict) and "value" in var_data:
-                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
-                elif var_data is not None:
-                    var_value = str(var_data)
-                else:
-                    var_value = var_name  # Показываем имя переменной если значения нет
-                text_content = text_content.replace(placeholder, var_value)
-        return text_content
-    
-    conditional_parse_mode = None
-    conditional_keyboard = None
-    # Функция для проверки переменных пользователя
-    def check_user_variable(var_name, user_data_dict):
-        """Проверяет существование и получает значение переменной пользователя"""
-        # Сначала проверяем в поле user_data (из БД)
-        if "user_data" in user_data_dict and user_data_dict["user_data"]:
-            try:
-                import json
-                parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]
-                if var_name in parsed_data:
-                    raw_value = parsed_data[var_name]
-                    if isinstance(raw_value, dict) and "value" in raw_value:
-                        var_value = raw_value["value"]
-                        # Проверяем, что значение действительно существует и не пустое
-                        if var_value is not None and str(var_value).strip() != "":
-                            return True, str(var_value)
-                    else:
-                        # Проверяем, что значение действительно существует и не пустое
-                        if raw_value is not None and str(raw_value).strip() != "":
-                            return True, str(raw_value)
-            except (json.JSONDecodeError, TypeError):
-                pass
-        
-        # Проверяем в локальных данных (без вложенности user_data)
-        if var_name in user_data_dict:
-            variable_data = user_data_dict.get(var_name)
-            if isinstance(variable_data, dict) and "value" in variable_data:
-                var_value = variable_data["value"]
-                # Проверяем, что значение действительно существует и не пустое
-                if var_value is not None and str(var_value).strip() != "":
-                    return True, str(var_value)
-            elif variable_data is not None and str(variable_data).strip() != "":
-                return True, str(variable_data)
-        
-        return False, None
-    
-    # Условие 1: user_data_exists для переменных: статус
-    if (
-        check_user_variable("статус", user_data_dict)[0]
-    ):
-        # Собираем значения переменных
-        variable_values = {}
-        _, variable_values["статус"] = check_user_variable("статус", user_data_dict)
-        text = """👑 Добро пожаловать, VIP-клиент {имя}!
-
-У вас есть эксклюзивные предложения!"""
-        conditional_parse_mode = None
-        if "{статус}" in text and variable_values["статус"] is not None:
-            text = text.replace("{статус}", variable_values["статус"])
-        # Создаем inline клавиатуру для условного сообщения
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="⭐ VIP предложения", callback_data="vip_offers"))
-        builder.add(InlineKeyboardButton(text="👨‍💼 Личный менеджер", callback_data="personal_manager"))
-        keyboard = builder.as_markup()
-        conditional_keyboard = keyboard
-        # Настраиваем ожидание текстового ввода для условного сообщения
-        conditional_message_config = {
-            "condition_id": "welcome_vip_customer",
-            "wait_for_input": False,
-            "input_variable": "",
-            "next_node_id": "",
-            "source_type": "conditional_message"
-        }
-        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    # Условие 2: user_data_exists для переменных: имя
-    elif (
-        check_user_variable("имя", user_data_dict)[0]
-    ):
-        # Собираем значения переменных
-        variable_values = {}
-        _, variable_values["имя"] = check_user_variable("имя", user_data_dict)
-        text = """🎉 С возвращением, {имя}!
-
-Ваш последний заказ: {последний_заказ}
-Бонусных баллов: {бонусы}"""
-        conditional_parse_mode = None
-        if "{имя}" in text and variable_values["имя"] is not None:
-            text = text.replace("{имя}", variable_values["имя"])
-        # Создаем inline клавиатуру для условного сообщения
-        builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="📦 Повторить заказ", callback_data="repeat_order"))
-        builder.add(InlineKeyboardButton(text="🆕 Новинки каталога", callback_data="new_products"))
-        builder.add(InlineKeyboardButton(text="🎁 Магазин бонусов", callback_data="bonus_shop"))
-        keyboard = builder.as_markup()
-        conditional_keyboard = keyboard
-        # Настраиваем ожидание текстового ввода для условного сообщения
-        conditional_message_config = {
-            "condition_id": "welcome_returning_customer",
-            "wait_for_input": False,
-            "input_variable": "",
-            "next_node_id": "",
-            "source_type": "conditional_message"
-        }
-        logging.info(f"Условие выполнено: переменные {variable_values} (AND)")
-    else:
-        text = "🛍️ Добро пожаловать в наш интернет-магазин!"
-        text = replace_variables_in_text(text, user_data_dict)
-        logging.info("Используется основное сообщение узла")
-    
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="📱 Каталог товаров", callback_data="btn_catalog"))
-    builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="btn_profile"))
-    builder.add(InlineKeyboardButton(text="🛒 Корзина", callback_data="btn_cart"))
-    builder.add(InlineKeyboardButton(text="💬 Поддержка", callback_data="btn_support"))
     keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
