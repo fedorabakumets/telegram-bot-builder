@@ -1875,10 +1875,10 @@ export async function seedDefaultTemplates(force = false) {
     await storage.createBotTemplate({
       name: "Интерактивный магазин с условными сообщениями",
       description: "Продвинутый шаблон интернет-магазина с умными условными сообщениями и персонализацией",
-      category: "ecommerce",
+      category: "business",
       tags: ["магазин", "условные сообщения", "персонализация", "каталог"],
       isPublic: 1,
-      difficulty: "advanced",
+      difficulty: "hard",
       authorName: "Система",
       version: "1.0.0",
       featured: 1,
@@ -2121,6 +2121,139 @@ export async function seedDefaultTemplates(force = false) {
                       text: "🚀 Предзаказы",
                       action: "goto",
                       target: "preorders"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            id: "catalog_main",
+            type: "keyboard",
+            position: { x: 400, y: 100 },
+            data: {
+              messageText: "📱 Каталог товаров\n\nВыберите категорию:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_electronics",
+                  text: "📱 Электроника",
+                  action: "goto",
+                  target: "electronics_category"
+                },
+                {
+                  id: "btn_clothing",
+                  text: "👕 Одежда",
+                  action: "goto",
+                  target: "clothing_category"
+                },
+                {
+                  id: "btn_home",
+                  text: "🏠 Дом и сад",
+                  action: "goto",
+                  target: "home_category"
+                },
+                {
+                  id: "btn_sports",
+                  text: "⚽ Спорт",
+                  action: "goto",
+                  target: "sports_category"
+                },
+                {
+                  id: "btn_back_main_catalog",
+                  text: "◀️ Главная",
+                  action: "goto",
+                  target: "start_store"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "catalog_personalized",
+                  condition: "user_data_exists",
+                  variableName: "предпочтения",
+                  messageText: "🎯 Рекомендуемые категории для вас:\n\n{рекомендации}\n\nОсновано на ваших покупках",
+                  priority: 15,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_recommended",
+                      text: "⭐ Рекомендуемое",
+                      action: "goto",
+                      target: "recommended_products"
+                    },
+                    {
+                      id: "btn_favorites",
+                      text: "❤️ Избранные категории",
+                      action: "goto",
+                      target: "favorite_categories"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            id: "electronics_category",
+            type: "keyboard",
+            position: { x: 700, y: 100 },
+            data: {
+              messageText: "📱 Электроника\n\nВыберите подкатегорию:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_smartphones",
+                  text: "📱 Смартфоны",
+                  action: "goto",
+                  target: "smartphones"
+                },
+                {
+                  id: "btn_laptops",
+                  text: "💻 Ноутбуки",
+                  action: "goto",
+                  target: "laptops"
+                },
+                {
+                  id: "btn_accessories",
+                  text: "🎧 Аксессуары",
+                  action: "goto",
+                  target: "accessories"
+                },
+                {
+                  id: "btn_back_to_catalog",
+                  text: "◀️ Назад к каталогу",
+                  action: "goto",
+                  target: "catalog_main"
+                },
+                {
+                  id: "btn_back_main_electronics",
+                  text: "🏠 Главная",
+                  action: "goto",
+                  target: "start_store"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "electronics_sale",
+                  condition: "user_data_exists",
+                  variableName: "скидка_электроника",
+                  variableValue: "активна",
+                  messageText: "🔥 Специальное предложение!\n\nСкидка {размер_скидки}% на всю электронику до {дата_окончания}",
+                  priority: 20,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_sale_smartphones",
+                      text: "📱 Акционные смартфоны",
+                      action: "goto",
+                      target: "sale_smartphones"
+                    },
+                    {
+                      id: "btn_sale_laptops",
+                      text: "💻 Акционные ноутбуки",
+                      action: "goto",
+                      target: "sale_laptops"
                     }
                   ]
                 }
@@ -2608,6 +2741,31 @@ export async function seedDefaultTemplates(force = false) {
             id: "conn_start_to_bonus_shop",
             source: "start_store",
             target: "bonus_shop"
+          },
+          {
+            id: "conn_bonus_shop_back_to_start",
+            source: "bonus_shop",
+            target: "start_store"
+          },
+          {
+            id: "conn_electronics_back_to_start",
+            source: "electronics_category",
+            target: "start_store"
+          },
+          {
+            id: "conn_start_to_new_products",
+            source: "start_store", 
+            target: "new_products"
+          },
+          {
+            id: "conn_new_products_back_to_start",
+            source: "new_products",
+            target: "start_store"
+          },
+          {
+            id: "conn_bonus_shop_to_catalog",
+            source: "bonus_shop",
+            target: "catalog_main"
           },
           {
             id: "conn_start_to_new_products",
