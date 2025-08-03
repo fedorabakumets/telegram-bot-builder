@@ -23,7 +23,7 @@ def get_moscow_time():
     return datetime.now(moscow_tz).isoformat()
 
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -2910,18 +2910,16 @@ async def handle_user_input(message: types.Message):
             
             # Переходим к следующему узлу
             try:
-                # Создаем фиктивный callback_query для навигации
-                import types as aiogram_types
-                import asyncio
-                fake_callback = aiogram_types.SimpleNamespace(
-                    id="input_nav",
-                    from_user=message.from_user,
-                    chat_instance="",
-                    data="--2N9FeeykMHVVlsVnSQW",
-                    message=message,
-                    answer=lambda text="", show_alert=False: asyncio.sleep(0)
-                )
-                await handle_callback___2N9FeeykMHVVlsVnSQW(fake_callback)
+                # Отправляем сообщение с клавиатурой
+                text = "Ты хочешься продолжить свою жизнь с чатом?"
+                logging.info(f"🔄 Отправляем сообщение: {text[:50]}...")
+                builder = InlineKeyboardBuilder()
+                builder.add(InlineKeyboardButton(text="Да", callback_data="nr3wIiTfBYYmpkkXMNH7n"))
+                builder.add(InlineKeyboardButton(text="Нет", callback_data="1BHSLWPMao9qQvSAzuzRl"))
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard)
+                logging.info("📤 Inline кнопки отправлены")
+                logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
                 logging.error(f"Ошибка при переходе к следующему узлу: {e}")
             return
@@ -3142,6 +3140,14 @@ async def handle_user_input(message: types.Message):
                 builder.add(InlineKeyboardButton(text="Нет", callback_data="1BHSLWPMao9qQvSAzuzRl"))
                 keyboard = builder.as_markup()
                 await fake_message.answer(text, reply_markup=keyboard)
+                # Настраиваем ожидание текстового ввода (collectUserInput)
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "желание",
+                    "save_to_database": True,
+                    "node_id": "--2N9FeeykMHVVlsVnSQW",
+                    "next_node_id": "nr3wIiTfBYYmpkkXMNH7n"
+                }
             elif next_node_id == "nr3wIiTfBYYmpkkXMNH7n":
                 text = "Какой твой пол?"
                 builder = InlineKeyboardBuilder()
@@ -3149,6 +3155,14 @@ async def handle_user_input(message: types.Message):
                 builder.add(InlineKeyboardButton(text="Мужчина", callback_data="XDSrTrNly5EtDtr85nN4P"))
                 keyboard = builder.as_markup()
                 await fake_message.answer(text, reply_markup=keyboard)
+                # Настраиваем ожидание текстового ввода (collectUserInput)
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "пол",
+                    "save_to_database": True,
+                    "node_id": "nr3wIiTfBYYmpkkXMNH7n",
+                    "next_node_id": "XDSrTrNly5EtDtr85nN4P"
+                }
             elif next_node_id == "1BHSLWPMao9qQvSAzuzRl":
                 text = "Печально, если что напиши /start или /profile для просмотра профиля"
                 # Используем parse_mode условного сообщения если он установлен

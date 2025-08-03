@@ -3717,26 +3717,50 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       // Найдем целевой узел для навигации
       const targetNode = nodes.find(n => n.id === node.data.inputTargetNodeId);
       if (targetNode) {
-        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `                # Создаем фиктивный callback_query для навигации\n`;
-        code += `                import types as aiogram_types\n`;
-        code += `                import asyncio\n`;
-        code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
-        code += `                    id="input_nav",\n`;
-        code += `                    from_user=message.from_user,\n`;
-        code += `                    chat_instance="",\n`;
-        code += `                    data="${targetNode.id}",\n`;
-        code += `                    message=message,\n`;
-        code += `                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n`;
-        code += `                )\n`;
-        code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
+        if (targetNode.type === 'keyboard') {
+          // Для keyboard узлов отправляем сообщение с клавиатурой напрямую
+          const messageText = targetNode.data.messageText || 'Выберите действие';
+          const formattedText = formatTextForPython(messageText);
+          code += `                # Отправляем сообщение с клавиатурой\n`;
+          code += `                text = ${formattedText}\n`;
+          
+          if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += `                builder = InlineKeyboardBuilder()\n`;
+            targetNode.data.buttons.forEach(button => {
+              const buttonText = button.text || 'Кнопка';
+              const buttonTarget = button.target || button.id;
+              code += `                builder.add(InlineKeyboardButton(text="${buttonText}", callback_data="${buttonTarget}"))\n`;
+            });
+            code += `                keyboard = builder.as_markup()\n`;
+            code += `                await message.answer(text, reply_markup=keyboard)\n`;
+          } else {
+            code += `                await message.answer(text)\n`;
+          }
+          code += `                logging.info("✅ Переход к следующему узлу выполнен успешно")\n`;
+        } else {
+          // Для других типов узлов используем callback
+          const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+          code += `                # Создаем фиктивный callback_query для навигации\n`;
+          code += `                import types as aiogram_types\n`;
+          code += `                import asyncio\n`;
+          code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
+          code += `                    id="input_nav",\n`;
+          code += `                    from_user=message.from_user,\n`;
+          code += `                    chat_instance="",\n`;
+          code += `                    data="${targetNode.id}",\n`;
+          code += `                    message=message,\n`;
+          code += `                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n`;
+          code += `                )\n`;
+          code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
+        }
       }
       
       code += `            except Exception as e:\n`;
       code += `                logging.error(f"Ошибка при переходе к следующему узлу: {e}")\n`;
+      code += `            return\n`;
+    } else {
+      code += `            return\n`;
     }
-    
-    code += `            return\n`;
   });
   
   code += '        \n';
@@ -3908,6 +3932,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
           
           code += '                # Настраиваем ожидание текстового ввода\n';
+          code += '                user_data[user_id]["waiting_for_input"] = {\n';
+          code += '                    "type": "text",\n';
+          code += `                    "variable": "${inputVariable}",\n`;
+          code += '                    "save_to_database": True,\n';
+          code += `                    "node_id": "${targetNode.id}",\n`;
+          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
+          code += '                }\n';
+        } else if (targetNode.data.collectUserInput) {
+          // Также настраиваем ожидание, если включен collectUserInput
+          const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+          const nextConnection = connections.find(conn => conn.source === targetNode.id);
+          const inputTargetNodeId = nextConnection ? nextConnection.target : '';
+          
+          code += '                # Настраиваем ожидание текстового ввода (collectUserInput)\n';
           code += '                user_data[user_id]["waiting_for_input"] = {\n';
           code += '                    "type": "text",\n';
           code += `                    "variable": "${inputVariable}",\n`;
@@ -4113,6 +4151,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
           code += '                }\n';
         }
+      } else if (targetNode.type === 'message') {
+        // Обработка узлов сообщений
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        code += `                await fake_message.answer(${formattedText})\n`;
+        code += `                logging.info(f"Отправлено сообщение узла ${targetNode.id}")\n`;
       } else {
         // Для других типов узлов просто логируем
         code += `                logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
