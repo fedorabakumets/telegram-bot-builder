@@ -1871,6 +1871,768 @@ export async function seedDefaultTemplates(force = false) {
       }
     });
 
+    // Новый шаблон с множеством условных сообщений
+    await storage.createBotTemplate({
+      name: "Интерактивный магазин с условными сообщениями",
+      description: "Продвинутый шаблон интернет-магазина с умными условными сообщениями и персонализацией",
+      category: "ecommerce",
+      tags: ["магазин", "условные сообщения", "персонализация", "каталог"],
+      isPublic: 1,
+      difficulty: "advanced",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 8,
+      estimatedTime: 25,
+      data: {
+        nodes: [
+          {
+            id: "start_store",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              description: "Главная страница магазина",
+              messageText: "🛍️ Добро пожаловать в наш интернет-магазин!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_catalog",
+                  text: "📱 Каталог товаров",
+                  action: "goto",
+                  target: "catalog_main"
+                },
+                {
+                  id: "btn_profile",
+                  text: "👤 Мой профиль",
+                  action: "goto",
+                  target: "user_profile"
+                },
+                {
+                  id: "btn_cart",
+                  text: "🛒 Корзина",
+                  action: "goto",
+                  target: "shopping_cart"
+                },
+                {
+                  id: "btn_support",
+                  text: "💬 Поддержка",
+                  action: "goto",
+                  target: "support_center"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "welcome_returning_customer",
+                  condition: "user_data_exists",
+                  variableName: "имя",
+                  messageText: "🎉 С возвращением, {имя}!\n\nВаш последний заказ: {последний_заказ}\nБонусных баллов: {бонусы}",
+                  priority: 15,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_last_order",
+                      text: "📦 Повторить заказ",
+                      action: "goto",
+                      target: "repeat_order"
+                    },
+                    {
+                      id: "btn_new_catalog",
+                      text: "🆕 Новинки каталога",
+                      action: "goto",
+                      target: "new_products"
+                    },
+                    {
+                      id: "btn_bonus_shop",
+                      text: "🎁 Магазин бонусов",
+                      action: "goto",
+                      target: "bonus_shop"
+                    }
+                  ]
+                },
+                {
+                  id: "welcome_vip_customer",
+                  condition: "user_data_exists",
+                  variableName: "статус",
+                  variableValue: "VIP",
+                  messageText: "👑 Добро пожаловать, VIP-клиент {имя}!\n\nУ вас есть эксклюзивные предложения!",
+                  priority: 20,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_vip_offers",
+                      text: "⭐ VIP предложения",
+                      action: "goto",
+                      target: "vip_offers"
+                    },
+                    {
+                      id: "btn_personal_manager",
+                      text: "👨‍💼 Личный менеджер",
+                      action: "goto",
+                      target: "personal_manager"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            id: "catalog_main",
+            type: "keyboard",
+            position: { x: 400, y: 100 },
+            data: {
+              messageText: "📱 Выберите категорию товаров:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_electronics",
+                  text: "📱 Электроника",
+                  action: "goto",
+                  target: "electronics_category"
+                },
+                {
+                  id: "btn_clothing",
+                  text: "👕 Одежда",
+                  action: "goto",
+                  target: "clothing_category"
+                },
+                {
+                  id: "btn_home",
+                  text: "🏠 Дом и сад",
+                  action: "goto",
+                  target: "home_category"
+                },
+                {
+                  id: "btn_back_main",
+                  text: "◀️ Главная",
+                  action: "goto",
+                  target: "start_store"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "personalized_catalog",
+                  condition: "user_data_exists",
+                  variableName: "предпочтения",
+                  messageText: "📱 Персональные рекомендации для вас:\n\nОсновано на ваших предпочтениях: {предпочтения}",
+                  priority: 10,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_recommended",
+                      text: "⭐ Рекомендованное",
+                      action: "goto",
+                      target: "recommendations"
+                    },
+                    {
+                      id: "btn_favorites",
+                      text: "❤️ Избранное",
+                      action: "goto",
+                      target: "favorites"
+                    },
+                    {
+                      id: "btn_all_categories",
+                      text: "📋 Все категории",
+                      action: "goto",
+                      target: "catalog_main"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            id: "electronics_category",
+            type: "keyboard",
+            position: { x: 700, y: 50 },
+            data: {
+              messageText: "📱 Электроника - выберите подкатегорию:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_smartphones",
+                  text: "📱 Смартфоны",
+                  action: "goto",
+                  target: "smartphones_list"
+                },
+                {
+                  id: "btn_laptops",
+                  text: "💻 Ноутбуки",
+                  action: "goto",
+                  target: "laptops_list"
+                },
+                {
+                  id: "btn_accessories",
+                  text: "🎧 Аксессуары",
+                  action: "goto",
+                  target: "accessories_list"
+                },
+                {
+                  id: "btn_back_catalog",
+                  text: "◀️ К каталогу",
+                  action: "goto",
+                  target: "catalog_main"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "electronics_history",
+                  condition: "user_data_exists",
+                  variableName: "последняя_покупка_электроника",
+                  messageText: "📱 В электронике:\n\nВаша последняя покупка: {последняя_покупка_электроника}\nРекомендуем дополнительные аксессуары!",
+                  priority: 12,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_compatible_accessories",
+                      text: "🔌 Совместимые аксессуары",
+                      action: "goto",
+                      target: "compatible_accessories"
+                    },
+                    {
+                      id: "btn_trade_in",
+                      text: "🔄 Trade-in",
+                      action: "goto",
+                      target: "trade_in"
+                    }
+                  ]
+                },
+                {
+                  id: "electronics_premium",
+                  condition: "user_data_exists",
+                  variableName: "статус",
+                  variableValue: "VIP",
+                  messageText: "👑 VIP-раздел электроники:\n\nДоступны эксклюзивные модели и предзаказы!",
+                  priority: 15,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_premium_electronics",
+                      text: "⭐ Премиум модели",
+                      action: "goto",
+                      target: "premium_electronics"
+                    },
+                    {
+                      id: "btn_preorders",
+                      text: "🚀 Предзаказы",
+                      action: "goto",
+                      target: "preorders"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            id: "user_profile",
+            type: "keyboard",
+            position: { x: 100, y: 400 },
+            data: {
+              messageText: "👤 Профиль пользователя",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_edit_profile",
+                  text: "✏️ Редактировать",
+                  action: "goto",
+                  target: "edit_profile"
+                },
+                {
+                  id: "btn_orders_history",
+                  text: "📦 История заказов",
+                  action: "goto",
+                  target: "orders_history"
+                },
+                {
+                  id: "btn_bonus_info",
+                  text: "🎁 Бонусы",
+                  action: "goto",
+                  target: "bonus_info"
+                },
+                {
+                  id: "btn_back_main_profile",
+                  text: "◀️ Главная",
+                  action: "goto",
+                  target: "start_store"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "profile_guest",
+                  condition: "user_data_not_exists",
+                  variableName: "имя",
+                  messageText: "👤 Гостевой профиль\n\nСоздайте аккаунт для персональных рекомендаций и скидок!",
+                  priority: 10,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_register",
+                      text: "📝 Зарегистрироваться",
+                      action: "goto",
+                      target: "registration"
+                    },
+                    {
+                      id: "btn_guest_continue",
+                      text: "👀 Продолжить как гость",
+                      action: "goto",
+                      target: "start_store"
+                    }
+                  ]
+                },
+                {
+                  id: "profile_registered",
+                  condition: "user_data_exists",
+                  variableName: "имя",
+                  messageText: "👤 Профиль: {имя}\n📧 Email: {email}\n🎁 Бонусы: {бонусы}\n📊 Статус: {статус}",
+                  priority: 15,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_achievements",
+                      text: "🏆 Достижения",
+                      action: "goto",
+                      target: "achievements"
+                    },
+                    {
+                      id: "btn_referral",
+                      text: "👥 Пригласить друзей",
+                      action: "goto",
+                      target: "referral_program"
+                    }
+                  ]
+                },
+                {
+                  id: "profile_vip",
+                  condition: "user_data_exists",
+                  variableName: "статус",
+                  variableValue: "VIP",
+                  messageText: "👑 VIP-профиль: {имя}\n\n⭐ Персональный менеджер\n🚚 Бесплатная доставка\n🎯 Эксклюзивные предложения",
+                  priority: 20,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_vip_support",
+                      text: "💎 VIP поддержка",
+                      action: "goto",
+                      target: "vip_support"
+                    },
+                    {
+                      id: "btn_exclusive_catalog",
+                      text: "🔒 Закрытый каталог",
+                      action: "goto",
+                      target: "exclusive_catalog"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            id: "shopping_cart",
+            type: "keyboard",
+            position: { x: 400, y: 400 },
+            data: {
+              messageText: "🛒 Ваша корзина пуста",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_continue_shopping",
+                  text: "🛍️ Продолжить покупки",
+                  action: "goto",
+                  target: "catalog_main"
+                },
+                {
+                  id: "btn_wishlist",
+                  text: "❤️ Список желаний",
+                  action: "goto",
+                  target: "wishlist"
+                },
+                {
+                  id: "btn_back_main_cart",
+                  text: "◀️ Главная",
+                  action: "goto",
+                  target: "start_store"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "cart_has_items",
+                  condition: "user_data_exists",
+                  variableName: "корзина_товары",
+                  messageText: "🛒 В корзине: {количество_товаров} товаров\nСумма: {сумма_корзины} ₽\n\n{список_товаров}",
+                  priority: 15,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_checkout",
+                      text: "💳 Оформить заказ",
+                      action: "goto",
+                      target: "checkout"
+                    },
+                    {
+                      id: "btn_edit_cart",
+                      text: "✏️ Изменить корзину",
+                      action: "goto",
+                      target: "edit_cart"
+                    },
+                    {
+                      id: "btn_save_for_later",
+                      text: "💾 Сохранить на потом",
+                      action: "goto",
+                      target: "save_cart"
+                    }
+                  ]
+                },
+                {
+                  id: "cart_discount_available",
+                  condition: "user_data_exists",
+                  variableName: "скидка_доступна",
+                  variableValue: "да",
+                  messageText: "🎉 У вас есть скидка {размер_скидки}%!\n\nПрименить к текущей корзине?",
+                  priority: 18,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_apply_discount",
+                      text: "✅ Применить скидку",
+                      action: "goto",
+                      target: "apply_discount"
+                    },
+                    {
+                      id: "btn_save_discount",
+                      text: "💾 Сохранить на потом",
+                      action: "goto",
+                      target: "save_discount"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            id: "support_center",
+            type: "keyboard",
+            position: { x: 700, y: 400 },
+            data: {
+              messageText: "💬 Центр поддержки\n\nВыберите способ получения помощи:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_faq",
+                  text: "❓ Частые вопросы",
+                  action: "goto",
+                  target: "faq"
+                },
+                {
+                  id: "btn_chat_support",
+                  text: "💬 Чат с оператором",
+                  action: "goto",
+                  target: "chat_support"
+                },
+                {
+                  id: "btn_callback",
+                  text: "📞 Обратный звонок",
+                  action: "goto",
+                  target: "callback_request"
+                },
+                {
+                  id: "btn_back_main_support",
+                  text: "◀️ Главная",
+                  action: "goto",
+                  target: "start_store"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "support_vip",
+                  condition: "user_data_exists",
+                  variableName: "статус",
+                  variableValue: "VIP",
+                  messageText: "👑 VIP поддержка\n\nПриоритетное обслуживание и персональный менеджер",
+                  priority: 20,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_personal_manager_direct",
+                      text: "👨‍💼 Связаться с менеджером",
+                      action: "goto",
+                      target: "personal_manager_contact"
+                    },
+                    {
+                      id: "btn_priority_support",
+                      text: "⚡ Приоритетная поддержка",
+                      action: "goto",
+                      target: "priority_support"
+                    }
+                  ]
+                },
+                {
+                  id: "support_order_issue",
+                  condition: "user_data_exists",
+                  variableName: "активный_заказ",
+                  messageText: "📦 У вас есть активный заказ #{номер_заказа}\n\nВопрос касается этого заказа?",
+                  priority: 15,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_order_status",
+                      text: "📍 Статус заказа",
+                      action: "goto",
+                      target: "order_status"
+                    },
+                    {
+                      id: "btn_order_change",
+                      text: "✏️ Изменить заказ",
+                      action: "goto",
+                      target: "change_order"
+                    },
+                    {
+                      id: "btn_other_question",
+                      text: "❓ Другой вопрос",
+                      action: "goto",
+                      target: "support_center"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            id: "bonus_shop",
+            type: "keyboard",
+            position: { x: 100, y: 700 },
+            data: {
+              messageText: "🎁 Магазин бонусов\n\nОбменяйте бонусы на товары и скидки!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_bonus_products",
+                  text: "🛍️ Товары за бонусы",
+                  action: "goto",
+                  target: "bonus_products"
+                },
+                {
+                  id: "btn_bonus_discounts",
+                  text: "💰 Скидки за бонусы",
+                  action: "goto",
+                  target: "bonus_discounts"
+                },
+                {
+                  id: "btn_bonus_rules",
+                  text: "📋 Правила программы",
+                  action: "goto",
+                  target: "bonus_rules"
+                },
+                {
+                  id: "btn_back_main_bonus",
+                  text: "◀️ Главная",
+                  action: "goto",
+                  target: "start_store"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "bonus_insufficient",
+                  condition: "user_data_exists",
+                  variableName: "бонусы",
+                  variableValue: "0",
+                  messageText: "🎁 У вас пока нет бонусов\n\nСовершите покупку, чтобы получить первые бонусы!",
+                  priority: 10,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_earn_bonuses",
+                      text: "💰 Как заработать бонусы",
+                      action: "goto",
+                      target: "earn_bonuses"
+                    },
+                    {
+                      id: "btn_shop_now",
+                      text: "🛍️ Совершить покупку",
+                      action: "goto",
+                      target: "catalog_main"
+                    }
+                  ]
+                },
+                {
+                  id: "bonus_available",
+                  condition: "user_data_exists",
+                  variableName: "бонусы",
+                  messageText: "🎁 Доступно бонусов: {бонусы}\n\nВыберите, что хотите приобрести:",
+                  priority: 15,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_special_offers",
+                      text: "⭐ Специальные предложения",
+                      action: "goto",
+                      target: "special_bonus_offers"
+                    },
+                    {
+                      id: "btn_bonus_history",
+                      text: "📊 История бонусов",
+                      action: "goto",
+                      target: "bonus_history"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            id: "new_products",
+            type: "message",
+            position: { x: 400, y: 700 },
+            data: {
+              messageText: "🆕 Новинки нашего магазина:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_this_week",
+                  text: "📅 Новинки недели",
+                  action: "goto",
+                  target: "weekly_new"
+                },
+                {
+                  id: "btn_this_month",
+                  text: "📆 Новинки месяца",
+                  action: "goto",
+                  target: "monthly_new"
+                },
+                {
+                  id: "btn_subscribe_new",
+                  text: "🔔 Подписаться на новинки",
+                  action: "goto",
+                  target: "subscribe_notifications"
+                },
+                {
+                  id: "btn_back_main_new",
+                  text: "◀️ Главная",
+                  action: "goto",
+                  target: "start_store"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "personalized_new_products",
+                  condition: "user_data_exists",
+                  variableName: "предпочтения",
+                  messageText: "🎯 Новинки в ваших любимых категориях:\n\n{персональные_новинки}\n\nОсновано на предпочтениях: {предпочтения}",
+                  priority: 15,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_personal_new",
+                      text: "⭐ Персональные новинки",
+                      action: "goto",
+                      target: "personal_new_products"
+                    },
+                    {
+                      id: "btn_notify_preferences",
+                      text: "🔔 Уведомления по интересам",
+                      action: "goto",
+                      target: "preference_notifications"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn_start_to_catalog",
+            source: "start_store",
+            target: "catalog_main"
+          },
+          {
+            id: "conn_start_to_profile",
+            source: "start_store",
+            target: "user_profile"
+          },
+          {
+            id: "conn_start_to_cart",
+            source: "start_store",
+            target: "shopping_cart"
+          },
+          {
+            id: "conn_start_to_support",
+            source: "start_store",
+            target: "support_center"
+          },
+          {
+            id: "conn_catalog_to_electronics",
+            source: "catalog_main",
+            target: "electronics_category"
+          },
+          {
+            id: "conn_catalog_back_to_start",
+            source: "catalog_main",
+            target: "start_store"
+          },
+          {
+            id: "conn_electronics_back_to_catalog",
+            source: "electronics_category",
+            target: "catalog_main"
+          },
+          {
+            id: "conn_profile_back_to_start",
+            source: "user_profile",
+            target: "start_store"
+          },
+          {
+            id: "conn_cart_to_catalog",
+            source: "shopping_cart",
+            target: "catalog_main"
+          },
+          {
+            id: "conn_cart_back_to_start",
+            source: "shopping_cart",
+            target: "start_store"
+          },
+          {
+            id: "conn_support_back_to_start",
+            source: "support_center",
+            target: "start_store"
+          },
+          {
+            id: "conn_start_to_bonus_shop",
+            source: "start_store",
+            target: "bonus_shop"
+          },
+          {
+            id: "conn_start_to_new_products",
+            source: "start_store",
+            target: "new_products"
+          },
+          {
+            id: "conn_bonus_shop_back_to_start",
+            source: "bonus_shop",
+            target: "start_store"
+          },
+          {
+            id: "conn_bonus_shop_to_catalog",
+            source: "bonus_shop",
+            target: "catalog_main"
+          },
+          {
+            id: "conn_new_products_back_to_start",
+            source: "new_products",
+            target: "start_store"
+          }
+        ]
+      }
+    });
+
     console.log('Базовые шаблоны успешно созданы');
   } catch (error) {
     console.error('Ошибка при создании шаблонов:', error);
