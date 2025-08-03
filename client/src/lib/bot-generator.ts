@@ -1883,6 +1883,80 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    }\n';
               }
               
+            } else if (targetNode.type === 'start') {
+              // Handle start nodes in callback queries - show start message with buttons
+              const messageText = targetNode.data.messageText || "Добро пожаловать!";
+              const cleanedMessageText = stripHtmlTags(messageText);
+              const formattedText = formatTextForPython(cleanedMessageText);
+              const parseMode = getParseMode(targetNode.data.formatMode);
+              
+              code += `    # Обрабатываем узел start: ${targetNode.id}\n`;
+              code += `    text = ${formattedText}\n`;
+              
+              // Применяем универсальную замену переменных
+              code += '    \n';
+              code += generateUniversalVariableReplacement('    ');
+              
+              // Добавляем поддержку условных сообщений для start узлов
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    \n';
+                code += '    # Проверка условных сообщений для start узла\n';
+                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                code += '    \n';
+                
+                // Use conditional message if available, otherwise use default
+                code += '    # Используем условное сообщение если есть подходящее условие\n';
+                code += '    if "text" not in locals():\n';
+                code += `        text = ${formattedText}\n`;
+                code += '    \n';
+                code += '    # Используем условную клавиатуру если есть\n';
+                code += '    if conditional_keyboard is not None:\n';
+                code += '        keyboard = conditional_keyboard\n';
+                code += '    else:\n';
+                code += '        keyboard = None\n';
+              } else {
+                code += '    \n';
+                code += '    # Без условных сообщений - используем обычную клавиатуру\n';
+                code += '    keyboard = None\n';
+              }
+              
+              // Создаем inline клавиатуру для start узла (только если нет условной клавиатуры)
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+                code += '    # Проверяем, есть ли условная клавиатура\n';
+                code += '    if keyboard is None:\n';
+                code += '        # Создаем inline клавиатуру для start узла\n';
+                code += '        builder = InlineKeyboardBuilder()\n';
+                targetNode.data.buttons.forEach((btn, index) => {
+                  if (btn.action === "url") {
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                  } else if (btn.action === 'goto') {
+                    // Создаем уникальный callback_data для каждой кнопки
+                    const baseCallbackData = btn.target || btn.id || 'no_action';
+                    const callbackData = `${baseCallbackData}_btn_${index}`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command') {
+                    // Для кнопок команд создаем специальную callback_data
+                    const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+                  }
+                });
+                code += '        keyboard = builder.as_markup()\n';
+              }
+              
+              // Отправляем сообщение start узла
+              code += '    # Отправляем сообщение start узла\n';
+              code += '    try:\n';
+              code += '        if keyboard is not None:\n';
+              code += `            await callback_query.message.edit_text(text, reply_markup=keyboard${parseMode})\n`;
+              code += '        else:\n';
+              code += `            await callback_query.message.edit_text(text${parseMode})\n`;
+              code += '    except Exception:\n';
+              code += '        if keyboard is not None:\n';
+              code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
+              code += '        else:\n';
+              code += `            await callback_query.message.answer(text${parseMode})\n`;
+              
             } else {
               // Generate response for target node (default text message)
               const targetText = targetNode.data.messageText || "Сообщение";
