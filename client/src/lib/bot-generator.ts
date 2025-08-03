@@ -1909,6 +1909,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    # Используем условную клавиатуру если есть\n';
                 code += '    if conditional_keyboard is not None:\n';
                 code += '        keyboard = conditional_keyboard\n';
+                code += '    else:\n';
+                code += '        keyboard = None\n';
                 code += '    \n';
               }
             
@@ -1975,16 +1977,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 
                 // Handle keyboard for target node
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                  code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
+                  code += '    if "keyboard" not in locals() or keyboard is None:\n';
+                  code += '        # Создаем inline клавиатуру\n';
+                  code += '        builder = InlineKeyboardBuilder()\n';
                   targetNode.data.buttons.forEach((btn, index) => {
                     if (btn.action === "url") {
-                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+                      code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
                     } else if (btn.action === 'goto') {
                       // Если есть target, используем его, иначе используем ID кнопки как callback_data
                       const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                      code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                      code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                     }
                   });
-                  code += '    keyboard = builder.as_markup()\n';
+                  code += '        keyboard = builder.as_markup()\n';
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';
                   if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -1999,13 +2005,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
                   code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
                 } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
-                  code += '    builder = ReplyKeyboardBuilder()\n';
+                  code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
+                  code += '    if "keyboard" not in locals() or keyboard is None:\n';
+                  code += '        # Создаем reply клавиатуру\n';
+                  code += '        builder = ReplyKeyboardBuilder()\n';
                   targetNode.data.buttons.forEach((btn, index) => {
-                    code += `    builder.add(KeyboardButton(text="${btn.text}"))\n`;
+                    code += `        builder.add(KeyboardButton(text="${btn.text}"))\n`;
                   });
                   const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
                   const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-                  code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                  code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                   code += '    # Для reply клавиатуры отправляем новое сообщение и удаляем старое\n';
                   code += '    try:\n';
                   code += '        await callback_query.message.delete()\n';
