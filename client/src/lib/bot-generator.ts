@@ -928,37 +928,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     code += '\n# Обработчики inline кнопок\n';
     const processedCallbacks = new Set<string>();
     
-    // First, create handlers for conditional message buttons
-    allConditionalButtons.forEach(callbackData => {
-      if (processedCallbacks.has(callbackData)) return;
-      processedCallbacks.add(callbackData);
-      
-      // Создаем обработчик для условной кнопки
-      const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9]/g, '_');
-      code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
-      code += `async def handle_conditional_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
-      code += '    await callback_query.answer()\n';
-      code += '    user_id = callback_query.from_user.id\n';
-      code += `    logging.info(f"Conditional button pressed: ${callbackData} by user {user_id}")\n`;
-      
-      // Find target node (if exists)
-      const targetNode = nodes.find(n => n.id === callbackData);
-      if (targetNode) {
-        code += '    \n';
-        code += '    # Отправляем содержимое целевого узла\n';
-        
-        if (targetNode.type === 'message') {
-          const messageText = targetNode.data.messageText || "Сообщение";
-          const formattedText = formatTextForPython(messageText);
-          code += `    text = ${formattedText}\n`;
-          code += '    await callback_query.message.edit_text(text)\n';
-        } else {
-          code += `    await callback_query.message.edit_text("Функция ${callbackData} будет добавлена позже")\n`;
-        }
-      } else {
-        code += `    await callback_query.message.edit_text("Функция ${callbackData} будет добавлена позже")\n`;
-      }
-    });
+    // Skip conditional placeholder handlers - they conflict with main handlers
+    // Main callback handlers below will handle all button interactions properly
     
     // Then, handle inline button nodes - create handlers for each unique button ID
     inlineNodes.forEach(node => {

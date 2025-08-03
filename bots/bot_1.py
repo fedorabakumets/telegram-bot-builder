@@ -554,21 +554,18 @@ async def handle_conditional_vip_offers(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: vip_offers by user {user_id}")
-    await callback_query.message.edit_text("Функция vip_offers будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "personal_manager")
 async def handle_conditional_personal_manager(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: personal_manager by user {user_id}")
-    await callback_query.message.edit_text("Функция personal_manager будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "repeat_order")
 async def handle_conditional_repeat_order(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: repeat_order by user {user_id}")
-    await callback_query.message.edit_text("Функция repeat_order будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "new_products")
 async def handle_conditional_new_products(callback_query: types.CallbackQuery):
@@ -587,21 +584,18 @@ async def handle_conditional_bonus_shop(callback_query: types.CallbackQuery):
     logging.info(f"Conditional button pressed: bonus_shop by user {user_id}")
     
     # Отправляем содержимое целевого узла
-    await callback_query.message.edit_text("Функция bonus_shop будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "recommendations")
 async def handle_conditional_recommendations(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: recommendations by user {user_id}")
-    await callback_query.message.edit_text("Функция recommendations будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "favorites")
 async def handle_conditional_favorites(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: favorites by user {user_id}")
-    await callback_query.message.edit_text("Функция favorites будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "catalog_main")
 async def handle_conditional_catalog_main(callback_query: types.CallbackQuery):
@@ -610,70 +604,60 @@ async def handle_conditional_catalog_main(callback_query: types.CallbackQuery):
     logging.info(f"Conditional button pressed: catalog_main by user {user_id}")
     
     # Отправляем содержимое целевого узла
-    await callback_query.message.edit_text("Функция catalog_main будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "premium_electronics")
 async def handle_conditional_premium_electronics(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: premium_electronics by user {user_id}")
-    await callback_query.message.edit_text("Функция premium_electronics будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "preorders")
 async def handle_conditional_preorders(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: preorders by user {user_id}")
-    await callback_query.message.edit_text("Функция preorders будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "compatible_accessories")
 async def handle_conditional_compatible_accessories(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: compatible_accessories by user {user_id}")
-    await callback_query.message.edit_text("Функция compatible_accessories будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "trade_in")
 async def handle_conditional_trade_in(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: trade_in by user {user_id}")
-    await callback_query.message.edit_text("Функция trade_in будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "vip_support")
 async def handle_conditional_vip_support(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: vip_support by user {user_id}")
-    await callback_query.message.edit_text("Функция vip_support будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "exclusive_catalog")
 async def handle_conditional_exclusive_catalog(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: exclusive_catalog by user {user_id}")
-    await callback_query.message.edit_text("Функция exclusive_catalog будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "achievements")
 async def handle_conditional_achievements(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: achievements by user {user_id}")
-    await callback_query.message.edit_text("Функция achievements будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "referral_program")
 async def handle_conditional_referral_program(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: referral_program by user {user_id}")
-    await callback_query.message.edit_text("Функция referral_program будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "registration")
 async def handle_conditional_registration(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: registration by user {user_id}")
-    await callback_query.message.edit_text("Функция registration будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "start_store")
 async def handle_conditional_start_store(callback_query: types.CallbackQuery):
@@ -682,114 +666,92 @@ async def handle_conditional_start_store(callback_query: types.CallbackQuery):
     logging.info(f"Conditional button pressed: start_store by user {user_id}")
     
     # Отправляем содержимое целевого узла
-    await callback_query.message.edit_text("Функция start_store будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "apply_discount")
 async def handle_conditional_apply_discount(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: apply_discount by user {user_id}")
-    await callback_query.message.edit_text("Функция apply_discount будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "save_discount")
 async def handle_conditional_save_discount(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: save_discount by user {user_id}")
-    await callback_query.message.edit_text("Функция save_discount будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "checkout")
 async def handle_conditional_checkout(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: checkout by user {user_id}")
-    await callback_query.message.edit_text("Функция checkout будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "edit_cart")
 async def handle_conditional_edit_cart(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: edit_cart by user {user_id}")
-    await callback_query.message.edit_text("Функция edit_cart будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "save_cart")
 async def handle_conditional_save_cart(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: save_cart by user {user_id}")
-    await callback_query.message.edit_text("Функция save_cart будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "personal_manager_contact")
 async def handle_conditional_personal_manager_contact(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: personal_manager_contact by user {user_id}")
-    await callback_query.message.edit_text("Функция personal_manager_contact будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "priority_support")
 async def handle_conditional_priority_support(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: priority_support by user {user_id}")
-    await callback_query.message.edit_text("Функция priority_support будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "order_status")
 async def handle_conditional_order_status(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: order_status by user {user_id}")
-    await callback_query.message.edit_text("Функция order_status будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "change_order")
 async def handle_conditional_change_order(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: change_order by user {user_id}")
-    await callback_query.message.edit_text("Функция change_order будет добавлена позже")
 
-@dp.callback_query(lambda c: c.data == "support_center")
-async def handle_conditional_support_center(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    user_id = callback_query.from_user.id
-    logging.info(f"Conditional button pressed: support_center by user {user_id}")
-    
-    # Отправляем содержимое целевого узла
-    await callback_query.message.edit_text("Функция support_center будет добавлена позже")
+# Placeholder handler removed - using real handler below
 
 @dp.callback_query(lambda c: c.data == "special_bonus_offers")
 async def handle_conditional_special_bonus_offers(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: special_bonus_offers by user {user_id}")
-    await callback_query.message.edit_text("Функция special_bonus_offers будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "bonus_history")
 async def handle_conditional_bonus_history(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: bonus_history by user {user_id}")
-    await callback_query.message.edit_text("Функция bonus_history будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "earn_bonuses")
 async def handle_conditional_earn_bonuses(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: earn_bonuses by user {user_id}")
-    await callback_query.message.edit_text("Функция earn_bonuses будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "personal_new_products")
 async def handle_conditional_personal_new_products(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: personal_new_products by user {user_id}")
-    await callback_query.message.edit_text("Функция personal_new_products будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "preference_notifications")
 async def handle_conditional_preference_notifications(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     logging.info(f"Conditional button pressed: preference_notifications by user {user_id}")
-    await callback_query.message.edit_text("Функция preference_notifications будет добавлена позже")
 
 @dp.callback_query(lambda c: c.data == "catalog_main")
 async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
