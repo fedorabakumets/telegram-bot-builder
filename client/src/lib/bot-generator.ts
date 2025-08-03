@@ -946,7 +946,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           // Создаем обработчик для каждой кнопки используя target как callback_data
           const actualCallbackData = button.target || callbackData;
-          code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}")\n`;
+          code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_"))\n`;
           // Создаем безопасное имя функции на основе target или button ID
           const safeFunctionName = actualCallbackData.replace(/[^a-zA-Z0-9]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
