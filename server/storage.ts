@@ -611,7 +611,7 @@ class MemStorage implements IStorage {
 
 // Database Storage Implementation
 export class DatabaseStorage implements IStorage {
-  private db = getDb();
+  protected db = getDb();
   
   // Bot Projects
   async getBotProject(id: number): Promise<BotProject | undefined> {
@@ -1093,7 +1093,7 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Оптимизированная версия с кэшированием
-export class OptimizedDatabaseStorage implements IStorage {
+export class OptimizedDatabaseStorage extends DatabaseStorage {
   private templateCache: Map<number, BotTemplate> = new Map();
   private projectCache: Map<number, BotProject> = new Map();
   private cacheTimeout = 5 * 60 * 1000; // 5 минут
@@ -1676,4 +1676,19 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных
-export const storage = new EnhancedDatabaseStorage();
+let storageInstance: EnhancedDatabaseStorage | null = null;
+
+function initStorage(): EnhancedDatabaseStorage {
+  if (!storageInstance) {
+    storageInstance = new EnhancedDatabaseStorage();
+  }
+  return storageInstance;
+}
+
+// Use a Proxy to lazily initialize storage
+export const storage = new Proxy({} as EnhancedDatabaseStorage, {
+  get(target, prop) {
+    const instance = initStorage();
+    return (instance as any)[prop];
+  }
+});
