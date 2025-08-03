@@ -603,14 +603,7 @@ async def handle_conditional_favorites(callback_query: types.CallbackQuery):
     logging.info(f"Conditional button pressed: favorites by user {user_id}")
     await callback_query.message.edit_text("Функция favorites будет добавлена позже")
 
-@dp.callback_query(lambda c: c.data == "catalog_main")
-async def handle_conditional_catalog_main(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    user_id = callback_query.from_user.id
-    logging.info(f"Conditional button pressed: catalog_main by user {user_id}")
-    
-    # Отправляем содержимое целевого узла
-    await callback_query.message.edit_text("Функция catalog_main будет добавлена позже")
+# Removed placeholder handler for catalog_main - using real handler instead
 
 @dp.callback_query(lambda c: c.data == "premium_electronics")
 async def handle_conditional_premium_electronics(callback_query: types.CallbackQuery):
@@ -668,12 +661,7 @@ async def handle_conditional_referral_program(callback_query: types.CallbackQuer
     logging.info(f"Conditional button pressed: referral_program by user {user_id}")
     await callback_query.message.edit_text("Функция referral_program будет добавлена позже")
 
-@dp.callback_query(lambda c: c.data == "registration")
-async def handle_conditional_registration(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    user_id = callback_query.from_user.id
-    logging.info(f"Conditional button pressed: registration by user {user_id}")
-    await callback_query.message.edit_text("Функция registration будет добавлена позже")
+# Removed placeholder handler for registration - using real handler instead
 
 @dp.callback_query(lambda c: c.data == "start_store")
 async def handle_conditional_start_store(callback_query: types.CallbackQuery):
@@ -747,14 +735,7 @@ async def handle_conditional_change_order(callback_query: types.CallbackQuery):
     logging.info(f"Conditional button pressed: change_order by user {user_id}")
     await callback_query.message.edit_text("Функция change_order будет добавлена позже")
 
-@dp.callback_query(lambda c: c.data == "support_center")
-async def handle_conditional_support_center(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    user_id = callback_query.from_user.id
-    logging.info(f"Conditional button pressed: support_center by user {user_id}")
-    
-    # Отправляем содержимое целевого узла
-    await callback_query.message.edit_text("Функция support_center будет добавлена позже")
+# Removed placeholder handler for support_center - using real handler instead
 
 @dp.callback_query(lambda c: c.data == "special_bonus_offers")
 async def handle_conditional_special_bonus_offers(callback_query: types.CallbackQuery):
