@@ -549,7 +549,7 @@ async def start_handler(message: types.Message):
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "catalog_main")
+@dp.callback_query(lambda c: c.data == "catalog_main" or c.data.startswith("catalog_main_btn_"))
 async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -701,7 +701,7 @@ async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "user_profile")
+@dp.callback_query(lambda c: c.data == "user_profile" or c.data.startswith("user_profile_btn_"))
 async def handle_callback_user_profile(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -906,7 +906,7 @@ async def handle_callback_user_profile(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "shopping_cart")
+@dp.callback_query(lambda c: c.data == "shopping_cart" or c.data.startswith("shopping_cart_btn_"))
 async def handle_callback_shopping_cart(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1086,7 +1086,7 @@ async def handle_callback_shopping_cart(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "support_center")
+@dp.callback_query(lambda c: c.data == "support_center" or c.data.startswith("support_center_btn_"))
 async def handle_callback_support_center(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1270,7 +1270,7 @@ async def handle_callback_support_center(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "electronics_category")
+@dp.callback_query(lambda c: c.data == "electronics_category" or c.data.startswith("electronics_category_btn_"))
 async def handle_callback_electronics_category(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1450,7 +1450,7 @@ async def handle_callback_electronics_category(callback_query: types.CallbackQue
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "clothing_category")
+@dp.callback_query(lambda c: c.data == "clothing_category" or c.data.startswith("clothing_category_btn_"))
 async def handle_callback_clothing_category(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1465,7 +1465,7 @@ async def handle_callback_clothing_category(callback_query: types.CallbackQuery)
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "home_category")
+@dp.callback_query(lambda c: c.data == "home_category" or c.data.startswith("home_category_btn_"))
 async def handle_callback_home_category(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1480,7 +1480,7 @@ async def handle_callback_home_category(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "start_store")
+@dp.callback_query(lambda c: c.data == "start_store" or c.data.startswith("start_store_btn_"))
 async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1666,7 +1666,7 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.answer(text)
 
-@dp.callback_query(lambda c: c.data == "smartphones_list")
+@dp.callback_query(lambda c: c.data == "smartphones_list" or c.data.startswith("smartphones_list_btn_"))
 async def handle_callback_smartphones_list(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1681,7 +1681,7 @@ async def handle_callback_smartphones_list(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "laptops_list")
+@dp.callback_query(lambda c: c.data == "laptops_list" or c.data.startswith("laptops_list_btn_"))
 async def handle_callback_laptops_list(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1696,7 +1696,7 @@ async def handle_callback_laptops_list(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "accessories_list")
+@dp.callback_query(lambda c: c.data == "accessories_list" or c.data.startswith("accessories_list_btn_"))
 async def handle_callback_accessories_list(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1711,7 +1711,7 @@ async def handle_callback_accessories_list(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "catalog_main")
+@dp.callback_query(lambda c: c.data == "catalog_main" or c.data.startswith("catalog_main_btn_"))
 async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1863,7 +1863,7 @@ async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "edit_profile")
+@dp.callback_query(lambda c: c.data == "edit_profile" or c.data.startswith("edit_profile_btn_"))
 async def handle_callback_edit_profile(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1878,7 +1878,7 @@ async def handle_callback_edit_profile(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "orders_history")
+@dp.callback_query(lambda c: c.data == "orders_history" or c.data.startswith("orders_history_btn_"))
 async def handle_callback_orders_history(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1893,7 +1893,7 @@ async def handle_callback_orders_history(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "bonus_info")
+@dp.callback_query(lambda c: c.data == "bonus_info" or c.data.startswith("bonus_info_btn_"))
 async def handle_callback_bonus_info(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -1908,7 +1908,7 @@ async def handle_callback_bonus_info(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "start_store")
+@dp.callback_query(lambda c: c.data == "start_store" or c.data.startswith("start_store_btn_"))
 async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2094,7 +2094,7 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.answer(text)
 
-@dp.callback_query(lambda c: c.data == "catalog_main")
+@dp.callback_query(lambda c: c.data == "catalog_main" or c.data.startswith("catalog_main_btn_"))
 async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2246,7 +2246,7 @@ async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text, reply_markup=keyboard)
 
-@dp.callback_query(lambda c: c.data == "wishlist")
+@dp.callback_query(lambda c: c.data == "wishlist" or c.data.startswith("wishlist_btn_"))
 async def handle_callback_wishlist(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2261,7 +2261,7 @@ async def handle_callback_wishlist(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "start_store")
+@dp.callback_query(lambda c: c.data == "start_store" or c.data.startswith("start_store_btn_"))
 async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2447,7 +2447,7 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.answer(text)
 
-@dp.callback_query(lambda c: c.data == "faq")
+@dp.callback_query(lambda c: c.data == "faq" or c.data.startswith("faq_btn_"))
 async def handle_callback_faq(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2462,7 +2462,7 @@ async def handle_callback_faq(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "chat_support")
+@dp.callback_query(lambda c: c.data == "chat_support" or c.data.startswith("chat_support_btn_"))
 async def handle_callback_chat_support(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2477,7 +2477,7 @@ async def handle_callback_chat_support(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "callback_request")
+@dp.callback_query(lambda c: c.data == "callback_request" or c.data.startswith("callback_request_btn_"))
 async def handle_callback_callback_request(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2492,7 +2492,7 @@ async def handle_callback_callback_request(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "start_store")
+@dp.callback_query(lambda c: c.data == "start_store" or c.data.startswith("start_store_btn_"))
 async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2678,7 +2678,7 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.answer(text)
 
-@dp.callback_query(lambda c: c.data == "bonus_products")
+@dp.callback_query(lambda c: c.data == "bonus_products" or c.data.startswith("bonus_products_btn_"))
 async def handle_callback_bonus_products(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2693,7 +2693,7 @@ async def handle_callback_bonus_products(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "bonus_discounts")
+@dp.callback_query(lambda c: c.data == "bonus_discounts" or c.data.startswith("bonus_discounts_btn_"))
 async def handle_callback_bonus_discounts(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2708,7 +2708,7 @@ async def handle_callback_bonus_discounts(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "bonus_rules")
+@dp.callback_query(lambda c: c.data == "bonus_rules" or c.data.startswith("bonus_rules_btn_"))
 async def handle_callback_bonus_rules(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2723,7 +2723,7 @@ async def handle_callback_bonus_rules(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "start_store")
+@dp.callback_query(lambda c: c.data == "start_store" or c.data.startswith("start_store_btn_"))
 async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2909,7 +2909,7 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.answer(text)
 
-@dp.callback_query(lambda c: c.data == "weekly_new")
+@dp.callback_query(lambda c: c.data == "weekly_new" or c.data.startswith("weekly_new_btn_"))
 async def handle_callback_weekly_new(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2924,7 +2924,7 @@ async def handle_callback_weekly_new(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "monthly_new")
+@dp.callback_query(lambda c: c.data == "monthly_new" or c.data.startswith("monthly_new_btn_"))
 async def handle_callback_monthly_new(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2939,7 +2939,7 @@ async def handle_callback_monthly_new(callback_query: types.CallbackQuery):
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "subscribe_notifications")
+@dp.callback_query(lambda c: c.data == "subscribe_notifications" or c.data.startswith("subscribe_notifications_btn_"))
 async def handle_callback_subscribe_notifications(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
@@ -2954,7 +2954,7 @@ async def handle_callback_subscribe_notifications(callback_query: types.Callback
     # Кнопка пока никуда не ведет
     await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
 
-@dp.callback_query(lambda c: c.data == "start_store")
+@dp.callback_query(lambda c: c.data == "start_store" or c.data.startswith("start_store_btn_"))
 async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
