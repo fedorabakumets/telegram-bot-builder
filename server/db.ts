@@ -2,20 +2,49 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Get DATABASE_URL from environment variables
-const databaseUrl = process.env.DATABASE_URL;
+// Initialize database connection lazily
+let pool: Pool | null = null;
+let db: ReturnType<typeof drizzle> | null = null;
 
-if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+function initializeDatabase() {
+  if (pool && db) {
+    return { pool, db };
+  }
+
+  // Get DATABASE_URL from environment variables
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error(
+      "DATABASE_URL must be set. Did you forget to provision a database?",
+    );
+  }
+
+  console.log('Initializing database connection...');
+
+  pool = new Pool({ 
+    connectionString: databaseUrl,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+
+  db = drizzle(pool, { schema });
+
+  return { pool, db };
 }
 
-console.log('Using DATABASE_URL for connection');
+// Export functions that initialize on first use
+export function getPool(): Pool {
+  const { pool } = initializeDatabase();
+  return pool;
+}
 
-export const pool = new Pool({ 
-  connectionString: databaseUrl,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+export function getDb() {
+  const { db } = initializeDatabase();
+  return db;
+}
 
-export const db = drizzle(pool, { schema });
+// For backward compatibility
+export { getPool as pool, getDb as db };

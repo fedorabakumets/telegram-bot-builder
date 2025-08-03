@@ -1,4 +1,4 @@
-import { db, pool } from './db';
+import { getDb, getPool } from './db';
 import { sql } from 'drizzle-orm';
 
 // Database connection monitoring and optimization utilities
@@ -52,6 +52,8 @@ export class DatabaseManager {
   // Perform health check
   async performHealthCheck(): Promise<boolean> {
     try {
+      const db = getDb();
+      const pool = getPool();
       // Test connection with a simple query
       const result = await db.execute(sql`SELECT 1 as health`);
       
@@ -86,6 +88,8 @@ export class DatabaseManager {
   // Optimize database connections
   async optimizeConnections(): Promise<void> {
     try {
+      const db = getDb();
+      const pool = getPool();
       // Close idle connections if there are too many
       if (this.connectionStats.idleConnections > 5) {
         console.log('Optimizing database connections...');
@@ -139,8 +143,9 @@ export class DatabaseManager {
 
   // Transaction wrapper with automatic rollback
   async transaction<T>(
-    operation: (tx: typeof db) => Promise<T>
+    operation: (tx: ReturnType<typeof getDb>) => Promise<T>
   ): Promise<T> {
+    const db = getDb();
     return await db.transaction(async (tx) => {
       try {
         const result = await operation(tx);

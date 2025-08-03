@@ -18,7 +18,7 @@ import {
   type UserBotData,
   type InsertUserBotData
 } from "@shared/schema";
-import { db } from "./db";
+import { getDb } from "./db";
 import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
 import { dbManager } from "./db-utils";
 import { cachedOps } from "./db-cache";
@@ -611,18 +611,20 @@ class MemStorage implements IStorage {
 
 // Database Storage Implementation
 export class DatabaseStorage implements IStorage {
+  private db = getDb();
+  
   // Bot Projects
   async getBotProject(id: number): Promise<BotProject | undefined> {
-    const [project] = await db.select().from(botProjects).where(eq(botProjects.id, id));
+    const [project] = await this.db.select().from(botProjects).where(eq(botProjects.id, id));
     return project || undefined;
   }
 
   async getAllBotProjects(): Promise<BotProject[]> {
-    return await db.select().from(botProjects).orderBy(desc(botProjects.updatedAt));
+    return await this.db.select().from(botProjects).orderBy(desc(botProjects.updatedAt));
   }
 
   async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
-    const [project] = await db
+    const [project] = await this.db
       .insert(botProjects)
       .values(insertProject)
       .returning();
@@ -630,7 +632,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
-    const [project] = await db
+    const [project] = await this.db
       .update(botProjects)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(botProjects.id, id))
@@ -639,22 +641,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBotProject(id: number): Promise<boolean> {
-    const result = await db.delete(botProjects).where(eq(botProjects.id, id));
+    const result = await this.db.delete(botProjects).where(eq(botProjects.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Bot Instances
   async getBotInstance(projectId: number): Promise<BotInstance | undefined> {
-    const [instance] = await db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
+    const [instance] = await this.db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
     return instance || undefined;
   }
 
   async getAllBotInstances(): Promise<BotInstance[]> {
-    return await db.select().from(botInstances).orderBy(desc(botInstances.startedAt));
+    return await this.db.select().from(botInstances).orderBy(desc(botInstances.startedAt));
   }
 
   async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
-    const [instance] = await db
+    const [instance] = await this.db
       .insert(botInstances)
       .values(insertInstance)
       .returning();
@@ -662,7 +664,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateBotInstance(id: number, updateData: Partial<InsertBotInstance>): Promise<BotInstance | undefined> {
-    const [instance] = await db
+    const [instance] = await this.db
       .update(botInstances)
       .set(updateData)
       .where(eq(botInstances.id, id))
@@ -671,12 +673,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBotInstance(id: number): Promise<boolean> {
-    const result = await db.delete(botInstances).where(eq(botInstances.id, id));
+    const result = await this.db.delete(botInstances).where(eq(botInstances.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async stopBotInstance(projectId: number): Promise<boolean> {
-    const result = await db
+    const result = await this.db
       .update(botInstances)
       .set({ status: 'stopped', stoppedAt: new Date() })
       .where(eq(botInstances.projectId, projectId));
@@ -685,16 +687,16 @@ export class DatabaseStorage implements IStorage {
 
   // Bot Templates
   async getBotTemplate(id: number): Promise<BotTemplate | undefined> {
-    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     return template || undefined;
   }
 
   async getAllBotTemplates(): Promise<BotTemplate[]> {
-    return await db.select().from(botTemplates).orderBy(desc(botTemplates.createdAt));
+    return await this.db.select().from(botTemplates).orderBy(desc(botTemplates.createdAt));
   }
 
   async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
-    const [template] = await db
+    const [template] = await this.db
       .insert(botTemplates)
       .values(insertTemplate)
       .returning();
@@ -702,7 +704,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
-    const [template] = await db
+    const [template] = await this.db
       .update(botTemplates)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(botTemplates.id, id))
@@ -711,15 +713,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBotTemplate(id: number): Promise<boolean> {
-    const result = await db.delete(botTemplates).where(eq(botTemplates.id, id));
+    const result = await this.db.delete(botTemplates).where(eq(botTemplates.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async incrementTemplateUseCount(id: number): Promise<boolean> {
-    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
     
-    const result = await db
+    const result = await this.db
       .update(botTemplates)
       .set({ 
         useCount: (template.useCount || 0) + 1,
@@ -730,10 +732,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementTemplateViewCount(id: number): Promise<boolean> {
-    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
     
-    const result = await db
+    const result = await this.db
       .update(botTemplates)
       .set({ 
         viewCount: (template.viewCount || 0) + 1
@@ -743,10 +745,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async incrementTemplateDownloadCount(id: number): Promise<boolean> {
-    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
     
-    const result = await db
+    const result = await this.db
       .update(botTemplates)
       .set({ 
         downloadCount: (template.downloadCount || 0) + 1
@@ -756,13 +758,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async toggleTemplateLike(id: number, liked: boolean): Promise<boolean> {
-    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
     
     const current = template.likeCount || 0;
     const newCount = liked ? current + 1 : Math.max(0, current - 1);
     
-    const result = await db
+    const result = await this.db
       .update(botTemplates)
       .set({ 
         likeCount: newCount
@@ -772,13 +774,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async toggleTemplateBookmark(id: number, bookmarked: boolean): Promise<boolean> {
-    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
     
     const current = template.bookmarkCount || 0;
     const newCount = bookmarked ? current + 1 : Math.max(0, current - 1);
     
-    const result = await db
+    const result = await this.db
       .update(botTemplates)
       .set({ 
         bookmarkCount: newCount
@@ -788,7 +790,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async rateTemplate(id: number, rating: number): Promise<boolean> {
-    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (!template) return false;
 
     const currentRating = template.rating || 0;
@@ -796,7 +798,7 @@ export class DatabaseStorage implements IStorage {
     const newRatingCount = currentRatingCount + 1;
     const newRating = Math.round(((currentRating * currentRatingCount) + rating) / newRatingCount);
 
-    const result = await db
+    const result = await this.db
       .update(botTemplates)
       .set({ 
         rating: newRating,
@@ -808,16 +810,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFeaturedTemplates(): Promise<BotTemplate[]> {
-    return await db.select().from(botTemplates).where(eq(botTemplates.featured, 1)).orderBy(desc(botTemplates.rating));
+    return await this.db.select().from(botTemplates).where(eq(botTemplates.featured, 1)).orderBy(desc(botTemplates.rating));
   }
 
   async getTemplatesByCategory(category: string): Promise<BotTemplate[]> {
-    return await db.select().from(botTemplates).where(eq(botTemplates.category, category)).orderBy(desc(botTemplates.createdAt));
+    return await this.db.select().from(botTemplates).where(eq(botTemplates.category, category)).orderBy(desc(botTemplates.createdAt));
   }
 
   async searchTemplates(query: string): Promise<BotTemplate[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
-    return await db.select().from(botTemplates).where(
+    return await this.db.select().from(botTemplates).where(
       or(
         ilike(botTemplates.name, searchTerm),
         ilike(botTemplates.description, searchTerm)
@@ -827,18 +829,18 @@ export class DatabaseStorage implements IStorage {
 
   // Bot Tokens
   async getBotToken(id: number): Promise<BotToken | undefined> {
-    const [token] = await db.select().from(botTokens).where(eq(botTokens.id, id));
+    const [token] = await this.db.select().from(botTokens).where(eq(botTokens.id, id));
     return token || undefined;
   }
 
   async getBotTokensByProject(projectId: number): Promise<BotToken[]> {
-    return await db.select().from(botTokens)
+    return await this.db.select().from(botTokens)
       .where(eq(botTokens.projectId, projectId))
       .orderBy(desc(botTokens.isDefault), desc(botTokens.createdAt));
   }
 
   async getDefaultBotToken(projectId: number): Promise<BotToken | undefined> {
-    const [token] = await db.select().from(botTokens)
+    const [token] = await this.db.select().from(botTokens)
       .where(and(eq(botTokens.projectId, projectId), eq(botTokens.isDefault, 1)))
       .orderBy(desc(botTokens.createdAt));
     return token || undefined;
@@ -846,12 +848,12 @@ export class DatabaseStorage implements IStorage {
 
   async createBotToken(insertToken: InsertBotToken): Promise<BotToken> {
     if (insertToken.isDefault === 1) {
-      await db.update(botTokens)
+      await this.db.update(botTokens)
         .set({ isDefault: 0 })
         .where(eq(botTokens.projectId, insertToken.projectId));
     }
 
-    const [token] = await db
+    const [token] = await this.db
       .insert(botTokens)
       .values(insertToken)
       .returning();
@@ -860,15 +862,15 @@ export class DatabaseStorage implements IStorage {
 
   async updateBotToken(id: number, updateData: Partial<InsertBotToken>): Promise<BotToken | undefined> {
     if (updateData.isDefault === 1) {
-      const [currentToken] = await db.select().from(botTokens).where(eq(botTokens.id, id));
+      const [currentToken] = await this.db.select().from(botTokens).where(eq(botTokens.id, id));
       if (currentToken) {
-        await db.update(botTokens)
+        await this.db.update(botTokens)
           .set({ isDefault: 0 })
           .where(eq(botTokens.projectId, currentToken.projectId));
       }
     }
 
-    const [token] = await db
+    const [token] = await this.db
       .update(botTokens)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(botTokens.id, id))
@@ -877,16 +879,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteBotToken(id: number): Promise<boolean> {
-    const result = await db.delete(botTokens).where(eq(botTokens.id, id));
+    const result = await this.db.delete(botTokens).where(eq(botTokens.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean> {
-    await db.update(botTokens)
+    await this.db.update(botTokens)
       .set({ isDefault: 0 })
       .where(eq(botTokens.projectId, projectId));
 
-    const result = await db.update(botTokens)
+    const result = await this.db.update(botTokens)
       .set({ isDefault: 1 })
       .where(eq(botTokens.id, tokenId));
     
@@ -894,7 +896,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async markTokenAsUsed(id: number): Promise<boolean> {
-    const result = await db.update(botTokens)
+    const result = await this.db.update(botTokens)
       .set({ lastUsedAt: new Date() })
       .where(eq(botTokens.id, id));
     
@@ -903,24 +905,24 @@ export class DatabaseStorage implements IStorage {
 
   // Media Files
   async getMediaFile(id: number): Promise<MediaFile | undefined> {
-    const [file] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    const [file] = await this.db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
     return file || undefined;
   }
 
   async getMediaFilesByProject(projectId: number): Promise<MediaFile[]> {
-    return await db.select().from(mediaFiles)
+    return await this.db.select().from(mediaFiles)
       .where(eq(mediaFiles.projectId, projectId))
       .orderBy(desc(mediaFiles.createdAt));
   }
 
   async getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]> {
-    return await db.select().from(mediaFiles)
+    return await this.db.select().from(mediaFiles)
       .where(and(eq(mediaFiles.projectId, projectId), eq(mediaFiles.fileType, fileType)))
       .orderBy(desc(mediaFiles.createdAt));
   }
 
   async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
-    const [file] = await db
+    const [file] = await this.db
       .insert(mediaFiles)
       .values(insertFile)
       .returning();
@@ -928,7 +930,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMediaFile(id: number, updateData: Partial<InsertMediaFile>): Promise<MediaFile | undefined> {
-    const [file] = await db
+    const [file] = await this.db
       .update(mediaFiles)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(mediaFiles.id, id))
@@ -937,15 +939,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMediaFile(id: number): Promise<boolean> {
-    const result = await db.delete(mediaFiles).where(eq(mediaFiles.id, id));
+    const result = await this.db.delete(mediaFiles).where(eq(mediaFiles.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async incrementMediaFileUsage(id: number): Promise<boolean> {
-    const [file] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    const [file] = await this.db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
     if (!file) return false;
     
-    const result = await db
+    const result = await this.db
       .update(mediaFiles)
       .set({ 
         usageCount: (file.usageCount || 0) + 1,
@@ -957,7 +959,7 @@ export class DatabaseStorage implements IStorage {
 
   async searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
-    return await db.select().from(mediaFiles)
+    return await this.db.select().from(mediaFiles)
       .where(
         and(
           eq(mediaFiles.projectId, projectId),
@@ -972,28 +974,28 @@ export class DatabaseStorage implements IStorage {
 
   // User Bot Data
   async getUserBotData(id: number): Promise<UserBotData | undefined> {
-    const [userData] = await db.select().from(userBotData).where(eq(userBotData.id, id));
+    const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
     return userData || undefined;
   }
 
   async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
-    const [userData] = await db.select().from(userBotData)
+    const [userData] = await this.db.select().from(userBotData)
       .where(and(eq(userBotData.projectId, projectId), eq(userBotData.userId, userId)));
     return userData || undefined;
   }
 
   async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
-    return await db.select().from(userBotData)
+    return await this.db.select().from(userBotData)
       .where(eq(userBotData.projectId, projectId))
       .orderBy(desc(userBotData.lastInteraction));
   }
 
   async getAllUserBotData(): Promise<UserBotData[]> {
-    return await db.select().from(userBotData).orderBy(desc(userBotData.lastInteraction));
+    return await this.db.select().from(userBotData).orderBy(desc(userBotData.lastInteraction));
   }
 
   async createUserBotData(insertUserData: InsertUserBotData): Promise<UserBotData> {
-    const [userData] = await db
+    const [userData] = await this.db
       .insert(userBotData)
       .values(insertUserData)
       .returning();
@@ -1001,7 +1003,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserBotData(id: number, updateData: Partial<InsertUserBotData>): Promise<UserBotData | undefined> {
-    const [userData] = await db
+    const [userData] = await this.db
       .update(userBotData)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(userBotData.id, id))
@@ -1010,20 +1012,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUserBotData(id: number): Promise<boolean> {
-    const result = await db.delete(userBotData).where(eq(userBotData.id, id));
+    const result = await this.db.delete(userBotData).where(eq(userBotData.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
-    const result = await db.delete(userBotData).where(eq(userBotData.projectId, projectId));
+    const result = await this.db.delete(userBotData).where(eq(userBotData.projectId, projectId));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async incrementUserInteraction(id: number): Promise<boolean> {
-    const [userData] = await db.select().from(userBotData).where(eq(userBotData.id, id));
+    const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
     if (!userData) return false;
     
-    const result = await db
+    const result = await this.db
       .update(userBotData)
       .set({ 
         interactionCount: (userData.interactionCount || 0) + 1,
@@ -1035,7 +1037,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserState(id: number, state: string): Promise<boolean> {
-    const result = await db
+    const result = await this.db
       .update(userBotData)
       .set({ 
         currentState: state,
@@ -1047,7 +1049,7 @@ export class DatabaseStorage implements IStorage {
 
   async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
-    return await db.select().from(userBotData)
+    return await this.db.select().from(userBotData)
       .where(
         and(
           eq(userBotData.projectId, projectId),
@@ -1070,7 +1072,7 @@ export class DatabaseStorage implements IStorage {
     totalInteractions: number;
     avgInteractionsPerUser: number;
   }> {
-    const users = await db.select().from(userBotData).where(eq(userBotData.projectId, projectId));
+    const users = await this.db.select().from(userBotData).where(eq(userBotData.projectId, projectId));
     
     const totalUsers = users.length;
     const activeUsers = users.filter(u => u.isActive === 1).length;
@@ -1101,7 +1103,7 @@ export class OptimizedDatabaseStorage implements IStorage {
     const cached = this.projectCache.get(id);
     if (cached) return cached;
     
-    const [project] = await db.select().from(botProjects).where(eq(botProjects.id, id));
+    const [project] = await this.db.select().from(botProjects).where(eq(botProjects.id, id));
     if (project) {
       this.projectCache.set(id, project);
       // Автоматически очищаем кэш через timeout
@@ -1111,11 +1113,11 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async getAllBotProjects(): Promise<BotProject[]> {
-    return await db.select().from(botProjects).orderBy(desc(botProjects.updatedAt));
+    return await this.db.select().from(botProjects).orderBy(desc(botProjects.updatedAt));
   }
 
   async createBotProject(insertProject: InsertBotProject): Promise<BotProject> {
-    const [project] = await db
+    const [project] = await this.db
       .insert(botProjects)
       .values(insertProject)
       .returning();
@@ -1124,7 +1126,7 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async updateBotProject(id: number, updateData: Partial<InsertBotProject>): Promise<BotProject | undefined> {
-    const [project] = await db
+    const [project] = await this.db
       .update(botProjects)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(botProjects.id, id))
@@ -1136,23 +1138,23 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async deleteBotProject(id: number): Promise<boolean> {
-    const result = await db.delete(botProjects).where(eq(botProjects.id, id));
+    const result = await this.db.delete(botProjects).where(eq(botProjects.id, id));
     this.projectCache.delete(id);
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Bot Instances (простая реализация)
   async getBotInstance(projectId: number): Promise<BotInstance | undefined> {
-    const [instance] = await db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
+    const [instance] = await this.db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
     return instance || undefined;
   }
 
   async getAllBotInstances(): Promise<BotInstance[]> {
-    return await db.select().from(botInstances).orderBy(desc(botInstances.startedAt));
+    return await this.db.select().from(botInstances).orderBy(desc(botInstances.startedAt));
   }
 
   async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
-    const [instance] = await db
+    const [instance] = await this.db
       .insert(botInstances)
       .values(insertInstance)
       .returning();
@@ -1160,7 +1162,7 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async updateBotInstance(id: number, updateData: Partial<InsertBotInstance>): Promise<BotInstance | undefined> {
-    const [instance] = await db
+    const [instance] = await this.db
       .update(botInstances)
       .set(updateData)
       .where(eq(botInstances.id, id))
@@ -1169,12 +1171,12 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async deleteBotInstance(id: number): Promise<boolean> {
-    const result = await db.delete(botInstances).where(eq(botInstances.id, id));
+    const result = await this.db.delete(botInstances).where(eq(botInstances.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async stopBotInstance(projectId: number): Promise<boolean> {
-    const result = await db
+    const result = await this.db
       .update(botInstances)
       .set({ status: 'stopped', stoppedAt: new Date() })
       .where(eq(botInstances.projectId, projectId));
@@ -1186,7 +1188,7 @@ export class OptimizedDatabaseStorage implements IStorage {
     const cached = this.templateCache.get(id);
     if (cached) return cached;
     
-    const [template] = await db.select().from(botTemplates).where(eq(botTemplates.id, id));
+    const [template] = await this.db.select().from(botTemplates).where(eq(botTemplates.id, id));
     if (template) {
       this.templateCache.set(id, template);
       setTimeout(() => this.templateCache.delete(id), this.cacheTimeout);
@@ -1195,11 +1197,11 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async getAllBotTemplates(): Promise<BotTemplate[]> {
-    return await db.select().from(botTemplates).orderBy(desc(botTemplates.createdAt));
+    return await this.db.select().from(botTemplates).orderBy(desc(botTemplates.createdAt));
   }
 
   async createBotTemplate(insertTemplate: InsertBotTemplate): Promise<BotTemplate> {
-    const [template] = await db
+    const [template] = await this.db
       .insert(botTemplates)
       .values(insertTemplate)
       .returning();
@@ -1208,7 +1210,7 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async updateBotTemplate(id: number, updateData: Partial<InsertBotTemplate>): Promise<BotTemplate | undefined> {
-    const [template] = await db
+    const [template] = await this.db
       .update(botTemplates)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(botTemplates.id, id))
@@ -1220,14 +1222,14 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async deleteBotTemplate(id: number): Promise<boolean> {
-    const result = await db.delete(botTemplates).where(eq(botTemplates.id, id));
+    const result = await this.db.delete(botTemplates).where(eq(botTemplates.id, id));
     this.templateCache.delete(id);
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Упрощенные методы для счетчиков
   async incrementTemplateUseCount(id: number): Promise<boolean> {
-    const result = await db
+    const result = await this.db
       .update(botTemplates)
       .set({ lastUsedAt: new Date() })
       .where(eq(botTemplates.id, id));
@@ -1236,7 +1238,7 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async incrementTemplateViewCount(id: number): Promise<boolean> {
-    const result = await db
+    const result = await this.db
       .update(botTemplates)
       .set({}) // Пустое обновление для простоты
       .where(eq(botTemplates.id, id));
@@ -1244,7 +1246,7 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async incrementTemplateDownloadCount(id: number): Promise<boolean> {
-    const result = await db
+    const result = await this.db
       .update(botTemplates)
       .set({}) // Пустое обновление для простоты
       .where(eq(botTemplates.id, id));
@@ -1267,16 +1269,16 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async getFeaturedTemplates(): Promise<BotTemplate[]> {
-    return await db.select().from(botTemplates).where(eq(botTemplates.featured, 1)).orderBy(desc(botTemplates.rating));
+    return await this.db.select().from(botTemplates).where(eq(botTemplates.featured, 1)).orderBy(desc(botTemplates.rating));
   }
 
   async getTemplatesByCategory(category: string): Promise<BotTemplate[]> {
-    return await db.select().from(botTemplates).where(eq(botTemplates.category, category)).orderBy(desc(botTemplates.createdAt));
+    return await this.db.select().from(botTemplates).where(eq(botTemplates.category, category)).orderBy(desc(botTemplates.createdAt));
   }
 
   async searchTemplates(query: string): Promise<BotTemplate[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
-    return await db.select().from(botTemplates).where(
+    return await this.db.select().from(botTemplates).where(
       or(
         ilike(botTemplates.name, searchTerm),
         ilike(botTemplates.description, searchTerm)
@@ -1286,18 +1288,18 @@ export class OptimizedDatabaseStorage implements IStorage {
 
   // Bot Tokens
   async getBotToken(id: number): Promise<BotToken | undefined> {
-    const [token] = await db.select().from(botTokens).where(eq(botTokens.id, id));
+    const [token] = await this.db.select().from(botTokens).where(eq(botTokens.id, id));
     return token || undefined;
   }
 
   async getBotTokensByProject(projectId: number): Promise<BotToken[]> {
-    return await db.select().from(botTokens)
+    return await this.db.select().from(botTokens)
       .where(eq(botTokens.projectId, projectId))
       .orderBy(desc(botTokens.isDefault), desc(botTokens.createdAt));
   }
 
   async getDefaultBotToken(projectId: number): Promise<BotToken | undefined> {
-    const [token] = await db.select().from(botTokens)
+    const [token] = await this.db.select().from(botTokens)
       .where(and(eq(botTokens.projectId, projectId), eq(botTokens.isDefault, 1)))
       .orderBy(desc(botTokens.createdAt));
     return token || undefined;
@@ -1306,12 +1308,12 @@ export class OptimizedDatabaseStorage implements IStorage {
   async createBotToken(insertToken: InsertBotToken): Promise<BotToken> {
     // Если создаем токен по умолчанию, убираем флаг с других токенов
     if (insertToken.isDefault === 1) {
-      await db.update(botTokens)
+      await this.db.update(botTokens)
         .set({ isDefault: 0 })
         .where(eq(botTokens.projectId, insertToken.projectId));
     }
 
-    const [token] = await db
+    const [token] = await this.db
       .insert(botTokens)
       .values(insertToken)
       .returning();
@@ -1321,15 +1323,15 @@ export class OptimizedDatabaseStorage implements IStorage {
   async updateBotToken(id: number, updateData: Partial<InsertBotToken>): Promise<BotToken | undefined> {
     // Если делаем токен по умолчанию, убираем флаг с других токенов
     if (updateData.isDefault === 1) {
-      const [currentToken] = await db.select().from(botTokens).where(eq(botTokens.id, id));
+      const [currentToken] = await this.db.select().from(botTokens).where(eq(botTokens.id, id));
       if (currentToken) {
-        await db.update(botTokens)
+        await this.db.update(botTokens)
           .set({ isDefault: 0 })
           .where(eq(botTokens.projectId, currentToken.projectId));
       }
     }
 
-    const [token] = await db
+    const [token] = await this.db
       .update(botTokens)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(botTokens.id, id))
@@ -1338,18 +1340,18 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async deleteBotToken(id: number): Promise<boolean> {
-    const result = await db.delete(botTokens).where(eq(botTokens.id, id));
+    const result = await this.db.delete(botTokens).where(eq(botTokens.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async setDefaultBotToken(projectId: number, tokenId: number): Promise<boolean> {
     // Убираем флаг по умолчанию со всех токенов проекта
-    await db.update(botTokens)
+    await this.db.update(botTokens)
       .set({ isDefault: 0 })
       .where(eq(botTokens.projectId, projectId));
 
     // Устанавливаем флаг по умолчанию для указанного токена
-    const result = await db.update(botTokens)
+    const result = await this.db.update(botTokens)
       .set({ isDefault: 1 })
       .where(eq(botTokens.id, tokenId));
     
@@ -1357,7 +1359,7 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async markTokenAsUsed(id: number): Promise<boolean> {
-    const result = await db.update(botTokens)
+    const result = await this.db.update(botTokens)
       .set({ lastUsedAt: new Date() })
       .where(eq(botTokens.id, id));
     
@@ -1366,24 +1368,24 @@ export class OptimizedDatabaseStorage implements IStorage {
 
   // Media Files (simplified implementation)
   async getMediaFile(id: number): Promise<MediaFile | undefined> {
-    const [file] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    const [file] = await this.db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
     return file || undefined;
   }
 
   async getMediaFilesByProject(projectId: number): Promise<MediaFile[]> {
-    return await db.select().from(mediaFiles)
+    return await this.db.select().from(mediaFiles)
       .where(eq(mediaFiles.projectId, projectId))
       .orderBy(desc(mediaFiles.createdAt));
   }
 
   async getMediaFilesByType(projectId: number, fileType: string): Promise<MediaFile[]> {
-    return await db.select().from(mediaFiles)
+    return await this.db.select().from(mediaFiles)
       .where(and(eq(mediaFiles.projectId, projectId), eq(mediaFiles.fileType, fileType)))
       .orderBy(desc(mediaFiles.createdAt));
   }
 
   async createMediaFile(insertFile: InsertMediaFile): Promise<MediaFile> {
-    const [file] = await db
+    const [file] = await this.db
       .insert(mediaFiles)
       .values(insertFile)
       .returning();
@@ -1391,7 +1393,7 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async updateMediaFile(id: number, updateData: Partial<InsertMediaFile>): Promise<MediaFile | undefined> {
-    const [file] = await db
+    const [file] = await this.db
       .update(mediaFiles)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(mediaFiles.id, id))
@@ -1400,15 +1402,15 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async deleteMediaFile(id: number): Promise<boolean> {
-    const result = await db.delete(mediaFiles).where(eq(mediaFiles.id, id));
+    const result = await this.db.delete(mediaFiles).where(eq(mediaFiles.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async incrementMediaFileUsage(id: number): Promise<boolean> {
-    const [file] = await db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
+    const [file] = await this.db.select().from(mediaFiles).where(eq(mediaFiles.id, id));
     if (!file) return false;
     
-    const result = await db
+    const result = await this.db
       .update(mediaFiles)
       .set({ usageCount: (file.usageCount || 0) + 1 })
       .where(eq(mediaFiles.id, id));
@@ -1417,7 +1419,7 @@ export class OptimizedDatabaseStorage implements IStorage {
 
   async searchMediaFiles(projectId: number, query: string): Promise<MediaFile[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
-    return await db.select().from(mediaFiles)
+    return await this.db.select().from(mediaFiles)
       .where(
         and(
           eq(mediaFiles.projectId, projectId),
@@ -1432,29 +1434,29 @@ export class OptimizedDatabaseStorage implements IStorage {
 
   // User Bot Data
   async getUserBotData(id: number): Promise<UserBotData | undefined> {
-    const [userData] = await db.select().from(userBotData).where(eq(userBotData.id, id));
+    const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
     return userData || undefined;
   }
 
   async getUserBotDataByProjectAndUser(projectId: number, userId: string): Promise<UserBotData | undefined> {
-    const [userData] = await db.select().from(userBotData)
+    const [userData] = await this.db.select().from(userBotData)
       .where(and(eq(userBotData.projectId, projectId), eq(userBotData.userId, userId)));
     return userData || undefined;
   }
 
   async getUserBotDataByProject(projectId: number): Promise<UserBotData[]> {
-    return await db.select().from(userBotData)
+    return await this.db.select().from(userBotData)
       .where(eq(userBotData.projectId, projectId))
       .orderBy(desc(userBotData.lastInteraction));
   }
 
   async getAllUserBotData(): Promise<UserBotData[]> {
-    return await db.select().from(userBotData)
+    return await this.db.select().from(userBotData)
       .orderBy(desc(userBotData.lastInteraction));
   }
 
   async createUserBotData(insertUserData: InsertUserBotData): Promise<UserBotData> {
-    const [userData] = await db
+    const [userData] = await this.db
       .insert(userBotData)
       .values(insertUserData)
       .returning();
@@ -1462,7 +1464,7 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async updateUserBotData(id: number, updateData: Partial<InsertUserBotData>): Promise<UserBotData | undefined> {
-    const [userData] = await db
+    const [userData] = await this.db
       .update(userBotData)
       .set({ ...updateData, updatedAt: new Date() })
       .where(eq(userBotData.id, id))
@@ -1471,20 +1473,20 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async deleteUserBotData(id: number): Promise<boolean> {
-    const result = await db.delete(userBotData).where(eq(userBotData.id, id));
+    const result = await this.db.delete(userBotData).where(eq(userBotData.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async deleteUserBotDataByProject(projectId: number): Promise<boolean> {
-    const result = await db.delete(userBotData).where(eq(userBotData.projectId, projectId));
+    const result = await this.db.delete(userBotData).where(eq(userBotData.projectId, projectId));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
   async incrementUserInteraction(id: number): Promise<boolean> {
-    const [userData] = await db.select().from(userBotData).where(eq(userBotData.id, id));
+    const [userData] = await this.db.select().from(userBotData).where(eq(userBotData.id, id));
     if (!userData) return false;
     
-    const result = await db
+    const result = await this.db
       .update(userBotData)
       .set({ 
         interactionCount: (userData.interactionCount || 0) + 1,
@@ -1495,7 +1497,7 @@ export class OptimizedDatabaseStorage implements IStorage {
   }
 
   async updateUserState(id: number, state: string): Promise<boolean> {
-    const result = await db
+    const result = await this.db
       .update(userBotData)
       .set({ currentState: state, updatedAt: new Date() })
       .where(eq(userBotData.id, id));
@@ -1504,7 +1506,7 @@ export class OptimizedDatabaseStorage implements IStorage {
 
   async searchUserBotData(projectId: number, query: string): Promise<UserBotData[]> {
     const searchTerm = `%${query.toLowerCase()}%`;
-    return await db.select().from(userBotData)
+    return await this.db.select().from(userBotData)
       .where(
         and(
           eq(userBotData.projectId, projectId),
@@ -1527,7 +1529,7 @@ export class OptimizedDatabaseStorage implements IStorage {
     totalInteractions: number;
     avgInteractionsPerUser: number;
   }> {
-    const users = await db.select().from(userBotData)
+    const users = await this.db.select().from(userBotData)
       .where(eq(userBotData.projectId, projectId));
     
     const totalUsers = users.length;
