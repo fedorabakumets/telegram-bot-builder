@@ -1,140 +1,90 @@
+#!/usr/bin/env python3
 """
-Создание тестового бота для проверки исправленных callback обработчиков
+Простой тест для проверки исправления callback_data в шаблоне магазина
 """
+
 import requests
 import json
 
-def create_test_bot():
-    """Создает тестовый бот через API"""
+def test_button_generation():
+    """Тестируем генерацию кнопок в магазине"""
+    print("🧪 Тестируем генерацию callback_data для кнопок...")
     
-    # Структура простого бота для проверки callback обработчиков
-    bot_data = {
-        "name": "Тест Callback Бот",
-        "description": "Тестовый бот для проверки callback обработчиков",
-        "data": {
-            "nodes": [
-                {
-                    "id": "start-node-1",
-                    "type": "start",
-                    "position": {"x": 100, "y": 100},
-                    "data": {
-                        "messageText": "Привет! Выберите действие:",
-                        "keyboardType": "inline",
-                        "buttons": [
-                            {
-                                "id": "btn-info-1",
-                                "text": "📊 Информация",
-                                "action": "goto",
-                                "target": "info-node-2"
-                            },
-                            {
-                                "id": "btn-settings-1", 
-                                "text": "⚙️ Настройки",
-                                "action": "goto",
-                                "target": "settings-node-3"
-                            }
-                        ],
-                        "resizeKeyboard": True,
-                        "oneTimeKeyboard": False
-                    }
-                },
-                {
-                    "id": "info-node-2",
-                    "type": "message",
-                    "position": {"x": 300, "y": 100},
-                    "data": {
-                        "messageText": "📊 Информация о боте:\n\nЭто тестовый бот для проверки callback обработчиков.\nВсе кнопки должны работать правильно.",
-                        "keyboardType": "inline",
-                        "buttons": [
-                            {
-                                "id": "btn-back-info",
-                                "text": "🔙 Назад к меню",
-                                "action": "goto",
-                                "target": "start-node-1"
-                            }
-                        ]
-                    }
-                },
-                {
-                    "id": "settings-node-3",
-                    "type": "message",
-                    "position": {"x": 500, "y": 100}, 
-                    "data": {
-                        "messageText": "⚙️ Настройки:\n\nЗдесь будут настройки бота.\nВыберите нужную опцию:",
-                        "keyboardType": "inline",
-                        "buttons": [
-                            {
-                                "id": "btn-back-settings",
-                                "text": "🔙 Назад к меню",
-                                "action": "goto",
-                                "target": "start-node-1"
-                            }
-                        ]
-                    }
+    # Загружаем шаблон "Interactive Shop with Conditional Messages"
+    template_data = {
+        "nodes": [
+            {
+                "id": "start_welcome",
+                "type": "start", 
+                "data": {
+                    "messageText": "Добро пожаловать в наш интернет-магазин! 🛍️",
+                    "keyboardType": "inline",
+                    "buttons": [
+                        {
+                            "id": "btn_catalog",
+                            "text": "📦 Каталог товаров",
+                            "action": "goto",
+                            "target": "catalog_main"
+                        },
+                        {
+                            "id": "btn_profile", 
+                            "text": "👤 Мой профиль",
+                            "action": "goto",
+                            "target": "profile_menu"
+                        }
+                    ]
                 }
-            ],
-            "connections": []
-        }
+            }
+        ],
+        "edges": []
     }
     
+    # Отправляем POST запрос на /api/export для генерации кода
     try:
-        # Сначала создаем проект
-        response = requests.post("http://localhost:5000/api/projects", json=bot_data)
+        # Создаем простой проект для тестирования
+        projects_response = requests.get('http://localhost:5000/api/projects')
+        projects = projects_response.json()
+        project_id = projects[0]['id'] if projects else 1
+        
+        response = requests.post(f'http://localhost:5000/api/projects/{project_id}/export', 
+                               json=template_data,
+                               headers={'Content-Type': 'application/json'})
         
         if response.status_code == 200:
-            project_data = response.json()
-            project_id = project_data["id"]
-            print(f"✅ Проект создан с ID: {project_id}")
+            generated_code = response.text
+            print("✅ Код успешно сгенерирован")
             
-            # Теперь экспортируем код
-            export_response = requests.post(f"http://localhost:5000/api/projects/{project_id}/export")
+            # Проверяем кнопки в коде
+            print("\n🔍 Анализируем сгенерированные кнопки:")
             
-            if export_response.status_code == 200:
-                files = export_response.json()["files"]
-                
-                # Сохраняем основной файл бота
-                main_file = files.get("main.py", "")
-                if main_file:
-                    with open("test_callback_fixed_bot.py", "w", encoding="utf-8") as f:
-                        f.write(main_file)
-                    
-                    print("✅ Код бота сохранен в test_callback_fixed_bot.py")
-                    
-                    # Проверяем ключевые элементы
-                    print("\nПроверка исправлений:")
-                    
-                    checks = [
-                        ('callback_data="info-node-2"', "Кнопка 'Информация' использует ID узла"),
-                        ('callback_data="settings-node-3"', "Кнопка 'Настройки' использует ID узла"),
-                        ('callback_data="start-node-1"', "Кнопка 'Назад' использует ID узла"),
-                        ('c.data == "info-node-2"', "Обработчик информации проверяет правильный ID"),
-                        ('c.data == "settings-node-3"', "Обработчик настроек проверяет правильный ID"),
-                        ('c.data == "start-node-1"', "Обработчик назад проверяет правильный ID"),
-                        ('await callback_query.answer()', "Обработчики отвечают на callback"),
-                        ('await callback_query.message.edit_text', "Обработчики редактируют сообщения")
-                    ]
-                    
-                    for check, description in checks:
-                        if check in main_file:
-                            print(f"✅ {description}")
-                        else:
-                            print(f"❌ {description}")
-                    
-                    return project_id
-                else:
-                    print("❌ Не удалось получить код бота")
+            if 'InlineKeyboardButton(text="📦 Каталог товаров", callback_data="catalog_main")' in generated_code:
+                print("✅ Кнопка каталога использует target как callback_data: catalog_main")
+            elif 'InlineKeyboardButton(text="📦 Каталог товаров", callback_data="btn_catalog")' in generated_code:
+                print("❌ Кнопка каталога использует button.id как callback_data: btn_catalog")
             else:
-                print(f"❌ Ошибка экспорта: {export_response.status_code}")
-                print(export_response.text)
+                print("⚠️ Не найдена кнопка каталога в коде")
+                
+            # Проверяем обработчики
+            print("\n🔍 Анализируем обработчики callback:")
+            
+            if '@dp.callback_query(lambda c: c.data == "catalog_main")' in generated_code:
+                print("✅ Обработчик использует target: catalog_main")
+            elif '@dp.callback_query(lambda c: c.data == "btn_catalog")' in generated_code:
+                print("✅ Обработчик использует button.id: btn_catalog")
+            else:
+                print("⚠️ Не найден обработчик для кнопки каталога")
+                
+            # Сохраняем результат для анализа
+            with open("test_generated_code.py", "w", encoding="utf-8") as f:
+                f.write(generated_code)
+            print("\n💾 Сгенерированный код сохранен в test_generated_code.py")
+            
         else:
-            print(f"❌ Ошибка создания проекта: {response.status_code}")
+            print(f"❌ Ошибка генерации: {response.status_code}")
             print(response.text)
             
     except Exception as e:
-        print(f"❌ Ошибка: {e}")
-        
-    return None
+        print(f"❌ Ошибка теста: {e}")
 
 if __name__ == "__main__":
-    print("Создание тестового бота для проверки callback обработчиков...")
-    create_test_bot()
+    test_button_generation()

@@ -891,8 +891,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     }
   });
 
-  // Collect all referenced node IDs
+  // Collect all referenced node IDs and conditional message buttons
   const allReferencedNodeIds = new Set<string>();
+  const allConditionalButtons = new Set<string>();
   
   // Add nodes from inline buttons
   inlineNodes.forEach(node => {
@@ -903,16 +904,63 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     });
   });
   
+  // Collect buttons from conditional messages
+  nodes.forEach(node => {
+    if (node.data.conditionalMessages) {
+      node.data.conditionalMessages.forEach((condition: any) => {
+        if (condition.buttons) {
+          condition.buttons.forEach((button: any) => {
+            if (button.action === 'goto' && button.target) {
+              allConditionalButtons.add(button.target);
+            }
+          });
+        }
+      });
+    }
+  });
+  
   // Add input target nodes
   inputTargetNodeIds.forEach(nodeId => {
     allReferencedNodeIds.add(nodeId);
   });
 
-  if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0) {
+  if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
     code += '\n# Обработчики inline кнопок\n';
     const processedCallbacks = new Set<string>();
     
-    // First, handle inline button nodes - create handlers for each unique button ID
+    // First, create handlers for conditional message buttons
+    allConditionalButtons.forEach(callbackData => {
+      if (processedCallbacks.has(callbackData)) return;
+      processedCallbacks.add(callbackData);
+      
+      // Создаем обработчик для условной кнопки
+      const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9]/g, '_');
+      code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
+      code += `async def handle_conditional_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+      code += '    await callback_query.answer()\n';
+      code += '    user_id = callback_query.from_user.id\n';
+      code += `    logging.info(f"Conditional button pressed: ${callbackData} by user {user_id}")\n`;
+      
+      // Find target node (if exists)
+      const targetNode = nodes.find(n => n.id === callbackData);
+      if (targetNode) {
+        code += '    \n';
+        code += '    # Отправляем содержимое целевого узла\n';
+        
+        if (targetNode.type === 'message') {
+          const messageText = targetNode.data.messageText || "Сообщение";
+          const formattedText = formatTextForPython(messageText);
+          code += `    text = ${formattedText}\n`;
+          code += '    await callback_query.message.edit_text(text)\n';
+        } else {
+          code += `    await callback_query.message.edit_text("Функция ${callbackData} будет добавлена позже")\n`;
+        }
+      } else {
+        code += `    await callback_query.message.edit_text("Функция ${callbackData} будет добавлена позже")\n`;
+      }
+    });
+    
+    // Then, handle inline button nodes - create handlers for each unique button ID
     inlineNodes.forEach(node => {
       node.data.buttons.forEach(button => {
         if (button.action === 'goto' && button.id) {
@@ -925,10 +973,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // Find target node (может быть null если нет target)
           const targetNode = button.target ? nodes.find(n => n.id === button.target) : null;
           
-          // Создаем обработчик для каждой кнопки
-          code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
-          // Создаем безопасное имя функции на основе button ID
-          const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9]/g, '_');
+          // Создаем обработчик для каждой кнопки используя target как callback_data
+          const actualCallbackData = button.target || callbackData;
+          code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}")\n`;
+          // Создаем безопасное имя функции на основе target или button ID
+          const safeFunctionName = actualCallbackData.replace(/[^a-zA-Z0-9]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
           
@@ -2149,29 +2198,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")\n';
           code += '    \n';
           
-          // ДОБАВЛЯЕМ ПЕРЕАДРЕСАЦИЮ: Проверяем, нужно ли перейти к следующему узлу
-          const sourceNodeForRedirect = nodes.find(n => 
-            n.data.buttons && n.data.buttons.some(btn => btn.target === nodeId)
-          );
-          
-          // Ищем настройки переадресации в родительском узле
-          let shouldRedirect = false;
-          let redirectTarget = null;
-          
-          if (sourceNodeForRedirect) {
-            // Проверяем, есть ли у родительского узла настройка переадресации
-            if (sourceNodeForRedirect.data.inputTargetNodeId) {
-              shouldRedirect = true;
-              redirectTarget = sourceNodeForRedirect.data.inputTargetNodeId;
-            } else {
-              // Ищем связь от родительского узла
-              const connectionFromSource = connections.find(conn => conn.source === sourceNodeForRedirect.id);
-              if (connectionFromSource) {
-                shouldRedirect = true;
-                redirectTarget = connectionFromSource.target;
-              }
-            }
-          }
+          // ИСПРАВЛЕНИЕ: Правильная переадресация к целевому узлу
+          // Кнопка должна вести к узлу, указанному в её target
+          const shouldRedirect = true;
+          const redirectTarget = nodeId; // nodeId - это уже целевой узел кнопки
           
           if (shouldRedirect && redirectTarget) {
             code += '    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных\n';

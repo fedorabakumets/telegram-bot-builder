@@ -8,9 +8,16 @@ This application provides a visual Telegram bot builder, enabling users to creat
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (August 1, 2025)
+## Recent Changes (August 3, 2025)
 
-### Conditional Button Implementation
+### Major Bot Generator Fix - Callback Handler Implementation
+- **Critical Fix**: Resolved callback_data mismatch between button generation and handlers in conditional messages
+- **Root Cause**: Buttons generated callback_data with button.target (e.g., "vip_offers") but handlers expected button.id (e.g., "btn_catalog")
+- **Solution**: Added comprehensive collection of conditional message buttons and automatic handler generation
+- **Impact**: Fixed 31 buttons vs 38 handlers mismatch in "Interactive Shop with Conditional Messages" template
+- **Verification**: All VIP buttons and Personal Manager buttons now functional with proper callback handlers
+
+### Conditional Button Implementation (August 1, 2025)
 - **Fixed Conditional Buttons**: Conditional message buttons now function as actual answer choices that save to database
 - **Database Integration**: Conditional buttons use format `conditional_variableName_value` to save user selections
 - **Automatic Profile Updates**: After updating a variable via conditional button, profile command is automatically triggered
