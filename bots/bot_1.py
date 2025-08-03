@@ -561,6 +561,7 @@ async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел типа keyboard: catalog_main
     text = "📱 Выберите категорию товаров:"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -712,6 +713,7 @@ async def handle_callback_user_profile(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел типа keyboard: user_profile
     text = "👤 Профиль пользователя"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -916,6 +918,7 @@ async def handle_callback_shopping_cart(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел типа keyboard: shopping_cart
     text = "🛒 Ваша корзина пуста"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -1095,6 +1098,7 @@ async def handle_callback_support_center(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел типа keyboard: support_center
     text = """💬 Центр поддержки
 
 Выберите способ получения помощи:"""
@@ -1278,6 +1282,7 @@ async def handle_callback_electronics_category(callback_query: types.CallbackQue
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел типа keyboard: electronics_category
     text = "📱 Электроника - выберите подкатегорию:"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -1487,7 +1492,9 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел start: start_store
     text = "🛍️ Добро пожаловать в наш интернет-магазин!"
+    
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -1531,8 +1538,8 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     
     text = replace_variables_in_text(text, user_vars)
     
-    # Проверка условных сообщений для keyboard узла
-    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    # Проверка условных сообщений для start узла
+    user_data_dict = user_record if user_record else user_data.get(user_id, {})
     conditional_parse_mode = None
     conditional_keyboard = None
     # Функция для проверки переменных пользователя
@@ -1638,22 +1645,26 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         keyboard = conditional_keyboard
     else:
         keyboard = None
-    
-    # Проверяем, есть ли уже клавиатура из условных сообщений
-    if "keyboard" not in locals() or keyboard is None:
-        # Создаем inline клавиатуру
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для start узла
         builder = InlineKeyboardBuilder()
         builder.add(InlineKeyboardButton(text="📱 Каталог товаров", callback_data="catalog_main_btn_0"))
         builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="user_profile_btn_1"))
         builder.add(InlineKeyboardButton(text="🛒 Корзина", callback_data="shopping_cart_btn_2"))
         builder.add(InlineKeyboardButton(text="💬 Поддержка", callback_data="support_center_btn_3"))
         keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    # Отправляем сообщение start узла
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
 
 @dp.callback_query(lambda c: c.data == "smartphones_list")
 async def handle_callback_smartphones_list(callback_query: types.CallbackQuery):
@@ -1712,6 +1723,7 @@ async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел типа keyboard: catalog_main
     text = "📱 Выберите категорию товаров:"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -1908,7 +1920,9 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел start: start_store
     text = "🛍️ Добро пожаловать в наш интернет-магазин!"
+    
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -1952,8 +1966,8 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     
     text = replace_variables_in_text(text, user_vars)
     
-    # Проверка условных сообщений для keyboard узла
-    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    # Проверка условных сообщений для start узла
+    user_data_dict = user_record if user_record else user_data.get(user_id, {})
     conditional_parse_mode = None
     conditional_keyboard = None
     # Функция для проверки переменных пользователя
@@ -2059,22 +2073,26 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         keyboard = conditional_keyboard
     else:
         keyboard = None
-    
-    # Проверяем, есть ли уже клавиатура из условных сообщений
-    if "keyboard" not in locals() or keyboard is None:
-        # Создаем inline клавиатуру
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для start узла
         builder = InlineKeyboardBuilder()
         builder.add(InlineKeyboardButton(text="📱 Каталог товаров", callback_data="catalog_main_btn_0"))
         builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="user_profile_btn_1"))
         builder.add(InlineKeyboardButton(text="🛒 Корзина", callback_data="shopping_cart_btn_2"))
         builder.add(InlineKeyboardButton(text="💬 Поддержка", callback_data="support_center_btn_3"))
         keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    # Отправляем сообщение start узла
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
 
 @dp.callback_query(lambda c: c.data == "catalog_main")
 async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
@@ -2088,6 +2106,7 @@ async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел типа keyboard: catalog_main
     text = "📱 Выберите категорию товаров:"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -2254,7 +2273,9 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел start: start_store
     text = "🛍️ Добро пожаловать в наш интернет-магазин!"
+    
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -2298,8 +2319,8 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     
     text = replace_variables_in_text(text, user_vars)
     
-    # Проверка условных сообщений для keyboard узла
-    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    # Проверка условных сообщений для start узла
+    user_data_dict = user_record if user_record else user_data.get(user_id, {})
     conditional_parse_mode = None
     conditional_keyboard = None
     # Функция для проверки переменных пользователя
@@ -2405,22 +2426,26 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         keyboard = conditional_keyboard
     else:
         keyboard = None
-    
-    # Проверяем, есть ли уже клавиатура из условных сообщений
-    if "keyboard" not in locals() or keyboard is None:
-        # Создаем inline клавиатуру
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для start узла
         builder = InlineKeyboardBuilder()
         builder.add(InlineKeyboardButton(text="📱 Каталог товаров", callback_data="catalog_main_btn_0"))
         builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="user_profile_btn_1"))
         builder.add(InlineKeyboardButton(text="🛒 Корзина", callback_data="shopping_cart_btn_2"))
         builder.add(InlineKeyboardButton(text="💬 Поддержка", callback_data="support_center_btn_3"))
         keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    # Отправляем сообщение start узла
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
 
 @dp.callback_query(lambda c: c.data == "faq")
 async def handle_callback_faq(callback_query: types.CallbackQuery):
@@ -2479,7 +2504,9 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел start: start_store
     text = "🛍️ Добро пожаловать в наш интернет-магазин!"
+    
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -2523,8 +2550,8 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     
     text = replace_variables_in_text(text, user_vars)
     
-    # Проверка условных сообщений для keyboard узла
-    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    # Проверка условных сообщений для start узла
+    user_data_dict = user_record if user_record else user_data.get(user_id, {})
     conditional_parse_mode = None
     conditional_keyboard = None
     # Функция для проверки переменных пользователя
@@ -2630,22 +2657,26 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         keyboard = conditional_keyboard
     else:
         keyboard = None
-    
-    # Проверяем, есть ли уже клавиатура из условных сообщений
-    if "keyboard" not in locals() or keyboard is None:
-        # Создаем inline клавиатуру
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для start узла
         builder = InlineKeyboardBuilder()
         builder.add(InlineKeyboardButton(text="📱 Каталог товаров", callback_data="catalog_main_btn_0"))
         builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="user_profile_btn_1"))
         builder.add(InlineKeyboardButton(text="🛒 Корзина", callback_data="shopping_cart_btn_2"))
         builder.add(InlineKeyboardButton(text="💬 Поддержка", callback_data="support_center_btn_3"))
         keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    # Отправляем сообщение start узла
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
 
 @dp.callback_query(lambda c: c.data == "bonus_products")
 async def handle_callback_bonus_products(callback_query: types.CallbackQuery):
@@ -2704,7 +2735,9 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел start: start_store
     text = "🛍️ Добро пожаловать в наш интернет-магазин!"
+    
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -2748,8 +2781,8 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     
     text = replace_variables_in_text(text, user_vars)
     
-    # Проверка условных сообщений для keyboard узла
-    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    # Проверка условных сообщений для start узла
+    user_data_dict = user_record if user_record else user_data.get(user_id, {})
     conditional_parse_mode = None
     conditional_keyboard = None
     # Функция для проверки переменных пользователя
@@ -2855,22 +2888,26 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         keyboard = conditional_keyboard
     else:
         keyboard = None
-    
-    # Проверяем, есть ли уже клавиатура из условных сообщений
-    if "keyboard" not in locals() or keyboard is None:
-        # Создаем inline клавиатуру
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для start узла
         builder = InlineKeyboardBuilder()
         builder.add(InlineKeyboardButton(text="📱 Каталог товаров", callback_data="catalog_main_btn_0"))
         builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="user_profile_btn_1"))
         builder.add(InlineKeyboardButton(text="🛒 Корзина", callback_data="shopping_cart_btn_2"))
         builder.add(InlineKeyboardButton(text="💬 Поддержка", callback_data="support_center_btn_3"))
         keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    # Отправляем сообщение start узла
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
 
 @dp.callback_query(lambda c: c.data == "weekly_new")
 async def handle_callback_weekly_new(callback_query: types.CallbackQuery):
@@ -2929,7 +2966,9 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Обрабатываем узел start: start_store
     text = "🛍️ Добро пожаловать в наш интернет-магазин!"
+    
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -2973,8 +3012,8 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
     
     text = replace_variables_in_text(text, user_vars)
     
-    # Проверка условных сообщений для keyboard узла
-    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})
+    # Проверка условных сообщений для start узла
+    user_data_dict = user_record if user_record else user_data.get(user_id, {})
     conditional_parse_mode = None
     conditional_keyboard = None
     # Функция для проверки переменных пользователя
@@ -3080,22 +3119,26 @@ async def handle_callback_start_store(callback_query: types.CallbackQuery):
         keyboard = conditional_keyboard
     else:
         keyboard = None
-    
-    # Проверяем, есть ли уже клавиатура из условных сообщений
-    if "keyboard" not in locals() or keyboard is None:
-        # Создаем inline клавиатуру
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для start узла
         builder = InlineKeyboardBuilder()
         builder.add(InlineKeyboardButton(text="📱 Каталог товаров", callback_data="catalog_main_btn_0"))
         builder.add(InlineKeyboardButton(text="👤 Мой профиль", callback_data="user_profile_btn_1"))
         builder.add(InlineKeyboardButton(text="🛒 Корзина", callback_data="shopping_cart_btn_2"))
         builder.add(InlineKeyboardButton(text="💬 Поддержка", callback_data="support_center_btn_3"))
         keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    # Отправляем сообщение start узла
     try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
 
 @dp.callback_query(lambda c: c.data == "catalog_main" or c.data.startswith("catalog_main_btn_"))
 async def handle_callback_catalog_main(callback_query: types.CallbackQuery):
