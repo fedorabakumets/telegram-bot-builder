@@ -2791,6 +2791,1006 @@ export async function seedDefaultTemplates(force = false) {
       }
     });
 
+    // Шаблон знакомств с многоуровневой навигацией (на основе предоставленного скрипта)
+    await storage.createBotTemplate({
+      name: "Бот знакомств с анкетой",
+      description: "Продвинутый бот для знакомств с детальной анкетой, многоуровневыми кнопками и сбором данных пользователя",
+      category: "community",
+      tags: ["знакомства", "анкета", "профиль", "многоуровневая навигация", "данные пользователя"],
+      isPublic: 1,
+      difficulty: "hard",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 9,
+      estimatedTime: 35,
+      data: {
+        nodes: [
+          {
+            id: "start_dating",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              description: "Начало регистрации в боте знакомств",
+              messageText: "🌟 Добро пожаловать в бот знакомств!\n\nЗдесь вы сможете найти интересных людей и новых друзей. Для начала нужно заполнить анкету.",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_start_profile",
+                  text: "📝 Создать анкету",
+                  action: "goto",
+                  target: "ask_join_chat"
+                },
+                {
+                  id: "btn_about",
+                  text: "ℹ️ О боте",
+                  action: "goto",
+                  target: "about_bot"
+                }
+              ]
+            }
+          },
+          {
+            id: "ask_join_chat",
+            type: "input",
+            position: { x: 400, y: 100 },
+            data: {
+              messageText: "💬 Хотите ли вы присоединиться к нашему чату знакомств?",
+              inputType: "buttons",
+              inputVariable: "хочет_в_чат",
+              inputPrompt: "Выберите ваш ответ:",
+              saveToDatabase: true,
+              buttonType: "reply",
+              responseOptions: [
+                { text: "Да 😎", value: "да" },
+                { text: "Нет 🙅", value: "нет" }
+              ],
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn_yes_chat",
+                  text: "Да 😎",
+                  action: "goto",
+                  target: "ask_gender"
+                },
+                {
+                  id: "btn_no_chat", 
+                  text: "Нет 🙅",
+                  action: "goto",
+                  target: "ask_gender"
+                }
+              ]
+            }
+          },
+          {
+            id: "ask_gender",
+            type: "input",
+            position: { x: 700, y: 100 },
+            data: {
+              messageText: "👤 Выберите ваш пол:",
+              inputType: "buttons",
+              inputVariable: "пол",
+              inputPrompt: "Укажите ваш пол:",
+              saveToDatabase: true,
+              buttonType: "reply",
+              responseOptions: [
+                { text: "Мужчина 👨", value: "мужчина" },
+                { text: "Женщина 👩", value: "женщина" }
+              ],
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn_male",
+                  text: "Мужчина 👨",
+                  action: "goto",
+                  target: "ask_name"
+                },
+                {
+                  id: "btn_female",
+                  text: "Женщина 👩", 
+                  action: "goto",
+                  target: "ask_name"
+                }
+              ]
+            }
+          },
+          {
+            id: "ask_name",
+            type: "input",
+            position: { x: 100, y: 300 },
+            data: {
+              messageText: "✏️ Как вас зовут?",
+              inputType: "text",
+              inputVariable: "имя",
+              inputPrompt: "Введите ваше имя:",
+              inputValidation: "text",
+              minLength: 2,
+              maxLength: 50,
+              inputRequired: true,
+              saveToDatabase: true,
+              inputSuccessMessage: "Отлично! Имя сохранено."
+            }
+          },
+          {
+            id: "ask_age",
+            type: "input",
+            position: { x: 400, y: 300 },
+            data: {
+              messageText: "🎂 Сколько вам лет?",
+              inputType: "number",
+              inputVariable: "возраст",
+              inputPrompt: "Введите ваш возраст (от 18 до 99):",
+              inputValidation: "number",
+              minLength: 18,
+              maxLength: 99,
+              inputRequired: true,
+              saveToDatabase: true,
+              inputSuccessMessage: "Возраст сохранен!"
+            }
+          },
+          {
+            id: "ask_metro",
+            type: "keyboard",
+            position: { x: 700, y: 300 },
+            data: {
+              messageText: "🚇 Выберите ближайшую станцию метро или ваше местоположение:",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn_red_line",
+                  text: "Красная ветка 🟥",
+                  action: "goto",
+                  target: "red_line_stations"
+                },
+                {
+                  id: "btn_blue_line",
+                  text: "Синяя ветка 🟦",
+                  action: "goto",
+                  target: "blue_line_stations"
+                },
+                {
+                  id: "btn_green_line",
+                  text: "Зелёная ветка 🟩",
+                  action: "goto",
+                  target: "green_line_stations"
+                },
+                {
+                  id: "btn_lo",
+                  text: "Я из ЛО 🏡",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_not_spb",
+                  text: "Я не в Питере 🌍",
+                  action: "goto",
+                  target: "ask_interests"
+                }
+              ]
+            }
+          },
+          {
+            id: "red_line_stations",
+            type: "keyboard",
+            position: { x: 100, y: 500 },
+            data: {
+              messageText: "🟥 Красная ветка - выберите станцию:",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn_red_1",
+                  text: "🟥 Девяткино",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_red_2",
+                  text: "🟥 Гражданский пр.",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_red_3",
+                  text: "🟥 Академическая",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_red_4",
+                  text: "🟥 Политехническая",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_red_5",
+                  text: "🟥 Площадь Мужества",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_red_6",
+                  text: "🟥 Лесная",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_back_metro",
+                  text: "Назад ⬅️",
+                  action: "goto",
+                  target: "ask_metro"
+                }
+              ]
+            }
+          },
+          {
+            id: "blue_line_stations",
+            type: "keyboard",
+            position: { x: 400, y: 500 },
+            data: {
+              messageText: "🟦 Синяя ветка - выберите станцию:",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn_blue_1",
+                  text: "🟦 Парнас",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_blue_2",
+                  text: "🟦 Проспект Просвещения",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_blue_3",
+                  text: "🟦 Озерки",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_blue_4",
+                  text: "🟦 Удельная",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_blue_5",
+                  text: "🟦 Пионерская",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_blue_6",
+                  text: "🟦 Чёрная речка",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_back_metro_blue",
+                  text: "Назад ⬅️", 
+                  action: "goto",
+                  target: "ask_metro"
+                }
+              ]
+            }
+          },
+          {
+            id: "green_line_stations",
+            type: "keyboard",
+            position: { x: 700, y: 500 },
+            data: {
+              messageText: "🟩 Зелёная ветка - выберите станцию:",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn_green_1",
+                  text: "🟩 Беговая",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_green_2",
+                  text: "🟩 Зенит",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_green_3",
+                  text: "🟩 Приморская",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_green_4",
+                  text: "🟩 Василеостровская",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_green_5",
+                  text: "🟩 Гостиный двор",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_green_6",
+                  text: "🟩 Маяковская",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_back_metro_green",
+                  text: "Назад ⬅️",
+                  action: "goto",
+                  target: "ask_metro"
+                }
+              ]
+            }
+          },
+          {
+            id: "ask_interests",
+            type: "keyboard",
+            position: { x: 100, y: 700 },
+            data: {
+              messageText: "🎯 Выберите ваши интересы.\n\nВы можете выбрать несколько категорий:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_sports_cat",
+                  text: "⚽ Спорт и активность",
+                  action: "goto",
+                  target: "sports_interests"
+                },
+                {
+                  id: "btn_culture_cat", 
+                  text: "🎨 Культура и искусство",
+                  action: "goto",
+                  target: "culture_interests"
+                },
+                {
+                  id: "btn_tech_cat",
+                  text: "💻 Технологии",
+                  action: "goto",
+                  target: "tech_interests"
+                },
+                {
+                  id: "btn_travel_cat",
+                  text: "✈️ Путешествия",
+                  action: "goto",
+                  target: "travel_interests"
+                },
+                {
+                  id: "btn_interests_done",
+                  text: "Готово ✅",
+                  action: "goto",
+                  target: "ask_marital_status"
+                }
+              ]
+            }
+          },
+          {
+            id: "sports_interests",
+            type: "keyboard",
+            position: { x: 400, y: 700 },
+            data: {
+              messageText: "⚽ Спорт и активность - выберите что вам интересно:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_sport_1",
+                  text: "⚽ Футбол",
+                  action: "command",
+                  target: "/save_interest_футбол"
+                },
+                {
+                  id: "btn_sport_2",
+                  text: "🏀 Баскетбол",
+                  action: "command",
+                  target: "/save_interest_баскетбол"
+                },
+                {
+                  id: "btn_sport_3",
+                  text: "🏊 Плавание",
+                  action: "command",
+                  target: "/save_interest_плавание"
+                },
+                {
+                  id: "btn_sport_4",
+                  text: "🏃 Бег",
+                  action: "command",
+                  target: "/save_interest_бег"
+                },
+                {
+                  id: "btn_sport_5",
+                  text: "🚴 Велоспорт",
+                  action: "command",
+                  target: "/save_interest_велоспорт"
+                },
+                {
+                  id: "btn_back_interests",
+                  text: "⬅️ К категориям",
+                  action: "goto",
+                  target: "ask_interests"
+                }
+              ]
+            }
+          },
+          {
+            id: "culture_interests",
+            type: "keyboard",
+            position: { x: 700, y: 700 },
+            data: {
+              messageText: "🎨 Культура и искусство - выберите что вам интересно:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_culture_1",
+                  text: "🎭 Театр",
+                  action: "command",
+                  target: "/save_interest_театр"
+                },
+                {
+                  id: "btn_culture_2",
+                  text: "🎬 Кино",
+                  action: "command",
+                  target: "/save_interest_кино"
+                },
+                {
+                  id: "btn_culture_3",
+                  text: "🎨 Живопись",
+                  action: "command",
+                  target: "/save_interest_живопись"
+                },
+                {
+                  id: "btn_culture_4",
+                  text: "📚 Литература",
+                  action: "command",
+                  target: "/save_interest_литература"
+                },
+                {
+                  id: "btn_culture_5",
+                  text: "🏛️ Музеи",
+                  action: "command",
+                  target: "/save_interest_музеи"
+                },
+                {
+                  id: "btn_back_interests_culture",
+                  text: "⬅️ К категориям",
+                  action: "goto",
+                  target: "ask_interests"
+                }
+              ]
+            }
+          },
+          {
+            id: "tech_interests", 
+            type: "keyboard",
+            position: { x: 1000, y: 700 },
+            data: {
+              messageText: "💻 Технологии - выберите что вам интересно:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_tech_1",
+                  text: "💻 Программирование",
+                  action: "command",
+                  target: "/save_interest_программирование"
+                },
+                {
+                  id: "btn_tech_2",
+                  text: "🎮 Игры",
+                  action: "command",
+                  target: "/save_interest_игры"
+                },
+                {
+                  id: "btn_tech_3",
+                  text: "🤖 ИИ и ML",
+                  action: "command",
+                  target: "/save_interest_ии"
+                },
+                {
+                  id: "btn_tech_4",
+                  text: "📱 Гаджеты",
+                  action: "command",
+                  target: "/save_interest_гаджеты"
+                },
+                {
+                  id: "btn_back_interests_tech",
+                  text: "⬅️ К категориям",
+                  action: "goto",
+                  target: "ask_interests"
+                }
+              ]
+            }
+          },
+          {
+            id: "travel_interests",
+            type: "keyboard",
+            position: { x: 1300, y: 700 },
+            data: {
+              messageText: "✈️ Путешествия - выберите что вам интересно:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_travel_1",
+                  text: "🏖️ Пляжный отдых",
+                  action: "command",
+                  target: "/save_interest_пляж"
+                },
+                {
+                  id: "btn_travel_2",
+                  text: "🏔️ Горы",
+                  action: "command",
+                  target: "/save_interest_горы"
+                },
+                {
+                  id: "btn_travel_3",
+                  text: "🏙️ Городские туры",
+                  action: "command",
+                  target: "/save_interest_города"
+                },
+                {
+                  id: "btn_travel_4",
+                  text: "🎒 Backpacking",
+                  action: "command",
+                  target: "/save_interest_backpacking"
+                },
+                {
+                  id: "btn_back_interests_travel",
+                  text: "⬅️ К категориям",
+                  action: "goto",
+                  target: "ask_interests"
+                }
+              ]
+            }
+          },
+          {
+            id: "ask_marital_status",
+            type: "input",
+            position: { x: 700, y: 900 },
+            data: {
+              messageText: "💕 Ваше семейное положение:",
+              inputType: "buttons",
+              inputVariable: "семейное_положение",
+              inputPrompt: "Выберите ваше семейное положение:",
+              saveToDatabase: true,
+              buttonType: "reply",
+              responseOptions: [
+                { text: "💔 Не в отношениях", value: "свободен" },
+                { text: "💑 В отношениях", value: "в_отношениях" },
+                { text: "💍 Женат/Замужем", value: "женат" },
+                { text: "🤐 Не скажу", value: "не_скажу" }
+              ],
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn_single",
+                  text: "💔 Не в отношениях",
+                  action: "goto",
+                  target: "ask_orientation"
+                },
+                {
+                  id: "btn_relationship",
+                  text: "💑 В отношениях",
+                  action: "goto",
+                  target: "ask_orientation"
+                },
+                {
+                  id: "btn_married",
+                  text: "💍 Женат/Замужем",
+                  action: "goto",
+                  target: "ask_orientation"
+                },
+                {
+                  id: "btn_no_tell",
+                  text: "🤐 Не скажу",
+                  action: "goto",
+                  target: "ask_orientation"
+                }
+              ]
+            }
+          },
+          {
+            id: "ask_orientation",
+            type: "input", 
+            position: { x: 1000, y: 900 },
+            data: {
+              messageText: "🏳️‍🌈 Ваша ориентация:",
+              inputType: "buttons",
+              inputVariable: "ориентация",
+              inputPrompt: "Выберите вашу ориентацию:",
+              saveToDatabase: true,
+              buttonType: "reply",
+              responseOptions: [
+                { text: "👫 Гетеро", value: "гетеро" },
+                { text: "🏳️‍🌈 Гомо", value: "гомо" },
+                { text: "💙💜💖 Би", value: "би" },
+                { text: "🤐 Не скажу", value: "не_скажу" }
+              ],
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn_hetero",
+                  text: "👫 Гетеро",
+                  action: "goto",
+                  target: "profile_complete"
+                },
+                {
+                  id: "btn_homo",
+                  text: "🏳️‍🌈 Гомо",
+                  action: "goto",
+                  target: "profile_complete"
+                },
+                {
+                  id: "btn_bi",
+                  text: "💙💜💖 Би",
+                  action: "goto",
+                  target: "profile_complete"
+                },
+                {
+                  id: "btn_no_tell_orient",
+                  text: "🤐 Не скажу",
+                  action: "goto",
+                  target: "profile_complete"
+                }
+              ]
+            }
+          },
+          {
+            id: "profile_complete",
+            type: "message",
+            position: { x: 400, y: 1100 },
+            data: {
+              messageText: "🎉 Отлично! Ваша анкета заполнена!\n\n📊 Ваш профиль:\n👤 Имя: {имя}\n🎂 Возраст: {возраст}\n👫 Пол: {пол}\n🚇 Метро: {станция_метро}\n💕 Семейное положение: {семейное_положение}\n🏳️‍🌈 Ориентация: {ориентация}\n🎯 Интересы: {интересы}\n\nТеперь можете познакомиться с другими участниками!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_browse_profiles",
+                  text: "👀 Смотреть анкеты",
+                  action: "goto",
+                  target: "browse_profiles"
+                },
+                {
+                  id: "btn_edit_profile",
+                  text: "✏️ Редактировать профиль",
+                  action: "goto",
+                  target: "edit_profile_menu"
+                },
+                {
+                  id: "btn_my_profile",
+                  text: "📝 Моя анкета",
+                  action: "goto",
+                  target: "show_my_profile"
+                }
+              ]
+            }
+          },
+          {
+            id: "browse_profiles",
+            type: "message",
+            position: { x: 700, y: 1100 },
+            data: {
+              messageText: "👀 Просмотр анкет\n\n(Здесь будет система просмотра анкет других пользователей)",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_next_profile",
+                  text: "➡️ Следующая анкета",
+                  action: "goto",
+                  target: "browse_profiles"
+                },
+                {
+                  id: "btn_like_profile",
+                  text: "❤️ Нравится",
+                  action: "command",
+                  target: "/like_profile"
+                },
+                {
+                  id: "btn_back_main",
+                  text: "🏠 В главное меню",
+                  action: "goto",
+                  target: "profile_complete"
+                }
+              ]
+            }
+          },
+          {
+            id: "edit_profile_menu",
+            type: "keyboard",
+            position: { x: 1000, y: 1100 },
+            data: {
+              messageText: "✏️ Что хотите отредактировать?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_edit_name",
+                  text: "👤 Имя",
+                  action: "goto",
+                  target: "ask_name"
+                },
+                {
+                  id: "btn_edit_age",
+                  text: "🎂 Возраст",
+                  action: "goto",
+                  target: "ask_age"
+                },
+                {
+                  id: "btn_edit_metro",
+                  text: "🚇 Метро",
+                  action: "goto",
+                  target: "ask_metro"
+                },
+                {
+                  id: "btn_edit_interests",
+                  text: "🎯 Интересы",
+                  action: "goto",
+                  target: "ask_interests"
+                },
+                {
+                  id: "btn_edit_status",
+                  text: "💕 Семейное положение",
+                  action: "goto",
+                  target: "ask_marital_status"
+                },
+                {
+                  id: "btn_back_profile",
+                  text: "⬅️ Назад",
+                  action: "goto",
+                  target: "profile_complete"
+                }
+              ]
+            }
+          },
+          {
+            id: "show_my_profile",
+            type: "message",
+            position: { x: 1300, y: 1100 },
+            data: {
+              messageText: "📝 Ваша анкета:\n\n👤 Имя: {имя}\n🎂 Возраст: {возраст} лет\n👫 Пол: {пол}\n🚇 Ближайшее метро: {станция_метро}\n💕 Семейное положение: {семейное_положение}\n🏳️‍🌈 Ориентация: {ориентация}\n🎯 Интересы: {интересы}\n\n💬 Хочет в чат: {хочет_в_чат}",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_back_main_from_profile",
+                  text: "🏠 В главное меню",
+                  action: "goto",
+                  target: "profile_complete"
+                },
+                {
+                  id: "btn_edit_from_profile",
+                  text: "✏️ Редактировать",
+                  action: "goto",
+                  target: "edit_profile_menu"
+                }
+              ]
+            }
+          },
+          {
+            id: "about_bot",
+            type: "message",
+            position: { x: 100, y: 1300 },
+            data: {
+              messageText: "ℹ️ О боте знакомств\n\nЭтот бот поможет вам:\n• Создать подробную анкету\n• Найти людей с общими интересами\n• Познакомиться с интересными собеседниками\n• Присоединиться к чату знакомств\n\n🔒 Все ваши данные хранятся безопасно и используются только для поиска совместимых людей.\n\n👥 Присоединяйтесь к нашему сообществу!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_start_registration",
+                  text: "📝 Начать регистрацию",
+                  action: "goto",
+                  target: "ask_join_chat"
+                },
+                {
+                  id: "btn_back_start",
+                  text: "⬅️ Назад",
+                  action: "goto",
+                  target: "start_dating"
+                }
+              ]
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn_start_to_join",
+            source: "start_dating",
+            target: "ask_join_chat"
+          },
+          {
+            id: "conn_start_to_about",
+            source: "start_dating",
+            target: "about_bot"
+          },
+          {
+            id: "conn_about_to_join",
+            source: "about_bot",
+            target: "ask_join_chat"
+          },
+          {
+            id: "conn_join_to_gender",
+            source: "ask_join_chat",
+            target: "ask_gender"
+          },
+          {
+            id: "conn_gender_to_name",
+            source: "ask_gender",
+            target: "ask_name"
+          },
+          {
+            id: "conn_name_to_age",
+            source: "ask_name",
+            target: "ask_age"
+          },
+          {
+            id: "conn_age_to_metro",
+            source: "ask_age",
+            target: "ask_metro"
+          },
+          {
+            id: "conn_metro_to_red",
+            source: "ask_metro",
+            target: "red_line_stations"
+          },
+          {
+            id: "conn_metro_to_blue",
+            source: "ask_metro",
+            target: "blue_line_stations"
+          },
+          {
+            id: "conn_metro_to_green",
+            source: "ask_metro",
+            target: "green_line_stations"
+          },
+          {
+            id: "conn_metro_to_interests_direct",
+            source: "ask_metro",
+            target: "ask_interests"
+          },
+          {
+            id: "conn_red_to_interests",
+            source: "red_line_stations",
+            target: "ask_interests"
+          },
+          {
+            id: "conn_blue_to_interests", 
+            source: "blue_line_stations",
+            target: "ask_interests"
+          },
+          {
+            id: "conn_green_to_interests",
+            source: "green_line_stations",
+            target: "ask_interests"
+          },
+          {
+            id: "conn_red_back_to_metro",
+            source: "red_line_stations",
+            target: "ask_metro"
+          },
+          {
+            id: "conn_blue_back_to_metro",
+            source: "blue_line_stations",
+            target: "ask_metro"
+          },
+          {
+            id: "conn_green_back_to_metro",
+            source: "green_line_stations",
+            target: "ask_metro"
+          },
+          {
+            id: "conn_interests_to_sports",
+            source: "ask_interests",
+            target: "sports_interests"
+          },
+          {
+            id: "conn_interests_to_culture",
+            source: "ask_interests",
+            target: "culture_interests"
+          },
+          {
+            id: "conn_interests_to_tech",
+            source: "ask_interests",
+            target: "tech_interests"
+          },
+          {
+            id: "conn_interests_to_travel",
+            source: "ask_interests",
+            target: "travel_interests"
+          },
+          {
+            id: "conn_sports_back",
+            source: "sports_interests",
+            target: "ask_interests"
+          },
+          {
+            id: "conn_culture_back",
+            source: "culture_interests",
+            target: "ask_interests"
+          },
+          {
+            id: "conn_tech_back",
+            source: "tech_interests",
+            target: "ask_interests"
+          },
+          {
+            id: "conn_travel_back",
+            source: "travel_interests",
+            target: "ask_interests"
+          },
+          {
+            id: "conn_interests_to_marital",
+            source: "ask_interests",
+            target: "ask_marital_status"
+          },
+          {
+            id: "conn_marital_to_orientation",
+            source: "ask_marital_status",
+            target: "ask_orientation"
+          },
+          {
+            id: "conn_orientation_to_complete",
+            source: "ask_orientation",
+            target: "profile_complete"
+          },
+          {
+            id: "conn_complete_to_browse",
+            source: "profile_complete",
+            target: "browse_profiles"
+          },
+          {
+            id: "conn_complete_to_edit",
+            source: "profile_complete",
+            target: "edit_profile_menu"
+          },
+          {
+            id: "conn_complete_to_show",
+            source: "profile_complete",
+            target: "show_my_profile"
+          },
+          {
+            id: "conn_browse_back",
+            source: "browse_profiles",
+            target: "profile_complete"
+          },
+          {
+            id: "conn_edit_back",
+            source: "edit_profile_menu",
+            target: "profile_complete"
+          },
+          {
+            id: "conn_show_back",
+            source: "show_my_profile",
+            target: "profile_complete"
+          },
+          {
+            id: "conn_edit_to_name",
+            source: "edit_profile_menu",
+            target: "ask_name"
+          },
+          {
+            id: "conn_edit_to_age",
+            source: "edit_profile_menu",
+            target: "ask_age"
+          },
+          {
+            id: "conn_edit_to_metro",
+            source: "edit_profile_menu",
+            target: "ask_metro"
+          },
+          {
+            id: "conn_edit_to_interests",
+            source: "edit_profile_menu",
+            target: "ask_interests"
+          },
+          {
+            id: "conn_edit_to_marital",
+            source: "edit_profile_menu",
+            target: "ask_marital_status"
+          }
+        ]
+      }
+    });
+
     console.log('Базовые шаблоны успешно созданы');
   } catch (error) {
     console.error('Ошибка при создании шаблонов:', error);
