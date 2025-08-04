@@ -2050,20 +2050,9 @@ export function PropertiesPanel({
               </div>
             )}
 
-            {/* Continue Button for Multiple Selection */}
+            {/* Multiple Selection Settings */}
             {selectedNode.data.keyboardType !== 'none' && selectedNode.data.allowMultipleSelection && (
-              <div className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground">Кнопка завершения</Label>
-                <Input
-                  value={selectedNode.data.continueButtonText || 'Готово'}
-                  onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonText: e.target.value })}
-                  className="text-xs"
-                  placeholder="Готово"
-                />
-                <div className="text-xs text-muted-foreground">
-                  Эта кнопка появится для перехода к следующему узлу после выбора опций
-                </div>
-                
+              <div className="space-y-4">
                 {/* Variable Name for Saving Multiple Selection */}
                 <div className="space-y-2">
                   <Label className="text-xs font-medium text-muted-foreground">Имя переменной для сохранения множественного выбора</Label>
@@ -2077,6 +2066,20 @@ export function PropertiesPanel({
                     Выбранные опции будут сохранены в эту переменную через запятую.
                     <br />
                     <span className="text-amber-600 dark:text-amber-400">⚠️ Убедитесь, что имя не совпадает с переменными из "✨ Дополнительный сбор ответов"</span>
+                  </div>
+                </div>
+                
+                {/* Continue Button Configuration */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Кнопка завершения</Label>
+                  <Input
+                    value={selectedNode.data.continueButtonText || 'Готово'}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonText: e.target.value })}
+                    className="text-xs"
+                    placeholder="Готово"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Эта кнопка появится для перехода к следующему узлу после выбора опций
                   </div>
                 </div>
                 
