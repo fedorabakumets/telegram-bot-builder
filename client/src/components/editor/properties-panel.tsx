@@ -3525,23 +3525,7 @@ export function PropertiesPanel({
                     />
                   </div>
 
-                  {/* Save to Database */}
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
-                    <div className="flex-1">
-                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                        Запомнить ответ навсегда
-                      </Label>
-                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                        Ответ пользователя сохранится и будет доступен в статистике
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <Switch
-                        checked={selectedNode.data.saveToDatabase ?? false}
-                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { saveToDatabase: checked })}
-                      />
-                    </div>
-                  </div>
+
                 </div>
               )}
             </div>
