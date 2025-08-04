@@ -96,6 +96,11 @@
   /* Glass effect colors */
   --glass-bg: hsl(240, 10%, 10% / 0.8);
   --glass-border: hsl(240, 10%, 30% / 0.2);
+  
+  /* Switch colors for better visibility */
+  --switch-unchecked-bg: hsl(240, 8%, 25%);
+  --switch-unchecked-border: hsl(240, 10%, 40%);
+  --switch-unchecked-thumb: hsl(240, 5%, 60%);
 }
 
 @layer base {
@@ -120,6 +125,30 @@
   .bg-grid-small {
     background-image: radial-gradient(circle, hsl(var(--muted-foreground) / 0.3) 1px, transparent 1px);
     background-size: 20px 20px;
+  }
+  
+  /* Enhanced Switch visibility in dark theme */
+  .dark [data-state="unchecked"][role="switch"] {
+    background-color: var(--switch-unchecked-bg) !important;
+    border: 1px solid var(--switch-unchecked-border) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  .dark [data-state="unchecked"][role="switch"] > span {
+    background-color: var(--switch-unchecked-thumb) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+  }
+  
+  /* Hover effects for better interaction feedback */
+  .dark [data-state="unchecked"][role="switch"]:hover {
+    background-color: hsl(240, 8%, 30%) !important;
+    border-color: hsl(240, 10%, 50%) !important;
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+  
+  .dark [data-state="unchecked"][role="switch"]:hover > span {
+    background-color: hsl(240, 5%, 70%) !important;
   }
 
   .bg-grid-slate-200 {
