@@ -2088,38 +2088,41 @@ export function PropertiesPanel({
                     onValueChange={(value) => onNodeUpdate(selectedNode.id, { continueButtonTarget: value })}
                   >
                     <SelectTrigger className="text-xs">
-                      <SelectValue placeholder="Выберите узел" />
+                      <SelectValue placeholder="Выберите экран" />
                     </SelectTrigger>
                     <SelectContent>
                       {allNodes
                         .filter(node => node.id !== selectedNode.id)
                         .map((node) => {
-                          const nodeName = node.data.messageText || node.data.command || node.data.name || node.type;
-                          const iconClass = 
-                            node.type === 'start' ? 'fas fa-play text-green-400' :
-                            node.type === 'command' ? 'fas fa-terminal text-blue-400' :
-                            node.type === 'message' ? 'fas fa-comment text-yellow-400' :
-                            node.type === 'user-input' ? 'fas fa-keyboard text-purple-400' :
-                            node.type === 'media' ? 'fas fa-image text-pink-400' :
-                            node.type === 'animation' ? 'fas fa-play-circle text-green-400' : 'fas fa-cube text-gray-400';
+                          const nodeName = 
+                            node.type === 'start' ? node.data.command :
+                            node.type === 'command' ? node.data.command :
+                            node.type === 'message' ? 'Сообщение' :
+                            node.type === 'photo' ? 'Фото' :
+                            node.type === 'keyboard' ? 'Клавиатура' :
+                            node.type === 'condition' ? 'Условие' :
+                            node.type === 'input' ? 'Ввод' : 'Узел';
                           
                           return (
                             <SelectItem key={node.id} value={node.id}>
-                              <div className="flex items-center gap-2">
-                                <i className={`${iconClass} text-xs`}></i>
-                                <span>{nodeName} ({node.id})</span>
-                              </div>
+                              {nodeName} ({node.id})
                             </SelectItem>
                           );
                         })}
-                      
-                      {(!allNodes || allNodes.filter(node => node.id !== selectedNode.id).length === 0) && (
+                      {allNodes.filter(node => node.id !== selectedNode.id).length === 0 && (
                         <SelectItem value="no-nodes" disabled>
-                          Создайте другие узлы для выбора
+                          Создайте другие экраны для выбора
                         </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
+                  
+                  <Input
+                    value={selectedNode.data.continueButtonTarget || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonTarget: e.target.value })}
+                    className="text-xs"
+                    placeholder="Или введите ID вручную"
+                  />
                 </div>
               </div>
             )}
