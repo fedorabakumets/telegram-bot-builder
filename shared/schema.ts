@@ -261,7 +261,7 @@ export type UserBotData = typeof userBotData.$inferSelect;
 export const buttonSchema = z.object({
   id: z.string(),
   text: z.string(),
-  action: z.enum(['goto', 'command', 'url', 'contact', 'location']),
+  action: z.enum(['goto', 'command', 'url', 'contact', 'location', 'selection']),
   target: z.string().optional(),
   url: z.string().optional(),
   requestContact: z.boolean().optional(),
@@ -351,6 +351,9 @@ export const nodeSchema = z.object({
       url: z.string().optional()
     })).default([]), // Варианты ответов для кнопок
     allowMultipleSelection: z.boolean().default(false), // Разрешить множественный выбор
+    multiSelectVariable: z.string().optional(), // Имя переменной для сохранения множественного выбора
+    continueButtonText: z.string().optional(), // Текст кнопки завершения выбора
+    continueButtonTarget: z.string().optional(), // Узел для перехода после завершения выбора
     inputVariable: z.string().optional(), // Имя переменной для сохранения ответа
     inputPrompt: z.string().optional(), // Текст запроса ввода
     inputValidation: z.string().optional(), // Правило валидации (regex или описание)
@@ -387,7 +390,18 @@ export const nodeSchema = z.object({
     minLength: z.number().optional(), // Минимальная длина текста
     maxLength: z.number().optional(), // Максимальная длина текста
     placeholder: z.string().optional(), // Подсказка для ввода
-    defaultValue: z.string().optional() // Значение по умолчанию
+    defaultValue: z.string().optional(), // Значение по умолчанию
+    // Дополнительные поля для различных типов узлов
+    mimeType: z.string().optional(),
+    stickerSetName: z.string().optional(),
+    fileName: z.string().optional(),
+    city: z.string().optional(),
+    country: z.string().optional(),
+    enableTextInput: z.boolean().optional(),
+    name: z.string().optional(),
+    label: z.string().optional(),
+    resizeKeyboard: z.boolean().optional(),
+    oneTimeKeyboard: z.boolean().optional()
   }),
 });
 
