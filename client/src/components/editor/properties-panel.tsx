@@ -102,6 +102,64 @@ export function PropertiesPanel({
     return uniqueQuestions;
   }, [allNodes]);
 
+  // Extract all available variables for text insertion
+  const availableVariables = useMemo(() => {
+    const variables: Array<{name: string, nodeId: string, nodeType: string, description?: string}> = [];
+    
+    allNodes.forEach(node => {
+      // From user-input nodes
+      if (node.type === 'user-input' && node.data.inputVariable) {
+        variables.push({
+          name: node.data.inputVariable,
+          nodeId: node.id,
+          nodeType: 'user-input',
+          description: node.data.inputPrompt || `Пользовательский ввод из узла ${node.id}`
+        });
+      }
+      
+      // From any nodes with additional input collection that have inputVariable
+      if (node.data.collectUserInput && node.data.inputVariable) {
+        variables.push({
+          name: node.data.inputVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          description: `Данные из узла типа ${node.type}`
+        });
+      }
+
+      // From conditional messages with textInputVariable
+      if (node.data.conditionalMessages) {
+        node.data.conditionalMessages.forEach((condition: any) => {
+          if (condition.textInputVariable) {
+            variables.push({
+              name: condition.textInputVariable,
+              nodeId: node.id,
+              nodeType: 'conditional',
+              description: `Условный ввод: ${condition.messageText?.substring(0, 50) || 'Условное сообщение'}...`
+            });
+          }
+        });
+      }
+    });
+
+    // Add common bot variables
+    const commonVariables = [
+      { name: 'user_name', nodeId: 'system', nodeType: 'system', description: 'Имя пользователя' },
+      { name: 'user_id', nodeId: 'system', nodeType: 'system', description: 'ID пользователя в Telegram' },
+      { name: 'chat_id', nodeId: 'system', nodeType: 'system', description: 'ID чата' },
+      { name: 'bot_name', nodeId: 'system', nodeType: 'system', description: 'Имя бота' }
+    ];
+
+    variables.push(...commonVariables);
+    
+    // Remove duplicates by variable name
+    const uniqueVariables = variables.filter((variable, index, self) => 
+      index === self.findIndex(v => v.name === variable.name)
+    );
+    
+    return uniqueVariables;
+  }, [allNodes]);
+
   // Function to detect conflicts between conditional message rules
   const detectRuleConflicts = useMemo(() => {
     if (!selectedNode?.data.conditionalMessages) return [];
@@ -481,6 +539,7 @@ export function PropertiesPanel({
                     enableMarkdown={selectedNode.data.markdown}
                     onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
                     onFormatModeChange={(formatMode) => onNodeUpdate(selectedNode.id, { formatMode })}
+                    availableVariables={availableVariables}
                   />
                   <div className="text-xs text-muted-foreground mt-1">
                     Используется для меню команд в @BotFather
@@ -1950,6 +2009,7 @@ export function PropertiesPanel({
                   enableMarkdown={selectedNode.data.markdown}
                   onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
                   onFormatModeChange={(formatMode) => onNodeUpdate(selectedNode.id, { formatMode })}
+                  availableVariables={availableVariables}
                 />
               </div>
             </div>
@@ -2634,10 +2694,16 @@ export function PropertiesPanel({
                                   );
                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                 }}
-                                formatMode={condition.formatMode || 'text'}
                                 placeholder="Добро пожаловать обратно! Рады вас снова видеть."
-                                className="text-xs"
-                                rows={3}
+                                enableMarkdown={condition.formatMode === 'markdown'}
+                                onMarkdownToggle={(enabled) => {
+                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                  const updatedConditions = currentConditions.map(c => 
+                                    c.id === condition.id ? { ...c, formatMode: enabled ? 'markdown' : 'text' } : c
+                                  );
+                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                }}
+                                availableVariables={availableVariables}
                               />
                               
 

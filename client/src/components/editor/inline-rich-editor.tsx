@@ -18,9 +18,25 @@ import {
   RotateCcw,
   RotateCw,
   Copy,
-  Sparkles
+  Sparkles,
+  Plus
 } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+
+interface Variable {
+  name: string;
+  nodeId: string;
+  nodeType: string;
+  description?: string;
+}
 
 interface InlineRichEditorProps {
   value: string;
@@ -29,6 +45,7 @@ interface InlineRichEditorProps {
   enableMarkdown?: boolean;
   onMarkdownToggle?: (enabled: boolean) => void;
   onFormatModeChange?: (formatMode: 'html' | 'markdown' | 'none') => void;
+  availableVariables?: Variable[];
 }
 
 export function InlineRichEditor({
@@ -37,7 +54,8 @@ export function InlineRichEditor({
   placeholder = "Введите текст сообщения...",
   enableMarkdown = false,
   onMarkdownToggle,
-  onFormatModeChange
+  onFormatModeChange,
+  availableVariables = []
 }: InlineRichEditorProps) {
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
@@ -431,6 +449,66 @@ export function InlineRichEditor({
     }
   }, [toast]);
 
+  // Insert variable at cursor position
+  const insertVariable = useCallback((variableName: string) => {
+    if (!editorRef.current) return;
+    
+    saveToUndoStack();
+    setIsFormatting(true);
+    
+    const selection = window.getSelection();
+    if (!selection) {
+      setIsFormatting(false);
+      return;
+    }
+
+    try {
+      let range: Range;
+      
+      if (selection.rangeCount > 0) {
+        range = selection.getRangeAt(0);
+      } else {
+        // If no selection, create a range at the end of the content
+        range = document.createRange();
+        range.selectNodeContents(editorRef.current);
+        range.collapse(false);
+      }
+
+      // Create the variable placeholder text
+      const variableText = `{${variableName}}`;
+      const textNode = document.createTextNode(variableText);
+      
+      // Insert the variable
+      range.deleteContents();
+      range.insertNode(textNode);
+      
+      // Position cursor after the inserted variable
+      range.setStartAfter(textNode);
+      range.setEndAfter(textNode);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+      // Update the value
+      setTimeout(() => {
+        handleInput();
+        toast({
+          title: "Переменная добавлена",
+          description: `Переменная "${variableName}" вставлена в текст`,
+          variant: "default"
+        });
+      }, 0);
+      
+    } catch (e) {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось вставить переменную",
+        variant: "destructive"
+      });
+    }
+    
+    setTimeout(() => setIsFormatting(false), 100);
+  }, [saveToUndoStack, handleInput, toast]);
+
   return (
     <div className="space-y-3">
       {/* Toolbar */}
@@ -485,6 +563,65 @@ export function InlineRichEditor({
             <Copy className="h-3 w-3" />
           </Button>
         </div>
+        
+        {/* Variables Insert Button */}
+        {availableVariables.length > 0 && (
+          <>
+            <div className="h-4 w-px bg-border mx-1" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 gap-1"
+                  title="Вставить переменную"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span className="text-xs">Переменная</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="text-xs">
+                  Доступные переменные
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {availableVariables.map((variable, index) => (
+                  <DropdownMenuItem
+                    key={`${variable.nodeId}-${variable.name}-${index}`}
+                    onClick={() => insertVariable(variable.name)}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                          {`{${variable.name}}`}
+                        </code>
+                        <Badge variant="outline" className="text-xs h-4">
+                          {variable.nodeType === 'user-input' ? 'Ввод' : 
+                           variable.nodeType === 'start' ? 'Команда' :
+                           variable.nodeType === 'command' ? 'Команда' : 
+                           'Другое'}
+                        </Badge>
+                      </div>
+                      {variable.description && (
+                        <div className="text-xs text-muted-foreground">
+                          {variable.description}
+                        </div>
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+                {availableVariables.length === 0 && (
+                  <DropdownMenuItem disabled>
+                    <span className="text-xs text-muted-foreground">
+                      Нет доступных переменных
+                    </span>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
         
         <div className="flex-1" />
         
