@@ -1969,22 +1969,7 @@ export function PropertiesPanel({
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
-                      <div className="flex-1">
-                        <Label className="text-xs font-medium text-green-700 dark:text-green-300">
-                          Сохранить в базу данных
-                        </Label>
-                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                          Ответ будет сохранен в базе данных
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <Switch
-                          checked={selectedNode.data.saveToDatabase ?? false}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { saveToDatabase: checked })}
-                        />
-                      </div>
-                    </div>
+
                   </div>
                 </div>
               </div>
