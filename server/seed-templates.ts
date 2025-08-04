@@ -2795,7 +2795,7 @@ export async function seedDefaultTemplates(force = false) {
     await storage.createBotTemplate({
       name: "🌟 Полный бот знакомств с условиями",
       description: "Продвинутый шаблон бота знакомств с условными сообщениями, дополнительным сбором ответов и динамической логикой на основе возраста пользователя",
-      category: "social",
+      category: "community",
       tags: ["знакомства", "условные сообщения", "дополнительный сбор", "переменные"],
       isPublic: 1,
       difficulty: "hard",
@@ -3211,6 +3211,264 @@ export async function seedDefaultTemplates(force = false) {
           enableAdditionalDataCollection: true,
           enableConditionalMessages: true
         }
+      }
+    });
+
+    // Шаблон с множественным выбором интересов
+    await storage.createBotTemplate({
+      name: "Выбор интересов - множественный",
+      description: "Простой шаблон для сбора интересов пользователя с множественным выбором без input узлов",
+      category: "community",
+      tags: ["интересы", "множественный выбор", "inline", "простой"],
+      isPublic: 1,
+      difficulty: "easy",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 3,
+      estimatedTime: 10,
+      data: {
+        nodes: [
+          {
+            id: "start_interests",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              description: "Приветствие и начало выбора интересов",
+              messageText: "Привет! 👋\n\nДавай узнаем о твоих интересах. Выбери все, что тебе нравится:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multipleSelectionVariable: "интересы",
+              checkmarkSymbol: "✅",
+              buttons: [
+                {
+                  id: "btn_sports",
+                  text: "Спорт",
+                  buttonType: "option",
+                  action: "selection"
+                },
+                {
+                  id: "btn_music",
+                  text: "Музыка",
+                  buttonType: "option", 
+                  action: "selection"
+                },
+                {
+                  id: "btn_movies",
+                  text: "Кино",
+                  buttonType: "option",
+                  action: "selection"
+                },
+                {
+                  id: "btn_cooking",
+                  text: "Кулинария",
+                  buttonType: "option",
+                  action: "selection"
+                },
+                {
+                  id: "btn_travel",
+                  text: "Путешествия",
+                  buttonType: "option",
+                  action: "selection"
+                },
+                {
+                  id: "btn_reading",
+                  text: "Чтение",
+                  buttonType: "option",
+                  action: "selection"
+                },
+                {
+                  id: "btn_gaming",
+                  text: "Игры",
+                  buttonType: "option",
+                  action: "selection"
+                },
+                {
+                  id: "btn_art",
+                  text: "Искусство",
+                  buttonType: "option",
+                  action: "selection"
+                },
+                {
+                  id: "btn_complete",
+                  text: "Готово ✨",
+                  buttonType: "complete",
+                  action: "goto",
+                  target: "show_interests"
+                }
+              ]
+            }
+          },
+          {
+            id: "show_interests",
+            type: "message",
+            position: { x: 400, y: 100 },
+            data: {
+              messageText: "Отлично! 🎉\n\nТвои интересы: {интересы}\n\nТеперь я смогу подбирать для тебя более подходящий контент!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_change_interests",
+                  text: "🔄 Изменить интересы",
+                  action: "goto",
+                  target: "start_interests"
+                },
+                {
+                  id: "btn_profile",
+                  text: "👤 Мой профиль",
+                  action: "command",
+                  target: "/profile"
+                },
+                {
+                  id: "btn_recommendations",
+                  text: "💡 Рекомендации",
+                  action: "goto",
+                  target: "recommendations"
+                }
+              ]
+            }
+          },
+          {
+            id: "recommendations",
+            type: "message",
+            position: { x: 700, y: 100 },
+            data: {
+              messageText: "🎯 Рекомендации на основе твоих интересов:\n\n{интересы}\n\nВыбери категорию:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_content",
+                  text: "📱 Контент",
+                  action: "goto",
+                  target: "content_recommendations"
+                },
+                {
+                  id: "btn_events",
+                  text: "🎪 События",
+                  action: "goto", 
+                  target: "events_recommendations"
+                },
+                {
+                  id: "btn_people",
+                  text: "👥 Люди",
+                  action: "goto",
+                  target: "people_recommendations"
+                },
+                {
+                  id: "btn_back_main",
+                  text: "◀️ Главное меню",
+                  action: "goto",
+                  target: "show_interests"
+                }
+              ]
+            }
+          },
+          {
+            id: "content_recommendations",
+            type: "message",
+            position: { x: 1000, y: 50 },
+            data: {
+              messageText: "📱 Контент для тебя:\n\nОсновано на интересах: {интересы}\n\n• Подборка статей\n• Видео-рекомендации\n• Подкасты по теме",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_back_recommendations",
+                  text: "◀️ К рекомендациям",
+                  action: "goto",
+                  target: "recommendations"
+                }
+              ]
+            }
+          },
+          {
+            id: "events_recommendations",
+            type: "message",
+            position: { x: 1000, y: 150 },
+            data: {
+              messageText: "🎪 События для тебя:\n\nПо твоим интересам: {интересы}\n\n• Мероприятия в городе\n• Онлайн-встречи\n• Мастер-классы",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_back_recommendations_events",
+                  text: "◀️ К рекомендациям",
+                  action: "goto",
+                  target: "recommendations"
+                }
+              ]
+            }
+          },
+          {
+            id: "people_recommendations",
+            type: "message",
+            position: { x: 1000, y: 250 },
+            data: {
+              messageText: "👥 Люди с похожими интересами:\n\nВаши общие темы: {интересы}\n\n• Сообщества по интересам\n• Чаты для общения\n• Новые знакомства",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_back_recommendations_people",
+                  text: "◀️ К рекомендациям",
+                  action: "goto",
+                  target: "recommendations"
+                }
+              ]
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn_start_to_show",
+            source: "start_interests",
+            target: "show_interests"
+          },
+          {
+            id: "conn_show_to_start",
+            source: "show_interests",
+            target: "start_interests"
+          },
+          {
+            id: "conn_show_to_recommendations",
+            source: "show_interests",
+            target: "recommendations"
+          },
+          {
+            id: "conn_recommendations_to_content",
+            source: "recommendations",
+            target: "content_recommendations"
+          },
+          {
+            id: "conn_recommendations_to_events",
+            source: "recommendations",
+            target: "events_recommendations"
+          },
+          {
+            id: "conn_recommendations_to_people",
+            source: "recommendations",
+            target: "people_recommendations"
+          },
+          {
+            id: "conn_content_back",
+            source: "content_recommendations",
+            target: "recommendations"
+          },
+          {
+            id: "conn_events_back",
+            source: "events_recommendations", 
+            target: "recommendations"
+          },
+          {
+            id: "conn_people_back",
+            source: "people_recommendations",
+            target: "recommendations"
+          },
+          {
+            id: "conn_recommendations_back",
+            source: "recommendations",
+            target: "show_interests"
+          }
+        ]
       }
     });
 
