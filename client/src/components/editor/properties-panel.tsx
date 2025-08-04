@@ -2079,53 +2079,8 @@ export function PropertiesPanel({
                     placeholder="Готово"
                   />
                   <div className="text-xs text-muted-foreground">
-                    Эта кнопка появится для перехода к следующему узлу после выбора опций
+                    Текст кнопки для завершения множественного выбора и сохранения результата
                   </div>
-                </div>
-                
-                {/* Continue Button Target */}
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Куда переходить после завершения</Label>
-                  <Select
-                    value={selectedNode.data.continueButtonTarget || ''}
-                    onValueChange={(value) => onNodeUpdate(selectedNode.id, { continueButtonTarget: value })}
-                  >
-                    <SelectTrigger className="text-xs">
-                      <SelectValue placeholder="Выберите экран" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allNodes
-                        .filter(node => node.id !== selectedNode.id)
-                        .map((node) => {
-                          const nodeName = 
-                            node.type === 'start' ? node.data.command :
-                            node.type === 'command' ? node.data.command :
-                            node.type === 'message' ? 'Сообщение' :
-                            node.type === 'photo' ? 'Фото' :
-                            node.type === 'keyboard' ? 'Клавиатура' :
-                            node.type === 'condition' ? 'Условие' :
-                            node.type === 'input' ? 'Ввод' : 'Узел';
-                          
-                          return (
-                            <SelectItem key={node.id} value={node.id}>
-                              {nodeName} ({node.id})
-                            </SelectItem>
-                          );
-                        })}
-                      {allNodes.filter(node => node.id !== selectedNode.id).length === 0 && (
-                        <SelectItem value="no-nodes" disabled>
-                          Создайте другие экраны для выбора
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Input
-                    value={selectedNode.data.continueButtonTarget || ''}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonTarget: e.target.value })}
-                    className="text-xs"
-                    placeholder="Или введите ID вручную"
-                  />
                 </div>
               </div>
             )}
@@ -2176,7 +2131,7 @@ export function PropertiesPanel({
                               id: Date.now().toString(),
                               text: selectedNode.data.continueButtonText || 'Готово',
                               action: 'goto' as const,
-                              target: selectedNode.data.continueButtonTarget || '',
+                              target: '',
                               buttonType: 'complete' as const,
                             };
                             
