@@ -2147,26 +2147,48 @@ export function PropertiesPanel({
                       + Добавить кнопку
                     </UIButton>
                     {selectedNode.data.allowMultipleSelection && (
-                      <UIButton
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          const newButton = {
-                            id: Date.now().toString(),
-                            text: 'Новая опция',
-                            action: 'selection' as const,
-                            target: '',
-                          };
-                          
-                          // Добавляем новую кнопку к существующему массиву кнопок
-                          const currentButtons = selectedNode.data.buttons || [];
-                          const updatedButtons = [...currentButtons, newButton];
-                          onNodeUpdate(selectedNode.id, { buttons: updatedButtons });
-                        }}
-                        className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium h-auto p-1"
-                      >
-                        + Опция выбора
-                      </UIButton>
+                      <>
+                        <UIButton
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const newButton = {
+                              id: Date.now().toString(),
+                              text: 'Новая опция',
+                              action: 'selection' as const,
+                              target: '',
+                              buttonType: 'option' as const,
+                            };
+                            
+                            const currentButtons = selectedNode.data.buttons || [];
+                            const updatedButtons = [...currentButtons, newButton];
+                            onNodeUpdate(selectedNode.id, { buttons: updatedButtons });
+                          }}
+                          className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium h-auto p-1"
+                        >
+                          + Опция
+                        </UIButton>
+                        <UIButton
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const newButton = {
+                              id: Date.now().toString(),
+                              text: selectedNode.data.continueButtonText || 'Готово',
+                              action: 'goto' as const,
+                              target: selectedNode.data.continueButtonTarget || '',
+                              buttonType: 'complete' as const,
+                            };
+                            
+                            const currentButtons = selectedNode.data.buttons || [];
+                            const updatedButtons = [...currentButtons, newButton];
+                            onNodeUpdate(selectedNode.id, { buttons: updatedButtons });
+                          }}
+                          className="text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium h-auto p-1"
+                        >
+                          + Завершение
+                        </UIButton>
+                      </>
                     )}
                   </div>
                 </div>
@@ -2183,15 +2205,24 @@ export function PropertiesPanel({
                         />
                         <div className="flex items-center gap-2">
                           {/* Button Type Indicator */}
-                          {selectedNode.data.allowMultipleSelection && button.action === 'selection' && (
-                            <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded text-xs font-medium">
-                              Опция
-                            </div>
-                          )}
-                          {selectedNode.data.allowMultipleSelection && button.action !== 'selection' && (
-                            <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs font-medium">
-                              Кнопка
-                            </div>
+                          {selectedNode.data.allowMultipleSelection && (
+                            <>
+                              {button.buttonType === 'option' && (
+                                <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded text-xs font-medium">
+                                  Опция
+                                </div>
+                              )}
+                              {button.buttonType === 'complete' && (
+                                <div className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded text-xs font-medium">
+                                  Завершение
+                                </div>
+                              )}
+                              {button.buttonType === 'normal' && (
+                                <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs font-medium">
+                                  Обычная
+                                </div>
+                              )}
+                            </>
                           )}
                           <UIButton
                             size="sm"
@@ -2211,12 +2242,26 @@ export function PropertiesPanel({
                         <div className="mb-3">
                           <Label className="text-xs font-medium text-muted-foreground mb-2 block">Тип кнопки</Label>
                           <Select
-                            value={button.action === 'selection' ? 'selection' : 'regular'}
-                            onValueChange={(value) => {
-                              if (value === 'selection') {
-                                onButtonUpdate(selectedNode.id, button.id, { action: 'selection', target: '' });
+                            value={button.buttonType || 'normal'}
+                            onValueChange={(value: 'normal' | 'option' | 'complete') => {
+                              if (value === 'option') {
+                                onButtonUpdate(selectedNode.id, button.id, { 
+                                  buttonType: 'option', 
+                                  action: 'selection', 
+                                  target: '' 
+                                });
+                              } else if (value === 'complete') {
+                                onButtonUpdate(selectedNode.id, button.id, { 
+                                  buttonType: 'complete', 
+                                  action: 'goto', 
+                                  target: selectedNode.data.continueButtonTarget || '' 
+                                });
                               } else {
-                                onButtonUpdate(selectedNode.id, button.id, { action: 'goto', target: '' });
+                                onButtonUpdate(selectedNode.id, button.id, { 
+                                  buttonType: 'normal', 
+                                  action: 'goto', 
+                                  target: '' 
+                                });
                               }
                             }}
                           >
@@ -2224,16 +2269,22 @@ export function PropertiesPanel({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="selection">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                  <span>Опция для множественного выбора</span>
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="regular">
+                              <SelectItem value="normal">
                                 <div className="flex items-center gap-2">
                                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                                  <span>Обычная кнопка (переход/команда/ссылка)</span>
+                                  <span>Обычная кнопка</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="option">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                  <span>Опция для выбора</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="complete">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                                  <span>Кнопка завершения</span>
                                 </div>
                               </SelectItem>
                             </SelectContent>
@@ -2241,7 +2292,7 @@ export function PropertiesPanel({
                         </div>
                       )}
                       {/* Action Selection - Show for normal buttons or non-multiple-selection modes */}
-                      {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && (
+                      {(!selectedNode.data.allowMultipleSelection || (button.buttonType !== 'option' && button.buttonType !== 'complete')) && (
                         <Select
                           value={button.action}
                           onValueChange={(value: 'goto' | 'command' | 'url') =>
@@ -2259,19 +2310,48 @@ export function PropertiesPanel({
                         </Select>
                       )}
                       
-                      {/* Multiple Selection Info - Show only for selection buttons */}
-                      {selectedNode.data.allowMultipleSelection && button.action === 'selection' && (
-                        <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/40 rounded-lg p-2 mt-2">
-                          <div className="text-xs text-green-700 dark:text-green-300 font-medium">
-                            Опция для множественного выбора
-                          </div>
-                          <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                            {selectedNode.data.keyboardType === 'inline' 
-                              ? 'При нажатии на кнопку появится галочка ✅'
-                              : 'После выбора покажется новое сообщение с обновленной клавиатурой'
-                            }
-                          </div>
-                        </div>
+                      {/* Button Type Info Blocks */}
+                      {selectedNode.data.allowMultipleSelection && (
+                        <>
+                          {/* Option Button Info */}
+                          {button.buttonType === 'option' && (
+                            <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/40 rounded-lg p-2 mt-2">
+                              <div className="text-xs text-green-700 dark:text-green-300 font-medium">
+                                Опция для выбора
+                              </div>
+                              <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                                {selectedNode.data.keyboardType === 'inline' 
+                                  ? 'При нажатии появится галочка ✅'
+                                  : 'После выбора покажется обновленная клавиатура'
+                                }
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Complete Button Info */}
+                          {button.buttonType === 'complete' && (
+                            <div className="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/40 dark:border-purple-800/40 rounded-lg p-2 mt-2">
+                              <div className="text-xs text-purple-700 dark:text-purple-300 font-medium">
+                                Кнопка завершения
+                              </div>
+                              <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                                Сохраняет выбранные опции и переходит к следующему экрану
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Normal Button Info */}
+                          {button.buttonType === 'normal' && (
+                            <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/40 dark:border-blue-800/40 rounded-lg p-2 mt-2">
+                              <div className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                                Обычная кнопка
+                              </div>
+                              <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                Работает как обычная кнопка навигации или команда
+                              </div>
+                            </div>
+                          )}
+                        </>
                       )}
                       
                       {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'url' && (

@@ -266,6 +266,7 @@ export const buttonSchema = z.object({
   url: z.string().optional(),
   requestContact: z.boolean().optional(),
   requestLocation: z.boolean().optional(),
+  buttonType: z.enum(['normal', 'option', 'complete']).default('normal'),
 });
 
 export const nodeSchema = z.object({
