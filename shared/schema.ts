@@ -402,7 +402,9 @@ export const nodeSchema = z.object({
     name: z.string().optional(),
     label: z.string().optional(),
     resizeKeyboard: z.boolean().optional(),
-    oneTimeKeyboard: z.boolean().optional()
+    oneTimeKeyboard: z.boolean().optional(),
+    checkmarkSymbol: z.string().optional(),
+    multiSelectCheckmark: z.string().optional()
   }),
 });
 

@@ -8,7 +8,23 @@ This application provides a visual Telegram bot builder, enabling users to creat
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (August 3, 2025)
+## Recent Changes (August 4, 2025)
+
+### Multiple Selection Button Types Implementation (August 4, 2025)
+- **Feature Added**: Comprehensive multiple selection functionality for keyboard buttons
+- **Button Types System**: Three distinct button types:
+  - 🔵 **Normal** - Standard navigation/command buttons
+  - 🟢 **Option** - Multiple selection choices with visual checkmarks
+  - 🟣 **Complete** - Finish selection and save results
+- **Customizable Checkmark Symbol**: Users can configure custom symbols (✅, ⭐, 🔥, etc.) for selected options
+- **Variable Storage**: Selected options automatically saved to specified variable (comma-separated format)
+- **Visual Indicators**: Color-coded button type badges and informational help blocks
+- **Quick Creation**: Dedicated buttons for adding different button types
+- **Technical Implementation**: 
+  - Added `buttonType` field to button schema with enum validation
+  - Added `checkmarkSymbol` configuration field
+  - Enhanced properties panel with intuitive type selection interface
+  - Removed redundant global settings in favor of per-button configuration
 
 ### Critical Text Input Transition Fix (August 3, 2025 - 19:02)
 - **Problem Resolved**: Fixed navigation after text-saving nodes (start_node → --2N9FeeykMHVVlsVnSQW)

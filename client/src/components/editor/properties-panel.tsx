@@ -2069,6 +2069,20 @@ export function PropertiesPanel({
                   </div>
                 </div>
                 
+                {/* Checkmark Symbol Configuration */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Символ отметки</Label>
+                  <Input
+                    value={selectedNode.data.checkmarkSymbol || '✅'}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { checkmarkSymbol: e.target.value })}
+                    className="text-xs"
+                    placeholder="✅"
+                    maxLength={3}
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Символ, который будет показываться рядом с выбранными опциями
+                  </div>
+                </div>
 
               </div>
             )}
@@ -2264,7 +2278,7 @@ export function PropertiesPanel({
                               </div>
                               <div className="text-xs text-green-600 dark:text-green-400 mt-1">
                                 {selectedNode.data.keyboardType === 'inline' 
-                                  ? 'При нажатии появится галочка ✅'
+                                  ? `При нажатии появится отметка ${selectedNode.data.checkmarkSymbol || '✅'}`
                                   : 'После выбора покажется обновленная клавиатура'
                                 }
                               </div>
