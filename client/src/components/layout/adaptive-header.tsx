@@ -148,10 +148,6 @@ export function AdaptiveHeader({
       )}
       
       <ThemeToggle />
-      
-      <button className={`${isCompact ? 'w-6 h-6' : 'w-8 h-8'} bg-muted hover:bg-muted/80 rounded-full flex items-center justify-center transition-colors`}>
-        <i className={`fas fa-user text-muted-foreground ${isCompact ? 'text-xs' : 'text-sm'}`}></i>
-      </button>
     </div>
   );
 
