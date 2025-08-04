@@ -60,7 +60,27 @@ export function AdaptiveHeader({
   // Компонент навигации
   const Navigation = () => (
     <nav className={`flex ${isVertical ? 'flex-col space-y-1 px-2' : 'items-center space-x-1'}`}>
-      
+      {[
+        { key: 'editor', label: 'Редактор' },
+        { key: 'preview', label: 'Превью' },
+        { key: 'export', label: 'Экспорт' },
+        { key: 'bot', label: 'Бот' },
+        { key: 'connections', label: 'Связи' },
+        { key: 'database', label: 'База данных' },
+        { key: 'responses', label: 'Ответы' }
+      ].map((tab) => (
+        <button 
+          key={tab.key}
+          onClick={() => onTabChange(tab.key as any)}
+          className={`${isCompact ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm'} font-medium rounded-md transition-colors ${
+            currentTab === tab.key 
+              ? 'text-primary bg-primary/10' 
+              : 'text-muted-foreground hover:bg-muted'
+          } ${isVertical ? 'w-full text-left' : ''}`}
+        >
+          {isVertical && isCompact ? tab.label.substring(0, 3) : tab.label}
+        </button>
+      ))}
     </nav>
   );
 
