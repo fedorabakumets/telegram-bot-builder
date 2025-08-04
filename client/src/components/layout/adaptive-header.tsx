@@ -66,7 +66,6 @@ export function AdaptiveHeader({
         { key: 'export', label: 'Экспорт' },
         { key: 'bot', label: 'Бот' },
         { key: 'connections', label: 'Связи' },
-        { key: 'database', label: 'База данных' },
         { key: 'responses', label: 'Ответы' }
       ].map((tab) => (
         <button 
