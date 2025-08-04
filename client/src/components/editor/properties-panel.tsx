@@ -2069,20 +2069,7 @@ export function PropertiesPanel({
                   </div>
                 </div>
                 
-                {/* Checkmark Symbol Configuration */}
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Символ отметки</Label>
-                  <Input
-                    value={selectedNode.data.checkmarkSymbol || '✅'}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { checkmarkSymbol: e.target.value })}
-                    className="text-xs"
-                    placeholder="✅"
-                    maxLength={3}
-                  />
-                  <div className="text-xs text-muted-foreground">
-                    Символ, который будет показываться рядом с выбранными опциями
-                  </div>
-                </div>
+
 
               </div>
             )}
@@ -2272,16 +2259,30 @@ export function PropertiesPanel({
                         <>
                           {/* Option Button Info */}
                           {button.buttonType === 'option' && (
-                            <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/40 rounded-lg p-2 mt-2">
+                            <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/40 rounded-lg p-2 mt-2 space-y-2">
                               <div className="text-xs text-green-700 dark:text-green-300 font-medium">
                                 Опция для выбора
                               </div>
-                              <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                              <div className="text-xs text-green-600 dark:text-green-400">
                                 {selectedNode.data.keyboardType === 'inline' 
                                   ? `При нажатии появится отметка ${selectedNode.data.checkmarkSymbol || '✅'}`
                                   : 'После выбора покажется обновленная клавиатура'
                                 }
                               </div>
+                              
+                              {/* Checkmark Symbol Input */}
+                              {selectedNode.data.keyboardType === 'inline' && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs font-medium text-green-700 dark:text-green-300">Символ отметки</Label>
+                                  <Input
+                                    value={selectedNode.data.checkmarkSymbol || '✅'}
+                                    onChange={(e) => onNodeUpdate(selectedNode.id, { checkmarkSymbol: e.target.value })}
+                                    className="text-xs bg-white dark:bg-green-950/30 border-green-300 dark:border-green-700"
+                                    placeholder="✅"
+                                    maxLength={3}
+                                  />
+                                </div>
+                              )}
                             </div>
                           )}
                           
