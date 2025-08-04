@@ -3335,7 +3335,7 @@ export async function seedDefaultTemplates(force = false) {
             type: "message",
             position: { x: 700, y: 100 },
             data: {
-              messageText: "🎯 Рекомендации на основе твоих интересов:\n\n{интересы}\n\nВыбери категорию:",
+              messageText: "🎯 Персональные рекомендации\n\nВаши интересы: {интересы}\n\nВыберите что вас интересует:",
               keyboardType: "inline",
               buttons: [
                 {
@@ -3352,15 +3352,123 @@ export async function seedDefaultTemplates(force = false) {
                 },
                 {
                   id: "btn_people",
-                  text: "👥 Люди",
+                  text: "👥 Сообщества",
                   action: "goto",
                   target: "people_recommendations"
                 },
                 {
                   id: "btn_back_main",
-                  text: "◀️ Главное меню",
+                  text: "◀️ Назад",
                   action: "goto",
                   target: "show_interests"
+                }
+              ],
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "sports_fan",
+                  condition: "user_data_contains",
+                  variableName: "интересы",
+                  variableValue: "Спорт",
+                  messageText: "⚽ Спортивные рекомендации\n\nВы выбрали: {интересы}\n\n🏃‍♂️ Специально для любителей спорта:",
+                  priority: 20,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_sports_news",
+                      text: "📰 Спортивные новости",
+                      action: "goto",
+                      target: "sports_content"
+                    },
+                    {
+                      id: "btn_training",
+                      text: "💪 Тренировки",
+                      action: "goto",
+                      target: "training_content"
+                    },
+                    {
+                      id: "btn_sports_events",
+                      text: "🏆 Спортивные события",
+                      action: "goto",
+                      target: "sports_events"
+                    },
+                    {
+                      id: "btn_back_rec",
+                      text: "◀️ Назад",
+                      action: "goto",
+                      target: "show_interests"
+                    }
+                  ]
+                },
+                {
+                  id: "creative_person",
+                  condition: "user_data_contains_any",
+                  variableName: "интересы",
+                  variableValue: "Искусство,Музыка",
+                  messageText: "🎨 Творческие рекомендации\n\nВы выбрали: {интересы}\n\n✨ Специально для творческих людей:",
+                  priority: 18,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_art_galleries",
+                      text: "🖼️ Галереи и выставки",
+                      action: "goto",
+                      target: "art_events"
+                    },
+                    {
+                      id: "btn_concerts",
+                      text: "🎵 Концерты и фестивали",
+                      action: "goto", 
+                      target: "music_events"
+                    },
+                    {
+                      id: "btn_creative_courses",
+                      text: "🎭 Творческие курсы",
+                      action: "goto",
+                      target: "creative_courses"
+                    },
+                    {
+                      id: "btn_back_creative",
+                      text: "◀️ Назад",
+                      action: "goto",
+                      target: "show_interests"
+                    }
+                  ]
+                },
+                {
+                  id: "home_person",
+                  condition: "user_data_contains_any",
+                  variableName: "интересы", 
+                  variableValue: "Кулинария,Чтение",
+                  messageText: "🏠 Уютные рекомендации\n\nВы выбрали: {интересы}\n\n☕ Для любителей домашнего уюта:",
+                  priority: 16,
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn_recipes",
+                      text: "🍳 Рецепты и кулинария",
+                      action: "goto",
+                      target: "cooking_content"
+                    },
+                    {
+                      id: "btn_books",
+                      text: "📚 Книжные рекомендации",
+                      action: "goto",
+                      target: "reading_content"
+                    },
+                    {
+                      id: "btn_home_events",
+                      text: "🏡 Домашние активности",
+                      action: "goto",
+                      target: "home_activities"
+                    },
+                    {
+                      id: "btn_back_home",
+                      text: "◀️ Назад",
+                      action: "goto",
+                      target: "show_interests"
+                    }
+                  ]
                 }
               ]
             }
@@ -3404,12 +3512,63 @@ export async function seedDefaultTemplates(force = false) {
             type: "message",
             position: { x: 1000, y: 250 },
             data: {
-              messageText: "👥 Люди с похожими интересами:\n\nВаши общие темы: {интересы}\n\n• Сообщества по интересам\n• Чаты для общения\n• Новые знакомства",
+              messageText: "👥 Сообщества по интересам:\n\nВаши темы: {интересы}\n\n• Чаты для общения\n• Тематические группы\n• Новые знакомства",
               keyboardType: "inline",
               buttons: [
                 {
                   id: "btn_back_recommendations_people",
                   text: "◀️ К рекомендациям",
+                  action: "goto",
+                  target: "recommendations"
+                }
+              ]
+            }
+          },
+          {
+            id: "sports_content",
+            type: "message",
+            position: { x: 1300, y: 50 },
+            data: {
+              messageText: "📰 Спортивные новости\n\n⚽ Последние новости спорта\n🏀 Результаты матчей\n🏆 Турнирные таблицы",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_back_sports",
+                  text: "◀️ Назад к спорту",
+                  action: "goto",
+                  target: "recommendations"
+                }
+              ]
+            }
+          },
+          {
+            id: "art_events",
+            type: "message",
+            position: { x: 1300, y: 150 },
+            data: {
+              messageText: "🖼️ Культурные события\n\n🎨 Выставки в галереях\n🏛️ Музейные экспозиции\n🎭 Театральные премьеры",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_back_art",
+                  text: "◀️ Назад к творчеству",
+                  action: "goto",
+                  target: "recommendations"
+                }
+              ]
+            }
+          },
+          {
+            id: "cooking_content",
+            type: "message",
+            position: { x: 1300, y: 250 },
+            data: {
+              messageText: "🍳 Кулинарные рецепты\n\n👨‍🍳 Рецепты от шеф-поваров\n🥘 Блюда разных кухонь\n📚 Кулинарные советы",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn_back_cooking",
+                  text: "◀️ Назад к уюту",
                   action: "goto",
                   target: "recommendations"
                 }
@@ -3467,6 +3626,36 @@ export async function seedDefaultTemplates(force = false) {
             id: "conn_recommendations_back",
             source: "recommendations",
             target: "show_interests"
+          },
+          {
+            id: "conn_sports_content",
+            source: "recommendations",
+            target: "sports_content"
+          },
+          {
+            id: "conn_art_events",
+            source: "recommendations",
+            target: "art_events"
+          },
+          {
+            id: "conn_cooking_content",
+            source: "recommendations",
+            target: "cooking_content"
+          },
+          {
+            id: "conn_sports_back",
+            source: "sports_content",
+            target: "recommendations"
+          },
+          {
+            id: "conn_art_back",
+            source: "art_events",
+            target: "recommendations"
+          },
+          {
+            id: "conn_cooking_back",
+            source: "cooking_content",
+            target: "recommendations"
           }
         ]
       }
