@@ -2021,19 +2021,142 @@ export function PropertiesPanel({
               </Select>
             </div>
 
+            {/* Multiple Selection Setting */}
+            {selectedNode.data.keyboardType !== 'none' && (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
+                <div className="flex-1">
+                  <Label className="text-xs font-medium text-foreground">
+                    Множественный выбор
+                  </Label>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {selectedNode.data.keyboardType === 'inline' 
+                      ? 'Кнопки не переходят к другому узлу, а отмечаются галочкой'
+                      : 'После каждого выбора показывается новое сообщение с обновленной клавиатурой'
+                    }
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <Switch
+                    checked={selectedNode.data.allowMultipleSelection ?? false}
+                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { allowMultipleSelection: checked })}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Continue Button for Multiple Selection */}
+            {selectedNode.data.keyboardType !== 'none' && selectedNode.data.allowMultipleSelection && (
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">Кнопка завершения</Label>
+                <Input
+                  value={selectedNode.data.continueButtonText || 'Готово'}
+                  onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonText: e.target.value })}
+                  className="text-xs"
+                  placeholder="Готово"
+                />
+                <div className="text-xs text-muted-foreground">
+                  Эта кнопка появится для перехода к следующему узлу после выбора опций
+                </div>
+                
+                {/* Variable Name for Saving Multiple Selection */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Имя переменной для сохранения множественного выбора</Label>
+                  <Input
+                    value={selectedNode.data.multiSelectVariable || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { multiSelectVariable: e.target.value })}
+                    className="text-xs"
+                    placeholder="выбранные_опции"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Выбранные опции будут сохранены в эту переменную через запятую.
+                    <br />
+                    <span className="text-amber-600 dark:text-amber-400">⚠️ Убедитесь, что имя не совпадает с переменными из "✨ Дополнительный сбор ответов"</span>
+                  </div>
+                </div>
+                
+                {/* Continue Button Target */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">Куда переходить после завершения</Label>
+                  <Select
+                    value={selectedNode.data.continueButtonTarget || ''}
+                    onValueChange={(value) => onNodeUpdate(selectedNode.id, { continueButtonTarget: value })}
+                  >
+                    <SelectTrigger className="text-xs">
+                      <SelectValue placeholder="Выберите узел" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allNodes
+                        .filter(node => node.id !== selectedNode.id)
+                        .map((node) => {
+                          const nodeName = node.data.messageText || node.data.command || node.data.name || node.type;
+                          const iconClass = 
+                            node.type === 'start' ? 'fas fa-play text-green-400' :
+                            node.type === 'command' ? 'fas fa-terminal text-blue-400' :
+                            node.type === 'message' ? 'fas fa-comment text-yellow-400' :
+                            node.type === 'user-input' ? 'fas fa-keyboard text-purple-400' :
+                            node.type === 'media' ? 'fas fa-image text-pink-400' :
+                            node.type === 'animation' ? 'fas fa-play-circle text-green-400' : 'fas fa-cube text-gray-400';
+                          
+                          return (
+                            <SelectItem key={node.id} value={node.id}>
+                              <div className="flex items-center gap-2">
+                                <i className={`${iconClass} text-xs`}></i>
+                                <span>{nodeName} ({node.id})</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      
+                      {(!allNodes || allNodes.filter(node => node.id !== selectedNode.id).length === 0) && (
+                        <SelectItem value="no-nodes" disabled>
+                          Создайте другие узлы для выбора
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
             {/* Buttons List */}
             {selectedNode.data.keyboardType !== 'none' && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Кнопки</Label>
-                  <UIButton
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleAddButton}
-                    className="text-xs text-primary hover:text-primary/80 font-medium h-auto p-1"
-                  >
-                    + Добавить
-                  </UIButton>
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    Кнопки
+                  </Label>
+                  <div className="flex gap-2">
+                    <UIButton
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleAddButton}
+                      className="text-xs text-primary hover:text-primary/80 font-medium h-auto p-1"
+                    >
+                      + Добавить кнопку
+                    </UIButton>
+                    {selectedNode.data.allowMultipleSelection && (
+                      <UIButton
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const newButton = {
+                            id: Date.now().toString(),
+                            text: 'Новая опция',
+                            action: 'selection' as const,
+                            target: '',
+                          };
+                          
+                          // Добавляем новую кнопку к существующему массиву кнопок
+                          const currentButtons = selectedNode.data.buttons || [];
+                          const updatedButtons = [...currentButtons, newButton];
+                          onNodeUpdate(selectedNode.id, { buttons: updatedButtons });
+                        }}
+                        className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium h-auto p-1"
+                      >
+                        + Опция выбора
+                      </UIButton>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -2046,34 +2169,100 @@ export function PropertiesPanel({
                           className="flex-1 text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary"
                           placeholder="Текст кнопки"
                         />
-                        <UIButton
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => onButtonDelete(selectedNode.id, button.id)}
-                          className="text-muted-foreground hover:text-destructive dark:text-muted-foreground dark:hover:text-destructive h-auto p-1 transition-colors duration-200"
-                        >
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </UIButton>
+                        <div className="flex items-center gap-2">
+                          {/* Button Type Indicator */}
+                          {selectedNode.data.allowMultipleSelection && button.action === 'selection' && (
+                            <div className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded text-xs font-medium">
+                              Опция
+                            </div>
+                          )}
+                          {selectedNode.data.allowMultipleSelection && button.action !== 'selection' && (
+                            <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-xs font-medium">
+                              Кнопка
+                            </div>
+                          )}
+                          <UIButton
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => onButtonDelete(selectedNode.id, button.id)}
+                            className="text-muted-foreground hover:text-destructive dark:text-muted-foreground dark:hover:text-destructive h-auto p-1 transition-colors duration-200"
+                          >
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </UIButton>
+                        </div>
                       </div>
-                      <Select
-                        value={button.action}
-                        onValueChange={(value: 'goto' | 'command' | 'url') =>
-                          onButtonUpdate(selectedNode.id, button.id, { action: value })
-                        }
-                      >
-                        <SelectTrigger className="w-full text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="goto">Перейти к экрану</SelectItem>
-                          <SelectItem value="command">Выполнить команду</SelectItem>
-                          <SelectItem value="url">Открыть ссылку</SelectItem>
-                        </SelectContent>
-                      </Select>
                       
-                      {button.action === 'url' && (
+                      {/* Button Type Selection - Show for Multiple Selection Mode */}
+                      {selectedNode.data.allowMultipleSelection && (
+                        <div className="mb-3">
+                          <Label className="text-xs font-medium text-muted-foreground mb-2 block">Тип кнопки</Label>
+                          <Select
+                            value={button.action === 'selection' ? 'selection' : 'regular'}
+                            onValueChange={(value) => {
+                              if (value === 'selection') {
+                                onButtonUpdate(selectedNode.id, button.id, { action: 'selection', target: '' });
+                              } else {
+                                onButtonUpdate(selectedNode.id, button.id, { action: 'goto', target: '' });
+                              }
+                            }}
+                          >
+                            <SelectTrigger className="w-full text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="selection">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                  <span>Опция для множественного выбора</span>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="regular">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                  <span>Обычная кнопка (переход/команда/ссылка)</span>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      {/* Action Selection - Show for normal buttons or non-multiple-selection modes */}
+                      {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && (
+                        <Select
+                          value={button.action}
+                          onValueChange={(value: 'goto' | 'command' | 'url') =>
+                            onButtonUpdate(selectedNode.id, button.id, { action: value })
+                          }
+                        >
+                          <SelectTrigger className="w-full text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="goto">Перейти к экрану</SelectItem>
+                            <SelectItem value="command">Выполнить команду</SelectItem>
+                            <SelectItem value="url">Открыть ссылку</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                      
+                      {/* Multiple Selection Info - Show only for selection buttons */}
+                      {selectedNode.data.allowMultipleSelection && button.action === 'selection' && (
+                        <div className="bg-green-50/50 dark:bg-green-950/20 border border-green-200/40 dark:border-green-800/40 rounded-lg p-2 mt-2">
+                          <div className="text-xs text-green-700 dark:text-green-300 font-medium">
+                            Опция для множественного выбора
+                          </div>
+                          <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                            {selectedNode.data.keyboardType === 'inline' 
+                              ? 'При нажатии на кнопку появится галочка ✅'
+                              : 'После выбора покажется новое сообщение с обновленной клавиатурой'
+                            }
+                          </div>
+                        </div>
+                      )}
+                      
+                      {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'url' && (
                         <Input
                           value={button.url || ''}
                           onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { url: e.target.value })}
@@ -2082,7 +2271,7 @@ export function PropertiesPanel({
                         />
                       )}
                       
-                      {button.action === 'command' && (
+                      {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'command' && (
                         <div className="mt-2 space-y-2">
                           <Select
                             value={button.target || ''}
@@ -2135,7 +2324,7 @@ export function PropertiesPanel({
                         </div>
                       )}
 
-                      {button.action === 'goto' && (
+                      {(!selectedNode.data.allowMultipleSelection || button.action !== 'selection') && button.action === 'goto' && (
                         <div className="mt-2 space-y-2">
                           <Select
                             value={button.target || ''}

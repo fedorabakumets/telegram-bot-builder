@@ -4375,6 +4375,219 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        print("🔌 Сессия бота закрыта")\n';
   code += '        print("✅ Бот корректно завершил работу")\n\n';
   
+  // Добавляем обработчики для множественного выбора
+  code += '\n# Обработчики для множественного выбора\n';
+  
+  // Обработчик для inline кнопок множественного выбора
+  code += '@dp.callback_query(lambda c: c.data.startswith("multi_select_"))\n';
+  code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
+  code += '    await callback_query.answer()\n';
+  code += '    user_id = callback_query.from_user.id\n';
+  code += '    callback_data = callback_query.data\n';
+  code += '    \n';
+  code += '    if callback_data.startswith("multi_select_done_"):\n';
+  code += '        # Завершение множественного выбора\n';
+  code += '        node_id = callback_data.replace("multi_select_done_", "")\n';
+  code += '        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n';
+  code += '        \n';
+  code += '        # Сохраняем выбранные опции в базу данных\n';
+  code += '        if selected_options:\n';
+  code += '            selected_text = ", ".join(selected_options)\n';
+  
+  // Генерируем сохранение для каждого узла с его переменной
+  multiSelectNodes.forEach(node => {
+    const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
+    code += `            if node_id == "${node.id}":\n`;
+    code += `                await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
+  });
+  
+  code += '            # Резервное сохранение если узел не найден\n';
+  code += '            if not any(node_id == node for node in [' + multiSelectNodes.map(n => `"${n.id}"`).join(', ') + ']):\n';
+  code += '                await save_user_data_to_db(user_id, f"multi_select_{node_id}", selected_text)\n';
+  code += '        \n';
+  code += '        # Очищаем состояние множественного выбора\n';
+  code += '        if user_id in user_data:\n';
+  code += '            user_data[user_id].pop(f"multi_select_{node_id}", None)\n';
+  code += '            user_data[user_id].pop("multi_select_node", None)\n';
+  code += '        \n';
+  code += '        # Переходим к следующему узлу, если указан\n';
+  
+  // Найдем узлы с множественным выбором и добавим переходы
+  const multiSelectNodes = nodes.filter(node => 
+    node.data.allowMultipleSelection && node.data.continueButtonTarget
+  );
+  
+  if (multiSelectNodes.length > 0) {
+    code += '        # Определяем следующий узел для каждого node_id\n';
+    multiSelectNodes.forEach(node => {
+      if (node.data.continueButtonTarget) {
+        code += `        if node_id == "${node.id}":\n`;
+        const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
+        if (targetNode) {
+          code += `            # Переход к узлу ${targetNode.id}\n`;
+          if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
+            code += `            await handle_message_${targetNode.id.replace(/[^a-zA-Z0-9]/g, '_')}(callback_query.message)\n`;
+          } else if (targetNode.type === 'command') {
+            code += `            await handle_command_${targetNode.data.command?.replace(/[^a-zA-Z0-9]/g, '_') || 'unknown'}(callback_query.message)\n`;
+          }
+        }
+      }
+    });
+  }
+  
+  code += '        return\n';
+  code += '    \n';
+  code += '    # Обработка выбора опции\n';
+  code += '    parts = callback_data.split("_")\n';
+  code += '    if len(parts) >= 4:\n';
+  code += '        node_id = parts[2]\n';
+  code += '        button_id = "_".join(parts[3:])\n';
+  code += '        \n';
+  code += '        # Инициализируем список выбранных опций\n';
+  code += '        if user_id not in user_data:\n';
+  code += '            user_data[user_id] = {}\n';
+  code += '        if f"multi_select_{node_id}" not in user_data[user_id]:\n';
+  code += '            user_data[user_id][f"multi_select_{node_id}"] = []\n';
+  code += '        \n';
+  code += '        # Находим текст кнопки по button_id\n';
+  code += '        button_text = None\n';
+  
+  // Добавляем маппинг кнопок для каждого узла с множественным выбором
+  multiSelectNodes.forEach(node => {
+    const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
+    if (selectionButtons.length > 0) {
+      code += `        if node_id == "${node.id}":\n`;
+      selectionButtons.forEach(button => {
+        code += `            if button_id == "${button.id}":\n`;
+        code += `                button_text = "${button.text}"\n`;
+      });
+    }
+  });
+  
+  code += '        \n';
+  code += '        if button_text:\n';
+  code += '            selected_list = user_data[user_id][f"multi_select_{node_id}"]\n';
+  code += '            if button_text in selected_list:\n';
+  code += '                # Убираем из выбранных\n';
+  code += '                selected_list.remove(button_text)\n';
+  code += '            else:\n';
+  code += '                # Добавляем к выбранным\n';
+  code += '                selected_list.append(button_text)\n';
+  code += '            \n';
+  code += '            # Обновляем клавиатуру с галочками\n';
+  code += '            builder = InlineKeyboardBuilder()\n';
+  
+  // Генерируем обновление клавиатуры для каждого узла
+  multiSelectNodes.forEach(node => {
+    const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
+    const regularButtons = node.data.buttons?.filter(btn => btn.action !== 'selection') || [];
+    
+    if (selectionButtons.length > 0) {
+      code += `            if node_id == "${node.id}":\n`;
+      
+      // Добавляем кнопки выбора
+      selectionButtons.forEach(button => {
+        code += `                selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
+        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="multi_select_{node_id}_${button.id}"))\n`;
+      });
+      
+      // Добавляем обычные кнопки
+      regularButtons.forEach(button => {
+        if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        } else if (button.action === 'url') {
+          code += `                builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        } else if (button.action === 'command') {
+          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+          code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+        }
+      });
+      
+      // Добавляем кнопку завершения
+      const continueText = node.data.continueButtonText || 'Готово';
+      code += `                builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
+    }
+  });
+  
+  code += '            \n';
+  code += '            keyboard = builder.as_markup()\n';
+  code += '            await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
+  code += '\n';
+  
+  // Обработчик для reply кнопок множественного выбора
+  code += '# Обработчик для reply кнопок множественного выбора\n';
+  code += '@dp.message()\n';
+  code += 'async def handle_multi_select_reply(message: types.Message):\n';
+  code += '    user_id = message.from_user.id\n';
+  code += '    user_input = message.text\n';
+  code += '    \n';
+  code += '    # Проверяем, находится ли пользователь в режиме множественного выбора reply\n';
+  code += '    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":\n';
+  code += '        node_id = user_data[user_id]["multi_select_node"]\n';
+  code += '        \n';
+  
+  // Проверяем, является ли это кнопкой завершения
+  multiSelectNodes.forEach(node => {
+    const continueText = node.data.continueButtonText || 'Готово';
+    const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
+    code += `        if node_id == "${node.id}" and user_input == "${continueText}":\n`;
+    code += `            # Завершение множественного выбора для узла ${node.id}\n`;
+    code += `            selected_options = user_data.get(user_id, {}).get("multi_select_{node_id}", [])\n`;
+    code += `            if selected_options:\n`;
+    code += `                selected_text = ", ".join(selected_options)\n`;
+    code += `                await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
+    code += `            \n`;
+    code += `            # Очищаем состояние\n`;
+    code += `            user_data[user_id].pop("multi_select_{node_id}", None)\n`;
+    code += `            user_data[user_id].pop("multi_select_node", None)\n`;
+    code += `            user_data[user_id].pop("multi_select_type", None)\n`;
+    code += `            \n`;
+    
+    if (node.data.continueButtonTarget) {
+      const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
+      if (targetNode) {
+        code += `            # Переход к следующему узлу\n`;
+        if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
+          code += `            await handle_message_${targetNode.id.replace(/[^a-zA-Z0-9]/g, '_')}(message)\n`;
+        } else if (targetNode.type === 'command') {
+          code += `            await handle_command_${targetNode.data.command?.replace(/[^a-zA-Z0-9]/g, '_') || 'unknown'}(message)\n`;
+        }
+      }
+    }
+    code += `            return\n`;
+    code += `        \n`;
+  });
+  
+  code += '        # Обработка выбора опции\n';
+  multiSelectNodes.forEach(node => {
+    const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
+    
+    if (selectionButtons.length > 0) {
+      code += `        if node_id == "${node.id}":\n`;
+      selectionButtons.forEach(button => {
+        code += `            if user_input == "${button.text}":\n`;
+        code += `                if "multi_select_{node_id}" not in user_data[user_id]:\n`;
+        code += `                    user_data[user_id]["multi_select_{node_id}"] = []\n`;
+        code += `                \n`;
+        code += `                selected_list = user_data[user_id]["multi_select_{node_id}"]\n`;
+        code += `                if "${button.text}" in selected_list:\n`;
+        code += `                    selected_list.remove("${button.text}")\n`;
+        code += `                    await message.answer("❌ Убрано: ${button.text}")\n`;
+        code += `                else:\n`;
+        code += `                    selected_list.append("${button.text}")\n`;
+        code += `                    await message.answer("✅ Выбрано: ${button.text}")\n`;
+        code += `                return\n`;
+        code += `            \n`;
+      });
+    }
+  });
+  
+  code += '    \n';
+  code += '    # Если не множественный выбор, передаем дальше по цепочке обработчиков\n';
+  code += '    pass\n';
+  code += '\n';
+
   code += 'if __name__ == "__main__":\n';
   code += '    asyncio.run(main())\n';
 
@@ -5554,42 +5767,135 @@ function generateKeyboard(node: Node): string {
     code += '    else:\n';
     
     if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
-      // Обычная reply клавиатура
-      code += '        builder = ReplyKeyboardBuilder()\n';
-      node.data.buttons.forEach(button => {
-        if (button.action === "contact" && button.requestContact) {
-          code += `        builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
-        } else if (button.action === "location" && button.requestLocation) {
-          code += `        builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
-        } else {
+      // Проверяем, есть ли множественный выбор
+      if (node.data.allowMultipleSelection) {
+        code += '        # Создаем reply клавиатуру с поддержкой множественного выбора\n';
+        code += '        builder = ReplyKeyboardBuilder()\n';
+        
+        // Разделяем кнопки на опции выбора и обычные кнопки
+        const selectionButtons = node.data.buttons.filter(button => button.action === 'selection');
+        const regularButtons = node.data.buttons.filter(button => button.action !== 'selection');
+        
+        // Добавляем кнопки для множественного выбора
+        selectionButtons.forEach(button => {
           code += `        builder.add(KeyboardButton(text="${button.text}"))\n`;
+        });
+        
+        // Добавляем обычные кнопки
+        regularButtons.forEach(button => {
+          if (button.action === "contact" && button.requestContact) {
+            code += `        builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+          } else if (button.action === "location" && button.requestLocation) {
+            code += `        builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+          } else {
+            code += `        builder.add(KeyboardButton(text="${button.text}"))\n`;
+          }
+        });
+        
+        // Добавляем кнопку завершения, если есть опции выбора
+        if (selectionButtons.length > 0) {
+          const continueText = node.data.continueButtonText || 'Готово';
+          code += `        builder.add(KeyboardButton(text="${continueText}"))\n`;
         }
-      });
-      
-      const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
-      const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
-      code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-      code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
+        const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
+        code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+        code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        // Инициализируем состояние множественного выбора
+        if (selectionButtons.length > 0) {
+          code += '        \n';
+          code += '        # Инициализируем состояние множественного выбора\n';
+          code += '        user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
+          code += `        user_data[message.from_user.id]["multi_select_${node.id}"] = []\n`;
+          code += `        user_data[message.from_user.id]["multi_select_node"] = "${node.id}"\n`;
+          code += `        user_data[message.from_user.id]["multi_select_type"] = "reply"\n`;
+        }
+      } else {
+        // Обычная reply клавиатура
+        code += '        builder = ReplyKeyboardBuilder()\n';
+        node.data.buttons.forEach(button => {
+          if (button.action === "contact" && button.requestContact) {
+            code += `        builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+          } else if (button.action === "location" && button.requestLocation) {
+            code += `        builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+          } else {
+            code += `        builder.add(KeyboardButton(text="${button.text}"))\n`;
+          }
+        });
+        
+        const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
+        const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
+        code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+        code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      }
     } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-      // Обычная inline клавиатура
-      code += '        # Создаем inline клавиатуру с кнопками\n';
-      code += '        builder = InlineKeyboardBuilder()\n';
-      node.data.buttons.forEach(button => {
-        if (button.action === "url") {
-          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-        } else if (button.action === 'goto') {
-          // Если есть target, используем его, иначе используем ID кнопки как callback_data
-          const callbackData = button.target || button.id || 'no_action';
-          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-        } else if (button.action === 'command') {
-          // Для кнопок команд создаем специальную callback_data
-          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+      // Проверяем, есть ли множественный выбор
+      if (node.data.allowMultipleSelection) {
+        code += '        # Создаем inline клавиатуру с поддержкой множественного выбора\n';
+        code += '        builder = InlineKeyboardBuilder()\n';
+        
+        // Разделяем кнопки на опции выбора и обычные кнопки
+        const selectionButtons = node.data.buttons.filter(button => button.action === 'selection');
+        const regularButtons = node.data.buttons.filter(button => button.action !== 'selection');
+        
+        // Добавляем кнопки для множественного выбора
+        selectionButtons.forEach(button => {
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="multi_select_${node.id}_${button.id}"))\n`;
+        });
+        
+        // Добавляем обычные кнопки
+        regularButtons.forEach(button => {
+          if (button.action === "url") {
+            code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+          } else if (button.action === 'goto') {
+            const callbackData = button.target || button.id || 'no_action';
+            code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+          } else if (button.action === 'command') {
+            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+            code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+          }
+        });
+        
+        // Добавляем кнопку завершения, если есть опции выбора
+        if (selectionButtons.length > 0) {
+          const continueText = node.data.continueButtonText || 'Готово';
+          code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
         }
-      });
-      
-      code += '        keyboard = builder.as_markup()\n';
-      code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        code += '        keyboard = builder.as_markup()\n';
+        code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        
+        // Инициализируем состояние множественного выбора
+        if (selectionButtons.length > 0) {
+          code += '        \n';
+          code += '        # Инициализируем состояние множественного выбора\n';
+          code += '        user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
+          code += `        user_data[message.from_user.id]["multi_select_${node.id}"] = []\n`;
+          code += `        user_data[message.from_user.id]["multi_select_node"] = "${node.id}"\n`;
+        }
+      } else {
+        // Обычная inline клавиатура
+        code += '        # Создаем inline клавиатуру с кнопками\n';
+        code += '        builder = InlineKeyboardBuilder()\n';
+        node.data.buttons.forEach(button => {
+          if (button.action === "url") {
+            code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+          } else if (button.action === 'goto') {
+            // Если есть target, используем его, иначе используем ID кнопки как callback_data
+            const callbackData = button.target || button.id || 'no_action';
+            code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+          } else if (button.action === 'command') {
+            // Для кнопок команд создаем специальную callback_data
+            const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+            code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+          }
+        });
+        
+        code += '        keyboard = builder.as_markup()\n';
+        code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      }
     } else {
       // Без клавиатуры
       code += `        await message.answer(text${parseMode})\n`;
