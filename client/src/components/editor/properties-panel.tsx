@@ -2069,19 +2069,7 @@ export function PropertiesPanel({
                   </div>
                 </div>
                 
-                {/* Continue Button Configuration */}
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">Кнопка завершения</Label>
-                  <Input
-                    value={selectedNode.data.continueButtonText || 'Готово'}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonText: e.target.value })}
-                    className="text-xs"
-                    placeholder="Готово"
-                  />
-                  <div className="text-xs text-muted-foreground">
-                    Текст кнопки для завершения множественного выбора и сохранения результата
-                  </div>
-                </div>
+
               </div>
             )}
 
@@ -2129,7 +2117,7 @@ export function PropertiesPanel({
                           onClick={() => {
                             const newButton = {
                               id: Date.now().toString(),
-                              text: selectedNode.data.continueButtonText || 'Готово',
+                              text: 'Готово',
                               action: 'goto' as const,
                               target: '',
                               buttonType: 'complete' as const,
