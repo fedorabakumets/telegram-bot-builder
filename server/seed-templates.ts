@@ -3240,7 +3240,7 @@ export async function seedDefaultTemplates(force = false) {
               messageText: "Привет! 👋\n\nДавай узнаем о твоих интересах. Выбери все, что тебе нравится:",
               keyboardType: "inline",
               allowMultipleSelection: true,
-              multipleSelectionVariable: "интересы",
+              multiSelectVariable: "интересы",
               checkmarkSymbol: "✅",
               buttons: [
                 {
