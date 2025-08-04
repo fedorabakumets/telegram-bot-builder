@@ -10,6 +10,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 4, 2025)
 
+### Multiple Selection Interests Template Creation (August 4, 2025)
+- **New Template Added**: "Выбор интересов - множественный" - Simple multiple selection template for interest collection
+- **Template Features**: 
+  - Start screen with friendly greeting "Привет! Давай узнаем о твоих интересах"
+  - 8 option buttons: Спорт, Музыка, Кино, Кулинария, Путешествия, Чтение, Игры, Искусство
+  - Complete button "Готово ✨" to finish selection
+  - Results display screen showing selected interests with personalization message
+  - Recommendation system with content, events, and people suggestions
+- **Category**: Moved to "business" for inclusion in basic templates
+- **Technical Implementation**: Uses inline keyboard with multiple selection, saves to "интересы" variable
+- **User Experience**: No input nodes required - pure button-based selection workflow
+
 ### Multiple Selection Button Types Implementation (August 4, 2025)
 - **Feature Added**: Comprehensive multiple selection functionality for keyboard buttons
 - **Button Types System**: Three distinct button types:

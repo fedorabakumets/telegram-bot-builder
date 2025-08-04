@@ -3218,8 +3218,8 @@ export async function seedDefaultTemplates(force = false) {
     await storage.createBotTemplate({
       name: "Выбор интересов - множественный",
       description: "Простой шаблон для сбора интересов пользователя с множественным выбором без input узлов",
-      category: "community",
-      tags: ["интересы", "множественный выбор", "inline", "простой"],
+      category: "business",
+      tags: ["интересы", "множественный выбор", "inline", "простой", "базовый"],
       isPublic: 1,
       difficulty: "easy",
       authorName: "Система",
