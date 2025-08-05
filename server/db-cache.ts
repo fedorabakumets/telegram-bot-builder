@@ -1,5 +1,5 @@
 // Enhanced caching layer for database operations
-import { BotProject, BotTemplate, BotInstance } from '../shared/schema.js';
+import { BotProject, BotTemplate, BotInstance } from '@shared/schema';
 
 export class DatabaseCache {
   private static instance: DatabaseCache;

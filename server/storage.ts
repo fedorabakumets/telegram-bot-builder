@@ -17,7 +17,7 @@ import {
   type InsertMediaFile,
   type UserBotData,
   type InsertUserBotData
-} from "../shared/schema.js";
+} from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
 import { dbManager } from "./db-utils";
