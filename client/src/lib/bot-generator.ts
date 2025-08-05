@@ -4384,29 +4384,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    profile_text = "👤 Ваш профиль:\\n\\n"\n';
   code += '    \n';
   
-  // Добавляем логику для variableLabel из всех input узлов
-  const profileInputNodes = nodes.filter(node => node.type === 'input' && node.data.inputVariable);
-  if (profileInputNodes.length > 0) {
-    code += '    # Отображаем переменные с их красивыми названиями (variableLabel)\n';
-    profileInputNodes.forEach(node => {
-      const variableName = node.data.inputVariable;
-      const variableLabel = node.data.variableLabel || variableName;
-      code += `    if "${variableName}" in user_vars:\n`;
-      code += `        value = user_vars["${variableName}"]\n`;
-      code += `        if isinstance(value, dict) and "value" in value:\n`;
-      code += `            value = value["value"]\n`;
-      code += `        profile_text += "${variableLabel}: " + str(value) + "\\n"\n`;
-      code += '    \n';
-    });
-  } else {
-    code += '    # Отображаем все доступные переменные\n';
-    code += '    for var_name, var_data in user_vars.items():\n';
-    code += '        if isinstance(var_data, dict) and "value" in var_data:\n';
-    code += '            value = var_data["value"]\n';
-    code += '        else:\n';
-    code += '            value = var_data\n';
-    code += '        profile_text += f"{var_name}: {value}\\n"\n';
-  }
+  // Отображаем все доступные переменные (удалена поддержка устаревшего типа узла 'input')
+  code += '    # Отображаем все доступные переменные\n';
+  code += '    for var_name, var_data in user_vars.items():\n';
+  code += '        if isinstance(var_data, dict) and "value" in var_data:\n';
+  code += '            value = var_data["value"]\n';
+  code += '        else:\n';
+  code += '            value = var_data\n';
+  code += '        profile_text += f"{var_name}: {value}\\n"\n';
   
   code += '    \n';
   code += '    await message.answer(profile_text)\n';
@@ -6318,92 +6303,3 @@ export function generateConfigYaml(botName: string): string {
   return lines.join('\n');
 }
 
-function generateUserInputHandler(node: Node): string {
-  let code = `\n# Обработчик сбора пользовательского ввода для узла ${node.id}\n`;
-  
-  // Генерируем безопасное имя функции
-  const safeFunctionName = node.id.replace(/[^a-zA-Z0-9]/g, '_');
-  
-  // Проверяем, есть ли команда для этого узла
-  if (node.data.command) {
-    const command = node.data.command.replace('/', '');
-    const functionName = `input_${command}_handler`.replace(/[^a-zA-Z0-9_]/g, '_');
-    
-    code += `@dp.message(Command("${command}"))\n`;
-    code += `async def ${functionName}(message: types.Message):\n`;
-    
-    // Добавляем проверки безопасности
-    if (node.data.isPrivateOnly) {
-      code += '    if not await is_private_chat(message):\n';
-      code += '        await message.answer("❌ Эта команда доступна только в приватных чатах")\n';
-      code += '        return\n';
-    }
-
-    if (node.data.adminOnly) {
-      code += '    if not await is_admin(message.from_user.id):\n';
-      code += '        await message.answer("❌ У вас нет прав для выполнения этой команды")\n';
-      code += '        return\n';
-    }
-
-    if (node.data.requiresAuth) {
-      code += '    if not await check_auth(message.from_user.id):\n';
-      code += '        await message.answer("❌ Необходимо войти в систему для выполнения этой команды")\n';
-      code += '        return\n';
-    }
-  }
-  
-  // Получаем параметры из узла
-  const inputPrompt = node.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
-  const inputType = node.data.inputType || 'text';
-  const inputVariable = node.data.inputVariable || `response_${node.id}`;
-  const inputValidation = node.data.inputValidation || '';
-  const minLength = node.data.minLength || 0;
-  const maxLength = node.data.maxLength || 0;
-  const inputTimeout = node.data.inputTimeout || 60;
-  const inputRequired = node.data.inputRequired !== false;
-  const allowSkip = node.data.allowSkip || false;
-  const saveToDatabase = node.data.saveToDatabase || false;
-  const inputRetryMessage = node.data.inputRetryMessage || "Пожалуйста, попробуйте еще раз.";
-  const inputSuccessMessage = node.data.inputSuccessMessage || "Спасибо за ваш ответ!";
-  const placeholder = node.data.placeholder || "";
-  const defaultValue = node.data.defaultValue || "";
-  
-  // Отправляем запрос пользователю
-  const formattedPrompt = formatTextForPython(inputPrompt);
-  code += `    prompt_text = ${formattedPrompt}\n`;
-  
-  if (placeholder) {
-    code += `    placeholder_text = "${placeholder}"\n`;
-    code += '    prompt_text += f"\\n\\n💡 {placeholder_text}"\n';
-  }
-  
-  if (allowSkip) {
-    code += '    prompt_text += "\\n\\n⏭️ Нажмите /skip чтобы пропустить"\n';
-  }
-  
-  code += '    await message.answer(prompt_text)\n';
-  code += '    \n';
-  code += '    # Инициализируем пользовательские данные если их нет\n';
-  code += '    if message.from_user.id not in user_data:\n';
-  code += '        user_data[message.from_user.id] = {}\n';
-  code += '    \n';
-  code += '    # Ожидаем ответ пользователя\n';
-  code += '    user_data[message.from_user.id]["waiting_for_input"] = {\n';
-  code += `        "type": "${inputType}",\n`;
-  code += `        "variable": "${inputVariable}",\n`;
-  code += `        "validation": "${inputValidation}",\n`;
-  code += `        "min_length": ${minLength},\n`;
-  code += `        "max_length": ${maxLength},\n`;
-  code += `        "timeout": ${inputTimeout},\n`;
-  code += `        "required": ${toPythonBoolean(inputRequired)},\n`;
-  code += `        "allow_skip": ${toPythonBoolean(allowSkip)},\n`;
-  code += `        "save_to_db": ${toPythonBoolean(saveToDatabase)},\n`;
-  code += `        "retry_message": "${inputRetryMessage}",\n`;
-  code += `        "success_message": "${inputSuccessMessage}",\n`;
-  code += `        "default_value": "${defaultValue}",\n`;
-  code += `        "node_id": "${node.id}"\n`;
-  code += '    }\n';
-  code += '    \n';
-  
-  return code;
-}

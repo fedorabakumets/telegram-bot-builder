@@ -6,6 +6,9 @@ This application provides a visual Telegram bot builder, enabling users to creat
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+- **January 5, 2025**: Removed deprecated 'input' node type from code generation. The legacy input node handling has been replaced with modern conditional input collection system.
+
 ## System Architecture
 
 ### Frontend
@@ -25,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 - **Session Storage**: PostgreSQL-based session storage
 - **API**: RESTful JSON API
 - **Key Features**:
-    - **Bot Editor Core**: Canvas-based visual flow editor with various node types (start, message, photo, keyboard, condition, input, command). Real-time property editing and a component sidebar.
+    - **Bot Editor Core**: Canvas-based visual flow editor with various node types (start, message, photo, keyboard, condition, command). Real-time property editing and a component sidebar.
     - **Bot Preview System**: Live, interactive bot simulation with message flow and button interaction testing.
     - **Code Generation**: Converts visual flows to aiogram (Python) code. Includes validation and export options (copy/download). Generates syntactically correct Python code, handling boolean conversions, indentation, and various node types.
     - **Storage System**: Persistent storage of bot projects using a PostgreSQL database with JSON flow storage. Supports in-memory fallback for development.
