@@ -10,6 +10,7 @@ import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
+import { VisibilityControls } from '@/components/editor/visibility-controls';
 
 import { ConnectionManagerPanel } from '@/components/editor/connection-manager-panel';
 import { EnhancedConnectionControls } from '@/components/editor/enhanced-connection-controls';
