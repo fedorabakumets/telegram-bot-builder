@@ -26,16 +26,16 @@ export function LayoutButtons({
   onToggleSidebar,
   onToggleProperties,
   onShowFullLayout,
-  canvasVisible = false,
-  headerVisible = false,
-  sidebarVisible = false,
-  propertiesVisible = false,
+  canvasVisible = true,
+  headerVisible = true,
+  sidebarVisible = true,
+  propertiesVisible = true,
   className = "" 
 }: LayoutButtonsProps) {
   return (
     <TooltipProvider>
       <div className={`flex items-center gap-1 p-2 bg-background border border-border rounded-lg ${className}`}>
-        {/* Кнопка скрыть шапку */}
+        {/* Кнопка скрыть шапку - показывается только когда шапка видна */}
         {headerVisible && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -54,7 +54,7 @@ export function LayoutButtons({
           </Tooltip>
         )}
 
-        {/* Кнопка скрыть боковую панель */}
+        {/* Кнопка скрыть боковую панель - показывается только когда боковая панель видна */}
         {sidebarVisible && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -73,7 +73,7 @@ export function LayoutButtons({
           </Tooltip>
         )}
 
-        {/* Кнопка скрыть холст */}
+        {/* Кнопка скрыть холст - показывается только когда холст виден */}
         {canvasVisible && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -92,7 +92,7 @@ export function LayoutButtons({
           </Tooltip>
         )}
 
-        {/* Кнопка скрыть панель свойств */}
+        {/* Кнопка скрыть панель свойств - показывается только когда панель свойств видна */}
         {propertiesVisible && (
           <Tooltip>
             <TooltipTrigger asChild>
