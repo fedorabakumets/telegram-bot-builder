@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 5, 2025)
 
+### Project Management Integration and UI Improvements (August 5, 2025)
+- **Integrated Project Management**: Moved project list from separate page into ComponentsSidebar as "Проекты" tab
+- **Simplified Project Creation**: Removed modal dialog, projects now created with single button click using auto-generated names
+- **Default Navigation**: Changed default route from home page to editor, improving user experience
+- **Header Cleanup**: Removed "Проекты" button from site header to reduce UI clutter
+- **Removed Unnecessary Elements**: Deleted DragDropTestButton from sidebar for cleaner interface
+- **Seamless Project Switching**: Users can now create, view, and switch between projects directly in editor without page navigation
+
 ### Database Issues Resolution and Template Improvements (August 5, 2025)
 - **Database Fixed**: PostgreSQL database successfully created and connected
 - **Schema Issues Resolved**: Fixed duplicate property definitions (resizeKeyboard, oneTimeKeyboard) in shared/schema.ts

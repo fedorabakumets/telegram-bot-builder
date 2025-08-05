@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { FolderOpen, Bookmark, Save, Download, User, Send, Layout, Home } from 'lucide-react';
+import { FolderOpen, Bookmark, Save, Download, User, Send, Layout } from 'lucide-react';
 import { LayoutConfig } from './layout-manager';
 
 interface AdaptiveHeaderProps {
@@ -13,7 +13,7 @@ interface AdaptiveHeaderProps {
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
   onLayoutSettings?: () => void;
-  onGoToProjects?: () => void;
+
   isSaving?: boolean;
 }
 
@@ -27,7 +27,6 @@ export function AdaptiveHeader({
   onSaveAsTemplate, 
   onLoadTemplate,
   onLayoutSettings,
-  onGoToProjects,
   isSaving 
 }: AdaptiveHeaderProps) {
   
@@ -86,18 +85,7 @@ export function AdaptiveHeader({
 
   // Компонент действий
   const Actions = () => (
-    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-4 max-sm:gap-x-1 max-sm:gap-y-1 max-sm:text-xs'}`}>
-      {onGoToProjects && (
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={onGoToProjects}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
-        >
-          <Home className="h-2.5 w-2.5 max-sm:mx-auto" />
-          <span className="max-sm:hidden ml-1">Проекты</span>
-        </Button>
-      )}
+    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-3 max-sm:gap-x-1 max-sm:gap-y-1 max-sm:text-xs'}`}>
       
       {onLoadTemplate && (
         <Button 

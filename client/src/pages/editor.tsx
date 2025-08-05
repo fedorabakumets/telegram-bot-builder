@@ -285,7 +285,6 @@ export default function Editor() {
         onSaveAsTemplate={handleSaveAsTemplate}
         onLoadTemplate={handleLoadTemplate}
         onLayoutSettings={() => setShowLayoutManager(true)}
-        onGoToProjects={handleGoToProjects}
         isSaving={updateProjectMutation.isPending}
       />
     );
