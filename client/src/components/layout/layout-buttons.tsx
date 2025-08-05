@@ -110,6 +110,25 @@ export function LayoutButtons({
             </TooltipContent>
           </Tooltip>
         )}
+
+        {/* Кнопка показать всё - показывается когда что-то скрыто */}
+        {(!headerVisible || !sidebarVisible || !canvasVisible || !propertiesVisible) && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"  
+                size="sm"
+                onClick={onShowFullLayout}
+                className="h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Показать всё</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
     </TooltipProvider>
   );
