@@ -17,7 +17,7 @@ export async function seedDefaultTemplates(force = false) {
         await storage.deleteBotTemplate(template.id);
       }
       console.log(`🗑️ Удалено ${systemTemplates.length} старых системных шаблонов`);
-    } else if (systemTemplates.length >= 2) {
+    } else if (systemTemplates.length >= 5) {
       console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
@@ -439,50 +439,65 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-sport",
                   text: "⚽ Спорт",
-                  action: "multi_select",
+                  action: "selection",
+                  buttonType: "option",
                   target: "sport"
                 },
                 {
                   id: "btn-music",
                   text: "🎵 Музыка",
-                  action: "multi_select",
+                  action: "selection",
+                  buttonType: "option",
                   target: "music"
                 },
                 {
                   id: "btn-books",
                   text: "📚 Книги",
-                  action: "multi_select",
+                  action: "selection",
+                  buttonType: "option",
                   target: "books"
                 },
                 {
                   id: "btn-travel",
                   text: "✈️ Путешествия",
-                  action: "multi_select",
+                  action: "selection",
+                  buttonType: "option",
                   target: "travel"
                 },
                 {
                   id: "btn-tech",
                   text: "💻 Технологии",
-                  action: "multi_select",
+                  action: "selection",
+                  buttonType: "option",
                   target: "tech"
                 },
                 {
                   id: "btn-cooking",
                   text: "🍳 Кулинария",
-                  action: "multi_select",
+                  action: "selection",
+                  buttonType: "option",
                   target: "cooking"
                 },
                 {
                   id: "btn-art",
                   text: "🎨 Искусство",
-                  action: "multi_select",
+                  action: "selection",
+                  buttonType: "option",
                   target: "art"
                 },
                 {
                   id: "btn-games",
                   text: "🎮 Игры",
-                  action: "multi_select",
+                  action: "selection",
+                  buttonType: "option",
                   target: "games"
+                },
+                {
+                  id: "btn-done",
+                  text: "✅ Готово",
+                  action: "goto",
+                  buttonType: "complete",
+                  target: "interests_result"
                 }
               ],
               markdown: false,
