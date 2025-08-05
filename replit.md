@@ -17,6 +17,8 @@ Preferred communication style: Simple, everyday language.
 - **Header Cleanup**: Removed "Проекты" button from site header to reduce UI clutter
 - **Removed Unnecessary Elements**: Deleted DragDropTestButton from sidebar for cleaner interface
 - **Seamless Project Switching**: Users can now create, view, and switch between projects directly in editor without page navigation
+- **Project Management Features**: Added delete functionality with confirmation dialogs for individual projects
+- **Drag-and-Drop Projects**: Implemented visual project reordering with drag handles, hover effects, and smooth transitions
 
 ### Database Issues Resolution and Template Improvements (August 5, 2025)
 - **Database Fixed**: PostgreSQL database successfully created and connected

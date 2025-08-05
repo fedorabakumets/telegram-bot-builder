@@ -112,6 +112,13 @@ export default function Editor() {
     getBotData
   } = useBotEditor(currentProject?.data as BotData);
 
+  // Обновляем данные бота при смене проекта
+  useEffect(() => {
+    if (currentProject?.data) {
+      setBotData(currentProject.data as BotData);
+    }
+  }, [currentProject?.id, currentProject?.data, setBotData]);
+
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
       if (!currentProject) return;

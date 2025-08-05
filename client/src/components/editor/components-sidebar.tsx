@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
+import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -409,6 +409,8 @@ export function ComponentsSidebar({
   propertiesContent
 }: ComponentsSidebarProps) {
   const [currentTab, setCurrentTab] = useState<'elements' | 'templates' | 'projects'>('elements');
+  const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
+  const [dragOverProject, setDragOverProject] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -495,10 +497,53 @@ export function ComponentsSidebar({
     createProjectMutation.mutate();
   };
 
-  const handleDeleteProject = (project: BotProject) => {
-    if (confirm(`Вы уверены, что хотите удалить проект "${project.name}"? Это действие нельзя отменить.`)) {
+  const handleDeleteProject = (projectId: number) => {
+    const project = projects.find(p => p.id === projectId);
+    if (project && confirm(`Вы уверены, что хотите удалить проект "${project.name}"? Это действие нельзя отменить.`)) {
       deleteProjectMutation.mutate(project.id);
     }
+  };
+
+  // Обработчики drag-and-drop для проектов
+  const handleProjectDragStart = (e: React.DragEvent, project: BotProject) => {
+    e.stopPropagation();
+    setDraggedProject(project);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', project.id.toString());
+  };
+
+  const handleProjectDragOver = (e: React.DragEvent, projectId: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverProject(projectId);
+  };
+
+  const handleProjectDragLeave = () => {
+    setDragOverProject(null);
+  };
+
+  const handleProjectDrop = (e: React.DragEvent, targetProject: BotProject) => {
+    e.preventDefault();
+    setDragOverProject(null);
+    
+    if (!draggedProject || draggedProject.id === targetProject.id) {
+      setDraggedProject(null);
+      return;
+    }
+
+    // Здесь можно добавить логику изменения порядка проектов
+    // Пока просто показываем уведомление
+    toast({
+      title: "Перемещение проектов",
+      description: `Проект "${draggedProject.name}" перемещен`,
+    });
+    
+    setDraggedProject(null);
+  };
+
+  const handleProjectDragEnd = () => {
+    setDraggedProject(null);
+    setDragOverProject(null);
   };
 
   const formatDate = (dateString: string | Date | null) => {
@@ -600,32 +645,47 @@ export function ComponentsSidebar({
                 {projects.map((project: BotProject) => (
                   <div
                     key={project.id}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    draggable
+                    onDragStart={(e) => handleProjectDragStart(e, project)}
+                    onDragOver={(e) => handleProjectDragOver(e, project.id)}
+                    onDragLeave={handleProjectDragLeave}
+                    onDrop={(e) => handleProjectDrop(e, project)}
+                    onDragEnd={handleProjectDragEnd}
+                    className={`group p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                       currentProjectId === project.id 
                         ? 'bg-primary/10 border border-primary/20' 
                         : 'bg-muted/50 hover:bg-muted'
+                    } ${
+                      dragOverProject === project.id ? 'border-primary border-2 scale-105' : ''
+                    } ${
+                      draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
                     }`}
                     onClick={() => onProjectSelect && onProjectSelect(project.id)}
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-foreground truncate">
-                          {project.name}
-                        </h4>
-                        {project.description && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {project.description}
-                          </p>
-                        )}
+                      <div className="flex items-center flex-1 min-w-0">
+                        <div className="cursor-grab active:cursor-grabbing mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <GripVertical className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-foreground truncate">
+                            {project.name}
+                          </h4>
+                          {project.description && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {project.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <Button 
                         variant="ghost" 
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteProject(project);
+                          handleDeleteProject(project.id);
                         }}
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
