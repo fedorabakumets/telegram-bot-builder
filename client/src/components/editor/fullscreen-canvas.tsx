@@ -88,42 +88,10 @@ export function FullscreenCanvas({
   }, [handleKeyDown, handleF11]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-white dark:bg-slate-950">
-      {/* Top controls */}
-      <div className="absolute top-4 right-4 z-50 flex items-center space-x-2">
-        <Button
-          onClick={toggleComponentsSidebar}
-          variant="outline"
-          size="sm"
-          className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-xl border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800"
-        >
-          <i className="fas fa-th-large mr-2"></i>
-          Компоненты
-        </Button>
-        <Button
-          onClick={onExitFullscreen}
-          variant="outline"
-          size="sm"
-          className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-xl border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800"
-        >
-          <i className="fas fa-times mr-2"></i>
-          Выйти из полноэкранного режима
-        </Button>
-      </div>
-
-      {/* Help text */}
-      <div className="absolute bottom-4 left-4 z-50">
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-lg shadow-xl border border-gray-200/50 dark:border-slate-700/50 px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
-          <div className="flex items-center space-x-2">
-            <i className="fas fa-keyboard text-blue-500"></i>
-            <span>ESC или F11 для выхода</span>
-          </div>
-        </div>
-      </div>
-
+    <div className="fixed inset-0 z-50 bg-white dark:bg-slate-950 flex">
       {/* Components Sidebar */}
       {showComponentsSidebar && (
-        <div className="absolute left-0 top-0 h-full w-80 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-r border-gray-200/50 dark:border-slate-700/50 shadow-2xl">
+        <div className="w-80 h-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-r border-gray-200/50 dark:border-slate-700/50 shadow-2xl flex-shrink-0">
           <div className="h-full flex flex-col">
             <div className="p-4 border-b border-gray-200/50 dark:border-slate-700/50">
               <div className="flex items-center justify-between">
@@ -147,28 +115,63 @@ export function FullscreenCanvas({
         </div>
       )}
 
-      {/* Canvas taking full screen */}
-      <div className={`transition-all duration-300 ${showComponentsSidebar ? 'ml-80' : 'ml-0'}`}>
-        <Canvas
-          nodes={nodes}
-          connections={connections}
-          selectedNodeId={selectedNodeId}
-          selectedConnectionId={selectedConnectionId}
-          onNodeSelect={onNodeSelect}
-          onNodeAdd={onNodeAdd}
-          onNodeDelete={onNodeDelete}
-          onNodeMove={onNodeMove}
-          onConnectionSelect={onConnectionSelect}
-          onConnectionDelete={onConnectionDelete}
-          onConnectionAdd={onConnectionAdd}
-          onNodesUpdate={onNodesUpdate}
-          onUndo={onUndo}
-          onRedo={onRedo}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onSave={onSave}
-          isSaving={isSaving}
-        />
+      {/* Main canvas area */}
+      <div className="flex-1 relative">
+        {/* Top controls */}
+        <div className="absolute top-4 right-4 z-50 flex items-center space-x-2">
+          <Button
+            onClick={toggleComponentsSidebar}
+            variant="outline"
+            size="sm"
+            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-xl border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800"
+          >
+            <i className="fas fa-th-large mr-2"></i>
+            Компоненты
+          </Button>
+          <Button
+            onClick={onExitFullscreen}
+            variant="outline"
+            size="sm"
+            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-xl border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800"
+          >
+            <i className="fas fa-times mr-2"></i>
+            Выйти из полноэкранного режима
+          </Button>
+        </div>
+
+        {/* Help text */}
+        <div className="absolute bottom-4 left-4 z-50">
+          <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-lg shadow-xl border border-gray-200/50 dark:border-slate-700/50 px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex items-center space-x-2">
+              <i className="fas fa-keyboard text-blue-500"></i>
+              <span>ESC или F11 для выхода</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Canvas taking full remaining space */}
+        <div className="w-full h-full">
+          <Canvas
+            nodes={nodes}
+            connections={connections}
+            selectedNodeId={selectedNodeId}
+            selectedConnectionId={selectedConnectionId}
+            onNodeSelect={onNodeSelect}
+            onNodeAdd={onNodeAdd}
+            onNodeDelete={onNodeDelete}
+            onNodeMove={onNodeMove}
+            onConnectionSelect={onConnectionSelect}
+            onConnectionDelete={onConnectionDelete}
+            onConnectionAdd={onConnectionAdd}
+            onNodesUpdate={onNodesUpdate}
+            onUndo={onUndo}
+            onRedo={onRedo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onSave={onSave}
+            isSaving={isSaving}
+          />
+        </div>
       </div>
     </div>
   );
