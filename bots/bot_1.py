@@ -267,7 +267,9 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = "Привет! Я ваш новый бот. Нажмите /help для получения помощи."
+    text = """👋 Добро пожаловать!
+
+Расскажите нам о ваших интересах. Выберите все, что вам подходит:"""
     # Определяем режим форматирования (приоритет у условного сообщения)
     if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
         current_parse_mode = conditional_parse_mode
@@ -281,7 +283,205 @@ async def start_handler(message: types.Message):
     if use_conditional_keyboard:
         await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
     else:
-        await message.answer(text, parse_mode=current_parse_mode if current_parse_mode else None)
+        # Создаем inline клавиатуру с поддержкой множественного выбора
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="⚽ Спорт", callback_data="multi_select_start_btn-sport"))
+        builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="multi_select_start_btn-music"))
+        builder.add(InlineKeyboardButton(text="📚 Книги", callback_data="multi_select_start_btn-books"))
+        builder.add(InlineKeyboardButton(text="✈️ Путешествия", callback_data="multi_select_start_btn-travel"))
+        builder.add(InlineKeyboardButton(text="💻 Технологии", callback_data="multi_select_start_btn-tech"))
+        builder.add(InlineKeyboardButton(text="🍳 Кулинария", callback_data="multi_select_start_btn-cooking"))
+        builder.add(InlineKeyboardButton(text="🎨 Искусство", callback_data="multi_select_start_btn-art"))
+        builder.add(InlineKeyboardButton(text="🎮 Игры", callback_data="multi_select_start_btn-games"))
+        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))
+        keyboard = builder.as_markup()
+        await message.answer(text, reply_markup=keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
+        
+        # Инициализируем состояние множественного выбора
+        user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+        user_data[message.from_user.id]["multi_select_start"] = []
+        user_data[message.from_user.id]["multi_select_node"] = "start"
+
+# Обработчики inline кнопок
+
+@dp.callback_query(lambda c: c.data == "start" or c.data.startswith("start_btn_"))
+async def handle_callback_start(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🔄 Изменить интересы"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Обрабатываем узел start: start
+    text = """👋 Добро пожаловать!
+
+Расскажите нам о ваших интересах. Выберите все, что вам подходит:"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для start узла
+        builder = InlineKeyboardBuilder()
+        keyboard = builder.as_markup()
+    # Отправляем сообщение start узла
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "start" or c.data.startswith("start_btn_"))
+async def handle_callback_start(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "🔄 Изменить интересы"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "button_click", button_display_text)
+    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
+    next_node_id = "start"
+    try:
+        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
+        if next_node_id == "start":
+            logging.info("Переход к узлу start")
+        elif next_node_id == "interests_result":
+            nav_text = """🎯 Ваши интересы:
+
+{user_interests}
+
+Спасибо за информацию! Теперь мы сможем предложить вам более подходящий контент."""
+            await callback_query.message.edit_text(nav_text)
+        else:
+            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+    except Exception as e:
+        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    
+    return  # Завершаем обработку после переадресации
+    
+    text = """👋 Добро пожаловать!
+
+Расскажите нам о ваших интересах. Выберите все, что вам подходит:"""
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    builder = InlineKeyboardBuilder()
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -348,6 +548,8 @@ async def handle_user_input(message: types.Message):
                     
                     if next_node_id == "start":
                         await handle_callback_start(fake_callback)
+                    elif next_node_id == "interests_result":
+                        await handle_callback_interests_result(fake_callback)
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
             except Exception as e:
@@ -430,6 +632,13 @@ async def handle_user_input(message: types.Message):
                     message_id=message.message_id
                 )
                 
+                if command == "/start":
+                    try:
+                        await start_handler(fake_message)
+                    except Exception as e:
+                        logging.error(f"Ошибка выполнения команды /start: {e}")
+                else:
+                    logging.warning(f"Неизвестная команда: {command}")
             elif option_action == "goto" and option_target:
                 # Переход к узлу
                 target_node_id = option_target
@@ -437,6 +646,8 @@ async def handle_user_input(message: types.Message):
                     # Вызываем обработчик для целевого узла
                     if target_node_id == "start":
                         await handle_callback_start(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "interests_result":
+                        await handle_callback_interests_result(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -449,6 +660,8 @@ async def handle_user_input(message: types.Message):
                         # Вызываем обработчик для следующего узла
                         if next_node_id == "start":
                             await handle_callback_start(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "interests_result":
+                            await handle_callback_interests_result(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -554,6 +767,13 @@ async def handle_user_input(message: types.Message):
                     logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
                     if next_node_id == "start":
                         logging.info(f"Переход к узлу start типа start")
+                    elif next_node_id == "interests_result":
+                        text = """🎯 Ваши интересы:
+
+{user_interests}
+
+Спасибо за информацию! Теперь мы сможем предложить вам более подходящий контент."""
+                        await message.answer(text)
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                 except Exception as e:
@@ -676,6 +896,35 @@ async def handle_user_input(message: types.Message):
             # Находим узел по ID и выполняем соответствующее действие
             if next_node_id == "start":
                 logging.info(f"Переход к узлу start типа start")
+            elif next_node_id == "interests_result":
+                text = """🎯 Ваши интересы:
+
+{user_interests}
+
+Спасибо за информацию! Теперь мы сможем предложить вам более подходящий контент."""
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["🔄 Изменить интересы"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="🔄 Изменить интересы", callback_data="start"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
@@ -829,8 +1078,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
         # Сохраняем выбранные опции в базу данных
         if selected_options:
             selected_text = ", ".join(selected_options)
+            if node_id == "start":
+                await save_user_data_to_db(user_id, "user_interests", selected_text)
             # Резервное сохранение если узел не найден
-            if not any(node_id == node for node in []):
+            if not any(node_id == node for node in ["start"]):
                 await save_user_data_to_db(user_id, f"multi_select_{node_id}", selected_text)
         
         # Очищаем состояние множественного выбора
@@ -839,6 +1090,10 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             user_data[user_id].pop("multi_select_node", None)
         
         # Переходим к следующему узлу, если указан
+        # Определяем следующий узел для каждого node_id
+        if node_id == "start":
+            # Переход к узлу interests_result
+            await handle_message_interests_result(callback_query.message)
         return
     
     # Обработка выбора опции
@@ -855,6 +1110,23 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
         
         # Находим текст кнопки по button_id
         button_text = None
+        if node_id == "start":
+            if button_id == "btn-sport":
+                button_text = "⚽ Спорт"
+            if button_id == "btn-music":
+                button_text = "🎵 Музыка"
+            if button_id == "btn-books":
+                button_text = "📚 Книги"
+            if button_id == "btn-travel":
+                button_text = "✈️ Путешествия"
+            if button_id == "btn-tech":
+                button_text = "💻 Технологии"
+            if button_id == "btn-cooking":
+                button_text = "🍳 Кулинария"
+            if button_id == "btn-art":
+                button_text = "🎨 Искусство"
+            if button_id == "btn-games":
+                button_text = "🎮 Игры"
         
         if button_text:
             selected_list = user_data[user_id][f"multi_select_{node_id}"]
@@ -867,6 +1139,39 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             
             # Обновляем клавиатуру с галочками
             builder = InlineKeyboardBuilder()
+            if node_id == "start":
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["⚽ Спорт", "🎵 Музыка", "📚 Книги", "✈️ Путешествия", "💻 Технологии", "🍳 Кулинария", "🎨 Искусство", "🎮 Игры"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                # Добавляем кнопки выбора с умным расположением
+                selected_mark = "✅ " if "⚽ Спорт" in selected_list else ""
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}⚽ Спорт", callback_data="multi_select_{node_id}_btn-sport"))
+                selected_mark = "✅ " if "🎵 Музыка" in selected_list else ""
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}🎵 Музыка", callback_data="multi_select_{node_id}_btn-music"))
+                selected_mark = "✅ " if "📚 Книги" in selected_list else ""
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}📚 Книги", callback_data="multi_select_{node_id}_btn-books"))
+                selected_mark = "✅ " if "✈️ Путешествия" in selected_list else ""
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}✈️ Путешествия", callback_data="multi_select_{node_id}_btn-travel"))
+                selected_mark = "✅ " if "💻 Технологии" in selected_list else ""
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}💻 Технологии", callback_data="multi_select_{node_id}_btn-tech"))
+                selected_mark = "✅ " if "🍳 Кулинария" in selected_list else ""
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}🍳 Кулинария", callback_data="multi_select_{node_id}_btn-cooking"))
+                selected_mark = "✅ " if "🎨 Искусство" in selected_list else ""
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}🎨 Искусство", callback_data="multi_select_{node_id}_btn-art"))
+                selected_mark = "✅ " if "🎮 Игры" in selected_list else ""
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}🎮 Игры", callback_data="multi_select_{node_id}_btn-games"))
+                builder.adjust(keyboard_width)
+                builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))
             
             keyboard = builder.as_markup()
             await callback_query.message.edit_reply_markup(reply_markup=keyboard)
@@ -881,7 +1186,128 @@ async def handle_multi_select_reply(message: types.Message):
     if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":
         node_id = user_data[user_id]["multi_select_node"]
         
+        if node_id == "start" and user_input == "Готово":
+            # Завершение множественного выбора для узла start
+            selected_options = user_data.get(user_id, {}).get("multi_select_{node_id}", [])
+            if selected_options:
+                selected_text = ", ".join(selected_options)
+                await save_user_data_to_db(user_id, "user_interests", selected_text)
+            
+            # Очищаем состояние
+            user_data[user_id].pop("multi_select_{node_id}", None)
+            user_data[user_id].pop("multi_select_node", None)
+            user_data[user_id].pop("multi_select_type", None)
+            
+            # Переход к следующему узлу
+            await handle_message_interests_result(message)
+            return
+        
         # Обработка выбора опции
+        if node_id == "start":
+            if user_input == "⚽ Спорт":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "⚽ Спорт" in selected_list:
+                    selected_list.remove("⚽ Спорт")
+                    await message.answer("❌ Убрано: ⚽ Спорт")
+                else:
+                    selected_list.append("⚽ Спорт")
+                    await message.answer("✅ Выбрано: ⚽ Спорт")
+                return
+            
+            if user_input == "🎵 Музыка":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "🎵 Музыка" in selected_list:
+                    selected_list.remove("🎵 Музыка")
+                    await message.answer("❌ Убрано: 🎵 Музыка")
+                else:
+                    selected_list.append("🎵 Музыка")
+                    await message.answer("✅ Выбрано: 🎵 Музыка")
+                return
+            
+            if user_input == "📚 Книги":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "📚 Книги" in selected_list:
+                    selected_list.remove("📚 Книги")
+                    await message.answer("❌ Убрано: 📚 Книги")
+                else:
+                    selected_list.append("📚 Книги")
+                    await message.answer("✅ Выбрано: 📚 Книги")
+                return
+            
+            if user_input == "✈️ Путешествия":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "✈️ Путешествия" in selected_list:
+                    selected_list.remove("✈️ Путешествия")
+                    await message.answer("❌ Убрано: ✈️ Путешествия")
+                else:
+                    selected_list.append("✈️ Путешествия")
+                    await message.answer("✅ Выбрано: ✈️ Путешествия")
+                return
+            
+            if user_input == "💻 Технологии":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "💻 Технологии" in selected_list:
+                    selected_list.remove("💻 Технологии")
+                    await message.answer("❌ Убрано: 💻 Технологии")
+                else:
+                    selected_list.append("💻 Технологии")
+                    await message.answer("✅ Выбрано: 💻 Технологии")
+                return
+            
+            if user_input == "🍳 Кулинария":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "🍳 Кулинария" in selected_list:
+                    selected_list.remove("🍳 Кулинария")
+                    await message.answer("❌ Убрано: 🍳 Кулинария")
+                else:
+                    selected_list.append("🍳 Кулинария")
+                    await message.answer("✅ Выбрано: 🍳 Кулинария")
+                return
+            
+            if user_input == "🎨 Искусство":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "🎨 Искусство" in selected_list:
+                    selected_list.remove("🎨 Искусство")
+                    await message.answer("❌ Убрано: 🎨 Искусство")
+                else:
+                    selected_list.append("🎨 Искусство")
+                    await message.answer("✅ Выбрано: 🎨 Искусство")
+                return
+            
+            if user_input == "🎮 Игры":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "🎮 Игры" in selected_list:
+                    selected_list.remove("🎮 Игры")
+                    await message.answer("❌ Убрано: 🎮 Игры")
+                else:
+                    selected_list.append("🎮 Игры")
+                    await message.answer("✅ Выбрано: 🎮 Игры")
+                return
+            
     
     # Если не множественный выбор, передаем дальше по цепочке обработчиков
     pass
