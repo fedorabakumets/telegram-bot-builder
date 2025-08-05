@@ -4,7 +4,9 @@ import {
   PanelTop, 
   PanelLeft, 
   LayoutGrid,
-  PanelRight
+  PanelRight,
+  EyeOff,
+  Eye
 } from 'lucide-react';
 
 interface LayoutButtonsProps {
@@ -126,6 +128,78 @@ export function LayoutButtons({
             </TooltipContent>
           </Tooltip>
         )}
+
+        {/* Дополнительные кнопки управления */}
+        {(() => {
+          const visiblePanels = [headerVisible, sidebarVisible, canvasVisible, propertiesVisible].filter(Boolean).length;
+          const hiddenPanels = 4 - visiblePanels;
+
+          // Если видна только одна панель - показываем кнопку "Скрыть текущую"
+          if (visiblePanels === 1) {
+            let currentVisibleAction;
+            let currentVisibleIcon;
+            let currentVisibleTooltip;
+
+            if (sidebarVisible) {
+              currentVisibleAction = onToggleSidebar;
+              currentVisibleIcon = <EyeOff className="h-4 w-4" />;
+              currentVisibleTooltip = "Скрыть боковую панель";
+            } else if (headerVisible) {
+              currentVisibleAction = onToggleHeader;
+              currentVisibleIcon = <EyeOff className="h-4 w-4" />;
+              currentVisibleTooltip = "Скрыть шапку";
+            } else if (canvasVisible) {
+              currentVisibleAction = onToggleCanvas;
+              currentVisibleIcon = <EyeOff className="h-4 w-4" />;
+              currentVisibleTooltip = "Скрыть холст";
+            } else if (propertiesVisible) {
+              currentVisibleAction = onToggleProperties;
+              currentVisibleIcon = <EyeOff className="h-4 w-4" />;
+              currentVisibleTooltip = "Скрыть панель свойств";
+            }
+
+            return currentVisibleAction && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={currentVisibleAction}
+                    className="h-8 w-8 p-0 bg-orange-600 hover:bg-orange-700 text-white rounded-md"
+                  >
+                    {currentVisibleIcon}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{currentVisibleTooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+          
+          // Если скрыто несколько панелей - показываем кнопку "Показать всё"
+          if (hiddenPanels > 1 && onShowFullLayout) {
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onShowFullLayout}
+                    className="h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Показать все панели</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+
+          return null;
+        })()}
       </div>
     </TooltipProvider>
   );
