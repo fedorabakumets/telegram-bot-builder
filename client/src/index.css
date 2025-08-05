@@ -1862,3 +1862,53 @@ input[type="checkbox"]:focus {
 .dark .live-preview-heading {
   color: #f9fafb;
 }
+
+/* Touch styles для мобильных устройств */
+@media (pointer: coarse) {
+  .canvas-node {
+    touch-action: none;
+  }
+  
+  .component-item {
+    touch-action: none;
+    user-select: none;
+  }
+  
+  /* Touch drag feedback */
+  .component-item:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  
+  /* Prevent text selection during touch drag */
+  .components-sidebar * {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Улучшенное перетаскивание на touch устройствах */
+  [draggable="true"] {
+    -webkit-user-drag: element;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Touch feedback для элементов компонентов */
+  .components-sidebar [draggable="true"]:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Увеличенные области для touch взаимодействия */
+  .components-sidebar button,
+  .components-sidebar [draggable="true"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

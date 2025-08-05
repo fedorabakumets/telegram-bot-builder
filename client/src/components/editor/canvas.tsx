@@ -244,6 +244,8 @@ export function Canvas({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving]);
 
+
+
   // Handle mouse events for panning
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -309,6 +311,40 @@ export function Canvas({
       onNodeAdd(newNode);
     }
   }, [onNodeAdd, pan, zoom]);
+
+  // Обработчик canvas-drop события для touch устройств  
+  const handleCanvasDrop = useCallback((e: CustomEvent) => {
+    const { component, position } = e.detail;
+    
+    // Transform screen coordinates to canvas coordinates
+    const canvasX = (position.x - pan.x) / (zoom / 100);
+    const canvasY = (position.y - pan.y) / (zoom / 100);
+    
+    const newNode: Node = {
+      id: nanoid(),
+      type: component.type,
+      position: { x: Math.max(0, canvasX - 80), y: Math.max(0, canvasY - 25) }, // Center the node
+      data: {
+        keyboardType: 'none',
+        buttons: [],
+        oneTimeKeyboard: false,
+        resizeKeyboard: true,
+        markdown: false,
+        ...component.defaultData
+      }
+    };
+    
+    onNodeAdd(newNode);
+  }, [onNodeAdd, pan, zoom]);
+
+  // Handle canvas-drop событие для touch устройств
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
+    if (canvasElement) {
+      canvasElement.addEventListener('canvas-drop', handleCanvasDrop as EventListener);
+      return () => canvasElement.removeEventListener('canvas-drop', handleCanvasDrop as EventListener);
+    }
+  }, [handleCanvasDrop]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -620,6 +656,7 @@ export function Canvas({
             cursor: isPanning ? 'grabbing' : 'grab'
           }}
           data-drag-over={isDragOver}
+          data-canvas-drop-zone
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}

@@ -419,6 +419,55 @@ export function ComponentsSidebar({
     onComponentDrag(component);
   };
 
+  // Touch события для мобильных устройств
+  const [touchedComponent, setTouchedComponent] = useState<ComponentDefinition | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  const handleTouchStart = (e: React.TouchEvent, component: ComponentDefinition) => {
+    const touch = e.touches[0];
+    setTouchedComponent(component);
+    setIsDragging(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDragOffset({
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top
+    });
+    onComponentDrag(component);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !touchedComponent) return;
+    e.preventDefault();
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!isDragging || !touchedComponent) return;
+    
+    const touch = e.changedTouches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    // Проверяем, попали ли мы на холст или в область холста
+    const canvas = document.querySelector('[data-canvas-drop-zone]');
+    if (canvas && (canvas.contains(element) || element === canvas)) {
+      // Создаем синтетическое событие drop
+      const dropEvent = new CustomEvent('canvas-drop', {
+        detail: {
+          component: touchedComponent,
+          position: {
+            x: touch.clientX - (canvas.getBoundingClientRect().left),
+            y: touch.clientY - (canvas.getBoundingClientRect().top)
+          }
+        }
+      });
+      canvas.dispatchEvent(dropEvent);
+    }
+    
+    setTouchedComponent(null);
+    setIsDragging(false);
+    setDragOffset({ x: 0, y: 0 });
+  };
+
   // Загрузка списка проектов
   const { data: projects = [], isLoading } = useQuery<BotProject[]>({
     queryKey: ['/api/projects'],
@@ -705,7 +754,12 @@ export function ComponentsSidebar({
                   key={component.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, component)}
-                  className="flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors"
+                  onTouchStart={(e) => handleTouchStart(e, component)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  className={`flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors ${
+                    touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
+                  }`}
                 >
                   <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mr-3", component.color)}>
                     <i className={`${component.icon} text-sm`}></i>
