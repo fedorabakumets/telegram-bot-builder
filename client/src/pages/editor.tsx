@@ -177,6 +177,10 @@ export default function Editor() {
     setShowTemplates(true);
   }, []);
 
+  const handleGoToProjects = useCallback(() => {
+    setLocation('/');
+  }, [setLocation]);
+
   const handleSelectTemplate = useCallback((template: any) => {
     // Применяем шаблон к текущему проекту
     try {
@@ -274,6 +278,7 @@ export default function Editor() {
         onSaveAsTemplate={handleSaveAsTemplate}
         onLoadTemplate={handleLoadTemplate}
         onLayoutSettings={() => setShowLayoutManager(true)}
+        onGoToProjects={handleGoToProjects}
         isSaving={updateProjectMutation.isPending}
       />
     );
@@ -327,6 +332,7 @@ export default function Editor() {
         onLoadTemplate={handleLoadTemplate}
         onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
         onLayoutChange={updateLayoutConfig}
+        onGoToProjects={handleGoToProjects}
         headerContent={headerContent}
         sidebarContent={<div>Sidebar</div>}
         canvasContent={canvasContent}
@@ -381,6 +387,7 @@ export default function Editor() {
               onLoadTemplate={handleLoadTemplate}
               onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
+              onGoToProjects={handleGoToProjects}
               headerContent={
                 <AdaptiveHeader
                   config={layoutConfig}

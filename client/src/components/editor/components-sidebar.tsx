@@ -6,13 +6,14 @@ import QuickLayoutSwitcher from '@/components/layout/quick-layout-switcher';
 import DragLayoutManager from '@/components/layout/drag-layout-manager';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Layout, Settings, Grid } from 'lucide-react';
+import { Layout, Settings, Grid, Home } from 'lucide-react';
 
 interface ComponentsSidebarProps {
   onComponentDrag: (component: ComponentDefinition) => void;
   onLoadTemplate?: () => void;
   onOpenLayoutCustomizer?: () => void;
   onLayoutChange?: (config: any) => void;
+  onGoToProjects?: () => void;
   headerContent?: React.ReactNode;
   sidebarContent?: React.ReactNode;
   canvasContent?: React.ReactNode;
@@ -388,12 +389,13 @@ export function ComponentsSidebar({
   onLoadTemplate, 
   onOpenLayoutCustomizer, 
   onLayoutChange,
+  onGoToProjects,
   headerContent,
   sidebarContent,
   canvasContent,
   propertiesContent
 }: ComponentsSidebarProps) {
-  const [currentTab, setCurrentTab] = useState<'elements' | 'templates'>('elements');
+  const [currentTab, setCurrentTab] = useState<'elements' | 'templates' | 'projects'>('elements');
   
   const handleDragStart = (e: React.DragEvent, component: ComponentDefinition) => {
     e.dataTransfer.setData('application/json', JSON.stringify(component));
@@ -416,7 +418,7 @@ export function ComponentsSidebar({
         <div className="flex space-x-1 bg-muted rounded-lg p-1">
           <button 
             onClick={() => setCurrentTab('elements')}
-            className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            className={`flex-1 px-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
               currentTab === 'elements' 
                 ? 'bg-background text-foreground shadow-sm' 
                 : 'text-muted-foreground hover:text-foreground'
@@ -426,7 +428,7 @@ export function ComponentsSidebar({
           </button>
           <button 
             onClick={handleTemplatesClick}
-            className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            className={`flex-1 px-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
               currentTab === 'templates' 
                 ? 'bg-background text-foreground shadow-sm' 
                 : 'text-muted-foreground hover:text-foreground'
@@ -434,12 +436,45 @@ export function ComponentsSidebar({
           >
             Шаблоны
           </button>
-          
+          <button 
+            onClick={() => {
+              setCurrentTab('projects');
+              if (onGoToProjects) {
+                onGoToProjects();
+              }
+            }}
+            className={`flex-1 px-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              currentTab === 'projects' 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Проекты
+          </button>
         </div>
       </div>
       
       {/* Components List */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {currentTab === 'projects' && (
+          <div className="space-y-4">
+            <div className="text-center py-8">
+              <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Переход к проектам</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Вернитесь к списку проектов для управления ботами
+              </p>
+              <Button 
+                onClick={onGoToProjects}
+                className="w-full"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Перейти к проектам
+              </Button>
+            </div>
+          </div>
+        )}
+        
         {currentTab === 'elements' && componentCategories.map((category) => (
           <div key={category.title}>
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
