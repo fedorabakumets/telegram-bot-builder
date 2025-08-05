@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { SimpleLayoutConfig } from './simple-layout-customizer';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
 
 interface FlexibleLayoutProps {
   config: SimpleLayoutConfig;
@@ -8,6 +9,7 @@ interface FlexibleLayoutProps {
   sidebarContent: React.ReactNode;
   canvasContent: React.ReactNode;
   propertiesContent: React.ReactNode;
+  onConfigChange?: (newConfig: SimpleLayoutConfig) => void;
 }
 
 export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
@@ -15,7 +17,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   headerContent,
   sidebarContent,
   canvasContent,
-  propertiesContent
+  propertiesContent,
+  onConfigChange
 }) => {
   const layoutStyles = useMemo(() => {
     const visibleElements = config.elements.filter(el => el.visible);
@@ -118,16 +121,95 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     const visibleElements = config.elements.filter(el => el.visible);
     
     if (visibleElements.length === 0) {
-      return <div className="h-full flex items-center justify-center text-muted-foreground">
-        Нет видимых элементов
-      </div>;
+      return (
+        <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground bg-background relative">
+          <div className="text-center mb-8">
+            <h3 className="text-lg font-medium mb-2">Все панели скрыты</h3>
+            <p className="text-sm">Используйте кнопки ниже для показа панелей</p>
+          </div>
+          
+          {/* Кнопки управления макетом */}
+          <div className="flex items-center space-x-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 p-3">
+            <button
+              onClick={() => {
+                if (onConfigChange) {
+                  const newConfig = { ...config };
+                  const headerElement = newConfig.elements.find(el => el.id === 'header');
+                  if (headerElement) {
+                    headerElement.visible = true;
+                    onConfigChange(newConfig);
+                  }
+                }
+              }}
+              className="p-3 rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400"
+              title="Показать шапку"
+            >
+              <Navigation className="w-5 h-5" />
+            </button>
+            
+            <button
+              onClick={() => {
+                if (onConfigChange) {
+                  const newConfig = { ...config };
+                  const sidebarElement = newConfig.elements.find(el => el.id === 'sidebar');
+                  if (sidebarElement) {
+                    sidebarElement.visible = true;
+                    onConfigChange(newConfig);
+                  }
+                }
+              }}
+              className="p-3 rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400"
+              title="Показать боковую панель"
+            >
+              <Sidebar className="w-5 h-5" />
+            </button>
+            
+            <button
+              onClick={() => {
+                if (onConfigChange) {
+                  const newConfig = { ...config };
+                  const canvasElement = newConfig.elements.find(el => el.id === 'canvas');
+                  if (canvasElement) {
+                    canvasElement.visible = true;
+                    onConfigChange(newConfig);
+                  }
+                }
+              }}
+              className="p-3 rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400"
+              title="Показать холст"
+            >
+              <Monitor className="w-5 h-5" />
+            </button>
+            
+            <button
+              onClick={() => {
+                if (onConfigChange) {
+                  const newConfig = { ...config };
+                  const propertiesElement = newConfig.elements.find(el => el.id === 'properties');
+                  if (propertiesElement) {
+                    propertiesElement.visible = true;
+                    onConfigChange(newConfig);
+                  }
+                }
+              }}
+              className="p-3 rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400"
+              title="Показать панель свойств"
+            >
+              <Sliders className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      );
     }
 
     // Если есть только один элемент
     if (visibleElements.length === 1) {
+      const singleElement = visibleElements[0];
       return (
-        <div className="h-full">
-          {renderElement(visibleElements[0])}
+        <div className="h-full w-full overflow-hidden bg-background">
+          <div className="h-full w-full">
+            {getElementContent(singleElement.type)}
+          </div>
         </div>
       );
     }
@@ -201,11 +283,15 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 
     // Если есть боковые панели и основной контент
     if ((leftEl || rightEl) && centerEl && !topEl && !bottomEl) {
+      const leftSize = leftEl?.size || 0;
+      const rightSize = rightEl?.size || 0;
+      const centerSize = Math.max(100 - leftSize - rightSize, 30); // минимум 30% для центра
+      
       return (
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {leftEl && (
             <>
-              <ResizablePanel defaultSize={leftEl.size} minSize={15} maxSize={40}>
+              <ResizablePanel defaultSize={leftSize} minSize={15} maxSize={40}>
                 <div className="h-full border-r border-border bg-background overflow-auto">
                   {getElementContent(leftEl.type)}
                 </div>
@@ -213,7 +299,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               <ResizableHandle />
             </>
           )}
-          <ResizablePanel defaultSize={centerEl.size || 50}>
+          <ResizablePanel defaultSize={centerSize} minSize={30}>
             <div className="h-full bg-background overflow-auto">
               {getElementContent(centerEl.type)}
             </div>
@@ -221,7 +307,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           {rightEl && (
             <>
               <ResizableHandle />
-              <ResizablePanel defaultSize={rightEl.size} minSize={15} maxSize={40}>
+              <ResizablePanel defaultSize={rightSize} minSize={15} maxSize={40}>
                 <div className="h-full border-l border-border bg-background overflow-auto">
                   {getElementContent(rightEl.type)}
                 </div>
@@ -252,7 +338,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 <ResizableHandle />
               </>
             )}
-            <ResizablePanel defaultSize={centerEl?.size || 50}>
+            <ResizablePanel defaultSize={Math.max(100 - (leftEl?.size || 0) - (rightEl?.size || 0), 30)} minSize={30}>
               <div className="h-full bg-background overflow-auto">
                 {centerEl ? getElementContent(centerEl.type) : null}
               </div>

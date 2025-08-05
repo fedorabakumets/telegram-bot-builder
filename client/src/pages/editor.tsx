@@ -497,6 +497,7 @@ export default function Editor() {
             sidebarContent={sidebarContent}
             canvasContent={canvasContent}
             propertiesContent={propertiesContent}
+            onConfigChange={setFlexibleLayoutConfig}
           />
         </SimpleLayoutCustomizer>
       );
