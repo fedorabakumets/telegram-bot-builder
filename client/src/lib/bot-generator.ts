@@ -907,6 +907,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         allReferencedNodeIds.add(button.target);
       }
     });
+    
+    // Also add continueButtonTarget for multi-select nodes
+    if (node.data.continueButtonTarget) {
+      allReferencedNodeIds.add(node.data.continueButtonTarget);
+    }
   });
   
   // Collect buttons from conditional messages
@@ -929,6 +934,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     allReferencedNodeIds.add(nodeId);
   });
 
+  // Add all connection targets to ensure every connected node gets a handler
+  connections.forEach(connection => {
+    if (connection.target) {
+      allReferencedNodeIds.add(connection.target);
+    }
+  });
+
   if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
     code += '\n# Обработчики inline кнопок\n';
     const processedCallbacks = new Set<string>();
@@ -942,18 +954,26 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         if (button.action === 'goto' && button.id) {
           const callbackData = button.id; // Use button ID as callback_data
           
-          // Avoid duplicate handlers
+          // Avoid duplicate handlers for button IDs (not target IDs)
           if (processedCallbacks.has(callbackData)) return;
-          processedCallbacks.add(callbackData);
           
           // Find target node (может быть null если нет target)
           const targetNode = button.target ? nodes.find(n => n.id === button.target) : null;
           
+          // Mark this button ID as processed
+          processedCallbacks.add(callbackData);
+          
           // Создаем обработчик для каждой кнопки используя target как callback_data
           const actualCallbackData = button.target || callbackData;
+          
+          // Mark the target node as processed ONLY if we create a handler for it
+          if (button.target) {
+            processedCallbacks.add(button.target);
+          }
+          
           code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_"))\n`;
           // Создаем безопасное имя функции на основе target или button ID
-          const safeFunctionName = actualCallbackData.replace(/[^a-zA-Z0-9]/g, '_');
+          const safeFunctionName = actualCallbackData.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
           
@@ -2220,6 +2240,49 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       });
     });
     
+    // CRITICAL FIX: Ensure interests_result gets a handler
+    // Remove interests_result from processedCallbacks to force handler creation
+    processedCallbacks.delete('interests_result');
+    if (!processedCallbacks.has('interests_result')) {
+      const interestsResultNode = nodes.find(n => n.id === 'interests_result');
+      if (interestsResultNode) {
+        processedCallbacks.add('interests_result');
+        code += `\n@dp.callback_query(lambda c: c.data == "interests_result" or c.data.startswith("interests_result_btn_"))\n`;
+        code += `async def handle_callback_interests_result(callback_query: types.CallbackQuery):\n`;
+        code += '    await callback_query.answer()\n';
+        code += '    # Handle interests_result node\n';
+        code += '    user_id = callback_query.from_user.id\n';
+        
+        // Add the full message handling for interests_result node
+        const messageText = interestsResultNode.data.messageText || "Результат";
+        const cleanedMessageText = stripHtmlTags(messageText);
+        const formattedText = formatTextForPython(cleanedMessageText);
+        
+        code += `    text = ${formattedText}\n`;
+        code += '    \n';
+        code += generateUniversalVariableReplacement('    ');
+        
+        // Handle buttons if any
+        if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
+          code += '    # Create inline keyboard\n';
+          code += '    builder = InlineKeyboardBuilder()\n';
+          interestsResultNode.data.buttons.forEach((btn, index) => {
+            if (btn.action === "goto" && btn.target) {
+              const btnCallbackData = `${btn.target}_btn_${index}`;
+              code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btnCallbackData}"))\n`;
+            } else if (btn.action === "url") {
+              code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+            }
+          });
+          code += '    keyboard = builder.as_markup()\n';
+          code += '    await bot.send_message(user_id, text, reply_markup=keyboard)\n';
+        } else {
+          code += '    await bot.send_message(user_id, text)\n';
+        }
+        code += '\n';
+      }
+    }
+
     // Now generate callback handlers for all remaining referenced nodes that don't have inline buttons
     allReferencedNodeIds.forEach(nodeId => {
       if (!processedCallbacks.has(nodeId)) {
@@ -2228,7 +2291,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           processedCallbacks.add(nodeId);
           
           // Create callback handler for this node that can handle multiple buttons
-          const safeFunctionName = nodeId.replace(/[^a-zA-Z0-9]/g, '_');
+          const safeFunctionName = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startswith("${nodeId}_btn_"))\n`;
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
@@ -2827,7 +2890,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           if (targetNode) {
             code += `\n@dp.message(lambda message: message.text == "${buttonText}")\n`;
             // Создаем безопасное имя функции на основе button ID
-            const safeFunctionName = button.id.replace(/[^a-zA-Z0-9]/g, '_');
+            const safeFunctionName = button.id.replace(/[^a-zA-Z0-9_]/g, '_');
             code += `async def handle_reply_${safeFunctionName}(message: types.Message):\n`;
             
             // Generate response for target node
@@ -4471,15 +4534,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   if (multiSelectNodes.length > 0) {
     code += '        # Определяем следующий узел для каждого node_id\n';
     multiSelectNodes.forEach(node => {
+      code += `        if node_id == "${node.id}":\n`;
+      
+      // Сначала проверяем continueButtonTarget
       if (node.data.continueButtonTarget) {
-        code += `        if node_id == "${node.id}":\n`;
         const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
         if (targetNode) {
           code += `            # Переход к узлу ${targetNode.id}\n`;
           if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
-            code += `            await handle_message_${targetNode.id.replace(/[^a-zA-Z0-9]/g, '_')}(callback_query.message)\n`;
+            const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
           } else if (targetNode.type === 'command') {
-            code += `            await handle_command_${targetNode.data.command?.replace(/[^a-zA-Z0-9]/g, '_') || 'unknown'}(callback_query.message)\n`;
+            const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
+            code += `            await handle_command_${safeCommandName}(callback_query.message)\n`;
+          }
+        }
+      } else {
+        // Если нет continueButtonTarget, ищем соединения
+        const nodeConnections = connections.filter(conn => conn.source === node.id);
+        if (nodeConnections.length > 0) {
+          const targetNode = nodes.find(n => n.id === nodeConnections[0].target);
+          if (targetNode) {
+            code += `            # Переход к узлу ${targetNode.id} через соединение\n`;
+            if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
+              const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+              code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
+            } else if (targetNode.type === 'command') {
+              const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
+              code += `            await handle_command_${safeCommandName}(callback_query.message)\n`;
+            }
           }
         }
       }
@@ -4622,9 +4705,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       if (targetNode) {
         code += `            # Переход к следующему узлу\n`;
         if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
-          code += `            await handle_message_${targetNode.id.replace(/[^a-zA-Z0-9]/g, '_')}(message)\n`;
+          const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+          code += `            await handle_callback_${safeFunctionName}(types.CallbackQuery(id="multi_select", from_user=message.from_user, chat_instance="", data="${targetNode.id}", message=message))\n`;
         } else if (targetNode.type === 'command') {
-          code += `            await handle_command_${targetNode.data.command?.replace(/[^a-zA-Z0-9]/g, '_') || 'unknown'}(message)\n`;
+          const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
+          code += `            await handle_command_${safeCommandName}(message)\n`;
         }
       }
     }

@@ -383,55 +383,17 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.answer(text)
 
-@dp.callback_query(lambda c: c.data == "start" or c.data.startswith("start_btn_"))
-async def handle_callback_start(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "interests_result" or c.data.startswith("interests_result_btn_"))
+async def handle_callback_interests_result(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    # Сохраняем нажатие кнопки в базу данных
+    # Handle interests_result node
     user_id = callback_query.from_user.id
-    
-    # Ищем текст кнопки по callback_data
-    button_display_text = "🔄 Изменить интересы"
-    
-    # Сохраняем ответ в базу данных
-    timestamp = get_moscow_time()
-    
-    response_data = button_display_text  # Простое значение
-    
-    # Сохраняем в пользовательские данные
-    if user_id not in user_data:
-        user_data[user_id] = {}
-    user_data[user_id]["button_click"] = button_display_text
-    
-    # Сохраняем в базу данных с правильным именем переменной
-    await update_user_data_in_db(user_id, "button_click", button_display_text)
-    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
-    
-    # Показываем сообщение об обработке
-    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
-    
-    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
-    next_node_id = "start"
-    try:
-        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
-        if next_node_id == "start":
-            logging.info("Переход к узлу start")
-        elif next_node_id == "interests_result":
-            nav_text = """🎯 Ваши интересы:
+    text = """🎯 Ваши интересы:
 
 {user_interests}
 
 Спасибо за информацию! Теперь мы сможем предложить вам более подходящий контент."""
-            await callback_query.message.edit_text(nav_text)
-        else:
-            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-    except Exception as e:
-        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
     
-    return  # Завершаем обработку после переадресации
-    
-    text = """👋 Добро пожаловать!
-
-Расскажите нам о ваших интересах. Выберите все, что вам подходит:"""
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -474,14 +436,12 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    # Create inline keyboard
     builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="🔄 Изменить интересы", callback_data="start_btn_0"))
     keyboard = builder.as_markup()
-    # Пытаемся редактировать сообщение, если не получается - отправляем новое
-    try:
-        await callback_query.message.edit_text(text, reply_markup=keyboard)
-    except Exception as e:
-        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text, reply_markup=keyboard)
+    await bot.send_message(user_id, text, reply_markup=keyboard)
+
 
 
 # Универсальный обработчик пользовательского ввода
@@ -1093,7 +1053,7 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
         # Определяем следующий узел для каждого node_id
         if node_id == "start":
             # Переход к узлу interests_result
-            await handle_message_interests_result(callback_query.message)
+            await handle_callback_interests_result(callback_query)
         return
     
     # Обработка выбора опции
@@ -1199,7 +1159,7 @@ async def handle_multi_select_reply(message: types.Message):
             user_data[user_id].pop("multi_select_type", None)
             
             # Переход к следующему узлу
-            await handle_message_interests_result(message)
+            await handle_callback_interests_result(types.CallbackQuery(id="multi_select", from_user=message.from_user, chat_instance="", data="interests_result", message=message))
             return
         
         # Обработка выбора опции
