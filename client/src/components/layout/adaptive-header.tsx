@@ -134,18 +134,6 @@ export function AdaptiveHeader({
         <div className="h-px w-full bg-border my-2"></div>
       )}
       
-      {onLayoutSettings && (
-        <Button 
-          variant="ghost" 
-          size={isCompact ? "sm" : "sm"}
-          onClick={onLayoutSettings}
-          className={`${isVertical ? 'w-full justify-start' : ''}`}
-        >
-          <Layout className="h-4 w-4" />
-          {!isVertical && <span>Макет</span>}
-        </Button>
-      )}
-      
       <ThemeToggle />
     </div>
   );
