@@ -35,97 +35,94 @@ export function LayoutButtons({
   return (
     <TooltipProvider>
       <div className={`flex items-center gap-1 p-2 bg-background border border-border rounded-lg ${className}`}>
-        {/* Кнопка скрыть шапку - показывается только когда шапка видна */}
-        {headerVisible && (
+        {/* Кнопка переключения шапки - всегда видна */}
+        {onToggleHeader && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onToggleHeader}
-                className="h-8 w-8 p-0 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
+                className={`h-8 w-8 p-0 rounded-md ${
+                  headerVisible 
+                    ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                    : 'bg-gray-300 hover:bg-gray-400 text-gray-600'
+                }`}
               >
                 <PanelTop className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Скрыть шапку</p>
+              <p>{headerVisible ? 'Скрыть шапку' : 'Показать шапку'}</p>
             </TooltipContent>
           </Tooltip>
         )}
 
-        {/* Кнопка скрыть боковую панель - показывается только когда боковая панель видна */}
-        {sidebarVisible && (
+        {/* Кнопка переключения боковой панели - всегда видна */}
+        {onToggleSidebar && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onToggleSidebar}
-                className="h-8 w-8 p-0 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
+                className={`h-8 w-8 p-0 rounded-md ${
+                  sidebarVisible 
+                    ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                    : 'bg-gray-300 hover:bg-gray-400 text-gray-600'
+                }`}
               >
                 <PanelLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Скрыть боковую панель</p>
+              <p>{sidebarVisible ? 'Скрыть боковую панель' : 'Показать боковую панель'}</p>
             </TooltipContent>
           </Tooltip>
         )}
 
-        {/* Кнопка скрыть холст - показывается только когда холст виден */}
-        {canvasVisible && (
+        {/* Кнопка переключения холста - всегда видна */}
+        {onToggleCanvas && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onToggleCanvas}
-                className="h-8 w-8 p-0 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
+                className={`h-8 w-8 p-0 rounded-md ${
+                  canvasVisible 
+                    ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                    : 'bg-gray-300 hover:bg-gray-400 text-gray-600'
+                }`}
               >
                 <LayoutGrid className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Скрыть холст</p>
+              <p>{canvasVisible ? 'Скрыть холст' : 'Показать холст'}</p>
             </TooltipContent>
           </Tooltip>
         )}
 
-        {/* Кнопка скрыть панель свойств - показывается только когда панель свойств видна */}
-        {propertiesVisible && (
+        {/* Кнопка переключения панели свойств - всегда видна */}
+        {onToggleProperties && (
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onToggleProperties}
-                className="h-8 w-8 p-0 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
+                className={`h-8 w-8 p-0 rounded-md ${
+                  propertiesVisible 
+                    ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                    : 'bg-gray-300 hover:bg-gray-400 text-gray-600'
+                }`}
               >
                 <PanelRight className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Скрыть панель свойств</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-
-        {/* Кнопка показать всё - показывается когда что-то скрыто */}
-        {(!headerVisible || !sidebarVisible || !canvasVisible || !propertiesVisible) && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"  
-                size="sm"
-                onClick={onShowFullLayout}
-                className="h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Показать всё</p>
+              <p>{propertiesVisible ? 'Скрыть панель свойств' : 'Показать панель свойств'}</p>
             </TooltipContent>
           </Tooltip>
         )}
