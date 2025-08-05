@@ -3731,11 +3731,31 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             code += `                builder = InlineKeyboardBuilder()\n`;
+            
+            // Добавляем логику для умного расположения кнопок
+            code += '                # Функция для определения количества колонок на основе текста кнопок\n';
+            code += '                def calculate_keyboard_width(buttons_data):\n';
+            code += '                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
+            code += '                    if max_text_length <= 6:  # Короткие тексты\n';
+            code += '                        return 3  # 3 колонки\n';
+            code += '                    elif max_text_length <= 12:  # Средние тексты\n';
+            code += '                        return 2  # 2 колонки\n';
+            code += '                    else:  # Длинные тексты\n';
+            code += '                        return 1  # 1 колонка\n';
+            code += '                \n';
+            
+            // Создаем массив текстов кнопок для расчета
+            const targetButtonTexts = targetNode.data.buttons.map(btn => btn.text || 'Кнопка');
+            code += `                button_texts = [${targetButtonTexts.map(text => `"${text}"`).join(', ')}]\n`;
+            code += '                keyboard_width = calculate_keyboard_width(button_texts)\n';
+            code += '                \n';
+            
             targetNode.data.buttons.forEach(button => {
               const buttonText = button.text || 'Кнопка';
               const buttonTarget = button.target || button.id;
               code += `                builder.add(InlineKeyboardButton(text="${buttonText}", callback_data="${buttonTarget}"))\n`;
             });
+            code += '                builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
             code += `                keyboard = builder.as_markup()\n`;
             code += `                await message.answer(text, reply_markup=keyboard)\n`;
           } else {
@@ -4019,6 +4039,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         // Добавляем кнопки если есть
         if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
           code += '                builder = InlineKeyboardBuilder()\n';
+          
+          // Добавляем логику для умного расположения кнопок
+          code += '                # Функция для определения количества колонок на основе текста кнопок\n';
+          code += '                def calculate_keyboard_width(buttons_data):\n';
+          code += '                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
+          code += '                    if max_text_length <= 6:  # Короткие тексты\n';
+          code += '                        return 3  # 3 колонки\n';
+          code += '                    elif max_text_length <= 12:  # Средние тексты\n';
+          code += '                        return 2  # 2 колонки\n';
+          code += '                    else:  # Длинные тексты\n';
+          code += '                        return 1  # 1 колонка\n';
+          code += '                \n';
+          
+          // Создаем массив текстов кнопок для расчета
+          const buttonTexts = targetNode.data.buttons.map(btn => btn.text);
+          code += `                button_texts = [${buttonTexts.map(text => `"${text}"`).join(', ')}]\n`;
+          code += '                keyboard_width = calculate_keyboard_width(button_texts)\n';
+          code += '                \n';
+          
           targetNode.data.buttons.forEach(button => {
             if (button.action === "url") {
               code += `                builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
@@ -4031,6 +4070,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
             }
           });
+          code += '                builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
           code += '                keyboard = builder.as_markup()\n';
           code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
         } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
@@ -4072,6 +4112,24 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '                # Создаем кнопки для выбора ответа\n';
           code += '                builder = InlineKeyboardBuilder()\n';
           
+          // Добавляем логику для умного расположения кнопок
+          code += '                # Функция для определения количества колонок на основе текста кнопок\n';
+          code += '                def calculate_keyboard_width(buttons_data):\n';
+          code += '                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
+          code += '                    if max_text_length <= 6:  # Короткие тексты\n';
+          code += '                        return 3  # 3 колонки\n';
+          code += '                    elif max_text_length <= 12:  # Средние тексты\n';
+          code += '                        return 2  # 2 колонки\n';
+          code += '                    else:  # Длинные тексты\n';
+          code += '                        return 1  # 1 колонка\n';
+          code += '                \n';
+          
+          // Создаем массив текстов кнопок для расчета
+          const responseButtonTexts = responseOptions.map(option => option.text || option);
+          code += `                button_texts = [${responseButtonTexts.map(text => `"${text}"`).join(', ')}]\n`;
+          code += '                keyboard_width = calculate_keyboard_width(button_texts)\n';
+          code += '                \n';
+          
           responseOptions.forEach((option, index) => {
             const optionValue = option.value || option.text;
             code += `                builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
@@ -4081,6 +4139,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="skip_${targetNode.id}"))\n`;
           }
           
+          code += '                builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
           code += '                keyboard = builder.as_markup()\n';
           code += '                await message.answer(prompt_text, reply_markup=keyboard)\n';
           code += '                \n';
@@ -4492,11 +4551,33 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     if (selectionButtons.length > 0) {
       code += `            if node_id == "${node.id}":\n`;
       
-      // Добавляем кнопки выбора
-      selectionButtons.forEach(button => {
+      // Добавляем логику для умного расположения кнопок
+      code += `                # Функция для определения количества колонок на основе текста кнопок\n`;
+      code += `                def calculate_keyboard_width(buttons_data):\n`;
+      code += `                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n`;
+      code += `                    if max_text_length <= 6:  # Короткие тексты\n`;
+      code += `                        return 3  # 3 колонки\n`;
+      code += `                    elif max_text_length <= 12:  # Средние тексты\n`;
+      code += `                        return 2  # 2 колонки\n`;
+      code += `                    else:  # Длинные тексты\n`;
+      code += `                        return 1  # 1 колонка\n`;
+      code += `                \n`;
+      
+      // Создаем массив текстов кнопок для расчета
+      const buttonTexts = selectionButtons.map(btn => btn.text);
+      code += `                button_texts = [${buttonTexts.map(text => `"${text}"`).join(', ')}]\n`;
+      code += `                keyboard_width = calculate_keyboard_width(button_texts)\n`;
+      code += `                \n`;
+      
+      // Добавляем кнопки выбора с автоматическим расположением
+      code += `                # Добавляем кнопки выбора с умным расположением\n`;
+      selectionButtons.forEach((button, index) => {
         code += `                selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
         code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="multi_select_{node_id}_${button.id}"))\n`;
       });
+      
+      // Применяем ширину клавиатуры
+      code += `                builder.adjust(keyboard_width)\n`;
       
       // Добавляем обычные кнопки
       regularButtons.forEach(button => {
@@ -4856,6 +4937,25 @@ function generatePhotoHandler(node: Node): string {
     if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        # Создаем inline клавиатуру с кнопками\n';
       code += '        builder = InlineKeyboardBuilder()\n';
+      
+      // Добавляем логику для умного расположения кнопок
+      code += '        # Функция для определения количества колонок на основе текста кнопок\n';
+      code += '        def calculate_keyboard_width(buttons_data):\n';
+      code += '            max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
+      code += '            if max_text_length <= 6:  # Короткие тексты\n';
+      code += '                return 3  # 3 колонки\n';
+      code += '            elif max_text_length <= 12:  # Средние тексты\n';
+      code += '                return 2  # 2 колонки\n';
+      code += '            else:  # Длинные тексты\n';
+      code += '                return 1  # 1 колонка\n';
+      code += '        \n';
+      
+      // Создаем массив текстов кнопок для расчета
+      const photoButtonTexts = node.data.buttons.map(btn => btn.text);
+      code += `        button_texts = [${photoButtonTexts.map(text => `"${text}"`).join(', ')}]\n`;
+      code += '        keyboard_width = calculate_keyboard_width(button_texts)\n';
+      code += '        \n';
+      
       node.data.buttons.forEach(button => {
         if (button.action === "url") {
           code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
@@ -4864,6 +4964,7 @@ function generatePhotoHandler(node: Node): string {
           code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
         }
       });
+      code += '        builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
       code += '        keyboard = builder.as_markup()\n';
       code += '        # Отправляем фото с подписью и inline кнопками\n';
       code += '        await message.answer_photo(photo_file, caption=caption, reply_markup=keyboard)\n';
@@ -4953,6 +5054,25 @@ function generateVideoHandler(node: Node): string {
     
     if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       code += '        builder = InlineKeyboardBuilder()\n';
+      
+      // Добавляем логику для умного расположения кнопок
+      code += '        # Функция для определения количества колонок на основе текста кнопок\n';
+      code += '        def calculate_keyboard_width(buttons_data):\n';
+      code += '            max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
+      code += '            if max_text_length <= 6:  # Короткие тексты\n';
+      code += '                return 3  # 3 колонки\n';
+      code += '            elif max_text_length <= 12:  # Средние тексты\n';
+      code += '                return 2  # 2 колонки\n';
+      code += '            else:  # Длинные тексты\n';
+      code += '                return 1  # 1 колонка\n';
+      code += '        \n';
+      
+      // Создаем массив текстов кнопок для расчета
+      const videoButtonTexts = node.data.buttons.map(btn => btn.text);
+      code += `        button_texts = [${videoButtonTexts.map(text => `"${text}"`).join(', ')}]\n`;
+      code += '        keyboard_width = calculate_keyboard_width(button_texts)\n';
+      code += '        \n';
+      
       node.data.buttons.forEach(button => {
         if (button.action === "url") {
           code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
@@ -4961,6 +5081,7 @@ function generateVideoHandler(node: Node): string {
           code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
         }
       });
+      code += '        builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
       code += '        keyboard = builder.as_markup()\n';
       code += '        await message.answer_video(\n';
       code += '            video_file,\n';
