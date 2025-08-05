@@ -25,9 +25,26 @@ function initializeDatabase() {
   pool = new Pool({ 
     connectionString: databaseUrl,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 20,
+    max: 10,
+    min: 2,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000,
+    acquireTimeoutMillis: 60000,
+    createTimeoutMillis: 30000,
+    destroyTimeoutMillis: 5000,
+    reapIntervalMillis: 1000,
+    createRetryIntervalMillis: 200,
+  });
+
+  // Add error handling for the pool
+  pool.on('error', (err) => {
+    console.error('Unexpected error on idle client:', err);
+  });
+
+  pool.on('connect', (client) => {
+    client.on('error', (err) => {
+      console.error('Database client error:', err);
+    });
   });
 
   db = drizzle(pool, { schema });

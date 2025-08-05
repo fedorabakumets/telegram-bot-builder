@@ -7,6 +7,7 @@ This application provides a visual Telegram bot builder, enabling users to creat
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **January 5, 2025**: Fixed database connection timeout issues by optimizing pool configuration and increasing connection timeout from 2s to 10s. Added better error handling for database connections.
 - **January 5, 2025**: Removed deprecated 'input' node type from code generation. The legacy input node handling has been replaced with modern conditional input collection system.
 
 ## System Architecture
