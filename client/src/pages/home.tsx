@@ -282,12 +282,7 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Токен бота */}
-                    <div>
-                      <Badge variant={project.botToken ? "default" : "secondary"}>
-                        {project.botToken ? "Токен настроен" : "Нужен токен"}
-                      </Badge>
-                    </div>
+
 
                     {/* Действия */}
                     <div className="flex space-x-2">
