@@ -408,7 +408,7 @@ export function ComponentsSidebar({
   canvasContent,
   propertiesContent
 }: ComponentsSidebarProps) {
-  const [currentTab, setCurrentTab] = useState<'elements' | 'templates' | 'projects'>('elements');
+  const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
   const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
   const [dragOverProject, setDragOverProject] = useState<number | null>(null);
   const queryClient = useQueryClient();
@@ -420,7 +420,7 @@ export function ComponentsSidebar({
   };
 
   // Загрузка списка проектов
-  const { data: projects = [], isLoading } = useQuery({
+  const { data: projects = [], isLoading } = useQuery<BotProject[]>({
     queryKey: ['/api/projects'],
   });
 
@@ -485,13 +485,7 @@ export function ComponentsSidebar({
     }
   });
 
-  const handleTemplatesClick = () => {
-    setCurrentTab('templates');
-    if (onLoadTemplate) {
-      console.log('Templates button clicked in sidebar');
-      onLoadTemplate();
-    }
-  };
+
 
   const handleCreateProject = () => {
     createProjectMutation.mutate();
@@ -579,16 +573,6 @@ export function ComponentsSidebar({
             }`}
           >
             Элементы
-          </button>
-          <button 
-            onClick={handleTemplatesClick}
-            className={`flex-1 px-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
-              currentTab === 'templates' 
-                ? 'bg-background text-foreground shadow-sm' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Шаблоны
           </button>
           <button 
             onClick={() => setCurrentTab('projects')}
@@ -739,91 +723,7 @@ export function ComponentsSidebar({
           </div>
         ))}
         
-        {currentTab === 'layout' && (
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Настройка макета
-              </h3>
-              <div className="space-y-3">
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Layout className="w-4 h-4" />
-                    <span className="text-sm font-medium">Быстрые настройки</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Выберите готовый макет из предустановленных вариантов
-                  </p>
-                  {onLayoutChange && (
-                    <QuickLayoutSwitcher onLayoutChange={onLayoutChange} />
-                  )}
-                </div>
-                
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Grid className="w-4 h-4" />
-                    <span className="text-sm font-medium">Перетаскивание</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Перетащите элементы в нужное место на экране
-                  </p>
-                  {headerContent && sidebarContent && canvasContent && propertiesContent && (
-                    <DragLayoutManager
-                      headerContent={headerContent}
-                      sidebarContent={sidebarContent}
-                      canvasContent={canvasContent}
-                      propertiesContent={propertiesContent}
-                      onLayoutChange={onLayoutChange}
-                    />
-                  )}
-                </div>
-                
-                <div className="p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Settings className="w-4 h-4" />
-                    <span className="text-sm font-medium">Дополнительно</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Расширенные настройки макета
-                  </p>
-                  {onOpenLayoutCustomizer && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={onOpenLayoutCustomizer}
-                      className="w-full"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Открыть настройки
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <Separator />
-            
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Советы по макету
-              </h3>
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="font-medium text-blue-900 dark:text-blue-100">💡 Заголовок внизу</p>
-                  <p className="text-blue-700 dark:text-blue-300">Попробуйте разместить заголовок снизу для необычного интерфейса</p>
-                </div>
-                <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <p className="font-medium text-green-900 dark:text-green-100">🎯 Боковая панель справа</p>
-                  <p className="text-green-700 dark:text-green-300">Переместите боковую панель вправо для левшей</p>
-                </div>
-                <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <p className="font-medium text-purple-900 dark:text-purple-100">⚡ Компактный режим</p>
-                  <p className="text-purple-700 dark:text-purple-300">Включите для экономии места на экране</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </aside>
   );

@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 5, 2025)
 
+### Interface Simplification (August 5, 2025)
+- **Removed Templates Tab**: Simplified components sidebar by removing "Шаблоны" button
+- **Two-Tab Interface**: ComponentsSidebar now has only "Элементы" and "Проекты" tabs
+- **Code Cleanup**: Removed unused layout-related code and improved TypeScript typing
+- **Cleaner UX**: Streamlined interface for better user experience with fewer UI elements
+
+## Recent Changes (August 5, 2025)
+
 ### Project Management Integration and UI Improvements (August 5, 2025)
 - **Integrated Project Management**: Moved project list from separate page into ComponentsSidebar as "Проекты" tab
 - **Simplified Project Creation**: Removed modal dialog, projects now created with single button click using auto-generated names
