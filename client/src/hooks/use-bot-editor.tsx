@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Connection, Button, BotData } from '@shared/schema';
 
 interface HistoryState {
@@ -14,13 +14,15 @@ export function useBotEditor(initialData?: BotData) {
   // История для undo/redo
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [isRedoUndoAction, setIsRedoUndoAction] = useState(false);
+  const isRedoUndoActionRef = useRef(false);
 
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
 
   // Сохранить текущее состояние в историю
   const saveToHistory = useCallback(() => {
-    if (isRedoUndoAction) return; // Не сохраняем состояние при undo/redo операциях
+    if (isRedoUndoActionRef.current) {
+      return; // Не сохраняем состояние при undo/redo операциях
+    }
     
     const currentState: HistoryState = {
       nodes: JSON.parse(JSON.stringify(nodes)),
@@ -41,7 +43,7 @@ export function useBotEditor(initialData?: BotData) {
     });
     
     setHistoryIndex(prev => Math.min(prev + 1, 49));
-  }, [nodes, connections, historyIndex, isRedoUndoAction]);
+  }, [nodes, connections, historyIndex, history.length]);
 
   // Отменить последнее действие
   const undo = useCallback(() => {
@@ -49,14 +51,17 @@ export function useBotEditor(initialData?: BotData) {
       const prevIndex = historyIndex - 1;
       const prevState = history[prevIndex];
       
-      setIsRedoUndoAction(true);
-      setNodes(prevState.nodes);
-      setConnections(prevState.connections);
+      isRedoUndoActionRef.current = true;
       setHistoryIndex(prevIndex);
       setSelectedNodeId(null);
       
-      // Сбрасываем флаг после обновления состояния
-      setTimeout(() => setIsRedoUndoAction(false), 0);
+      // Обновляем nodes и connections в следующем тике, чтобы избежать срабатывания useEffect
+      setTimeout(() => {
+        setNodes(prevState.nodes);
+        setConnections(prevState.connections);
+        // Сбрасываем флаг после обновления состояния
+        setTimeout(() => { isRedoUndoActionRef.current = false; }, 100);
+      }, 0);
     }
   }, [history, historyIndex]);
 
@@ -66,14 +71,17 @@ export function useBotEditor(initialData?: BotData) {
       const nextIndex = historyIndex + 1;
       const nextState = history[nextIndex];
       
-      setIsRedoUndoAction(true);
-      setNodes(nextState.nodes);
-      setConnections(nextState.connections);
+      isRedoUndoActionRef.current = true;
       setHistoryIndex(nextIndex);
       setSelectedNodeId(null);
       
-      // Сбрасываем флаг после обновления состояния
-      setTimeout(() => setIsRedoUndoAction(false), 0);
+      // Обновляем nodes и connections в следующем тике, чтобы избежать срабатывания useEffect
+      setTimeout(() => {
+        setNodes(nextState.nodes);
+        setConnections(nextState.connections);
+        // Сбрасываем флаг после обновления состояния
+        setTimeout(() => { isRedoUndoActionRef.current = false; }, 100);
+      }, 0);
     }
   }, [history, historyIndex]);
 
@@ -81,13 +89,25 @@ export function useBotEditor(initialData?: BotData) {
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
+  // Инициализируем историю при первой загрузке
+  useEffect(() => {
+    if (history.length === 0 && (nodes.length > 0 || connections.length > 0)) {
+      const initialState: HistoryState = {
+        nodes: JSON.parse(JSON.stringify(nodes)),
+        connections: JSON.parse(JSON.stringify(connections))
+      };
+      setHistory([initialState]);
+      setHistoryIndex(0);
+    }
+  }, [nodes, connections, history.length]);
+
   // Сохраняем состояние в историю при изменении nodes или connections
   useEffect(() => {
-    if (!isRedoUndoAction && (nodes.length > 0 || connections.length > 0)) {
-      const timeoutId = setTimeout(saveToHistory, 100); // Дебаунс для избежания частых сохранений
+    if (!isRedoUndoActionRef.current && history.length > 0) {
+      const timeoutId = setTimeout(saveToHistory, 300); // Увеличен дебаунс для избежания частых сохранений
       return () => clearTimeout(timeoutId);
     }
-  }, [nodes, connections, saveToHistory, isRedoUndoAction]);
+  }, [nodes, connections, saveToHistory, history.length]);
 
   const addNode = useCallback((node: Node) => {
     setNodes(prev => [...prev, node]);
