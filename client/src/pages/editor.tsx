@@ -482,7 +482,6 @@ export default function Editor() {
         sidebarContent={<div>Sidebar</div>}
         canvasContent={canvasContent}
         propertiesContent={propertiesContent}
-        onSendToChat={() => console.log('Send to chat clicked')}
         onToggleCanvas={handleToggleCanvas}
         onToggleHeader={handleToggleHeader}
         onShowFullLayout={() => {
@@ -554,7 +553,6 @@ export default function Editor() {
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
               currentProjectId={currentProject?.id}
-              onSendToChat={() => console.log('Send to chat clicked')}
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}
               onShowFullLayout={() => {

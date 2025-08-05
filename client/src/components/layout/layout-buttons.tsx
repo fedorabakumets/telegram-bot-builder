@@ -1,14 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
-  Send, 
-  PanelLeftClose, 
-  MessageSquare, 
-  LayoutGrid 
+  PanelTop, 
+  PanelLeft, 
+  LayoutGrid,
+  Eye
 } from 'lucide-react';
 
 interface LayoutButtonsProps {
-  onSendToChat?: () => void;
   onToggleCanvas?: () => void;
   onToggleHeader?: () => void;
   onShowFullLayout?: () => void;
@@ -18,7 +17,6 @@ interface LayoutButtonsProps {
 }
 
 export function LayoutButtons({ 
-  onSendToChat, 
   onToggleCanvas, 
   onToggleHeader, 
   onShowFullLayout,
@@ -29,62 +27,54 @@ export function LayoutButtons({
   return (
     <TooltipProvider>
       <div className={`flex items-center gap-1 p-2 bg-background border border-border rounded-lg ${className}`}>
-        {/* Кнопка отправки в чат */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onSendToChat}
-              className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Отправить в чат</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Кнопка переключения холста */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleCanvas}
-              className={`h-8 w-8 p-0 ${
-                canvasVisible 
-                  ? 'bg-green-500 hover:bg-green-600 text-white' 
-                  : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-              }`}
-            >
-              <PanelLeftClose className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{canvasVisible ? 'Скрыть холст' : 'Показать холст'}</p>
-          </TooltipContent>
-        </Tooltip>
-
-        {/* Кнопка переключения сообщений/чата */}
+        {/* Кнопка показать шапку */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
               onClick={onToggleHeader}
-              className={`h-8 w-8 p-0 ${
-                headerVisible 
-                  ? 'bg-green-500 hover:bg-green-600 text-white' 
-                  : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-              }`}
+              className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white"
             >
-              <MessageSquare className="h-4 w-4" />
+              <PanelTop className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{headerVisible ? 'Скрыть шапку' : 'Показать шапку'}</p>
+            <p>Показать шапку</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Кнопка показать холст */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleCanvas}
+              className="h-8 w-8 p-0 bg-green-500 hover:bg-green-600 text-white"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Показать холст</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Кнопка показать боковую панель свойств */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onShowFullLayout}
+              className="h-8 w-8 p-0 bg-purple-500 hover:bg-purple-600 text-white"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Показать всё</p>
           </TooltipContent>
         </Tooltip>
 
@@ -95,7 +85,7 @@ export function LayoutButtons({
               variant="ghost"
               size="sm"
               onClick={onShowFullLayout}
-              className="h-8 w-8 p-0 bg-muted hover:bg-muted/80 text-muted-foreground"
+              className="h-8 w-8 p-0 bg-gray-500 hover:bg-gray-600 text-white"
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>

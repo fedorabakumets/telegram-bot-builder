@@ -31,7 +31,6 @@ interface ComponentsSidebarProps {
   canvasContent?: React.ReactNode;
   propertiesContent?: React.ReactNode;
   // Новые пропсы для управления макетом
-  onSendToChat?: () => void;
   onToggleCanvas?: () => void;
   onToggleHeader?: () => void;
   onShowFullLayout?: () => void;
@@ -416,7 +415,6 @@ export function ComponentsSidebar({
   sidebarContent,
   canvasContent,
   propertiesContent,
-  onSendToChat,
   onToggleCanvas,
   onToggleHeader,
   onShowFullLayout,
@@ -763,7 +761,6 @@ export function ComponentsSidebar({
           {/* Кнопки макета отображаются когда только панель компонентов видна */}
           {showLayoutButtons && (
             <LayoutButtons
-              onSendToChat={onSendToChat}
               onToggleCanvas={onToggleCanvas}
               onToggleHeader={onToggleHeader}
               onShowFullLayout={onShowFullLayout}
