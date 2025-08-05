@@ -53,7 +53,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
         </nav>
       </div>
       
-      <div className="flex items-center space-x-3">
+      <div className="flex flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-2 max-sm:gap-x-2 max-sm:gap-y-2">
         {onLoadTemplate && (
           <Button 
             variant="outline" 
@@ -62,10 +62,11 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
               console.log('Templates button clicked in header');
               onLoadTemplate();
             }}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 max-sm:text-xs max-sm:px-2 max-sm:py-1"
           >
             <FolderOpen className="h-4 w-4 text-muted-foreground" />
-            <span>Шаблоны</span>
+            <span className="max-sm:hidden">Шаблоны</span>
+            <span className="sm:hidden">Шаблоны</span>
           </Button>
         )}
         
@@ -74,10 +75,11 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             variant="outline" 
             size="sm"
             onClick={onSaveAsTemplate}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 max-sm:text-xs max-sm:px-2 max-sm:py-1"
           >
             <Bookmark className="h-4 w-4 text-muted-foreground" />
-            <span>Сохранить шаблон</span>
+            <span className="max-sm:hidden">Сохранить шаблон</span>
+            <span className="sm:hidden">Шаблон</span>
           </Button>
         )}
         
@@ -86,28 +88,32 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
           size="sm"
           onClick={onSave}
           disabled={isSaving}
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-2 max-sm:text-xs max-sm:px-2 max-sm:py-1"
         >
           <Save className={`h-4 w-4 text-muted-foreground ${isSaving ? 'animate-spin' : ''}`} />
-          <span>{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
+          <span className="max-sm:hidden">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
+          <span className="sm:hidden">Сохранить</span>
         </Button>
         
         <Button 
           size="sm"
           onClick={onExport}
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-2 max-sm:text-xs max-sm:px-2 max-sm:py-1"
         >
           <i className="fas fa-download"></i>
-          <span>Экспорт кода</span>
+          <span className="max-sm:hidden">Экспорт кода</span>
+          <span className="sm:hidden">Экспорт</span>
         </Button>
         
-        <div className="h-6 w-px bg-border"></div>
+        <div className="h-6 w-px bg-border max-sm:hidden"></div>
         
-        <ThemeToggle />
-        
-        <button className="w-8 h-8 bg-muted hover:bg-muted/80 rounded-full flex items-center justify-center transition-colors">
-          <i className="fas fa-user text-muted-foreground text-sm"></i>
-        </button>
+        <div className="max-sm:col-span-2 max-sm:flex max-sm:justify-center max-sm:gap-4">
+          <ThemeToggle />
+          
+          <button className="w-8 h-8 bg-muted hover:bg-muted/80 rounded-full flex items-center justify-center transition-colors">
+            <i className="fas fa-user text-muted-foreground text-sm"></i>
+          </button>
+        </div>
       </div>
     </header>
   );

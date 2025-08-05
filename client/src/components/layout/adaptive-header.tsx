@@ -85,16 +85,17 @@ export function AdaptiveHeader({
 
   // Компонент действий
   const Actions = () => (
-    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'items-center space-x-3'}`}>
+    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-2 max-sm:gap-x-2 max-sm:gap-y-2'}`}>
       {onLoadTemplate && (
         <Button 
           variant="outline" 
           size={isCompact ? "sm" : "sm"}
           onClick={onLoadTemplate}
-          className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-2'}`}
+          className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-2'} max-sm:text-xs max-sm:px-2 max-sm:py-1`}
         >
           <FolderOpen className="h-4 w-4" />
-          {!isVertical && <span>Шаблоны</span>}
+          {!isVertical && <span className="max-sm:hidden">Шаблоны</span>}
+          <span className="sm:hidden">Шаблоны</span>
         </Button>
       )}
       
@@ -103,10 +104,11 @@ export function AdaptiveHeader({
           variant="outline" 
           size={isCompact ? "sm" : "sm"}
           onClick={onSaveAsTemplate}
-          className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-2'}`}
+          className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-2'} max-sm:text-xs max-sm:px-2 max-sm:py-1`}
         >
           <Bookmark className="h-4 w-4" />
-          {!isVertical && <span>Сохранить шаблон</span>}
+          {!isVertical && <span className="max-sm:hidden">Сохранить шаблон</span>}
+          <span className="sm:hidden">Шаблон</span>
         </Button>
       )}
       
@@ -115,26 +117,30 @@ export function AdaptiveHeader({
         size={isCompact ? "sm" : "sm"}
         onClick={onSave}
         disabled={isSaving}
-        className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-2'}`}
+        className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-2'} max-sm:text-xs max-sm:px-2 max-sm:py-1`}
       >
         <Save className={`h-4 w-4 ${isSaving ? 'animate-spin' : ''}`} />
-        {!isVertical && <span>{isSaving ? 'Сохранение...' : 'Сохранить'}</span>}
+        {!isVertical && <span className="max-sm:hidden">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>}
+        <span className="sm:hidden">Сохранить</span>
       </Button>
       
       <Button 
         size={isCompact ? "sm" : "sm"}
         onClick={onExport}
-        className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-2'}`}
+        className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-2'} max-sm:text-xs max-sm:px-2 max-sm:py-1`}
       >
         <i className="fas fa-download"></i>
-        {!isVertical && <span>Экспорт кода</span>}
+        {!isVertical && <span className="max-sm:hidden">Экспорт кода</span>}
+        <span className="sm:hidden">Экспорт</span>
       </Button>
       
       {isVertical && (
         <div className="h-px w-full bg-border my-2"></div>
       )}
       
-      <ThemeToggle />
+      <div className="max-sm:col-span-2 max-sm:flex max-sm:justify-center">
+        <ThemeToggle />
+      </div>
     </div>
   );
 
