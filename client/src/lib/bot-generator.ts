@@ -4378,6 +4378,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   // Добавляем обработчики для множественного выбора
   code += '\n# Обработчики для множественного выбора\n';
   
+  // Найдем узлы с множественным выбором для использования в обработчиках
+  const multiSelectNodes = nodes.filter(node => 
+    node.data.allowMultipleSelection && node.data.continueButtonTarget
+  );
+  
   // Обработчик для inline кнопок множественного выбора
   code += '@dp.callback_query(lambda c: c.data.startswith("multi_select_"))\n';
   code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
@@ -4412,10 +4417,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        \n';
   code += '        # Переходим к следующему узлу, если указан\n';
   
-  // Найдем узлы с множественным выбором и добавим переходы
-  const multiSelectNodes = nodes.filter(node => 
-    node.data.allowMultipleSelection && node.data.continueButtonTarget
-  );
+  // Добавим переходы для узлов с множественным выбором
   
   if (multiSelectNodes.length > 0) {
     code += '        # Определяем следующий узел для каждого node_id\n';
