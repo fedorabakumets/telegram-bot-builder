@@ -377,7 +377,9 @@ export default function Editor() {
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
-                      onFullscreen={handleEnterFullscreen}
+            onSave={() => updateProjectMutation.mutate({})}
+            isSaving={updateProjectMutation.isPending}
+            onFullscreen={handleEnterFullscreen}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -502,6 +504,8 @@ export default function Editor() {
                       onRedo={redo}
                       canUndo={canUndo}
                       canRedo={canRedo}
+                      onSave={() => updateProjectMutation.mutate({})}
+                      isSaving={updateProjectMutation.isPending}
                       onFullscreen={handleEnterFullscreen}
                     />
                   ) : null}
