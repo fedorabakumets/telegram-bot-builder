@@ -23,7 +23,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             <i className="fab fa-telegram-plane text-primary-foreground text-lg"></i>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-foreground">TelegramBot Builder</h1>
+            <h1 className="text-lg font-semibold text-foreground">BotCraft Studio</h1>
             <p className="text-xs text-muted-foreground">{projectName}</p>
           </div>
         </div>

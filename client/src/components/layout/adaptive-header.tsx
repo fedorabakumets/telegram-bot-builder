@@ -48,7 +48,7 @@ export function AdaptiveHeader({
       </div>
       <div className={isVertical ? 'text-center' : ''}>
         <h1 className={`font-semibold text-foreground ${isCompact ? 'text-sm' : 'text-lg'}`}>
-          {isVertical && !isCompact ? 'TelegramBot' : 'TelegramBot Builder'}
+          {isVertical && !isCompact ? 'BotCraft' : 'BotCraft Studio'}
         </h1>
         <p className={`text-muted-foreground ${isCompact ? 'text-xs' : 'text-xs'}`}>
           {isVertical ? (projectName.length > 12 ? projectName.substring(0, 12) + '...' : projectName) : projectName}
