@@ -512,63 +512,6 @@ export default function Editor() {
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
               currentProjectId={currentProject?.id}
-              headerContent={
-                <AdaptiveHeader
-                  config={layoutConfig}
-                  projectName={currentProject.name}
-                  currentTab={currentTab}
-                  onTabChange={handleTabChange}
-                  onExport={() => setShowExport(true)}
-                  onSaveAsTemplate={handleSaveAsTemplate}
-                  onLoadTemplate={handleLoadTemplate}
-                  onLayoutSettings={() => setShowLayoutManager(true)}
-                />
-              }
-              sidebarContent={<div>Sidebar</div>}
-              canvasContent={
-                <div className="h-full">
-                  {currentTab === 'editor' ? (
-                    <Canvas
-                      nodes={nodes}
-                      connections={connections}
-                      selectedNodeId={selectedNodeId}
-                      selectedConnectionId={selectedConnectionId || undefined}
-                      onNodeSelect={setSelectedNodeId}
-                      onNodeAdd={addNode}
-                      onNodeDelete={deleteNode}
-                      onNodeMove={handleNodeMove}
-                      onConnectionSelect={setSelectedConnectionId}
-                      onConnectionDelete={deleteConnection}
-                      onConnectionAdd={addConnection}
-                      onNodesUpdate={updateNodes}
-                      onUndo={undo}
-                      onRedo={redo}
-                      canUndo={canUndo}
-                      canRedo={canRedo}
-                      onSave={() => updateProjectMutation.mutate({})}
-                      isSaving={updateProjectMutation.isPending}
-                      onFullscreen={handleEnterFullscreen}
-                      onToggleHeader={handleToggleHeader}
-                      onToggleSidebar={handleToggleSidebar}
-                      onToggleProperties={handleToggleProperties}
-                      headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-                      sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
-                      propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
-                    />
-                  ) : null}
-                </div>
-              }
-              propertiesContent={
-                <PropertiesPanel
-                  projectId={currentProject.id}
-                  selectedNode={selectedNode}
-                  allNodes={nodes}
-                  onNodeUpdate={updateNodeData}
-                  onButtonAdd={addButton}
-                  onButtonUpdate={updateButton}
-                  onButtonDelete={deleteButton}
-                />
-              }
             />
           }
           canvas={
