@@ -59,7 +59,7 @@ export function AdaptiveHeader({
 
   // Компонент навигации
   const Navigation = () => (
-    <nav className={`flex ${isVertical ? 'flex-col space-y-1 px-2' : 'items-center space-x-1'}`}>
+    <nav className={`flex ${isVertical ? 'flex-col space-y-1 px-2' : 'flex-wrap items-center gap-1 max-sm:grid max-sm:grid-cols-2 max-sm:gap-x-2 max-sm:gap-y-1'}`}>
       {[
         { key: 'editor', label: 'Редактор' },
         { key: 'preview', label: 'Превью' },
@@ -75,7 +75,7 @@ export function AdaptiveHeader({
             currentTab === tab.key 
               ? 'text-primary bg-primary/10' 
               : 'text-muted-foreground hover:bg-muted'
-          } ${isVertical ? 'w-full text-left' : ''}`}
+          } ${isVertical ? 'w-full text-left' : 'whitespace-nowrap'} max-sm:text-xs max-sm:px-2 max-sm:py-1`}
         >
           {isVertical && isCompact ? tab.label.substring(0, 3) : tab.label}
         </button>

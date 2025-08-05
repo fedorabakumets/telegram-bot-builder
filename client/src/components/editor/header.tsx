@@ -30,57 +30,26 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
         
         <div className="h-6 w-px bg-border"></div>
         
-        <nav className="flex items-center space-x-1">
-          <button 
-            onClick={() => onTabChange('editor')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              currentTab === 'editor' 
-                ? 'text-primary bg-primary/10' 
-                : 'text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            Редактор
-          </button>
-          <button 
-            onClick={() => onTabChange('preview')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              currentTab === 'preview' 
-                ? 'text-primary bg-primary/10' 
-                : 'text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            Превью
-          </button>
-          <button 
-            onClick={() => onTabChange('export')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              currentTab === 'export' 
-                ? 'text-primary bg-primary/10' 
-                : 'text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            Экспорт
-          </button>
-          <button 
-            onClick={() => onTabChange('bot')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              currentTab === 'bot' 
-                ? 'text-primary bg-primary/10' 
-                : 'text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            Бот
-          </button>
-          <button 
-            onClick={() => onTabChange('connections')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              currentTab === 'connections' 
-                ? 'text-primary bg-primary/10' 
-                : 'text-muted-foreground hover:bg-muted'
-            }`}
-          >
-            Связи
-          </button>
+        <nav className="flex flex-wrap items-center gap-1 max-sm:grid max-sm:grid-cols-2 max-sm:gap-x-2 max-sm:gap-y-1">
+          {[
+            { key: 'editor', label: 'Редактор' },
+            { key: 'preview', label: 'Превью' },
+            { key: 'export', label: 'Экспорт' },
+            { key: 'bot', label: 'Бот' },
+            { key: 'connections', label: 'Связи' }
+          ].map((tab) => (
+            <button 
+              key={tab.key}
+              onClick={() => onTabChange(tab.key as any)}
+              className={`px-3 py-1.5 text-sm max-sm:text-xs max-sm:px-2 max-sm:py-1 font-medium rounded-md transition-colors whitespace-nowrap ${
+                currentTab === tab.key 
+                  ? 'text-primary bg-primary/10' 
+                  : 'text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </nav>
       </div>
       
