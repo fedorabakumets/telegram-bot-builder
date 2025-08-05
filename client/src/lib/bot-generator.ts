@@ -1,50 +1,28 @@
 import { BotData, Node } from '@shared/schema';
 import { generateBotFatherCommands } from './commands';
+import { 
+  escapeForPython, 
+  stripHtmlTags, 
+  formatTextForPython, 
+  getParseMode, 
+  toPythonBoolean, 
+  escapeForJsonString,
+  generateSecurityChecks,
+  generateUserDataSaving,
+  generateUserRegistration,
+  createSafeFunctionName
+} from './bot-generator/utils';
+import { generateInlineKeyboard, generateReplyKeyboard, generateMessageWithKeyboard, generateConditionalKeyboard } from './bot-generator/keyboard-utils';
+import { 
+  generateStartHandler, 
+  generateCommandHandler, 
+  generatePhotoHandler, 
+  generateVideoHandler, 
+  generateAudioHandler, 
+  generateDocumentHandler 
+} from './bot-generator/handlers';
 
-// Функция для правильного экранирования строк в Python коде
-function escapeForPython(text: string): string {
-  return text.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
-}
-
-// Функция для удаления HTML тегов из текста
-function stripHtmlTags(text: string): string {
-  if (!text) return text;
-  return text.replace(/<[^>]*>/g, '');
-}
-
-// Функция для правильного форматирования текста с поддержкой многострочности
-function formatTextForPython(text: string): string {
-  if (!text) return '""';
-  
-  // Для многострочного текста используем тройные кавычки
-  if (text.includes('\n')) {
-    return `"""${text}"""`;
-  } else {
-    // Для однострочного текста экранируем только кавычки
-    return `"${text.replace(/"/g, '\\"')}"`;
-  }
-}
-
-// Функция для получения режима парсинга
-function getParseMode(formatMode: string): string {
-  if (formatMode === 'html') {
-    return ', parse_mode=ParseMode.HTML';
-  } else if (formatMode === 'markdown') {
-    return ', parse_mode=ParseMode.MARKDOWN';
-  }
-  return '';
-}
-
-// Функция для конвертации JavaScript boolean в Python boolean
-function toPythonBoolean(value: any): string {
-  return value ? 'True' : 'False';
-}
-
-// Функция для правильного экранирования строк в JSON контексте
-function escapeForJsonString(text: string): string {
-  if (!text) return '';
-  return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
-}
+// Утилитарные функции перенесены в ./bot-generator/utils.ts
 
 // Функция для генерации замены переменных в тексте
 function generateVariableReplacement(variableName: string, indentLevel: string): string {
@@ -107,64 +85,7 @@ function generateUniversalVariableReplacement(indentLevel: string): string {
   return code;
 }
 
-// Функция для генерации клавиатуры для условного сообщения
-function generateConditionalKeyboard(condition: any, indentLevel: string, nodeData?: any): string {
-  if (!condition.keyboardType || condition.keyboardType === 'none' || !condition.buttons || condition.buttons.length === 0) {
-    return '';
-  }
-
-  let code = '';
-  
-  if (condition.keyboardType === 'inline') {
-    code += `${indentLevel}# Создаем inline клавиатуру для условного сообщения\n`;
-    code += `${indentLevel}builder = InlineKeyboardBuilder()\n`;
-    
-    condition.buttons.forEach((button: any) => {
-      if (button.action === "url") {
-        code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-      } else if (button.action === 'goto') {
-        const callbackData = button.target || button.id || 'no_action';
-        code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-      } else if (button.action === 'command') {
-        // Для кнопок команд в условных сообщениях, которые должны сохранять данные
-        // Создаем специальную callback_data с переменной и значением из условного сообщения
-        const conditionalVariableName = condition.variableName || condition.variableNames?.[0] || (nodeData && nodeData.inputVariable);
-        if (conditionalVariableName) {
-          const conditionalCallback = `conditional_${conditionalVariableName}_${button.text}`;
-          code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${conditionalCallback}"))\n`;
-        } else {
-          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
-        }
-      } else {
-        const callbackData = button.target || button.id || 'no_action';
-        code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-      }
-    });
-    
-    code += `${indentLevel}keyboard = builder.as_markup()\n`;
-    code += `${indentLevel}conditional_keyboard = keyboard\n`;
-    
-  } else if (condition.keyboardType === 'reply') {
-    code += `${indentLevel}# Создаем reply клавиатуру для условного сообщения\n`;
-    code += `${indentLevel}builder = ReplyKeyboardBuilder()\n`;
-    
-    condition.buttons.forEach((button: any) => {
-      if (button.action === "contact" && button.requestContact) {
-        code += `${indentLevel}builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
-      } else if (button.action === "location" && button.requestLocation) {
-        code += `${indentLevel}builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
-      } else {
-        code += `${indentLevel}builder.add(KeyboardButton(text="${button.text}"))\n`;
-      }
-    });
-    
-    code += `${indentLevel}keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)\n`;
-    code += `${indentLevel}conditional_keyboard = keyboard\n`;
-  }
-  
-  return code;
-}
+// Функция для генерации клавиатуры перенесена в ./bot-generator/keyboard-utils.ts
 
 // Функция для генерации логики условных сообщений
 function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel: string = '    ', nodeData?: any): string {
