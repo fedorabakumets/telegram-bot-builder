@@ -17,7 +17,7 @@ export async function seedDefaultTemplates(force = false) {
         await storage.deleteBotTemplate(template.id);
       }
       console.log(`🗑️ Удалено ${systemTemplates.length} старых системных шаблонов`);
-    } else if (systemTemplates.length >= 6) {
+    } else if (systemTemplates.length >= 8) {
       console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
@@ -511,7 +511,18 @@ export async function seedDefaultTemplates(force = false) {
             position: { x: 500, y: 100 },
             data: {
               messageText: "🎯 Ваши интересы:\n\n{user_interests}\n\nСпасибо за информацию! Теперь мы сможем предложить вам более подходящий контент.",
-              markdown: false
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-restart",
+                  text: "🔄 Изменить интересы",
+                  action: "goto",
+                  target: "start"
+                }
+              ],
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
             }
           }
         ],
