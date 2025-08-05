@@ -1912,3 +1912,50 @@ input[type="checkbox"]:focus {
     min-width: 44px;
   }
 }
+
+/* Улучшенная поддержка touch событий для мобильных устройств */
+.touch-action-none {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.touch-action-manipulation {
+  touch-action: manipulation;
+}
+
+/* Предотвращение выделения текста при drag and drop */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Дополнительные стили для touch drag and drop */
+.touch-dragging {
+  opacity: 0.7;
+  transform: scale(0.95);
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+/* Мобильные оптимизации */
+@media (pointer: coarse) {
+  .component-item {
+    min-height: 44px; /* Минимальный размер для удобного touch взаимодействия */
+    padding: 12px 16px;
+  }
+  
+  .canvas-container {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+

@@ -1,6 +1,6 @@
 import { ComponentDefinition, BotProject } from '@shared/schema';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import QuickLayoutSwitcher from '@/components/layout/quick-layout-switcher';
@@ -423,14 +423,21 @@ export function ComponentsSidebar({
   const [touchedComponent, setTouchedComponent] = useState<ComponentDefinition | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [touchStartElement, setTouchStartElement] = useState<HTMLElement | null>(null);
 
   const handleTouchStart = (e: React.TouchEvent, component: ComponentDefinition) => {
     console.log('Touch start on component:', component.name);
     e.preventDefault();
+    e.stopPropagation();
+    
     const touch = e.touches[0];
+    const element = e.currentTarget as HTMLElement;
+    
     setTouchedComponent(component);
     setIsDragging(true);
-    const rect = e.currentTarget.getBoundingClientRect();
+    setTouchStartElement(element);
+    
+    const rect = element.getBoundingClientRect();
     setDragOffset({
       x: touch.clientX - rect.left,
       y: touch.clientY - rect.top
@@ -438,16 +445,21 @@ export function ComponentsSidebar({
     onComponentDrag(component);
     
     // Добавляем визуальную обратную связь
-    const element = e.currentTarget as HTMLElement;
     element.style.opacity = '0.7';
     element.style.transform = 'scale(0.95)';
-    console.log('Touch drag started for:', component.name);
+    element.style.transition = 'all 0.2s ease';
+    
+    console.log('Touch drag started for:', component.name, {
+      touchPos: { x: touch.clientX, y: touch.clientY },
+      elementRect: rect
+    });
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !touchedComponent) return;
     e.preventDefault();
     e.stopPropagation();
+    console.log('Touch move:', { x: e.touches[0].clientX, y: e.touches[0].clientY });
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -509,7 +521,83 @@ export function ComponentsSidebar({
     setTouchedComponent(null);
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
+    setTouchStartElement(null);
   };
+
+  // Глобальные touch обработчики для лучшей поддержки мобильных устройств
+  useEffect(() => {
+    const handleGlobalTouchMove = (e: TouchEvent) => {
+      if (isDragging && touchedComponent) {
+        e.preventDefault();
+        console.log('Global touch move:', { x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+    };
+
+    const handleGlobalTouchEnd = (e: TouchEvent) => {
+      if (!isDragging || !touchedComponent) return;
+      
+      console.log('Global touch end for component:', touchedComponent.name);
+      const touch = e.changedTouches[0];
+      const element = document.elementFromPoint(touch.clientX, touch.clientY);
+      
+      console.log('Global touch end position:', { x: touch.clientX, y: touch.clientY });
+      console.log('Element at global touch point:', element);
+      
+      // Восстанавливаем стили элемента
+      if (touchStartElement) {
+        touchStartElement.style.opacity = '';
+        touchStartElement.style.transform = '';
+        touchStartElement.style.transition = '';
+      }
+      
+      // Проверяем, попали ли мы на холст
+      const canvas = document.querySelector('[data-canvas-drop-zone]');
+      console.log('Canvas element found (global):', canvas);
+      
+      if (canvas && element) {
+        const isInCanvas = canvas.contains(element) || element === canvas || 
+                          element.closest('[data-canvas-drop-zone]') === canvas;
+        
+        console.log('Is in canvas (global):', isInCanvas);
+        
+        if (isInCanvas) {
+          const canvasRect = canvas.getBoundingClientRect();
+          const dropPosition = {
+            x: touch.clientX - canvasRect.left,
+            y: touch.clientY - canvasRect.top
+          };
+          
+          console.log('Dispatching global canvas-drop event:', {
+            component: touchedComponent.name,
+            position: dropPosition
+          });
+          
+          const dropEvent = new CustomEvent('canvas-drop', {
+            detail: {
+              component: touchedComponent,
+              position: dropPosition
+            }
+          });
+          canvas.dispatchEvent(dropEvent);
+        }
+      }
+      
+      setTouchedComponent(null);
+      setIsDragging(false);
+      setDragOffset({ x: 0, y: 0 });
+      setTouchStartElement(null);
+    };
+
+    if (isDragging) {
+      document.addEventListener('touchmove', handleGlobalTouchMove, { passive: false });
+      document.addEventListener('touchend', handleGlobalTouchEnd, { passive: false });
+    }
+
+    return () => {
+      document.removeEventListener('touchmove', handleGlobalTouchMove);
+      document.removeEventListener('touchend', handleGlobalTouchEnd);
+    };
+  }, [isDragging, touchedComponent, touchStartElement]);
 
   // Загрузка списка проектов
   const { data: projects = [], isLoading } = useQuery<BotProject[]>({
@@ -800,7 +888,7 @@ export function ComponentsSidebar({
                   onTouchStart={(e) => handleTouchStart(e, component)}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
-                  className={`flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors ${
+                  className={`component-item flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors touch-action-none no-select ${
                     touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
                   }`}
                 >
