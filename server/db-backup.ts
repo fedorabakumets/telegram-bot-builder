@@ -2,7 +2,7 @@ import { getDb, getPool } from './db';
 import { sql } from 'drizzle-orm';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { botProjects, botInstances, botTemplates, botTokens, mediaFiles, userBotData } from '@shared/schema';
+import { botProjects, botInstances, botTemplates, botTokens, mediaFiles, userBotData } from '../shared/schema.js';
 
 interface BackupData {
   metadata: {

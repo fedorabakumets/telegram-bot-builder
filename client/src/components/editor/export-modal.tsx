@@ -11,7 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { generatePythonCode, validateBotStructure, generateRequirementsTxt, generateReadme, generateDockerfile, generateConfigYaml } from '@/lib/bot-generator';
 import { generateBotFatherCommands } from '@/lib/commands';
 import { BotData } from '@shared/schema';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface ExportModalProps {
   isOpen: boolean;
