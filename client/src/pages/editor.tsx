@@ -484,6 +484,7 @@ export default function Editor() {
         propertiesContent={propertiesContent}
         onToggleCanvas={handleToggleCanvas}
         onToggleHeader={handleToggleHeader}
+        onToggleProperties={handleToggleProperties}
         onShowFullLayout={() => {
           setFlexibleLayoutConfig(prev => ({
             ...prev,
@@ -492,6 +493,7 @@ export default function Editor() {
         }}
         canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+        propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
         showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
       />
     );
@@ -555,6 +557,7 @@ export default function Editor() {
               currentProjectId={currentProject?.id}
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}
+              onToggleProperties={handleToggleProperties}
               onShowFullLayout={() => {
                 setFlexibleLayoutConfig(prev => ({
                   ...prev,
@@ -563,6 +566,7 @@ export default function Editor() {
               }}
               canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+              propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
               showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
             />
           }

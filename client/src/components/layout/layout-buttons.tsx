@@ -4,24 +4,28 @@ import {
   PanelTop, 
   PanelLeft, 
   LayoutGrid,
-  Eye
+  PanelRight
 } from 'lucide-react';
 
 interface LayoutButtonsProps {
   onToggleCanvas?: () => void;
   onToggleHeader?: () => void;
+  onToggleProperties?: () => void;
   onShowFullLayout?: () => void;
   canvasVisible?: boolean;
   headerVisible?: boolean;
+  propertiesVisible?: boolean;
   className?: string;
 }
 
 export function LayoutButtons({ 
   onToggleCanvas, 
   onToggleHeader, 
+  onToggleProperties,
   onShowFullLayout,
   canvasVisible = false,
   headerVisible = false,
+  propertiesVisible = false,
   className = "" 
 }: LayoutButtonsProps) {
   return (
@@ -34,7 +38,7 @@ export function LayoutButtons({
               variant="ghost"
               size="sm"
               onClick={onToggleHeader}
-              className="h-8 w-8 p-0 bg-blue-500 hover:bg-blue-600 text-white"
+              className="h-8 w-8 p-0 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
             >
               <PanelTop className="h-4 w-4" />
             </Button>
@@ -51,7 +55,7 @@ export function LayoutButtons({
               variant="ghost"
               size="sm"
               onClick={onToggleCanvas}
-              className="h-8 w-8 p-0 bg-green-500 hover:bg-green-600 text-white"
+              className="h-8 w-8 p-0 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
             >
               <PanelLeft className="h-4 w-4" />
             </Button>
@@ -61,20 +65,20 @@ export function LayoutButtons({
           </TooltipContent>
         </Tooltip>
 
-        {/* Кнопка показать боковую панель свойств */}
+        {/* Кнопка показать панель свойств */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="sm"
-              onClick={onShowFullLayout}
-              className="h-8 w-8 p-0 bg-purple-500 hover:bg-purple-600 text-white"
+              onClick={onToggleProperties}
+              className="h-8 w-8 p-0 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
             >
-              <Eye className="h-4 w-4" />
+              <PanelRight className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Показать всё</p>
+            <p>Показать панель свойств</p>
           </TooltipContent>
         </Tooltip>
 
@@ -85,13 +89,13 @@ export function LayoutButtons({
               variant="ghost"
               size="sm"
               onClick={onShowFullLayout}
-              className="h-8 w-8 p-0 bg-gray-500 hover:bg-gray-600 text-white"
+              className="h-8 w-8 p-0 bg-gray-600 hover:bg-gray-700 text-white rounded-md"
             >
               <LayoutGrid className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Полный макет</p>
+            <p>Показать всё</p>
           </TooltipContent>
         </Tooltip>
       </div>

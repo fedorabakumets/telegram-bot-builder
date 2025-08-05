@@ -33,9 +33,11 @@ interface ComponentsSidebarProps {
   // Новые пропсы для управления макетом
   onToggleCanvas?: () => void;
   onToggleHeader?: () => void;
+  onToggleProperties?: () => void;
   onShowFullLayout?: () => void;
   canvasVisible?: boolean;
   headerVisible?: boolean;
+  propertiesVisible?: boolean;
   showLayoutButtons?: boolean;
 }
 
@@ -417,9 +419,11 @@ export function ComponentsSidebar({
   propertiesContent,
   onToggleCanvas,
   onToggleHeader,
+  onToggleProperties,
   onShowFullLayout,
   canvasVisible = false,
   headerVisible = false,
+  propertiesVisible = false,
   showLayoutButtons = false
 }: ComponentsSidebarProps) {
   const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
@@ -763,9 +767,11 @@ export function ComponentsSidebar({
             <LayoutButtons
               onToggleCanvas={onToggleCanvas}
               onToggleHeader={onToggleHeader}
+              onToggleProperties={onToggleProperties}
               onShowFullLayout={onShowFullLayout}
               canvasVisible={canvasVisible}
               headerVisible={headerVisible}
+              propertiesVisible={propertiesVisible}
               className="scale-75 -mr-2"
             />
           )}
