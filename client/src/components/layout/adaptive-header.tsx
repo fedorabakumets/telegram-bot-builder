@@ -94,7 +94,7 @@ export function AdaptiveHeader({
           className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full`}
         >
           <FolderOpen className="h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto" />
-          <span className="max-sm:hidden ml-1">Шаблоны</span>
+          <span className="max-sm:hidden ml-1">Шаблон</span>
         </Button>
       )}
       
@@ -106,7 +106,7 @@ export function AdaptiveHeader({
           className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full`}
         >
           <Bookmark className="h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto" />
-          <span className="max-sm:hidden ml-1">Сохранить шаблон</span>
+          <span className="max-sm:hidden ml-1">Создать</span>
         </Button>
       )}
       
@@ -118,7 +118,7 @@ export function AdaptiveHeader({
         className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full`}
       >
         <Save className={`h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto ${isSaving ? 'animate-spin' : ''}`} />
-        <span className="max-sm:hidden ml-1">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
+        <span className="max-sm:hidden ml-1">{isSaving ? 'Сохр...' : 'Сохр'}</span>
       </Button>
       
       <Button 
@@ -127,7 +127,7 @@ export function AdaptiveHeader({
         className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
       >
         <i className="fas fa-download text-sm max-sm:text-xs max-sm:mx-auto"></i>
-        <span className="max-sm:hidden ml-1">Экспорт кода</span>
+        <span className="max-sm:hidden ml-1">Экспорт</span>
       </Button>
       
       {isVertical && (
