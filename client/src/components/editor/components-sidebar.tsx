@@ -2,7 +2,7 @@ import { ComponentDefinition, BotProject } from '@shared/schema';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DragDropTestButton } from '@/components/layout/drag-drop-test-button';
+
 import QuickLayoutSwitcher from '@/components/layout/quick-layout-switcher';
 import DragLayoutManager from '@/components/layout/drag-layout-manager';
 import { Button } from '@/components/ui/button';
@@ -765,11 +765,6 @@ export function ComponentsSidebar({
           </div>
         )}
       </div>
-      
-      {/* Drag & Drop Test Button */}
-      {onOpenLayoutCustomizer && (
-        <DragDropTestButton onOpenCustomizer={onOpenLayoutCustomizer} />
-      )}
     </aside>
   );
 }
