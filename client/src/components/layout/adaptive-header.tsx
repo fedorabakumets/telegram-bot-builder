@@ -89,11 +89,11 @@ export function AdaptiveHeader({
       {onLoadTemplate && (
         <Button 
           variant="outline" 
-          size={isCompact ? "sm" : "sm"}
+          size="sm"
           onClick={onLoadTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs max-sm:px-1 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
         >
-          <FolderOpen className="h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto" />
+          <FolderOpen className="h-3 w-3 max-sm:mx-auto" />
           <span className="max-sm:hidden ml-1">Шаблон</span>
         </Button>
       )}
@@ -101,32 +101,32 @@ export function AdaptiveHeader({
       {onSaveAsTemplate && (
         <Button 
           variant="outline" 
-          size={isCompact ? "sm" : "sm"}
+          size="sm"
           onClick={onSaveAsTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs max-sm:px-1 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
         >
-          <Bookmark className="h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto" />
+          <Bookmark className="h-3 w-3 max-sm:mx-auto" />
           <span className="max-sm:hidden ml-1">Создать</span>
         </Button>
       )}
       
       <Button 
         variant="outline" 
-        size={isCompact ? "sm" : "sm"}
+        size="sm"
         onClick={onSave}
         disabled={isSaving}
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full`}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs max-sm:px-1 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
       >
-        <Save className={`h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto ${isSaving ? 'animate-spin' : ''}`} />
+        <Save className={`h-3 w-3 max-sm:mx-auto ${isSaving ? 'animate-spin' : ''}`} />
         <span className="max-sm:hidden ml-1">{isSaving ? 'Сохр...' : 'Сохр'}</span>
       </Button>
       
       <Button 
-        size={isCompact ? "sm" : "sm"}
+        size="sm"
         onClick={onExport}
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs max-sm:px-1 max-sm:py-1 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
       >
-        <i className="fas fa-download text-sm max-sm:text-xs max-sm:mx-auto"></i>
+        <i className="fas fa-download text-xs max-sm:mx-auto"></i>
         <span className="max-sm:hidden ml-1">Экспорт</span>
       </Button>
       
