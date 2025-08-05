@@ -493,7 +493,7 @@ export default function Editor() {
         }}
         canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-        showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible || !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+        showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
       />
     );
 
@@ -565,7 +565,7 @@ export default function Editor() {
               }}
               canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-              showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible || !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+              showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
             />
           }
           canvas={
