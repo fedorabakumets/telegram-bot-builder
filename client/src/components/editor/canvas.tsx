@@ -314,11 +314,24 @@ export function Canvas({
 
   // Обработчик canvas-drop события для touch устройств  
   const handleCanvasDrop = useCallback((e: CustomEvent) => {
+    console.log('Canvas drop event received:', e.detail);
     const { component, position } = e.detail;
+    
+    if (!component || !position) {
+      console.error('Invalid drop data:', { component, position });
+      return;
+    }
     
     // Transform screen coordinates to canvas coordinates
     const canvasX = (position.x - pan.x) / (zoom / 100);
     const canvasY = (position.y - pan.y) / (zoom / 100);
+    
+    console.log('Drop position calculation:', {
+      screenPos: position,
+      pan,
+      zoom,
+      canvasPos: { x: canvasX, y: canvasY }
+    });
     
     const newNode: Node = {
       id: nanoid(),
@@ -334,6 +347,7 @@ export function Canvas({
       }
     };
     
+    console.log('Creating new node:', newNode);
     onNodeAdd(newNode);
   }, [onNodeAdd, pan, zoom]);
 

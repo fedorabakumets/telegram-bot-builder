@@ -425,6 +425,8 @@ export function ComponentsSidebar({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const handleTouchStart = (e: React.TouchEvent, component: ComponentDefinition) => {
+    console.log('Touch start on component:', component.name);
+    e.preventDefault();
     const touch = e.touches[0];
     setTouchedComponent(component);
     setIsDragging(true);
@@ -434,33 +436,74 @@ export function ComponentsSidebar({
       y: touch.clientY - rect.top
     });
     onComponentDrag(component);
+    
+    // Добавляем визуальную обратную связь
+    const element = e.currentTarget as HTMLElement;
+    element.style.opacity = '0.7';
+    element.style.transform = 'scale(0.95)';
+    console.log('Touch drag started for:', component.name);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !touchedComponent) return;
     e.preventDefault();
+    e.stopPropagation();
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!isDragging || !touchedComponent) return;
+    if (!isDragging || !touchedComponent) {
+      console.log('Touch end ignored - not dragging or no component');
+      return;
+    }
     
+    console.log('Touch end for component:', touchedComponent.name);
     const touch = e.changedTouches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     
+    console.log('Touch end position:', { x: touch.clientX, y: touch.clientY });
+    console.log('Element at touch point:', element);
+    
+    // Возвращаем стили элемента
+    const currentTarget = e.currentTarget as HTMLElement;
+    currentTarget.style.opacity = '';
+    currentTarget.style.transform = '';
+    
     // Проверяем, попали ли мы на холст или в область холста
     const canvas = document.querySelector('[data-canvas-drop-zone]');
-    if (canvas && (canvas.contains(element) || element === canvas)) {
-      // Создаем синтетическое событие drop
-      const dropEvent = new CustomEvent('canvas-drop', {
-        detail: {
-          component: touchedComponent,
-          position: {
-            x: touch.clientX - (canvas.getBoundingClientRect().left),
-            y: touch.clientY - (canvas.getBoundingClientRect().top)
+    console.log('Canvas element found:', canvas);
+    
+    if (canvas && element) {
+      // Проверяем если элемент находится внутри canvas или является самим canvas
+      const isInCanvas = canvas.contains(element) || element === canvas || 
+                        element.closest('[data-canvas-drop-zone]') === canvas;
+      
+      console.log('Is in canvas:', isInCanvas);
+      
+      if (isInCanvas) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const dropPosition = {
+          x: touch.clientX - canvasRect.left,
+          y: touch.clientY - canvasRect.top
+        };
+        
+        console.log('Dispatching canvas-drop event:', {
+          component: touchedComponent.name,
+          position: dropPosition
+        });
+        
+        // Создаем синтетическое событие drop
+        const dropEvent = new CustomEvent('canvas-drop', {
+          detail: {
+            component: touchedComponent,
+            position: dropPosition
           }
-        }
-      });
-      canvas.dispatchEvent(dropEvent);
+        });
+        canvas.dispatchEvent(dropEvent);
+      } else {
+        console.log('Touch ended outside canvas');
+      }
+    } else {
+      console.log('Canvas not found or no element at touch point');
     }
     
     setTouchedComponent(null);
