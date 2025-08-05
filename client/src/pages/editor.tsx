@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation, useParams } from 'wouter';
+import { useLocation, useParams, useRoute } from 'wouter';
 import { Header } from '@/components/editor/header';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
@@ -28,6 +28,8 @@ import { BotProject, Connection, ComponentDefinition, BotData } from '@shared/sc
 
 export default function Editor() {
   const [, setLocation] = useLocation();
+  const [match, params] = useRoute('/editor/:id');
+  const projectId = params?.id ? parseInt(params.id) : null;
   const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot'>('editor');
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
@@ -81,12 +83,13 @@ export default function Editor() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Load the first project for demo
+  // Load all projects
   const { data: projects } = useQuery<BotProject[]>({
     queryKey: ['/api/projects'],
   });
 
-  const currentProject = projects?.[0];
+  // Find current project by ID from URL
+  const currentProject = projects?.find(p => p.id === projectId) || projects?.[0];
 
   const {
     nodes,
@@ -178,7 +181,11 @@ export default function Editor() {
   }, []);
 
   const handleGoToProjects = useCallback(() => {
-    setLocation('/');
+    setLocation('/projects');
+  }, [setLocation]);
+
+  const handleProjectSelect = useCallback((newProjectId: number) => {
+    setLocation(`/editor/${newProjectId}`);
   }, [setLocation]);
 
   const handleSelectTemplate = useCallback((template: any) => {
@@ -333,6 +340,8 @@ export default function Editor() {
         onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
         onLayoutChange={updateLayoutConfig}
         onGoToProjects={handleGoToProjects}
+        onProjectSelect={handleProjectSelect}
+        currentProjectId={currentProject?.id}
         headerContent={headerContent}
         sidebarContent={<div>Sidebar</div>}
         canvasContent={canvasContent}
@@ -388,6 +397,8 @@ export default function Editor() {
               onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
               onGoToProjects={handleGoToProjects}
+              onProjectSelect={handleProjectSelect}
+              currentProjectId={currentProject?.id}
               headerContent={
                 <AdaptiveHeader
                   config={layoutConfig}

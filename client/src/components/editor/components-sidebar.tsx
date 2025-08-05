@@ -1,12 +1,21 @@
-import { ComponentDefinition } from '@shared/schema';
+import { ComponentDefinition, BotProject } from '@shared/schema';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DragDropTestButton } from '@/components/layout/drag-drop-test-button';
 import QuickLayoutSwitcher from '@/components/layout/quick-layout-switcher';
 import DragLayoutManager from '@/components/layout/drag-layout-manager';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Layout, Settings, Grid, Home } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
+import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+
+
 
 interface ComponentsSidebarProps {
   onComponentDrag: (component: ComponentDefinition) => void;
@@ -14,6 +23,8 @@ interface ComponentsSidebarProps {
   onOpenLayoutCustomizer?: () => void;
   onLayoutChange?: (config: any) => void;
   onGoToProjects?: () => void;
+  onProjectSelect?: (projectId: number) => void;
+  currentProjectId?: number;
   headerContent?: React.ReactNode;
   sidebarContent?: React.ReactNode;
   canvasContent?: React.ReactNode;
@@ -390,17 +401,87 @@ export function ComponentsSidebar({
   onOpenLayoutCustomizer, 
   onLayoutChange,
   onGoToProjects,
+  onProjectSelect,
+  currentProjectId,
   headerContent,
   sidebarContent,
   canvasContent,
   propertiesContent
 }: ComponentsSidebarProps) {
   const [currentTab, setCurrentTab] = useState<'elements' | 'templates' | 'projects'>('elements');
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const handleDragStart = (e: React.DragEvent, component: ComponentDefinition) => {
     e.dataTransfer.setData('application/json', JSON.stringify(component));
     onComponentDrag(component);
   };
+
+  // Загрузка списка проектов
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ['/api/projects'],
+  });
+
+  // Создание нового проекта
+  const createProjectMutation = useMutation({
+    mutationFn: () => {
+      const projectCount = projects.length;
+      return apiRequest('POST', '/api/projects', {
+        name: `Новый бот ${projectCount + 1}`,
+        description: '',
+        data: {
+          nodes: [{
+            id: 'start',
+            type: 'start',
+            position: { x: 100, y: 100 },
+            data: {
+              messageText: 'Привет! Я ваш новый бот.',
+              keyboardType: 'none',
+              buttons: [],
+            }
+          }],
+          connections: []
+        }
+      });
+    },
+    onSuccess: (newProject: BotProject) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      toast({
+        title: "Проект создан",
+        description: `Проект "${newProject.name}" успешно создан`,
+      });
+      // Переключаемся на новый проект
+      if (onProjectSelect) {
+        onProjectSelect(newProject.id);
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка создания",
+        description: "Не удалось создать проект",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Удаление проекта
+  const deleteProjectMutation = useMutation({
+    mutationFn: (projectId: number) => apiRequest('DELETE', `/api/projects/${projectId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      toast({
+        title: "Проект удален",
+        description: "Проект успешно удален",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка удаления",
+        description: "Не удалось удалить проект",
+        variant: "destructive",
+      });
+    }
+  });
 
   const handleTemplatesClick = () => {
     setCurrentTab('templates');
@@ -408,6 +489,34 @@ export function ComponentsSidebar({
       console.log('Templates button clicked in sidebar');
       onLoadTemplate();
     }
+  };
+
+  const handleCreateProject = () => {
+    createProjectMutation.mutate();
+  };
+
+  const handleDeleteProject = (project: BotProject) => {
+    if (confirm(`Вы уверены, что хотите удалить проект "${project.name}"? Это действие нельзя отменить.`)) {
+      deleteProjectMutation.mutate(project.id);
+    }
+  };
+
+  const formatDate = (dateString: string | Date | null) => {
+    if (!dateString) return 'Неизвестно';
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getNodeCount = (project: BotProject) => {
+    if (!project.data || typeof project.data !== 'object') return 0;
+    const data = project.data as { nodes?: any[] };
+    return data.nodes?.length || 0;
   };
 
   return (
@@ -437,12 +546,7 @@ export function ComponentsSidebar({
             Шаблоны
           </button>
           <button 
-            onClick={() => {
-              setCurrentTab('projects');
-              if (onGoToProjects) {
-                onGoToProjects();
-              }
-            }}
+            onClick={() => setCurrentTab('projects')}
             className={`flex-1 px-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
               currentTab === 'projects' 
                 ? 'bg-background text-foreground shadow-sm' 
@@ -458,20 +562,94 @@ export function ComponentsSidebar({
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {currentTab === 'projects' && (
           <div className="space-y-4">
-            <div className="text-center py-8">
-              <Home className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Переход к проектам</h3>
-              <p className="text-muted-foreground text-sm mb-4">
-                Вернитесь к списку проектов для управления ботами
-              </p>
+            {/* Заголовок и кнопка создания */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Проекты ({projects.length})
+              </h3>
               <Button 
-                onClick={onGoToProjects}
-                className="w-full"
+                size="sm" 
+                variant="outline" 
+                className="h-6 w-6 p-0"
+                onClick={handleCreateProject}
+                disabled={createProjectMutation.isPending}
               >
-                <Home className="h-4 w-4 mr-2" />
-                Перейти к проектам
+                <Plus className="h-3 w-3" />
               </Button>
             </div>
+
+            {/* Список проектов */}
+            {isLoading ? (
+              <div className="text-center py-4">
+                <div className="w-6 h-6 bg-muted rounded-lg flex items-center justify-center mx-auto mb-2">
+                  <i className="fas fa-spinner fa-spin text-muted-foreground text-xs"></i>
+                </div>
+                <p className="text-xs text-muted-foreground">Загрузка...</p>
+              </div>
+            ) : projects.length === 0 ? (
+              <div className="text-center py-6">
+                <Home className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground mb-3">Нет проектов</p>
+                <Button size="sm" onClick={handleCreateProject} disabled={createProjectMutation.isPending}>
+                  <Plus className="h-3 w-3 mr-1" />
+                  {createProjectMutation.isPending ? 'Создание...' : 'Создать'}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {projects.map((project: BotProject) => (
+                  <div
+                    key={project.id}
+                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                      currentProjectId === project.id 
+                        ? 'bg-primary/10 border border-primary/20' 
+                        : 'bg-muted/50 hover:bg-muted'
+                    }`}
+                    onClick={() => onProjectSelect && onProjectSelect(project.id)}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-foreground truncate">
+                          {project.name}
+                        </h4>
+                        {project.description && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {project.description}
+                          </p>
+                        )}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteProject(project);
+                        }}
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div className="flex items-center space-x-2">
+                        <span className="flex items-center">
+                          <User className="h-3 w-3 mr-1" />
+                          {getNodeCount(project)}
+                        </span>
+                        <Badge variant={project.botToken ? "default" : "secondary"} className="h-4 text-xs">
+                          {project.botToken ? "Настроен" : "Токен"}
+                        </Badge>
+                      </div>
+                      <span className="flex items-center">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {formatDate(project.updatedAt).split(' ')[0]}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         
