@@ -109,7 +109,11 @@ export default function Editor() {
     deleteButton,
     updateNodes,
     setBotData,
-    getBotData
+    getBotData,
+    undo,
+    redo,
+    canUndo,
+    canRedo
   } = useBotEditor(currentProject?.data as BotData);
 
   // Обновляем данные бота при смене проекта
@@ -312,6 +316,10 @@ export default function Editor() {
             onConnectionDelete={deleteConnection}
             onConnectionAdd={addConnection}
             onNodesUpdate={updateNodes}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-gray-50 overflow-auto">

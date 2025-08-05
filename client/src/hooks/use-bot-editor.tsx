@@ -1,12 +1,93 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Node, Connection, Button, BotData } from '@shared/schema';
+
+interface HistoryState {
+  nodes: Node[];
+  connections: Connection[];
+}
 
 export function useBotEditor(initialData?: BotData) {
   const [nodes, setNodes] = useState<Node[]>(initialData?.nodes || []);
   const [connections, setConnections] = useState<Connection[]>(initialData?.connections || []);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  
+  // История для undo/redo
+  const [history, setHistory] = useState<HistoryState[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isRedoUndoAction, setIsRedoUndoAction] = useState(false);
 
   const selectedNode = nodes.find(node => node.id === selectedNodeId) || null;
+
+  // Сохранить текущее состояние в историю
+  const saveToHistory = useCallback(() => {
+    if (isRedoUndoAction) return; // Не сохраняем состояние при undo/redo операциях
+    
+    const currentState: HistoryState = {
+      nodes: JSON.parse(JSON.stringify(nodes)),
+      connections: JSON.parse(JSON.stringify(connections))
+    };
+    
+    setHistory(prev => {
+      // Если мы не в конце истории, удаляем все состояния после текущего индекса
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(currentState);
+      
+      // Ограничиваем размер истории (максимум 50 состояний)
+      if (newHistory.length > 50) {
+        return newHistory.slice(-50);
+      }
+      
+      return newHistory;
+    });
+    
+    setHistoryIndex(prev => Math.min(prev + 1, 49));
+  }, [nodes, connections, historyIndex, isRedoUndoAction]);
+
+  // Отменить последнее действие
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const prevIndex = historyIndex - 1;
+      const prevState = history[prevIndex];
+      
+      setIsRedoUndoAction(true);
+      setNodes(prevState.nodes);
+      setConnections(prevState.connections);
+      setHistoryIndex(prevIndex);
+      setSelectedNodeId(null);
+      
+      // Сбрасываем флаг после обновления состояния
+      setTimeout(() => setIsRedoUndoAction(false), 0);
+    }
+  }, [history, historyIndex]);
+
+  // Повторить отмененное действие
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const nextIndex = historyIndex + 1;
+      const nextState = history[nextIndex];
+      
+      setIsRedoUndoAction(true);
+      setNodes(nextState.nodes);
+      setConnections(nextState.connections);
+      setHistoryIndex(nextIndex);
+      setSelectedNodeId(null);
+      
+      // Сбрасываем флаг после обновления состояния
+      setTimeout(() => setIsRedoUndoAction(false), 0);
+    }
+  }, [history, historyIndex]);
+
+  // Проверяем, доступны ли операции undo/redo
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  // Сохраняем состояние в историю при изменении nodes или connections
+  useEffect(() => {
+    if (!isRedoUndoAction && (nodes.length > 0 || connections.length > 0)) {
+      const timeoutId = setTimeout(saveToHistory, 100); // Дебаунс для избежания частых сохранений
+      return () => clearTimeout(timeoutId);
+    }
+  }, [nodes, connections, saveToHistory, isRedoUndoAction]);
 
   const addNode = useCallback((node: Node) => {
     setNodes(prev => [...prev, node]);
@@ -133,6 +214,10 @@ export function useBotEditor(initialData?: BotData) {
     deleteButton,
     updateNodes,
     setBotData,
-    getBotData
+    getBotData,
+    undo,
+    redo,
+    canUndo,
+    canRedo
   };
 }
