@@ -6,6 +6,7 @@ import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
 import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Navigation, Sidebar, Sliders } from 'lucide-react';
 import { Node, ComponentDefinition, Connection } from '@/types/bot';
 import { generateAutoConnections } from '@/utils/auto-connection';
 import { ConnectionManager } from '@/utils/connection-manager';
@@ -31,6 +32,13 @@ interface CanvasProps {
   onSave?: () => void;
   isSaving?: boolean;
   onFullscreen?: () => void;
+  // Кнопки управления интерфейсом
+  onToggleHeader?: () => void;
+  onToggleSidebar?: () => void;
+  onToggleProperties?: () => void;
+  headerVisible?: boolean;
+  sidebarVisible?: boolean;
+  propertiesVisible?: boolean;
 }
 
 export function Canvas({ 
@@ -52,7 +60,13 @@ export function Canvas({
   canRedo,
   onSave,
   isSaving,
-  onFullscreen
+  onFullscreen,
+  onToggleHeader,
+  onToggleSidebar,
+  onToggleProperties,
+  headerVisible,
+  sidebarVisible,
+  propertiesVisible
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -591,6 +605,53 @@ export function Canvas({
                   <i className="fas fa-save text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
                 )}
               </button>
+            )}
+
+            {/* Кнопки управления интерфейсом */}
+            {(onToggleHeader || onToggleSidebar || onToggleProperties) && (
+              <div className="flex items-center space-x-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 p-1">
+                {onToggleHeader && (
+                  <button
+                    onClick={onToggleHeader}
+                    className={`p-2 rounded-md transition-all duration-200 ${
+                      headerVisible 
+                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                    }`}
+                    title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
+                  >
+                    <Navigation className="w-4 h-4" />
+                  </button>
+                )}
+                
+                {onToggleSidebar && (
+                  <button
+                    onClick={onToggleSidebar}
+                    className={`p-2 rounded-md transition-all duration-200 ${
+                      sidebarVisible 
+                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                    }`}
+                    title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
+                  >
+                    <Sidebar className="w-4 h-4" />
+                  </button>
+                )}
+                
+                {onToggleProperties && (
+                  <button
+                    onClick={onToggleProperties}
+                    className={`p-2 rounded-md transition-all duration-200 ${
+                      propertiesVisible 
+                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                    }`}
+                    title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
+                  >
+                    <Sliders className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             )}
           </div>
           

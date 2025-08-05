@@ -43,6 +43,41 @@ export default function Editor() {
   const [showLayoutManager, setShowLayoutManager] = useState(false);
   const [showLayoutCustomizer, setShowLayoutCustomizer] = useState(false);
   const [useFlexibleLayout, setUseFlexibleLayout] = useState(true);
+  
+  // Функции для управления видимостью панелей
+  const handleToggleHeader = useCallback(() => {
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element =>
+        element.id === 'header'
+          ? { ...element, visible: !element.visible }
+          : element
+      )
+    }));
+  }, []);
+
+  const handleToggleSidebar = useCallback(() => {
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element =>
+        element.id === 'sidebar'
+          ? { ...element, visible: !element.visible }
+          : element
+      )
+    }));
+  }, []);
+
+  const handleToggleProperties = useCallback(() => {
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element =>
+        element.id === 'properties'
+          ? { ...element, visible: !element.visible }
+          : element
+      )
+    }));
+  }, []);
+
   const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>({
     elements: [
       {
@@ -380,6 +415,12 @@ export default function Editor() {
             onSave={() => updateProjectMutation.mutate({})}
             isSaving={updateProjectMutation.isPending}
             onFullscreen={handleEnterFullscreen}
+            onToggleHeader={handleToggleHeader}
+            onToggleSidebar={handleToggleSidebar}
+            onToggleProperties={handleToggleProperties}
+            headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+            sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+            propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -507,6 +548,12 @@ export default function Editor() {
                       onSave={() => updateProjectMutation.mutate({})}
                       isSaving={updateProjectMutation.isPending}
                       onFullscreen={handleEnterFullscreen}
+                      onToggleHeader={handleToggleHeader}
+                      onToggleSidebar={handleToggleSidebar}
+                      onToggleProperties={handleToggleProperties}
+                      headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                      sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+                      propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                     />
                   ) : null}
                 </div>
@@ -547,6 +594,12 @@ export default function Editor() {
                   onSave={() => updateProjectMutation.mutate({})}
                   isSaving={updateProjectMutation.isPending}
                   onFullscreen={handleEnterFullscreen}
+                  onToggleHeader={handleToggleHeader}
+                  onToggleSidebar={handleToggleSidebar}
+                  onToggleProperties={handleToggleProperties}
+                  headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                  sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+                  propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -640,6 +693,12 @@ export default function Editor() {
                       onSave={() => updateProjectMutation.mutate({})}
                       isSaving={updateProjectMutation.isPending}
                       onFullscreen={handleEnterFullscreen}
+                      onToggleHeader={handleToggleHeader}
+                      onToggleSidebar={handleToggleSidebar}
+                      onToggleProperties={handleToggleProperties}
+                      headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                      sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+                      propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                     />
                   ) : null}
                 </div>
@@ -680,6 +739,12 @@ export default function Editor() {
                   onSave={() => updateProjectMutation.mutate({})}
                   isSaving={updateProjectMutation.isPending}
                   onFullscreen={handleEnterFullscreen}
+                  onToggleHeader={handleToggleHeader}
+                  onToggleSidebar={handleToggleSidebar}
+                  onToggleProperties={handleToggleProperties}
+                  headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+                  sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+                  propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                 />
               ) : null}
             </div>
