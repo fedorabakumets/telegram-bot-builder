@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { FolderOpen, Bookmark, Save, Download, User, Send, Layout } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, User, Send, Layout } from 'lucide-react';
 import { LayoutConfig } from './layout-manager';
 
 interface AdaptiveHeaderProps {
@@ -8,13 +8,10 @@ interface AdaptiveHeaderProps {
   projectName: string;
   currentTab: 'editor' | 'preview' | 'export' | 'bot';
   onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot') => void;
-  onSave: () => void;
   onExport: () => void;
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
   onLayoutSettings?: () => void;
-
-  isSaving?: boolean;
 }
 
 export function AdaptiveHeader({ 
@@ -22,12 +19,10 @@ export function AdaptiveHeader({
   projectName, 
   currentTab, 
   onTabChange, 
-  onSave, 
   onExport, 
   onSaveAsTemplate, 
   onLoadTemplate,
-  onLayoutSettings,
-  isSaving 
+  onLayoutSettings
 }: AdaptiveHeaderProps) {
   
   // Определяем ориентацию заголовка
@@ -111,16 +106,7 @@ export function AdaptiveHeader({
         </Button>
       )}
       
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={onSave}
-        disabled={isSaving}
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
-      >
-        <Save className={`h-2.5 w-2.5 max-sm:mx-auto ${isSaving ? 'animate-spin' : ''}`} />
-        <span className="max-sm:hidden ml-1">{isSaving ? 'Сохр...' : 'Сохр'}</span>
-      </Button>
+
       
       <Button 
         size="sm"

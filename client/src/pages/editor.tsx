@@ -291,12 +291,10 @@ export default function Editor() {
         projectName={currentProject.name}
         currentTab={currentTab}
         onTabChange={handleTabChange}
-        onSave={handleSave}
         onExport={() => setShowExport(true)}
         onSaveAsTemplate={handleSaveAsTemplate}
         onLoadTemplate={handleLoadTemplate}
         onLayoutSettings={() => setShowLayoutManager(true)}
-        isSaving={updateProjectMutation.isPending}
       />
     );
 
@@ -320,8 +318,6 @@ export default function Editor() {
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
-            onSave={handleSave}
-            isSaving={updateProjectMutation.isPending}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -398,12 +394,10 @@ export default function Editor() {
               projectName={currentProject.name}
               currentTab={currentTab}
               onTabChange={handleTabChange}
-              onSave={handleSave}
               onExport={() => setShowExport(true)}
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
-              isSaving={updateProjectMutation.isPending}
             />
           }
           sidebar={
@@ -421,12 +415,10 @@ export default function Editor() {
                   projectName={currentProject.name}
                   currentTab={currentTab}
                   onTabChange={handleTabChange}
-                  onSave={handleSave}
                   onExport={() => setShowExport(true)}
                   onSaveAsTemplate={handleSaveAsTemplate}
                   onLoadTemplate={handleLoadTemplate}
                   onLayoutSettings={() => setShowLayoutManager(true)}
-                  isSaving={updateProjectMutation.isPending}
                 />
               }
               sidebarContent={<div>Sidebar</div>}
@@ -450,8 +442,6 @@ export default function Editor() {
                       onRedo={redo}
                       canUndo={canUndo}
                       canRedo={canRedo}
-                      onSave={handleSave}
-                      isSaving={updateProjectMutation.isPending}
                     />
                   ) : null}
                 </div>
@@ -489,8 +479,6 @@ export default function Editor() {
                   onRedo={redo}
                   canUndo={canUndo}
                   canRedo={canRedo}
-                  onSave={handleSave}
-                  isSaving={updateProjectMutation.isPending}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -536,12 +524,10 @@ export default function Editor() {
               projectName={currentProject.name}
               currentTab={currentTab}
               onTabChange={handleTabChange}
-              onSave={handleSave}
               onExport={() => setShowExport(true)}
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
-              isSaving={updateProjectMutation.isPending}
             />
           }
           sidebarContent={
@@ -556,12 +542,10 @@ export default function Editor() {
                   projectName={currentProject.name}
                   currentTab={currentTab}
                   onTabChange={handleTabChange}
-                  onSave={handleSave}
                   onExport={() => setShowExport(true)}
                   onSaveAsTemplate={handleSaveAsTemplate}
                   onLoadTemplate={handleLoadTemplate}
                   onLayoutSettings={() => setShowLayoutManager(true)}
-                  isSaving={updateProjectMutation.isPending}
                 />
               }
               sidebarContent={<div>Sidebar</div>}
@@ -585,8 +569,6 @@ export default function Editor() {
                       onRedo={redo}
                       canUndo={canUndo}
                       canRedo={canRedo}
-                      onSave={handleSave}
-                      isSaving={updateProjectMutation.isPending}
                     />
                   ) : null}
                 </div>
@@ -624,8 +606,6 @@ export default function Editor() {
                   onRedo={redo}
                   canUndo={canUndo}
                   canRedo={canRedo}
-                  onSave={handleSave}
-                  isSaving={updateProjectMutation.isPending}
                 />
               ) : null}
             </div>
