@@ -5,8 +5,8 @@ import { useState } from 'react';
 
 interface HeaderProps {
   projectName: string;
-  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'connections';
-  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections') => void;
+  currentTab: 'editor' | 'preview' | 'export' | 'bot';
+  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot') => void;
   onSave: () => void;
   onExport: () => void;
   onSaveAsTemplate?: () => void;
@@ -35,8 +35,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             { key: 'editor', label: 'Редактор' },
             { key: 'preview', label: 'Превью' },
             { key: 'export', label: 'Экспорт' },
-            { key: 'bot', label: 'Бот' },
-            { key: 'connections', label: 'Связи' }
+            { key: 'bot', label: 'Бот' }
           ].map((tab) => (
             <button 
               key={tab.key}

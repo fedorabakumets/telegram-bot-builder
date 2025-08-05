@@ -28,7 +28,7 @@ import { BotProject, Connection, ComponentDefinition, BotData } from '@shared/sc
 
 export default function Editor() {
   const [, setLocation] = useLocation();
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'connections'>('editor');
+  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot'>('editor');
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -136,7 +136,7 @@ export default function Editor() {
     updateProjectMutation.mutate({});
   }, [updateProjectMutation]);
 
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections') => {
+  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
@@ -147,14 +147,11 @@ export default function Editor() {
     } else if (tab === 'bot') {
       // Auto-save before showing bot controls
       updateProjectMutation.mutate({});
-    } else if (tab === 'connections') {
-      // Auto-save before showing connections
-      updateProjectMutation.mutate({});
     }
   }, [updateProjectMutation]);
 
   // Enhanced onNodeUpdate that auto-saves changes
-  const handleNodeUpdate = useCallback((nodeId: string, updates: Partial<Node['data']>) => {
+  const handleNodeUpdate = useCallback((nodeId: string, updates: any) => {
     // First update local state
     updateNodeData(nodeId, updates);
     // Then auto-save to database with a small delay
@@ -288,7 +285,7 @@ export default function Editor() {
             nodes={nodes}
             connections={connections}
             selectedNodeId={selectedNodeId}
-            selectedConnectionId={selectedConnectionId || undefined}
+            selectedConnectionId={selectedConnectionId ?? undefined}
             onNodeSelect={setSelectedNodeId}
             onNodeAdd={addNode}
             onNodeDelete={deleteNode}
@@ -307,48 +304,7 @@ export default function Editor() {
               />
             </div>
           </div>
-        ) : currentTab === 'connections' ? (
-          <div className="h-full bg-background">
-            <div className="h-full flex">
-              <div className="w-1/2 p-4 space-y-4 overflow-auto">
-                <SmartConnectionCreator
-                  nodes={nodes}
-                  connections={connections}
-                  onConnectionAdd={addConnection}
-                  onNodesChange={updateNodes}
-                  autoButtonCreation={autoButtonCreation}
-                  selectedNodeId={selectedNodeId || undefined}
-                />
-                
-                <EnhancedConnectionControls
-                  nodes={nodes}
-                  connections={connections}
-                  onConnectionAdd={addConnection}
-                  onConnectionDelete={deleteConnection}
-                  onConnectionUpdate={updateConnection}
-                  onNodesChange={updateNodes}
-                  autoButtonCreation={autoButtonCreation}
-                  onAutoButtonCreationChange={setAutoButtonCreation}
-                  selectedConnection={selectedConnection}
-                  onConnectionSelect={setSelectedConnection}
-                />
-              </div>
-              
-              <div className="w-1/2 p-4 overflow-auto border-l">
-                <ConnectionVisualization
-                  nodes={nodes}
-                  connections={connections}
-                  onConnectionSelect={handleConnectionSelect}
-                  onConnectionDelete={handleConnectionDelete}
-                  onConnectionEdit={handleConnectionEdit}
-                  selectedConnectionId={selectedConnectionId || undefined}
-                  showLabels={true}
-                  showMetrics={true}
-                  interactive={true}
-                />
-              </div>
-            </div>
-          </div>
+
         ) : null}
       </div>
     );
@@ -499,48 +455,7 @@ export default function Editor() {
                     />
                   </div>
                 </div>
-              ) : currentTab === 'connections' ? (
-                <div className="h-full bg-background">
-                  <div className="h-full flex">
-                    <div className="w-1/2 p-4 space-y-4 overflow-auto">
-                      <SmartConnectionCreator
-                        nodes={nodes}
-                        connections={connections}
-                        onConnectionAdd={addConnection}
-                        onNodesChange={updateNodes}
-                        autoButtonCreation={autoButtonCreation}
-                        selectedNodeId={selectedNodeId || undefined}
-                      />
-                      
-                      <EnhancedConnectionControls
-                        nodes={nodes}
-                        connections={connections}
-                        onConnectionAdd={addConnection}
-                        onConnectionDelete={deleteConnection}
-                        onConnectionUpdate={updateConnection}
-                        onNodesChange={updateNodes}
-                        autoButtonCreation={autoButtonCreation}
-                        onAutoButtonCreationChange={setAutoButtonCreation}
-                        selectedConnection={selectedConnection}
-                        onConnectionSelect={setSelectedConnection}
-                      />
-                    </div>
-                    
-                    <div className="w-1/2 p-4 overflow-auto border-l">
-                      <ConnectionVisualization
-                        nodes={nodes}
-                        connections={connections}
-                        onConnectionSelect={handleConnectionSelect}
-                        onConnectionDelete={handleConnectionDelete}
-                        onConnectionEdit={handleConnectionEdit}
-                        selectedConnectionId={selectedConnectionId || undefined}
-                        showLabels={true}
-                        showMetrics={true}
-                        interactive={true}
-                      />
-                    </div>
-                  </div>
-                </div>
+
               ) : null}
             </div>
           }
