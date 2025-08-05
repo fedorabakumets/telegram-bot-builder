@@ -908,7 +908,21 @@ async def handle_user_input(message: types.Message):
                 else:
                     parse_mode = None
                 builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["🔄 Изменить интересы"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
                 builder.add(InlineKeyboardButton(text="🔄 Изменить интересы", callback_data="start"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             else:
@@ -1126,6 +1140,20 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             # Обновляем клавиатуру с галочками
             builder = InlineKeyboardBuilder()
             if node_id == "start":
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["⚽ Спорт", "🎵 Музыка", "📚 Книги", "✈️ Путешествия", "💻 Технологии", "🍳 Кулинария", "🎨 Искусство", "🎮 Игры"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                # Добавляем кнопки выбора с умным расположением
                 selected_mark = "✅ " if "⚽ Спорт" in selected_list else ""
                 builder.add(InlineKeyboardButton(text=f"{selected_mark}⚽ Спорт", callback_data="multi_select_{node_id}_btn-sport"))
                 selected_mark = "✅ " if "🎵 Музыка" in selected_list else ""
@@ -1142,6 +1170,7 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
                 builder.add(InlineKeyboardButton(text=f"{selected_mark}🎨 Искусство", callback_data="multi_select_{node_id}_btn-art"))
                 selected_mark = "✅ " if "🎮 Игры" in selected_list else ""
                 builder.add(InlineKeyboardButton(text=f"{selected_mark}🎮 Игры", callback_data="multi_select_{node_id}_btn-games"))
+                builder.adjust(keyboard_width)
                 builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))
             
             keyboard = builder.as_markup()
