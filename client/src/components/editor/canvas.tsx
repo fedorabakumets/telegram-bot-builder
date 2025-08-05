@@ -7,6 +7,7 @@ import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
+
 import { Node, ComponentDefinition, Connection } from '@/types/bot';
 import { generateAutoConnections } from '@/utils/auto-connection';
 import { ConnectionManager } from '@/utils/connection-manager';
@@ -32,6 +33,7 @@ interface CanvasProps {
   onSave?: () => void;
   isSaving?: boolean;
   onFullscreen?: () => void;
+  
   // Кнопки управления интерфейсом
   onToggleHeader?: () => void;
   onToggleSidebar?: () => void;
@@ -611,8 +613,8 @@ export function Canvas({
               </button>
             )}
 
-            {/* Кнопки управления интерфейсом */}
-            {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
+            {/* Кнопки управления интерфейсом - показываем только когда шапка скрыта */}
+            {headerVisible === false && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
               <div className="flex items-center space-x-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 p-1">
                 {onToggleHeader && (
                   <button
@@ -671,6 +673,7 @@ export function Canvas({
                 )}
               </div>
             )}
+
           </div>
           
           {/* Zoom Info and Help */}

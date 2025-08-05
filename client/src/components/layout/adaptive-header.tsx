@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { FolderOpen, Bookmark, Download, User, Send, Layout } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders } from 'lucide-react';
 import { LayoutConfig } from './layout-manager';
 
 interface AdaptiveHeaderProps {
@@ -12,6 +12,15 @@ interface AdaptiveHeaderProps {
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
   onLayoutSettings?: () => void;
+  // Кнопки управления макетом
+  onToggleHeader?: () => void;
+  onToggleSidebar?: () => void;
+  onToggleProperties?: () => void;
+  onToggleCanvas?: () => void;
+  headerVisible?: boolean;
+  sidebarVisible?: boolean;
+  propertiesVisible?: boolean;
+  canvasVisible?: boolean;
 }
 
 export function AdaptiveHeader({ 
@@ -22,7 +31,15 @@ export function AdaptiveHeader({
   onExport, 
   onSaveAsTemplate, 
   onLoadTemplate,
-  onLayoutSettings
+  onLayoutSettings,
+  onToggleHeader,
+  onToggleSidebar,
+  onToggleProperties,
+  onToggleCanvas,
+  headerVisible,
+  sidebarVisible,
+  propertiesVisible,
+  canvasVisible
 }: AdaptiveHeaderProps) {
   
   // Определяем ориентацию заголовка
@@ -81,6 +98,59 @@ export function AdaptiveHeader({
   // Компонент действий
   const Actions = () => (
     <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-3 max-sm:gap-x-1 max-sm:gap-y-1 max-sm:text-xs'}`}>
+      
+      {/* Кнопки управления макетом */}
+      {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
+        <div className="flex items-center space-x-1 bg-background/80 backdrop-blur-sm border border-border rounded-md p-1">
+          {onToggleHeader && (
+            <Button
+              variant={headerVisible ? "default" : "outline"}
+              size="sm"
+              onClick={onToggleHeader}
+              className="h-7 w-7 p-0"
+              title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
+            >
+              <NavigationIcon className="w-3 h-3" />
+            </Button>
+          )}
+          
+          {onToggleSidebar && (
+            <Button
+              variant={sidebarVisible ? "default" : "outline"}
+              size="sm"
+              onClick={onToggleSidebar}
+              className="h-7 w-7 p-0"
+              title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
+            >
+              <Sidebar className="w-3 h-3" />
+            </Button>
+          )}
+          
+          {onToggleCanvas && (
+            <Button
+              variant={canvasVisible ? "default" : "outline"}
+              size="sm"
+              onClick={onToggleCanvas}
+              className="h-7 w-7 p-0"
+              title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
+            >
+              <Monitor className="w-3 h-3" />
+            </Button>
+          )}
+          
+          {onToggleProperties && (
+            <Button
+              variant={propertiesVisible ? "default" : "outline"}
+              size="sm"
+              onClick={onToggleProperties}
+              className="h-7 w-7 p-0"
+              title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
+            >
+              <Sliders className="w-3 h-3" />
+            </Button>
+          )}
+        </div>
+      )}
       
       {onLoadTemplate && (
         <Button 
