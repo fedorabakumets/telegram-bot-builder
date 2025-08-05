@@ -53,7 +53,7 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
         </nav>
       </div>
       
-      <div className="flex flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-2 max-sm:gap-1 max-sm:text-xs">
+      <div className="flex flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-3 max-sm:gap-x-1 max-sm:gap-y-1 max-sm:text-xs">
         {onLoadTemplate && (
           <Button 
             variant="outline" 
@@ -62,11 +62,10 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
               console.log('Templates button clicked in header');
               onLoadTemplate();
             }}
-            className="flex items-center space-x-1 max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:flex-shrink"
+            className="flex items-center justify-center max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full"
           >
-            <FolderOpen className="h-3 w-3 max-sm:h-3 max-sm:w-3 text-muted-foreground" />
-            <span className="max-sm:hidden">Шаблоны</span>
-            <span className="sm:hidden truncate">Шаблон</span>
+            <FolderOpen className="h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto text-muted-foreground" />
+            <span className="max-sm:hidden ml-1">Шаблоны</span>
           </Button>
         )}
         
@@ -75,11 +74,10 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
             variant="outline" 
             size="sm"
             onClick={onSaveAsTemplate}
-            className="flex items-center space-x-1 max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:flex-shrink"
+            className="flex items-center justify-center max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full"
           >
-            <Bookmark className="h-3 w-3 max-sm:h-3 max-sm:w-3 text-muted-foreground" />
-            <span className="max-sm:hidden">Сохранить шаблон</span>
-            <span className="sm:hidden truncate">Создать</span>
+            <Bookmark className="h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto text-muted-foreground" />
+            <span className="max-sm:hidden ml-1">Сохранить шаблон</span>
           </Button>
         )}
         
@@ -88,31 +86,25 @@ export function Header({ projectName, currentTab, onTabChange, onSave, onExport,
           size="sm"
           onClick={onSave}
           disabled={isSaving}
-          className="flex items-center space-x-1 max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:flex-shrink"
+          className="flex items-center justify-center max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full"
         >
-          <Save className={`h-3 w-3 max-sm:h-3 max-sm:w-3 text-muted-foreground ${isSaving ? 'animate-spin' : ''}`} />
-          <span className="max-sm:hidden">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
-          <span className="sm:hidden truncate">Сохр</span>
+          <Save className={`h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto text-muted-foreground ${isSaving ? 'animate-spin' : ''}`} />
+          <span className="max-sm:hidden ml-1">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
         </Button>
         
         <Button 
           size="sm"
           onClick={onExport}
-          className="flex items-center space-x-1 max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:flex-shrink"
+          className="flex items-center justify-center max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full max-sm:col-span-2"
         >
-          <i className="fas fa-download text-xs"></i>
-          <span className="max-sm:hidden">Экспорт кода</span>
-          <span className="sm:hidden truncate">Экспорт</span>
+          <i className="fas fa-download text-sm max-sm:text-xs max-sm:mx-auto"></i>
+          <span className="max-sm:hidden ml-1">Экспорт кода</span>
         </Button>
         
         <div className="h-6 w-px bg-border max-sm:hidden"></div>
         
-        <div className="max-sm:col-span-2 max-sm:flex max-sm:justify-center max-sm:gap-4 max-sm:mt-1">
+        <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
           <ThemeToggle />
-          
-          <button className="w-6 h-6 max-sm:w-6 max-sm:h-6 bg-muted hover:bg-muted/80 rounded-full flex items-center justify-center transition-colors">
-            <i className="fas fa-user text-muted-foreground text-xs"></i>
-          </button>
         </div>
       </div>
     </header>

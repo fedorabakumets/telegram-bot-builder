@@ -85,17 +85,16 @@ export function AdaptiveHeader({
 
   // Компонент действий
   const Actions = () => (
-    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-2 max-sm:gap-1 max-sm:text-xs'}`}>
+    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-3 max-sm:gap-x-1 max-sm:gap-y-1 max-sm:text-xs'}`}>
       {onLoadTemplate && (
         <Button 
           variant="outline" 
           size={isCompact ? "sm" : "sm"}
           onClick={onLoadTemplate}
-          className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-1'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:flex-shrink`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full`}
         >
-          <FolderOpen className="h-3 w-3 max-sm:h-3 max-sm:w-3" />
-          {!isVertical && <span className="max-sm:hidden">Шаблоны</span>}
-          <span className="sm:hidden truncate">Шаблон</span>
+          <FolderOpen className="h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto" />
+          <span className="max-sm:hidden ml-1">Шаблоны</span>
         </Button>
       )}
       
@@ -104,11 +103,10 @@ export function AdaptiveHeader({
           variant="outline" 
           size={isCompact ? "sm" : "sm"}
           onClick={onSaveAsTemplate}
-          className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-1'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:flex-shrink`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full`}
         >
-          <Bookmark className="h-3 w-3 max-sm:h-3 max-sm:w-3" />
-          {!isVertical && <span className="max-sm:hidden">Сохранить шаблон</span>}
-          <span className="sm:hidden truncate">Создать</span>
+          <Bookmark className="h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto" />
+          <span className="max-sm:hidden ml-1">Сохранить шаблон</span>
         </Button>
       )}
       
@@ -117,28 +115,26 @@ export function AdaptiveHeader({
         size={isCompact ? "sm" : "sm"}
         onClick={onSave}
         disabled={isSaving}
-        className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-1'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:flex-shrink`}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full`}
       >
-        <Save className={`h-3 w-3 max-sm:h-3 max-sm:w-3 ${isSaving ? 'animate-spin' : ''}`} />
-        {!isVertical && <span className="max-sm:hidden">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>}
-        <span className="sm:hidden truncate">Сохр</span>
+        <Save className={`h-4 w-4 max-sm:h-3 max-sm:w-3 max-sm:mx-auto ${isSaving ? 'animate-spin' : ''}`} />
+        <span className="max-sm:hidden ml-1">{isSaving ? 'Сохранение...' : 'Сохранить'}</span>
       </Button>
       
       <Button 
         size={isCompact ? "sm" : "sm"}
         onClick={onExport}
-        className={`${isVertical ? 'w-full justify-start' : 'flex items-center space-x-1'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:flex-shrink`}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} max-sm:px-1 max-sm:py-1 max-sm:text-xs max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
       >
-        <i className="fas fa-download text-xs"></i>
-        {!isVertical && <span className="max-sm:hidden">Экспорт кода</span>}
-        <span className="sm:hidden truncate">Экспорт</span>
+        <i className="fas fa-download text-sm max-sm:text-xs max-sm:mx-auto"></i>
+        <span className="max-sm:hidden ml-1">Экспорт кода</span>
       </Button>
       
       {isVertical && (
         <div className="h-px w-full bg-border my-2"></div>
       )}
       
-      <div className="max-sm:col-span-2 max-sm:flex max-sm:justify-center max-sm:mt-1">
+      <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
         <ThemeToggle />
       </div>
     </div>
