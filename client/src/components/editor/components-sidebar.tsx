@@ -676,14 +676,11 @@ export function ComponentsSidebar({
                     </div>
                     
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center">
                         <span className="flex items-center">
                           <User className="h-3 w-3 mr-1" />
-                          {getNodeCount(project)}
+                          {getNodeCount(project)} узлов
                         </span>
-                        <Badge variant={project.botToken ? "default" : "secondary"} className="h-4 text-xs">
-                          {project.botToken ? "Настроен" : "Токен"}
-                        </Badge>
                       </div>
                       <span className="flex items-center">
                         <Calendar className="h-3 w-3 mr-1" />
