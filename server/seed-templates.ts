@@ -17,7 +17,7 @@ export async function seedDefaultTemplates(force = false) {
         await storage.deleteBotTemplate(template.id);
       }
       console.log(`🗑️ Удалено ${systemTemplates.length} старых системных шаблонов`);
-    } else if (systemTemplates.length >= 8) {
+    } else if (systemTemplates.length >= 10) {
       console.log('Системные шаблоны уже существуют, пропускаем инициализацию');
       return;
     }
@@ -491,13 +491,6 @@ export async function seedDefaultTemplates(force = false) {
                   action: "selection",
                   buttonType: "option",
                   target: "games"
-                },
-                {
-                  id: "btn-done",
-                  text: "✅ Готово",
-                  action: "goto",
-                  buttonType: "complete",
-                  target: "interests_result"
                 }
               ],
               markdown: false,

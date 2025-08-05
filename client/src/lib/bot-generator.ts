@@ -704,6 +704,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        logging.error(f"Ошибка обновления данных пользователя: {e}")\n';
   code += '        return False\n\n';
 
+  // Добавляем алиас функции для обратной совместимости
+  code += 'async def save_user_data_to_db(user_id: int, data_key: str, data_value):\n';
+  code += '    """Алиас для update_user_data_in_db для обратной совместимости"""\n';
+  code += '    return await update_user_data_in_db(user_id, data_key, data_value)\n\n';
+
   code += 'async def update_user_variable_in_db(user_id: int, variable_name: str, variable_value: str):\n';
   code += '    """Сохраняет переменную пользователя в базу данных"""\n';
   code += '    if not db_pool:\n';
