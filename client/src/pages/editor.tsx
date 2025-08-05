@@ -21,6 +21,7 @@ import { LayoutManager, useLayoutManager } from '@/components/layout/layout-mana
 import { LayoutCustomizer } from '@/components/layout/layout-customizer';
 import { SimpleLayoutCustomizer, SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 import { FlexibleLayout } from '@/components/layout/flexible-layout';
+import { LayoutToggleButtons } from '@/components/layout/layout-toggle-buttons';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
@@ -500,7 +501,20 @@ export default function Editor() {
   return (
     <>
       {useFlexibleLayout ? (
-        renderFlexibleLayoutContent()
+        <>
+          {renderFlexibleLayoutContent()}
+          {/* Кнопки управления макетом - показываются всегда, даже если холст скрыт */}
+          <LayoutToggleButtons
+            onToggleHeader={handleToggleHeader}
+            onToggleSidebar={handleToggleSidebar}
+            onToggleProperties={handleToggleProperties}
+            onToggleCanvas={handleToggleCanvas}
+            headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+            sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
+            propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+            canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+          />
+        </>
       ) : (
         <AdaptiveLayout
           config={layoutConfig}
