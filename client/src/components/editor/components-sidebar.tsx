@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { LayoutButtons } from '@/components/layout/layout-buttons';
 
 
 
@@ -29,6 +30,14 @@ interface ComponentsSidebarProps {
   sidebarContent?: React.ReactNode;
   canvasContent?: React.ReactNode;
   propertiesContent?: React.ReactNode;
+  // Новые пропсы для управления макетом
+  onSendToChat?: () => void;
+  onToggleCanvas?: () => void;
+  onToggleHeader?: () => void;
+  onShowFullLayout?: () => void;
+  canvasVisible?: boolean;
+  headerVisible?: boolean;
+  showLayoutButtons?: boolean;
 }
 
 const components: ComponentDefinition[] = [
@@ -406,7 +415,14 @@ export function ComponentsSidebar({
   headerContent,
   sidebarContent,
   canvasContent,
-  propertiesContent
+  propertiesContent,
+  onSendToChat,
+  onToggleCanvas,
+  onToggleHeader,
+  onShowFullLayout,
+  canvasVisible = false,
+  headerVisible = false,
+  showLayoutButtons = false
 }: ComponentsSidebarProps) {
   const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
   const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
@@ -742,7 +758,21 @@ export function ComponentsSidebar({
     <aside className="w-full h-full bg-background border-r border-border flex flex-col">
       {/* Sidebar Header */}
       <div className="p-4 border-b border-border">
-        <h2 className="text-sm font-semibold text-foreground mb-3">Компоненты</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-foreground">Компоненты</h2>
+          {/* Кнопки макета отображаются когда только панель компонентов видна */}
+          {showLayoutButtons && (
+            <LayoutButtons
+              onSendToChat={onSendToChat}
+              onToggleCanvas={onToggleCanvas}
+              onToggleHeader={onToggleHeader}
+              onShowFullLayout={onShowFullLayout}
+              canvasVisible={canvasVisible}
+              headerVisible={headerVisible}
+              className="scale-75 -mr-2"
+            />
+          )}
+        </div>
         <div className="flex space-x-1 bg-muted rounded-lg p-1">
           <button 
             onClick={() => setCurrentTab('elements')}

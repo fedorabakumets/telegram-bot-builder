@@ -482,6 +482,18 @@ export default function Editor() {
         sidebarContent={<div>Sidebar</div>}
         canvasContent={canvasContent}
         propertiesContent={propertiesContent}
+        onSendToChat={() => console.log('Send to chat clicked')}
+        onToggleCanvas={handleToggleCanvas}
+        onToggleHeader={handleToggleHeader}
+        onShowFullLayout={() => {
+          setFlexibleLayoutConfig(prev => ({
+            ...prev,
+            elements: prev.elements.map(element => ({ ...element, visible: true }))
+          }))
+        }}
+        canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+        headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+        showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible || !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
       />
     );
 
@@ -542,6 +554,18 @@ export default function Editor() {
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
               currentProjectId={currentProject?.id}
+              onSendToChat={() => console.log('Send to chat clicked')}
+              onToggleCanvas={handleToggleCanvas}
+              onToggleHeader={handleToggleHeader}
+              onShowFullLayout={() => {
+                setFlexibleLayoutConfig(prev => ({
+                  ...prev,
+                  elements: prev.elements.map(element => ({ ...element, visible: true }))
+                }))
+              }}
+              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+              headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+              showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible || !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
             />
           }
           canvas={
