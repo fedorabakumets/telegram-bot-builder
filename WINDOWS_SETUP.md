@@ -47,8 +47,11 @@ npm install
 # Создайте таблицы в базе данных
 npm run db:push
 
-# Запустите проект
-npm run dev
+# Запустите проект (ЛУЧШИЙ СПОСОБ для Windows PowerShell)
+$env:NODE_ENV="development"; tsx server/index.ts
+
+# Или альтернативно в CMD
+start-dev.bat
 ```
 
 ### 4. Откройте браузер

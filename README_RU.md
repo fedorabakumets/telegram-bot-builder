@@ -41,11 +41,11 @@ npm install
 # Создаем таблицы в базе данных
 npm run db:push
 
-# Запускаем проект (для Windows)
-start-dev.bat
+# Запускаем проект (Windows PowerShell - РЕКОМЕНДУЕТСЯ)
+$env:NODE_ENV="development"; tsx server/index.ts
 
-# Или альтернативный способ через PowerShell:
-# $env:NODE_ENV="development"; tsx server/index.ts
+# Или альтернативный способ через bat файл:
+start-dev.bat
 ```
 
 ### 4️⃣ Открываем браузер
@@ -101,8 +101,9 @@ taskkill /PID 1234 /F
 ## Команды разработчика
 
 ```cmd
-start-dev.bat       # Запуск в режиме разработки (Windows)
-npm run dev          # Запуск в режиме разработки (может не работать на Windows)
+$env:NODE_ENV="development"; tsx server/index.ts  # Запуск в Windows PowerShell (ЛУЧШИЙ СПОСОБ)
+start-dev.bat       # Запуск через bat файл (Windows CMD)
+npm run dev          # Стандартная команда (работает не на всех Windows)
 npm run build        # Сборка для продакшна  
 npm run start        # Запуск готового приложения
 npm run db:push      # Обновление схемы базы данных

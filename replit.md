@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 5, 2025)
 
+### Windows Installation Support (August 5, 2025)
+- **Windows Compatibility Fixed**: Resolved NODE_ENV command issues for Windows users
+- **PowerShell Solution**: Confirmed `$env:NODE_ENV="development"; tsx server/index.ts` as best practice for Windows
+- **Improved Documentation**: Created comprehensive Windows installation guides and scripts
+- **Installation Files**: Added setup.bat, start-dev.bat, quick-start-windows.md, and Russian documentation
+- **Database Setup**: Provided multiple methods for PostgreSQL configuration on Windows
+- **Cross-Platform Support**: Enhanced project to work seamlessly on Windows, Linux, and macOS
+
 ### Interface Simplification (August 5, 2025)
 - **Removed Templates Tab**: Simplified components sidebar by removing "Шаблоны" button
 - **Two-Tab Interface**: ComponentsSidebar now has only "Элементы" and "Проекты" tabs
