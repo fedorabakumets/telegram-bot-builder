@@ -4,6 +4,7 @@ import { useLocation, useParams, useRoute } from 'wouter';
 import { Header } from '@/components/editor/header';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
+import { FullscreenCanvas } from '@/components/editor/fullscreen-canvas';
 import { PropertiesPanel } from '@/components/editor/properties-panel';
 import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
@@ -34,6 +35,7 @@ export default function Editor() {
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
@@ -300,6 +302,33 @@ export default function Editor() {
     }
   }, [deleteConnection, selectedConnectionId]);
 
+  const handleEnterFullscreen = useCallback(() => {
+    setIsFullscreen(true);
+  }, []);
+
+  const handleExitFullscreen = useCallback(() => {
+    setIsFullscreen(false);
+  }, []);
+
+  // Handle F11 key for fullscreen toggle
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'F11' && currentTab === 'editor') {
+        event.preventDefault();
+        if (isFullscreen) {
+          handleExitFullscreen();
+        } else {
+          handleEnterFullscreen();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullscreen, currentTab, handleEnterFullscreen, handleExitFullscreen]);
+
   if (!currentProject) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -348,6 +377,7 @@ export default function Editor() {
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
+                      onFullscreen={handleEnterFullscreen}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -472,6 +502,7 @@ export default function Editor() {
                       onRedo={redo}
                       canUndo={canUndo}
                       canRedo={canRedo}
+                      onFullscreen={handleEnterFullscreen}
                     />
                   ) : null}
                 </div>
@@ -509,6 +540,7 @@ export default function Editor() {
                   onRedo={redo}
                   canUndo={canUndo}
                   canRedo={canRedo}
+                      onFullscreen={handleEnterFullscreen}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -599,6 +631,7 @@ export default function Editor() {
                       onRedo={redo}
                       canUndo={canUndo}
                       canRedo={canRedo}
+                      onFullscreen={handleEnterFullscreen}
                     />
                   ) : null}
                 </div>
@@ -636,6 +669,7 @@ export default function Editor() {
                   onRedo={redo}
                   canUndo={canUndo}
                   canRedo={canRedo}
+                      onFullscreen={handleEnterFullscreen}
                 />
               ) : null}
             </div>
@@ -686,6 +720,30 @@ export default function Editor() {
         projectName={currentProject.name}
       />
 
+      {/* Fullscreen Canvas */}
+      {isFullscreen && (
+        <FullscreenCanvas
+          nodes={nodes}
+          connections={connections}
+          selectedNodeId={selectedNodeId}
+          selectedConnectionId={selectedConnectionId ?? undefined}
+          onNodeSelect={setSelectedNodeId}
+          onNodeAdd={addNode}
+          onNodeDelete={deleteNode}
+          onNodeMove={handleNodeMove}
+          onConnectionSelect={setSelectedConnectionId}
+          onConnectionDelete={deleteConnection}
+          onConnectionAdd={addConnection}
+          onNodesUpdate={updateNodes}
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onSave={handleSave}
+          isSaving={updateProjectMutation.isPending}
+          onExitFullscreen={handleExitFullscreen}
+        />
+      )}
 
     </>
   );
