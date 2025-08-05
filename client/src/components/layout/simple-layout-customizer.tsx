@@ -132,29 +132,7 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
     setTempConfig(DEFAULT_CONFIG);
   }, []);
 
-  const handleQuickToggle = useCallback((elementId: string) => {
-    const newConfig = {
-      ...config,
-      elements: config.elements.map(element =>
-        element.id === elementId
-          ? { ...element, visible: !element.visible }
-          : element
-      )
-    };
-    onConfigChange(newConfig);
-  }, [config, onConfigChange]);
 
-  const handleQuickMove = useCallback((elementId: string, position: SimpleLayoutElement['position']) => {
-    const newConfig = {
-      ...config,
-      elements: config.elements.map(element =>
-        element.id === elementId
-          ? { ...element, position }
-          : element
-      )
-    };
-    onConfigChange(newConfig);
-  }, [config, onConfigChange]);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -190,31 +168,11 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
 
   return (
     <div className="relative">
-      {/* Быстрые кнопки управления */}
-      <div className="absolute top-4 right-4 z-10 flex items-center space-x-2">
-        {/* Быстрые переключатели */}
-        <div className="flex items-center space-x-1 bg-background/80 backdrop-blur-sm border border-border rounded-md p-1">
-          {config.elements.map(element => (
-            <Button
-              key={element.id}
-              variant={element.visible ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleQuickToggle(element.id)}
-              className="h-8 w-8 p-0"
-              title={`${element.visible ? 'Скрыть' : 'Показать'} ${element.name}`}
-            >
-              {getIcon(element.type)}
-            </Button>
-          ))}
-        </div>
-
-        {/* Кнопка настроек */}
+      {/* Диалог настроек - скрыт, доступен только программно */}
+      <div className="hidden">
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-2" />
-              Настройки макета
-            </Button>
+            <div />
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
@@ -323,7 +281,7 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
                             ...tempConfig,
                             elements: tempConfig.elements.map(el => ({
                               ...el,
-                              position: el.type === 'header' ? 'bottom' as const : el.position
+                              position: (el.type === 'header' ? 'bottom' : el.position) as SimpleLayoutElement['position']
                             }))
                           };
                           setTempConfig(preset);
@@ -362,9 +320,9 @@ export const SimpleLayoutCustomizer: React.FC<SimpleLayoutCustomizerProps> = ({
                             elements: tempConfig.elements.map(el => ({
                               ...el,
                               visible: true,
-                              position: el.type === 'header' ? 'top' : 
+                              position: (el.type === 'header' ? 'top' : 
                                        el.type === 'sidebar' ? 'left' :
-                                       el.type === 'properties' ? 'right' : 'center'
+                                       el.type === 'properties' ? 'right' : 'center') as SimpleLayoutElement['position']
                             }))
                           };
                           setTempConfig(preset);
