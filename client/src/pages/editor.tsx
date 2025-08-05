@@ -320,6 +320,8 @@ export default function Editor() {
             onRedo={redo}
             canUndo={canUndo}
             canRedo={canRedo}
+            onSave={handleSave}
+            isSaving={updateProjectMutation.isPending}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -444,6 +446,12 @@ export default function Editor() {
                       onConnectionDelete={deleteConnection}
                       onConnectionAdd={addConnection}
                       onNodesUpdate={updateNodes}
+                      onUndo={undo}
+                      onRedo={redo}
+                      canUndo={canUndo}
+                      canRedo={canRedo}
+                      onSave={handleSave}
+                      isSaving={updateProjectMutation.isPending}
                     />
                   ) : null}
                 </div>
@@ -477,6 +485,12 @@ export default function Editor() {
                   onConnectionDelete={deleteConnection}
                   onConnectionAdd={addConnection}
                   onNodesUpdate={updateNodes}
+                  onUndo={undo}
+                  onRedo={redo}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  onSave={handleSave}
+                  isSaving={updateProjectMutation.isPending}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -567,6 +581,12 @@ export default function Editor() {
                       onConnectionDelete={deleteConnection}
                       onConnectionAdd={addConnection}
                       onNodesUpdate={updateNodes}
+                      onUndo={undo}
+                      onRedo={redo}
+                      canUndo={canUndo}
+                      canRedo={canRedo}
+                      onSave={handleSave}
+                      isSaving={updateProjectMutation.isPending}
                     />
                   ) : null}
                 </div>
@@ -600,6 +620,12 @@ export default function Editor() {
                   onConnectionDelete={deleteConnection}
                   onConnectionAdd={addConnection}
                   onNodesUpdate={updateNodes}
+                  onUndo={undo}
+                  onRedo={redo}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  onSave={handleSave}
+                  isSaving={updateProjectMutation.isPending}
                 />
               ) : null}
             </div>

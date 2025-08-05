@@ -28,6 +28,8 @@ interface CanvasProps {
   onRedo?: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
+  onSave?: () => void;
+  isSaving?: boolean;
 }
 
 export function Canvas({ 
@@ -46,7 +48,9 @@ export function Canvas({
   onUndo,
   onRedo,
   canUndo,
-  canRedo
+  canRedo,
+  onSave,
+  isSaving
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -224,13 +228,19 @@ export function Canvas({
               onRedo();
             }
             break;
+          case 's':
+            e.preventDefault();
+            if (onSave && !isSaving) {
+              onSave();
+            }
+            break;
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo]);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving]);
 
   // Handle mouse events for panning
   useEffect(() => {
@@ -505,6 +515,21 @@ export function Canvas({
             >
               <i className="fas fa-redo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
             </button>
+
+            {onSave && (
+              <button 
+                onClick={onSave}
+                disabled={isSaving}
+                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Сохранить проект (Ctrl + S)"
+              >
+                {isSaving ? (
+                  <i className="fas fa-spinner fa-spin text-gray-600 dark:text-gray-400 text-sm"></i>
+                ) : (
+                  <i className="fas fa-save text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
+                )}
+              </button>
+            )}
           </div>
           
           {/* Zoom Info and Help */}
