@@ -78,6 +78,17 @@ export default function Editor() {
     }));
   }, []);
 
+  const handleToggleCanvas = useCallback(() => {
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element =>
+        element.id === 'canvas'
+          ? { ...element, visible: !element.visible }
+          : element
+      )
+    }));
+  }, []);
+
   const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>({
     elements: [
       {
@@ -418,9 +429,11 @@ export default function Editor() {
             onToggleHeader={handleToggleHeader}
             onToggleSidebar={handleToggleSidebar}
             onToggleProperties={handleToggleProperties}
+            onToggleCanvas={handleToggleCanvas}
             headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
             sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
             propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+            canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-gray-50 overflow-auto">
@@ -540,9 +553,11 @@ export default function Editor() {
                   onToggleHeader={handleToggleHeader}
                   onToggleSidebar={handleToggleSidebar}
                   onToggleProperties={handleToggleProperties}
+                  onToggleCanvas={handleToggleCanvas}
                   headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
                   sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
                   propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                  canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-gray-50 overflow-auto">
