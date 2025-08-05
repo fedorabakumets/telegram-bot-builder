@@ -9,7 +9,7 @@ import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
-import { TemplatesModal } from '@/components/editor/templates-modal';
+
 import { ConnectionManagerPanel } from '@/components/editor/connection-manager-panel';
 import { EnhancedConnectionControls } from '@/components/editor/enhanced-connection-controls';
 import { ConnectionVisualization } from '@/components/editor/connection-visualization';
@@ -34,7 +34,7 @@ export default function Editor() {
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
+
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
@@ -120,6 +120,8 @@ export default function Editor() {
   useEffect(() => {
     if (currentProject?.data) {
       setBotData(currentProject.data as BotData);
+      // Сохраняем ID текущего проекта для возврата со страницы шаблонов
+      localStorage.setItem('lastProjectId', currentProject.id.toString());
     }
   }, [currentProject?.id, currentProject?.data, setBotData]);
 
@@ -164,6 +166,34 @@ export default function Editor() {
     }
   }, [updateProjectMutation]);
 
+  // Проверяем, есть ли выбранный шаблон при загрузке страницы
+  useEffect(() => {
+    const selectedTemplateData = localStorage.getItem('selectedTemplate');
+    if (selectedTemplateData && currentProject) {
+      try {
+        const template = JSON.parse(selectedTemplateData);
+        console.log('Применяем сохраненный шаблон:', template.name);
+        
+        // Применяем шаблон
+        setBotData(template.data);
+        updateProjectMutation.mutate({
+          data: template.data
+        });
+        
+        toast({
+          title: 'Шаблон применен',
+          description: `Шаблон "${template.name}" успешно загружен`,
+        });
+        
+        // Удаляем сохраненный шаблон
+        localStorage.removeItem('selectedTemplate');
+      } catch (error) {
+        console.error('Ошибка применения сохраненного шаблона:', error);
+        localStorage.removeItem('selectedTemplate');
+      }
+    }
+  }, [currentProject?.id, setBotData, updateProjectMutation, toast]);
+
   // Enhanced onNodeUpdate that auto-saves changes
   const handleNodeUpdate = useCallback((nodeId: string, updates: any) => {
     // First update local state
@@ -187,9 +217,9 @@ export default function Editor() {
   }, []);
 
   const handleLoadTemplate = useCallback(() => {
-    console.log('Template button clicked, opening modal...');
-    setShowTemplates(true);
-  }, []);
+    console.log('Template button clicked, navigating to templates page...');
+    setLocation('/templates');
+  }, [setLocation]);
 
   const handleGoToProjects = useCallback(() => {
     setLocation('/projects');
@@ -656,11 +686,7 @@ export default function Editor() {
         projectName={currentProject.name}
       />
 
-      <TemplatesModal
-        isOpen={showTemplates}
-        onClose={() => setShowTemplates(false)}
-        onSelectTemplate={handleSelectTemplate}
-      />
+
     </>
   );
 }

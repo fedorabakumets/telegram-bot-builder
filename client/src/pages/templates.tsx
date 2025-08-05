@@ -271,12 +271,23 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     } else {
       // Сохраняем выбранный шаблон в localStorage для загрузки в редакторе
       localStorage.setItem('selectedTemplate', JSON.stringify(template));
-      setLocation('/');
+      
+      // Пытаемся получить ID текущего проекта из истории браузера или localStorage
+      const lastProjectId = localStorage.getItem('lastProjectId');
+      const referrer = document.referrer;
+      
+      // Если пришли из редактора, возвращаемся туда
+      if (referrer && referrer.includes('/editor/') && lastProjectId) {
+        setLocation(`/editor/${lastProjectId}`);
+      } else {
+        // Иначе переходим на главную страницу
+        setLocation('/');
+      }
     }
     
     toast({
       title: 'Шаблон загружен!',
-      description: `Шаблон "${template.name}" успешно применен к вашему проекту`,
+      description: `Шаблон "${template.name}" будет применен к вашему проекту`,
     });
   };
 
@@ -669,7 +680,14 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => setLocation('/')}
+          onClick={() => {
+            const lastProjectId = localStorage.getItem('lastProjectId');
+            if (lastProjectId) {
+              setLocation(`/editor/${lastProjectId}`);
+            } else {
+              setLocation('/');
+            }
+          }}
           className="transition-all hover:scale-105"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
