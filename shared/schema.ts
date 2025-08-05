@@ -401,8 +401,6 @@ export const nodeSchema = z.object({
     enableTextInput: z.boolean().optional(),
     name: z.string().optional(),
     label: z.string().optional(),
-    resizeKeyboard: z.boolean().optional(),
-    oneTimeKeyboard: z.boolean().optional(),
     checkmarkSymbol: z.string().optional(),
     multiSelectCheckmark: z.string().optional()
   }),
