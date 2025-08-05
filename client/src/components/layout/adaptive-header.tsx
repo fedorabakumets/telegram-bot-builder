@@ -91,9 +91,9 @@ export function AdaptiveHeader({
           variant="outline" 
           size="sm"
           onClick={onLoadTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs max-sm:px-1 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
         >
-          <FolderOpen className="h-3 w-3 max-sm:mx-auto" />
+          <FolderOpen className="h-2.5 w-2.5 max-sm:mx-auto" />
           <span className="max-sm:hidden ml-1">Шаблон</span>
         </Button>
       )}
@@ -103,9 +103,9 @@ export function AdaptiveHeader({
           variant="outline" 
           size="sm"
           onClick={onSaveAsTemplate}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs max-sm:px-1 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
         >
-          <Bookmark className="h-3 w-3 max-sm:mx-auto" />
+          <Bookmark className="h-2.5 w-2.5 max-sm:mx-auto" />
           <span className="max-sm:hidden ml-1">Создать</span>
         </Button>
       )}
@@ -115,18 +115,18 @@ export function AdaptiveHeader({
         size="sm"
         onClick={onSave}
         disabled={isSaving}
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs max-sm:px-1 max-sm:py-1 max-sm:min-w-0 max-sm:w-full`}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
       >
-        <Save className={`h-3 w-3 max-sm:mx-auto ${isSaving ? 'animate-spin' : ''}`} />
+        <Save className={`h-2.5 w-2.5 max-sm:mx-auto ${isSaving ? 'animate-spin' : ''}`} />
         <span className="max-sm:hidden ml-1">{isSaving ? 'Сохр...' : 'Сохр'}</span>
       </Button>
       
       <Button 
         size="sm"
         onClick={onExport}
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-2 py-1 text-xs max-sm:px-1 max-sm:py-1 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
       >
-        <i className="fas fa-download text-xs max-sm:mx-auto"></i>
+        <i className="fas fa-download text-2xs max-sm:mx-auto"></i>
         <span className="max-sm:hidden ml-1">Экспорт</span>
       </Button>
       
