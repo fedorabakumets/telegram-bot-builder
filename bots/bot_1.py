@@ -285,15 +285,15 @@ async def start_handler(message: types.Message):
     else:
         # Создаем inline клавиатуру с поддержкой множественного выбора
         builder = InlineKeyboardBuilder()
-        builder.add(InlineKeyboardButton(text="⚽ Спорт", callback_data="multi_select_start_btn-sport"))
-        builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="multi_select_start_btn-music"))
-        builder.add(InlineKeyboardButton(text="📚 Книги", callback_data="multi_select_start_btn-books"))
-        builder.add(InlineKeyboardButton(text="✈️ Путешествия", callback_data="multi_select_start_btn-travel"))
-        builder.add(InlineKeyboardButton(text="💻 Технологии", callback_data="multi_select_start_btn-tech"))
-        builder.add(InlineKeyboardButton(text="🍳 Кулинария", callback_data="multi_select_start_btn-cooking"))
-        builder.add(InlineKeyboardButton(text="🎨 Искусство", callback_data="multi_select_start_btn-art"))
-        builder.add(InlineKeyboardButton(text="🎮 Игры", callback_data="multi_select_start_btn-games"))
-        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))
+        builder.add(InlineKeyboardButton(text="⚽ Спорт", callback_data=f"multi_select_start_btn-sport"))
+        builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data=f"multi_select_start_btn-music"))
+        builder.add(InlineKeyboardButton(text="📚 Книги", callback_data=f"multi_select_start_btn-books"))
+        builder.add(InlineKeyboardButton(text="✈️ Путешествия", callback_data=f"multi_select_start_btn-travel"))
+        builder.add(InlineKeyboardButton(text="💻 Технологии", callback_data=f"multi_select_start_btn-tech"))
+        builder.add(InlineKeyboardButton(text="🍳 Кулинария", callback_data=f"multi_select_start_btn-cooking"))
+        builder.add(InlineKeyboardButton(text="🎨 Искусство", callback_data=f"multi_select_start_btn-art"))
+        builder.add(InlineKeyboardButton(text="🎮 Игры", callback_data=f"multi_select_start_btn-games"))
+        builder.add(InlineKeyboardButton(text="Готово", callback_data=f"multi_select_done_start"))
         keyboard = builder.as_markup()
         await message.answer(text, reply_markup=keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
         
@@ -373,6 +373,85 @@ async def handle_callback_final_message(callback_query: types.CallbackQuery):
         builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="start_btn_0"))
         keyboard = builder.as_markup()
     # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "start" or c.data.startswith("start_btn_"))
+async def handle_callback_start(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "✏️ Изменить выбор"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Обрабатываем узел start: start
+    text = """👋 Добро пожаловать!
+
+Расскажите нам о ваших интересах. Выберите все, что вам подходит:"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для start узла
+        builder = InlineKeyboardBuilder()
+        keyboard = builder.as_markup()
+    # Отправляем сообщение start узла
     try:
         if keyboard is not None:
             await callback_query.message.edit_text(text, reply_markup=keyboard)
@@ -519,6 +598,7 @@ async def handle_callback_interests_result(callback_query: types.CallbackQuery):
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="👍 Продолжить", callback_data="final_message_btn_0"))
+    builder.add(InlineKeyboardButton(text="✏️ Изменить выбор", callback_data="start_btn_1"))
     keyboard = builder.as_markup()
     await bot.send_message(user_id, text, reply_markup=keyboard)
 
@@ -973,7 +1053,7 @@ async def handle_user_input(message: types.Message):
                 keyboard_width = calculate_keyboard_width(button_texts)
                 
                 builder.add(InlineKeyboardButton(text="👍 Продолжить", callback_data="final_message"))
-                builder.add(InlineKeyboardButton(text="✏️ Изменить выбор", callback_data="cmd_start"))
+                builder.add(InlineKeyboardButton(text="✏️ Изменить выбор", callback_data="start"))
                 builder.adjust(keyboard_width)  # Умное расположение кнопок
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
@@ -1068,26 +1148,6 @@ async def handle_conditional_button(callback_query: types.CallbackQuery):
         logging.warning(f"Неверный формат условной кнопки: {callback_query.data}")
         await callback_query.answer("❌ Ошибка обработки кнопки", show_alert=True)
 
-
-# Обработчики для кнопок команд
-
-@dp.callback_query(lambda c: c.data == "cmd_start")
-async def handle_cmd_start(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Симулируем выполнение команды /start
-    
-    # Создаем fake message object для команды
-    from types import SimpleNamespace
-    fake_message = SimpleNamespace()
-    fake_message.from_user = callback_query.from_user
-    fake_message.chat = callback_query.message.chat
-    fake_message.date = callback_query.message.date
-    fake_message.answer = callback_query.message.answer
-    fake_message.edit_text = callback_query.message.edit_text
-    
-    # Вызываем start handler
-    await start_handler(fake_message)
-    logging.info(f"Команда /start выполнена через callback кнопку (пользователь {callback_query.from_user.id})")
 
 
 # Обработчик команды профиля с поддержкой variableLabel
@@ -1270,7 +1330,7 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
                 selected_mark = "✅ " if "🎮 Игры" in selected_list else ""
                 builder.add(InlineKeyboardButton(text=f"{selected_mark}🎮 Игры", callback_data=f"multi_select_{node_id}_btn-games"))
                 builder.adjust(keyboard_width)
-                builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))
+                builder.add(InlineKeyboardButton(text="Готово", callback_data=f"multi_select_done_start"))
             
             keyboard = builder.as_markup()
             await callback_query.message.edit_reply_markup(reply_markup=keyboard)
