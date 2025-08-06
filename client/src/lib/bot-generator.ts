@@ -4641,7 +4641,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += `                # Добавляем кнопки выбора с умным расположением\n`;
       selectionButtons.forEach((button, index) => {
         code += `                selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
-        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="multi_select_{node_id}_${button.id}"))\n`;
+        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data=f"multi_select_{node_id}_${button.id}"))\n`;
       });
       
       // Применяем ширину клавиатуры
@@ -4662,7 +4662,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       
       // Добавляем кнопку завершения
       const continueText = node.data.continueButtonText || 'Готово';
-      code += `                builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
+      code += `                builder.add(InlineKeyboardButton(text="${continueText}", callback_data=f"multi_select_done_${node.id}"))\n`;
     }
   });
   
@@ -6040,7 +6040,7 @@ function generateKeyboard(node: Node): string {
         
         // Добавляем кнопки для множественного выбора
         selectionButtons.forEach(button => {
-          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="multi_select_${node.id}_${button.id}"))\n`;
+          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data=f"multi_select_${node.id}_${button.id}"))\n`;
         });
         
         // Добавляем обычные кнопки
@@ -6059,7 +6059,7 @@ function generateKeyboard(node: Node): string {
         // Добавляем кнопку завершения, если есть опции выбора
         if (selectionButtons.length > 0) {
           const continueText = node.data.continueButtonText || 'Готово';
-          code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
+          code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data=f"multi_select_done_${node.id}"))\n`;
         }
         
         code += '        keyboard = builder.as_markup()\n';

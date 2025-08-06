@@ -1254,21 +1254,21 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
                 
                 # Добавляем кнопки выбора с умным расположением
                 selected_mark = "✅ " if "⚽ Спорт" in selected_list else ""
-                builder.add(InlineKeyboardButton(text=f"{selected_mark}⚽ Спорт", callback_data="multi_select_{node_id}_btn-sport"))
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}⚽ Спорт", callback_data=f"multi_select_{node_id}_btn-sport"))
                 selected_mark = "✅ " if "🎵 Музыка" in selected_list else ""
-                builder.add(InlineKeyboardButton(text=f"{selected_mark}🎵 Музыка", callback_data="multi_select_{node_id}_btn-music"))
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}🎵 Музыка", callback_data=f"multi_select_{node_id}_btn-music"))
                 selected_mark = "✅ " if "📚 Книги" in selected_list else ""
-                builder.add(InlineKeyboardButton(text=f"{selected_mark}📚 Книги", callback_data="multi_select_{node_id}_btn-books"))
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}📚 Книги", callback_data=f"multi_select_{node_id}_btn-books"))
                 selected_mark = "✅ " if "✈️ Путешествия" in selected_list else ""
-                builder.add(InlineKeyboardButton(text=f"{selected_mark}✈️ Путешествия", callback_data="multi_select_{node_id}_btn-travel"))
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}✈️ Путешествия", callback_data=f"multi_select_{node_id}_btn-travel"))
                 selected_mark = "✅ " if "💻 Технологии" in selected_list else ""
-                builder.add(InlineKeyboardButton(text=f"{selected_mark}💻 Технологии", callback_data="multi_select_{node_id}_btn-tech"))
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}💻 Технологии", callback_data=f"multi_select_{node_id}_btn-tech"))
                 selected_mark = "✅ " if "🍳 Кулинария" in selected_list else ""
-                builder.add(InlineKeyboardButton(text=f"{selected_mark}🍳 Кулинария", callback_data="multi_select_{node_id}_btn-cooking"))
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}🍳 Кулинария", callback_data=f"multi_select_{node_id}_btn-cooking"))
                 selected_mark = "✅ " if "🎨 Искусство" in selected_list else ""
-                builder.add(InlineKeyboardButton(text=f"{selected_mark}🎨 Искусство", callback_data="multi_select_{node_id}_btn-art"))
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}🎨 Искусство", callback_data=f"multi_select_{node_id}_btn-art"))
                 selected_mark = "✅ " if "🎮 Игры" in selected_list else ""
-                builder.add(InlineKeyboardButton(text=f"{selected_mark}🎮 Игры", callback_data="multi_select_{node_id}_btn-games"))
+                builder.add(InlineKeyboardButton(text=f"{selected_mark}🎮 Игры", callback_data=f"multi_select_{node_id}_btn-games"))
                 builder.adjust(keyboard_width)
                 builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))
             
