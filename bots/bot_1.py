@@ -449,17 +449,20 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
     
     # Получаем сохраненные интересы из базы данных
     saved_interests = []
-    if user_vars and "user_interests" in user_vars:
-        interests_value = user_vars["user_interests"]
-        if isinstance(interests_value, dict) and "value" in interests_value:
-            interests_str = interests_value["value"]
-        elif isinstance(interests_value, str):
-            interests_str = interests_value
-        else:
-            interests_str = str(interests_value) if interests_value else ""
-        
-        if interests_str:
-            saved_interests = [interest.strip() for interest in interests_str.split(",")]
+    if user_vars:
+        # Ищем интересы в любой переменной, которая может их содержать
+        for var_name, var_data in user_vars.items():
+            if "интерес" in var_name.lower() or var_name == "interests":
+                if isinstance(var_data, dict) and "value" in var_data:
+                    interests_str = var_data["value"]
+                elif isinstance(var_data, str):
+                    interests_str = var_data
+                else:
+                    interests_str = str(var_data) if var_data else ""
+                
+                if interests_str:
+                    saved_interests = [interest.strip() for interest in interests_str.split(",")]
+                    break
     
     # Инициализируем состояние множественного выбора с сохраненными интересами
     user_data[user_id]["multi_select_start"] = saved_interests.copy()
@@ -467,22 +470,38 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
     
     # Создаем inline клавиатуру с кнопками интересов и галочками для выбранных
     builder = InlineKeyboardBuilder()
-    selected_mark = "✅ " if "⚽ Спорт" in saved_interests else ""
-    builder.add(InlineKeyboardButton(text=f"{selected_mark}⚽ Спорт", callback_data="multi_select_start_btn-sport"))
-    selected_mark = "✅ " if "🎵 Музыка" in saved_interests else ""
-    builder.add(InlineKeyboardButton(text=f"{selected_mark}🎵 Музыка", callback_data="multi_select_start_btn-music"))
-    selected_mark = "✅ " if "📚 Книги" in saved_interests else ""
-    builder.add(InlineKeyboardButton(text=f"{selected_mark}📚 Книги", callback_data="multi_select_start_btn-books"))
-    selected_mark = "✅ " if "✈️ Путешествия" in saved_interests else ""
-    builder.add(InlineKeyboardButton(text=f"{selected_mark}✈️ Путешествия", callback_data="multi_select_start_btn-travel"))
-    selected_mark = "✅ " if "💻 Технологии" in saved_interests else ""
-    builder.add(InlineKeyboardButton(text=f"{selected_mark}💻 Технологии", callback_data="multi_select_start_btn-tech"))
-    selected_mark = "✅ " if "🍳 Кулинария" in saved_interests else ""
-    builder.add(InlineKeyboardButton(text=f"{selected_mark}🍳 Кулинария", callback_data="multi_select_start_btn-cooking"))
-    selected_mark = "✅ " if "🎨 Искусство" in saved_interests else ""
-    builder.add(InlineKeyboardButton(text=f"{selected_mark}🎨 Искусство", callback_data="multi_select_start_btn-art"))
-    selected_mark = "✅ " if "🎮 Игры" in saved_interests else ""
-    builder.add(InlineKeyboardButton(text=f"{selected_mark}🎮 Игры", callback_data="multi_select_start_btn-games"))
+    # Проверяем каждый интерес и добавляем галочку если он выбран
+    sport_selected = any("Спорт" in interest or "sport" in interest.lower() for interest in saved_interests)
+    sport_text = "✅ ⚽ Спорт" if sport_selected else "⚽ Спорт"
+    builder.add(InlineKeyboardButton(text=sport_text, callback_data="multi_select_start_btn-sport"))
+    
+    music_selected = any("Музыка" in interest or "music" in interest.lower() for interest in saved_interests)
+    music_text = "✅ 🎵 Музыка" if music_selected else "🎵 Музыка"
+    builder.add(InlineKeyboardButton(text=music_text, callback_data="multi_select_start_btn-music"))
+    
+    books_selected = any("Книги" in interest or "books" in interest.lower() for interest in saved_interests)
+    books_text = "✅ 📚 Книги" if books_selected else "📚 Книги"
+    builder.add(InlineKeyboardButton(text=books_text, callback_data="multi_select_start_btn-books"))
+    
+    travel_selected = any("Путешествия" in interest or "travel" in interest.lower() for interest in saved_interests)
+    travel_text = "✅ ✈️ Путешествия" if travel_selected else "✈️ Путешествия"
+    builder.add(InlineKeyboardButton(text=travel_text, callback_data="multi_select_start_btn-travel"))
+    
+    tech_selected = any("Технологии" in interest or "tech" in interest.lower() for interest in saved_interests)
+    tech_text = "✅ 💻 Технологии" if tech_selected else "💻 Технологии"
+    builder.add(InlineKeyboardButton(text=tech_text, callback_data="multi_select_start_btn-tech"))
+    
+    cooking_selected = any("Кулинария" in interest or "cooking" in interest.lower() for interest in saved_interests)
+    cooking_text = "✅ 🍳 Кулинария" if cooking_selected else "🍳 Кулинария"
+    builder.add(InlineKeyboardButton(text=cooking_text, callback_data="multi_select_start_btn-cooking"))
+    
+    art_selected = any("Искусство" in interest or "art" in interest.lower() for interest in saved_interests)
+    art_text = "✅ 🎨 Искусство" if art_selected else "🎨 Искусство"
+    builder.add(InlineKeyboardButton(text=art_text, callback_data="multi_select_start_btn-art"))
+    
+    games_selected = any("Игры" in interest or "games" in interest.lower() for interest in saved_interests)
+    games_text = "✅ 🎮 Игры" if games_selected else "🎮 Игры"
+    builder.add(InlineKeyboardButton(text=games_text, callback_data="multi_select_start_btn-games"))
     builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))
     builder.adjust(2)  # Размещаем кнопки в 2 колонки
     keyboard = builder.as_markup()
