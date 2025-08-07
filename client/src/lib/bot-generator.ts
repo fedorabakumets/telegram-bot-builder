@@ -5983,6 +5983,10 @@ function generateKeyboard(node: Node): string {
           const callbackData = `input_${node.id}_${option.id}`;
           code += `    builder.add(InlineKeyboardButton(text="${option.text}", callback_data="${callbackData}"))\n`;
         });
+        
+        // Автоматическое распределение колонок
+        const columns = calculateOptimalColumns(node.data.responseOptions);
+        code += `    builder.adjust(${columns})\n`;
         code += '    keyboard = builder.as_markup()\n';
         code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       }
@@ -6111,6 +6115,9 @@ function generateKeyboard(node: Node): string {
           code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data=f"multi_select_done_${node.id}"))\n`;
         }
         
+        // Автоматическое распределение колонок
+        const columns = calculateOptimalColumns(node.data.buttons);
+        code += `        builder.adjust(${columns})\n`;
         code += '        keyboard = builder.as_markup()\n';
         code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
         
@@ -6140,6 +6147,9 @@ function generateKeyboard(node: Node): string {
           }
         });
         
+        // Автоматическое распределение колонок
+        const columns = calculateOptimalColumns(node.data.buttons);
+        code += `        builder.adjust(${columns})\n`;
         code += '        keyboard = builder.as_markup()\n';
         code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       }
