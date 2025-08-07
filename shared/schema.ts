@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, jsonb, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, timestamp, bigint } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -116,6 +116,18 @@ export const userBotData = pgTable("user_bot_data", {
   notes: text("notes"), // Заметки администратора
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const botUsers = pgTable("bot_users", {
+  userId: bigint("user_id", { mode: "number" }).primaryKey(),
+  username: text("username"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  registeredAt: timestamp("registered_at").defaultNow(),
+  lastInteraction: timestamp("last_interaction").defaultNow(),
+  interactionCount: integer("interaction_count").default(0),
+  userData: jsonb("user_data").default({}),
+  isActive: integer("is_active").default(1),
 });
 
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
@@ -238,6 +250,21 @@ export const insertUserBotDataSchema = createInsertSchema(userBotData).pick({
   totalMessagesReceived: z.number().min(0).default(0),
 });
 
+export const insertBotUserSchema = createInsertSchema(botUsers).pick({
+  userId: true,
+  username: true,
+  firstName: true,
+  lastName: true,
+  interactionCount: true,
+  userData: true,
+  isActive: true,
+}).extend({
+  userId: z.number().positive("ID пользователя должен быть положительным числом"),
+  userData: z.record(z.any()).default({}),
+  isActive: z.number().min(0).max(1).default(1),
+  interactionCount: z.number().min(0).default(0),
+});
+
 // Схема для оценки шаблона
 export const rateTemplateSchema = z.object({
   templateId: z.number(),
@@ -256,6 +283,8 @@ export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
 export type MediaFile = typeof mediaFiles.$inferSelect;
 export type InsertUserBotData = z.infer<typeof insertUserBotDataSchema>;
 export type UserBotData = typeof userBotData.$inferSelect;
+export type InsertBotUser = z.infer<typeof insertBotUserSchema>;
+export type BotUser = typeof botUsers.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({
