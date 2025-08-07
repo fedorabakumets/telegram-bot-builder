@@ -484,18 +484,36 @@ async def handle_callback_cmd_start(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Команда /start выполнена через callback кнопку (пользователь {user_id})")
     
-    # Вызываем команду /start напрямую
-    from types import SimpleNamespace
-    fake_message = SimpleNamespace()
-    fake_message.from_user = callback_query.from_user
-    fake_message.chat = callback_query.message.chat
-    fake_message.text = "/start"
-    fake_message.answer = callback_query.message.answer
-    fake_message.edit_text = callback_query.message.edit_text
-    
-    # Вызываем обработчик команды /start
+    # Дублируем логику команды /start напрямую
     try:
-        await start_command(fake_message)
+        # Сохраняем пользователя в базу данных
+        await save_user_to_db(
+            user_id, 
+            callback_query.from_user.username, 
+            callback_query.from_user.first_name, 
+            callback_query.from_user.last_name
+        )
+        
+        text = """👋 Добро пожаловать!
+
+Расскажите нам о ваших интересах. Выберите все, что вам подходит:"""
+        
+        # Инициализируем пользователя
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        # Создаем inline клавиатуру
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="⚽ Спорт", callback_data="btn_btn-sport"))
+        builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="btn_btn-music"))
+        builder.add(InlineKeyboardButton(text="📚 Книги", callback_data="btn_btn-books"))
+        builder.add(InlineKeyboardButton(text="✈️ Путешествия", callback_data="btn_btn-travel"))
+        builder.add(InlineKeyboardButton(text="💻 Технологии", callback_data="btn_btn-tech"))
+        builder.add(InlineKeyboardButton(text="🍳 Кулинария", callback_data="btn_btn-cooking"))
+        builder.add(InlineKeyboardButton(text="🎨 Искусство", callback_data="btn_btn-art"))
+        builder.add(InlineKeyboardButton(text="🎮 Игры", callback_data="btn_btn-games"))
+        keyboard = builder.as_markup()
+        
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
     except Exception as e:
         logging.error(f"Ошибка вызова команды start: {e}")
         await callback_query.message.answer("Произошла ошибка при выполнении команды")
