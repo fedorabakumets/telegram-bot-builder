@@ -6349,10 +6349,11 @@ function generateKeyboard(node: Node): string {
         // Добавляем кнопки для множественного выбора с логикой галочек
         selectionButtons.forEach(button => {
           const buttonValue = button.target || button.id || button.text;
+          const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
           code += `        # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
-          code += `        ${buttonValue.toLowerCase()}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in saved_interests)\n`;
-          code += `        ${buttonValue.toLowerCase()}_text = f"✅ {button.text}" if ${buttonValue.toLowerCase()}_selected else "${button.text}"\n`;
-          code += `        builder.add(InlineKeyboardButton(text=${buttonValue.toLowerCase()}_text, callback_data="multi_select_${node.id}_btn-${buttonValue}"))\n`;
+          code += `        ${safeVarName}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in saved_interests)\n`;
+          code += `        ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
+          code += `        builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_${node.id}_btn-${buttonValue}"))\n`;
         });
         
         // Добавляем обычные кнопки
