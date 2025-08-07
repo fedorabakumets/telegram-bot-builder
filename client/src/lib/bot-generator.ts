@@ -2346,7 +2346,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    timestamp = get_moscow_time()\n';
           code += '    response_data = button_text\n';
           code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
-          code += `    logging.info(f"Команда ${button.target} выполнена через callback кнопку (пользователь {user_id})")\n`;
+          code += `    logging.info(f"Команда ${button.target || 'неизвестная'} выполнена через callback кнопку (пользователь {user_id})")\n`;
           code += '    \n';
           
           // Если это команда /start, вызываем обработчик команды /start

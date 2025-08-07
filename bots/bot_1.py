@@ -482,7 +482,7 @@ async def handle_callback_cmd_start(callback_query: types.CallbackQuery):
     timestamp = get_moscow_time()
     response_data = button_text
     await update_user_data_in_db(user_id, button_text, response_data)
-    logging.info(f"Команда {button.target} выполнена через callback кнопку (пользователь {user_id})")
+    logging.info(f"Команда /start выполнена через callback кнопку (пользователь {user_id})")
     
     # Вызываем команду /start напрямую
     from types import SimpleNamespace
