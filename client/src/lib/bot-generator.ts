@@ -54,7 +54,10 @@ function calculateOptimalColumns(buttons: any[]): number {
   const averageTextLength = buttons.reduce((sum, btn) => sum + (btn.text?.length || 5), 0) / totalButtons;
   
   // Более умная логика для красивого отображения кнопок интересов
-  if (totalButtons === 8) {
+  if (totalButtons === 9) {
+    // Для 9 кнопок (8 интересов + "Готово") - оптимально 3 колонки (3x3)
+    return 3;
+  } else if (totalButtons === 8) {
     // Для 8 кнопок интересов - оптимально 2 колонки (4x2)
     return 2;
   } else if (totalButtons >= 6) {
@@ -6116,7 +6119,12 @@ function generateKeyboard(node: Node): string {
         }
         
         // Автоматическое распределение колонок
-        const columns = calculateOptimalColumns(node.data.buttons);
+        // Для множественного выбора учитываем все кнопки включая "Готово"
+        const allButtons = [...selectionButtons];
+        if (selectionButtons.length > 0) {
+          allButtons.push({ text: node.data.continueButtonText || 'Готово' });
+        }
+        const columns = calculateOptimalColumns(allButtons);
         code += `        builder.adjust(${columns})\n`;
         code += '        keyboard = builder.as_markup()\n';
         code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
