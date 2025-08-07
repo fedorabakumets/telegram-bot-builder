@@ -4755,14 +4755,30 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       const commandNode = nodes.find(n => n.data.command === `/${command}` || n.data.command === command);
       if (commandNode) {
         if (commandNode.type === 'start') {
-          code += '    # Вызываем start handler\n';
-          code += '    await start_handler(fake_message)\n';
+          code += '    # Вызываем start handler через edit_text\n';
+          code += '    # Создаем специальный объект для редактирования сообщения\n';
+          code += '    class FakeMessageEdit:\n';
+          code += '        def __init__(self, callback_query):\n';
+          code += '            self.from_user = callback_query.from_user\n';
+          code += '            self.chat = callback_query.message.chat\n';
+          code += '            self.date = callback_query.message.date\n';
+          code += '            self.message_id = callback_query.message.message_id\n';
+          code += '            self._callback_query = callback_query\n';
+          code += '        \n';
+          code += '        async def answer(self, text, parse_mode=None, reply_markup=None):\n';
+          code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
+          code += '        \n';
+          code += '        async def edit_text(self, text, parse_mode=None, reply_markup=None):\n';
+          code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
+          code += '    \n';
+          code += '    fake_edit_message = FakeMessageEdit(callback_query)\n';
+          code += '    await start_handler(fake_edit_message)\n';
         } else if (commandNode.type === 'command') {
           code += `    # Вызываем ${command} handler\n`;
           code += `    await ${command}_handler(fake_message)\n`;
         }
       } else {
-        code += `    await callback_query.message.answer("Команда /${command} выполнена")\n`;
+        code += `    await callback_query.message.edit_text("Команда /${command} выполнена")\n`;
       }
       code += `    logging.info(f"Команда /${command} выполнена через callback кнопку (пользователь {callback_query.from_user.id})")\n`;
     });
@@ -5210,6 +5226,46 @@ function generateStartHandler(node: Node): string {
   code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n';
   code += '    \n';
   
+  // Создаем клавиатуру с восстановленными галочками для множественного выбора
+  if (node.data.allowMultipleSelection) {
+    code += '    # Создаем клавиатуру с восстановленными галочками\n';
+    code += '    builder = InlineKeyboardBuilder()\n';
+    code += '    \n';
+    code += '    # Функция для проверки совпадения интересов\n';
+    code += '    def check_interest_match(button_text, saved_list):\n';
+    code += '        """Проверяет, есть ли интерес в сохраненном списке"""\n';
+    code += '        if not saved_list:\n';
+    code += '            return False\n';
+    code += '        # Убираем эмодзи и галочки для сравнения\n';
+    code += '        clean_button = button_text.replace("✅ ", "").replace("⬜ ", "").strip()\n';
+    code += '        for saved_interest in saved_list:\n';
+    code += '            clean_saved = saved_interest.replace("✅ ", "").replace("⬜ ", "").strip()\n';
+    code += '            if clean_button == clean_saved or clean_button in clean_saved or clean_saved in clean_button:\n';
+    code += '                return True\n';
+    code += '        return False\n';
+    code += '    \n';
+    
+    // Добавляем кнопки интересов с галочками
+    const buttons = node.data.buttons || [];
+    const interestButtons = buttons.filter(btn => btn.action === 'selection');
+    
+    interestButtons.forEach(button => {
+      const buttonText = button.text || 'Неизвестно';
+      const buttonTarget = button.target || button.id;
+      code += `    ${buttonTarget}_selected = check_interest_match("${buttonText}", saved_interests)\n`;
+      code += `    ${buttonTarget}_text = "✅ ${buttonText}" if ${buttonTarget}_selected else "${buttonText}"\n`;
+      code += `    builder.add(InlineKeyboardButton(text=${buttonTarget}_text, callback_data="multi_select_${node.id}_${buttonTarget}"))\n`;
+      code += '    \n';
+    });
+    
+    // Добавляем кнопку "Готово"
+    const continueTarget = node.data.continueButtonTarget || 'next';
+    code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${node.id}"))\n`;
+    code += '    builder.adjust(2)  # Используем 2 колонки для консистентности\n';
+    code += '    keyboard = builder.as_markup()\n';
+    code += '    \n';
+  }
+  
   // Добавляем обработку условных сообщений
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
   const formattedText = formatTextForPython(messageText);
@@ -5251,6 +5307,12 @@ function generateStartHandler(node: Node): string {
     code += '    \n';
   } else {
     code += `    text = ${formattedText}\n`;
+  }
+  
+  // Для множественного выбора используем уже созданную клавиатуру
+  if (node.data.allowMultipleSelection) {
+    code += '    await message.answer(text, reply_markup=keyboard)\n';
+    return code;
   }
   
   return code + generateKeyboard(node);
