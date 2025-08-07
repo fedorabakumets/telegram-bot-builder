@@ -79,8 +79,8 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
     } else if (button.action === 'goto') {
       const baseCallbackData = button.target || button.id || 'no_action';
-      const callbackData = nodeId ? `${baseCallbackData}_btn_${index}` : baseCallbackData;
-      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      // Для кнопок goto всегда используем target как callback_data без суффиксов
+      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${baseCallbackData}"))\n`;
     } else if (button.action === 'command') {
       const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
