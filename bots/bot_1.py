@@ -535,11 +535,28 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
         user_data[user_id] = {}
     
     # Получаем сохраненные интересы из базы данных
+    user_record = await get_user_from_db(user_id)
     saved_interests = []
+    
+    # Извлекаем user_vars из базы данных
+    if user_record and "user_data" in user_record:
+        if isinstance(user_record["user_data"], str):
+            try:
+                import json
+                user_vars = json.loads(user_record["user_data"])
+            except (json.JSONDecodeError, TypeError):
+                user_vars = {}
+        elif isinstance(user_record["user_data"], dict):
+            user_vars = user_record["user_data"]
+        else:
+            user_vars = {}
+    else:
+        user_vars = user_record if user_record else {}
+    
     if user_vars:
         # Ищем интересы в любой переменной, которая может их содержать
         for var_name, var_data in user_vars.items():
-            if "интерес" in var_name.lower() or var_name == "interests" or var_name == "user_interests":
+            if "интерес" in var_name.lower() or var_name == "interests":
                 if isinstance(var_data, dict) and "value" in var_data:
                     interests_str = var_data["value"]
                 elif isinstance(var_data, str):
