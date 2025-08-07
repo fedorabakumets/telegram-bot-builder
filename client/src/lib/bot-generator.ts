@@ -2354,6 +2354,49 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
           
+          // СПЕЦИАЛЬНАЯ ОБРАБОТКА: Если это узел "start" с множественным выбором интересов
+          if (targetNode && targetNode.id === 'start' && targetNode.data.allowMultipleSelection) {
+            code += '    user_id = callback_query.from_user.id\n';
+            code += '    \n';
+            code += '    # Обрабатываем узел start: start\n';
+            const messageText = targetNode.data.messageText || "👋 Добро пожаловать!\n\nРасскажите нам о ваших интересах. Выберите все, что вам подходит:";
+            const formattedText = formatTextForPython(messageText);
+            code += `    text = ${formattedText}\n`;
+            code += '    \n';
+            code += generateUniversalVariableReplacement('    ');
+            code += '    \n';
+            code += '    # Создаем inline клавиатуру с кнопками интересов для множественного выбора\n';
+            code += '    builder = InlineKeyboardBuilder()\n';
+            
+            // Генерируем кнопки интересов из data.buttons
+            if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              targetNode.data.buttons.forEach((btn) => {
+                if (btn.action === 'selection') {
+                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="multi_select_start_btn-${btn.target}"))\n`;
+                }
+              });
+              // Добавляем кнопку "Готово"
+              code += '    builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))\n';
+              code += '    builder.adjust(2)  # Размещаем кнопки в 2 колонки\n';
+              code += '    keyboard = builder.as_markup()\n';
+              code += '    \n';
+              code += '    # Инициализируем состояние множественного выбора\n';
+              code += '    if user_id not in user_data:\n';
+              code += '        user_data[user_id] = {}\n';
+              code += '    user_data[user_id]["multi_select_start"] = []\n';
+              code += '    user_data[user_id]["multi_select_node"] = "start"\n';
+              code += '    \n';
+              code += '    # Отправляем сообщение start узла\n';
+              code += '    try:\n';
+              code += '        await callback_query.message.edit_text(text, reply_markup=keyboard)\n';
+              code += '    except Exception:\n';
+              code += '        await callback_query.message.answer(text, reply_markup=keyboard)\n';
+              code += '    \n';
+              code += '    return  # Завершаем выполнение специального случая\n';
+              code += '    \n';
+            }
+          }
+          
           // Сохраняем нажатие кнопки в базу данных
           code += '    # Сохраняем нажатие кнопки в базу данных\n';
           code += '    user_id = callback_query.from_user.id\n';

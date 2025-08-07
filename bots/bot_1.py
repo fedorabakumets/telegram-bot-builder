@@ -445,24 +445,31 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
     
     text = replace_variables_in_text(text, user_vars)
     
-    # Без условных сообщений - используем обычную клавиатуру
-    keyboard = None
-    # Проверяем, есть ли условная клавиатура
-    if keyboard is None:
-        # Создаем inline клавиатуру для start узла
-        builder = InlineKeyboardBuilder()
-        keyboard = builder.as_markup()
-    # Отправляем сообщение start узла
+    # ИСПРАВЛЕНО: Создаем inline клавиатуру с кнопками интересов для множественного выбора
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="⚽ Спорт", callback_data=f"multi_select_start_btn-sport"))
+    builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data=f"multi_select_start_btn-music"))
+    builder.add(InlineKeyboardButton(text="📚 Книги", callback_data=f"multi_select_start_btn-books"))
+    builder.add(InlineKeyboardButton(text="✈️ Путешествия", callback_data=f"multi_select_start_btn-travel"))
+    builder.add(InlineKeyboardButton(text="💻 Технологии", callback_data=f"multi_select_start_btn-tech"))
+    builder.add(InlineKeyboardButton(text="🍳 Кулинария", callback_data=f"multi_select_start_btn-cooking"))
+    builder.add(InlineKeyboardButton(text="🎨 Искусство", callback_data=f"multi_select_start_btn-art"))
+    builder.add(InlineKeyboardButton(text="🎮 Игры", callback_data=f"multi_select_start_btn-games"))
+    builder.add(InlineKeyboardButton(text="Готово", callback_data=f"multi_select_done_start"))
+    builder.adjust(2)  # Размещаем кнопки в 2 колонки
+    keyboard = builder.as_markup()
+    
+    # Инициализируем состояние множественного выбора
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["multi_select_start"] = []
+    user_data[user_id]["multi_select_node"] = "start"
+    
+    # Отправляем сообщение start узла с кнопками интересов
     try:
-        if keyboard is not None:
-            await callback_query.message.edit_text(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.edit_text(text)
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
     except Exception:
-        if keyboard is not None:
-            await callback_query.message.answer(text, reply_markup=keyboard)
-        else:
-            await callback_query.message.answer(text)
+        await callback_query.message.answer(text, reply_markup=keyboard)
 
 @dp.callback_query(lambda c: c.data == "start" or c.data.startswith("start_btn_"))
 async def handle_callback_start(callback_query: types.CallbackQuery):
