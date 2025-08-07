@@ -2327,6 +2327,46 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '    # Кнопка пока никуда не ведет\n';
             code += '    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)\n';
           }
+        } else if (button.action === 'command' && button.id) {
+          // Обработка кнопок с действием "command"
+          const callbackData = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+          
+          // Avoid duplicate handlers
+          if (processedCallbacks.has(callbackData)) return;
+          processedCallbacks.add(callbackData);
+          
+          code += `\n@dp.callback_query(lambda c: c.data == "${callbackData}")\n`;
+          const safeFunctionName = callbackData.replace(/[^a-zA-Z0-9_]/g, '_');
+          code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+          code += '    await callback_query.answer()\n';
+          code += '    user_id = callback_query.from_user.id\n';
+          code += `    button_text = "${button.text}"\n`;
+          code += '    \n';
+          code += '    # Сохраняем кнопку в базу данных\n';
+          code += '    timestamp = get_moscow_time()\n';
+          code += '    response_data = button_text\n';
+          code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
+          code += '    logging.info(f"Команда {button.target} выполнена через callback кнопку (пользователь {user_id})")\n';
+          code += '    \n';
+          
+          // Если это команда /start, вызываем обработчик команды /start
+          if (button.target === '/start') {
+            code += '    # Вызываем команду /start напрямую\n';
+            code += '    from types import SimpleNamespace\n';
+            code += '    fake_message = SimpleNamespace()\n';
+            code += '    fake_message.from_user = callback_query.from_user\n';
+            code += '    fake_message.chat = callback_query.message.chat\n';
+            code += '    fake_message.text = "/start"\n';
+            code += '    fake_message.answer = callback_query.message.answer\n';
+            code += '    fake_message.edit_text = callback_query.message.edit_text\n';
+            code += '    \n';
+            code += '    # Вызываем обработчик команды /start\n';
+            code += '    try:\n';
+            code += '        await start_command(fake_message)\n';
+            code += '    except Exception as e:\n';
+            code += '        logging.error(f"Ошибка вызова команды start: {e}")\n';
+            code += '        await callback_query.message.answer("Произошла ошибка при выполнении команды")\n';
+          }
         }
       });
     });
