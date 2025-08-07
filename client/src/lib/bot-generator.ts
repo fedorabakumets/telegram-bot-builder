@@ -5032,7 +5032,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
         code += `                ${safeVarName}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in selected_list)\n`;
         code += `                ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
-        code += `                builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
+        code += `                builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_${node.id}_${buttonValue}"))\n`;
       });
       
       // Добавляем обычные кнопки
