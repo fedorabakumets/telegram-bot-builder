@@ -539,7 +539,7 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
     if user_vars:
         # Ищем интересы в любой переменной, которая может их содержать
         for var_name, var_data in user_vars.items():
-            if "интерес" in var_name.lower() or var_name == "interests":
+            if "интерес" in var_name.lower() or var_name == "interests" or var_name == "user_interests":
                 if isinstance(var_data, dict) and "value" in var_data:
                     interests_str = var_data["value"]
                 elif isinstance(var_data, str):
