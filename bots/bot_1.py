@@ -484,6 +484,23 @@ async def handle_callback_start(callback_query: types.CallbackQuery):
     await update_user_data_in_db(user_id, button_text, response_data)
     logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
     
+    # Вызываем команду /start напрямую для восстановления галочек
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.text = "/start"
+    fake_message.answer = callback_query.message.answer
+    fake_message.edit_text = callback_query.message.edit_text
+    
+    # Вызываем обработчик команды /start
+    try:
+        await start_command(fake_message)
+        return
+    except Exception as e:
+        logging.error(f"Ошибка вызова команды start: {e}")
+        # Fallback - продолжаем с базовой логикой
+    
     # Отправляем сообщение с кнопками интересов
     text = """👋 Добро пожаловать!\n\nРасскажите нам о ваших интересах. Выберите все, что вам подходит:"""
     
