@@ -1027,6 +1027,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // Mark the target node as processed ONLY if we create a handler for it
           if (button.target) {
             processedCallbacks.add(button.target);
+            console.log(`Узел ${button.target} добавлен в processedCallbacks из inline кнопок`);
           }
           
           code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_"))\n`;
@@ -1034,6 +1035,94 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const safeFunctionName = actualCallbackData.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
+          
+          // СПЕЦИАЛЬНАЯ ОБРАБОТКА: Если это узел "start" с интересами
+          if (actualCallbackData === 'start' && button.text === "✏️ Изменить выбор") {
+            code += '    user_id = callback_query.from_user.id\n';
+            code += `    button_text = "${button.text}"\n`;
+            code += '    \n';
+            code += '    # Сохраняем кнопку в базу данных\n';
+            code += '    timestamp = get_moscow_time()\n';
+            code += '    response_data = button_text\n';
+            code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
+            code += '    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")\n';
+            code += '    \n';
+            code += '    # Отправляем сообщение с кнопками интересов\n';
+            code += '    text = """👋 Добро пожаловать!\\n\\nРасскажите нам о ваших интересах. Выберите все, что вам подходит:"""\n';
+            code += '    \n';
+            code += generateUniversalVariableReplacement('    ');
+            code += '    \n';
+            code += '    # Загружаем ранее выбранные интересы из базы данных\n';
+            code += '    if user_id not in user_data:\n';
+            code += '        user_data[user_id] = {}\n';
+            code += '    \n';
+            code += '    # Получаем сохраненные интересы из базы данных\n';
+            code += '    saved_interests = []\n';
+            code += '    if user_vars:\n';
+            code += '        # Ищем интересы в любой переменной, которая может их содержать\n';
+            code += '        for var_name, var_data in user_vars.items():\n';
+            code += '            if "интерес" in var_name.lower() or var_name == "interests":\n';
+            code += '                if isinstance(var_data, dict) and "value" in var_data:\n';
+            code += '                    interests_str = var_data["value"]\n';
+            code += '                elif isinstance(var_data, str):\n';
+            code += '                    interests_str = var_data\n';
+            code += '                else:\n';
+            code += '                    interests_str = str(var_data) if var_data else ""\n';
+            code += '                \n';
+            code += '                if interests_str:\n';
+            code += '                    saved_interests = [interest.strip() for interest in interests_str.split(",")]\n';
+            code += '                    break\n';
+            code += '    \n';
+            code += '    # Инициализируем состояние множественного выбора с сохраненными интересами\n';
+            code += '    user_data[user_id]["multi_select_start"] = saved_interests.copy()\n';
+            code += '    user_data[user_id]["multi_select_node"] = "start"\n';
+            code += '    \n';
+            code += '    # Создаем inline клавиатуру с кнопками интересов и галочками для выбранных\n';
+            code += '    builder = InlineKeyboardBuilder()\n';
+            code += '    # Проверяем каждый интерес и добавляем галочку если он выбран\n';
+            code += '    sport_selected = any("Спорт" in interest or "sport" in interest.lower() for interest in saved_interests)\n';
+            code += '    sport_text = "✅ ⚽ Спорт" if sport_selected else "⚽ Спорт"\n';
+            code += '    builder.add(InlineKeyboardButton(text=sport_text, callback_data="multi_select_start_btn-sport"))\n';
+            code += '    \n';
+            code += '    music_selected = any("Музыка" in interest or "music" in interest.lower() for interest in saved_interests)\n';
+            code += '    music_text = "✅ 🎵 Музыка" if music_selected else "🎵 Музыка"\n';
+            code += '    builder.add(InlineKeyboardButton(text=music_text, callback_data="multi_select_start_btn-music"))\n';
+            code += '    \n';
+            code += '    books_selected = any("Книги" in interest or "books" in interest.lower() for interest in saved_interests)\n';
+            code += '    books_text = "✅ 📚 Книги" if books_selected else "📚 Книги"\n';
+            code += '    builder.add(InlineKeyboardButton(text=books_text, callback_data="multi_select_start_btn-books"))\n';
+            code += '    \n';
+            code += '    travel_selected = any("Путешествия" in interest or "travel" in interest.lower() for interest in saved_interests)\n';
+            code += '    travel_text = "✅ ✈️ Путешествия" if travel_selected else "✈️ Путешествия"\n';
+            code += '    builder.add(InlineKeyboardButton(text=travel_text, callback_data="multi_select_start_btn-travel"))\n';
+            code += '    \n';
+            code += '    tech_selected = any("Технологии" in interest or "tech" in interest.lower() for interest in saved_interests)\n';
+            code += '    tech_text = "✅ 💻 Технологии" if tech_selected else "💻 Технологии"\n';
+            code += '    builder.add(InlineKeyboardButton(text=tech_text, callback_data="multi_select_start_btn-tech"))\n';
+            code += '    \n';
+            code += '    cooking_selected = any("Кулинария" in interest or "cooking" in interest.lower() for interest in saved_interests)\n';
+            code += '    cooking_text = "✅ 🍳 Кулинария" if cooking_selected else "🍳 Кулинария"\n';
+            code += '    builder.add(InlineKeyboardButton(text=cooking_text, callback_data="multi_select_start_btn-cooking"))\n';
+            code += '    \n';
+            code += '    art_selected = any("Искусство" in interest or "art" in interest.lower() for interest in saved_interests)\n';
+            code += '    art_text = "✅ 🎨 Искусство" if art_selected else "🎨 Искусство"\n';
+            code += '    builder.add(InlineKeyboardButton(text=art_text, callback_data="multi_select_start_btn-art"))\n';
+            code += '    \n';
+            code += '    games_selected = any("Игры" in interest or "games" in interest.lower() for interest in saved_interests)\n';
+            code += '    games_text = "✅ 🎮 Игры" if games_selected else "🎮 Игры"\n';
+            code += '    builder.add(InlineKeyboardButton(text=games_text, callback_data="multi_select_start_btn-games"))\n';
+            code += '    builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))\n';
+            code += '    builder.adjust(2)  # Размещаем кнопки в 2 колонки\n';
+            code += '    keyboard = builder.as_markup()\n';
+            code += '    \n';
+            code += '    # Отправляем сообщение с кнопками интересов\n';
+            code += '    try:\n';
+            code += '        await callback_query.message.edit_text(text, reply_markup=keyboard)\n';
+            code += '    except Exception:\n';
+            code += '        await callback_query.message.answer(text, reply_markup=keyboard)\n';
+            code += '    return\n';
+            code += '    \n';
+          }
           
           // Правильная логика сохранения переменной на основе кнопки
           code += '    user_id = callback_query.from_user.id\n';
@@ -2346,6 +2435,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       if (!processedCallbacks.has(nodeId)) {
         const targetNode = nodes.find(n => n.id === nodeId);
         if (targetNode) {
+          // ВАЖНО: Не создаваем обработчик для "start", если он уже был создан ранее (избегаем дублирования)
+          if (nodeId === 'start') {
+            console.log(`Пропускаем создание дублированной функции для узла ${nodeId} - уже создана ранее`);
+            return; // Пропускаем создание дублированной функции
+          }
+          
           processedCallbacks.add(nodeId);
           
           // Create callback handler for this node that can handle multiple buttons
@@ -2354,48 +2449,56 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
           
-          // СПЕЦИАЛЬНАЯ ОБРАБОТКА: Если это узел "start" с множественным выбором интересов
-          if (targetNode && targetNode.id === 'start' && targetNode.data.allowMultipleSelection) {
-            code += '    user_id = callback_query.from_user.id\n';
-            code += '    \n';
-            code += '    # Обрабатываем узел start: start\n';
-            const messageText = targetNode.data.messageText || "👋 Добро пожаловать!\n\nРасскажите нам о ваших интересах. Выберите все, что вам подходит:";
-            const formattedText = formatTextForPython(messageText);
-            code += `    text = ${formattedText}\n`;
-            code += '    \n';
-            code += generateUniversalVariableReplacement('    ');
-            code += '    \n';
-            code += '    # Создаем inline клавиатуру с кнопками интересов для множественного выбора\n';
-            code += '    builder = InlineKeyboardBuilder()\n';
+          // Обычная обработка узлов без специальной логики
+          code += '    user_id = callback_query.from_user.id\n';
+          
+          // Определяем переменную для сохранения на основе родительского узла  
+          if (targetNode && targetNode.data.inputVariable) {
+            const variableName = targetNode.data.inputVariable;
+            const variableValue = 'callback_query.data';
             
-            // Генерируем кнопки интересов из data.buttons
-            if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-              targetNode.data.buttons.forEach((btn) => {
-                if (btn.action === 'selection') {
-                  code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="multi_select_start_btn-${btn.target}"))\n`;
-                }
-              });
-              // Добавляем кнопку "Готово"
-              code += '    builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))\n';
-              code += '    builder.adjust(2)  # Размещаем кнопки в 2 колонки\n';
-              code += '    keyboard = builder.as_markup()\n';
-              code += '    \n';
-              code += '    # Инициализируем состояние множественного выбора\n';
-              code += '    if user_id not in user_data:\n';
-              code += '        user_data[user_id] = {}\n';
-              code += '    user_data[user_id]["multi_select_start"] = []\n';
-              code += '    user_data[user_id]["multi_select_node"] = "start"\n';
-              code += '    \n';
-              code += '    # Отправляем сообщение start узла\n';
-              code += '    try:\n';
-              code += '        await callback_query.message.edit_text(text, reply_markup=keyboard)\n';
-              code += '    except Exception:\n';
-              code += '        await callback_query.message.answer(text, reply_markup=keyboard)\n';
-              code += '    \n';
-              code += '    return  # Завершаем выполнение специального случая\n';
-              code += '    \n';
-            }
+            code += '    # Сохраняем правильную переменную в базу данных\n';
+            code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
+            code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
+            code += '    \n';
           }
+          
+          code += `    # Обрабатываем узел ${nodeId}: ${nodeId}\n`;
+          const messageText = targetNode.data.messageText || "Сообщение не задано";
+          const formattedText = formatTextForPython(messageText);
+          code += `    text = ${formattedText}\n`;
+          code += '    \n';
+          code += generateUniversalVariableReplacement('    ');
+          
+          // Handle buttons if any
+          if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += '    # Create inline keyboard\n';
+            code += '    builder = InlineKeyboardBuilder()\n';
+            targetNode.data.buttons.forEach((btn, index) => {
+              if (btn.action === "goto" && btn.target) {
+                const btnCallbackData = `${btn.target}_btn_${index}`;
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btnCallbackData}"))\n`;
+              } else if (btn.action === "url") {
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+              }
+            });
+            code += '    keyboard = builder.as_markup()\n';
+          } else {
+            code += '    keyboard = None\n';
+          }
+          
+          // Send message with keyboard
+          code += '    # Отправляем сообщение\n';
+          code += '    try:\n';
+          code += '        if keyboard:\n';
+          code += '            await callback_query.message.edit_text(text, reply_markup=keyboard)\n';
+          code += '        else:\n';
+          code += '            await callback_query.message.edit_text(text)\n';
+          code += '    except Exception:\n';
+          code += '        if keyboard:\n';
+          code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
+          code += '        else:\n';
+          code += '            await callback_query.message.answer(text)\n';
           
           // Сохраняем нажатие кнопки в базу данных
           code += '    # Сохраняем нажатие кнопки в базу данных\n';
