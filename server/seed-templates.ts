@@ -130,8 +130,8 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-edit",
                   text: "✏️ Изменить выбор",
-                  action: "goto",
-                  target: "start"
+                  action: "command",
+                  target: "/start"
                 }
               ],
               markdown: false,
@@ -150,8 +150,8 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-restart",
                   text: "🔄 Начать заново",
-                  action: "goto",
-                  target: "start"
+                  action: "command",
+                  target: "/start"
                 }
               ],
               markdown: false,
