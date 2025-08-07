@@ -46,6 +46,63 @@ function escapeForJsonString(text: string): string {
   return text.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
 }
 
+// Функция для вычисления оптимального количества колонок для кнопок
+function calculateOptimalColumns(buttons: any[]): number {
+  if (!buttons || buttons.length === 0) return 1;
+  
+  const totalButtons = buttons.length;
+  const averageTextLength = buttons.reduce((sum, btn) => sum + (btn.text?.length || 5), 0) / totalButtons;
+  
+  // Простая логика для определения количества колонок на основе длины текста и количества кнопок
+  if (averageTextLength <= 10) {
+    // Короткие кнопки - больше колонок
+    if (totalButtons >= 8) return 2;
+    if (totalButtons >= 4) return 2;
+    return 1;
+  } else if (averageTextLength <= 20) {
+    // Средние кнопки
+    if (totalButtons >= 6) return 2;
+    return 1;
+  } else {
+    // Длинные кнопки - по одной в колонке
+    return 1;
+  }
+}
+
+// Функция для генерации inline клавиатуры с автоматической настройкой колонок
+function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string): string {
+  if (!buttons || buttons.length === 0) return '';
+  
+  let code = '';
+  code += `${indentLevel}builder = InlineKeyboardBuilder()\n`;
+  
+  buttons.forEach((button, index) => {
+    if (button.action === "url") {
+      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+    } else if (button.action === 'goto') {
+      const baseCallbackData = button.target || button.id || 'no_action';
+      const callbackData = nodeId ? `${baseCallbackData}_btn_${index}` : baseCallbackData;
+      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+    } else if (button.action === 'command') {
+      const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+    } else if (button.action === 'selection') {
+      const callbackData = nodeId ? `multi_select_${nodeId}_${button.id}` : `selection_${button.id}`;
+      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+    } else {
+      const callbackData = button.target || button.id || 'no_action';
+      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+    }
+  });
+  
+  // Автоматическое распределение колонок
+  const columns = calculateOptimalColumns(buttons);
+  code += `${indentLevel}builder.adjust(${columns})\n`;
+  code += `${indentLevel}keyboard = builder.as_markup()\n`;
+  
+  return code;
+}
+
 // Функция для генерации замены переменных в тексте
 function generateVariableReplacement(variableName: string, indentLevel: string): string {
   let code = '';
@@ -142,6 +199,9 @@ function generateConditionalKeyboard(condition: any, indentLevel: string, nodeDa
       }
     });
     
+    // Автоматическое распределение колонок для inline клавиатуры
+    const columns = calculateOptimalColumns(condition.buttons);
+    code += `${indentLevel}builder.adjust(${columns})\n`;
     code += `${indentLevel}keyboard = builder.as_markup()\n`;
     code += `${indentLevel}conditional_keyboard = keyboard\n`;
     
