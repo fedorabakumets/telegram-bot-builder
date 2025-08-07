@@ -1255,20 +1255,9 @@ async def main():
         print("✅ Бот корректно завершил работу")
 
 
-# Универсальный обработчик для отладки всех callback_query
-@dp.callback_query()
-async def debug_all_callbacks(callback_query: types.CallbackQuery):
-    logging.info(f"🔥 ЛЮБОЙ CALLBACK: '{callback_query.data}' от {callback_query.from_user.id}")
-    
-    # Если это multi_select, обрабатываем
-    if callback_query.data.startswith("multi_select_"):
-        await handle_multi_select_callback_internal(callback_query)
-    else:
-        # Для других callback - просто отвечаем
-        await callback_query.answer("Callback получен, но не обработан")
-
 # Обработчики для множественного выбора
-async def handle_multi_select_callback_internal(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data.startswith("multi_select_"))
+async def handle_multi_select_callback(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
     callback_data = callback_query.data
