@@ -1,5 +1,5 @@
 """
-Мой первый бот - Telegram Bot
+Тест исправления колонок - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
 """
 
@@ -325,7 +325,7 @@ async def start_handler(message: types.Message):
             return text_content
         
         text = replace_variables_in_text(text, user_vars)
-        # Загружаем ранее выбранные интересы из базы данных
+        # Загружаем ранее выбранные интересы из базы данных для восстановления состояния
         if user_id not in user_data:
             user_data[user_id] = {}
         
@@ -344,11 +344,13 @@ async def start_handler(message: types.Message):
                     
                     if interests_str:
                         saved_interests = [interest.strip() for interest in interests_str.split(",")]
+                        logging.info(f"Восстановлены интересы из БД: {saved_interests}")
                         break
         
         # Инициализируем состояние множественного выбора с сохраненными интересами
         user_data[user_id]["multi_select_start"] = saved_interests.copy()
         user_data[user_id]["multi_select_node"] = "start"
+        logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")
         
         # Создаем inline клавиатуру с поддержкой множественного выбора
         builder = InlineKeyboardBuilder()
@@ -459,6 +461,7 @@ async def handle_callback_final_message(callback_query: types.CallbackQuery):
         # Создаем inline клавиатуру для целевого узла
         builder = InlineKeyboardBuilder()
         builder.add(InlineKeyboardButton(text="🔄 Начать заново", callback_data="cmd_start"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
         keyboard = builder.as_markup()
     # Отправляем сообщение
     try:
@@ -511,6 +514,7 @@ async def handle_callback_cmd_start(callback_query: types.CallbackQuery):
         builder.add(InlineKeyboardButton(text="🍳 Кулинария", callback_data="btn_btn-cooking"))
         builder.add(InlineKeyboardButton(text="🎨 Искусство", callback_data="btn_btn-art"))
         builder.add(InlineKeyboardButton(text="🎮 Игры", callback_data="btn_btn-games"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
         keyboard = builder.as_markup()
         
         await callback_query.message.edit_text(text, reply_markup=keyboard)
