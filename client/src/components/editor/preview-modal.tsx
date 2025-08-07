@@ -255,6 +255,14 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
         // Find the target node by ID or by command if action is 'command'
         let targetNode;
         if (action === 'command') {
+          // Special handling for /start command - restart the bot
+          if (target === '/start') {
+            // Clear message history and restart
+            setTimeout(() => {
+              handleStart();
+            }, 100);
+            return;
+          }
           // Find node with matching command
           targetNode = nodes.find(node => 
             (node.type === 'command' || node.type === 'start') && 
