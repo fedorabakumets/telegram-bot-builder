@@ -53,18 +53,18 @@ function calculateOptimalColumns(buttons: any[]): number {
   const totalButtons = buttons.length;
   const averageTextLength = buttons.reduce((sum, btn) => sum + (btn.text?.length || 5), 0) / totalButtons;
   
-  // Простая логика для определения количества колонок на основе длины текста и количества кнопок
-  if (averageTextLength <= 10) {
-    // Короткие кнопки - больше колонок
-    if (totalButtons >= 8) return 2;
-    if (totalButtons >= 4) return 2;
-    return 1;
-  } else if (averageTextLength <= 20) {
-    // Средние кнопки
-    if (totalButtons >= 6) return 2;
+  // Более умная логика для красивого отображения кнопок интересов
+  if (totalButtons === 8) {
+    // Для 8 кнопок интересов - оптимально 2 колонки (4x2)
+    return 2;
+  } else if (totalButtons >= 6) {
+    // Для 6+ кнопок - 2 колонки
+    return 2;
+  } else if (totalButtons >= 3) {
+    // Для 3-5 кнопок - 1 колонка для удобочитаемости
     return 1;
   } else {
-    // Длинные кнопки - по одной в колонке
+    // Для 1-2 кнопок - 1 колонка
     return 1;
   }
 }
@@ -87,8 +87,8 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
     } else if (button.action === 'selection') {
-      const callbackData = nodeId ? `multi_select_${nodeId}_${button.id}` : `selection_${button.id}`;
-      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      const callbackData = nodeId ? `multi_select_${nodeId}_btn-${button.target || button.id}` : `selection_${button.target || button.id}`;
+      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${escapeForPython(button.text)}", callback_data="${callbackData}"))\n`;
     } else {
       const callbackData = button.target || button.id || 'no_action';
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
@@ -4680,28 +4680,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += `            if node_id == "${node.id}":\n`;
       
       // Добавляем логику для умного расположения кнопок
-      code += `                # Функция для определения количества колонок на основе текста кнопок\n`;
-      code += `                def calculate_keyboard_width(buttons_data):\n`;
-      code += `                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n`;
-      code += `                    if max_text_length <= 6:  # Короткие тексты\n`;
-      code += `                        return 3  # 3 колонки\n`;
-      code += `                    elif max_text_length <= 12:  # Средние тексты\n`;
-      code += `                        return 2  # 2 колонки\n`;
-      code += `                    else:  # Длинные тексты\n`;
-      code += `                        return 1  # 1 колонка\n`;
-      code += `                \n`;
-      
-      // Создаем массив текстов кнопок для расчета
-      const buttonTexts = selectionButtons.map(btn => btn.text);
-      code += `                button_texts = [${buttonTexts.map(text => `"${text}"`).join(', ')}]\n`;
-      code += `                keyboard_width = calculate_keyboard_width(button_texts)\n`;
+      code += `                # Оптимальное количество колонок для кнопок интересов\n`;
+      const totalButtons = selectionButtons.length;
+      const optimalColumns = totalButtons === 8 ? 2 : (totalButtons >= 6 ? 2 : 1);
+      code += `                keyboard_width = ${optimalColumns}  # Оптимально для ${totalButtons} кнопок\n`;
       code += `                \n`;
       
       // Добавляем кнопки выбора с автоматическим расположением
       code += `                # Добавляем кнопки выбора с умным расположением\n`;
       selectionButtons.forEach((button, index) => {
         code += `                selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
-        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data=f"multi_select_{node_id}_${button.id}"))\n`;
+        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${escapeForPython(button.text)}", callback_data=f"multi_select_{node_id}_btn-${button.target || button.id}"))\n`;
       });
       
       // Применяем ширину клавиатуры
@@ -6100,7 +6089,7 @@ function generateKeyboard(node: Node): string {
         
         // Добавляем кнопки для множественного выбора
         selectionButtons.forEach(button => {
-          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data=f"multi_select_${node.id}_${button.id}"))\n`;
+          code += `        builder.add(InlineKeyboardButton(text="${escapeForPython(button.text)}", callback_data=f"multi_select_${node.id}_btn-${button.target || button.id}"))\n`;
         });
         
         // Добавляем обычные кнопки
