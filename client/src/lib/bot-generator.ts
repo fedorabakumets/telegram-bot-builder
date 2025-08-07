@@ -86,7 +86,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
     } else if (button.action === 'selection') {
       const callbackData = nodeId ? `multi_select_${nodeId}_btn-${button.target || button.id}` : `selection_${button.target || button.id}`;
-      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${escapeForPython(button.text)}", callback_data="${callbackData}"))\n`;
+      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
     } else {
       const callbackData = button.target || button.id || 'no_action';
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
@@ -4913,7 +4913,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       selectionButtons.forEach((button, index) => {
         const buttonValue = button.target || button.id || button.text;
         code += `                selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
-        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${escapeForPython(button.text)}", callback_data="multi_select_${node.id}_btn-${buttonValue}"))\n`;
+        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="multi_select_${node.id}_btn-${buttonValue}"))\n`;
       });
       
       // Добавляем обычные кнопки
@@ -6351,7 +6351,7 @@ function generateKeyboard(node: Node): string {
           const buttonValue = button.target || button.id || button.text;
           code += `        # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
           code += `        ${buttonValue.toLowerCase()}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in saved_interests)\n`;
-          code += `        ${buttonValue.toLowerCase()}_text = "✅ ${escapeForPython(button.text)}" if ${buttonValue.toLowerCase()}_selected else "${escapeForPython(button.text)}"\n`;
+          code += `        ${buttonValue.toLowerCase()}_text = f"✅ {button.text}" if ${buttonValue.toLowerCase()}_selected else "${button.text}"\n`;
           code += `        builder.add(InlineKeyboardButton(text=${buttonValue.toLowerCase()}_text, callback_data="multi_select_${node.id}_btn-${buttonValue}"))\n`;
         });
         
