@@ -73,6 +73,7 @@ export class DatabaseManager {
 
   // Get connection statistics
   getConnectionStats() {
+    const pool = getPool();
     return {
       ...this.connectionStats,
       poolInfo: {
@@ -143,12 +144,12 @@ export class DatabaseManager {
 
   // Transaction wrapper with automatic rollback
   async transaction<T>(
-    operation: (tx: ReturnType<typeof getDb>) => Promise<T>
+    operation: (db: ReturnType<typeof getDb>) => Promise<T>
   ): Promise<T> {
     const db = getDb();
     return await db.transaction(async (tx) => {
       try {
-        const result = await operation(tx);
+        const result = await operation(db);
         return result;
       } catch (error) {
         console.error('Transaction failed, rolling back:', error);
@@ -163,6 +164,7 @@ export class DatabaseManager {
     const backupName = `backup_${timestamp}`;
     
     try {
+      const db = getDb();
       // This is a simplified backup - in production you'd use pg_dump
       await db.execute(sql`
         SELECT pg_terminate_backend(pid)
@@ -184,6 +186,7 @@ export class DatabaseManager {
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
     try {
+      const db = getDb();
       // Clean up old bot instances
       const cleanupResult = await db.execute(sql`
         DELETE FROM bot_instances 
@@ -207,6 +210,7 @@ export class DatabaseManager {
   // Get database metrics
   async getDatabaseMetrics() {
     try {
+      const db = getDb();
       const metrics = await db.execute(sql`
         SELECT 
           schemaname,
@@ -237,10 +241,10 @@ dbManager.startHealthMonitoring();
 // Graceful shutdown
 process.on('SIGTERM', () => {
   dbManager.stopHealthMonitoring();
-  pool.end();
+  getPool().end();
 });
 
 process.on('SIGINT', () => {
   dbManager.stopHealthMonitoring();
-  pool.end();
+  getPool().end();
 });
