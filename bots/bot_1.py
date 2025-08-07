@@ -1300,8 +1300,8 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             # Обновляем клавиатуру с галочками
             builder = InlineKeyboardBuilder()
             if node_id == "start":
-                # Оптимальное количество колонок для кнопок интересов (8 кнопок + "Готово" = 9 кнопок)
-                keyboard_width = 3  # Оптимально для 9 кнопок (3x3)
+                # Оптимальное количество колонок для кнопок интересов
+                keyboard_width = 2  # Оптимально для 8 кнопок
                 
                 # Добавляем кнопки выбора с умным расположением
                 selected_mark = "✅ " if "⚽ Спорт" in selected_list else ""
