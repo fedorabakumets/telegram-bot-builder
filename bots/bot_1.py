@@ -294,6 +294,7 @@ async def start_handler(message: types.Message):
         builder.add(InlineKeyboardButton(text="🎨 Искусство", callback_data=f"multi_select_start_btn-art"))
         builder.add(InlineKeyboardButton(text="🎮 Игры", callback_data=f"multi_select_start_btn-games"))
         builder.add(InlineKeyboardButton(text="Готово", callback_data=f"multi_select_done_start"))
+        builder.adjust(2)
         keyboard = builder.as_markup()
         await message.answer(text, reply_markup=keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
         
