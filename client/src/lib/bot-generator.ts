@@ -2386,7 +2386,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   
                   startNode.data.buttons.forEach((btn, index) => {
                     const btnText = btn.text || `Кнопка ${index + 1}`;
-                    const btnCallbackData = `multi_select_${startNode.id}_${btn.id}`;
+                    const btnId = btn.id || btn.target || `btn-${index}`;
+                    const btnCallbackData = `multi_select_start_btn-${btnId}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btnText}", callback_data="${btnCallbackData}"))\n`;
                   });
                   
@@ -4912,8 +4913,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += `                # Добавляем кнопки выбора с умным расположением\n`;
       selectionButtons.forEach((button, index) => {
         const buttonValue = button.target || button.id || button.text;
-        code += `                selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
-        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="multi_select_${node.id}_btn-${buttonValue}"))\n`;
+        const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        code += `                # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
+        code += `                ${safeVarName}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in selected_list)\n`;
+        code += `                ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
+        code += `                builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_btn-${buttonValue}"))\n`;
       });
       
       // Добавляем обычные кнопки
@@ -6353,7 +6357,7 @@ function generateKeyboard(node: Node): string {
           code += `        # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
           code += `        ${safeVarName}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in saved_interests)\n`;
           code += `        ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
-          code += `        builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_${node.id}_btn-${buttonValue}"))\n`;
+          code += `        builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_btn-${buttonValue}"))\n`;
         });
         
         // Добавляем обычные кнопки
@@ -6377,8 +6381,8 @@ function generateKeyboard(node: Node): string {
         }
         
         // Автоматическое распределение колонок
-        // Для множественного выбора учитываем все кнопки включая "Готово"
-        const allButtons = [...selectionButtons];
+        // Для множественного выбора учитываем все кнопки: селекции + регулярные + "Готово"
+        const allButtons = [...selectionButtons, ...regularButtons];
         if (selectionButtons.length > 0) {
           allButtons.push({ text: node.data.continueButtonText || 'Готово' });
         }

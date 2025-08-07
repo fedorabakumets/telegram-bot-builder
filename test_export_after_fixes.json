@@ -1,0 +1,8 @@
+npm error Missing script: "export"
+npm error
+npm error Did you mean this?
+npm error   npm explore # Browse an installed package
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: /home/runner/.npm/_logs/2025-08-07T21_26_22_727Z-debug-0.log
