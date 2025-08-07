@@ -85,7 +85,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
     } else if (button.action === 'selection') {
-      const callbackData = nodeId ? `multi_select_${nodeId}_btn-${button.target || button.id}` : `selection_${button.target || button.id}`;
+      const callbackData = nodeId ? `multi_select_${nodeId}_${button.target || button.id}` : `selection_${button.target || button.id}`;
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
     } else {
       const callbackData = button.target || button.id || 'no_action';
@@ -1100,38 +1100,56 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '            # Создаем клавиатуру с восстановленными галочками\n';
             code += '            builder = InlineKeyboardBuilder()\n';
             code += '            \n';
+            code += '            # КРИТИЧЕСКИ ВАЖНО: Правильная логика проверки галочек\n';
+            code += '            logging.info(f"Сохраненные интересы для проверки галочек: {saved_interests}")\n';
+            code += '            \n';
+            code += '            # Функция для проверки совпадения интересов (более гибкая)\n';
+            code += '            def check_interest_match(button_text, saved_list):\n';
+            code += '                """Проверяет, есть ли интерес в сохраненном списке"""\n';
+            code += '                if not saved_list:\n';
+            code += '                    return False\n';
+            code += '                # Убираем эмодзи и галочки для сравнения\n';
+            code += '                clean_button = button_text.replace("✅ ", "").replace("⬜ ", "").strip()\n';
+            code += '                for saved_interest in saved_list:\n';
+            code += '                    clean_saved = saved_interest.replace("✅ ", "").replace("⬜ ", "").strip()\n';
+            code += '                    if clean_button == clean_saved or clean_button in clean_saved or clean_saved in clean_button:\n';
+            code += '                        return True\n';
+            code += '                return False\n';
+            code += '            \n';
             code += '            # Проверяем каждый интерес и добавляем галочку если он выбран\n';
-            code += '            sport_selected = any("⚽ Спорт" in interest or "sport" in interest.lower() for interest in saved_interests)\n';
+            code += '            sport_selected = check_interest_match("⚽ Спорт", saved_interests)\n';
             code += '            sport_text = "✅ ⚽ Спорт" if sport_selected else "⚽ Спорт"\n';
-            code += '            builder.add(InlineKeyboardButton(text=sport_text, callback_data="multi_select_start_btn-sport"))\n';
+            code += '            builder.add(InlineKeyboardButton(text=sport_text, callback_data="multi_select_start_sport"))\n';
             code += '            \n';
-            code += '            music_selected = any("🎵 Музыка" in interest or "music" in interest.lower() for interest in saved_interests)\n';
+            code += '            music_selected = check_interest_match("🎵 Музыка", saved_interests)\n';
             code += '            music_text = "✅ 🎵 Музыка" if music_selected else "🎵 Музыка"\n';
-            code += '            builder.add(InlineKeyboardButton(text=music_text, callback_data="multi_select_start_btn-music"))\n';
+            code += '            builder.add(InlineKeyboardButton(text=music_text, callback_data="multi_select_start_music"))\n';
             code += '            \n';
-            code += '            books_selected = any("📚 Книги" in interest or "books" in interest.lower() for interest in saved_interests)\n';
+            code += '            books_selected = check_interest_match("📚 Книги", saved_interests)\n';
             code += '            books_text = "✅ 📚 Книги" if books_selected else "📚 Книги"\n';
-            code += '            builder.add(InlineKeyboardButton(text=books_text, callback_data="multi_select_start_btn-books"))\n';
+            code += '            builder.add(InlineKeyboardButton(text=books_text, callback_data="multi_select_start_books"))\n';
             code += '            \n';
-            code += '            travel_selected = any("✈️ Путешествия" in interest or "travel" in interest.lower() for interest in saved_interests)\n';
+            code += '            travel_selected = check_interest_match("✈️ Путешествия", saved_interests)\n';
             code += '            travel_text = "✅ ✈️ Путешествия" if travel_selected else "✈️ Путешествия"\n';
-            code += '            builder.add(InlineKeyboardButton(text=travel_text, callback_data="multi_select_start_btn-travel"))\n';
+            code += '            builder.add(InlineKeyboardButton(text=travel_text, callback_data="multi_select_start_travel"))\n';
             code += '            \n';
-            code += '            tech_selected = any("💻 Технологии" in interest or "tech" in interest.lower() for interest in saved_interests)\n';
+            code += '            tech_selected = check_interest_match("💻 Технологии", saved_interests)\n';
             code += '            tech_text = "✅ 💻 Технологии" if tech_selected else "💻 Технологии"\n';
-            code += '            builder.add(InlineKeyboardButton(text=tech_text, callback_data="multi_select_start_btn-tech"))\n';
+            code += '            builder.add(InlineKeyboardButton(text=tech_text, callback_data="multi_select_start_tech"))\n';
             code += '            \n';
-            code += '            cooking_selected = any("🍳 Кулинария" in interest or "cooking" in interest.lower() for interest in saved_interests)\n';
+            code += '            cooking_selected = check_interest_match("🍳 Кулинария", saved_interests)\n';
             code += '            cooking_text = "✅ 🍳 Кулинария" if cooking_selected else "🍳 Кулинария"\n';
-            code += '            builder.add(InlineKeyboardButton(text=cooking_text, callback_data="multi_select_start_btn-cooking"))\n';
+            code += '            builder.add(InlineKeyboardButton(text=cooking_text, callback_data="multi_select_start_cooking"))\n';
             code += '            \n';
-            code += '            art_selected = any("🎨 Искусство" in interest or "art" in interest.lower() for interest in saved_interests)\n';
+            code += '            art_selected = check_interest_match("🎨 Искусство", saved_interests)\n';
             code += '            art_text = "✅ 🎨 Искусство" if art_selected else "🎨 Искусство"\n';
-            code += '            builder.add(InlineKeyboardButton(text=art_text, callback_data="multi_select_start_btn-art"))\n';
+            code += '            builder.add(InlineKeyboardButton(text=art_text, callback_data="multi_select_start_art"))\n';
             code += '            \n';
-            code += '            games_selected = any("🎮 Игры" in interest or "games" in interest.lower() for interest in saved_interests)\n';
+            code += '            games_selected = check_interest_match("🎮 Игры", saved_interests)\n';
             code += '            games_text = "✅ 🎮 Игры" if games_selected else "🎮 Игры"\n';
-            code += '            builder.add(InlineKeyboardButton(text=games_text, callback_data="multi_select_start_btn-games"))\n';
+            code += '            builder.add(InlineKeyboardButton(text=games_text, callback_data="multi_select_start_games"))\n';
+            code += '            \n';
+            code += '            logging.info(f"Статус галочек: sport={sport_selected}, music={music_selected}, books={books_selected}, travel={travel_selected}, tech={tech_selected}, cooking={cooking_selected}, art={art_selected}, games={games_selected}")\n';
             code += '            \n';
             code += '            builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_start"))\n';
             code += '            builder.adjust(2)  # Используем 2 колонки для консистентности\n';
@@ -2466,8 +2484,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   
                   startNode.data.buttons.forEach((btn, index) => {
                     const btnText = btn.text || `Кнопка ${index + 1}`;
-                    const btnId = btn.id || btn.target || `btn-${index}`;
-                    const btnCallbackData = `multi_select_start_btn-${btnId}`;
+                    const btnId = btn.id || btn.target || `${index}`;
+                    const btnCallbackData = `multi_select_start_${btnId}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btnText}", callback_data="${btnCallbackData}"))\n`;
                   });
                   
@@ -4913,9 +4931,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    \n';
   code += '    # Обработка выбора опции\n';
   code += '    parts = callback_data.split("_")\n';
-  code += '    if len(parts) >= 4:\n';
+  code += '    if len(parts) >= 3:\n';
   code += '        node_id = parts[2]\n';
-  code += '        button_id = "_".join(parts[3:])\n';
+  code += '        button_id = "_".join(parts[3:]) if len(parts) > 3 else parts[2]\n';
   code += '        \n';
   code += '        # Инициализируем список выбранных опций с восстановлением из БД\n';
   code += '        if user_id not in user_data:\n';
@@ -4955,7 +4973,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       selectionButtons.forEach(button => {
         // Используем target или id для маппинга, как в генераторе клавиатуры
         const buttonValue = button.target || button.id || button.text;
-        code += `            if button_id == "btn-${buttonValue}":\n`;
+        code += `            if button_id == "${buttonValue}":\n`;
         code += `                button_text = "${button.text}"\n`;
       });
     }
@@ -4998,7 +5016,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
         code += `                ${safeVarName}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in selected_list)\n`;
         code += `                ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
-        code += `                builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_btn-${buttonValue}"))\n`;
+        code += `                builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
       });
       
       // Добавляем обычные кнопки
@@ -6479,7 +6497,7 @@ function generateKeyboard(node: Node): string {
           code += `        # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
           code += `        ${safeVarName}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in saved_interests)\n`;
           code += `        ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
-          code += `        builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_btn-${buttonValue}"))\n`;
+          code += `        builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
         });
         
         // Добавляем обычные кнопки
