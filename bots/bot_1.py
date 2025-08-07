@@ -472,6 +472,34 @@ async def handle_callback_final_message(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.answer(text)
 
+@dp.callback_query(lambda c: c.data == "cmd_start")
+async def handle_callback_cmd_start(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "✏️ Изменить выбор"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Команда {button.target} выполнена через callback кнопку (пользователь {user_id})")
+    
+    # Вызываем команду /start напрямую
+    from types import SimpleNamespace
+    fake_message = SimpleNamespace()
+    fake_message.from_user = callback_query.from_user
+    fake_message.chat = callback_query.message.chat
+    fake_message.text = "/start"
+    fake_message.answer = callback_query.message.answer
+    fake_message.edit_text = callback_query.message.edit_text
+    
+    # Вызываем обработчик команды /start
+    try:
+        await start_command(fake_message)
+    except Exception as e:
+        logging.error(f"Ошибка вызова команды start: {e}")
+        await callback_query.message.answer("Произошла ошибка при выполнении команды")
+
 @dp.callback_query(lambda c: c.data == "interests_result" or c.data.startswith("interests_result_btn_"))
 async def handle_callback_interests_result(callback_query: types.CallbackQuery):
     await callback_query.answer()
@@ -528,6 +556,7 @@ async def handle_callback_interests_result(callback_query: types.CallbackQuery):
     # Create inline keyboard
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="👍 Продолжить", callback_data="final_message_btn_0"))
+    builder.add(InlineKeyboardButton(text="✏️ Изменить выбор", callback_data="cmd_start"))
     keyboard = builder.as_markup()
     await bot.send_message(user_id, text, reply_markup=keyboard)
 

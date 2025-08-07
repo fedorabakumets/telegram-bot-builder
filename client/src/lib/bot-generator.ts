@@ -2401,6 +2401,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             if (btn.action === "goto" && btn.target) {
               const btnCallbackData = `${btn.target}_btn_${index}`;
               code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btnCallbackData}"))\n`;
+            } else if (btn.action === "command" && btn.target) {
+              const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+              code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
             } else if (btn.action === "url") {
               code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
             }
