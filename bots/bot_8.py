@@ -342,6 +342,7 @@ async def handle_callback_interests_multiple(callback_query: types.CallbackQuery
     builder.add(InlineKeyboardButton(text="👨‍🍳 Кулинария", callback_data="response_interests-multiple_4"))
     builder.add(InlineKeyboardButton(text="📚 Книги", callback_data="response_interests-multiple_5"))
     builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="response_interests-multiple_6"))
+    builder.adjust(2)  # Устанавливаем 2 колонки для красивого отображения
     keyboard = builder.as_markup()
     await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
     

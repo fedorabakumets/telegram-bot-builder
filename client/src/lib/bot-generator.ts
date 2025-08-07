@@ -47,33 +47,28 @@ function escapeForJsonString(text: string): string {
 }
 
 // Функция для вычисления оптимального количества колонок для кнопок
-function calculateOptimalColumns(buttons: any[]): number {
+function calculateOptimalColumns(buttons: any[], nodeData?: any): number {
   if (!buttons || buttons.length === 0) return 1;
   
   const totalButtons = buttons.length;
-  const averageTextLength = buttons.reduce((sum, btn) => sum + (btn.text?.length || 5), 0) / totalButtons;
   
-  // Более умная логика для красивого отображения кнопок интересов
-  if (totalButtons === 9) {
-    // Для 9 кнопок (8 интересов + "Готово") - оптимально 3 колонки (3x3)
-    return 3;
-  } else if (totalButtons === 8) {
-    // Для 8 кнопок интересов - оптимально 2 колонки (4x2)
+  // Если это множественный выбор, всегда используем 2 колонки для консистентности
+  if (nodeData?.multiSelectEnabled || nodeData?.allowMultipleSelection) {
     return 2;
-  } else if (totalButtons >= 6) {
-    // Для 6+ кнопок - 2 колонки
-    return 2;
+  }
+  
+  // Стандартная логика для обычных кнопок
+  if (totalButtons >= 6) {
+    return 2; // Для 6+ кнопок - 2 колонки
   } else if (totalButtons >= 3) {
-    // Для 3-5 кнопок - 1 колонка для удобочитаемости
-    return 1;
+    return 1; // Для 3-5 кнопок - 1 колонка для удобочитаемости
   } else {
-    // Для 1-2 кнопок - 1 колонка
-    return 1;
+    return 1; // Для 1-2 кнопок - 1 колонка
   }
 }
 
 // Функция для генерации inline клавиатуры с автоматической настройкой колонок
-function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string): string {
+function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any): string {
   if (!buttons || buttons.length === 0) return '';
   
   let code = '';
@@ -98,8 +93,8 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
     }
   });
   
-  // Автоматическое распределение колонок
-  const columns = calculateOptimalColumns(buttons);
+  // Автоматическое распределение колонок с учетом данных узла
+  const columns = calculateOptimalColumns(buttons, nodeData);
   code += `${indentLevel}builder.adjust(${columns})\n`;
   code += `${indentLevel}keyboard = builder.as_markup()\n`;
   
@@ -4684,9 +4679,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       
       // Добавляем логику для умного расположения кнопок
       code += `                # Оптимальное количество колонок для кнопок интересов\n`;
-      const totalButtons = selectionButtons.length;
-      const optimalColumns = totalButtons === 8 ? 2 : (totalButtons >= 6 ? 2 : 1);
-      code += `                keyboard_width = ${optimalColumns}  # Оптимально для ${totalButtons} кнопок\n`;
+      const allButtons = [...selectionButtons];
+      allButtons.push({ text: node.data.continueButtonText || 'Готово' });
+      const optimalColumns = calculateOptimalColumns(allButtons, node.data);
+      code += `                keyboard_width = ${optimalColumns}  # Консистентное количество колонок для множественного выбора\n`;
       code += `                \n`;
       
       // Добавляем кнопки выбора с автоматическим расположением
@@ -6124,7 +6120,7 @@ function generateKeyboard(node: Node): string {
         if (selectionButtons.length > 0) {
           allButtons.push({ text: node.data.continueButtonText || 'Готово' });
         }
-        const columns = calculateOptimalColumns(allButtons);
+        const columns = calculateOptimalColumns(allButtons, node.data);
         code += `        builder.adjust(${columns})\n`;
         code += '        keyboard = builder.as_markup()\n';
         code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
@@ -6156,7 +6152,7 @@ function generateKeyboard(node: Node): string {
         });
         
         // Автоматическое распределение колонок
-        const columns = calculateOptimalColumns(node.data.buttons);
+        const columns = calculateOptimalColumns(node.data.buttons, node.data);
         code += `        builder.adjust(${columns})\n`;
         code += '        keyboard = builder.as_markup()\n';
         code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
