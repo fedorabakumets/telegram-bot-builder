@@ -16,6 +16,7 @@ import { ConnectionManagerPanel } from '@/components/editor/connection-manager-p
 import { EnhancedConnectionControls } from '@/components/editor/enhanced-connection-controls';
 import { ConnectionVisualization } from '@/components/editor/connection-visualization';
 import { SmartConnectionCreator } from '@/components/editor/smart-connection-creator';
+import { UserDatabasePanel } from '@/components/editor/user-database-panel';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
@@ -32,7 +33,7 @@ export default function Editor() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/editor/:id');
   const projectId = params?.id ? parseInt(params.id) : null;
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot'>('editor');
+  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users'>('editor');
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -201,7 +202,7 @@ export default function Editor() {
     updateProjectMutation.mutate({});
   }, [updateProjectMutation]);
 
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot') => {
+  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
@@ -211,6 +212,9 @@ export default function Editor() {
       setShowExport(true);
     } else if (tab === 'bot') {
       // Auto-save before showing bot controls
+      updateProjectMutation.mutate({});
+    } else if (tab === 'users') {
+      // Auto-save before showing users panel
       updateProjectMutation.mutate({});
     }
   }, [updateProjectMutation]);
@@ -453,7 +457,13 @@ export default function Editor() {
               />
             </div>
           </div>
-
+        ) : currentTab === 'users' ? (
+          <div className="h-full">
+            <UserDatabasePanel
+              projectId={currentProject.id}
+              projectName={currentProject.name}
+            />
+          </div>
         ) : null}
       </div>
     );
@@ -612,7 +622,13 @@ export default function Editor() {
                     />
                   </div>
                 </div>
-
+              ) : currentTab === 'users' ? (
+                <div className="h-full">
+                  <UserDatabasePanel
+                    projectId={currentProject.id}
+                    projectName={currentProject.name}
+                  />
+                </div>
               ) : null}
             </div>
           }
