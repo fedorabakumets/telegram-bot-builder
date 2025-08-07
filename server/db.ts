@@ -29,11 +29,6 @@ function initializeDatabase() {
     min: 2,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
-    acquireTimeoutMillis: 60000,
-    createTimeoutMillis: 30000,
-    destroyTimeoutMillis: 5000,
-    reapIntervalMillis: 1000,
-    createRetryIntervalMillis: 200,
   });
 
   // Add error handling for the pool
