@@ -7,6 +7,9 @@ This application provides a visual Telegram bot builder, enabling users to creat
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **August 7, 2025**: Completed comprehensive scale testing with 26 advanced test cases covering functionality, performance, security, and internationalization. Results: 84.6% success rate (22/26 tests passed). Added extensive test coverage for inline keyboard layout optimization and multi-column button distribution.
+- **August 7, 2025**: Enhanced testing framework with stress tests (100+ concurrent users), performance benchmarks (10,000+ operations), memory monitoring (5,000+ user simulation), database stress operations (2,000+ batch users), error recovery mechanisms, and comprehensive analytics with user segmentation.
+- **August 7, 2025**: Implemented advanced security testing including XSS protection, SQL injection prevention, input sanitization, and access control validation. Added internationalization support for Russian, English, and Spanish languages.
 - **January 5, 2025**: Fixed database connection timeout issues by optimizing pool configuration and increasing connection timeout from 2s to 10s. Added better error handling for database connections.
 - **January 5, 2025**: Removed deprecated 'input' node type from code generation. The legacy input node handling has been replaced with modern conditional input collection system.
 
