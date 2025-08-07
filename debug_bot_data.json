@@ -1,0 +1,98 @@
+{
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "data": {
+        "messageText": "👋 Добро пожаловать!\n\nРасскажите нам о ваших интересах. Выберите все, что вам подходит:",
+        "command": "/start",
+        "description": "Сбор интересов",
+        "keyboardType": "inline",
+        "allowMultipleSelection": true,
+        "continueButtonText": "Готово",
+        "continueButtonTarget": "result",
+        "buttons": [
+          {
+            "id": "btn-sport",
+            "text": "⚽ Спорт",
+            "action": "selection",
+            "target": "sport",
+            "buttonType": "option"
+          },
+          {
+            "id": "btn-music",
+            "text": "🎵 Музыка",
+            "action": "selection",
+            "target": "music",
+            "buttonType": "option"
+          },
+          {
+            "id": "btn-books",
+            "text": "📚 Книги",
+            "action": "selection",
+            "target": "books",
+            "buttonType": "option"
+          },
+          {
+            "id": "btn-travel",
+            "text": "✈️ Путешествия",
+            "action": "selection",
+            "target": "travel",
+            "buttonType": "option"
+          },
+          {
+            "id": "btn-tech",
+            "text": "💻 Технологии",
+            "action": "selection",
+            "target": "tech",
+            "buttonType": "option"
+          },
+          {
+            "id": "btn-cooking",
+            "text": "🍳 Кулинария",
+            "action": "selection",
+            "target": "cooking",
+            "buttonType": "option"
+          },
+          {
+            "id": "btn-art",
+            "text": "🎨 Искусство",
+            "action": "selection",
+            "target": "art",
+            "buttonType": "option"
+          },
+          {
+            "id": "btn-games",
+            "text": "🎮 Игры",
+            "action": "selection",
+            "target": "games",
+            "buttonType": "option"
+          }
+        ]
+      },
+      "position": {
+        "x": 100,
+        "y": 100
+      }
+    },
+    {
+      "id": "result",
+      "type": "message",
+      "data": {
+        "messageText": "🎯 Ваши интересы:\n\n{user_interests}\n\nСпасибо за информацию! Теперь мы сможем предложить вам более подходящий контент.",
+        "buttons": []
+      },
+      "position": {
+        "x": 300,
+        "y": 100
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn1",
+      "source": "start",
+      "target": "result"
+    }
+  ]
+}

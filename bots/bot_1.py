@@ -294,7 +294,7 @@ async def start_handler(message: types.Message):
         builder.add(InlineKeyboardButton(text="🎨 Искусство", callback_data=f"multi_select_start_btn-art"))
         builder.add(InlineKeyboardButton(text="🎮 Игры", callback_data=f"multi_select_start_btn-games"))
         builder.add(InlineKeyboardButton(text="Готово", callback_data=f"multi_select_done_start"))
-        builder.adjust(3)
+        builder.adjust(2)
         keyboard = builder.as_markup()
         await message.answer(text, reply_markup=keyboard, parse_mode=current_parse_mode if current_parse_mode else None)
         
@@ -1301,7 +1301,7 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             builder = InlineKeyboardBuilder()
             if node_id == "start":
                 # Оптимальное количество колонок для кнопок интересов
-                keyboard_width = 2  # Оптимально для 8 кнопок
+                keyboard_width = 2  # Консистентное количество колонок для множественного выбора
                 
                 # Добавляем кнопки выбора с умным расположением
                 selected_mark = "✅ " if "⚽ Спорт" in selected_list else ""

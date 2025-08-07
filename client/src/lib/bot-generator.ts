@@ -198,7 +198,7 @@ function generateConditionalKeyboard(condition: any, indentLevel: string, nodeDa
     });
     
     // Автоматическое распределение колонок для inline клавиатуры
-    const columns = calculateOptimalColumns(condition.buttons);
+    const columns = calculateOptimalColumns(condition.buttons, nodeData);
     code += `${indentLevel}builder.adjust(${columns})\n`;
     code += `${indentLevel}keyboard = builder.as_markup()\n`;
     code += `${indentLevel}conditional_keyboard = keyboard\n`;
@@ -4692,9 +4692,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${escapeForPython(button.text)}", callback_data=f"multi_select_{node_id}_btn-${button.target || button.id}"))\n`;
       });
       
-      // Применяем ширину клавиатуры
-      code += `                builder.adjust(keyboard_width)\n`;
-      
       // Добавляем обычные кнопки
       regularButtons.forEach(button => {
         if (button.action === 'goto') {
@@ -4711,6 +4708,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       // Добавляем кнопку завершения
       const continueText = node.data.continueButtonText || 'Готово';
       code += `                builder.add(InlineKeyboardButton(text="${continueText}", callback_data=f"multi_select_done_${node.id}"))\n`;
+      
+      // Применяем ширину клавиатуры ПОСЛЕ добавления всех кнопок
+      code += `                builder.adjust(keyboard_width)\n`;
     }
   });
   
@@ -5984,7 +5984,7 @@ function generateKeyboard(node: Node): string {
         });
         
         // Автоматическое распределение колонок
-        const columns = calculateOptimalColumns(node.data.responseOptions);
+        const columns = calculateOptimalColumns(node.data.responseOptions, node.data);
         code += `    builder.adjust(${columns})\n`;
         code += '    keyboard = builder.as_markup()\n';
         code += `    await message.answer(text, reply_markup=keyboard${parseMode})\n`;
