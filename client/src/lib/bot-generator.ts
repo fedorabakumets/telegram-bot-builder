@@ -2349,23 +2349,90 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `    logging.info(f"Команда ${button.target || 'неизвестная'} выполнена через callback кнопку (пользователь {user_id})")\n`;
           code += '    \n';
           
-          // Если это команда /start, вызываем обработчик команды /start
+          // Если это команда /start, найти узел start и дублировать его логику
           if (button.target === '/start') {
-            code += '    # Вызываем команду /start напрямую\n';
-            code += '    from types import SimpleNamespace\n';
-            code += '    fake_message = SimpleNamespace()\n';
-            code += '    fake_message.from_user = callback_query.from_user\n';
-            code += '    fake_message.chat = callback_query.message.chat\n';
-            code += '    fake_message.text = "/start"\n';
-            code += '    fake_message.answer = callback_query.message.answer\n';
-            code += '    fake_message.edit_text = callback_query.message.edit_text\n';
-            code += '    \n';
-            code += '    # Вызываем обработчик команды /start\n';
-            code += '    try:\n';
-            code += '        await start_command(fake_message)\n';
-            code += '    except Exception as e:\n';
-            code += '        logging.error(f"Ошибка вызова команды start: {e}")\n';
-            code += '        await callback_query.message.answer("Произошла ошибка при выполнении команды")\n';
+            const startNode = nodes.find(n => n.data.command === '/start' || n.id === 'start');
+            if (startNode) {
+              code += '    # Дублируем логику команды /start напрямую\n';
+              code += '    try:\n';
+              code += '        # Сохраняем пользователя в базу данных\n';
+              code += '        await save_user_to_db(\n';
+              code += '            user_id, \n';
+              code += '            callback_query.from_user.username, \n';
+              code += '            callback_query.from_user.first_name, \n';
+              code += '            callback_query.from_user.last_name\n';
+              code += '        )\n';
+              code += '        \n';
+              
+              // Генерируем текст сообщения
+              const messageText = startNode.data.messageText || "Добро пожаловать!";
+              const formattedText = formatTextForPython(stripHtmlTags(messageText));
+              code += `        text = ${formattedText}\n`;
+              code += '        \n';
+              
+              // Инициализируем пользователя
+              code += '        # Инициализируем пользователя\n';
+              code += '        if user_id not in user_data:\n';
+              code += '            user_data[user_id] = {}\n';
+              
+              // Генерируем клавиатуру если есть кнопки
+              if (startNode.data.buttons && startNode.data.buttons.length > 0) {
+                if (startNode.data.multiSelect) {
+                  // Множественный выбор
+                  code += '        user_data[user_id]["user_interests"] = []\n';
+                  code += '        \n';
+                  code += '        # Создаем inline клавиатуру для множественного выбора\n';
+                  code += '        builder = InlineKeyboardBuilder()\n';
+                  
+                  startNode.data.buttons.forEach((btn, index) => {
+                    const btnText = btn.text || `Кнопка ${index + 1}`;
+                    const btnCallbackData = `multi_select_${startNode.id}_${btn.id}`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btnText}", callback_data="${btnCallbackData}"))\n`;
+                  });
+                  
+                  // Добавляем кнопку "Готово"
+                  code += `        builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="multi_select_done_${startNode.id}"))\n`;
+                  code += '        \n';
+                  code += '        builder.adjust(2)\n';
+                  code += '        keyboard = builder.as_markup()\n';
+                  code += '        \n';
+                  code += '        await callback_query.message.edit_text(text, reply_markup=keyboard)\n';
+                } else {
+                  // Обычные кнопки
+                  code += '        # Создаем inline клавиатуру\n';
+                  code += '        builder = InlineKeyboardBuilder()\n';
+                  
+                  startNode.data.buttons.forEach((btn, index) => {
+                    const btnText = btn.text || `Кнопка ${index + 1}`;
+                    let btnCallbackData = '';
+                    
+                    if (btn.action === 'goto' && btn.target) {
+                      btnCallbackData = `goto_${btn.target}`;
+                    } else if (btn.action === 'command' && btn.target) {
+                      btnCallbackData = `cmd_${btn.target.replace('/', '')}`;
+                    } else {
+                      btnCallbackData = `btn_${btn.id || index}`;
+                    }
+                    
+                    code += `        builder.add(InlineKeyboardButton(text="${btnText}", callback_data="${btnCallbackData}"))\n`;
+                  });
+                  
+                  code += '        keyboard = builder.as_markup()\n';
+                  code += '        \n';
+                  code += '        await callback_query.message.edit_text(text, reply_markup=keyboard)\n';
+                }
+              } else {
+                // Без кнопок
+                code += '        await callback_query.message.edit_text(text)\n';
+              }
+              
+              code += '    except Exception as e:\n';
+              code += '        logging.error(f"Ошибка вызова команды start: {e}")\n';
+              code += '        await callback_query.message.answer("Произошла ошибка при выполнении команды")\n';
+            } else {
+              code += '    # Узел start не найден\n';
+              code += '    await callback_query.message.answer("Команда /start не настроена")\n';
+            }
           }
         }
       });
