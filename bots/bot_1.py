@@ -1474,11 +1474,32 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
         node_id = parts[2]
         button_id = "_".join(parts[3:])
         
-        # Инициализируем список выбранных опций
+        # Инициализируем список выбранных опций с восстановлением из БД
         if user_id not in user_data:
             user_data[user_id] = {}
+        
+        # Восстанавливаем ранее выбранные опции из базы данных
         if f"multi_select_{node_id}" not in user_data[user_id]:
-            user_data[user_id][f"multi_select_{node_id}"] = []
+            # Загружаем сохраненные данные из базы
+            user_vars = await get_user_from_db(user_id)
+            saved_selections = []
+            
+            if user_vars:
+                # Ищем переменную с интересами
+                for var_name, var_data in user_vars.items():
+                    if "интерес" in var_name.lower() or var_name == "interests" or var_name.startswith("multi_select_"):
+                        if isinstance(var_data, dict) and "value" in var_data:
+                            saved_str = var_data["value"]
+                        elif isinstance(var_data, str):
+                            saved_str = var_data
+                        else:
+                            saved_str = str(var_data) if var_data else ""
+                        
+                        if saved_str:
+                            saved_selections = [item.strip() for item in saved_str.split(",")]
+                            break
+            
+            user_data[user_id][f"multi_select_{node_id}"] = saved_selections
         
         # Находим текст кнопки по button_id
         button_text = None
