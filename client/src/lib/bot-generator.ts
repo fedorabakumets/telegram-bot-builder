@@ -4796,7 +4796,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     if (selectionButtons.length > 0) {
       code += `        if node_id == "${node.id}":\n`;
       selectionButtons.forEach(button => {
-        code += `            if button_id == "${button.id}":\n`;
+        // Используем target или id для маппинга, как в генераторе клавиатуры
+        const buttonValue = button.target || button.id || button.text;
+        code += `            if button_id == "btn-${buttonValue}":\n`;
         code += `                button_text = "${button.text}"\n`;
       });
     }
@@ -4834,8 +4836,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       // Добавляем кнопки выбора с автоматическим расположением
       code += `                # Добавляем кнопки выбора с умным расположением\n`;
       selectionButtons.forEach((button, index) => {
+        const buttonValue = button.target || button.id || button.text;
         code += `                selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
-        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${escapeForPython(button.text)}", callback_data=f"multi_select_{node_id}_btn-${button.target || button.id}"))\n`;
+        code += `                builder.add(InlineKeyboardButton(text=f"{selected_mark}${escapeForPython(button.text)}", callback_data="multi_select_${node.id}_btn-${buttonValue}"))\n`;
       });
       
       // Добавляем обычные кнопки
@@ -4853,7 +4856,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       
       // Добавляем кнопку завершения
       const continueText = node.data.continueButtonText || 'Готово';
-      code += `                builder.add(InlineKeyboardButton(text="${continueText}", callback_data=f"multi_select_done_${node.id}"))\n`;
+      code += `                builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
       
       // Применяем ширину клавиатуры ПОСЛЕ добавления всех кнопок
       code += `                builder.adjust(keyboard_width)\n`;
@@ -6229,6 +6232,38 @@ function generateKeyboard(node: Node): string {
     } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       // Проверяем, есть ли множественный выбор
       if (node.data.allowMultipleSelection) {
+        // Добавляем универсальную функцию замены переменных для доступа к user_vars
+        code += generateUniversalVariableReplacement('        ');
+        
+        // Добавляем логику загрузки ранее выбранных интересов
+        const multiSelectVariable = node.data.multiSelectVariable || 'user_interests';
+        
+        code += '        # Загружаем ранее выбранные интересы из базы данных\n';
+        code += '        if user_id not in user_data:\n';
+        code += '            user_data[user_id] = {}\n';
+        code += '        \n';
+        code += '        # Получаем сохраненные интересы из базы данных\n';
+        code += '        saved_interests = []\n';
+        code += '        if user_vars:\n';
+        code += '            # Ищем интересы в любой переменной, которая может их содержать\n';
+        code += '            for var_name, var_data in user_vars.items():\n';
+        code += '                if "интерес" in var_name.lower() or var_name == "interests" or var_name == "' + multiSelectVariable + '":\n';
+        code += '                    if isinstance(var_data, dict) and "value" in var_data:\n';
+        code += '                        interests_str = var_data["value"]\n';
+        code += '                    elif isinstance(var_data, str):\n';
+        code += '                        interests_str = var_data\n';
+        code += '                    else:\n';
+        code += '                        interests_str = str(var_data) if var_data else ""\n';
+        code += '                    \n';
+        code += '                    if interests_str:\n';
+        code += '                        saved_interests = [interest.strip() for interest in interests_str.split(",")]\n';
+        code += '                        break\n';
+        code += '        \n';
+        code += '        # Инициализируем состояние множественного выбора с сохраненными интересами\n';
+        code += `        user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy()\n`;
+        code += `        user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
+        code += '        \n';
+        
         code += '        # Создаем inline клавиатуру с поддержкой множественного выбора\n';
         code += '        builder = InlineKeyboardBuilder()\n';
         
@@ -6236,9 +6271,13 @@ function generateKeyboard(node: Node): string {
         const selectionButtons = node.data.buttons.filter(button => button.action === 'selection');
         const regularButtons = node.data.buttons.filter(button => button.action !== 'selection');
         
-        // Добавляем кнопки для множественного выбора
+        // Добавляем кнопки для множественного выбора с логикой галочек
         selectionButtons.forEach(button => {
-          code += `        builder.add(InlineKeyboardButton(text="${escapeForPython(button.text)}", callback_data=f"multi_select_${node.id}_btn-${button.target || button.id}"))\n`;
+          const buttonValue = button.target || button.id || button.text;
+          code += `        # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
+          code += `        ${buttonValue.toLowerCase()}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in saved_interests)\n`;
+          code += `        ${buttonValue.toLowerCase()}_text = "✅ ${escapeForPython(button.text)}" if ${buttonValue.toLowerCase()}_selected else "${escapeForPython(button.text)}"\n`;
+          code += `        builder.add(InlineKeyboardButton(text=${buttonValue.toLowerCase()}_text, callback_data="multi_select_${node.id}_btn-${buttonValue}"))\n`;
         });
         
         // Добавляем обычные кнопки
@@ -6253,11 +6292,12 @@ function generateKeyboard(node: Node): string {
             code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
           }
         });
+        code += '        \n';
         
         // Добавляем кнопку завершения, если есть опции выбора
         if (selectionButtons.length > 0) {
           const continueText = node.data.continueButtonText || 'Готово';
-          code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data=f"multi_select_done_${node.id}"))\n`;
+          code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
         }
         
         // Автоматическое распределение колонок
@@ -6271,14 +6311,7 @@ function generateKeyboard(node: Node): string {
         code += '        keyboard = builder.as_markup()\n';
         code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
         
-        // Инициализируем состояние множественного выбора
-        if (selectionButtons.length > 0) {
-          code += '        \n';
-          code += '        # Инициализируем состояние множественного выбора\n';
-          code += '        user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
-          code += `        user_data[message.from_user.id]["multi_select_${node.id}"] = []\n`;
-          code += `        user_data[message.from_user.id]["multi_select_node"] = "${node.id}"\n`;
-        }
+        // Состояние множественного выбора уже инициализировано выше с сохраненными значениями
       } else {
         // Обычная inline клавиатура
         code += '        # Создаем inline клавиатуру с кнопками\n';
