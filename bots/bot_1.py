@@ -1320,8 +1320,8 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
                 builder.add(InlineKeyboardButton(text=f"{selected_mark}🎨 Искусство", callback_data=f"multi_select_{node_id}_btn-art"))
                 selected_mark = "✅ " if "🎮 Игры" in selected_list else ""
                 builder.add(InlineKeyboardButton(text=f"{selected_mark}🎮 Игры", callback_data=f"multi_select_{node_id}_btn-games"))
-                builder.adjust(keyboard_width)
                 builder.add(InlineKeyboardButton(text="Готово", callback_data=f"multi_select_done_start"))
+                builder.adjust(keyboard_width)
             
             keyboard = builder.as_markup()
             await callback_query.message.edit_reply_markup(reply_markup=keyboard)
