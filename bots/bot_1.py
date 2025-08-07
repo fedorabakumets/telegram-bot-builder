@@ -1,5 +1,5 @@
 """
-Тест исправления колонок - Telegram Bot
+Мой первый бот - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
 """
 

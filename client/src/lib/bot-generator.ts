@@ -5154,6 +5154,44 @@ function generateStartHandler(node: Node): string {
   code += '    else:\n';
   code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
   
+  // КРИТИЧЕСКИ ВАЖНО: ВСЕГДА восстанавливаем состояние множественного выбора
+  // Это необходимо для корректной работы кнопок "Изменить выбор" и "Начать заново"
+  // УБИРАЕМ условие node.data.allowMultipleSelection, потому что состояние нужно восстанавливать всегда
+  code += '    # ВАЖНО: ВСЕГДА восстанавливаем состояние множественного выбора из БД\n';
+  code += '    # Это критически важно для кнопок "Изменить выбор" и "Начать заново"\n';
+  code += '    user_record = await get_user_from_db(user_id)\n';
+  code += '    saved_interests = []\n';
+  code += '    \n';
+  code += '    if user_record and isinstance(user_record, dict):\n';
+  code += '        user_data_field = user_record.get("user_data", {})\n';
+  code += '        if isinstance(user_data_field, str):\n';
+  code += '            import json\n';
+  code += '            try:\n';
+  code += '                user_vars = json.loads(user_data_field)\n';
+  code += '            except:\n';
+  code += '                user_vars = {}\n';
+  code += '        elif isinstance(user_data_field, dict):\n';
+  code += '            user_vars = user_data_field\n';
+  code += '        else:\n';
+  code += '            user_vars = {}\n';
+  code += '        \n';
+  code += '        # Ищем сохраненные интересы в любой переменной\n';
+  code += '        for var_name, var_data in user_vars.items():\n';
+  code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
+  code += '                if isinstance(var_data, str) and var_data:\n';
+  code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
+  code += '                    logging.info(f"Восстановлены интересы из переменной {var_name}: {saved_interests}")\n';
+  code += '                    break\n';
+  code += '    \n';
+  code += '    # ВСЕГДА инициализируем состояние множественного выбора с восстановленными интересами\n';
+  code += '    if user_id not in user_data:\n';
+  code += '        user_data[user_id] = {}\n';
+  const multiSelectVariable = node.data.multiSelectVariable || 'user_interests';
+  code += `    user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy()\n`;
+  code += `    user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
+  code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n';
+  code += '    \n';
+  
   // Добавляем обработку условных сообщений
   const messageText = node.data.messageText || "Привет! Добро пожаловать!";
   const formattedText = formatTextForPython(messageText);
