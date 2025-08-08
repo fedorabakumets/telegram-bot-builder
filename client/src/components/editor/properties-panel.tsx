@@ -2069,58 +2069,6 @@ export function PropertiesPanel({
                   </div>
                 </div>
                 
-                {/* Continue Button Settings */}
-                <div className="space-y-2 p-3 bg-purple-50/50 dark:bg-purple-900/20 rounded-lg border border-purple-200/30 dark:border-purple-800/30">
-                  <h4 className="text-xs font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-2">
-                    <i className="fas fa-check-circle"></i>
-                    Настройки кнопки завершения
-                  </h4>
-                  
-                  {/* Continue Button Text */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground">Текст кнопки завершения</Label>
-                    <Input
-                      value={selectedNode.data.continueButtonText || 'Готово'}
-                      onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonText: e.target.value })}
-                      className="text-xs"
-                      placeholder="Готово"
-                    />
-                    <div className="text-xs text-muted-foreground">
-                      Текст кнопки для завершения множественного выбора.
-                    </div>
-                  </div>
-                  
-                  {/* Continue Button Target */}
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-muted-foreground">Переход после завершения выбора</Label>
-                    <Select
-                      value={selectedNode.data.continueButtonTarget || 'none'}
-                      onValueChange={(value) => onNodeUpdate(selectedNode.id, { continueButtonTarget: value === 'none' ? '' : value })}
-                    >
-                      <SelectTrigger className="text-xs">
-                        <SelectValue placeholder="Выберите узел для перехода" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-48 overflow-y-auto">
-                        <SelectItem value="none">Не выбрано</SelectItem>
-                        {allNodes
-                          .filter(node => node.id !== selectedNode.id)
-                          .map((node) => (
-                            <SelectItem key={node.id} value={node.id}>
-                              <div className="flex items-center space-x-2">
-                                <i className={`${nodeIcons[node.type]} text-xs`}></i>
-                                <span className="truncate">{node.id}</span>
-                                <span className="text-muted-foreground text-xs">({nodeTypeNames[node.type]})</span>
-                              </div>
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
-                    <div className="text-xs text-muted-foreground">
-                      Узел, к которому перейти после нажатия кнопки завершения.
-                    </div>
-                  </div>
-                </div>
 
               </div>
             )}
