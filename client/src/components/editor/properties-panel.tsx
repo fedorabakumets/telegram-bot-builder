@@ -2191,34 +2191,59 @@ export function PropertiesPanel({
                 <div className="space-y-2">
                   {/* Show Continue Button for Multiple Selection */}
                   {selectedNode.data.allowMultipleSelection && (
-                    <div className="bg-purple-50/70 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200/50 dark:border-purple-800/50">
+                    <div className="bg-muted/50 rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded text-xs font-medium">
-                            <i className="fas fa-check-circle mr-1"></i>
-                            Кнопка завершения
+                        <Input
+                          value={selectedNode.data.continueButtonText || 'Готово'}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonText: e.target.value })}
+                          className="flex-1 text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="Готово"
+                        />
+                        <div className="flex items-center gap-2">
+                          {/* Button Type Indicator */}
+                          <div className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded text-xs font-medium">
+                            Завершение
                           </div>
-                          <Input
-                            value={selectedNode.data.continueButtonText || 'Готово'}
-                            onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonText: e.target.value })}
-                            className="flex-1 text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="Готово"
-                          />
+                          <button
+                            onClick={() => {
+                              // No delete action for auto-generated button, just show info
+                              toast({
+                                title: "Автоматическая кнопка",
+                                description: "Эта кнопка генерируется автоматически для завершения выбора",
+                              });
+                            }}
+                            className="text-xs text-muted-foreground hover:text-destructive p-1"
+                          >
+                            <i className="fas fa-info-circle"></i>
+                          </button>
                         </div>
-                        <Badge variant="outline" className="text-xs bg-purple-100/50 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700">
-                          Авто-генерируется
-                        </Badge>
                       </div>
-                      
-                      {/* Continue Button Target Selection */}
+
+                      {/* Button Type Selection - Disabled for continue button */}
+                      <div className="mb-2">
+                        <Label className="text-xs font-medium text-muted-foreground mb-1">Тип кнопки</Label>
+                        <Select value="complete" disabled>
+                          <SelectTrigger className="text-xs opacity-60">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="complete">Кнопка завершения</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Сохраняет выбранные опции и переходит к следующему экрану
+                        </div>
+                      </div>
+
+                      {/* Continue Button Target */}
                       <div className="space-y-2">
-                        <Label className="text-xs font-medium text-muted-foreground">Переход после завершения</Label>
+                        <Label className="text-xs font-medium text-muted-foreground">Выберите экран</Label>
                         <Select
                           value={selectedNode.data.continueButtonTarget || 'none'}
                           onValueChange={(value) => onNodeUpdate(selectedNode.id, { continueButtonTarget: value === 'none' ? '' : value })}
                         >
                           <SelectTrigger className="text-xs">
-                            <SelectValue placeholder="Выберите узел для перехода" />
+                            <SelectValue placeholder="Или введите ID вручную" />
                           </SelectTrigger>
                           <SelectContent className="max-h-48 overflow-y-auto">
                             <SelectItem value="none">Не выбрано</SelectItem>
@@ -2236,20 +2261,12 @@ export function PropertiesPanel({
                             }
                           </SelectContent>
                         </Select>
-                      </div>
-                      
-                      <div className="text-xs text-muted-foreground flex items-center gap-2 mt-2 p-2 bg-purple-100/30 dark:bg-purple-900/20 rounded">
-                        <i className="fas fa-info-circle text-purple-500"></i>
-                        Эта кнопка автоматически появляется в боте для завершения множественного выбора.
-                        {selectedNode.data.continueButtonTarget ? (
-                          <span className="text-purple-600 dark:text-purple-400 font-medium">
-                            Переход → {selectedNode.data.continueButtonTarget}
-                          </span>
-                        ) : (
-                          <span className="text-amber-600 dark:text-amber-400 font-medium">
-                            ⚠️ Не указан узел для перехода
-                          </span>
-                        )}
+                        <Input
+                          value={selectedNode.data.continueButtonTarget || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { continueButtonTarget: e.target.value })}
+                          className="text-xs"
+                          placeholder="Или введите ID вручную"
+                        />
                       </div>
                     </div>
                   )}
