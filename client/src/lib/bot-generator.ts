@@ -5076,7 +5076,8 @@ function generateStartHandler(node: Node): string {
     
     // Добавляем кнопку "Готово"
     const continueTarget = node.data.continueButtonTarget || 'next';
-    code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${node.id}"))\n`;
+    const continueText = node.data.continueButtonText || 'Готово';
+    code += `    builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
     code += '    builder.adjust(2)  # Используем 2 колонки для консистентности\n';
     code += '    keyboard = builder.as_markup()\n';
     code += '    \n';
