@@ -235,7 +235,7 @@ export async function seedDefaultTemplates(force = false) {
               keyboardType: "none",
               buttons: [],
               collectUserInput: true,
-              inputVariable: "user_source",
+              variable: "user_source",
               markdown: false
             }
           },
@@ -305,8 +305,6 @@ export async function seedDefaultTemplates(force = false) {
               oneTimeKeyboard: true,
               resizeKeyboard: true,
               variable: "gender",
-              collectUserInput: true,
-              inputVariable: "gender",
               markdown: false
             }
           },
@@ -319,7 +317,7 @@ export async function seedDefaultTemplates(force = false) {
               keyboardType: "none",
               buttons: [],
               collectUserInput: true,
-              inputVariable: "user_name",
+              variable: "user_name",
               markdown: false
             }
           },
@@ -331,6 +329,7 @@ export async function seedDefaultTemplates(force = false) {
               messageText: "Сколько тебе лет? 🎂\n\nНапиши свой возраст числом (например, 25):",
               keyboardType: "none",
               buttons: [],
+              collectUserInput: true,
               variable: "user_age",
               markdown: false
             }
@@ -703,6 +702,7 @@ export async function seedDefaultTemplates(force = false) {
             data: {
               messageText: "Хочешь указать свой телеграм-канал? 📢",
               keyboardType: "inline",
+              variable: "has_telegram_channel",
               buttons: [
                 {
                   id: "channel-yes",
@@ -732,6 +732,7 @@ export async function seedDefaultTemplates(force = false) {
               messageText: "Введи свой телеграм-канал 📢\n\n(можно ссылку, ник с @ или просто имя):",
               keyboardType: "none",
               buttons: [],
+              collectUserInput: true,
               variable: "telegram_channel",
               markdown: false
             }
@@ -744,6 +745,7 @@ export async function seedDefaultTemplates(force = false) {
               messageText: "Хочешь добавить что-то ещё о себе? 📝\n\nРасскажи о себе (до 2000 символов) или напиши 'пропустить':",
               keyboardType: "none",
               buttons: [],
+              collectUserInput: true,
               variable: "extra_info",
               markdown: false
             }
