@@ -1,7 +1,7 @@
 import { storage } from "./storage";
 
 // Стандартные шаблоны для демонстрации
-export async function seedDefaultTemplates(force = false) {
+async function seedDefaultTemplates(force = false) {
   try {
     console.log(`📋 seedDefaultTemplates вызван с force=${force}`);
     const existingTemplates = await storage.getAllBotTemplates();
@@ -247,20 +247,24 @@ export async function seedDefaultTemplates(force = false) {
             data: {
               messageText: "Хочешь присоединиться к нашему чату? 🚀",
               keyboardType: "inline",
+              collectUserInput: true,
+              inputVariable: "join_request_response",
               buttons: [
                 {
                   id: "btn-yes",
                   text: "Да 😎",
                   action: "goto",
                   buttonType: "option",
-                  target: "gender_selection"
+                  target: "gender_selection",
+                  value: "yes"
                 },
                 {
                   id: "btn-no",
                   text: "Нет 🙅",
                   action: "goto",
                   buttonType: "option",
-                  target: "decline_response"
+                  target: "decline_response",
+                  value: "no"
                 }
               ],
               oneTimeKeyboard: true,
@@ -287,25 +291,28 @@ export async function seedDefaultTemplates(force = false) {
             data: {
               messageText: "Укажи свой пол: 👨👩",
               keyboardType: "inline",
+              collectUserInput: true,
+              inputVariable: "gender",
               buttons: [
                 {
                   id: "btn-male",
                   text: "Мужчина 👨",
                   action: "goto",
                   buttonType: "option",
-                  target: "name_input"
+                  target: "name_input",
+                  value: "male"
                 },
                 {
                   id: "btn-female",
                   text: "Женщина 👩",
                   action: "goto",
                   buttonType: "option",
-                  target: "name_input"
+                  target: "name_input",
+                  value: "female"
                 }
               ],
               oneTimeKeyboard: true,
               resizeKeyboard: true,
-              inputVariable: "gender",
               markdown: false
             }
           },
@@ -577,81 +584,92 @@ export async function seedDefaultTemplates(force = false) {
             data: {
               messageText: "Выбери семейное положение 💍:",
               keyboardType: "inline",
+              collectUserInput: true,
+              inputVariable: "marital_status",
               buttons: [
                 {
                   id: "marital-single-m",
                   text: "💔 Не женат",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "single_male"
                 },
                 {
                   id: "marital-single-f",
                   text: "💔 Не замужем",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "single_female"
                 },
                 {
                   id: "marital-dating",
                   text: "💕 Встречаюсь",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "dating"
                 },
                 {
                   id: "marital-engaged",
                   text: "💍 Помолвлен(а)",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "engaged"
                 },
                 {
                   id: "marital-married-m",
                   text: "💒 Женат",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "married_male"
                 },
                 {
                   id: "marital-married-f",
                   text: "💒 Замужем",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "married_female"
                 },
                 {
                   id: "marital-civil",
                   text: "🤝 В гражданском браке",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "civil_marriage"
                 },
                 {
                   id: "marital-love",
                   text: "😍 Влюблён",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "in_love"
                 },
                 {
                   id: "marital-complicated",
                   text: "🤷 Всё сложно",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "complicated"
                 },
                 {
                   id: "marital-searching",
                   text: "🔍 В активном поиске",
                   action: "goto",
                   buttonType: "option",
-                  target: "sexual_orientation"
+                  target: "sexual_orientation",
+                  value: "searching"
                 }
               ],
               oneTimeKeyboard: true,
               resizeKeyboard: true,
-              inputVariable: "marital_status",
               markdown: false
             }
           },
@@ -662,39 +680,44 @@ export async function seedDefaultTemplates(force = false) {
             data: {
               messageText: "Укажи свою сексуальную ориентацию 🌈:",
               keyboardType: "inline",
+              collectUserInput: true,
+              inputVariable: "sexual_orientation",
               buttons: [
                 {
                   id: "orientation-hetero",
                   text: "Гетеро 😊",
                   action: "goto",
                   buttonType: "option",
-                  target: "telegram_channel"
+                  target: "telegram_channel",
+                  value: "heterosexual"
                 },
                 {
                   id: "orientation-bi",
                   text: "Би 🌈",
                   action: "goto",
                   buttonType: "option",
-                  target: "telegram_channel"
+                  target: "telegram_channel",
+                  value: "bisexual"
                 },
                 {
                   id: "orientation-gay",
                   text: "Гей/Лесби 🏳️‍🌈",
                   action: "goto",
                   buttonType: "option",
-                  target: "telegram_channel"
+                  target: "telegram_channel",
+                  value: "homosexual"
                 },
                 {
                   id: "orientation-other",
                   text: "Другое ✍️",
                   action: "goto",
                   buttonType: "option",
-                  target: "telegram_channel"
+                  target: "telegram_channel",
+                  value: "other"
                 }
               ],
               oneTimeKeyboard: true,
               resizeKeyboard: true,
-              inputVariable: "sexual_orientation",
               markdown: false
             }
           },
@@ -705,6 +728,7 @@ export async function seedDefaultTemplates(force = false) {
             data: {
               messageText: "Хочешь указать свой телеграм-канал? 📢",
               keyboardType: "inline",
+              collectUserInput: true,
               inputVariable: "has_telegram_channel",
               buttons: [
                 {
@@ -712,14 +736,16 @@ export async function seedDefaultTemplates(force = false) {
                   text: "Указать канал 📢",
                   action: "goto",
                   buttonType: "option",
-                  target: "channel_input"
+                  target: "channel_input",
+                  value: "yes"
                 },
                 {
                   id: "channel-no",
                   text: "Не указывать 🚫",
                   action: "goto",
                   buttonType: "option",
-                  target: "extra_info"
+                  target: "extra_info",
+                  value: "no"
                 }
               ],
               oneTimeKeyboard: true,
@@ -993,3 +1019,11 @@ export async function seedDefaultTemplates(force = false) {
     console.error('Ошибка при создании шаблонов:', error);
   }
 }
+
+async function updateTemplatesWithFixedVariables() {
+  console.log('🔄 Обновляем шаблоны с исправленными переменными...');
+  await seedDefaultTemplates(true);
+  console.log('✅ Шаблоны обновлены с исправленными переменными');
+}
+
+export { seedDefaultTemplates, updateTemplatesWithFixedVariables };
