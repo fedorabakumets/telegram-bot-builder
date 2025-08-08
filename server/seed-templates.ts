@@ -194,6 +194,805 @@ export async function seedDefaultTemplates(force = false) {
     });
 
     console.log('✅ Шаблон сбора интересов создан');
+
+    // Создаем шаблон VProgulke Bot для знакомств
+    await storage.createBotTemplate({
+      name: "🌟 VProgulke Bot - Знакомства СПб",
+      description: "Продвинутый бот знакомств для Санкт-Петербурга с детальной анкетой, системой метро и многоуровневыми интересами",
+      category: "community",
+      tags: ["знакомства", "профиль", "метро", "интересы", "СПб", "анкета", "чат"],
+      isPublic: 1,
+      difficulty: "hard",
+      authorName: "Система",
+      version: "2.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 9,
+      estimatedTime: 45,
+      data: {
+        nodes: [
+          {
+            id: "start",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              description: "Приветствие и источник",
+              messageText: "🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!\n\nЭтот бот поможет тебе найти интересных людей в Санкт-Петербурге!\n\nОткуда ты узнал о нашем чате? 😎",
+              keyboardType: "none",
+              buttons: [],
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "source_input",
+            type: "input",
+            position: { x: 400, y: 100 },
+            data: {
+              description: "Источник информации",
+              messageText: "Откуда ты узнал о нашем чате?",
+              inputType: "text",
+              variable: "user_source",
+              placeholder: "Напиши, откуда узнал...",
+              required: true,
+              maxLength: 200,
+              validation: "string"
+            }
+          },
+          {
+            id: "join_request",
+            type: "message",
+            position: { x: 700, y: 100 },
+            data: {
+              messageText: "Хочешь присоединиться к нашему чату? 🚀",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn-yes",
+                  text: "Да 😎",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "gender_selection"
+                },
+                {
+                  id: "btn-no",
+                  text: "Нет 🙅",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "decline_response"
+                }
+              ],
+              oneTimeKeyboard: true,
+              resizeKeyboard: true,
+              markdown: false
+            }
+          },
+          {
+            id: "decline_response",
+            type: "message",
+            position: { x: 1000, y: 100 },
+            data: {
+              messageText: "Понятно! Если передумаешь, напиши /start! 😊",
+              keyboardType: "none",
+              buttons: [],
+              removeKeyboard: true,
+              markdown: false
+            }
+          },
+          {
+            id: "gender_selection",
+            type: "message",
+            position: { x: 100, y: 300 },
+            data: {
+              messageText: "Укажи свой пол: 👨👩",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "btn-male",
+                  text: "Мужчина 👨",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "name_input"
+                },
+                {
+                  id: "btn-female",
+                  text: "Женщина 👩",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "name_input"
+                }
+              ],
+              oneTimeKeyboard: true,
+              resizeKeyboard: true,
+              variable: "gender",
+              markdown: false
+            }
+          },
+          {
+            id: "name_input",
+            type: "input",
+            position: { x: 400, y: 300 },
+            data: {
+              description: "Ввод имени",
+              messageText: "Как тебя зовут? ✏️",
+              inputType: "text",
+              variable: "user_name",
+              placeholder: "Введи своё имя...",
+              required: true,
+              minLength: 2,
+              maxLength: 50,
+              validation: "string"
+            }
+          },
+          {
+            id: "age_input",
+            type: "input",
+            position: { x: 700, y: 300 },
+            data: {
+              description: "Ввод возраста",
+              messageText: "Сколько тебе лет? (Введи число, например, 25) 🎂",
+              inputType: "number",
+              variable: "user_age",
+              placeholder: "Например: 25",
+              required: true,
+              min: 14,
+              max: 99,
+              validation: "number"
+            }
+          },
+          {
+            id: "metro_selection",
+            type: "message",
+            position: { x: 100, y: 500 },
+            data: {
+              messageText: "На какой станции метро ты обычно бываешь? 🚇\n\nМожешь выбрать несколько веток:",
+              keyboardType: "reply",
+              allowMultipleSelection: true,
+              multiSelectVariable: "metro_lines",
+              continueButtonTarget: "interests_categories",
+              buttons: [
+                {
+                  id: "btn-red",
+                  text: "Красная ветка 🟥",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "red_line"
+                },
+                {
+                  id: "btn-blue",
+                  text: "Синяя ветка 🟦",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "blue_line"
+                },
+                {
+                  id: "btn-green",
+                  text: "Зелёная ветка 🟩",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "green_line"
+                },
+                {
+                  id: "btn-orange",
+                  text: "Оранжевая ветка 🟧",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "orange_line"
+                },
+                {
+                  id: "btn-purple",
+                  text: "Фиолетовая ветка 🟪",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "purple_line"
+                },
+                {
+                  id: "btn-lo",
+                  text: "Я из ЛО 🏡",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "lo_cities"
+                },
+                {
+                  id: "btn-not-spb",
+                  text: "Я не в Питере 🌍",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "not_in_spb"
+                }
+              ],
+              oneTimeKeyboard: true,
+              resizeKeyboard: true,
+              markdown: false
+            }
+          },
+          {
+            id: "interests_categories",
+            type: "message",
+            position: { x: 400, y: 500 },
+            data: {
+              messageText: "Выбери категории интересов 🎯:",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-hobby",
+                  text: "🎮 Хобби",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "hobby_interests"
+                },
+                {
+                  id: "btn-social",
+                  text: "👥 Социальная жизнь",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "social_interests"
+                },
+                {
+                  id: "btn-creativity",
+                  text: "🎨 Творчество",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "creativity_interests"
+                },
+                {
+                  id: "btn-active",
+                  text: "🏃 Активный образ жизни",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "active_interests"
+                },
+                {
+                  id: "btn-food",
+                  text: "🍕 Еда и напитки",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "food_interests"
+                },
+                {
+                  id: "btn-sport",
+                  text: "⚽ Спорт",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sport_interests"
+                },
+                {
+                  id: "btn-home",
+                  text: "🏠 Время дома",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "home_interests"
+                },
+                {
+                  id: "btn-travel",
+                  text: "✈️ Путешествия",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "travel_interests"
+                },
+                {
+                  id: "btn-pets",
+                  text: "🐾 Домашние животные",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "pets_interests"
+                },
+                {
+                  id: "btn-movies",
+                  text: "🎬 Фильмы и сериалы",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "movies_interests"
+                },
+                {
+                  id: "btn-music",
+                  text: "🎵 Музыка",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "music_interests"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "hobby_interests",
+            type: "message",
+            position: { x: 700, y: 500 },
+            data: {
+              messageText: "Выбери интересы в категории 🎮 Хобби:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "user_interests",
+              continueButtonTarget: "marital_status",
+              buttons: [
+                {
+                  id: "hobby-games",
+                  text: "🎮 Компьютерные игры",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "computer_games"
+                },
+                {
+                  id: "hobby-fashion",
+                  text: "💄 Мода и красота",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "fashion"
+                },
+                {
+                  id: "hobby-cars",
+                  text: "🚗 Автомобили",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "cars"
+                },
+                {
+                  id: "hobby-it",
+                  text: "💻 IT и технологии",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "it_tech"
+                },
+                {
+                  id: "hobby-psychology",
+                  text: "🧠 Психология",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "psychology"
+                },
+                {
+                  id: "hobby-astrology",
+                  text: "🔮 Астрология",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "astrology"
+                },
+                {
+                  id: "hobby-meditation",
+                  text: "🧘 Медитации",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "meditation"
+                },
+                {
+                  id: "hobby-comics",
+                  text: "📚 Комиксы",
+                  action: "selection",
+                  buttonType: "option",
+                  target: "comics"
+                },
+                {
+                  id: "btn-back-categories",
+                  text: "⬅️ К категориям",
+                  action: "continue",
+                  buttonType: "navigation",
+                  target: "interests_categories"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "marital_status",
+            type: "message",
+            position: { x: 100, y: 700 },
+            data: {
+              messageText: "Выбери семейное положение 💍:",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "marital-single-m",
+                  text: "💔 Не женат",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                },
+                {
+                  id: "marital-single-f",
+                  text: "💔 Не замужем",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                },
+                {
+                  id: "marital-dating",
+                  text: "💕 Встречаюсь",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                },
+                {
+                  id: "marital-engaged",
+                  text: "💍 Помолвлен(а)",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                },
+                {
+                  id: "marital-married-m",
+                  text: "💒 Женат",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                },
+                {
+                  id: "marital-married-f",
+                  text: "💒 Замужем",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                },
+                {
+                  id: "marital-civil",
+                  text: "🤝 В гражданском браке",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                },
+                {
+                  id: "marital-love",
+                  text: "😍 Влюблён",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                },
+                {
+                  id: "marital-complicated",
+                  text: "🤷 Всё сложно",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                },
+                {
+                  id: "marital-searching",
+                  text: "🔍 В активном поиске",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "sexual_orientation"
+                }
+              ],
+              oneTimeKeyboard: true,
+              resizeKeyboard: true,
+              variable: "marital_status",
+              markdown: false
+            }
+          },
+          {
+            id: "sexual_orientation",
+            type: "message",
+            position: { x: 400, y: 700 },
+            data: {
+              messageText: "Укажи свою сексуальную ориентацию 🌈:",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "orientation-hetero",
+                  text: "Гетеро 😊",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "telegram_channel"
+                },
+                {
+                  id: "orientation-bi",
+                  text: "Би 🌈",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "telegram_channel"
+                },
+                {
+                  id: "orientation-gay",
+                  text: "Гей/Лесби 🏳️‍🌈",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "telegram_channel"
+                },
+                {
+                  id: "orientation-other",
+                  text: "Другое ✍️",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "telegram_channel"
+                }
+              ],
+              oneTimeKeyboard: true,
+              resizeKeyboard: true,
+              variable: "sexual_orientation",
+              markdown: false
+            }
+          },
+          {
+            id: "telegram_channel",
+            type: "message",
+            position: { x: 700, y: 700 },
+            data: {
+              messageText: "Хочешь указать свой телеграм-канал? 📢",
+              keyboardType: "reply",
+              buttons: [
+                {
+                  id: "channel-yes",
+                  text: "Указать канал 📢",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "channel_input"
+                },
+                {
+                  id: "channel-no",
+                  text: "Не указывать 🚫",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "extra_info"
+                }
+              ],
+              oneTimeKeyboard: true,
+              resizeKeyboard: true,
+              markdown: false
+            }
+          },
+          {
+            id: "channel_input",
+            type: "input",
+            position: { x: 1000, y: 700 },
+            data: {
+              description: "Ввод Telegram-канала",
+              messageText: "Введи свой телеграм-канал (можно ссылку, ник с @ или просто имя) 📢:",
+              inputType: "text",
+              variable: "telegram_channel",
+              placeholder: "@MyChannel или t.me/MyChannel",
+              required: false,
+              maxLength: 200,
+              validation: "string"
+            }
+          },
+          {
+            id: "extra_info",
+            type: "input",
+            position: { x: 100, y: 900 },
+            data: {
+              description: "Дополнительная информация",
+              messageText: "Хочешь добавить что-то ещё о себе? (до 2000 символов) 📝",
+              inputType: "text",
+              variable: "extra_info",
+              placeholder: "Расскажи о себе...",
+              required: false,
+              maxLength: 2000,
+              validation: "string"
+            }
+          },
+          {
+            id: "profile_complete",
+            type: "message",
+            position: { x: 400, y: 900 },
+            data: {
+              messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\n\nТеперь ты можешь получить ссылку на чат знакомств!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-profile",
+                  text: "👤 Мой профиль",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "show_profile"
+                },
+                {
+                  id: "btn-chat-link",
+                  text: "🔗 Ссылка на чат",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "chat_link"
+                },
+                {
+                  id: "btn-edit",
+                  text: "✏️ Редактировать профиль",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "edit_profile_menu"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "chat_link",
+            type: "message",
+            position: { x: 700, y: 900 },
+            data: {
+              messageText: "🔗 Актуальная ссылка на чат:\n\nhttps://t.me/+agkIVgCzHtY2ZTA6\n\nДобро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🌟",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-back-profile",
+                  text: "👤 Мой профиль",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "show_profile"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "show_profile",
+            type: "message",
+            position: { x: 1000, y: 900 },
+            data: {
+              messageText: "👤 Твой профиль:\n\nПол: {gender} {'👨' if gender == 'Мужчина' else '👩'}\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nИнтересы: {user_interests} 🎉\nСемейное положение: {marital_status} 💍\nСексуальная ориентация: {sexual_orientation} 🌈\nTelegram-канал: {telegram_channel} 📢\nДоп. информация: {extra_info} 📝",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-edit-profile",
+                  text: "✏️ Редактировать",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "edit_profile_menu"
+                },
+                {
+                  id: "btn-get-link",
+                  text: "🔗 Ссылка на чат",
+                  action: "continue",
+                  buttonType: "option",
+                  target: "chat_link"
+                }
+              ],
+              markdown: false
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn-1",
+            sourceNodeId: "start",
+            targetNodeId: "source_input",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-2",
+            sourceNodeId: "source_input",
+            targetNodeId: "join_request",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-3",
+            sourceNodeId: "join_request",
+            targetNodeId: "decline_response",
+            sourceHandle: "btn-no",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-4",
+            sourceNodeId: "join_request",
+            targetNodeId: "gender_selection",
+            sourceHandle: "btn-yes",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-5",
+            sourceNodeId: "gender_selection",
+            targetNodeId: "name_input",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-6",
+            sourceNodeId: "name_input",
+            targetNodeId: "age_input",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-7",
+            sourceNodeId: "age_input",
+            targetNodeId: "metro_selection",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8",
+            sourceNodeId: "metro_selection",
+            targetNodeId: "interests_categories",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-9",
+            sourceNodeId: "interests_categories",
+            targetNodeId: "hobby_interests",
+            sourceHandle: "btn-hobby",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-10",
+            sourceNodeId: "hobby_interests",
+            targetNodeId: "interests_categories",
+            sourceHandle: "btn-back-categories",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-11",
+            sourceNodeId: "hobby_interests",
+            targetNodeId: "marital_status",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-12",
+            sourceNodeId: "marital_status",
+            targetNodeId: "sexual_orientation",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-13",
+            sourceNodeId: "sexual_orientation",
+            targetNodeId: "telegram_channel",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-14",
+            sourceNodeId: "telegram_channel",
+            targetNodeId: "channel_input",
+            sourceHandle: "channel-yes",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-15",
+            sourceNodeId: "telegram_channel",
+            targetNodeId: "extra_info",
+            sourceHandle: "channel-no",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-16",
+            sourceNodeId: "channel_input",
+            targetNodeId: "extra_info",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-17",
+            sourceNodeId: "extra_info",
+            targetNodeId: "profile_complete",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-18",
+            sourceNodeId: "profile_complete",
+            targetNodeId: "show_profile",
+            sourceHandle: "btn-profile",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-19",
+            sourceNodeId: "profile_complete",
+            targetNodeId: "chat_link",
+            sourceHandle: "btn-chat-link",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-20",
+            sourceNodeId: "show_profile",
+            targetNodeId: "chat_link",
+            sourceHandle: "btn-get-link",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-21",
+            sourceNodeId: "chat_link",
+            targetNodeId: "show_profile",
+            sourceHandle: "btn-back-profile",
+            targetHandle: "target"
+          }
+        ]
+      }
+    });
+
+    console.log('✅ Шаблон VProgulke Bot создан');
     console.log('✅ Системные шаблоны созданы');
 
   } catch (error) {
