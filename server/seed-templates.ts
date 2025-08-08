@@ -224,7 +224,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_source",
-              nextNode: "join_request",
+              nextNodeId: "join_request",
               markdown: false,
               oneTimeKeyboard: false,
               resizeKeyboard: true
@@ -318,7 +318,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_name",
-              nextNode: "age_input",
+              nextNodeId: "age_input",
               markdown: false
             }
           },
@@ -333,7 +333,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_age",
-              nextNode: "metro_selection",
+              nextNodeId: "metro_selection",
               markdown: false
             }
           },
@@ -757,7 +757,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "telegram_channel",
-              nextNode: "extra_info",
+              nextNodeId: "extra_info",
               markdown: false
             }
           },
@@ -772,7 +772,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "extra_info",
-              nextNode: "profile_complete",
+              nextNodeId: "profile_complete",
               markdown: false
             }
           },
