@@ -1288,7 +1288,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/templates", async (req, res) => {
     try {
       const templates = await storage.getAllBotTemplates();
-      res.json(templates);
+      // Маппинг data -> flow_data для совместимости с фронтендом
+      const mappedTemplates = templates.map(template => ({
+        ...template,
+        flow_data: template.data
+      }));
+      res.json(mappedTemplates);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch templates" });
     }

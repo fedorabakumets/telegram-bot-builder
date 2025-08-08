@@ -7,6 +7,7 @@ This application provides a visual Telegram bot builder, enabling users to creat
 Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
+- **August 8, 2025**: CRITICAL FIX: Fixed VProgulke Bot template data collection issues. Added missing collectUserInput, inputVariable, and nextNodeId fields for all interactive nodes (gender_selection, join_request, age_input, marital_status, sexual_orientation, telegram_channel, extra_info). Implemented data->flow_data API mapping for proper template rendering. All user input collection and navigation flows now work correctly.
 - **August 7, 2025**: CRITICAL FIX: Fixed multi-select state restoration bug in /start command handler. Added proper state recovery from database for "Change selection" and "Start over" buttons. Now generateStartHandler() properly initializes multi_select state with saved interests when allowMultipleSelection is enabled, ensuring checkmarks display correctly after navigation.
 - **August 7, 2025**: Fixed column regulation for multi-select buttons in interest collection templates. Removed incorrect escapeForPython() usage and ensured proper calculateOptimalColumns() application for "Change selection" and "Start over" buttons. All button layout issues resolved.
 - **August 7, 2025**: Completed comprehensive scale testing with 26 advanced test cases covering functionality, performance, security, and internationalization. Results: 84.6% success rate (22/26 tests passed). Added extensive test coverage for inline keyboard layout optimization and multi-column button distribution.
