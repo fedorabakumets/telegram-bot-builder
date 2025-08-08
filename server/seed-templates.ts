@@ -244,7 +244,7 @@ export async function seedDefaultTemplates(force = false) {
             position: { x: 700, y: 100 },
             data: {
               messageText: "Хочешь присоединиться к нашему чату? 🚀",
-              keyboardType: "reply",
+              keyboardType: "inline",
               buttons: [
                 {
                   id: "btn-yes",
@@ -284,7 +284,7 @@ export async function seedDefaultTemplates(force = false) {
             position: { x: 100, y: 300 },
             data: {
               messageText: "Укажи свой пол: 👨👩",
-              keyboardType: "reply",
+              keyboardType: "inline",
               buttons: [
                 {
                   id: "btn-male",
@@ -337,7 +337,7 @@ export async function seedDefaultTemplates(force = false) {
             position: { x: 100, y: 500 },
             data: {
               messageText: "На какой станции метро ты обычно бываешь? 🚇\n\nМожешь выбрать несколько веток:",
-              keyboardType: "reply",
+              keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "metro_lines",
               continueButtonTarget: "interests_categories",
@@ -570,7 +570,7 @@ export async function seedDefaultTemplates(force = false) {
             position: { x: 100, y: 700 },
             data: {
               messageText: "Выбери семейное положение 💍:",
-              keyboardType: "reply",
+              keyboardType: "inline",
               buttons: [
                 {
                   id: "marital-single-m",
@@ -655,7 +655,7 @@ export async function seedDefaultTemplates(force = false) {
             position: { x: 400, y: 700 },
             data: {
               messageText: "Укажи свою сексуальную ориентацию 🌈:",
-              keyboardType: "reply",
+              keyboardType: "inline",
               buttons: [
                 {
                   id: "orientation-hetero",
@@ -698,7 +698,7 @@ export async function seedDefaultTemplates(force = false) {
             position: { x: 700, y: 700 },
             data: {
               messageText: "Хочешь указать свой телеграм-канал? 📢",
-              keyboardType: "reply",
+              keyboardType: "inline",
               buttons: [
                 {
                   id: "channel-yes",
