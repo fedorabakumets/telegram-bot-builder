@@ -228,17 +228,14 @@ export async function seedDefaultTemplates(force = false) {
           },
           {
             id: "source_input",
-            type: "input",
+            type: "message",
             position: { x: 400, y: 100 },
             data: {
-              description: "Источник информации",
-              messageText: "Откуда ты узнал о нашем чате?",
-              inputType: "text",
+              messageText: "Откуда ты узнал о нашем чате? 😎\n\nНапиши в сообщении:",
+              keyboardType: "none",
+              buttons: [],
               variable: "user_source",
-              placeholder: "Напиши, откуда узнал...",
-              required: true,
-              maxLength: 200,
-              validation: "string"
+              markdown: false
             }
           },
           {
@@ -312,34 +309,26 @@ export async function seedDefaultTemplates(force = false) {
           },
           {
             id: "name_input",
-            type: "input",
+            type: "message",
             position: { x: 400, y: 300 },
             data: {
-              description: "Ввод имени",
-              messageText: "Как тебя зовут? ✏️",
-              inputType: "text",
+              messageText: "Как тебя зовут? ✏️\n\nНапиши своё имя в сообщении:",
+              keyboardType: "none",
+              buttons: [],
               variable: "user_name",
-              placeholder: "Введи своё имя...",
-              required: true,
-              minLength: 2,
-              maxLength: 50,
-              validation: "string"
+              markdown: false
             }
           },
           {
             id: "age_input",
-            type: "input",
+            type: "message",
             position: { x: 700, y: 300 },
             data: {
-              description: "Ввод возраста",
-              messageText: "Сколько тебе лет? (Введи число, например, 25) 🎂",
-              inputType: "number",
+              messageText: "Сколько тебе лет? 🎂\n\nНапиши свой возраст числом (например, 25):",
+              keyboardType: "none",
+              buttons: [],
               variable: "user_age",
-              placeholder: "Например: 25",
-              required: true,
-              min: 14,
-              max: 99,
-              validation: "number"
+              markdown: false
             }
           },
           {
@@ -733,32 +722,26 @@ export async function seedDefaultTemplates(force = false) {
           },
           {
             id: "channel_input",
-            type: "input",
+            type: "message",
             position: { x: 1000, y: 700 },
             data: {
-              description: "Ввод Telegram-канала",
-              messageText: "Введи свой телеграм-канал (можно ссылку, ник с @ или просто имя) 📢:",
-              inputType: "text",
+              messageText: "Введи свой телеграм-канал 📢\n\n(можно ссылку, ник с @ или просто имя):",
+              keyboardType: "none",
+              buttons: [],
               variable: "telegram_channel",
-              placeholder: "@MyChannel или t.me/MyChannel",
-              required: false,
-              maxLength: 200,
-              validation: "string"
+              markdown: false
             }
           },
           {
             id: "extra_info",
-            type: "input",
+            type: "message",
             position: { x: 100, y: 900 },
             data: {
-              description: "Дополнительная информация",
-              messageText: "Хочешь добавить что-то ещё о себе? (до 2000 символов) 📝",
-              inputType: "text",
+              messageText: "Хочешь добавить что-то ещё о себе? 📝\n\nРасскажи о себе (до 2000 символов) или напиши 'пропустить':",
+              keyboardType: "none",
+              buttons: [],
               variable: "extra_info",
-              placeholder: "Расскажи о себе...",
-              required: false,
-              maxLength: 2000,
-              validation: "string"
+              markdown: false
             }
           },
           {
