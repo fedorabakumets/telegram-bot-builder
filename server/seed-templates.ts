@@ -235,7 +235,8 @@ export async function seedDefaultTemplates(force = false) {
               keyboardType: "none",
               buttons: [],
               collectUserInput: true,
-              variable: "user_source",
+              enableTextInput: true,
+              inputVariable: "user_source",
               markdown: false
             }
           },
@@ -304,7 +305,7 @@ export async function seedDefaultTemplates(force = false) {
               ],
               oneTimeKeyboard: true,
               resizeKeyboard: true,
-              variable: "gender",
+              inputVariable: "gender",
               markdown: false
             }
           },
@@ -317,7 +318,8 @@ export async function seedDefaultTemplates(force = false) {
               keyboardType: "none",
               buttons: [],
               collectUserInput: true,
-              variable: "user_name",
+              enableTextInput: true,
+              inputVariable: "user_name",
               markdown: false
             }
           },
@@ -330,7 +332,8 @@ export async function seedDefaultTemplates(force = false) {
               keyboardType: "none",
               buttons: [],
               collectUserInput: true,
-              variable: "user_age",
+              enableTextInput: true,
+              inputVariable: "user_age",
               markdown: false
             }
           },
@@ -648,7 +651,7 @@ export async function seedDefaultTemplates(force = false) {
               ],
               oneTimeKeyboard: true,
               resizeKeyboard: true,
-              variable: "marital_status",
+              inputVariable: "marital_status",
               markdown: false
             }
           },
@@ -691,7 +694,7 @@ export async function seedDefaultTemplates(force = false) {
               ],
               oneTimeKeyboard: true,
               resizeKeyboard: true,
-              variable: "sexual_orientation",
+              inputVariable: "sexual_orientation",
               markdown: false
             }
           },
@@ -702,7 +705,7 @@ export async function seedDefaultTemplates(force = false) {
             data: {
               messageText: "Хочешь указать свой телеграм-канал? 📢",
               keyboardType: "inline",
-              variable: "has_telegram_channel",
+              inputVariable: "has_telegram_channel",
               buttons: [
                 {
                   id: "channel-yes",
@@ -733,7 +736,8 @@ export async function seedDefaultTemplates(force = false) {
               keyboardType: "none",
               buttons: [],
               collectUserInput: true,
-              variable: "telegram_channel",
+              enableTextInput: true,
+              inputVariable: "telegram_channel",
               markdown: false
             }
           },
@@ -746,7 +750,8 @@ export async function seedDefaultTemplates(force = false) {
               keyboardType: "none",
               buttons: [],
               collectUserInput: true,
-              variable: "extra_info",
+              enableTextInput: true,
+              inputVariable: "extra_info",
               markdown: false
             }
           },
