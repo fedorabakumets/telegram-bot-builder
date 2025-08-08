@@ -1,1 +1,171 @@
-{"id":16,"name":"🌟 VProgulke Bot - Знакомства СПб","description":"Продвинутый бот знакомств для Санкт-Петербурга с детальной анкетой, системой метро и многоуровневыми интересами","data":{"nodes":[{"id":"start","data":{"buttons":[],"command":"/start","markdown":false,"description":"Приветствие и источник","messageText":"🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!\n\nЭтот бот поможет тебе найти интересных людей в Санкт-Петербурге!\n\nОткуда ты узнал о нашем чате? 😎","keyboardType":"none","resizeKeyboard":true,"oneTimeKeyboard":false},"type":"start","position":{"x":100,"y":100}},{"id":"source_input","data":{"buttons":[],"markdown":false,"variable":"user_source","messageText":"Откуда ты узнал о нашем чате? 😎\n\nНапиши в сообщении:","keyboardType":"none"},"type":"message","position":{"x":400,"y":100}},{"id":"join_request","data":{"buttons":[{"id":"btn-yes","text":"Да 😎","action":"continue","target":"gender_selection","buttonType":"option"},{"id":"btn-no","text":"Нет 🙅","action":"continue","target":"decline_response","buttonType":"option"}],"markdown":false,"messageText":"Хочешь присоединиться к нашему чату? 🚀","keyboardType":"reply","resizeKeyboard":true,"oneTimeKeyboard":true},"type":"message","position":{"x":700,"y":100}},{"id":"decline_response","data":{"buttons":[],"markdown":false,"messageText":"Понятно! Если передумаешь, напиши /start! 😊","keyboardType":"none","removeKeyboard":true},"type":"message","position":{"x":1000,"y":100}},{"id":"gender_selection","data":{"buttons":[{"id":"btn-male","text":"Мужчина 👨","action":"continue","target":"name_input","buttonType":"option"},{"id":"btn-female","text":"Женщина 👩","action":"continue","target":"name_input","buttonType":"option"}],"markdown":false,"variable":"gender","messageText":"Укажи свой пол: 👨👩","keyboardType":"reply","resizeKeyboard":true,"oneTimeKeyboard":true},"type":"message","position":{"x":100,"y":300}},{"id":"name_input","data":{"buttons":[],"markdown":false,"variable":"user_name","messageText":"Как тебя зовут? ✏️\n\nНапиши своё имя в сообщении:","keyboardType":"none"},"type":"message","position":{"x":400,"y":300}},{"id":"age_input","data":{"buttons":[],"markdown":false,"variable":"user_age","messageText":"Сколько тебе лет? 🎂\n\nНапиши свой возраст числом (например, 25):","keyboardType":"none"},"type":"message","position":{"x":700,"y":300}},{"id":"metro_selection","data":{"buttons":[{"id":"btn-red","text":"Красная ветка 🟥","action":"selection","target":"red_line","buttonType":"option"},{"id":"btn-blue","text":"Синяя ветка 🟦","action":"selection","target":"blue_line","buttonType":"option"},{"id":"btn-green","text":"Зелёная ветка 🟩","action":"selection","target":"green_line","buttonType":"option"},{"id":"btn-orange","text":"Оранжевая ветка 🟧","action":"selection","target":"orange_line","buttonType":"option"},{"id":"btn-purple","text":"Фиолетовая ветка 🟪","action":"selection","target":"purple_line","buttonType":"option"},{"id":"btn-lo","text":"Я из ЛО 🏡","action":"selection","target":"lo_cities","buttonType":"option"},{"id":"btn-not-spb","text":"Я не в Питере 🌍","action":"selection","target":"not_in_spb","buttonType":"option"}],"markdown":false,"messageText":"На какой станции метро ты обычно бываешь? 🚇\n\nМожешь выбрать несколько веток:","keyboardType":"reply","resizeKeyboard":true,"oneTimeKeyboard":true,"multiSelectVariable":"metro_lines","continueButtonTarget":"interests_categories","allowMultipleSelection":true},"type":"message","position":{"x":100,"y":500}},{"id":"interests_categories","data":{"buttons":[{"id":"btn-hobby","text":"🎮 Хобби","action":"continue","target":"hobby_interests","buttonType":"option"},{"id":"btn-social","text":"👥 Социальная жизнь","action":"continue","target":"social_interests","buttonType":"option"},{"id":"btn-creativity","text":"🎨 Творчество","action":"continue","target":"creativity_interests","buttonType":"option"},{"id":"btn-active","text":"🏃 Активный образ жизни","action":"continue","target":"active_interests","buttonType":"option"},{"id":"btn-food","text":"🍕 Еда и напитки","action":"continue","target":"food_interests","buttonType":"option"},{"id":"btn-sport","text":"⚽ Спорт","action":"continue","target":"sport_interests","buttonType":"option"},{"id":"btn-home","text":"🏠 Время дома","action":"continue","target":"home_interests","buttonType":"option"},{"id":"btn-travel","text":"✈️ Путешествия","action":"continue","target":"travel_interests","buttonType":"option"},{"id":"btn-pets","text":"🐾 Домашние животные","action":"continue","target":"pets_interests","buttonType":"option"},{"id":"btn-movies","text":"🎬 Фильмы и сериалы","action":"continue","target":"movies_interests","buttonType":"option"},{"id":"btn-music","text":"🎵 Музыка","action":"continue","target":"music_interests","buttonType":"option"}],"markdown":false,"messageText":"Выбери категории интересов 🎯:","keyboardType":"inline"},"type":"message","position":{"x":400,"y":500}},{"id":"hobby_interests","data":{"buttons":[{"id":"hobby-games","text":"🎮 Компьютерные игры","action":"selection","target":"computer_games","buttonType":"option"},{"id":"hobby-fashion","text":"💄 Мода и красота","action":"selection","target":"fashion","buttonType":"option"},{"id":"hobby-cars","text":"🚗 Автомобили","action":"selection","target":"cars","buttonType":"option"},{"id":"hobby-it","text":"💻 IT и технологии","action":"selection","target":"it_tech","buttonType":"option"},{"id":"hobby-psychology","text":"🧠 Психология","action":"selection","target":"psychology","buttonType":"option"},{"id":"hobby-astrology","text":"🔮 Астрология","action":"selection","target":"astrology","buttonType":"option"},{"id":"hobby-meditation","text":"🧘 Медитации","action":"selection","target":"meditation","buttonType":"option"},{"id":"hobby-comics","text":"📚 Комиксы","action":"selection","target":"comics","buttonType":"option"},{"id":"btn-back-categories","text":"⬅️ К категориям","action":"continue","target":"interests_categories","buttonType":"navigation"}],"markdown":false,"messageText":"Выбери интересы в категории 🎮 Хобби:","keyboardType":"inline","multiSelectVariable":"user_interests","continueButtonTarget":"marital_status","allowMultipleSelection":true},"type":"message","position":{"x":700,"y":500}},{"id":"marital_status","data":{"buttons":[{"id":"marital-single-m","text":"💔 Не женат","action":"continue","target":"sexual_orientation","buttonType":"option"},{"id":"marital-single-f","text":"💔 Не замужем","action":"continue","target":"sexual_orientation","buttonType":"option"},{"id":"marital-dating","text":"💕 Встречаюсь","action":"continue","target":"sexual_orientation","buttonType":"option"},{"id":"marital-engaged","text":"💍 Помолвлен(а)","action":"continue","target":"sexual_orientation","buttonType":"option"},{"id":"marital-married-m","text":"💒 Женат","action":"continue","target":"sexual_orientation","buttonType":"option"},{"id":"marital-married-f","text":"💒 Замужем","action":"continue","target":"sexual_orientation","buttonType":"option"},{"id":"marital-civil","text":"🤝 В гражданском браке","action":"continue","target":"sexual_orientation","buttonType":"option"},{"id":"marital-love","text":"😍 Влюблён","action":"continue","target":"sexual_orientation","buttonType":"option"},{"id":"marital-complicated","text":"🤷 Всё сложно","action":"continue","target":"sexual_orientation","buttonType":"option"},{"id":"marital-searching","text":"🔍 В активном поиске","action":"continue","target":"sexual_orientation","buttonType":"option"}],"markdown":false,"variable":"marital_status","messageText":"Выбери семейное положение 💍:","keyboardType":"reply","resizeKeyboard":true,"oneTimeKeyboard":true},"type":"message","position":{"x":100,"y":700}},{"id":"sexual_orientation","data":{"buttons":[{"id":"orientation-hetero","text":"Гетеро 😊","action":"continue","target":"telegram_channel","buttonType":"option"},{"id":"orientation-bi","text":"Би 🌈","action":"continue","target":"telegram_channel","buttonType":"option"},{"id":"orientation-gay","text":"Гей/Лесби 🏳️‍🌈","action":"continue","target":"telegram_channel","buttonType":"option"},{"id":"orientation-other","text":"Другое ✍️","action":"continue","target":"telegram_channel","buttonType":"option"}],"markdown":false,"variable":"sexual_orientation","messageText":"Укажи свою сексуальную ориентацию 🌈:","keyboardType":"reply","resizeKeyboard":true,"oneTimeKeyboard":true},"type":"message","position":{"x":400,"y":700}},{"id":"telegram_channel","data":{"buttons":[{"id":"channel-yes","text":"Указать канал 📢","action":"continue","target":"channel_input","buttonType":"option"},{"id":"channel-no","text":"Не указывать 🚫","action":"continue","target":"extra_info","buttonType":"option"}],"markdown":false,"messageText":"Хочешь указать свой телеграм-канал? 📢","keyboardType":"reply","resizeKeyboard":true,"oneTimeKeyboard":true},"type":"message","position":{"x":700,"y":700}},{"id":"channel_input","data":{"buttons":[],"markdown":false,"variable":"telegram_channel","messageText":"Введи свой телеграм-канал 📢\n\n(можно ссылку, ник с @ или просто имя):","keyboardType":"none"},"type":"message","position":{"x":1000,"y":700}},{"id":"extra_info","data":{"buttons":[],"markdown":false,"variable":"extra_info","messageText":"Хочешь добавить что-то ещё о себе? 📝\n\nРасскажи о себе (до 2000 символов) или напиши 'пропустить':","keyboardType":"none"},"type":"message","position":{"x":100,"y":900}},{"id":"profile_complete","data":{"buttons":[{"id":"btn-profile","text":"👤 Мой профиль","action":"continue","target":"show_profile","buttonType":"option"},{"id":"btn-chat-link","text":"🔗 Ссылка на чат","action":"continue","target":"chat_link","buttonType":"option"},{"id":"btn-edit","text":"✏️ Редактировать профиль","action":"continue","target":"edit_profile_menu","buttonType":"option"}],"markdown":false,"messageText":"🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\n\nТеперь ты можешь получить ссылку на чат знакомств!","keyboardType":"inline"},"type":"message","position":{"x":400,"y":900}},{"id":"chat_link","data":{"buttons":[{"id":"btn-back-profile","text":"👤 Мой профиль","action":"continue","target":"show_profile","buttonType":"option"}],"markdown":false,"messageText":"🔗 Актуальная ссылка на чат:\n\nhttps://t.me/+agkIVgCzHtY2ZTA6\n\nДобро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🌟","keyboardType":"inline"},"type":"message","position":{"x":700,"y":900}},{"id":"show_profile","data":{"buttons":[{"id":"btn-edit-profile","text":"✏️ Редактировать","action":"continue","target":"edit_profile_menu","buttonType":"option"},{"id":"btn-get-link","text":"🔗 Ссылка на чат","action":"continue","target":"chat_link","buttonType":"option"}],"markdown":false,"messageText":"👤 Твой профиль:\n\nПол: {gender} {'👨' if gender == 'Мужчина' else '👩'}\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nИнтересы: {user_interests} 🎉\nСемейное положение: {marital_status} 💍\nСексуальная ориентация: {sexual_orientation} 🌈\nTelegram-канал: {telegram_channel} 📢\nДоп. информация: {extra_info} 📝","keyboardType":"inline"},"type":"message","position":{"x":1000,"y":900}}],"connections":[{"id":"conn-1","sourceHandle":"source","sourceNodeId":"start","targetHandle":"target","targetNodeId":"source_input"},{"id":"conn-2","sourceHandle":"source","sourceNodeId":"source_input","targetHandle":"target","targetNodeId":"join_request"},{"id":"conn-3","sourceHandle":"btn-no","sourceNodeId":"join_request","targetHandle":"target","targetNodeId":"decline_response"},{"id":"conn-4","sourceHandle":"btn-yes","sourceNodeId":"join_request","targetHandle":"target","targetNodeId":"gender_selection"},{"id":"conn-5","sourceHandle":"source","sourceNodeId":"gender_selection","targetHandle":"target","targetNodeId":"name_input"},{"id":"conn-6","sourceHandle":"source","sourceNodeId":"name_input","targetHandle":"target","targetNodeId":"age_input"},{"id":"conn-7","sourceHandle":"source","sourceNodeId":"age_input","targetHandle":"target","targetNodeId":"metro_selection"},{"id":"conn-8","sourceHandle":"source","sourceNodeId":"metro_selection","targetHandle":"target","targetNodeId":"interests_categories"},{"id":"conn-9","sourceHandle":"btn-hobby","sourceNodeId":"interests_categories","targetHandle":"target","targetNodeId":"hobby_interests"},{"id":"conn-10","sourceHandle":"btn-back-categories","sourceNodeId":"hobby_interests","targetHandle":"target","targetNodeId":"interests_categories"},{"id":"conn-11","sourceHandle":"source","sourceNodeId":"hobby_interests","targetHandle":"target","targetNodeId":"marital_status"},{"id":"conn-12","sourceHandle":"source","sourceNodeId":"marital_status","targetHandle":"target","targetNodeId":"sexual_orientation"},{"id":"conn-13","sourceHandle":"source","sourceNodeId":"sexual_orientation","targetHandle":"target","targetNodeId":"telegram_channel"},{"id":"conn-14","sourceHandle":"channel-yes","sourceNodeId":"telegram_channel","targetHandle":"target","targetNodeId":"channel_input"},{"id":"conn-15","sourceHandle":"channel-no","sourceNodeId":"telegram_channel","targetHandle":"target","targetNodeId":"extra_info"},{"id":"conn-16","sourceHandle":"source","sourceNodeId":"channel_input","targetHandle":"target","targetNodeId":"extra_info"},{"id":"conn-17","sourceHandle":"source","sourceNodeId":"extra_info","targetHandle":"target","targetNodeId":"profile_complete"},{"id":"conn-18","sourceHandle":"btn-profile","sourceNodeId":"profile_complete","targetHandle":"target","targetNodeId":"show_profile"},{"id":"conn-19","sourceHandle":"btn-chat-link","sourceNodeId":"profile_complete","targetHandle":"target","targetNodeId":"chat_link"},{"id":"conn-20","sourceHandle":"btn-get-link","sourceNodeId":"show_profile","targetHandle":"target","targetNodeId":"chat_link"},{"id":"conn-21","sourceHandle":"btn-back-profile","sourceNodeId":"chat_link","targetHandle":"target","targetNodeId":"show_profile"}]},"category":"community","tags":["знакомства","профиль","метро","интересы","СПб","анкета","чат"],"isPublic":1,"difficulty":"hard","authorId":null,"authorName":"Система","useCount":1,"rating":0,"ratingCount":0,"featured":1,"version":"2.0.0","previewImage":null,"lastUsedAt":"2025-08-08T16:59:39.362Z","downloadCount":1,"likeCount":0,"bookmarkCount":0,"viewCount":0,"language":"ru","requiresToken":0,"complexity":9,"estimatedTime":45,"createdAt":"2025-08-08T16:58:31.100Z","updatedAt":"2025-08-08T16:58:31.100Z"}
+{
+  "nodes": [
+    {
+      "id": "start",
+      "data": {
+        "buttons": [],
+        "command": "/start",
+        "markdown": false,
+        "description": "Приветствие и источник",
+        "messageText": "🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!\n\nЭтот бот поможет тебе найти интересных людей в Санкт-Петербурге!\n\nОткуда ты узнал о нашем чате? 😎",
+        "keyboardType": "none",
+        "resizeKeyboard": true,
+        "oneTimeKeyboard": false
+      },
+      "type": "start",
+      "position": { "x": 100, "y": 100 }
+    },
+    {
+      "id": "source_input",
+      "data": {
+        "buttons": [],
+        "markdown": false,
+        "variable": "user_source",
+        "messageText": "Откуда ты узнал о нашем чате? 😎\n\nНапиши в сообщении:",
+        "keyboardType": "none",
+        "collectUserInput": true
+      },
+      "type": "message",
+      "position": { "x": 400, "y": 100 }
+    },
+    {
+      "id": "join_request",
+      "data": {
+        "buttons": [
+          {
+            "id": "btn-yes",
+            "text": "Да 😎",
+            "action": "goto",
+            "target": "gender_selection",
+            "buttonType": "option"
+          },
+          {
+            "id": "btn-no",
+            "text": "Нет 🙅",
+            "action": "goto",
+            "target": "decline_response",
+            "buttonType": "option"
+          }
+        ],
+        "markdown": false,
+        "messageText": "Хочешь присоединиться к нашему чату? 🚀",
+        "keyboardType": "inline",
+        "resizeKeyboard": true,
+        "oneTimeKeyboard": true
+      },
+      "type": "message",
+      "position": { "x": 700, "y": 100 }
+    },
+    {
+      "id": "decline_response",
+      "data": {
+        "buttons": [],
+        "markdown": false,
+        "messageText": "Понятно! Если передумаешь, напиши /start! 😊",
+        "keyboardType": "none",
+        "removeKeyboard": true
+      },
+      "type": "message",
+      "position": { "x": 1000, "y": 100 }
+    },
+    {
+      "id": "gender_selection",
+      "data": {
+        "buttons": [
+          {
+            "id": "btn-male",
+            "text": "Мужчина 👨",
+            "action": "goto",
+            "target": "name_input",
+            "buttonType": "option"
+          },
+          {
+            "id": "btn-female",
+            "text": "Женщина 👩",
+            "action": "goto",
+            "target": "name_input",
+            "buttonType": "option"
+          }
+        ],
+        "markdown": false,
+        "variable": "gender",
+        "messageText": "Укажи свой пол: 👨👩",
+        "keyboardType": "inline",
+        "resizeKeyboard": true,
+        "oneTimeKeyboard": true
+      },
+      "type": "message",
+      "position": { "x": 100, "y": 300 }
+    },
+    {
+      "id": "name_input",
+      "data": {
+        "buttons": [],
+        "markdown": false,
+        "variable": "user_name",
+        "messageText": "Как тебя зовут? ✏️\n\nНапиши своё имя в сообщении:",
+        "keyboardType": "none",
+        "collectUserInput": true
+      },
+      "type": "message",
+      "position": { "x": 400, "y": 300 }
+    },
+    {
+      "id": "age_input",
+      "data": {
+        "buttons": [],
+        "markdown": false,
+        "variable": "user_age",
+        "messageText": "Сколько тебе лет? 🎂\n\nНапиши свой возраст числом (например, 25):",
+        "keyboardType": "none",
+        "collectUserInput": true
+      },
+      "type": "message",
+      "position": { "x": 700, "y": 300 }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-1",
+      "sourceHandle": "source",
+      "sourceNodeId": "start",
+      "targetHandle": "target",
+      "targetNodeId": "source_input"
+    },
+    {
+      "id": "conn-2",
+      "sourceHandle": "source",
+      "sourceNodeId": "source_input",
+      "targetHandle": "target",
+      "targetNodeId": "join_request"
+    },
+    {
+      "id": "conn-3",
+      "sourceHandle": "btn-no",
+      "sourceNodeId": "join_request",
+      "targetHandle": "target",
+      "targetNodeId": "decline_response"
+    },
+    {
+      "id": "conn-4",
+      "sourceHandle": "btn-yes",
+      "sourceNodeId": "join_request",
+      "targetHandle": "target",
+      "targetNodeId": "gender_selection"
+    },
+    {
+      "id": "conn-5",
+      "sourceHandle": "source",
+      "sourceNodeId": "gender_selection",
+      "targetHandle": "target",
+      "targetNodeId": "name_input"
+    },
+    {
+      "id": "conn-6",
+      "sourceHandle": "source",
+      "sourceNodeId": "name_input",
+      "targetHandle": "target",
+      "targetNodeId": "age_input"
+    }
+  ]
+}
