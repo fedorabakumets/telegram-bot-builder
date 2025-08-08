@@ -221,25 +221,16 @@ async function seedDefaultTemplates(force = false) {
               messageText: "🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!\n\nЭтот бот поможет тебе найти интересных людей в Санкт-Петербурге!\n\nОткуда ты узнал о нашем чате? 😎",
               keyboardType: "none",
               buttons: [],
+              collectUserInput: true,
+              enableTextInput: true,
+              inputVariable: "user_source",
+              nextNode: "join_request",
               markdown: false,
               oneTimeKeyboard: false,
               resizeKeyboard: true
             }
           },
-          {
-            id: "source_input",
-            type: "message",
-            position: { x: 400, y: 100 },
-            data: {
-              messageText: "Откуда ты узнал о нашем чате? 😎\n\nНапиши в сообщении:",
-              keyboardType: "none",
-              buttons: [],
-              collectUserInput: true,
-              enableTextInput: true,
-              inputVariable: "user_source",
-              markdown: false
-            }
-          },
+
           {
             id: "join_request",
             type: "message",
@@ -327,6 +318,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_name",
+              nextNode: "age_input",
               markdown: false
             }
           },
@@ -341,6 +333,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_age",
+              nextNode: "metro_selection",
               markdown: false
             }
           },
@@ -764,6 +757,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "telegram_channel",
+              nextNode: "extra_info",
               markdown: false
             }
           },
@@ -778,6 +772,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "extra_info",
+              nextNode: "profile_complete",
               markdown: false
             }
           },
@@ -864,145 +859,138 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "conn-1",
             sourceNodeId: "start",
-            targetNodeId: "source_input",
-            sourceHandle: "source",
-            targetHandle: "target"
-          },
-          {
-            id: "conn-2",
-            sourceNodeId: "source_input",
             targetNodeId: "join_request",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-3",
+            id: "conn-2",
             sourceNodeId: "join_request",
             targetNodeId: "decline_response",
             sourceHandle: "btn-no",
             targetHandle: "target"
           },
           {
-            id: "conn-4",
+            id: "conn-3",
             sourceNodeId: "join_request",
             targetNodeId: "gender_selection",
             sourceHandle: "btn-yes",
             targetHandle: "target"
           },
           {
-            id: "conn-5",
+            id: "conn-4",
             sourceNodeId: "gender_selection",
             targetNodeId: "name_input",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-6",
+            id: "conn-5",
             sourceNodeId: "name_input",
             targetNodeId: "age_input",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-7",
+            id: "conn-6",
             sourceNodeId: "age_input",
             targetNodeId: "metro_selection",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-8",
+            id: "conn-7",
             sourceNodeId: "metro_selection",
             targetNodeId: "interests_categories",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-9",
+            id: "conn-8",
             sourceNodeId: "interests_categories",
             targetNodeId: "hobby_interests",
             sourceHandle: "btn-hobby",
             targetHandle: "target"
           },
           {
-            id: "conn-10",
+            id: "conn-9",
             sourceNodeId: "hobby_interests",
             targetNodeId: "interests_categories",
             sourceHandle: "btn-back-categories",
             targetHandle: "target"
           },
           {
-            id: "conn-11",
+            id: "conn-10",
             sourceNodeId: "hobby_interests",
             targetNodeId: "marital_status",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-12",
+            id: "conn-11",
             sourceNodeId: "marital_status",
             targetNodeId: "sexual_orientation",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-13",
+            id: "conn-12",
             sourceNodeId: "sexual_orientation",
             targetNodeId: "telegram_channel",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-14",
+            id: "conn-13",
             sourceNodeId: "telegram_channel",
             targetNodeId: "channel_input",
             sourceHandle: "channel-yes",
             targetHandle: "target"
           },
           {
-            id: "conn-15",
+            id: "conn-14",
             sourceNodeId: "telegram_channel",
             targetNodeId: "extra_info",
             sourceHandle: "channel-no",
             targetHandle: "target"
           },
           {
-            id: "conn-16",
+            id: "conn-15",
             sourceNodeId: "channel_input",
             targetNodeId: "extra_info",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-17",
+            id: "conn-16",
             sourceNodeId: "extra_info",
             targetNodeId: "profile_complete",
             sourceHandle: "source",
             targetHandle: "target"
           },
           {
-            id: "conn-18",
+            id: "conn-17",
             sourceNodeId: "profile_complete",
             targetNodeId: "show_profile",
             sourceHandle: "btn-profile",
             targetHandle: "target"
           },
           {
-            id: "conn-19",
+            id: "conn-18",
             sourceNodeId: "profile_complete",
             targetNodeId: "chat_link",
             sourceHandle: "btn-chat-link",
             targetHandle: "target"
           },
           {
-            id: "conn-20",
+            id: "conn-19",
             sourceNodeId: "show_profile",
             targetNodeId: "chat_link",
             sourceHandle: "btn-get-link",
             targetHandle: "target"
           },
           {
-            id: "conn-21",
+            id: "conn-20",
             sourceNodeId: "chat_link",
             targetNodeId: "show_profile",
             sourceHandle: "btn-back-profile",
