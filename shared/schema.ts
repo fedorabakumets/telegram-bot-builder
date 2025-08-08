@@ -96,7 +96,7 @@ export const userBotData = pgTable("user_bot_data", {
   // Данные взаимодействий
   lastInteraction: timestamp("last_interaction").defaultNow(),
   interactionCount: integer("interaction_count").default(0),
-  // Сохраненные данные из user-input узлов
+  // Сохраненные данные из узлов сбора ввода
   userData: jsonb("user_data").default({}), // Пользовательские данные (ответы на вопросы, формы и т.д.)
   // Настройки и состояние
   currentState: text("current_state"), // Текущее состояние в диалоге с ботом
@@ -300,7 +300,7 @@ export const buttonSchema = z.object({
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'condition', 'input', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'poll', 'dice', 'user-input']),
+  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'condition', 'input', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'poll', 'dice']),
   position: z.object({
     x: z.number(),
     y: z.number(),

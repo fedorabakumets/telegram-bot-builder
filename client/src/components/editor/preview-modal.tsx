@@ -60,22 +60,6 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
       return null;
     }
 
-    // For user-input nodes, we need to find the success or error path
-    const currentNode = nodes.find(node => node.id === currentNodeId);
-    if (currentNode?.type === 'user-input') {
-      if (isSuccess) {
-        // Find the primary success connection (usually first connection)
-        const successConnection = fromConnections[0];
-        return successConnection ? nodes.find(node => node.id === successConnection.target) : null;
-      } else {
-        // Find error connection if exists
-        const errorConnection = fromConnections.find(conn => {
-          const targetNode = nodes.find(node => node.id === conn.target);
-          return targetNode && targetNode.data.messageText && targetNode.data.messageText.includes('Ошибка');
-        });
-        return errorConnection ? nodes.find(node => node.id === errorConnection.target) : null;
-      }
-    }
 
     // For other node types, return the first connection
     const nextConnection = fromConnections[0];
@@ -224,7 +208,7 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
     }
     
     // Check if this node expects input
-    const inputNode = nodes.find(node => node.type === 'input' || node.type === 'user-input');
+    const inputNode = nodes.find(node => node.type === 'input');
     setWaitingForInput(!!inputNode && startNode.data.keyboardType === 'none');
   };
 
@@ -287,8 +271,6 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
             responseText = `Стартовая команда: ${targetNode.data.command || '/start'}`;
           } else if (targetNode.type === 'input') {
             responseText = 'Ожидаю ввод...';
-          } else if (targetNode.type === 'user-input') {
-            responseText = targetNode.data.inputPrompt || 'Введите ваш ответ:';
           } else if (['photo', 'video', 'audio', 'document', 'sticker', 'voice', 'animation'].includes(targetNode.type)) {
             responseText = targetNode.data.mediaCaption || '';
           } else if (targetNode.type === 'location') {
@@ -305,17 +287,9 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
 
           const targetMediaInfo = getMediaInfo(targetNode);
           
-          // Handle buttons for user-input nodes with response type buttons
+          // Handle buttons
           let buttons;
-          if (targetNode.type === 'user-input' && targetNode.data.responseType === 'buttons' && targetNode.data.responseOptions) {
-            // Generate buttons from response options for user-input nodes
-            buttons = targetNode.data.responseOptions.map(option => ({
-              text: option.text,
-              target: 'next', // Will handle response collection
-              action: 'select_option',
-              value: option.value
-            }));
-          } else if (targetNode.data.keyboardType !== 'none' && targetNode.data.buttons) {
+          if (targetNode.data.keyboardType !== 'none' && targetNode.data.buttons) {
             // Regular buttons for other node types
             buttons = targetNode.data.buttons.map(btn => ({
               text: btn.text,
@@ -325,9 +299,7 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
           }
 
           // Create bot response from target node
-          const keyboardType = (targetNode.type === 'user-input' && targetNode.data.responseType === 'buttons') 
-            ? 'inline' 
-            : targetNode.data.keyboardType;
+          const keyboardType = targetNode.data.keyboardType;
             
           const botResponse = {
             id: `msg-${Date.now()}-bot`,
@@ -347,14 +319,13 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
           // Update reply keyboard based on target node
           if (targetNode.data.keyboardType === 'reply' && buttons) {
             setCurrentReplyKeyboard(buttons);
-          } else if (targetNode.data.keyboardType === 'none' || (targetNode.type === 'user-input' && targetNode.data.responseType === 'buttons')) {
+          } else if (targetNode.data.keyboardType === 'none') {
             setCurrentReplyKeyboard(null);
           }
           
           // Check if target node expects input
-          const expectsTextInput = (targetNode.type === 'input' || targetNode.type === 'user-input') && 
-                                  targetNode.data.keyboardType === 'none' && 
-                                  (!targetNode.data.responseType || targetNode.data.responseType === 'text');
+          const expectsTextInput = targetNode.type === 'input' && 
+                                  targetNode.data.keyboardType === 'none';
           setWaitingForInput(expectsTextInput);
         } else {
           // Node not found - show error
@@ -426,34 +397,7 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
       } else {
         // Regular text input - check if we're waiting for user input
         if (waitingForInput && currentNodeId) {
-          // Validate the input and find next node
-          const currentNode = nodes.find(node => node.id === currentNodeId);
-          if (currentNode?.type === 'user-input') {
-            // Simple validation (you can extend this)
-            const minLength = currentNode.data.minLength || 0;
-            const maxLength = currentNode.data.maxLength || 1000;
-            const isValid = userInput.length >= minLength && userInput.length <= maxLength;
-            
-            if (isValid) {
-              // Find success path
-              const nextNode = findNextNode(currentNodeId, true);
-              if (nextNode) {
-                handleUserMessage(userInput, nextNode.id, 'goto');
-              } else {
-                handleUserMessage(userInput);
-              }
-            } else {
-              // Find error path
-              const errorNode = findNextNode(currentNodeId, false);
-              if (errorNode) {
-                handleUserMessage(userInput, errorNode.id, 'goto');
-              } else {
-                handleUserMessage(userInput);
-              }
-            }
-          } else {
-            handleUserMessage(userInput);
-          }
+          handleUserMessage(userInput);
         } else {
           handleUserMessage(userInput);
         }

@@ -187,7 +187,6 @@ const nodeIcons = {
   keyboard: 'fas fa-keyboard',
   condition: 'fas fa-code-branch',
   input: 'fas fa-edit',
-  'user-input': 'fas fa-comments',
   command: 'fas fa-terminal',
   sticker: 'fas fa-laugh',
   voice: 'fas fa-microphone',
@@ -208,7 +207,6 @@ const nodeColors = {
   keyboard: 'bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900/30 dark:to-yellow-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
   condition: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
   input: 'bg-gradient-to-br from-cyan-50 to-teal-100 dark:from-cyan-900/30 dark:to-teal-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800',
-  'user-input': 'bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800',
   command: 'bg-gradient-to-br from-indigo-50 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800',
   sticker: 'bg-gradient-to-br from-pink-50 to-fuchsia-100 dark:from-pink-900/30 dark:to-fuchsia-900/30 text-pink-600 dark:text-pink-400 border border-pink-200 dark:border-pink-800',
   voice: 'bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
@@ -377,7 +375,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
                   case 'contact': return !!(node.data.phoneNumber && node.data.firstName);
                   case 'poll': return !!(node.data.question && node.data.options?.length);
                   case 'command': return !!node.data.command;
-                  case 'user-input': return !!((node.data as any).inputType && (node.data as any).variableName);
                   default: return !!node.data.messageText;
                 }
               })();
@@ -419,7 +416,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
               {node.type === 'keyboard' && 'Клавиатура'}
               {node.type === 'condition' && 'Условие'}
               {node.type === 'input' && 'Ввод данных'}
-              {node.type === 'user-input' && 'Сбор ввода'}
               {node.type === 'sticker' && 'Стикер'}
               {node.type === 'voice' && 'Голосовое сообщение'}
               {node.type === 'animation' && 'GIF анимация'}
@@ -744,7 +740,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
       )}
       
       {/* User Input preview */}
-      {node.type === 'user-input' && (
+      {false && (
         <div className="bg-gradient-to-br from-purple-50/70 to-indigo-50/70 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-xl p-4 mb-4 border border-purple-200 dark:border-purple-800/30">
           <div className="space-y-3">
             {/* Input type and variable display */}
