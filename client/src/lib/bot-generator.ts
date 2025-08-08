@@ -5128,6 +5128,26 @@ function generateStartHandler(node: Node): string {
   
   // Для множественного выбора используем уже созданную клавиатуру
   if (node.data.allowMultipleSelection) {
+    // Добавляем кнопки команд и другие кнопки к клавиатуре множественного выбора
+    const allButtons = node.data.buttons || [];
+    const nonSelectionButtons = allButtons.filter(btn => btn.action !== 'selection');
+    
+    if (nonSelectionButtons.length > 0) {
+      code += '    # Добавляем дополнительные кнопки к клавиатуре множественного выбора\n';
+      nonSelectionButtons.forEach(button => {
+        if (button.action === 'command') {
+          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+          code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+        } else if (button.action === 'goto') {
+          const callbackData = button.target || button.id || 'no_action';
+          code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+        } else if (button.action === 'url') {
+          code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+        }
+      });
+      code += '    keyboard = builder.as_markup()  # Пересоздаем клавиатуру с дополнительными кнопками\n';
+    }
+    
     code += '    await message.answer(text, reply_markup=keyboard)\n';
     return code;
   }
