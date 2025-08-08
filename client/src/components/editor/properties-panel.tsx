@@ -2300,17 +2300,18 @@ export function PropertiesPanel({
                       {(!selectedNode.data.allowMultipleSelection || (button.buttonType !== 'option' && button.buttonType !== 'complete')) && (
                         <Select
                           value={button.action}
-                          onValueChange={(value: 'goto' | 'command' | 'url') =>
+                          onValueChange={(value: 'goto' | 'command' | 'url' | 'selection') =>
                             onButtonUpdate(selectedNode.id, button.id, { action: value })
                           }
                         >
                           <SelectTrigger className="w-full text-xs">
-                            <SelectValue />
+                            <SelectValue placeholder="Выберите действие" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="goto">Перейти к экрану</SelectItem>
                             <SelectItem value="command">Выполнить команду</SelectItem>
                             <SelectItem value="url">Открыть ссылку</SelectItem>
+                            <SelectItem value="selection">Выбор опции</SelectItem>
                           </SelectContent>
                         </Select>
                       )}
@@ -3225,6 +3226,7 @@ export function PropertiesPanel({
                                               <SelectItem value="goto">Перейти к узлу</SelectItem>
                                               <SelectItem value="url">Открыть ссылку</SelectItem>
                                               <SelectItem value="command">Выполнить команду</SelectItem>
+                                              <SelectItem value="selection">Выбор опции</SelectItem>
                                             </SelectContent>
                                           </Select>
 
@@ -3535,7 +3537,7 @@ export function PropertiesPanel({
                                 </Label>
                                 <Select
                                   value={option.action || 'goto'}
-                                  onValueChange={(value: 'goto' | 'command' | 'url') => {
+                                  onValueChange={(value: 'goto' | 'command' | 'url' | 'selection') => {
                                     const updatedOptions = [...(selectedNode.data.responseOptions || [])];
                                     updatedOptions[index] = { ...option, action: value };
                                     onNodeUpdate(selectedNode.id, { responseOptions: updatedOptions });
@@ -3561,6 +3563,12 @@ export function PropertiesPanel({
                                       <div className="flex items-center gap-2">
                                         <i className="fas fa-external-link-alt text-xs text-green-500"></i>
                                         <span>Открыть ссылку</span>
+                                      </div>
+                                    </SelectItem>
+                                    <SelectItem value="selection">
+                                      <div className="flex items-center gap-2">
+                                        <i className="fas fa-check-square text-xs text-purple-500"></i>
+                                        <span>Выбор опции</span>
                                       </div>
                                     </SelectItem>
                                   </SelectContent>

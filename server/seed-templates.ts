@@ -234,7 +234,8 @@ export async function seedDefaultTemplates(force = false) {
               messageText: "Откуда ты узнал о нашем чате? 😎\n\nНапиши в сообщении:",
               keyboardType: "none",
               buttons: [],
-              variable: "user_source",
+              collectUserInput: true,
+              inputVariable: "user_source",
               markdown: false
             }
           },
@@ -249,14 +250,14 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-yes",
                   text: "Да 😎",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "gender_selection"
                 },
                 {
                   id: "btn-no",
                   text: "Нет 🙅",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "decline_response"
                 }
@@ -289,14 +290,14 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-male",
                   text: "Мужчина 👨",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "name_input"
                 },
                 {
                   id: "btn-female",
                   text: "Женщина 👩",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "name_input"
                 }
@@ -304,6 +305,8 @@ export async function seedDefaultTemplates(force = false) {
               oneTimeKeyboard: true,
               resizeKeyboard: true,
               variable: "gender",
+              collectUserInput: true,
+              inputVariable: "gender",
               markdown: false
             }
           },
@@ -315,7 +318,8 @@ export async function seedDefaultTemplates(force = false) {
               messageText: "Как тебя зовут? ✏️\n\nНапиши своё имя в сообщении:",
               keyboardType: "none",
               buttons: [],
-              variable: "user_name",
+              collectUserInput: true,
+              inputVariable: "user_name",
               markdown: false
             }
           },
@@ -408,77 +412,77 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-hobby",
                   text: "🎮 Хобби",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "hobby_interests"
                 },
                 {
                   id: "btn-social",
                   text: "👥 Социальная жизнь",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "social_interests"
                 },
                 {
                   id: "btn-creativity",
                   text: "🎨 Творчество",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "creativity_interests"
                 },
                 {
                   id: "btn-active",
                   text: "🏃 Активный образ жизни",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "active_interests"
                 },
                 {
                   id: "btn-food",
                   text: "🍕 Еда и напитки",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "food_interests"
                 },
                 {
                   id: "btn-sport",
                   text: "⚽ Спорт",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sport_interests"
                 },
                 {
                   id: "btn-home",
                   text: "🏠 Время дома",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "home_interests"
                 },
                 {
                   id: "btn-travel",
                   text: "✈️ Путешествия",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "travel_interests"
                 },
                 {
                   id: "btn-pets",
                   text: "🐾 Домашние животные",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "pets_interests"
                 },
                 {
                   id: "btn-movies",
                   text: "🎬 Фильмы и сериалы",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "movies_interests"
                 },
                 {
                   id: "btn-music",
                   text: "🎵 Музыка",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "music_interests"
                 }
@@ -556,7 +560,7 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-back-categories",
                   text: "⬅️ К категориям",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "navigation",
                   target: "interests_categories"
                 }
@@ -575,70 +579,70 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "marital-single-m",
                   text: "💔 Не женат",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 },
                 {
                   id: "marital-single-f",
                   text: "💔 Не замужем",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 },
                 {
                   id: "marital-dating",
                   text: "💕 Встречаюсь",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 },
                 {
                   id: "marital-engaged",
                   text: "💍 Помолвлен(а)",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 },
                 {
                   id: "marital-married-m",
                   text: "💒 Женат",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 },
                 {
                   id: "marital-married-f",
                   text: "💒 Замужем",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 },
                 {
                   id: "marital-civil",
                   text: "🤝 В гражданском браке",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 },
                 {
                   id: "marital-love",
                   text: "😍 Влюблён",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 },
                 {
                   id: "marital-complicated",
                   text: "🤷 Всё сложно",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 },
                 {
                   id: "marital-searching",
                   text: "🔍 В активном поиске",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "sexual_orientation"
                 }
@@ -660,28 +664,28 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "orientation-hetero",
                   text: "Гетеро 😊",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "telegram_channel"
                 },
                 {
                   id: "orientation-bi",
                   text: "Би 🌈",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "telegram_channel"
                 },
                 {
                   id: "orientation-gay",
                   text: "Гей/Лесби 🏳️‍🌈",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "telegram_channel"
                 },
                 {
                   id: "orientation-other",
                   text: "Другое ✍️",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "telegram_channel"
                 }
@@ -703,14 +707,14 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "channel-yes",
                   text: "Указать канал 📢",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "channel_input"
                 },
                 {
                   id: "channel-no",
                   text: "Не указывать 🚫",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "extra_info"
                 }
@@ -755,21 +759,21 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-profile",
                   text: "👤 Мой профиль",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "show_profile"
                 },
                 {
                   id: "btn-chat-link",
                   text: "🔗 Ссылка на чат",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "chat_link"
                 },
                 {
                   id: "btn-edit",
                   text: "✏️ Редактировать профиль",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "edit_profile_menu"
                 }
@@ -788,7 +792,7 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-back-profile",
                   text: "👤 Мой профиль",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "show_profile"
                 }
@@ -807,14 +811,14 @@ export async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-edit-profile",
                   text: "✏️ Редактировать",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "edit_profile_menu"
                 },
                 {
                   id: "btn-get-link",
                   text: "🔗 Ссылка на чат",
-                  action: "continue",
+                  action: "goto",
                   buttonType: "option",
                   target: "chat_link"
                 }
