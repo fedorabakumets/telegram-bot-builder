@@ -2327,9 +2327,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `    logging.info(f"Команда ${button.target || 'неизвестная'} выполнена через callback кнопку (пользователь {user_id})")\n`;
           code += '    \n';
           
-          // Если это команда /start, используем правильный start_handler вместо дублирования
-          if (button.target === '/start') {
-            code += '    # Вызываем start_handler правильно через edit_text\n';
+          // Создаем правильный вызов команды для callback кнопок
+          if (button.target) {
+            // Определяем команду - убираем ведущий слеш если есть
+            const command = button.target.startsWith('/') ? button.target.replace('/', '') : button.target;
+            const handlerName = `${command}_handler`;
+            
+            code += `    # Вызываем ${handlerName} правильно через edit_text\n`;
             code += '    # Создаем специальный объект для редактирования сообщения\n';
             code += '    class FakeMessageEdit:\n';
             code += '        def __init__(self, callback_query):\n';
@@ -2346,9 +2350,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '            await self._callback_query.message.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)\n';
             code += '    \n';
             code += '    fake_edit_message = FakeMessageEdit(callback_query)\n';
-            code += '    await start_handler(fake_edit_message)\n';
+            code += `    await ${handlerName}(fake_edit_message)\n`;
           } else {
-            code += '    await callback_query.message.edit_text("Команда выполнена")\n';
+            code += '    await callback_query.message.edit_text("❌ Команда не найдена")\n';
           }
         }
       });
@@ -5074,6 +5078,22 @@ function generateStartHandler(node: Node): string {
       code += '    \n';
     });
     
+    // Добавляем кнопки команд и другие кнопки ПЕРЕД кнопкой "Готово"
+    const allButtons = node.data.buttons || [];
+    const nonSelectionButtons = allButtons.filter(btn => btn.action !== 'selection');
+    
+    nonSelectionButtons.forEach(button => {
+      if (button.action === 'command') {
+        const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+      } else if (button.action === 'goto') {
+        const callbackData = button.target || button.id || 'no_action';
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      } else if (button.action === 'url') {
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+      }
+    });
+    
     // Добавляем кнопку "Готово"
     const continueTarget = node.data.continueButtonTarget || 'next';
     const continueText = node.data.continueButtonText || 'Готово';
@@ -5128,26 +5148,6 @@ function generateStartHandler(node: Node): string {
   
   // Для множественного выбора используем уже созданную клавиатуру
   if (node.data.allowMultipleSelection) {
-    // Добавляем кнопки команд и другие кнопки к клавиатуре множественного выбора
-    const allButtons = node.data.buttons || [];
-    const nonSelectionButtons = allButtons.filter(btn => btn.action !== 'selection');
-    
-    if (nonSelectionButtons.length > 0) {
-      code += '    # Добавляем дополнительные кнопки к клавиатуре множественного выбора\n';
-      nonSelectionButtons.forEach(button => {
-        if (button.action === 'command') {
-          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
-        } else if (button.action === 'goto') {
-          const callbackData = button.target || button.id || 'no_action';
-          code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-        } else if (button.action === 'url') {
-          code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-        }
-      });
-      code += '    keyboard = builder.as_markup()  # Пересоздаем клавиатуру с дополнительными кнопками\n';
-    }
-    
     code += '    await message.answer(text, reply_markup=keyboard)\n';
     return code;
   }
@@ -5206,7 +5206,7 @@ function generateCommandHandler(node: Node): string {
   code += `    user_data[user_id]["commands_used"]["${command}"] = user_data[user_id]["commands_used"].get("${command}", 0) + 1\n`;
 
   // Добавляем обработку условных сообщений
-  const messageText = node.data.messageText || "Команда выполнена";
+  const messageText = node.data.messageText || "🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка\n/settings - Настройки";
   const cleanedMessageText = stripHtmlTags(messageText); // Удаляем HTML теги
   const formattedText = formatTextForPython(cleanedMessageText);
   
