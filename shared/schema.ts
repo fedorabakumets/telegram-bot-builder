@@ -300,7 +300,7 @@ export const buttonSchema = z.object({
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'condition', 'input', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'poll', 'dice']),
+  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'condition', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'poll', 'dice']),
   position: z.object({
     x: z.number(),
     y: z.number(),
