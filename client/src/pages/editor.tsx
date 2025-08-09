@@ -429,6 +429,7 @@ export default function Editor() {
             onNodeSelect={setSelectedNodeId}
             onNodeAdd={addNode}
             onNodeDelete={deleteNode}
+            onNodeDuplicate={duplicateNode}
             onNodeMove={handleNodeMove}
             onConnectionSelect={setSelectedConnectionId}
             onConnectionDelete={deleteConnection}
