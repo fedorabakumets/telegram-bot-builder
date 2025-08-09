@@ -1283,6 +1283,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to refresh templates" });
     }
   });
+
+  // Recreate templates with hierarchy
+  app.post("/api/templates/recreate", async (req, res) => {
+    try {
+      console.log('🔄 Пересоздание шаблонов с иерархией по API запросу');
+      await seedDefaultTemplates(true);
+      res.json({ message: "Templates recreated with hierarchy successfully" });
+    } catch (error) {
+      console.error('❌ Ошибка пересоздания шаблонов:', error);
+      res.status(500).json({ message: "Failed to recreate templates" });
+    }
+  });
   
   // Get all templates
   app.get("/api/templates", async (req, res) => {

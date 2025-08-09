@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Connection, Button, BotData } from '@shared/schema';
+import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 
 interface HistoryState {
   nodes: Node[];
@@ -199,12 +200,16 @@ export function useBotEditor(initialData?: BotData) {
     setNodes(newNodes);
   }, []);
 
-  const setBotData = useCallback((botData: BotData) => {
+  const setBotData = useCallback((botData: BotData, templateName?: string) => {
     console.log('setBotData вызван с данными:', botData);
     console.log('Устанавливаем узлы:', botData.nodes?.length || 0);
     console.log('Устанавливаем связи:', botData.connections?.length || 0);
     
-    setNodes(botData.nodes || []);
+    // Применяем иерархическую компоновку к узлам
+    const layoutNodes = applyTemplateLayout(botData.nodes || [], botData.connections || [], templateName);
+    console.log('Применили иерархическую компоновку:', layoutNodes.length);
+    
+    setNodes(layoutNodes);
     setConnections(botData.connections || []);
     setSelectedNodeId(null); // Сбрасываем выбранный узел
     

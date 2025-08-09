@@ -214,7 +214,7 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "start",
             type: "start",
-            position: { x: 100, y: 100 },
+            position: { x: 100, y: 50 },
             data: {
               command: "/start",
               description: "Приветствие и источник",
@@ -234,7 +234,7 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "join_request",
             type: "message",
-            position: { x: 700, y: 100 },
+            position: { x: 100, y: 250 },
             data: {
               messageText: "Хочешь присоединиться к нашему чату? 🚀",
               keyboardType: "inline",
@@ -266,7 +266,7 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "decline_response",
             type: "message",
-            position: { x: 1000, y: 100 },
+            position: { x: 450, y: 250 },
             data: {
               messageText: "Понятно! Если передумаешь, напиши /start! 😊",
               keyboardType: "none",
@@ -278,7 +278,7 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "gender_selection",
             type: "message",
-            position: { x: 100, y: 300 },
+            position: { x: 100, y: 450 },
             data: {
               messageText: "Укажи свой пол: 👨👩",
               keyboardType: "inline",
@@ -310,7 +310,7 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "name_input",
             type: "message",
-            position: { x: 400, y: 300 },
+            position: { x: 450, y: 450 },
             data: {
               messageText: "Как тебя зовут? ✏️\n\nНапиши своё имя в сообщении:",
               keyboardType: "none",
@@ -325,7 +325,7 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "age_input",
             type: "message",
-            position: { x: 700, y: 300 },
+            position: { x: 800, y: 450 },
             data: {
               messageText: "Сколько тебе лет? 🎂\n\nНапиши свой возраст числом (например, 25):",
               keyboardType: "none",
@@ -340,7 +340,7 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "metro_selection",
             type: "message",
-            position: { x: 100, y: 500 },
+            position: { x: 100, y: 650 },
             data: {
               messageText: "На какой станции метро ты обычно бываешь? 🚇\n\nМожешь выбрать несколько веток:",
               keyboardType: "inline",
@@ -406,7 +406,7 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "interests_categories",
             type: "message",
-            position: { x: 400, y: 500 },
+            position: { x: 450, y: 650 },
             data: {
               messageText: "Выбери категории интересов 🎯:",
               keyboardType: "inline",
@@ -495,7 +495,7 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "hobby_interests",
             type: "message",
-            position: { x: 700, y: 500 },
+            position: { x: 800, y: 650 },
             data: {
               messageText: "Выбери интересы в категории 🎮 Хобби:",
               keyboardType: "inline",
@@ -1014,4 +1014,10 @@ async function updateTemplatesWithFixedVariables() {
   console.log('✅ Шаблоны обновлены с исправленными переменными');
 }
 
-export { seedDefaultTemplates, updateTemplatesWithFixedVariables };
+async function recreateTemplatesWithHierarchy() {
+  console.log('🔄 Пересоздаем шаблоны с иерархической компоновкой...');
+  await seedDefaultTemplates(true);
+  console.log('✅ Шаблоны пересозданы с иерархической компоновкой');
+}
+
+export { seedDefaultTemplates, updateTemplatesWithFixedVariables, recreateTemplatesWithHierarchy };

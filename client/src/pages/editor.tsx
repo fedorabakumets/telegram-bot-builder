@@ -297,8 +297,8 @@ export default function Editor() {
         throw new Error('Некорректные данные шаблона');
       }
       
-      // Немедленно обновляем локальное состояние редактора
-      setBotData(templateData);
+      // Немедленно обновляем локальное состояние редактора с именем шаблона
+      setBotData(templateData, template.name);
       
       console.log('Применили данные шаблона, узлов:', templateData.nodes.length);
       console.log('Применили данные шаблона, связей:', templateData.connections?.length || 0);
