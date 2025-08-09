@@ -1180,9 +1180,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '            if conditional_next_node:\n';
                 code += '                next_node_id = conditional_next_node\n';
                 code += '            else:\n';
-                const currentNodeConnections = connections.filter(conn => conn.source === targetNode.id);
+                const currentNodeConnections = connections.filter(conn => conn.sourceNodeId === targetNode.id);
                 if (currentNodeConnections.length > 0) {
-                  const nextNodeId = currentNodeConnections[0].target;
+                  const nextNodeId = currentNodeConnections[0].targetNodeId;
                   code += `                next_node_id = "${nextNodeId}"\n`;
                 } else {
                   code += '                next_node_id = None\n';
@@ -1914,8 +1914,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '        user_data[callback_query.from_user.id] = {}\n';
                 code += '    \n';
                 // Find the next node to navigate to after successful input
-                const nextConnection = connections.find(conn => conn.source === targetNode.id);
-                const nextNodeId = nextConnection ? nextConnection.target : null;
+                const nextConnection = connections.find(conn => conn.sourceNodeId === targetNode.id);
+                const nextNodeId = nextConnection ? nextConnection.targetNodeId : null;
                 
                 code += '    # Сохраняем настройки для обработки ответа\n';
                 code += '    user_data[callback_query.from_user.id]["button_response_config"] = {\n';
@@ -1955,8 +1955,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '        user_data[callback_query.from_user.id] = {}\n';
                 code += '    \n';
                 // Find the next node to navigate to after successful input
-                const nextConnection = connections.find(conn => conn.source === targetNode.id);
-                const nextNodeId = nextConnection ? nextConnection.target : null;
+                const nextConnection = connections.find(conn => conn.sourceNodeId === targetNode.id);
+                const nextNodeId = nextConnection ? nextConnection.targetNodeId : null;
                 
                 code += '    # Настраиваем ожидание ввода\n';
                 code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
@@ -2870,8 +2870,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             if (responseType === 'text') {
               // Find next node through connections
-              const nextConnection = connections.find(conn => conn.source === targetNode.id);
-              const nextNodeId = nextConnection ? nextConnection.target : null;
+              const nextConnection = connections.find(conn => conn.sourceNodeId === targetNode.id);
+              const nextNodeId = nextConnection ? nextConnection.targetNodeId : null;
               
               code += '    # Настраиваем ожидание ввода\n';
               code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
@@ -3884,9 +3884,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                            "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
         code += `                            "save_to_database": True,\n`;
         code += `                            "node_id": "${targetNode.id}",\n`;
-        const nextConnection = connections.find(conn => conn.source === targetNode.id);
+        const nextConnection = connections.find(conn => conn.sourceNodeId === targetNode.id);
         if (nextConnection) {
-          code += `                            "next_node_id": "${nextConnection.target}",\n`;
+          code += `                            "next_node_id": "${nextConnection.targetNodeId}",\n`;
         } else {
           code += '                            "next_node_id": None,\n';
         }
@@ -4272,8 +4272,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         } else if (targetNode.data.collectUserInput) {
           // Также настраиваем ожидание, если включен collectUserInput
           const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-          const nextConnection = connections.find(conn => conn.source === targetNode.id);
-          const inputTargetNodeId = nextConnection ? nextConnection.target : '';
+          const nextConnection = connections.find(conn => conn.sourceNodeId === targetNode.id);
+          const inputTargetNodeId = nextConnection ? nextConnection.targetNodeId : '';
           
           code += '                # Настраиваем ожидание текстового ввода (collectUserInput)\n';
           code += '                user_data[user_id]["waiting_for_input"] = {\n';
@@ -4484,9 +4484,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '                    ],\n';
           
           // Находим следующий узел для этого user-input узла (fallback)
-          const nextConnection = connections.find(conn => conn.source === targetNode.id);
+          const nextConnection = connections.find(conn => conn.sourceNodeId === targetNode.id);
           if (nextConnection) {
-            code += `                    "next_node_id": "${nextConnection.target}"\n`;
+            code += `                    "next_node_id": "${nextConnection.targetNodeId}"\n`;
           } else {
             code += '                    "next_node_id": None\n';
           }
@@ -4512,9 +4512,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `                    "node_id": "${targetNode.id}",\n`;
           
           // Находим следующий узел для этого user-input узла
-          const nextConnection = connections.find(conn => conn.source === targetNode.id);
+          const nextConnection = connections.find(conn => conn.sourceNodeId === targetNode.id);
           if (nextConnection) {
-            code += `                    "next_node_id": "${nextConnection.target}"\n`;
+            code += `                    "next_node_id": "${nextConnection.targetNodeId}"\n`;
           } else {
             code += '                    "next_node_id": None\n';
           }

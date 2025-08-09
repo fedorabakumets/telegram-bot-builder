@@ -300,7 +300,11 @@ async def start_handler(message: types.Message):
     user_data[user_id]["multi_select_node"] = "start"
     logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")
     
-    text = "Привет! Я ваш новый бот. ОТкуда вы узнали об этом?"
+    text = """🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!
+
+Этот бот поможет тебе найти интересных людей в Санкт-Петербурге!
+
+Откуда ты узнал о нашем чате? 😎"""
     # Определяем режим форматирования (приоритет у условного сообщения)
     if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
         current_parse_mode = conditional_parse_mode
@@ -317,16 +321,19 @@ async def start_handler(message: types.Message):
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "grLe3J7YjDg2W8VkY_d7O" or c.data.startswith("grLe3J7YjDg2W8VkY_d7O_btn_"))
-async def handle_callback_grLe3J7YjDg2W8VkY_d7O(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "gender_selection" or c.data.startswith("gender_selection_btn_"))
+async def handle_callback_gender_selection(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    # Сохраняем правильную переменную в базу данных
-    await update_user_data_in_db(user_id, "екекек", callback_query.data)
-    logging.info(f"Переменная екекек сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    button_text = "Да 😎"
     
-    # Обрабатываем узел grLe3J7YjDg2W8VkY_d7O: grLe3J7YjDg2W8VkY_d7O
-    text = "Новое сообщение"
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "join_request_response", button_text)
+    logging.info(f"Переменная join_request_response сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла gender_selection
+    text = "Укажи свой пол: 👨👩"
     
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -370,7 +377,2256 @@ async def handle_callback_grLe3J7YjDg2W8VkY_d7O(callback_query: types.CallbackQu
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
     keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input_btn_0"))
+        builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input_btn_1"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "decline_response" or c.data.startswith("decline_response_btn_"))
+async def handle_callback_decline_response(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Нет 🙅"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "join_request_response", button_text)
+    logging.info(f"Переменная join_request_response сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла decline_response
+    text = "Понятно! Если передумаешь, напиши /start! 😊"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    if keyboard is None:
+        keyboard = None
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "name_input" or c.data.startswith("name_input_btn_"))
+async def handle_callback_name_input(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Мужчина 👨"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "gender", button_text)
+    logging.info(f"Переменная gender сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла name_input
+    text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    if keyboard is None:
+        keyboard = None
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "name_input" or c.data.startswith("name_input_btn_"))
+async def handle_callback_name_input(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Женщина 👩"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "gender", button_text)
+    logging.info(f"Переменная gender сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла name_input
+    text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    if keyboard is None:
+        keyboard = None
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "hobby_interests" or c.data.startswith("hobby_interests_btn_"))
+async def handle_callback_hobby_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🎮 Хобби"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Отправляем сообщение для узла hobby_interests
+    text = "Выбери интересы в категории 🎮 Хобби:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories_btn_8"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "social_interests" or c.data.startswith("social_interests_btn_"))
+async def handle_callback_social_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "👥 Социальная жизнь"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "creativity_interests" or c.data.startswith("creativity_interests_btn_"))
+async def handle_callback_creativity_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🎨 Творчество"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "active_interests" or c.data.startswith("active_interests_btn_"))
+async def handle_callback_active_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🏃 Активный образ жизни"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "food_interests" or c.data.startswith("food_interests_btn_"))
+async def handle_callback_food_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🍕 Еда и напитки"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "sport_interests" or c.data.startswith("sport_interests_btn_"))
+async def handle_callback_sport_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "⚽ Спорт"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "home_interests" or c.data.startswith("home_interests_btn_"))
+async def handle_callback_home_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🏠 Время дома"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "travel_interests" or c.data.startswith("travel_interests_btn_"))
+async def handle_callback_travel_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "✈️ Путешествия"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "pets_interests" or c.data.startswith("pets_interests_btn_"))
+async def handle_callback_pets_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🐾 Домашние животные"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "movies_interests" or c.data.startswith("movies_interests_btn_"))
+async def handle_callback_movies_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🎬 Фильмы и сериалы"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "music_interests" or c.data.startswith("music_interests_btn_"))
+async def handle_callback_music_interests(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🎵 Музыка"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Кнопка пока никуда не ведет
+    await callback_query.answer("⚠️ Эта кнопка пока не настроена", show_alert=True)
+
+@dp.callback_query(lambda c: c.data == "interests_categories" or c.data.startswith("interests_categories_btn_"))
+async def handle_callback_interests_categories(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "⬅️ К категориям"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Отправляем сообщение для узла interests_categories
+    text = "Выбери категории интересов 🎯:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="🎮 Хобби", callback_data="hobby_interests_btn_0"))
+        builder.add(InlineKeyboardButton(text="👥 Социальная жизнь", callback_data="social_interests_btn_1"))
+        builder.add(InlineKeyboardButton(text="🎨 Творчество", callback_data="creativity_interests_btn_2"))
+        builder.add(InlineKeyboardButton(text="🏃 Активный образ жизни", callback_data="active_interests_btn_3"))
+        builder.add(InlineKeyboardButton(text="🍕 Еда и напитки", callback_data="food_interests_btn_4"))
+        builder.add(InlineKeyboardButton(text="⚽ Спорт", callback_data="sport_interests_btn_5"))
+        builder.add(InlineKeyboardButton(text="🏠 Время дома", callback_data="home_interests_btn_6"))
+        builder.add(InlineKeyboardButton(text="✈️ Путешествия", callback_data="travel_interests_btn_7"))
+        builder.add(InlineKeyboardButton(text="🐾 Домашние животные", callback_data="pets_interests_btn_8"))
+        builder.add(InlineKeyboardButton(text="🎬 Фильмы и сериалы", callback_data="movies_interests_btn_9"))
+        builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="music_interests_btn_10"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "💔 Не женат"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "💔 Не замужем"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "💕 Встречаюсь"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "💍 Помолвлен(а)"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "💒 Женат"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "💒 Замужем"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🤝 В гражданском браке"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "😍 Влюблён"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🤷 Всё сложно"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "sexual_orientation" or c.data.startswith("sexual_orientation_btn_"))
+async def handle_callback_sexual_orientation(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🔍 В активном поиске"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", button_text)
+    logging.info(f"Переменная marital_status сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла sexual_orientation
+    text = "Укажи свою сексуальную ориентацию 🌈:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel_btn_0"))
+        builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel_btn_1"))
+        builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel_btn_2"))
+        builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel_btn_3"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "telegram_channel" or c.data.startswith("telegram_channel_btn_"))
+async def handle_callback_telegram_channel(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Гетеро 😊"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "sexual_orientation", button_text)
+    logging.info(f"Переменная sexual_orientation сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла telegram_channel
+    text = "Хочешь указать свой телеграм-канал? 📢"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Указать канал 📢", callback_data="channel_input_btn_0"))
+        builder.add(InlineKeyboardButton(text="Не указывать 🚫", callback_data="extra_info_btn_1"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "telegram_channel" or c.data.startswith("telegram_channel_btn_"))
+async def handle_callback_telegram_channel(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Би 🌈"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "sexual_orientation", button_text)
+    logging.info(f"Переменная sexual_orientation сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла telegram_channel
+    text = "Хочешь указать свой телеграм-канал? 📢"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Указать канал 📢", callback_data="channel_input_btn_0"))
+        builder.add(InlineKeyboardButton(text="Не указывать 🚫", callback_data="extra_info_btn_1"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "telegram_channel" or c.data.startswith("telegram_channel_btn_"))
+async def handle_callback_telegram_channel(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Гей/Лесби 🏳️‍🌈"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "sexual_orientation", button_text)
+    logging.info(f"Переменная sexual_orientation сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла telegram_channel
+    text = "Хочешь указать свой телеграм-канал? 📢"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Указать канал 📢", callback_data="channel_input_btn_0"))
+        builder.add(InlineKeyboardButton(text="Не указывать 🚫", callback_data="extra_info_btn_1"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "telegram_channel" or c.data.startswith("telegram_channel_btn_"))
+async def handle_callback_telegram_channel(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Другое ✍️"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "sexual_orientation", button_text)
+    logging.info(f"Переменная sexual_orientation сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла telegram_channel
+    text = "Хочешь указать свой телеграм-канал? 📢"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Указать канал 📢", callback_data="channel_input_btn_0"))
+        builder.add(InlineKeyboardButton(text="Не указывать 🚫", callback_data="extra_info_btn_1"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "channel_input" or c.data.startswith("channel_input_btn_"))
+async def handle_callback_channel_input(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Указать канал 📢"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "has_telegram_channel", button_text)
+    logging.info(f"Переменная has_telegram_channel сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла channel_input
+    text = """Введи свой телеграм-канал 📢
+
+(можно ссылку, ник с @ или просто имя):"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    if keyboard is None:
+        keyboard = None
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "extra_info" or c.data.startswith("extra_info_btn_"))
+async def handle_callback_extra_info(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "Не указывать 🚫"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "has_telegram_channel", button_text)
+    logging.info(f"Переменная has_telegram_channel сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла extra_info
+    text = """Хочешь добавить что-то ещё о себе? 📝
+
+Расскажи о себе (до 2000 символов) или напиши 'пропустить':"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    if keyboard is None:
+        keyboard = None
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "show_profile" or c.data.startswith("show_profile_btn_"))
+async def handle_callback_show_profile(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "👤 Моя анкета"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Отправляем сообщение для узла show_profile
+    text = """👤 Твой профиль:
+
+Пол: {gender} {'👨' if gender == 'Мужчина' else '👩'}
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_lines} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+ТГ-канал: {telegram_channel} 📢
+О себе: {extra_info} 📝"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="🔗 Получить ссылку на чат", callback_data="chat_link_btn_0"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "chat_link" or c.data.startswith("chat_link_btn_"))
+async def handle_callback_chat_link(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🔗 Получить ссылку на чат"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Отправляем сообщение для узла chat_link
+    text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="👤 К профилю", callback_data="show_profile_btn_0"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "chat_link" or c.data.startswith("chat_link_btn_"))
+async def handle_callback_chat_link(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "🔗 Получить ссылку на чат"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Отправляем сообщение для узла chat_link
+    text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="👤 К профилю", callback_data="show_profile_btn_0"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "show_profile" or c.data.startswith("show_profile_btn_"))
+async def handle_callback_show_profile(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    button_text = "👤 К профилю"
+    
+    # Сохраняем кнопку в базу данных
+    timestamp = get_moscow_time()
+    response_data = button_text  # Простое значение
+    await update_user_data_in_db(user_id, button_text, response_data)
+    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")
+    
+    # Отправляем сообщение для узла show_profile
+    text = """👤 Твой профиль:
+
+Пол: {gender} {'👨' if gender == 'Мужчина' else '👩'}
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_lines} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+ТГ-канал: {telegram_channel} 📢
+О себе: {extra_info} 📝"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    # Проверяем, есть ли условная клавиатура
+    if keyboard is None:
+        # Создаем inline клавиатуру для целевого узла
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="🔗 Получить ссылку на чат", callback_data="chat_link_btn_0"))
+        builder.adjust(2)  # Используем 2 колонки для консистентности
+        keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "marital_status" or c.data.startswith("marital_status_btn_"))
+async def handle_callback_marital_status(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "marital_status", callback_query.data)
+    logging.info(f"Переменная marital_status сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    
+    # Обрабатываем узел marital_status: marital_status
+    text = "Выбери семейное положение 💍:"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="💔 Не женат", callback_data="sexual_orientation_btn_0"))
+    builder.add(InlineKeyboardButton(text="💔 Не замужем", callback_data="sexual_orientation_btn_1"))
+    builder.add(InlineKeyboardButton(text="💕 Встречаюсь", callback_data="sexual_orientation_btn_2"))
+    builder.add(InlineKeyboardButton(text="💍 Помолвлен(а)", callback_data="sexual_orientation_btn_3"))
+    builder.add(InlineKeyboardButton(text="💒 Женат", callback_data="sexual_orientation_btn_4"))
+    builder.add(InlineKeyboardButton(text="💒 Замужем", callback_data="sexual_orientation_btn_5"))
+    builder.add(InlineKeyboardButton(text="🤝 В гражданском браке", callback_data="sexual_orientation_btn_6"))
+    builder.add(InlineKeyboardButton(text="😍 Влюблён", callback_data="sexual_orientation_btn_7"))
+    builder.add(InlineKeyboardButton(text="🤷 Всё сложно", callback_data="sexual_orientation_btn_8"))
+    builder.add(InlineKeyboardButton(text="🔍 В активном поиске", callback_data="sexual_orientation_btn_9"))
+    keyboard = builder.as_markup()
     # Отправляем сообщение
     try:
         if keyboard:
@@ -386,7 +2642,7 @@ async def handle_callback_grLe3J7YjDg2W8VkY_d7O(callback_query: types.CallbackQu
     user_id = callback_query.from_user.id
     
     # Ищем текст кнопки по callback_data
-    button_display_text = "Кнопка grLe3J7YjDg2W8VkY_d7O"
+    button_display_text = "Кнопка marital_status"
     
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
@@ -406,13 +2662,13 @@ async def handle_callback_grLe3J7YjDg2W8VkY_d7O(callback_query: types.CallbackQu
     await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
     
     # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
-    next_node_id = "grLe3J7YjDg2W8VkY_d7O"
+    next_node_id = "marital_status"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start":
             logging.info("Переход к узлу start")
-        elif next_node_id == "grLe3J7YjDg2W8VkY_d7O":
-            nav_text = "Новое сообщение"
+        elif next_node_id == "join_request":
+            nav_text = "Хочешь присоединиться к нашему чату? 🚀"
             await callback_query.message.edit_text(nav_text)
             # Настраиваем ожидание ввода для message узла в навигации
             user_id = callback_query.from_user.id
@@ -420,17 +2676,214 @@ async def handle_callback_grLe3J7YjDg2W8VkY_d7O(callback_query: types.CallbackQu
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_input"] = {
                 "type": "text",
-                "variable": "екекек",
+                "variable": "join_request_response",
                 "save_to_database": True,
-                "node_id": "grLe3J7YjDg2W8VkY_d7O",
-                "next_node_id": "J3kVXLbZunO5QeI8bsZrw",
+                "node_id": "join_request",
+                "next_node_id": "",
                 "min_length": 0,
                 "max_length": 0,
                 "retry_message": "Пожалуйста, попробуйте еще раз.",
                 "success_message": "Спасибо за ваш ответ!"
             }
-        elif next_node_id == "J3kVXLbZunO5QeI8bsZrw":
-            nav_text = "Новое сообщение"
+        elif next_node_id == "decline_response":
+            nav_text = "Понятно! Если передумаешь, напиши /start! 😊"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "gender_selection":
+            nav_text = "Укажи свой пол: 👨👩"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "gender",
+                "save_to_database": True,
+                "node_id": "gender_selection",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "name_input":
+            nav_text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_name",
+                "save_to_database": True,
+                "node_id": "name_input",
+                "next_node_id": "age_input",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "age_input":
+            nav_text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_age",
+                "save_to_database": True,
+                "node_id": "age_input",
+                "next_node_id": "metro_selection",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "metro_selection":
+            nav_text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "interests_categories":
+            nav_text = "Выбери категории интересов 🎯:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "hobby_interests":
+            nav_text = "Выбери интересы в категории 🎮 Хобби:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "marital_status":
+            nav_text = "Выбери семейное положение 💍:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "marital_status",
+                "save_to_database": True,
+                "node_id": "marital_status",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "sexual_orientation":
+            nav_text = "Укажи свою сексуальную ориентацию 🌈:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "sexual_orientation",
+                "save_to_database": True,
+                "node_id": "sexual_orientation",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "telegram_channel":
+            nav_text = "Хочешь указать свой телеграм-канал? 📢"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "has_telegram_channel",
+                "save_to_database": True,
+                "node_id": "telegram_channel",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "channel_input":
+            nav_text = """Введи свой телеграм-канал 📢
+
+(можно ссылку, ник с @ или просто имя):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "telegram_channel",
+                "save_to_database": True,
+                "node_id": "channel_input",
+                "next_node_id": "extra_info",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "extra_info":
+            nav_text = """Хочешь добавить что-то ещё о себе? 📝
+
+Расскажи о себе (до 2000 символов) или напиши 'пропустить':"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "extra_info",
+                "save_to_database": True,
+                "node_id": "extra_info",
+                "next_node_id": "profile_complete",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "profile_complete":
+            nav_text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "show_profile":
+            nav_text = """👤 Твой профиль:
+
+Пол: {gender} {'👨' if gender == 'Мужчина' else '👩'}
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_lines} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+ТГ-канал: {telegram_channel} 📢
+О себе: {extra_info} 📝"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "chat_link":
+            nav_text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
             await callback_query.message.edit_text(nav_text)
         else:
             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
@@ -439,7 +2892,7 @@ async def handle_callback_grLe3J7YjDg2W8VkY_d7O(callback_query: types.CallbackQu
     
     return  # Завершаем обработку после переадресации
     
-    text = "Новое сообщение"
+    text = "Выбери семейное положение 💍:"
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -486,26 +2939,438 @@ async def handle_callback_grLe3J7YjDg2W8VkY_d7O(callback_query: types.CallbackQu
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
     
-    user_data[callback_query.from_user.id]["waiting_for_input"] = "grLe3J7YjDg2W8VkY_d7O"
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "marital_status"
     user_data[callback_query.from_user.id]["input_type"] = "text"
-    user_data[callback_query.from_user.id]["input_variable"] = "екекек"
+    user_data[callback_query.from_user.id]["input_variable"] = "marital_status"
     user_data[callback_query.from_user.id]["save_to_database"] = True
-    user_data[callback_query.from_user.id]["input_target_node_id"] = "J3kVXLbZunO5QeI8bsZrw"
+    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
     
+    # Проверяем, есть ли условная клавиатура
+    if "keyboard" not in locals() or keyboard is None:
+        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="💔 Не женат", callback_data="marital-single-m"))
+        builder.add(InlineKeyboardButton(text="💔 Не замужем", callback_data="marital-single-f"))
+        builder.add(InlineKeyboardButton(text="💕 Встречаюсь", callback_data="marital-dating"))
+        builder.add(InlineKeyboardButton(text="💍 Помолвлен(а)", callback_data="marital-engaged"))
+        builder.add(InlineKeyboardButton(text="💒 Женат", callback_data="marital-married-m"))
+        builder.add(InlineKeyboardButton(text="💒 Замужем", callback_data="marital-married-f"))
+        builder.add(InlineKeyboardButton(text="🤝 В гражданском браке", callback_data="marital-civil"))
+        builder.add(InlineKeyboardButton(text="😍 Влюблён", callback_data="marital-love"))
+        builder.add(InlineKeyboardButton(text="🤷 Всё сложно", callback_data="marital-complicated"))
+        builder.add(InlineKeyboardButton(text="🔍 В активном поиске", callback_data="marital-searching"))
+        keyboard = builder.as_markup()
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
-        await callback_query.message.edit_text(text)
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
     except Exception as e:
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
-        await callback_query.message.answer(text)
+        await callback_query.message.answer(text, reply_markup=keyboard)
     
 
-@dp.callback_query(lambda c: c.data == "J3kVXLbZunO5QeI8bsZrw" or c.data.startswith("J3kVXLbZunO5QeI8bsZrw_btn_"))
-async def handle_callback_J3kVXLbZunO5QeI8bsZrw(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "join_request" or c.data.startswith("join_request_btn_"))
+async def handle_callback_join_request(callback_query: types.CallbackQuery):
     await callback_query.answer()
     user_id = callback_query.from_user.id
-    # Обрабатываем узел J3kVXLbZunO5QeI8bsZrw: J3kVXLbZunO5QeI8bsZrw
-    text = "Новое сообщение"
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "join_request_response", callback_query.data)
+    logging.info(f"Переменная join_request_response сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    
+    # Обрабатываем узел join_request: join_request
+    text = "Хочешь присоединиться к нашему чату? 🚀"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection_btn_0"))
+    builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response_btn_1"))
+    keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Кнопка join_request"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "button_click", button_display_text)
+    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
+    next_node_id = "join_request"
+    try:
+        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
+        if next_node_id == "start":
+            logging.info("Переход к узлу start")
+        elif next_node_id == "join_request":
+            nav_text = "Хочешь присоединиться к нашему чату? 🚀"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "join_request_response",
+                "save_to_database": True,
+                "node_id": "join_request",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "decline_response":
+            nav_text = "Понятно! Если передумаешь, напиши /start! 😊"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "gender_selection":
+            nav_text = "Укажи свой пол: 👨👩"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "gender",
+                "save_to_database": True,
+                "node_id": "gender_selection",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "name_input":
+            nav_text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_name",
+                "save_to_database": True,
+                "node_id": "name_input",
+                "next_node_id": "age_input",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "age_input":
+            nav_text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_age",
+                "save_to_database": True,
+                "node_id": "age_input",
+                "next_node_id": "metro_selection",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "metro_selection":
+            nav_text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "interests_categories":
+            nav_text = "Выбери категории интересов 🎯:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "hobby_interests":
+            nav_text = "Выбери интересы в категории 🎮 Хобби:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "marital_status":
+            nav_text = "Выбери семейное положение 💍:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "marital_status",
+                "save_to_database": True,
+                "node_id": "marital_status",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "sexual_orientation":
+            nav_text = "Укажи свою сексуальную ориентацию 🌈:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "sexual_orientation",
+                "save_to_database": True,
+                "node_id": "sexual_orientation",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "telegram_channel":
+            nav_text = "Хочешь указать свой телеграм-канал? 📢"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "has_telegram_channel",
+                "save_to_database": True,
+                "node_id": "telegram_channel",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "channel_input":
+            nav_text = """Введи свой телеграм-канал 📢
+
+(можно ссылку, ник с @ или просто имя):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "telegram_channel",
+                "save_to_database": True,
+                "node_id": "channel_input",
+                "next_node_id": "extra_info",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "extra_info":
+            nav_text = """Хочешь добавить что-то ещё о себе? 📝
+
+Расскажи о себе (до 2000 символов) или напиши 'пропустить':"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "extra_info",
+                "save_to_database": True,
+                "node_id": "extra_info",
+                "next_node_id": "profile_complete",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "profile_complete":
+            nav_text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "show_profile":
+            nav_text = """👤 Твой профиль:
+
+Пол: {gender} {'👨' if gender == 'Мужчина' else '👩'}
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_lines} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+ТГ-канал: {telegram_channel} 📢
+О себе: {extra_info} 📝"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "chat_link":
+            nav_text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
+            await callback_query.message.edit_text(nav_text)
+        else:
+            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+    except Exception as e:
+        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    
+    return  # Завершаем обработку после переадресации
+    
+    text = "Хочешь присоединиться к нашему чату? 🚀"
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "join_request"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "join_request_response"
+    user_data[callback_query.from_user.id]["save_to_database"] = True
+    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    
+    # Проверяем, есть ли условная клавиатура
+    if "keyboard" not in locals() or keyboard is None:
+        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Да 😎", callback_data="btn-yes"))
+        builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="btn-no"))
+        keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+    
+
+@dp.callback_query(lambda c: c.data == "age_input" or c.data.startswith("age_input_btn_"))
+async def handle_callback_age_input(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "user_age", callback_query.data)
+    logging.info(f"Переменная user_age сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    
+    # Обрабатываем узел age_input: age_input
+    text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
     
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
@@ -565,7 +3430,7 @@ async def handle_callback_J3kVXLbZunO5QeI8bsZrw(callback_query: types.CallbackQu
     user_id = callback_query.from_user.id
     
     # Ищем текст кнопки по callback_data
-    button_display_text = "Кнопка J3kVXLbZunO5QeI8bsZrw"
+    button_display_text = "Кнопка age_input"
     
     # Сохраняем ответ в базу данных
     timestamp = get_moscow_time()
@@ -585,13 +3450,13 @@ async def handle_callback_J3kVXLbZunO5QeI8bsZrw(callback_query: types.CallbackQu
     await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
     
     # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
-    next_node_id = "J3kVXLbZunO5QeI8bsZrw"
+    next_node_id = "age_input"
     try:
         logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
         if next_node_id == "start":
             logging.info("Переход к узлу start")
-        elif next_node_id == "grLe3J7YjDg2W8VkY_d7O":
-            nav_text = "Новое сообщение"
+        elif next_node_id == "join_request":
+            nav_text = "Хочешь присоединиться к нашему чату? 🚀"
             await callback_query.message.edit_text(nav_text)
             # Настраиваем ожидание ввода для message узла в навигации
             user_id = callback_query.from_user.id
@@ -599,17 +3464,214 @@ async def handle_callback_J3kVXLbZunO5QeI8bsZrw(callback_query: types.CallbackQu
                 user_data[user_id] = {}
             user_data[user_id]["waiting_for_input"] = {
                 "type": "text",
-                "variable": "екекек",
+                "variable": "join_request_response",
                 "save_to_database": True,
-                "node_id": "grLe3J7YjDg2W8VkY_d7O",
-                "next_node_id": "J3kVXLbZunO5QeI8bsZrw",
+                "node_id": "join_request",
+                "next_node_id": "",
                 "min_length": 0,
                 "max_length": 0,
                 "retry_message": "Пожалуйста, попробуйте еще раз.",
                 "success_message": "Спасибо за ваш ответ!"
             }
-        elif next_node_id == "J3kVXLbZunO5QeI8bsZrw":
-            nav_text = "Новое сообщение"
+        elif next_node_id == "decline_response":
+            nav_text = "Понятно! Если передумаешь, напиши /start! 😊"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "gender_selection":
+            nav_text = "Укажи свой пол: 👨👩"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "gender",
+                "save_to_database": True,
+                "node_id": "gender_selection",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "name_input":
+            nav_text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_name",
+                "save_to_database": True,
+                "node_id": "name_input",
+                "next_node_id": "age_input",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "age_input":
+            nav_text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_age",
+                "save_to_database": True,
+                "node_id": "age_input",
+                "next_node_id": "metro_selection",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "metro_selection":
+            nav_text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "interests_categories":
+            nav_text = "Выбери категории интересов 🎯:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "hobby_interests":
+            nav_text = "Выбери интересы в категории 🎮 Хобби:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "marital_status":
+            nav_text = "Выбери семейное положение 💍:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "marital_status",
+                "save_to_database": True,
+                "node_id": "marital_status",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "sexual_orientation":
+            nav_text = "Укажи свою сексуальную ориентацию 🌈:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "sexual_orientation",
+                "save_to_database": True,
+                "node_id": "sexual_orientation",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "telegram_channel":
+            nav_text = "Хочешь указать свой телеграм-канал? 📢"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "has_telegram_channel",
+                "save_to_database": True,
+                "node_id": "telegram_channel",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "channel_input":
+            nav_text = """Введи свой телеграм-канал 📢
+
+(можно ссылку, ник с @ или просто имя):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "telegram_channel",
+                "save_to_database": True,
+                "node_id": "channel_input",
+                "next_node_id": "extra_info",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "extra_info":
+            nav_text = """Хочешь добавить что-то ещё о себе? 📝
+
+Расскажи о себе (до 2000 символов) или напиши 'пропустить':"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "extra_info",
+                "save_to_database": True,
+                "node_id": "extra_info",
+                "next_node_id": "profile_complete",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "profile_complete":
+            nav_text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "show_profile":
+            nav_text = """👤 Твой профиль:
+
+Пол: {gender} {'👨' if gender == 'Мужчина' else '👩'}
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_lines} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+ТГ-канал: {telegram_channel} 📢
+О себе: {extra_info} 📝"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "chat_link":
+            nav_text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
             await callback_query.message.edit_text(nav_text)
         else:
             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
@@ -618,7 +3680,9 @@ async def handle_callback_J3kVXLbZunO5QeI8bsZrw(callback_query: types.CallbackQu
     
     return  # Завершаем обработку после переадресации
     
-    text = "Новое сообщение"
+    text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
     # Подставляем все доступные переменные пользователя в текст
     user_record = await get_user_from_db(user_id)
     if not user_record:
@@ -661,12 +3725,791 @@ async def handle_callback_J3kVXLbZunO5QeI8bsZrw(callback_query: types.CallbackQu
         return text_content
     
     text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода
+    if callback_query.from_user.id not in user_data:
+        user_data[callback_query.from_user.id] = {}
+    
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "age_input"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "user_age"
+    user_data[callback_query.from_user.id]["save_to_database"] = True
+    user_data[callback_query.from_user.id]["input_target_node_id"] = "metro_selection"
+    
     # Пытаемся редактировать сообщение, если не получается - отправляем новое
     try:
         await callback_query.message.edit_text(text)
     except Exception as e:
         logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
         await callback_query.message.answer(text)
+    
+
+@dp.callback_query(lambda c: c.data == "metro_selection" or c.data.startswith("metro_selection_btn_"))
+async def handle_callback_metro_selection(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    # Обрабатываем узел metro_selection: metro_selection
+    text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Кнопка metro_selection"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "button_click", button_display_text)
+    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
+    next_node_id = "metro_selection"
+    try:
+        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
+        if next_node_id == "start":
+            logging.info("Переход к узлу start")
+        elif next_node_id == "join_request":
+            nav_text = "Хочешь присоединиться к нашему чату? 🚀"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "join_request_response",
+                "save_to_database": True,
+                "node_id": "join_request",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "decline_response":
+            nav_text = "Понятно! Если передумаешь, напиши /start! 😊"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "gender_selection":
+            nav_text = "Укажи свой пол: 👨👩"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "gender",
+                "save_to_database": True,
+                "node_id": "gender_selection",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "name_input":
+            nav_text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_name",
+                "save_to_database": True,
+                "node_id": "name_input",
+                "next_node_id": "age_input",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "age_input":
+            nav_text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_age",
+                "save_to_database": True,
+                "node_id": "age_input",
+                "next_node_id": "metro_selection",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "metro_selection":
+            nav_text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "interests_categories":
+            nav_text = "Выбери категории интересов 🎯:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "hobby_interests":
+            nav_text = "Выбери интересы в категории 🎮 Хобби:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "marital_status":
+            nav_text = "Выбери семейное положение 💍:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "marital_status",
+                "save_to_database": True,
+                "node_id": "marital_status",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "sexual_orientation":
+            nav_text = "Укажи свою сексуальную ориентацию 🌈:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "sexual_orientation",
+                "save_to_database": True,
+                "node_id": "sexual_orientation",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "telegram_channel":
+            nav_text = "Хочешь указать свой телеграм-канал? 📢"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "has_telegram_channel",
+                "save_to_database": True,
+                "node_id": "telegram_channel",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "channel_input":
+            nav_text = """Введи свой телеграм-канал 📢
+
+(можно ссылку, ник с @ или просто имя):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "telegram_channel",
+                "save_to_database": True,
+                "node_id": "channel_input",
+                "next_node_id": "extra_info",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "extra_info":
+            nav_text = """Хочешь добавить что-то ещё о себе? 📝
+
+Расскажи о себе (до 2000 символов) или напиши 'пропустить':"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "extra_info",
+                "save_to_database": True,
+                "node_id": "extra_info",
+                "next_node_id": "profile_complete",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "profile_complete":
+            nav_text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "show_profile":
+            nav_text = """👤 Твой профиль:
+
+Пол: {gender} {'👨' if gender == 'Мужчина' else '👩'}
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_lines} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+ТГ-канал: {telegram_channel} 📢
+О себе: {extra_info} 📝"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "chat_link":
+            nav_text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
+            await callback_query.message.edit_text(nav_text)
+        else:
+            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+    except Exception as e:
+        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    
+    return  # Завершаем обработку после переадресации
+    
+    text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    builder = InlineKeyboardBuilder()
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
+
+@dp.callback_query(lambda c: c.data == "profile_complete" or c.data.startswith("profile_complete_btn_"))
+async def handle_callback_profile_complete(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    # Обрабатываем узел profile_complete: profile_complete
+    text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Create inline keyboard
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="👤 Моя анкета", callback_data="show_profile_btn_0"))
+    builder.add(InlineKeyboardButton(text="🔗 Получить ссылку на чат", callback_data="chat_link_btn_1"))
+    keyboard = builder.as_markup()
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Кнопка profile_complete"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "button_click", button_display_text)
+    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
+    next_node_id = "profile_complete"
+    try:
+        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
+        if next_node_id == "start":
+            logging.info("Переход к узлу start")
+        elif next_node_id == "join_request":
+            nav_text = "Хочешь присоединиться к нашему чату? 🚀"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "join_request_response",
+                "save_to_database": True,
+                "node_id": "join_request",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "decline_response":
+            nav_text = "Понятно! Если передумаешь, напиши /start! 😊"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "gender_selection":
+            nav_text = "Укажи свой пол: 👨👩"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "gender",
+                "save_to_database": True,
+                "node_id": "gender_selection",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "name_input":
+            nav_text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_name",
+                "save_to_database": True,
+                "node_id": "name_input",
+                "next_node_id": "age_input",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "age_input":
+            nav_text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_age",
+                "save_to_database": True,
+                "node_id": "age_input",
+                "next_node_id": "metro_selection",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "metro_selection":
+            nav_text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "interests_categories":
+            nav_text = "Выбери категории интересов 🎯:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "hobby_interests":
+            nav_text = "Выбери интересы в категории 🎮 Хобби:"
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "marital_status":
+            nav_text = "Выбери семейное положение 💍:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "marital_status",
+                "save_to_database": True,
+                "node_id": "marital_status",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "sexual_orientation":
+            nav_text = "Укажи свою сексуальную ориентацию 🌈:"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "sexual_orientation",
+                "save_to_database": True,
+                "node_id": "sexual_orientation",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "telegram_channel":
+            nav_text = "Хочешь указать свой телеграм-канал? 📢"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "has_telegram_channel",
+                "save_to_database": True,
+                "node_id": "telegram_channel",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "channel_input":
+            nav_text = """Введи свой телеграм-канал 📢
+
+(можно ссылку, ник с @ или просто имя):"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "telegram_channel",
+                "save_to_database": True,
+                "node_id": "channel_input",
+                "next_node_id": "extra_info",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "extra_info":
+            nav_text = """Хочешь добавить что-то ещё о себе? 📝
+
+Расскажи о себе (до 2000 символов) или напиши 'пропустить':"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "extra_info",
+                "save_to_database": True,
+                "node_id": "extra_info",
+                "next_node_id": "profile_complete",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "profile_complete":
+            nav_text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "show_profile":
+            nav_text = """👤 Твой профиль:
+
+Пол: {gender} {'👨' if gender == 'Мужчина' else '👩'}
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_lines} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+ТГ-канал: {telegram_channel} 📢
+О себе: {extra_info} 📝"""
+            await callback_query.message.edit_text(nav_text)
+        elif next_node_id == "chat_link":
+            nav_text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
+            await callback_query.message.edit_text(nav_text)
+        else:
+            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+    except Exception as e:
+        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+    
+    return  # Завершаем обработку после переадресации
+    
+    text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    builder = InlineKeyboardBuilder()
+    builder.add(InlineKeyboardButton(text="👤 Моя анкета", callback_data="btn-profile"))
+    builder.add(InlineKeyboardButton(text="🔗 Получить ссылку на чат", callback_data="btn-chat-link"))
+    keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
 
 
 # Универсальный обработчик пользовательского ввода
@@ -733,10 +4576,38 @@ async def handle_user_input(message: types.Message):
                     
                     if next_node_id == "start":
                         await handle_callback_start(fake_callback)
-                    elif next_node_id == "grLe3J7YjDg2W8VkY_d7O":
-                        await handle_callback_grLe3J7YjDg2W8VkY_d7O(fake_callback)
-                    elif next_node_id == "J3kVXLbZunO5QeI8bsZrw":
-                        await handle_callback_J3kVXLbZunO5QeI8bsZrw(fake_callback)
+                    elif next_node_id == "join_request":
+                        await handle_callback_join_request(fake_callback)
+                    elif next_node_id == "decline_response":
+                        await handle_callback_decline_response(fake_callback)
+                    elif next_node_id == "gender_selection":
+                        await handle_callback_gender_selection(fake_callback)
+                    elif next_node_id == "name_input":
+                        await handle_callback_name_input(fake_callback)
+                    elif next_node_id == "age_input":
+                        await handle_callback_age_input(fake_callback)
+                    elif next_node_id == "metro_selection":
+                        await handle_callback_metro_selection(fake_callback)
+                    elif next_node_id == "interests_categories":
+                        await handle_callback_interests_categories(fake_callback)
+                    elif next_node_id == "hobby_interests":
+                        await handle_callback_hobby_interests(fake_callback)
+                    elif next_node_id == "marital_status":
+                        await handle_callback_marital_status(fake_callback)
+                    elif next_node_id == "sexual_orientation":
+                        await handle_callback_sexual_orientation(fake_callback)
+                    elif next_node_id == "telegram_channel":
+                        await handle_callback_telegram_channel(fake_callback)
+                    elif next_node_id == "channel_input":
+                        await handle_callback_channel_input(fake_callback)
+                    elif next_node_id == "extra_info":
+                        await handle_callback_extra_info(fake_callback)
+                    elif next_node_id == "profile_complete":
+                        await handle_callback_profile_complete(fake_callback)
+                    elif next_node_id == "show_profile":
+                        await handle_callback_show_profile(fake_callback)
+                    elif next_node_id == "chat_link":
+                        await handle_callback_chat_link(fake_callback)
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
             except Exception as e:
@@ -819,6 +4690,13 @@ async def handle_user_input(message: types.Message):
                     message_id=message.message_id
                 )
                 
+                if command == "/start":
+                    try:
+                        await start_handler(fake_message)
+                    except Exception as e:
+                        logging.error(f"Ошибка выполнения команды /start: {e}")
+                else:
+                    logging.warning(f"Неизвестная команда: {command}")
             elif option_action == "goto" and option_target:
                 # Переход к узлу
                 target_node_id = option_target
@@ -826,10 +4704,38 @@ async def handle_user_input(message: types.Message):
                     # Вызываем обработчик для целевого узла
                     if target_node_id == "start":
                         await handle_callback_start(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "grLe3J7YjDg2W8VkY_d7O":
-                        await handle_callback_grLe3J7YjDg2W8VkY_d7O(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
-                    elif target_node_id == "J3kVXLbZunO5QeI8bsZrw":
-                        await handle_callback_J3kVXLbZunO5QeI8bsZrw(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "join_request":
+                        await handle_callback_join_request(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "decline_response":
+                        await handle_callback_decline_response(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "gender_selection":
+                        await handle_callback_gender_selection(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "name_input":
+                        await handle_callback_name_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "age_input":
+                        await handle_callback_age_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "metro_selection":
+                        await handle_callback_metro_selection(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "interests_categories":
+                        await handle_callback_interests_categories(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "hobby_interests":
+                        await handle_callback_hobby_interests(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "marital_status":
+                        await handle_callback_marital_status(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "sexual_orientation":
+                        await handle_callback_sexual_orientation(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "telegram_channel":
+                        await handle_callback_telegram_channel(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "channel_input":
+                        await handle_callback_channel_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "extra_info":
+                        await handle_callback_extra_info(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "profile_complete":
+                        await handle_callback_profile_complete(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "show_profile":
+                        await handle_callback_show_profile(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "chat_link":
+                        await handle_callback_chat_link(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
                     else:
                         logging.warning(f"Неизвестный целевой узел: {target_node_id}")
                 except Exception as e:
@@ -842,10 +4748,38 @@ async def handle_user_input(message: types.Message):
                         # Вызываем обработчик для следующего узла
                         if next_node_id == "start":
                             await handle_callback_start(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "grLe3J7YjDg2W8VkY_d7O":
-                            await handle_callback_grLe3J7YjDg2W8VkY_d7O(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
-                        elif next_node_id == "J3kVXLbZunO5QeI8bsZrw":
-                            await handle_callback_J3kVXLbZunO5QeI8bsZrw(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "join_request":
+                            await handle_callback_join_request(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "decline_response":
+                            await handle_callback_decline_response(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "gender_selection":
+                            await handle_callback_gender_selection(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "name_input":
+                            await handle_callback_name_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "age_input":
+                            await handle_callback_age_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "metro_selection":
+                            await handle_callback_metro_selection(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "interests_categories":
+                            await handle_callback_interests_categories(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "hobby_interests":
+                            await handle_callback_hobby_interests(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "marital_status":
+                            await handle_callback_marital_status(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "sexual_orientation":
+                            await handle_callback_sexual_orientation(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "telegram_channel":
+                            await handle_callback_telegram_channel(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "channel_input":
+                            await handle_callback_channel_input(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "extra_info":
+                            await handle_callback_extra_info(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "profile_complete":
+                            await handle_callback_profile_complete(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "show_profile":
+                            await handle_callback_show_profile(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "chat_link":
+                            await handle_callback_chat_link(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
                         else:
                             logging.warning(f"Неизвестный следующий узел: {next_node_id}")
                     except Exception as e:
@@ -951,23 +4885,196 @@ async def handle_user_input(message: types.Message):
                     logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
                     if next_node_id == "start":
                         logging.info(f"Переход к узлу start типа start")
-                    elif next_node_id == "grLe3J7YjDg2W8VkY_d7O":
-                        text = "Новое сообщение"
+                    elif next_node_id == "join_request":
+                        text = "Хочешь присоединиться к нашему чату? 🚀"
                         await message.answer(text)
                         # Настраиваем ожидание ввода для message узла
                         user_data[user_id]["waiting_for_input"] = {
                             "type": "text",
-                            "variable": "екекек",
+                            "variable": "join_request_response",
                             "save_to_database": True,
-                            "node_id": "grLe3J7YjDg2W8VkY_d7O",
-                            "next_node_id": "J3kVXLbZunO5QeI8bsZrw",
+                            "node_id": "join_request",
+                            "next_node_id": "",
                             "min_length": 0,
                             "max_length": 0,
                             "retry_message": "Пожалуйста, попробуйте еще раз.",
                             "success_message": "Спасибо за ваш ответ!"
                         }
-                    elif next_node_id == "J3kVXLbZunO5QeI8bsZrw":
-                        text = "Новое сообщение"
+                    elif next_node_id == "decline_response":
+                        text = "Понятно! Если передумаешь, напиши /start! 😊"
+                        await message.answer(text)
+                    elif next_node_id == "gender_selection":
+                        text = "Укажи свой пол: 👨👩"
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "gender",
+                            "save_to_database": True,
+                            "node_id": "gender_selection",
+                            "next_node_id": "",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    elif next_node_id == "name_input":
+                        text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "user_name",
+                            "save_to_database": True,
+                            "node_id": "name_input",
+                            "next_node_id": "age_input",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    elif next_node_id == "age_input":
+                        text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "user_age",
+                            "save_to_database": True,
+                            "node_id": "age_input",
+                            "next_node_id": "metro_selection",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    elif next_node_id == "metro_selection":
+                        text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+                        await message.answer(text)
+                    elif next_node_id == "interests_categories":
+                        text = "Выбери категории интересов 🎯:"
+                        await message.answer(text)
+                    elif next_node_id == "hobby_interests":
+                        text = "Выбери интересы в категории 🎮 Хобби:"
+                        await message.answer(text)
+                    elif next_node_id == "marital_status":
+                        text = "Выбери семейное положение 💍:"
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "marital_status",
+                            "save_to_database": True,
+                            "node_id": "marital_status",
+                            "next_node_id": "",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    elif next_node_id == "sexual_orientation":
+                        text = "Укажи свою сексуальную ориентацию 🌈:"
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "sexual_orientation",
+                            "save_to_database": True,
+                            "node_id": "sexual_orientation",
+                            "next_node_id": "",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    elif next_node_id == "telegram_channel":
+                        text = "Хочешь указать свой телеграм-канал? 📢"
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "has_telegram_channel",
+                            "save_to_database": True,
+                            "node_id": "telegram_channel",
+                            "next_node_id": "",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    elif next_node_id == "channel_input":
+                        text = """Введи свой телеграм-канал 📢
+
+(можно ссылку, ник с @ или просто имя):"""
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "telegram_channel",
+                            "save_to_database": True,
+                            "node_id": "channel_input",
+                            "next_node_id": "extra_info",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    elif next_node_id == "extra_info":
+                        text = """Хочешь добавить что-то ещё о себе? 📝
+
+Расскажи о себе (до 2000 символов) или напиши 'пропустить':"""
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "extra_info",
+                            "save_to_database": True,
+                            "node_id": "extra_info",
+                            "next_node_id": "profile_complete",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    elif next_node_id == "profile_complete":
+                        text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+                        await message.answer(text)
+                    elif next_node_id == "show_profile":
+                        text = """👤 Твой профиль:
+
+Пол: {gender} {'👨' if gender == 'Мужчина' else '👩'}
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_lines} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+ТГ-канал: {telegram_channel} 📢
+О себе: {extra_info} 📝"""
+                        await message.answer(text)
+                    elif next_node_id == "chat_link":
+                        text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
                         await message.answer(text)
                     else:
                         logging.warning(f"Неизвестный следующий узел: {next_node_id}")
@@ -988,12 +5095,12 @@ async def handle_user_input(message: types.Message):
             response_data = user_text  # Простое значение вместо сложного объекта
             
             # Сохраняем в пользовательские данные
-            user_data[user_id]["источник"] = response_data
+            user_data[user_id]["user_source"] = response_data
             
             # Сохраняем в базу данных
-            saved_to_db = await update_user_data_in_db(user_id, "источник", response_data)
+            saved_to_db = await update_user_data_in_db(user_id, "user_source", response_data)
             if saved_to_db:
-                logging.info(f"✅ Данные сохранены в БД: источник = {user_text} (пользователь {user_id})")
+                logging.info(f"✅ Данные сохранены в БД: user_source = {user_text} (пользователь {user_id})")
             else:
                 logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
             
@@ -1002,25 +5109,43 @@ async def handle_user_input(message: types.Message):
             # Очищаем состояние ожидания ввода
             del user_data[user_id]["waiting_for_input"]
             
-            logging.info(f"Получен пользовательский ввод: источник = {user_text}")
+            logging.info(f"Получен пользовательский ввод: user_source = {user_text}")
             
             # Переходим к следующему узлу
             try:
-                # Отправляем сообщение для узла grLe3J7YjDg2W8VkY_d7O
-                text = "Новое сообщение"
-                # Настраиваем новое ожидание ввода для узла grLe3J7YjDg2W8VkY_d7O
-                user_data[user_id]["waiting_for_input"] = "grLe3J7YjDg2W8VkY_d7O"
+                # Отправляем сообщение для узла join_request
+                text = "Хочешь присоединиться к нашему чату? 🚀"
+                # Настраиваем новое ожидание ввода для узла join_request
+                user_data[user_id]["waiting_for_input"] = "join_request"
                 user_data[user_id]["input_type"] = "text"
-                user_data[user_id]["input_variable"] = "екекек"
+                user_data[user_id]["input_variable"] = "join_request_response"
                 user_data[user_id]["save_to_database"] = True
-                user_data[user_id]["input_target_node_id"] = "J3kVXLbZunO5QeI8bsZrw"
+                user_data[user_id]["input_target_node_id"] = ""
                 
-                await message.answer(text)
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["Да 😎", "Нет 🙅"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
+                builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard)
                 logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
                 logging.error(f"Ошибка при переходе к следующему узлу: {e}")
             return
-        elif waiting_node_id == "grLe3J7YjDg2W8VkY_d7O":
+        elif waiting_node_id == "join_request":
             
             # Сохраняем ответ пользователя
             import datetime
@@ -1030,12 +5155,12 @@ async def handle_user_input(message: types.Message):
             response_data = user_text  # Простое значение вместо сложного объекта
             
             # Сохраняем в пользовательские данные
-            user_data[user_id]["екекек"] = response_data
+            user_data[user_id]["join_request_response"] = response_data
             
             # Сохраняем в базу данных
-            saved_to_db = await update_user_data_in_db(user_id, "екекек", response_data)
+            saved_to_db = await update_user_data_in_db(user_id, "join_request_response", response_data)
             if saved_to_db:
-                logging.info(f"✅ Данные сохранены в БД: екекек = {user_text} (пользователь {user_id})")
+                logging.info(f"✅ Данные сохранены в БД: join_request_response = {user_text} (пользователь {user_id})")
             else:
                 logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
             
@@ -1044,13 +5169,325 @@ async def handle_user_input(message: types.Message):
             # Очищаем состояние ожидания ввода
             del user_data[user_id]["waiting_for_input"]
             
-            logging.info(f"Получен пользовательский ввод: екекек = {user_text}")
+            logging.info(f"Получен пользовательский ввод: join_request_response = {user_text}")
+            
+            return
+        elif waiting_node_id == "gender_selection":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["gender"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "gender", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: gender = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: gender = {user_text}")
+            
+            return
+        elif waiting_node_id == "name_input":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["user_name"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "user_name", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: user_name = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: user_name = {user_text}")
             
             # Переходим к следующему узлу
             try:
-                # Отправляем сообщение для узла J3kVXLbZunO5QeI8bsZrw
-                text = "Новое сообщение"
+                # Отправляем сообщение для узла age_input
+                text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+                # Настраиваем новое ожидание ввода для узла age_input
+                user_data[user_id]["waiting_for_input"] = "age_input"
+                user_data[user_id]["input_type"] = "text"
+                user_data[user_id]["input_variable"] = "user_age"
+                user_data[user_id]["save_to_database"] = True
+                user_data[user_id]["input_target_node_id"] = "metro_selection"
+                
                 await message.answer(text)
+                logging.info("✅ Переход к следующему узлу выполнен успешно")
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
+            return
+        elif waiting_node_id == "age_input":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["user_age"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "user_age", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: user_age = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: user_age = {user_text}")
+            
+            # Переходим к следующему узлу
+            try:
+                # Отправляем сообщение для узла metro_selection
+                text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["Красная ветка 🟥", "Синяя ветка 🟦", "Зелёная ветка 🟩", "Оранжевая ветка 🟧", "Фиолетовая ветка 🟪", "Я из ЛО 🏡", "Я не в Питере 🌍"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="Красная ветка 🟥", callback_data="red_line"))
+                builder.add(InlineKeyboardButton(text="Синяя ветка 🟦", callback_data="blue_line"))
+                builder.add(InlineKeyboardButton(text="Зелёная ветка 🟩", callback_data="green_line"))
+                builder.add(InlineKeyboardButton(text="Оранжевая ветка 🟧", callback_data="orange_line"))
+                builder.add(InlineKeyboardButton(text="Фиолетовая ветка 🟪", callback_data="purple_line"))
+                builder.add(InlineKeyboardButton(text="Я из ЛО 🏡", callback_data="lo_cities"))
+                builder.add(InlineKeyboardButton(text="Я не в Питере 🌍", callback_data="not_in_spb"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard)
+                logging.info("✅ Переход к следующему узлу выполнен успешно")
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
+            return
+        elif waiting_node_id == "marital_status":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["marital_status"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "marital_status", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: marital_status = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: marital_status = {user_text}")
+            
+            return
+        elif waiting_node_id == "sexual_orientation":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["sexual_orientation"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "sexual_orientation", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: sexual_orientation = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: sexual_orientation = {user_text}")
+            
+            return
+        elif waiting_node_id == "telegram_channel":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["has_telegram_channel"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "has_telegram_channel", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: has_telegram_channel = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: has_telegram_channel = {user_text}")
+            
+            return
+        elif waiting_node_id == "channel_input":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["telegram_channel"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "telegram_channel", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: telegram_channel = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: telegram_channel = {user_text}")
+            
+            # Переходим к следующему узлу
+            try:
+                # Отправляем сообщение для узла extra_info
+                text = """Хочешь добавить что-то ещё о себе? 📝
+
+Расскажи о себе (до 2000 символов) или напиши 'пропустить':"""
+                # Настраиваем новое ожидание ввода для узла extra_info
+                user_data[user_id]["waiting_for_input"] = "extra_info"
+                user_data[user_id]["input_type"] = "text"
+                user_data[user_id]["input_variable"] = "extra_info"
+                user_data[user_id]["save_to_database"] = True
+                user_data[user_id]["input_target_node_id"] = "profile_complete"
+                
+                await message.answer(text)
+                logging.info("✅ Переход к следующему узлу выполнен успешно")
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
+            return
+        elif waiting_node_id == "extra_info":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["extra_info"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "extra_info", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: extra_info = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: extra_info = {user_text}")
+            
+            # Переходим к следующему узлу
+            try:
+                # Отправляем сообщение для узла profile_complete
+                text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["👤 Моя анкета", "🔗 Получить ссылку на чат"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="👤 Моя анкета", callback_data="show_profile"))
+                builder.add(InlineKeyboardButton(text="🔗 Получить ссылку на чат", callback_data="chat_link"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard)
                 logging.info("✅ Переход к следующему узлу выполнен успешно")
             except Exception as e:
                 logging.error(f"Ошибка при переходе к следующему узлу: {e}")
@@ -1168,22 +5605,381 @@ async def handle_user_input(message: types.Message):
             # Находим узел по ID и выполняем соответствующее действие
             if next_node_id == "start":
                 logging.info(f"Переход к узлу start типа start")
-            elif next_node_id == "grLe3J7YjDg2W8VkY_d7O":
-                text = "Новое сообщение"
+            elif next_node_id == "join_request":
+                text = "Хочешь присоединиться к нашему чату? 🚀"
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["Да 😎", "Нет 🙅"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="Да 😎", callback_data="gender_selection"))
+                builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="decline_response"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "decline_response":
+                text = "Понятно! Если передумаешь, напиши /start! 😊"
                 # Используем parse_mode условного сообщения если он установлен
                 if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
                     parse_mode = conditional_parse_mode
                 else:
                     parse_mode = None
                 await message.answer(text, parse_mode=parse_mode)
-            elif next_node_id == "J3kVXLbZunO5QeI8bsZrw":
-                text = "Новое сообщение"
+            elif next_node_id == "gender_selection":
+                text = "Укажи свой пол: 👨👩"
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["Мужчина 👨", "Женщина 👩"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="Мужчина 👨", callback_data="name_input"))
+                builder.add(InlineKeyboardButton(text="Женщина 👩", callback_data="name_input"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "name_input":
+                text = """Как тебя зовут? ✏️
+
+Напиши своё имя в сообщении:"""
                 # Используем parse_mode условного сообщения если он установлен
                 if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
                     parse_mode = conditional_parse_mode
                 else:
                     parse_mode = None
                 await message.answer(text, parse_mode=parse_mode)
+            elif next_node_id == "age_input":
+                text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):"""
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                await message.answer(text, parse_mode=parse_mode)
+            elif next_node_id == "metro_selection":
+                text = """На какой станции метро ты обычно бываешь? 🚇
+
+Можешь выбрать несколько веток:"""
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["Красная ветка 🟥", "Синяя ветка 🟦", "Зелёная ветка 🟩", "Оранжевая ветка 🟧", "Фиолетовая ветка 🟪", "Я из ЛО 🏡", "Я не в Питере 🌍"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "interests_categories":
+                text = "Выбери категории интересов 🎯:"
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["🎮 Хобби", "👥 Социальная жизнь", "🎨 Творчество", "🏃 Активный образ жизни", "🍕 Еда и напитки", "⚽ Спорт", "🏠 Время дома", "✈️ Путешествия", "🐾 Домашние животные", "🎬 Фильмы и сериалы", "🎵 Музыка"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="🎮 Хобби", callback_data="hobby_interests"))
+                builder.add(InlineKeyboardButton(text="👥 Социальная жизнь", callback_data="social_interests"))
+                builder.add(InlineKeyboardButton(text="🎨 Творчество", callback_data="creativity_interests"))
+                builder.add(InlineKeyboardButton(text="🏃 Активный образ жизни", callback_data="active_interests"))
+                builder.add(InlineKeyboardButton(text="🍕 Еда и напитки", callback_data="food_interests"))
+                builder.add(InlineKeyboardButton(text="⚽ Спорт", callback_data="sport_interests"))
+                builder.add(InlineKeyboardButton(text="🏠 Время дома", callback_data="home_interests"))
+                builder.add(InlineKeyboardButton(text="✈️ Путешествия", callback_data="travel_interests"))
+                builder.add(InlineKeyboardButton(text="🐾 Домашние животные", callback_data="pets_interests"))
+                builder.add(InlineKeyboardButton(text="🎬 Фильмы и сериалы", callback_data="movies_interests"))
+                builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="music_interests"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "hobby_interests":
+                text = "Выбери интересы в категории 🎮 Хобби:"
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["🎮 Компьютерные игры", "💄 Мода и красота", "🚗 Автомобили", "💻 IT и технологии", "🧠 Психология", "🔮 Астрология", "🧘 Медитации", "📚 Комиксы", "⬅️ К категориям"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "marital_status":
+                text = "Выбери семейное положение 💍:"
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["💔 Не женат", "💔 Не замужем", "💕 Встречаюсь", "💍 Помолвлен(а)", "💒 Женат", "💒 Замужем", "🤝 В гражданском браке", "😍 Влюблён", "🤷 Всё сложно", "🔍 В активном поиске"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="💔 Не женат", callback_data="sexual_orientation"))
+                builder.add(InlineKeyboardButton(text="💔 Не замужем", callback_data="sexual_orientation"))
+                builder.add(InlineKeyboardButton(text="💕 Встречаюсь", callback_data="sexual_orientation"))
+                builder.add(InlineKeyboardButton(text="💍 Помолвлен(а)", callback_data="sexual_orientation"))
+                builder.add(InlineKeyboardButton(text="💒 Женат", callback_data="sexual_orientation"))
+                builder.add(InlineKeyboardButton(text="💒 Замужем", callback_data="sexual_orientation"))
+                builder.add(InlineKeyboardButton(text="🤝 В гражданском браке", callback_data="sexual_orientation"))
+                builder.add(InlineKeyboardButton(text="😍 Влюблён", callback_data="sexual_orientation"))
+                builder.add(InlineKeyboardButton(text="🤷 Всё сложно", callback_data="sexual_orientation"))
+                builder.add(InlineKeyboardButton(text="🔍 В активном поиске", callback_data="sexual_orientation"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "sexual_orientation":
+                text = "Укажи свою сексуальную ориентацию 🌈:"
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["Гетеро 😊", "Би 🌈", "Гей/Лесби 🏳️‍🌈", "Другое ✍️"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="Гетеро 😊", callback_data="telegram_channel"))
+                builder.add(InlineKeyboardButton(text="Би 🌈", callback_data="telegram_channel"))
+                builder.add(InlineKeyboardButton(text="Гей/Лесби 🏳️‍🌈", callback_data="telegram_channel"))
+                builder.add(InlineKeyboardButton(text="Другое ✍️", callback_data="telegram_channel"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "telegram_channel":
+                text = "Хочешь указать свой телеграм-канал? 📢"
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["Указать канал 📢", "Не указывать 🚫"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="Указать канал 📢", callback_data="channel_input"))
+                builder.add(InlineKeyboardButton(text="Не указывать 🚫", callback_data="extra_info"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "channel_input":
+                text = """Введи свой телеграм-канал 📢
+
+(можно ссылку, ник с @ или просто имя):"""
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                await message.answer(text, parse_mode=parse_mode)
+            elif next_node_id == "extra_info":
+                text = """Хочешь добавить что-то ещё о себе? 📝
+
+Расскажи о себе (до 2000 символов) или напиши 'пропустить':"""
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                await message.answer(text, parse_mode=parse_mode)
+            elif next_node_id == "profile_complete":
+                text = """🎉 Отлично! Твой профиль заполнен!
+
+👤 Твоя анкета:
+Пол: {gender}
+Имя: {user_name}
+Возраст: {user_age}
+Метро: {metro_lines}
+Интересы: {user_interests}
+Семейное положение: {marital_status}
+Ориентация: {sexual_orientation}
+ТГ-канал: {telegram_channel}
+О себе: {extra_info}"""
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["👤 Моя анкета", "🔗 Получить ссылку на чат"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="👤 Моя анкета", callback_data="show_profile"))
+                builder.add(InlineKeyboardButton(text="🔗 Получить ссылку на чат", callback_data="chat_link"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "show_profile":
+                text = """👤 Твой профиль:
+
+Пол: {gender} {'👨' if gender == 'Мужчина' else '👩'}
+Имя: {user_name} ✏️
+Возраст: {user_age} 🎂
+Метро: {metro_lines} 🚇
+Интересы: {user_interests} 🎯
+Семейное положение: {marital_status} 💍
+Ориентация: {sexual_orientation} 🌈
+ТГ-канал: {telegram_channel} 📢
+О себе: {extra_info} 📝"""
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["🔗 Получить ссылку на чат"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="🔗 Получить ссылку на чат", callback_data="chat_link"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "chat_link":
+                text = """🔗 Актуальная ссылка на чат:
+
+https://t.me/+agkIVgCzHtY2ZTA6
+
+Добро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉"""
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["👤 К профилю"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="👤 К профилю", callback_data="show_profile"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
@@ -1337,8 +6133,12 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
         # Сохраняем выбранные опции в базу данных
         if selected_options:
             selected_text = ", ".join(selected_options)
+            if node_id == "metro_selection":
+                await save_user_data_to_db(user_id, "metro_lines", selected_text)
+            if node_id == "hobby_interests":
+                await save_user_data_to_db(user_id, "user_interests", selected_text)
             # Резервное сохранение если узел не найден
-            if not any(node_id == node for node in []):
+            if not any(node_id == node for node in ["metro_selection", "hobby_interests"]):
                 await save_user_data_to_db(user_id, f"multi_select_{node_id}", selected_text)
         
         # Очищаем состояние множественного выбора
@@ -1347,6 +6147,13 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             user_data[user_id].pop("multi_select_node", None)
         
         # Переходим к следующему узлу, если указан
+        # Определяем следующий узел для каждого node_id
+        if node_id == "metro_selection":
+            # Переход к узлу hobby_interests
+            await handle_callback_hobby_interests(callback_query)
+        if node_id == "hobby_interests":
+            # Переход к узлу marital_status
+            await handle_callback_marital_status(callback_query)
         return
     
     # Обработка выбора опции
@@ -1384,6 +6191,38 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
         
         # Находим текст кнопки по button_id
         button_text = None
+        if node_id == "metro_selection":
+            if button_id == "red_line":
+                button_text = "Красная ветка 🟥"
+            if button_id == "blue_line":
+                button_text = "Синяя ветка 🟦"
+            if button_id == "green_line":
+                button_text = "Зелёная ветка 🟩"
+            if button_id == "orange_line":
+                button_text = "Оранжевая ветка 🟧"
+            if button_id == "purple_line":
+                button_text = "Фиолетовая ветка 🟪"
+            if button_id == "lo_cities":
+                button_text = "Я из ЛО 🏡"
+            if button_id == "not_in_spb":
+                button_text = "Я не в Питере 🌍"
+        if node_id == "hobby_interests":
+            if button_id == "computer_games":
+                button_text = "🎮 Компьютерные игры"
+            if button_id == "fashion":
+                button_text = "💄 Мода и красота"
+            if button_id == "cars":
+                button_text = "🚗 Автомобили"
+            if button_id == "it_tech":
+                button_text = "💻 IT и технологии"
+            if button_id == "psychology":
+                button_text = "🧠 Психология"
+            if button_id == "astrology":
+                button_text = "🔮 Астрология"
+            if button_id == "meditation":
+                button_text = "🧘 Медитации"
+            if button_id == "comics":
+                button_text = "📚 Комиксы"
         
         if button_text:
             selected_list = user_data[user_id][f"multi_select_{node_id}"]
@@ -1396,6 +6235,81 @@ async def handle_multi_select_callback(callback_query: types.CallbackQuery):
             
             # Обновляем клавиатуру с галочками
             builder = InlineKeyboardBuilder()
+            if node_id == "metro_selection":
+                # Оптимальное количество колонок для кнопок интересов
+                keyboard_width = 2  # Консистентное количество колонок для множественного выбора
+                
+                # Добавляем кнопки выбора с умным расположением
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                red_line_selected = any("Красная ветка 🟥" in interest or "red_line" in interest.lower() for interest in selected_list)
+                red_line_text = "✅ Красная ветка 🟥" if red_line_selected else "Красная ветка 🟥"
+                builder.add(InlineKeyboardButton(text=red_line_text, callback_data="multi_select_metro_selection_red_line"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                blue_line_selected = any("Синяя ветка 🟦" in interest or "blue_line" in interest.lower() for interest in selected_list)
+                blue_line_text = "✅ Синяя ветка 🟦" if blue_line_selected else "Синяя ветка 🟦"
+                builder.add(InlineKeyboardButton(text=blue_line_text, callback_data="multi_select_metro_selection_blue_line"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                green_line_selected = any("Зелёная ветка 🟩" in interest or "green_line" in interest.lower() for interest in selected_list)
+                green_line_text = "✅ Зелёная ветка 🟩" if green_line_selected else "Зелёная ветка 🟩"
+                builder.add(InlineKeyboardButton(text=green_line_text, callback_data="multi_select_metro_selection_green_line"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                orange_line_selected = any("Оранжевая ветка 🟧" in interest or "orange_line" in interest.lower() for interest in selected_list)
+                orange_line_text = "✅ Оранжевая ветка 🟧" if orange_line_selected else "Оранжевая ветка 🟧"
+                builder.add(InlineKeyboardButton(text=orange_line_text, callback_data="multi_select_metro_selection_orange_line"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                purple_line_selected = any("Фиолетовая ветка 🟪" in interest or "purple_line" in interest.lower() for interest in selected_list)
+                purple_line_text = "✅ Фиолетовая ветка 🟪" if purple_line_selected else "Фиолетовая ветка 🟪"
+                builder.add(InlineKeyboardButton(text=purple_line_text, callback_data="multi_select_metro_selection_purple_line"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                lo_cities_selected = any("Я из ЛО 🏡" in interest or "lo_cities" in interest.lower() for interest in selected_list)
+                lo_cities_text = "✅ Я из ЛО 🏡" if lo_cities_selected else "Я из ЛО 🏡"
+                builder.add(InlineKeyboardButton(text=lo_cities_text, callback_data="multi_select_metro_selection_lo_cities"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                not_in_spb_selected = any("Я не в Питере 🌍" in interest or "not_in_spb" in interest.lower() for interest in selected_list)
+                not_in_spb_text = "✅ Я не в Питере 🌍" if not_in_spb_selected else "Я не в Питере 🌍"
+                builder.add(InlineKeyboardButton(text=not_in_spb_text, callback_data="multi_select_metro_selection_not_in_spb"))
+                builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_metro_selection"))
+                builder.adjust(keyboard_width)
+            if node_id == "hobby_interests":
+                # Оптимальное количество колонок для кнопок интересов
+                keyboard_width = 2  # Консистентное количество колонок для множественного выбора
+                
+                # Добавляем кнопки выбора с умным расположением
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                computer_games_selected = any("🎮 Компьютерные игры" in interest or "computer_games" in interest.lower() for interest in selected_list)
+                computer_games_text = "✅ 🎮 Компьютерные игры" if computer_games_selected else "🎮 Компьютерные игры"
+                builder.add(InlineKeyboardButton(text=computer_games_text, callback_data="multi_select_hobby_interests_computer_games"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                fashion_selected = any("💄 Мода и красота" in interest or "fashion" in interest.lower() for interest in selected_list)
+                fashion_text = "✅ 💄 Мода и красота" if fashion_selected else "💄 Мода и красота"
+                builder.add(InlineKeyboardButton(text=fashion_text, callback_data="multi_select_hobby_interests_fashion"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                cars_selected = any("🚗 Автомобили" in interest or "cars" in interest.lower() for interest in selected_list)
+                cars_text = "✅ 🚗 Автомобили" if cars_selected else "🚗 Автомобили"
+                builder.add(InlineKeyboardButton(text=cars_text, callback_data="multi_select_hobby_interests_cars"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                it_tech_selected = any("💻 IT и технологии" in interest or "it_tech" in interest.lower() for interest in selected_list)
+                it_tech_text = "✅ 💻 IT и технологии" if it_tech_selected else "💻 IT и технологии"
+                builder.add(InlineKeyboardButton(text=it_tech_text, callback_data="multi_select_hobby_interests_it_tech"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                psychology_selected = any("🧠 Психология" in interest or "psychology" in interest.lower() for interest in selected_list)
+                psychology_text = "✅ 🧠 Психология" if psychology_selected else "🧠 Психология"
+                builder.add(InlineKeyboardButton(text=psychology_text, callback_data="multi_select_hobby_interests_psychology"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                astrology_selected = any("🔮 Астрология" in interest or "astrology" in interest.lower() for interest in selected_list)
+                astrology_text = "✅ 🔮 Астрология" if astrology_selected else "🔮 Астрология"
+                builder.add(InlineKeyboardButton(text=astrology_text, callback_data="multi_select_hobby_interests_astrology"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                meditation_selected = any("🧘 Медитации" in interest or "meditation" in interest.lower() for interest in selected_list)
+                meditation_text = "✅ 🧘 Медитации" if meditation_selected else "🧘 Медитации"
+                builder.add(InlineKeyboardButton(text=meditation_text, callback_data="multi_select_hobby_interests_meditation"))
+                # Проверяем каждый интерес и добавляем галочку если он выбран
+                comics_selected = any("📚 Комиксы" in interest or "comics" in interest.lower() for interest in selected_list)
+                comics_text = "✅ 📚 Комиксы" if comics_selected else "📚 Комиксы"
+                builder.add(InlineKeyboardButton(text=comics_text, callback_data="multi_select_hobby_interests_comics"))
+                builder.add(InlineKeyboardButton(text="⬅️ К категориям", callback_data="interests_categories"))
+                builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_hobby_interests"))
+                builder.adjust(keyboard_width)
             
             keyboard = builder.as_markup()
             await callback_query.message.edit_reply_markup(reply_markup=keyboard)
@@ -1410,7 +6324,236 @@ async def handle_multi_select_reply(message: types.Message):
     if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":
         node_id = user_data[user_id]["multi_select_node"]
         
+        if node_id == "metro_selection" and user_input == "Готово":
+            # Завершение множественного выбора для узла metro_selection
+            selected_options = user_data.get(user_id, {}).get("multi_select_{node_id}", [])
+            if selected_options:
+                selected_text = ", ".join(selected_options)
+                await save_user_data_to_db(user_id, "metro_lines", selected_text)
+            
+            # Очищаем состояние
+            user_data[user_id].pop("multi_select_{node_id}", None)
+            user_data[user_id].pop("multi_select_node", None)
+            user_data[user_id].pop("multi_select_type", None)
+            
+            # Переход к следующему узлу
+            await handle_callback_hobby_interests(types.CallbackQuery(id="multi_select", from_user=message.from_user, chat_instance="", data="hobby_interests", message=message))
+            return
+        
+        if node_id == "hobby_interests" and user_input == "Готово":
+            # Завершение множественного выбора для узла hobby_interests
+            selected_options = user_data.get(user_id, {}).get("multi_select_{node_id}", [])
+            if selected_options:
+                selected_text = ", ".join(selected_options)
+                await save_user_data_to_db(user_id, "user_interests", selected_text)
+            
+            # Очищаем состояние
+            user_data[user_id].pop("multi_select_{node_id}", None)
+            user_data[user_id].pop("multi_select_node", None)
+            user_data[user_id].pop("multi_select_type", None)
+            
+            # Переход к следующему узлу
+            await handle_callback_marital_status(types.CallbackQuery(id="multi_select", from_user=message.from_user, chat_instance="", data="marital_status", message=message))
+            return
+        
         # Обработка выбора опции
+        if node_id == "metro_selection":
+            if user_input == "Красная ветка 🟥":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "Красная ветка 🟥" in selected_list:
+                    selected_list.remove("Красная ветка 🟥")
+                    await message.answer("❌ Убрано: Красная ветка 🟥")
+                else:
+                    selected_list.append("Красная ветка 🟥")
+                    await message.answer("✅ Выбрано: Красная ветка 🟥")
+                return
+            
+            if user_input == "Синяя ветка 🟦":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "Синяя ветка 🟦" in selected_list:
+                    selected_list.remove("Синяя ветка 🟦")
+                    await message.answer("❌ Убрано: Синяя ветка 🟦")
+                else:
+                    selected_list.append("Синяя ветка 🟦")
+                    await message.answer("✅ Выбрано: Синяя ветка 🟦")
+                return
+            
+            if user_input == "Зелёная ветка 🟩":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "Зелёная ветка 🟩" in selected_list:
+                    selected_list.remove("Зелёная ветка 🟩")
+                    await message.answer("❌ Убрано: Зелёная ветка 🟩")
+                else:
+                    selected_list.append("Зелёная ветка 🟩")
+                    await message.answer("✅ Выбрано: Зелёная ветка 🟩")
+                return
+            
+            if user_input == "Оранжевая ветка 🟧":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "Оранжевая ветка 🟧" in selected_list:
+                    selected_list.remove("Оранжевая ветка 🟧")
+                    await message.answer("❌ Убрано: Оранжевая ветка 🟧")
+                else:
+                    selected_list.append("Оранжевая ветка 🟧")
+                    await message.answer("✅ Выбрано: Оранжевая ветка 🟧")
+                return
+            
+            if user_input == "Фиолетовая ветка 🟪":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "Фиолетовая ветка 🟪" in selected_list:
+                    selected_list.remove("Фиолетовая ветка 🟪")
+                    await message.answer("❌ Убрано: Фиолетовая ветка 🟪")
+                else:
+                    selected_list.append("Фиолетовая ветка 🟪")
+                    await message.answer("✅ Выбрано: Фиолетовая ветка 🟪")
+                return
+            
+            if user_input == "Я из ЛО 🏡":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "Я из ЛО 🏡" in selected_list:
+                    selected_list.remove("Я из ЛО 🏡")
+                    await message.answer("❌ Убрано: Я из ЛО 🏡")
+                else:
+                    selected_list.append("Я из ЛО 🏡")
+                    await message.answer("✅ Выбрано: Я из ЛО 🏡")
+                return
+            
+            if user_input == "Я не в Питере 🌍":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "Я не в Питере 🌍" in selected_list:
+                    selected_list.remove("Я не в Питере 🌍")
+                    await message.answer("❌ Убрано: Я не в Питере 🌍")
+                else:
+                    selected_list.append("Я не в Питере 🌍")
+                    await message.answer("✅ Выбрано: Я не в Питере 🌍")
+                return
+            
+        if node_id == "hobby_interests":
+            if user_input == "🎮 Компьютерные игры":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "🎮 Компьютерные игры" in selected_list:
+                    selected_list.remove("🎮 Компьютерные игры")
+                    await message.answer("❌ Убрано: 🎮 Компьютерные игры")
+                else:
+                    selected_list.append("🎮 Компьютерные игры")
+                    await message.answer("✅ Выбрано: 🎮 Компьютерные игры")
+                return
+            
+            if user_input == "💄 Мода и красота":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "💄 Мода и красота" in selected_list:
+                    selected_list.remove("💄 Мода и красота")
+                    await message.answer("❌ Убрано: 💄 Мода и красота")
+                else:
+                    selected_list.append("💄 Мода и красота")
+                    await message.answer("✅ Выбрано: 💄 Мода и красота")
+                return
+            
+            if user_input == "🚗 Автомобили":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "🚗 Автомобили" in selected_list:
+                    selected_list.remove("🚗 Автомобили")
+                    await message.answer("❌ Убрано: 🚗 Автомобили")
+                else:
+                    selected_list.append("🚗 Автомобили")
+                    await message.answer("✅ Выбрано: 🚗 Автомобили")
+                return
+            
+            if user_input == "💻 IT и технологии":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "💻 IT и технологии" in selected_list:
+                    selected_list.remove("💻 IT и технологии")
+                    await message.answer("❌ Убрано: 💻 IT и технологии")
+                else:
+                    selected_list.append("💻 IT и технологии")
+                    await message.answer("✅ Выбрано: 💻 IT и технологии")
+                return
+            
+            if user_input == "🧠 Психология":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "🧠 Психология" in selected_list:
+                    selected_list.remove("🧠 Психология")
+                    await message.answer("❌ Убрано: 🧠 Психология")
+                else:
+                    selected_list.append("🧠 Психология")
+                    await message.answer("✅ Выбрано: 🧠 Психология")
+                return
+            
+            if user_input == "🔮 Астрология":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "🔮 Астрология" in selected_list:
+                    selected_list.remove("🔮 Астрология")
+                    await message.answer("❌ Убрано: 🔮 Астрология")
+                else:
+                    selected_list.append("🔮 Астрология")
+                    await message.answer("✅ Выбрано: 🔮 Астрология")
+                return
+            
+            if user_input == "🧘 Медитации":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "🧘 Медитации" in selected_list:
+                    selected_list.remove("🧘 Медитации")
+                    await message.answer("❌ Убрано: 🧘 Медитации")
+                else:
+                    selected_list.append("🧘 Медитации")
+                    await message.answer("✅ Выбрано: 🧘 Медитации")
+                return
+            
+            if user_input == "📚 Комиксы":
+                if "multi_select_{node_id}" not in user_data[user_id]:
+                    user_data[user_id]["multi_select_{node_id}"] = []
+                
+                selected_list = user_data[user_id]["multi_select_{node_id}"]
+                if "📚 Комиксы" in selected_list:
+                    selected_list.remove("📚 Комиксы")
+                    await message.answer("❌ Убрано: 📚 Комиксы")
+                else:
+                    selected_list.append("📚 Комиксы")
+                    await message.answer("✅ Выбрано: 📚 Комиксы")
+                return
+            
     
     # Если не множественный выбор, передаем дальше по цепочке обработчиков
     pass
