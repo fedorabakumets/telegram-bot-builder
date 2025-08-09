@@ -1001,6 +1001,89 @@ async function seedDefaultTemplates(force = false) {
     });
 
     console.log('✅ Шаблон VProgulke Bot создан');
+
+    // Создаем базовый шаблон "Саша"
+    await storage.createBotTemplate({
+      name: "саша",
+      description: "Базовый шаблон бота с простыми сообщениями для начинающих",
+      category: "official",
+      tags: ["базовый", "простой", "начинающий"],
+      isPublic: 1,
+      difficulty: "easy",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 1,
+      estimatedTime: 5,
+      data: {
+        nodes: [
+          {
+            id: "start",
+            type: "start",
+            position: { x: 140, y: 100 },
+            data: {
+              command: "/start",
+              description: "Приветствие",
+              messageText: "Привет! Я ваш новый бот.",
+              keyboardType: "none",
+              buttons: [],
+              collectUserInput: true,
+              enableTextInput: true,
+              inputVariable: "источник",
+              nextNodeId: "message_1",
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "message_1",
+            type: "message",
+            position: { x: 540, y: 100 },
+            data: {
+              messageText: "Новое сообщение",
+              keyboardType: "none",
+              buttons: [],
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "message_2",
+            type: "message",
+            position: { x: 940, y: 100 },
+            data: {
+              messageText: "Новое сообщение",
+              keyboardType: "none", 
+              buttons: [],
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn-1",
+            sourceNodeId: "start",
+            targetNodeId: "message_1",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-2", 
+            sourceNodeId: "message_1",
+            targetNodeId: "message_2",
+            sourceHandle: "source",
+            targetHandle: "target"
+          }
+        ]
+      }
+    });
+
+    console.log('✅ Базовый шаблон "саша" создан');
     console.log('✅ Системные шаблоны созданы');
 
   } catch (error) {
