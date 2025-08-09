@@ -3896,12 +3896,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '                else:\n';
   code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
   code += '            \n';
-  code += '            # НЕ отправляем сообщение об успехе здесь - это делается после перехода к следующему узлу\n';
-  code += '            # success_message = waiting_config.get("success_message", "✅ Спасибо за ваш ответ!")\n';
-  code += '            # await message.answer(success_message)\n';
-  code += '            \n';
-  code += '            # НЕ очищаем состояние здесь - это делается после успешного перехода\n';
-  code += '            # del user_data[user_id]["waiting_for_input"]\n';
+  code += '            # НЕ отправляем сообщение об успехе здесь и НЕ очищаем состояние\n';
+  code += '            # Это будет сделано после успешного перехода к следующему узлу\n';
   code += '            \n';
   code += '            # ИСПРАВЛЕНИЕ: Добавляем маркер, что ввод был обработан для этого узла\n';
   code += '            if "processed_inputs" not in user_data[user_id]:\n';
@@ -3976,6 +3972,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           // Очищаем состояние ожидания ввода после успешного перехода для message узлов без сбора ввода
           if (!targetNode.data.collectUserInput) {
+            code += '                        # НЕ отправляем сообщение об успехе здесь - это делается в старом формате\n';
             code += '                        # Очищаем состояние ожидания ввода после успешного перехода\n';
             code += '                        if "waiting_for_input" in user_data[user_id]:\n';
             code += '                            del user_data[user_id]["waiting_for_input"]\n';
@@ -4036,7 +4033,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        # Обработка старого формата (для совместимости)\n';
   code += '        # Находим узел для получения настроек\n';
   
-  // Генерируем проверку для каждого узла с универсальным сбором ввода
+  // Генерируем проверку для каждого узла с универсальным сбором ввода (старый формат)
   const inputNodes = nodes.filter(node => node.data.collectUserInput);
   inputNodes.forEach((node, index) => {
     const condition = index === 0 ? 'if' : 'elif';
@@ -4100,6 +4097,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
     code += `            \n`;
     
+    code += `            \n`;
+    code += `            # Отправляем сообщение об успехе с галочкой\n`;
+    code += `            await message.answer("✅ Спасибо за ваш ответ!")\n`;
     code += `            \n`;
     code += `            logging.info(f"Получен пользовательский ввод: ${variableName} = {user_text}")\n`;
     code += `            \n`;
