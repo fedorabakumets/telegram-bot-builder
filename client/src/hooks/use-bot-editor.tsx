@@ -216,6 +216,75 @@ export function useBotEditor(initialData?: BotData) {
     console.log('setBotData завершен');
   }, []);
 
+  const duplicateNode = useCallback((nodeId: string) => {
+    const nodeToDuplicate = nodes.find(node => node.id === nodeId);
+    if (!nodeToDuplicate) return;
+
+    // Создаем копию узла с новым ID и смещенной позицией
+    const duplicatedNode: Node = {
+      ...JSON.parse(JSON.stringify(nodeToDuplicate)), // Глубокое копирование
+      id: `${nodeId}_copy_${Date.now()}`, // Новый уникальный ID
+      position: {
+        x: nodeToDuplicate.position.x + 50, // Смещение вправо
+        y: nodeToDuplicate.position.y + 50  // Смещение вниз
+      }
+    };
+
+    setNodes(prev => [...prev, duplicatedNode]);
+    setSelectedNodeId(duplicatedNode.id); // Выбираем скопированный узел
+  }, [nodes]);
+
+  const duplicateNodes = useCallback((nodeIds: string[]) => {
+    const nodesToDuplicate = nodes.filter(node => nodeIds.includes(node.id));
+    if (nodesToDuplicate.length === 0) return;
+
+    const idMapping: { [oldId: string]: string } = {};
+    const duplicatedNodes: Node[] = [];
+
+    // Создаем копии узлов с новыми ID
+    nodesToDuplicate.forEach(node => {
+      const newId = `${node.id}_copy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      idMapping[node.id] = newId;
+
+      const duplicatedNode: Node = {
+        ...JSON.parse(JSON.stringify(node)), // Глубокое копирование
+        id: newId,
+        position: {
+          x: node.position.x + 50, // Смещение вправо
+          y: node.position.y + 50  // Смещение вниз
+        }
+      };
+
+      duplicatedNodes.push(duplicatedNode);
+    });
+
+    // Копируем связи между дублированными узлами
+    const duplicatedConnections: Connection[] = [];
+    connections.forEach(connection => {
+      const sourceId = idMapping[connection.source];
+      const targetId = idMapping[connection.target];
+      
+      // Создаем связь только если оба узла были скопированы
+      if (sourceId && targetId) {
+        const duplicatedConnection: Connection = {
+          ...JSON.parse(JSON.stringify(connection)), // Глубокое копирование
+          id: `${connection.id}_copy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          source: sourceId,
+          target: targetId
+        };
+        duplicatedConnections.push(duplicatedConnection);
+      }
+    });
+
+    setNodes(prev => [...prev, ...duplicatedNodes]);
+    setConnections(prev => [...prev, ...duplicatedConnections]);
+    
+    // Выбираем первый скопированный узел
+    if (duplicatedNodes.length > 0) {
+      setSelectedNodeId(duplicatedNodes[0].id);
+    }
+  }, [nodes, connections]);
+
   const getBotData = useCallback((): BotData => ({
     nodes,
     connections
@@ -230,6 +299,8 @@ export function useBotEditor(initialData?: BotData) {
     addNode,
     updateNode,
     deleteNode,
+    duplicateNode,
+    duplicateNodes,
     addConnection,
     deleteConnection,
     updateConnection,

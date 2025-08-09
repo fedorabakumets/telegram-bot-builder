@@ -150,6 +150,8 @@ export default function Editor() {
     addNode,
     updateNode,
     deleteNode,
+    duplicateNode,
+    duplicateNodes,
     addConnection,
     deleteConnection,
     updateConnection,
@@ -592,6 +594,7 @@ export default function Editor() {
                   onNodeSelect={setSelectedNodeId}
                   onNodeAdd={addNode}
                   onNodeDelete={deleteNode}
+                  onNodeDuplicate={duplicateNode}
                   onNodeMove={handleNodeMove}
                   onConnectionSelect={setSelectedConnectionId}
                   onConnectionDelete={deleteConnection}
@@ -699,6 +702,7 @@ export default function Editor() {
                       onNodeSelect={setSelectedNodeId}
                       onNodeAdd={addNode}
                       onNodeDelete={deleteNode}
+                      onNodeDuplicate={duplicateNode}
                       onNodeMove={handleNodeMove}
                       onConnectionSelect={setSelectedConnectionId}
                       onConnectionDelete={deleteConnection}
@@ -745,6 +749,7 @@ export default function Editor() {
                   onNodeSelect={setSelectedNodeId}
                   onNodeAdd={addNode}
                   onNodeDelete={deleteNode}
+                  onNodeDuplicate={duplicateNode}
                   onNodeMove={handleNodeMove}
                   onConnectionSelect={setSelectedConnectionId}
                   onConnectionDelete={deleteConnection}
@@ -823,6 +828,7 @@ export default function Editor() {
           onNodeSelect={setSelectedNodeId}
           onNodeAdd={addNode}
           onNodeDelete={deleteNode}
+          onNodeDuplicate={duplicateNode}
           onNodeMove={handleNodeMove}
           onConnectionSelect={setSelectedConnectionId}
           onConnectionDelete={deleteConnection}

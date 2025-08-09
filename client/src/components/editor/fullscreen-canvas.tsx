@@ -12,6 +12,7 @@ interface FullscreenCanvasProps {
   onNodeSelect: (nodeId: string) => void;
   onNodeAdd: (node: Node) => void;
   onNodeDelete: (nodeId: string) => void;
+  onNodeDuplicate?: (nodeId: string) => void;
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
   onConnectionSelect?: (connectionId: string) => void;
   onConnectionDelete?: (connectionId: string) => void;
@@ -34,6 +35,7 @@ export function FullscreenCanvas({
   onNodeSelect,
   onNodeAdd,
   onNodeDelete,
+  onNodeDuplicate,
   onNodeMove,
   onConnectionSelect,
   onConnectionDelete,
@@ -159,6 +161,7 @@ export function FullscreenCanvas({
             onNodeSelect={onNodeSelect}
             onNodeAdd={onNodeAdd}
             onNodeDelete={onNodeDelete}
+            onNodeDuplicate={onNodeDuplicate}
             onNodeMove={onNodeMove}
             onConnectionSelect={onConnectionSelect}
             onConnectionDelete={onConnectionDelete}

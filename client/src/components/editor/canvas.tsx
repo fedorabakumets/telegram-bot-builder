@@ -21,6 +21,7 @@ interface CanvasProps {
   onNodeSelect: (nodeId: string) => void;
   onNodeAdd: (node: Node) => void;
   onNodeDelete: (nodeId: string) => void;
+  onNodeDuplicate?: (nodeId: string) => void;
   onNodeMove: (nodeId: string, position: { x: number; y: number }) => void;
   onConnectionSelect?: (connectionId: string) => void;
   onConnectionDelete?: (connectionId: string) => void;
@@ -53,6 +54,7 @@ export function Canvas({
   onNodeSelect, 
   onNodeAdd, 
   onNodeDelete,
+  onNodeDuplicate,
   onNodeMove,
   onConnectionSelect,
   onConnectionDelete,
@@ -217,6 +219,19 @@ export function Canvas({
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Проверяем, что фокус не находится на input или textarea
+      const target = e.target as HTMLElement;
+      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true';
+      
+      if (!isInputField) {
+        // Обработка клавиши Delete для удаления выбранного узла
+        if (e.key === 'Delete' && selectedNodeId && onNodeDelete) {
+          e.preventDefault();
+          onNodeDelete(selectedNodeId);
+          return;
+        }
+      }
+
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
           case '=':
@@ -256,13 +271,25 @@ export function Canvas({
               onSave();
             }
             break;
+          case 'c':
+            e.preventDefault();
+            if (selectedNodeId && onNodeDuplicate) {
+              onNodeDuplicate(selectedNodeId);
+            }
+            break;
+          case 'd':
+            e.preventDefault();
+            if (selectedNodeId && onNodeDuplicate) {
+              onNodeDuplicate(selectedNodeId);
+            }
+            break;
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving]);
+  }, [zoomIn, zoomOut, resetZoom, fitToContent, onUndo, onRedo, canUndo, canRedo, onSave, isSaving, selectedNodeId, onNodeDelete, onNodeDuplicate]);
 
 
 
