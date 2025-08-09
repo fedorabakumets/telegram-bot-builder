@@ -1020,6 +1020,144 @@ async function seedDefaultTemplates(force = false) {
     });
 
     console.log('✅ Базовый шаблон "саша" создан');
+
+    // Создаем базовый шаблон "Маша" - простой бот для знакомств
+    await storage.createBotTemplate({
+      name: "маша",
+      description: "Простой базовый шаблон для знакомств с основными функциями",
+      category: "official",
+      tags: ["знакомства", "простой", "базовый", "имя", "пол"],
+      isPublic: 1,
+      difficulty: "easy",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 3,
+      estimatedTime: 10,
+      data: {
+        nodes: [
+          {
+            id: "start",
+            type: "start",
+            position: { x: 140, y: 100 },
+            data: {
+              command: "/start",
+              description: "Приветствие и источник",
+              messageText: "🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!\n\nЭтот бот поможет тебе найти интересных людей в Санкт-Петербурге!\n\nОткуда ты узнал о нашем чате? 😎",
+              keyboardType: "none",
+              inputVariable: "user_source",
+              resizeKeyboard: true,
+              enableTextInput: true,
+              oneTimeKeyboard: false,
+              collectUserInput: true,
+              nextNodeId: "gender_selection",
+              markdown: false
+            }
+          },
+          {
+            id: "gender_selection",
+            type: "message",
+            position: { x: 540, y: 100 },
+            data: {
+              messageText: "Укажи свой пол: 👨👩",
+              keyboardType: "inline",
+              inputVariable: "gender",
+              resizeKeyboard: true,
+              oneTimeKeyboard: true,
+              collectUserInput: true,
+              buttons: [
+                {
+                  id: "btn-male",
+                  text: "Мужчина 👨",
+                  value: "male",
+                  action: "goto",
+                  target: "name_input",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-female",
+                  text: "Женщина 👩",
+                  value: "female",
+                  action: "goto",
+                  target: "name_input",
+                  buttonType: "option"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "name_input",
+            type: "message",
+            position: { x: 940, y: 100 },
+            data: {
+              messageText: "Как тебя зовут? ✏️\n\nНапиши своё имя в сообщении:",
+              keyboardType: "none",
+              inputVariable: "user_name",
+              enableTextInput: true,
+              collectUserInput: true,
+              nextNodeId: "profile_complete",
+              markdown: false,
+              buttons: []
+            }
+          },
+          {
+            id: "profile_complete",
+            type: "message",
+            position: { x: 1340, y: 100 },
+            data: {
+              messageText: "🎉 Отлично! Основная информация собрана!\n\n👤 Твои данные:\nПол: {gender}\nИмя: {user_name}\nИсточник: {user_source}\n\nСпасибо за регистрацию!",
+              keyboardType: "inline",
+              resizeKeyboard: true,
+              oneTimeKeyboard: true,
+              buttons: [
+                {
+                  id: "btn-restart",
+                  text: "🔄 Начать заново",
+                  action: "command",
+                  target: "/start",
+                  buttonType: "navigation"
+                }
+              ],
+              markdown: false
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn-1",
+            sourceNodeId: "start",
+            targetNodeId: "gender_selection",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-2",
+            sourceNodeId: "gender_selection",
+            targetNodeId: "name_input",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-3",
+            sourceNodeId: "name_input",
+            targetNodeId: "profile_complete",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-4",
+            sourceNodeId: "profile_complete",
+            targetNodeId: "start",
+            sourceHandle: "source",
+            targetHandle: "target"
+          }
+        ]
+      }
+    });
+
+    console.log('✅ Базовый шаблон "маша" создан');
     console.log('✅ Системные шаблоны созданы');
 
   } catch (error) {
