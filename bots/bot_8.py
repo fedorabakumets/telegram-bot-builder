@@ -1,5 +1,5 @@
 """
-Тест комплексного сбора данных - DEBUG - Telegram Bot
+Тест шаблона маша - Telegram Bot
 Сгенерировано с помощью TelegramBot Builder
 """
 
@@ -11,12 +11,19 @@ from aiogram.filters import CommandStart, Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 from aiogram.enums import ParseMode
+from typing import Optional
 import asyncpg
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import json
 
+# Функция для получения московского времени
+def get_moscow_time():
+    """Возвращает текущее время в московском часовом поясе"""
+    moscow_tz = timezone(timedelta(hours=3))  # UTC+3 для Москвы
+    return datetime.now(moscow_tz).isoformat()
+
 # Токен вашего бота (получите у @BotFather)
-BOT_TOKEN = "8082906513:AAEkTEm-HYvpRkI8ZuPuWmx3f25zi5tm1OE"
+BOT_TOKEN = "7713154819:AAEE4vOE0cpuLpsJZTQPCiAwKMjifDlpnTk"
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +36,7 @@ dp = Dispatcher()
 ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов
 
 # Настройки базы данных
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/bot_db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Пул соединений с базой данных
 db_pool = None
@@ -64,7 +71,7 @@ async def init_database():
         logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")
         db_pool = None
 
-async def save_user_to_db(user_id: int, username: str = None, first_name: str = None, last_name: str = None):
+async def save_user_to_db(user_id: int, username: Optional[str] = None, first_name: Optional[str] = None, last_name: Optional[str] = None):
     """Сохраняет пользователя в базу данных"""
     if not db_pool:
         return False
@@ -104,16 +111,57 @@ async def update_user_data_in_db(user_id: int, data_key: str, data_value):
     if not db_pool:
         return False
     try:
+        import json
         async with db_pool.acquire() as conn:
+            # Сначала создаём или получаем существующую запись
+            await conn.execute("""
+                INSERT INTO bot_users (user_id) 
+                VALUES ($1) 
+                ON CONFLICT (user_id) DO NOTHING
+            """, user_id)
+            
+            # Обновляем данные пользователя
+            update_data = {data_key: data_value}
             await conn.execute("""
                 UPDATE bot_users 
-                SET user_data = user_data || $2::jsonb,
+                SET user_data = COALESCE(user_data, '{}'::jsonb) || $2::jsonb,
                     last_interaction = NOW()
                 WHERE user_id = $1
-            """, user_id, json.dumps({data_key: data_value}))
+            """, user_id, json.dumps(update_data))
         return True
     except Exception as e:
         logging.error(f"Ошибка обновления данных пользователя: {e}")
+        return False
+
+async def save_user_data_to_db(user_id: int, data_key: str, data_value):
+    """Алиас для update_user_data_in_db для обратной совместимости"""
+    return await update_user_data_in_db(user_id, data_key, data_value)
+
+async def update_user_variable_in_db(user_id: int, variable_name: str, variable_value: str):
+    """Сохраняет переменную пользователя в базу данных"""
+    if not db_pool:
+        return False
+    try:
+        import json
+        async with db_pool.acquire() as conn:
+            # Сначала создаём или получаем существующую запись
+            await conn.execute("""
+                INSERT INTO bot_users (user_id) 
+                VALUES ($1) 
+                ON CONFLICT (user_id) DO NOTHING
+            """, user_id)
+            
+            # Обновляем переменную пользователя
+            update_data = {variable_name: variable_value}
+            await conn.execute("""
+                UPDATE bot_users 
+                SET user_data = COALESCE(user_data, '{}'::jsonb) || $2::jsonb,
+                    last_interaction = NOW()
+                WHERE user_id = $1
+            """, user_id, json.dumps(update_data))
+        return True
+    except Exception as e:
+        logging.error(f"Ошибка сохранения переменной пользователя: {e}")
         return False
 
 
@@ -197,12 +245,11 @@ def generate_map_urls(latitude: float, longitude: float, title: str = "") -> dic
 
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
-
     # Регистрируем пользователя в системе
-    user_id = message.from_user.id
-    username = message.from_user.username
-    first_name = message.from_user.first_name
-    last_name = message.from_user.last_name
+    user_id = message.from_user.id if message.from_user else 0
+    username = message.from_user.username if message.from_user else None
+    first_name = message.from_user.first_name if message.from_user else None
+    last_name = message.from_user.last_name if message.from_user else None
     
     # Сохраняем пользователя в базу данных
     saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)
@@ -219,1933 +266,426 @@ async def start_handler(message: types.Message):
     else:
         logging.info(f"Пользователь {user_id} сохранен в базу данных")
 
-    text = f"🎯 **Добро пожаловать в систему сбора данных!**\n\nЭтот бот демонстрирует все возможности сбора пользовательского ввода:\n\n• 📝 Текстовый ввод\n• 🔘 Кнопочные ответы\n• ☑️ Множественный выбор\n• 📱 Медиа файлы\n• 📊 Структурированные данные\n\nНачнем сбор ваших данных?"
+    # ВАЖНО: ВСЕГДА восстанавливаем состояние множественного выбора из БД
+    # Это критически важно для кнопок "Изменить выбор" и "Начать заново"
+    user_record = await get_user_from_db(user_id)
+    saved_interests = []
     
-    # Создаем inline клавиатуру с кнопками
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🚀 Начать сбор данных", callback_data="name-input"))
-    builder.add(InlineKeyboardButton(text="⏭️ Пропустить все", callback_data="final-results"))
-    keyboard = builder.as_markup()
-    # Отправляем сообщение с прикрепленными inline кнопками
-    await message.answer(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+    if user_record and isinstance(user_record, dict):
+        user_data_field = user_record.get("user_data", {})
+        if isinstance(user_data_field, str):
+            import json
+            try:
+                user_vars = json.loads(user_data_field)
+            except:
+                user_vars = {}
+        elif isinstance(user_data_field, dict):
+            user_vars = user_data_field
+        else:
+            user_vars = {}
+        
+        # Ищем сохраненные интересы в любой переменной
+        for var_name, var_data in user_vars.items():
+            if "интерес" in var_name.lower() or var_name == "user_interests":
+                if isinstance(var_data, str) and var_data:
+                    saved_interests = [interest.strip() for interest in var_data.split(",")]
+                    logging.info(f"Восстановлены интересы из переменной {var_name}: {saved_interests}")
+                    break
+    
+    # ВСЕГДА инициализируем состояние множественного выбора с восстановленными интересами
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["multi_select_start_paste_1754773085472_7rftt8agl"] = saved_interests.copy()
+    user_data[user_id]["multi_select_node"] = "start_paste_1754773085472_7rftt8agl"
+    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")
+    
+    text = """🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!
+
+Этот бот поможет тебе найти интересных людей в Санкт-Петербурге!
+
+Откуда ты узнал о нашем чате? 😎"""
+    # Определяем режим форматирования (приоритет у условного сообщения)
+    if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+        current_parse_mode = conditional_parse_mode
+    else:
+        current_parse_mode = None
+    # Инициализируем переменную для проверки условной клавиатуры
+    use_conditional_keyboard = False
+    conditional_keyboard = None
+    await message.answer(text, parse_mode=current_parse_mode if current_parse_mode else None)
+    
+    # Устанавливаем состояние ожидания ввода
+    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
+    user_data[message.from_user.id]["waiting_for_input"] = "start_paste_1754773085472_7rftt8agl"
 
 # Обработчики inline кнопок
 
-@dp.callback_query(lambda c: c.data == "name-input")
-async def handle_callback_name_input(callback_query: types.CallbackQuery):
+@dp.callback_query(lambda c: c.data == "age_input_paste_1754773140898_ofvtop5ht" or c.data.startswith("age_input_paste_1754773140898_ofvtop5ht_btn_"))
+async def handle_callback_age_input_paste_1754773140898_ofvtop5ht(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    # Удаляем старое сообщение
-    await callback_query.message.delete()
+    user_id = callback_query.from_user.id
+    button_text = "Да 😎"
     
-    text = f"👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):"
-    placeholder_text = "Введите ваше имя..."
-    text += f"\n\n💡 {placeholder_text}"
-    await bot.send_message(callback_query.from_user.id, text)
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "join_request_response", button_text)
+    logging.info(f"Переменная join_request_response сохранена: " + str(button_text) + f" (пользователь {user_id})")
     
-    # Инициализируем пользовательские данные если их нет
-    if callback_query.from_user.id not in user_data:
-        user_data[callback_query.from_user.id] = {}
     
-    # Настраиваем ожидание ввода
-    user_data[callback_query.from_user.id]["waiting_for_input"] = {
-        "type": "text",
-        "variable": "user_name",
-        "validation": "",
-        "min_length": 2,
-        "max_length": 50,
-        "timeout": 60,
-        "required": True,
-        "allow_skip": False,
-        "save_to_database": True,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": "Спасибо за ваш ответ!",
-        "prompt": "👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):",
-        "node_id": "name-input",
-        "next_node_id": "age-buttons"
-    }
+    # Отправляем сообщение для узла age_input_paste_1754773140898_ofvtop5ht
+    text = """Сколько тебе лет? 🎂
 
-@dp.callback_query(lambda c: c.data == "final-results")
-async def handle_callback_final_results(callback_query: types.CallbackQuery):
+Напиши свой возраст числом (например, 25):
+
+Спасибо за заполнение анкеты!"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    if keyboard is None:
+        keyboard = None
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+
+@dp.callback_query(lambda c: c.data == "age_input_paste_1754773140898_ofvtop5ht" or c.data.startswith("age_input_paste_1754773140898_ofvtop5ht_btn_"))
+async def handle_callback_age_input_paste_1754773140898_ofvtop5ht(callback_query: types.CallbackQuery):
     await callback_query.answer()
-    text = """🎉 **Сбор данных завершен!**
+    user_id = callback_query.from_user.id
+    button_text = "Нет 🙅"
+    
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "join_request_response", button_text)
+    logging.info(f"Переменная join_request_response сохранена: " + str(button_text) + f" (пользователь {user_id})")
+    
+    
+    # Отправляем сообщение для узла age_input_paste_1754773140898_ofvtop5ht
+    text = """Сколько тебе лет? 🎂
 
-<b>Спасибо за участие!</b>
+Напиши свой возраст числом (например, 25):
 
-Вы успешно продемонстрировали все типы сбора пользовательского ввода:
+Спасибо за заполнение анкеты!"""
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    
+    # Без условных сообщений - используем обычную клавиатуру
+    keyboard = None
+    if keyboard is None:
+        keyboard = None
+    # Отправляем сообщение
+    try:
+        if keyboard is not None:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard is not None:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
 
-✅ <b>Текстовый ввод</b> - имя и комментарии
-✅ <b>Одиночный выбор</b> - возраст и рейтинг
-✅ <b>Множественный выбор</b> - интересы
-✅ <b>Валидация данных</b> - проверка email/телефона
-✅ <b>Обработка ошибок</b> - повторы и пропуски
-
-Все данные сохранены в базе данных и готовы к анализу."""
+@dp.callback_query(lambda c: c.data == "join_request_paste_1754773111934_7otlx3suc" or c.data.startswith("join_request_paste_1754773111934_7otlx3suc_btn_"))
+async def handle_callback_join_request_paste_1754773111934_7otlx3suc(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    # Сохраняем правильную переменную в базу данных
+    await update_user_data_in_db(user_id, "join_request_response", callback_query.data)
+    logging.info(f"Переменная join_request_response сохранена: " + str(callback_query.data) + f" (пользователь {user_id})")
+    
+    # Обрабатываем узел join_request_paste_1754773111934_7otlx3suc: join_request_paste_1754773111934_7otlx3suc
+    text = "Хочешь присоединиться к нашему чату? 🚀"
+    
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Create inline keyboard
     builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🔄 Пройти снова", callback_data="start-1"))
+    builder.add(InlineKeyboardButton(text="Да 😎", callback_data="age_input_paste_1754773140898_ofvtop5ht_btn_0"))
+    builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="age_input_paste_1754773140898_ofvtop5ht_btn_1"))
     keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
+    # Отправляем сообщение
+    try:
+        if keyboard:
+            await callback_query.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.edit_text(text)
+    except Exception:
+        if keyboard:
+            await callback_query.message.answer(text, reply_markup=keyboard)
+        else:
+            await callback_query.message.answer(text)
+    # Сохраняем нажатие кнопки в базу данных
+    user_id = callback_query.from_user.id
+    
+    # Ищем текст кнопки по callback_data
+    button_display_text = "Кнопка join_request_paste_1754773111934_7otlx3suc"
+    
+    # Сохраняем ответ в базу данных
+    timestamp = get_moscow_time()
+    
+    response_data = button_display_text  # Простое значение
+    
+    # Сохраняем в пользовательские данные
+    if user_id not in user_data:
+        user_data[user_id] = {}
+    user_data[user_id]["button_click"] = button_display_text
+    
+    # Сохраняем в базу данных с правильным именем переменной
+    await update_user_data_in_db(user_id, "button_click", button_display_text)
+    logging.info(f"Переменная button_click сохранена: " + str(button_display_text) + f" (пользователь {user_id})")
+    
+    # Показываем сообщение об обработке
+    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+    
+    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных
+    next_node_id = "join_request_paste_1754773111934_7otlx3suc"
+    try:
+        logging.info(f"🚀 Переходим к следующему узлу после выбора кнопки: {next_node_id}")
+        if next_node_id == "start_paste_1754773085472_7rftt8agl":
+            logging.info("Переход к узлу start_paste_1754773085472_7rftt8agl")
+        elif next_node_id == "join_request_paste_1754773111934_7otlx3suc":
+            nav_text = "Хочешь присоединиться к нашему чату? 🚀"
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "join_request_response",
+                "save_to_database": True,
+                "node_id": "join_request_paste_1754773111934_7otlx3suc",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        elif next_node_id == "age_input_paste_1754773140898_ofvtop5ht":
+            nav_text = """Сколько тебе лет? 🎂
 
-@dp.callback_query(lambda c: c.data == "age-buttons")
-async def handle_callback_age_buttons(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Удаляем старое сообщение
-    await callback_query.message.delete()
+Напиши свой возраст числом (например, 25):
+
+Спасибо за заполнение анкеты!"""
+            await callback_query.message.edit_text(nav_text)
+            # Настраиваем ожидание ввода для message узла в навигации
+            user_id = callback_query.from_user.id
+            if user_id not in user_data:
+                user_data[user_id] = {}
+            user_data[user_id]["waiting_for_input"] = {
+                "type": "text",
+                "variable": "user_age",
+                "save_to_database": True,
+                "node_id": "age_input_paste_1754773140898_ofvtop5ht",
+                "next_node_id": "",
+                "min_length": 0,
+                "max_length": 0,
+                "retry_message": "Пожалуйста, попробуйте еще раз.",
+                "success_message": "Спасибо за ваш ответ!"
+            }
+        else:
+            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+    except Exception as e:
+        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
     
-    text = f"🎂 **Шаг 2: Возрастная группа**\n\n<b>Выберите вашу возрастную группу:</b>\n\nИспользуйте кнопки для выбора:"
+    return  # Завершаем обработку после переадресации
     
-    # Создаем кнопки для выбора ответа
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="18-25 лет", callback_data="response_age-buttons_0"))
-    builder.add(InlineKeyboardButton(text="26-35 лет", callback_data="response_age-buttons_1"))
-    builder.add(InlineKeyboardButton(text="36-45 лет", callback_data="response_age-buttons_2"))
-    builder.add(InlineKeyboardButton(text="46-55 лет", callback_data="response_age-buttons_3"))
-    builder.add(InlineKeyboardButton(text="55+ лет", callback_data="response_age-buttons_4"))
-    keyboard = builder.as_markup()
-    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
+    text = "Хочешь присоединиться к нашему чату? 🚀"
+    # Подставляем все доступные переменные пользователя в текст
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
     
-    # Инициализируем пользовательские данные если их нет
+    # Безопасно извлекаем user_data
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    # Заменяем все переменные в тексте
+    import re
+    def replace_variables_in_text(text_content, variables_dict):
+        if not text_content or not variables_dict:
+            return text_content
+        
+        for var_name, var_data in variables_dict.items():
+            placeholder = "{" + var_name + "}"
+            if placeholder in text_content:
+                if isinstance(var_data, dict) and "value" in var_data:
+                    var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                elif var_data is not None:
+                    var_value = str(var_data)
+                else:
+                    var_value = var_name  # Показываем имя переменной если значения нет
+                text_content = text_content.replace(placeholder, var_value)
+        return text_content
+    
+    text = replace_variables_in_text(text, user_vars)
+    # Активируем сбор пользовательского ввода
     if callback_query.from_user.id not in user_data:
         user_data[callback_query.from_user.id] = {}
     
-    # Сохраняем настройки для обработки ответа
-    user_data[callback_query.from_user.id]["button_response_config"] = {
-        "node_id": "age-buttons",
-        "variable": "user_age_group",
-        "save_to_database": True,
-        "success_message": "Спасибо за ваш ответ!",
-        "allow_multiple": False,
-        "next_node_id": "interests-multiple",
-        "options": [
-            {"index": 0, "text": "18-25 лет", "value": "18-25"},
-            {"index": 1, "text": "26-35 лет", "value": "26-35"},
-            {"index": 2, "text": "36-45 лет", "value": "36-45"},
-            {"index": 3, "text": "46-55 лет", "value": "46-55"},
-            {"index": 4, "text": "55+ лет", "value": "55+"},
-        ],
-        "selected": []
-    }
-
-@dp.callback_query(lambda c: c.data == "interests-multiple")
-async def handle_callback_interests_multiple(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Удаляем старое сообщение
-    await callback_query.message.delete()
+    user_data[callback_query.from_user.id]["waiting_for_input"] = "join_request_paste_1754773111934_7otlx3suc"
+    user_data[callback_query.from_user.id]["input_type"] = "text"
+    user_data[callback_query.from_user.id]["input_variable"] = "join_request_response"
+    user_data[callback_query.from_user.id]["save_to_database"] = True
+    user_data[callback_query.from_user.id]["input_target_node_id"] = ""
+    
+    # Проверяем, есть ли условная клавиатура
+    if "keyboard" not in locals() or keyboard is None:
+        # Создаем inline клавиатуру с кнопками (+ сбор ввода включен)
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="Да 😎", callback_data="btn-yes"))
+        builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="btn-no"))
+        keyboard = builder.as_markup()
+    # Пытаемся редактировать сообщение, если не получается - отправляем новое
+    try:
+        await callback_query.message.edit_text(text, reply_markup=keyboard)
+    except Exception as e:
+        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")
+        await callback_query.message.answer(text, reply_markup=keyboard)
     
-    text = f"🎯 **Шаг 3: Интересы (множественный выбор)**\n\n<b>Выберите ваши интересы (можно несколько):</b>\n\nВыберите все подходящие варианты и нажмите \"Готово\":"
-    
-    # Создаем кнопки для выбора ответа
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="💻 Технологии", callback_data="response_interests-multiple_0"))
-    builder.add(InlineKeyboardButton(text="⚽ Спорт", callback_data="response_interests-multiple_1"))
-    builder.add(InlineKeyboardButton(text="🎵 Музыка", callback_data="response_interests-multiple_2"))
-    builder.add(InlineKeyboardButton(text="✈️ Путешествия", callback_data="response_interests-multiple_3"))
-    builder.add(InlineKeyboardButton(text="👨‍🍳 Кулинария", callback_data="response_interests-multiple_4"))
-    builder.add(InlineKeyboardButton(text="📚 Книги", callback_data="response_interests-multiple_5"))
-    builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="response_interests-multiple_6"))
-    builder.adjust(2)  # Устанавливаем 2 колонки для красивого отображения
-    keyboard = builder.as_markup()
-    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
-    
-    # Инициализируем пользовательские данные если их нет
-    if callback_query.from_user.id not in user_data:
-        user_data[callback_query.from_user.id] = {}
-    
-    # Сохраняем настройки для обработки ответа
-    user_data[callback_query.from_user.id]["button_response_config"] = {
-        "node_id": "interests-multiple",
-        "variable": "user_interests",
-        "save_to_database": True,
-        "success_message": "Спасибо за ваш ответ!",
-        "allow_multiple": True,
-        "next_node_id": "contact-input",
-        "options": [
-            {"index": 0, "text": "💻 Технологии", "value": "technology"},
-            {"index": 1, "text": "⚽ Спорт", "value": "sport"},
-            {"index": 2, "text": "🎵 Музыка", "value": "music"},
-            {"index": 3, "text": "✈️ Путешествия", "value": "travel"},
-            {"index": 4, "text": "👨‍🍳 Кулинария", "value": "cooking"},
-            {"index": 5, "text": "📚 Книги", "value": "books"},
-            {"index": 6, "text": "✅ Готово", "value": "done"},
-        ],
-        "selected": []
-    }
-
-@dp.callback_query(lambda c: c.data == "contact-input")
-async def handle_callback_contact_input(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Удаляем старое сообщение
-    await callback_query.message.delete()
-    
-    text = f"📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:"
-    placeholder_text = "example@email.com или +7-999-123-45-67"
-    text += f"\n\n💡 {placeholder_text}"
-    await bot.send_message(callback_query.from_user.id, text)
-    
-    # Инициализируем пользовательские данные если их нет
-    if callback_query.from_user.id not in user_data:
-        user_data[callback_query.from_user.id] = {}
-    
-    # Настраиваем ожидание ввода
-    user_data[callback_query.from_user.id]["waiting_for_input"] = {
-        "type": "email",
-        "variable": "user_contact",
-        "validation": "",
-        "min_length": 5,
-        "max_length": 100,
-        "timeout": 60,
-        "required": True,
-        "allow_skip": False,
-        "save_to_database": True,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": "Спасибо за ваш ответ!",
-        "prompt": "📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:",
-        "node_id": "contact-input",
-        "next_node_id": "experience-rating"
-    }
-
-@dp.callback_query(lambda c: c.data == "experience-rating")
-async def handle_callback_experience_rating(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Удаляем старое сообщение
-    await callback_query.message.delete()
-    
-    text = f"⭐ **Шаг 5: Оценка опыта**\n\n<b>Как вы оцениваете опыт использования этого бота?</b>\n\nВыберите количество звезд:"
-    
-    # Создаем кнопки для выбора ответа
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="⭐ 1 звезда", callback_data="response_experience-rating_0"))
-    builder.add(InlineKeyboardButton(text="⭐⭐ 2 звезды", callback_data="response_experience-rating_1"))
-    builder.add(InlineKeyboardButton(text="⭐⭐⭐ 3 звезды", callback_data="response_experience-rating_2"))
-    builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐ 4 звезды", callback_data="response_experience-rating_3"))
-    builder.add(InlineKeyboardButton(text="⭐⭐⭐⭐⭐ 5 звезд", callback_data="response_experience-rating_4"))
-    keyboard = builder.as_markup()
-    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)
-    
-    # Инициализируем пользовательские данные если их нет
-    if callback_query.from_user.id not in user_data:
-        user_data[callback_query.from_user.id] = {}
-    
-    # Сохраняем настройки для обработки ответа
-    user_data[callback_query.from_user.id]["button_response_config"] = {
-        "node_id": "experience-rating",
-        "variable": "user_rating",
-        "save_to_database": True,
-        "success_message": "Спасибо за ваш ответ!",
-        "allow_multiple": False,
-        "next_node_id": "final-comment",
-        "options": [
-            {"index": 0, "text": "⭐ 1 звезда", "value": "1"},
-            {"index": 1, "text": "⭐⭐ 2 звезды", "value": "2"},
-            {"index": 2, "text": "⭐⭐⭐ 3 звезды", "value": "3"},
-            {"index": 3, "text": "⭐⭐⭐⭐ 4 звезды", "value": "4"},
-            {"index": 4, "text": "⭐⭐⭐⭐⭐ 5 звезд", "value": "5"},
-        ],
-        "selected": []
-    }
-
-@dp.callback_query(lambda c: c.data == "final-comment")
-async def handle_callback_final_comment(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    # Удаляем старое сообщение
-    await callback_query.message.delete()
-    
-    text = f"💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):"
-    placeholder_text = "Ваши комментарии и предложения..."
-    text += f"\n\n💡 {placeholder_text}"
-    await bot.send_message(callback_query.from_user.id, text)
-    
-    # Инициализируем пользовательские данные если их нет
-    if callback_query.from_user.id not in user_data:
-        user_data[callback_query.from_user.id] = {}
-    
-    # Настраиваем ожидание ввода
-    user_data[callback_query.from_user.id]["waiting_for_input"] = {
-        "type": "text",
-        "variable": "user_comment",
-        "validation": "",
-        "min_length": 0,
-        "max_length": 1000,
-        "timeout": 60,
-        "required": True,
-        "allow_skip": False,
-        "save_to_database": True,
-        "retry_message": "Пожалуйста, попробуйте еще раз.",
-        "success_message": "Спасибо за ваш ответ!",
-        "prompt": "💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):",
-        "node_id": "final-comment",
-        "next_node_id": "final-results"
-    }
-
-@dp.callback_query(lambda c: c.data == "start-1")
-async def handle_callback_start_1(callback_query: types.CallbackQuery):
-    await callback_query.answer()
-    text = """🎯 **Добро пожаловать в систему сбора данных!**
-
-Этот бот демонстрирует все возможности сбора пользовательского ввода:
-
-• 📝 Текстовый ввод
-• 🔘 Кнопочные ответы
-• ☑️ Множественный выбор
-• 📱 Медиа файлы
-• 📊 Структурированные данные
-
-Начнем сбор ваших данных?"""
-    builder = InlineKeyboardBuilder()
-    builder.add(InlineKeyboardButton(text="🚀 Начать сбор данных", callback_data="name-input"))
-    builder.add(InlineKeyboardButton(text="⏭️ Пропустить все", callback_data="final-results"))
-    keyboard = builder.as_markup()
-    await callback_query.message.edit_text(text, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN)
-
-# Обработчики кнопочных ответов для сбора пользовательского ввода
-
-@dp.callback_query(F.data == "response_age-buttons_0")
-async def handle_response_age_buttons_0(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "18-25"
-    selected_text = "18-25 лет"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_age-buttons_1")
-async def handle_response_age_buttons_1(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "26-35"
-    selected_text = "26-35 лет"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_age-buttons_2")
-async def handle_response_age_buttons_2(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "36-45"
-    selected_text = "36-45 лет"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_age-buttons_3")
-async def handle_response_age_buttons_3(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "46-55"
-    selected_text = "46-55 лет"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_age-buttons_4")
-async def handle_response_age_buttons_4(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "55+"
-    selected_text = "55+ лет"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_interests-multiple_0")
-async def handle_response_interests_multiple_0(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "technology"
-    selected_text = "💻 Технологии"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_interests-multiple_1")
-async def handle_response_interests_multiple_1(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "sport"
-    selected_text = "⚽ Спорт"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_interests-multiple_2")
-async def handle_response_interests_multiple_2(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "music"
-    selected_text = "🎵 Музыка"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_interests-multiple_3")
-async def handle_response_interests_multiple_3(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "travel"
-    selected_text = "✈️ Путешествия"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_interests-multiple_4")
-async def handle_response_interests_multiple_4(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "cooking"
-    selected_text = "👨‍🍳 Кулинария"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_interests-multiple_5")
-async def handle_response_interests_multiple_5(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "books"
-    selected_text = "📚 Книги"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_interests-multiple_6")
-async def handle_response_interests_multiple_6(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "done"
-    selected_text = "✅ Готово"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_experience-rating_0")
-async def handle_response_experience_rating_0(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "1"
-    selected_text = "⭐ 1 звезда"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_experience-rating_1")
-async def handle_response_experience_rating_1(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "2"
-    selected_text = "⭐⭐ 2 звезды"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_experience-rating_2")
-async def handle_response_experience_rating_2(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "3"
-    selected_text = "⭐⭐⭐ 3 звезды"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_experience-rating_3")
-async def handle_response_experience_rating_3(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "4"
-    selected_text = "⭐⭐⭐⭐ 4 звезды"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
-
-@dp.callback_query(F.data == "response_experience-rating_4")
-async def handle_response_experience_rating_4(callback_query: types.CallbackQuery):
-    user_id = callback_query.from_user.id
-    
-    # Проверяем настройки кнопочного ответа
-    if user_id not in user_data or "button_response_config" not in user_data[user_id]:
-        await callback_query.answer("⚠️ Сессия истекла, попробуйте снова", show_alert=True)
-        return
-    
-    config = user_data[user_id]["button_response_config"]
-    selected_value = "5"
-    selected_text = "⭐⭐⭐⭐⭐ 5 звезд"
-    
-    # Обработка множественного выбора
-    if config.get("allow_multiple"):
-        if selected_value not in config["selected"]:
-            config["selected"].append({"text": selected_text, "value": selected_value})
-            await callback_query.answer(f"✅ Выбрано: {selected_text}")
-        else:
-            config["selected"] = [item for item in config["selected"] if item["value"] != selected_value]
-            await callback_query.answer(f"❌ Убрано: {selected_text}")
-        return  # Не завершаем сбор, позволяем выбрать еще
-    
-    # Сохраняем одиночный выбор
-    variable_name = config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
-    node_id = config.get("node_id", "unknown")
-    
-    # Создаем структурированный ответ
-    response_data = {
-        "value": selected_value,
-        "text": selected_text,
-        "type": "button_choice",
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "variable": variable_name
-    }
-    
-    # Сохраняем в пользовательские данные
-    user_data[user_id][variable_name] = response_data
-    
-    # Сохраняем в базу данных если включено
-    if config.get("save_to_database"):
-        saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
-        if saved_to_db:
-            logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
-        else:
-            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
-    
-    # Отправляем сообщение об успехе
-    success_message = config.get("success_message", "Спасибо за ваш выбор!")
-    await callback_query.message.edit_text(f"{success_message}\n\n✅ Ваш выбор: {selected_text}")
-    
-    # Очищаем состояние
-    del user_data[user_id]["button_response_config"]
-    
-    logging.info(f"Получен кнопочный ответ: {variable_name} = {selected_text}")
-    
-    # Автоматическая навигация к следующему узлу
-    next_node_id = config.get("next_node_id")
-    if next_node_id:
-        try:
-            # Вызываем обработчик для следующего узла
-            if next_node_id == "start-1":
-                await handle_callback_start_1(callback_query)
-            elif next_node_id == "name-input":
-                await handle_callback_name_input(callback_query)
-            elif next_node_id == "name-error":
-                await handle_callback_name_error(callback_query)
-            elif next_node_id == "age-buttons":
-                await handle_callback_age_buttons(callback_query)
-            elif next_node_id == "age-error":
-                await handle_callback_age_error(callback_query)
-            elif next_node_id == "interests-multiple":
-                await handle_callback_interests_multiple(callback_query)
-            elif next_node_id == "interests-error":
-                await handle_callback_interests_error(callback_query)
-            elif next_node_id == "contact-input":
-                await handle_callback_contact_input(callback_query)
-            elif next_node_id == "contact-error":
-                await handle_callback_contact_error(callback_query)
-            elif next_node_id == "experience-rating":
-                await handle_callback_experience_rating(callback_query)
-            elif next_node_id == "rating-error":
-                await handle_callback_rating_error(callback_query)
-            elif next_node_id == "final-comment":
-                await handle_callback_final_comment(callback_query)
-            elif next_node_id == "comment-error":
-                await handle_callback_comment_error(callback_query)
-            elif next_node_id == "final-results":
-                await handle_callback_final_results(callback_query)
-            else:
-                logging.warning(f"Неизвестный следующий узел: {next_node_id}")
-        except Exception as e:
-            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
 
 
 # Универсальный обработчик пользовательского ввода
@@ -2153,19 +693,572 @@ async def handle_response_experience_rating_4(callback_query: types.CallbackQuer
 async def handle_user_input(message: types.Message):
     user_id = message.from_user.id
     
-    # Проверяем, ожидаем ли мы ввод от пользователя
-    if user_id not in user_data or "waiting_for_input" not in user_data[user_id]:
-        return  # Игнорируем сообщение если не ожидаем ввод
+    # Проверяем, ожидаем ли мы ввод для условного сообщения
+    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:
+        config = user_data[user_id]["waiting_for_conditional_input"]
+        user_text = message.text
+        
+        # Сохраняем текстовый ввод для условного сообщения
+        condition_id = config.get("condition_id", "unknown")
+        next_node_id = config.get("next_node_id")
+        
+        # Сохраняем ответ пользователя
+        timestamp = get_moscow_time()
+        # Используем переменную из конфигурации или создаем автоматическую
+        input_variable = config.get("input_variable", "")
+        if input_variable:
+            variable_name = input_variable
+        else:
+            variable_name = f"conditional_response_{condition_id}"
+        
+        # Сохраняем в пользовательские данные
+        user_data[user_id][variable_name] = user_text
+        
+        # Сохраняем в базу данных
+        saved_to_db = await update_user_data_in_db(user_id, variable_name, user_text)
+        if saved_to_db:
+            logging.info(f"✅ Условный ответ сохранен в БД: {variable_name} = {user_text} (пользователь {user_id})")
+        else:
+            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+        
+        # Отправляем подтверждение
+        await message.answer("✅ Спасибо за ваш ответ! Обрабатываю...")
+        
+        # Очищаем состояние ожидания
+        del user_data[user_id]["waiting_for_conditional_input"]
+        
+        logging.info(f"Получен ответ на условное сообщение: {variable_name} = {user_text}")
+        
+        # Переходим к следующему узлу если указан
+        if next_node_id:
+            try:
+                logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
+                
+                # Проверяем, является ли это командой
+                if next_node_id == "profile_command":
+                    logging.info("Переход к команде /profile")
+                    await profile_handler(message)
+                else:
+                    # Создаем фиктивный callback для навигации к обычному узлу
+                    import types as aiogram_types
+                    fake_callback = aiogram_types.SimpleNamespace(
+                        id="conditional_nav",
+                        from_user=message.from_user,
+                        chat_instance="",
+                        data=next_node_id,
+                        message=message,
+                        answer=lambda text="", show_alert=False: asyncio.sleep(0)
+                    )
+                    
+                    if next_node_id == "start_paste_1754773085472_7rftt8agl":
+                        await handle_callback_start_paste_1754773085472_7rftt8agl(fake_callback)
+                    elif next_node_id == "join_request_paste_1754773111934_7otlx3suc":
+                        await handle_callback_join_request_paste_1754773111934_7otlx3suc(fake_callback)
+                    elif next_node_id == "age_input_paste_1754773140898_ofvtop5ht":
+                        await handle_callback_age_input_paste_1754773140898_ofvtop5ht(fake_callback)
+                    else:
+                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+        
+        return  # Завершаем обработку для условного сообщения
     
-    input_config = user_data[user_id]["waiting_for_input"]
-    user_text = message.text
+    # Проверяем, ожидаем ли мы кнопочный ответ через reply клавиатуру
+    if user_id in user_data and "button_response_config" in user_data[user_id]:
+        config = user_data[user_id]["button_response_config"]
+        user_text = message.text
+        
+        # Ищем выбранный вариант среди доступных опций
+        selected_option = None
+        for option in config.get("options", []):
+            if option["text"] == user_text:
+                selected_option = option
+                break
+        
+        if selected_option:
+            selected_value = selected_option["value"]
+            selected_text = selected_option["text"]
+            
+            # Сохраняем ответ пользователя
+            variable_name = config.get("variable", "button_response")
+            timestamp = get_moscow_time()
+            node_id = config.get("node_id", "unknown")
+            
+            # Создаем структурированный ответ
+            response_data = {
+                "value": selected_value,
+                "text": selected_text,
+                "type": "button_choice",
+                "timestamp": timestamp,
+                "nodeId": node_id,
+                "variable": variable_name
+            }
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id][variable_name] = response_data
+            
+            # Сохраняем в базу данных если включено
+            if config.get("save_to_database"):
+                saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                if saved_to_db:
+                    logging.info(f"✅ Кнопочный ответ сохранен в БД: {variable_name} = {selected_text} (пользователь {user_id})")
+                else:
+                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            # Отправляем сообщение об успехе
+            success_message = config.get("success_message", "Спасибо за ваш выбор!")
+            await message.answer(f"{success_message}\n\n✅ Ваш выбор: {selected_text}", reply_markup=ReplyKeyboardRemove())
+            
+            # Очищаем состояние
+            del user_data[user_id]["button_response_config"]
+            
+            logging.info(f"Получен кнопочный ответ через reply клавиатуру: {variable_name} = {selected_text}")
+            
+            # Навигация на основе действия кнопки
+            option_action = selected_option.get("action", "goto")
+            option_target = selected_option.get("target", "")
+            option_url = selected_option.get("url", "")
+            
+            if option_action == "url" and option_url:
+                # Открытие ссылки
+                url = option_url
+                keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="🔗 Открыть ссылку", url=url)]
+                ])
+                await message.answer("Нажмите кнопку ниже, чтобы открыть ссылку:", reply_markup=keyboard)
+            elif option_action == "command" and option_target:
+                # Выполнение команды
+                command = option_target
+                # Создаем фиктивное сообщение для выполнения команды
+                import types as aiogram_types
+                fake_message = aiogram_types.SimpleNamespace(
+                    from_user=message.from_user,
+                    chat=message.chat,
+                    text=command,
+                    message_id=message.message_id
+                )
+                
+                if command == "/start":
+                    try:
+                        await start_handler(fake_message)
+                    except Exception as e:
+                        logging.error(f"Ошибка выполнения команды /start: {e}")
+                else:
+                    logging.warning(f"Неизвестная команда: {command}")
+            elif option_action == "goto" and option_target:
+                # Переход к узлу
+                target_node_id = option_target
+                try:
+                    # Вызываем обработчик для целевого узла
+                    if target_node_id == "start_paste_1754773085472_7rftt8agl":
+                        await handle_callback_start_paste_1754773085472_7rftt8agl(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "join_request_paste_1754773111934_7otlx3suc":
+                        await handle_callback_join_request_paste_1754773111934_7otlx3suc(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    elif target_node_id == "age_input_paste_1754773140898_ofvtop5ht":
+                        await handle_callback_age_input_paste_1754773140898_ofvtop5ht(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=target_node_id, message=message))
+                    else:
+                        logging.warning(f"Неизвестный целевой узел: {target_node_id}")
+                except Exception as e:
+                    logging.error(f"Ошибка при переходе к узлу {target_node_id}: {e}")
+            else:
+                # Fallback к старой системе next_node_id если нет action
+                next_node_id = config.get("next_node_id")
+                if next_node_id:
+                    try:
+                        # Вызываем обработчик для следующего узла
+                        if next_node_id == "start_paste_1754773085472_7rftt8agl":
+                            await handle_callback_start_paste_1754773085472_7rftt8agl(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "join_request_paste_1754773111934_7otlx3suc":
+                            await handle_callback_join_request_paste_1754773111934_7otlx3suc(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        elif next_node_id == "age_input_paste_1754773140898_ofvtop5ht":
+                            await handle_callback_age_input_paste_1754773140898_ofvtop5ht(types.CallbackQuery(id="reply_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))
+                        else:
+                            logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                    except Exception as e:
+                        logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+            return
+        else:
+            # Неверный выбор - показываем доступные варианты
+            available_options = [option["text"] for option in config.get("options", [])]
+            options_text = "\n".join([f"• {opt}" for opt in available_options])
+            await message.answer(f"❌ Неверный выбор. Пожалуйста, выберите один из предложенных вариантов:\n\n{options_text}")
+            return
     
-    # Проверяем команду пропуска
-    if input_config.get("allow_skip") and user_text == "/skip":
-        await message.answer("⏭️ Ввод пропущен")
+    # Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)
+    if user_id in user_data and "waiting_for_input" in user_data[user_id]:
+        # Обрабатываем ввод через универсальную систему
+        waiting_config = user_data[user_id]["waiting_for_input"]
+        
+        # Проверяем формат конфигурации - новый (словарь) или старый (строка)
+        if isinstance(waiting_config, dict):
+            # Новый формат - извлекаем данные из словаря
+            waiting_node_id = waiting_config.get("node_id")
+            input_type = waiting_config.get("type", "text")
+            variable_name = waiting_config.get("variable", "user_response")
+            save_to_database = waiting_config.get("save_to_database", False)
+            min_length = waiting_config.get("min_length", 0)
+            max_length = waiting_config.get("max_length", 0)
+            next_node_id = waiting_config.get("next_node_id")
+        else:
+            # Старый формат - waiting_config это строка с node_id
+            waiting_node_id = waiting_config
+            input_type = user_data[user_id].get("input_type", "text")
+            variable_name = user_data[user_id].get("input_variable", "user_response")
+            save_to_database = user_data[user_id].get("save_to_database", False)
+            min_length = 0
+            max_length = 0
+            next_node_id = user_data[user_id].get("input_target_node_id")
+        
+        user_text = message.text
+        
+        # Валидация для нового формата
+        if isinstance(waiting_config, dict):
+            # Валидация длины
+            if min_length > 0 and len(user_text) < min_length:
+                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+                await message.answer(f"❌ Слишком короткий ответ (минимум {min_length} символов). {retry_message}")
+                return
+            
+            if max_length > 0 and len(user_text) > max_length:
+                retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+                await message.answer(f"❌ Слишком длинный ответ (максимум {max_length} символов). {retry_message}")
+                return
+            
+            # Валидация типа ввода
+            if input_type == "email":
+                import re
+                email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                if not re.match(email_pattern, user_text):
+                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+                    await message.answer(f"❌ Неверный формат email. {retry_message}")
+                    return
+            elif input_type == "number":
+                try:
+                    float(user_text)
+                except ValueError:
+                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+                    await message.answer(f"❌ Введите корректное число. {retry_message}")
+                    return
+            elif input_type == "phone":
+                import re
+                phone_pattern = r"^[+]?[0-9\s\-\(\)]{10,}$"
+                if not re.match(phone_pattern, user_text):
+                    retry_message = waiting_config.get("retry_message", "Пожалуйста, попробуйте еще раз.")
+                    await message.answer(f"❌ Неверный формат телефона. {retry_message}")
+                    return
+            
+            # Сохраняем ответ для нового формата
+            timestamp = get_moscow_time()
+            response_data = user_text
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id][variable_name] = response_data
+            
+            # Сохраняем в базу данных если включено
+            if save_to_database:
+                saved_to_db = await update_user_data_in_db(user_id, variable_name, response_data)
+                if saved_to_db:
+                    logging.info(f"✅ Данные сохранены в БД: {variable_name} = {user_text} (пользователь {user_id})")
+                else:
+                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            # Отправляем сообщение об успехе
+            success_message = waiting_config.get("success_message", "Спасибо за ваш ответ!")
+            await message.answer(success_message)
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")
+            
+            # Навигация к следующему узлу для нового формата
+            if next_node_id:
+                try:
+                    logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
+                    # Проверяем навигацию к узлам
+                    if next_node_id == "start_paste_1754773085472_7rftt8agl":
+                        logging.info(f"Переход к узлу start_paste_1754773085472_7rftt8agl типа start")
+                    elif next_node_id == "join_request_paste_1754773111934_7otlx3suc":
+                        text = "Хочешь присоединиться к нашему чату? 🚀"
+                        # Замена переменных в тексте
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_record = await get_user_from_db(user_id)
+                        if not user_record:
+                            user_record = user_data.get(user_id, {})
+                        
+                        # Безопасно извлекаем user_data
+                        if isinstance(user_record, dict):
+                            if "user_data" in user_record:
+                                if isinstance(user_record["user_data"], str):
+                                    try:
+                                        import json
+                                        user_vars = json.loads(user_record["user_data"])
+                                    except (json.JSONDecodeError, TypeError):
+                                        user_vars = {}
+                                elif isinstance(user_record["user_data"], dict):
+                                    user_vars = user_record["user_data"]
+                                else:
+                                    user_vars = {}
+                            else:
+                                user_vars = user_record
+                        else:
+                            user_vars = {}
+                        
+                        # Заменяем все переменные в тексте
+                        import re
+                        def replace_variables_in_text(text_content, variables_dict):
+                            if not text_content or not variables_dict:
+                                return text_content
+                            
+                            for var_name, var_data in variables_dict.items():
+                                placeholder = "{" + var_name + "}"
+                                if placeholder in text_content:
+                                    if isinstance(var_data, dict) and "value" in var_data:
+                                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                                    elif var_data is not None:
+                                        var_value = str(var_data)
+                                    else:
+                                        var_value = var_name  # Показываем имя переменной если значения нет
+                                    text_content = text_content.replace(placeholder, var_value)
+                            return text_content
+                        
+                        text = replace_variables_in_text(text, user_vars)
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "join_request_response",
+                            "save_to_database": True,
+                            "node_id": "join_request_paste_1754773111934_7otlx3suc",
+                            "next_node_id": "",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    elif next_node_id == "age_input_paste_1754773140898_ofvtop5ht":
+                        text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):
+
+Спасибо за заполнение анкеты!"""
+                        # Замена переменных в тексте
+                        # Подставляем все доступные переменные пользователя в текст
+                        user_record = await get_user_from_db(user_id)
+                        if not user_record:
+                            user_record = user_data.get(user_id, {})
+                        
+                        # Безопасно извлекаем user_data
+                        if isinstance(user_record, dict):
+                            if "user_data" in user_record:
+                                if isinstance(user_record["user_data"], str):
+                                    try:
+                                        import json
+                                        user_vars = json.loads(user_record["user_data"])
+                                    except (json.JSONDecodeError, TypeError):
+                                        user_vars = {}
+                                elif isinstance(user_record["user_data"], dict):
+                                    user_vars = user_record["user_data"]
+                                else:
+                                    user_vars = {}
+                            else:
+                                user_vars = user_record
+                        else:
+                            user_vars = {}
+                        
+                        # Заменяем все переменные в тексте
+                        import re
+                        def replace_variables_in_text(text_content, variables_dict):
+                            if not text_content or not variables_dict:
+                                return text_content
+                            
+                            for var_name, var_data in variables_dict.items():
+                                placeholder = "{" + var_name + "}"
+                                if placeholder in text_content:
+                                    if isinstance(var_data, dict) and "value" in var_data:
+                                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name
+                                    elif var_data is not None:
+                                        var_value = str(var_data)
+                                    else:
+                                        var_value = var_name  # Показываем имя переменной если значения нет
+                                    text_content = text_content.replace(placeholder, var_value)
+                            return text_content
+                        
+                        text = replace_variables_in_text(text, user_vars)
+                        await message.answer(text)
+                        # Настраиваем ожидание ввода для message узла
+                        user_data[user_id]["waiting_for_input"] = {
+                            "type": "text",
+                            "variable": "user_age",
+                            "save_to_database": True,
+                            "node_id": "age_input_paste_1754773140898_ofvtop5ht",
+                            "next_node_id": "",
+                            "min_length": 0,
+                            "max_length": 0,
+                            "retry_message": "Пожалуйста, попробуйте еще раз.",
+                            "success_message": "Спасибо за ваш ответ!"
+                        }
+                    else:
+                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")
+                except Exception as e:
+                    logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+            
+            return  # Завершаем обработку для нового формата
+        
+        # Обработка старого формата (для совместимости)
+        # Находим узел для получения настроек
+        if waiting_node_id == "start_paste_1754773085472_7rftt8agl":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["user_source"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "user_source", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: user_source = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: user_source = {user_text}")
+            
+            # Переходим к следующему узлу
+            try:
+                # Отправляем сообщение для узла join_request_paste_1754773111934_7otlx3suc
+                text = "Хочешь присоединиться к нашему чату? 🚀"
+                # Настраиваем новое ожидание ввода для узла join_request_paste_1754773111934_7otlx3suc
+                user_data[user_id]["waiting_for_input"] = {
+                    "type": "text",
+                    "variable": "join_request_response",
+                    "save_to_database": True,
+                    "node_id": "join_request_paste_1754773111934_7otlx3suc",
+                    "next_node_id": "",
+                    "min_length": 0,
+                    "max_length": 0,
+                    "retry_message": "Пожалуйста, попробуйте еще раз.",
+                    "success_message": "Спасибо за ваш ответ!"
+                }
+                
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
+                
+                button_texts = ["Да 😎", "Нет 🙅"]
+                keyboard_width = calculate_keyboard_width(button_texts)
+                
+                builder.add(InlineKeyboardButton(text="Да 😎", callback_data="age_input_paste_1754773140898_ofvtop5ht"))
+                builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="age_input_paste_1754773140898_ofvtop5ht"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
+                keyboard = builder.as_markup()
+                await message.answer(text, reply_markup=keyboard)
+                logging.info("✅ Переход к следующему узлу выполнен успешно")
+            except Exception as e:
+                logging.error(f"Ошибка при переходе к следующему узлу: {e}")
+            return
+        elif waiting_node_id == "join_request_paste_1754773111934_7otlx3suc":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["join_request_response"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "join_request_response", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: join_request_response = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: join_request_response = {user_text}")
+            
+            # Конец цепочки ввода - завершаем обработку
+            logging.info("Завершена цепочка сбора пользовательских данных")
+            return
+        elif waiting_node_id == "age_input_paste_1754773140898_ofvtop5ht":
+            
+            # Сохраняем ответ пользователя
+            import datetime
+            timestamp = get_moscow_time()
+            
+            # Сохраняем простое значение для совместимости с логикой профиля
+            response_data = user_text  # Простое значение вместо сложного объекта
+            
+            # Сохраняем в пользовательские данные
+            user_data[user_id]["user_age"] = response_data
+            
+            # Сохраняем в базу данных
+            saved_to_db = await update_user_data_in_db(user_id, "user_age", response_data)
+            if saved_to_db:
+                logging.info(f"✅ Данные сохранены в БД: user_age = {user_text} (пользователь {user_id})")
+            else:
+                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")
+            
+            await message.answer("✅ Спасибо за ваш ответ!")
+            
+            # Очищаем состояние ожидания ввода
+            del user_data[user_id]["waiting_for_input"]
+            
+            logging.info(f"Получен пользовательский ввод: user_age = {user_text}")
+            
+            # Конец цепочки ввода - завершаем обработку
+            logging.info("Завершена цепочка сбора пользовательских данных")
+            return
+        
+        # Если узел не найден
+        logging.warning(f"Узел для сбора ввода не найден: {waiting_node_id}")
         del user_data[user_id]["waiting_for_input"]
         return
     
+    # НОВАЯ ЛОГИКА: Проверяем, включен ли дополнительный сбор ответов для обычных кнопок
+    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):
+        input_node_id = user_data[user_id].get("input_node_id")
+        input_variable = user_data[user_id].get("input_variable", "button_response")
+        user_text = message.text
+        
+        # Сохраняем любой текст как дополнительный ответ
+        timestamp = get_moscow_time()
+        
+        response_data = user_text  # Простое значение
+        
+        # Сохраняем в пользовательские данные
+        user_data[user_id][f"{input_variable}_additional"] = response_data
+        
+        # Уведомляем пользователя
+        await message.answer("✅ Дополнительный комментарий сохранен!")
+        
+        logging.info(f"Дополнительный текстовый ввод: {input_variable}_additional = {user_text} (пользователь {user_id})")
+        return
+    
+    # Если нет активного ожидания ввода, игнорируем сообщение
+    return
     # Валидация длины текста
     min_length = input_config.get("min_length", 0)
     max_length = input_config.get("max_length", 0)
@@ -2207,21 +1300,13 @@ async def handle_user_input(message: types.Message):
             await message.answer(f"❌ Неверный формат телефона. {retry_message}")
             return
     
-    # Сохраняем ответ пользователя в структурированном формате
+    # Сохраняем ответ пользователя простым значением
     variable_name = input_config.get("variable", "user_response")
-    import datetime
-    timestamp = datetime.datetime.now().isoformat()
+    timestamp = get_moscow_time()
     node_id = input_config.get("node_id", "unknown")
     
-    # Создаем структурированный ответ
-    response_data = {
-        "value": user_text,
-        "type": input_type,
-        "timestamp": timestamp,
-        "nodeId": node_id,
-        "prompt": input_config.get("prompt", ""),
-        "variable": variable_name
-    }
+    # Простое значение вместо сложного объекта
+    response_data = user_text
     
     # Сохраняем в пользовательские данные
     user_data[user_id][variable_name] = response_data
@@ -2250,200 +1335,164 @@ async def handle_user_input(message: types.Message):
         try:
             logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")
             
+            # Создаем фейковое сообщение для навигации
+            fake_message = type("FakeMessage", (), {})()
+            fake_message.from_user = message.from_user
+            fake_message.answer = message.answer
+            fake_message.delete = lambda: None
+            
             # Находим узел по ID и выполняем соответствующее действие
-            if next_node_id == "start-1":
-                logging.info(f"Переход к узлу start-1 типа start")
-            elif next_node_id == "name-input":
-                prompt_text = f"👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):"
-                placeholder_text = "Введите ваше имя..."
-                prompt_text += f"\n\n💡 {placeholder_text}"
-                await message.answer(prompt_text)
+            if next_node_id == "start_paste_1754773085472_7rftt8agl":
+                logging.info(f"Переход к узлу start_paste_1754773085472_7rftt8agl типа start")
+            elif next_node_id == "join_request_paste_1754773111934_7otlx3suc":
+                text = "Хочешь присоединиться к нашему чату? 🚀"
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                builder = InlineKeyboardBuilder()
+                # Функция для определения количества колонок на основе текста кнопок
+                def calculate_keyboard_width(buttons_data):
+                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])
+                    if max_text_length <= 6:  # Короткие тексты
+                        return 3  # 3 колонки
+                    elif max_text_length <= 12:  # Средние тексты
+                        return 2  # 2 колонки
+                    else:  # Длинные тексты
+                        return 1  # 1 колонка
                 
-                # Настраиваем ожидание ввода
-                user_data[user_id]["waiting_for_input"] = {
-                    "type": "text",
-                    "variable": "user_name",
-                    "validation": "",
-                    "min_length": 2,
-                    "max_length": 50,
-                    "timeout": 60,
-                    "required": True,
-                    "allow_skip": False,
-                    "save_to_database": True,
-                    "retry_message": "Пожалуйста, попробуйте еще раз.",
-                    "success_message": "Спасибо за ваш ответ!",
-                    "prompt": f"👤 **Шаг 1: Персональные данные**\n\n<b>Как вас зовут?</b>\n\nВведите ваше имя (от 2 до 50 символов):",
-                    "node_id": "name-input",
-                    "next_node_id": "age-buttons"
-                }
-            elif next_node_id == "name-error":
-                text = f"❌ **Ошибка ввода имени**\n\nПожалуйста, введите корректное имя (от 2 до 50 символов).\n\nПопробуйте ещё раз:"
-                parse_mode = ParseMode.MARKDOWN
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="🔄 Повторить ввод", callback_data="name-input"))
-                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="age-buttons"))
-                keyboard = builder.as_markup()
-                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "age-buttons":
-                prompt_text = f"🎂 **Шаг 2: Возрастная группа**\n\n<b>Выберите вашу возрастную группу:</b>\n\nИспользуйте кнопки для выбора:"
-                await message.answer(prompt_text)
+                button_texts = ["Да 😎", "Нет 🙅"]
+                keyboard_width = calculate_keyboard_width(button_texts)
                 
-                # Настраиваем ожидание ввода
-                user_data[user_id]["waiting_for_input"] = {
-                    "type": "text",
-                    "variable": "user_age_group",
-                    "validation": "",
-                    "min_length": 0,
-                    "max_length": 0,
-                    "timeout": 60,
-                    "required": True,
-                    "allow_skip": False,
-                    "save_to_database": True,
-                    "retry_message": "Пожалуйста, попробуйте еще раз.",
-                    "success_message": "Спасибо за ваш ответ!",
-                    "prompt": f"🎂 **Шаг 2: Возрастная группа**\n\n<b>Выберите вашу возрастную группу:</b>\n\nИспользуйте кнопки для выбора:",
-                    "node_id": "age-buttons",
-                    "next_node_id": "interests-multiple"
-                }
-            elif next_node_id == "age-error":
-                text = f"❌ **Ошибка выбора возраста**\n\nПожалуйста, выберите одну из предложенных возрастных групп."
-                parse_mode = ParseMode.MARKDOWN
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="🔄 Повторить выбор", callback_data="age-buttons"))
-                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="interests-multiple"))
+                builder.add(InlineKeyboardButton(text="Да 😎", callback_data="age_input_paste_1754773140898_ofvtop5ht"))
+                builder.add(InlineKeyboardButton(text="Нет 🙅", callback_data="age_input_paste_1754773140898_ofvtop5ht"))
+                builder.adjust(keyboard_width)  # Умное расположение кнопок
                 keyboard = builder.as_markup()
                 await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "interests-multiple":
-                prompt_text = f"🎯 **Шаг 3: Интересы (множественный выбор)**\n\n<b>Выберите ваши интересы (можно несколько):</b>\n\nВыберите все подходящие варианты и нажмите \"Готово\":"
-                await message.answer(prompt_text)
-                
-                # Настраиваем ожидание ввода
-                user_data[user_id]["waiting_for_input"] = {
-                    "type": "text",
-                    "variable": "user_interests",
-                    "validation": "",
-                    "min_length": 0,
-                    "max_length": 0,
-                    "timeout": 60,
-                    "required": True,
-                    "allow_skip": False,
-                    "save_to_database": True,
-                    "retry_message": "Пожалуйста, попробуйте еще раз.",
-                    "success_message": "Спасибо за ваш ответ!",
-                    "prompt": f"🎯 **Шаг 3: Интересы (множественный выбор)**\n\n<b>Выберите ваши интересы (можно несколько):</b>\n\nВыберите все подходящие варианты и нажмите \"Готово\":",
-                    "node_id": "interests-multiple",
-                    "next_node_id": "contact-input"
-                }
-            elif next_node_id == "interests-error":
-                text = f"❌ **Ошибка выбора интересов**\n\nПожалуйста, выберите хотя бы один интерес и нажмите \"Готово\"."
-                parse_mode = ParseMode.MARKDOWN
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="🔄 Повторить выбор", callback_data="interests-multiple"))
-                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="contact-input"))
-                keyboard = builder.as_markup()
-                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "contact-input":
-                prompt_text = f"📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:"
-                placeholder_text = "example@email.com или +7-999-123-45-67"
-                prompt_text += f"\n\n💡 {placeholder_text}"
-                await message.answer(prompt_text)
-                
-                # Настраиваем ожидание ввода
-                user_data[user_id]["waiting_for_input"] = {
-                    "type": "email",
-                    "variable": "user_contact",
-                    "validation": "",
-                    "min_length": 5,
-                    "max_length": 100,
-                    "timeout": 60,
-                    "required": True,
-                    "allow_skip": False,
-                    "save_to_database": True,
-                    "retry_message": "Пожалуйста, попробуйте еще раз.",
-                    "success_message": "Спасибо за ваш ответ!",
-                    "prompt": f"📱 **Шаг 4: Контактная информация**\n\n<b>Введите ваш email или телефон:</b>\n\nМы используем эти данные для связи с вами:",
-                    "node_id": "contact-input",
-                    "next_node_id": "experience-rating"
-                }
-            elif next_node_id == "contact-error":
-                text = f"❌ **Ошибка ввода контактов**\n\nПожалуйста, введите корректный email или номер телефона."
-                parse_mode = ParseMode.MARKDOWN
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="🔄 Повторить ввод", callback_data="contact-input"))
-                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="experience-rating"))
-                keyboard = builder.as_markup()
-                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "experience-rating":
-                prompt_text = f"⭐ **Шаг 5: Оценка опыта**\n\n<b>Как вы оцениваете опыт использования этого бота?</b>\n\nВыберите количество звезд:"
-                await message.answer(prompt_text)
-                
-                # Настраиваем ожидание ввода
-                user_data[user_id]["waiting_for_input"] = {
-                    "type": "text",
-                    "variable": "user_rating",
-                    "validation": "",
-                    "min_length": 0,
-                    "max_length": 0,
-                    "timeout": 60,
-                    "required": True,
-                    "allow_skip": False,
-                    "save_to_database": True,
-                    "retry_message": "Пожалуйста, попробуйте еще раз.",
-                    "success_message": "Спасибо за ваш ответ!",
-                    "prompt": f"⭐ **Шаг 5: Оценка опыта**\n\n<b>Как вы оцениваете опыт использования этого бота?</b>\n\nВыберите количество звезд:",
-                    "node_id": "experience-rating",
-                    "next_node_id": "final-comment"
-                }
-            elif next_node_id == "rating-error":
-                text = f"❌ **Ошибка оценки**\n\nПожалуйста, выберите оценку от 1 до 5 звезд."
-                parse_mode = ParseMode.MARKDOWN
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="🔄 Повторить оценку", callback_data="experience-rating"))
-                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="final-comment"))
-                keyboard = builder.as_markup()
-                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "final-comment":
-                prompt_text = f"💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):"
-                placeholder_text = "Ваши комментарии и предложения..."
-                prompt_text += f"\n\n💡 {placeholder_text}"
-                await message.answer(prompt_text)
-                
-                # Настраиваем ожидание ввода
-                user_data[user_id]["waiting_for_input"] = {
-                    "type": "text",
-                    "variable": "user_comment",
-                    "validation": "",
-                    "min_length": 0,
-                    "max_length": 1000,
-                    "timeout": 60,
-                    "required": True,
-                    "allow_skip": False,
-                    "save_to_database": True,
-                    "retry_message": "Пожалуйста, попробуйте еще раз.",
-                    "success_message": "Спасибо за ваш ответ!",
-                    "prompt": f"💭 **Шаг 6: Заключительный комментарий**\n\n<b>Есть ли у вас дополнительные комментарии или предложения?</b>\n\nНапишите ваше мнение (необязательно):",
-                    "node_id": "final-comment",
-                    "next_node_id": "final-results"
-                }
-            elif next_node_id == "comment-error":
-                text = f"❌ **Ошибка комментария**\n\nКомментарий слишком длинный. Максимум 1000 символов."
-                parse_mode = ParseMode.MARKDOWN
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="🔄 Повторить ввод", callback_data="final-comment"))
-                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="final-results"))
-                keyboard = builder.as_markup()
-                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
-            elif next_node_id == "final-results":
-                text = f"🎉 **Сбор данных завершен!**\n\n<b>Спасибо за участие!</b>\n\nВы успешно продемонстрировали все типы сбора пользовательского ввода:\n\n✅ <b>Текстовый ввод</b> - имя и комментарии\n✅ <b>Одиночный выбор</b> - возраст и рейтинг\n✅ <b>Множественный выбор</b> - интересы\n✅ <b>Валидация данных</b> - проверка email/телефона\n✅ <b>Обработка ошибок</b> - повторы и пропуски\n\nВсе данные сохранены в базе данных и готовы к анализу."
-                parse_mode = ParseMode.MARKDOWN
-                builder = InlineKeyboardBuilder()
-                builder.add(InlineKeyboardButton(text="🔄 Пройти снова", callback_data="start-1"))
-                keyboard = builder.as_markup()
-                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)
+            elif next_node_id == "age_input_paste_1754773140898_ofvtop5ht":
+                text = """Сколько тебе лет? 🎂
+
+Напиши свой возраст числом (например, 25):
+
+Спасибо за заполнение анкеты!"""
+                # Используем parse_mode условного сообщения если он установлен
+                if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:
+                    parse_mode = conditional_parse_mode
+                else:
+                    parse_mode = None
+                await message.answer(text, parse_mode=parse_mode)
             else:
                 logging.warning(f"Неизвестный следующий узел: {next_node_id}")
         except Exception as e:
             logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")
+
+
+# Обработчик для условных кнопок
+@dp.callback_query(lambda c: c.data.startswith("conditional_"))
+async def handle_conditional_button(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    
+    # Парсим callback_data: conditional_variableName_value
+    callback_parts = callback_query.data.split("_", 2)
+    if len(callback_parts) >= 3:
+        variable_name = callback_parts[1]
+        variable_value = callback_parts[2]
+        
+        user_id = callback_query.from_user.id
+        
+        # Сохраняем значение в базу данных
+        await update_user_data_in_db(user_id, variable_name, variable_value)
+        
+        # Сохраняем в локальные данные
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        user_data[user_id][variable_name] = variable_value
+        
+        logging.info(f"Условная кнопка: {variable_name} = {variable_value} (пользователь {user_id})")
+        
+        # После обновления значения автоматически вызываем профиль
+        await callback_query.answer(f"✅ {variable_name} обновлено")
+        
+        # Создаем имитацию сообщения для вызова команды профиль
+        class FakeMessage:
+            def __init__(self, callback_query):
+                self.from_user = callback_query.from_user
+                self.chat = callback_query.message.chat
+                self.date = callback_query.message.date
+                self.message_id = callback_query.message.message_id
+            
+            async def answer(self, text, parse_mode=None, reply_markup=None):
+                if reply_markup:
+                    await bot.send_message(self.chat.id, text, parse_mode=parse_mode, reply_markup=reply_markup)
+                else:
+                    await bot.send_message(self.chat.id, text, parse_mode=parse_mode)
+            
+            async def edit_text(self, text, parse_mode=None, reply_markup=None):
+                try:
+                    await bot.edit_message_text(text, self.chat.id, self.message_id, parse_mode=parse_mode, reply_markup=reply_markup)
+                except Exception:
+                    await self.answer(text, parse_mode, reply_markup)
+        
+        fake_message = FakeMessage(callback_query)
+        
+        # Вызываем обработчик профиля
+        try:
+            await profile_handler(fake_message)
+        except Exception as e:
+            logging.error(f"Ошибка вызова profile_handler: {e}")
+            await callback_query.message.answer(f"✅ Значение {variable_name} обновлено на: {variable_value}")
+    else:
+        logging.warning(f"Неверный формат условной кнопки: {callback_query.data}")
+        await callback_query.answer("❌ Ошибка обработки кнопки", show_alert=True)
+
+
+
+# Обработчик команды профиля с поддержкой variableLabel
+@dp.message(Command("profile"))
+async def profile_handler(message: types.Message):
+    user_id = message.from_user.id
+    
+    # Получаем данные пользователя из базы данных
+    user_record = await get_user_from_db(user_id)
+    if not user_record:
+        user_record = user_data.get(user_id, {})
+    
+    # Извлекаем пользовательские данные
+    if isinstance(user_record, dict):
+        if "user_data" in user_record:
+            if isinstance(user_record["user_data"], str):
+                try:
+                    import json
+                    user_vars = json.loads(user_record["user_data"])
+                except (json.JSONDecodeError, TypeError):
+                    user_vars = {}
+            elif isinstance(user_record["user_data"], dict):
+                user_vars = user_record["user_data"]
+            else:
+                user_vars = {}
+        else:
+            user_vars = user_record
+    else:
+        user_vars = {}
+    
+    if not user_vars:
+        await message.answer("👤 Профиль недоступен\n\nПохоже, вы еще не прошли опрос. Пожалуйста, введите /start чтобы заполнить профиль.")
+        return
+    
+    # Формируем сообщение профиля с поддержкой variableLabel
+    profile_text = "👤 Ваш профиль:\n\n"
+    
+    # Отображаем все доступные переменные
+    for var_name, var_data in user_vars.items():
+        if isinstance(var_data, dict) and "value" in var_data:
+            value = var_data["value"]
+        else:
+            value = var_data
+        profile_text += f"{var_name}: {value}\n"
+    
+    await message.answer(profile_text)
+    logging.info(f"Профиль отображен для пользователя {user_id}")
 
 
 
@@ -2469,6 +1518,100 @@ async def main():
         await bot.session.close()
         print("🔌 Сессия бота закрыта")
         print("✅ Бот корректно завершил работу")
+
+
+# Обработчики для множественного выбора
+@dp.callback_query(lambda c: c.data.startswith("multi_select_"))
+async def handle_multi_select_callback(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+    user_id = callback_query.from_user.id
+    callback_data = callback_query.data
+    
+    if callback_data.startswith("multi_select_done_"):
+        # Завершение множественного выбора
+        node_id = callback_data.replace("multi_select_done_", "")
+        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])
+        
+        # Сохраняем выбранные опции в базу данных
+        if selected_options:
+            selected_text = ", ".join(selected_options)
+            # Резервное сохранение если узел не найден
+            if not any(node_id == node for node in []):
+                await save_user_data_to_db(user_id, f"multi_select_{node_id}", selected_text)
+        
+        # Очищаем состояние множественного выбора
+        if user_id in user_data:
+            user_data[user_id].pop(f"multi_select_{node_id}", None)
+            user_data[user_id].pop("multi_select_node", None)
+        
+        # Переходим к следующему узлу, если указан
+        return
+    
+    # Обработка выбора опции
+    parts = callback_data.split("_")
+    if len(parts) >= 3:
+        node_id = parts[2]
+        button_id = "_".join(parts[3:]) if len(parts) > 3 else parts[2]
+        
+        # Инициализируем список выбранных опций с восстановлением из БД
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        
+        # Восстанавливаем ранее выбранные опции из базы данных
+        if f"multi_select_{node_id}" not in user_data[user_id]:
+            # Загружаем сохраненные данные из базы
+            user_vars = await get_user_from_db(user_id)
+            saved_selections = []
+            
+            if user_vars:
+                # Ищем переменную с интересами
+                for var_name, var_data in user_vars.items():
+                    if "интерес" in var_name.lower() or var_name == "interests" or var_name.startswith("multi_select_"):
+                        if isinstance(var_data, dict) and "value" in var_data:
+                            saved_str = var_data["value"]
+                        elif isinstance(var_data, str):
+                            saved_str = var_data
+                        else:
+                            saved_str = str(var_data) if var_data else ""
+                        
+                        if saved_str:
+                            saved_selections = [item.strip() for item in saved_str.split(",")]
+                            break
+            
+            user_data[user_id][f"multi_select_{node_id}"] = saved_selections
+        
+        # Находим текст кнопки по button_id
+        button_text = None
+        
+        if button_text:
+            selected_list = user_data[user_id][f"multi_select_{node_id}"]
+            if button_text in selected_list:
+                # Убираем из выбранных
+                selected_list.remove(button_text)
+            else:
+                # Добавляем к выбранным
+                selected_list.append(button_text)
+            
+            # Обновляем клавиатуру с галочками
+            builder = InlineKeyboardBuilder()
+            
+            keyboard = builder.as_markup()
+            await callback_query.message.edit_reply_markup(reply_markup=keyboard)
+
+# Обработчик для reply кнопок множественного выбора
+@dp.message()
+async def handle_multi_select_reply(message: types.Message):
+    user_id = message.from_user.id
+    user_input = message.text
+    
+    # Проверяем, находится ли пользователь в режиме множественного выбора reply
+    if user_id in user_data and "multi_select_node" in user_data[user_id] and user_data[user_id].get("multi_select_type") == "reply":
+        node_id = user_data[user_id]["multi_select_node"]
+        
+        # Обработка выбора опции
+    
+    # Если не множественный выбор, передаем дальше по цепочке обработчиков
+    pass
 
 if __name__ == "__main__":
     asyncio.run(main())
