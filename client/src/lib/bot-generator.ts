@@ -2613,6 +2613,29 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   const formattedText = formatTextForPython(messageText);
                   code += `            nav_text = ${formattedText}\n`;
                   code += '            await callback_query.message.edit_text(nav_text)\n';
+                  
+                  // Если узел message собирает ввод, настраиваем ожидание
+                  if (navTargetNode.data.collectUserInput === true) {
+                    const inputType = navTargetNode.data.inputType || 'text';
+                    const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
+                    const inputTargetNodeId = navTargetNode.data.inputTargetNodeId;
+                    
+                    code += '            # Настраиваем ожидание ввода для message узла в навигации\n';
+                    code += '            user_id = callback_query.from_user.id\n';
+                    code += '            if user_id not in user_data:\n';
+                    code += '                user_data[user_id] = {}\n';
+                    code += '            user_data[user_id]["waiting_for_input"] = {\n';
+                    code += `                "type": "${inputType}",\n`;
+                    code += `                "variable": "${inputVariable}",\n`;
+                    code += '                "save_to_database": True,\n';
+                    code += `                "node_id": "${navTargetNode.id}",\n`;
+                    code += `                "next_node_id": "${inputTargetNodeId || ''}",\n`;
+                    code += `                "min_length": ${navTargetNode.data.minLength || 0},\n`;
+                    code += `                "max_length": ${navTargetNode.data.maxLength || 0},\n`;
+                    code += '                "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+                    code += '                "success_message": "Спасибо за ваш ответ!"\n';
+                    code += '            }\n';
+                  }
                 } else if (navTargetNode.type === 'command') {
                   // Для узлов команд вызываем соответствующий обработчик
                   const commandName = navTargetNode.data.command?.replace('/', '') || 'unknown';
