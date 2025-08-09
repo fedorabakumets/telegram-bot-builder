@@ -3825,6 +3825,26 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         const formattedText = formatTextForPython(messageText);
         code += `                        text = ${formattedText}\n`;
         code += '                        await message.answer(text)\n';
+        
+        // Если узел message собирает ввод, настраиваем ожидание
+        if (targetNode.data.collectUserInput === true) {
+          const inputType = targetNode.data.inputType || 'text';
+          const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+          const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+          
+          code += '                        # Настраиваем ожидание ввода для message узла\n';
+          code += '                        user_data[user_id]["waiting_for_input"] = {\n';
+          code += `                            "type": "${inputType}",\n`;
+          code += `                            "variable": "${inputVariable}",\n`;
+          code += '                            "save_to_database": True,\n';
+          code += `                            "node_id": "${targetNode.id}",\n`;
+          code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
+          code += `                            "min_length": ${targetNode.data.minLength || 0},\n`;
+          code += `                            "max_length": ${targetNode.data.maxLength || 0},\n`;
+          code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+          code += '                            "success_message": "Спасибо за ваш ответ!"\n';
+          code += '                        }\n';
+        }
       } else if (targetNode.type === 'user-input') {
         const inputPrompt = formatTextForPython(targetNode.data.messageText || "Введите ваш ответ:");
         code += `                        prompt_text = ${inputPrompt}\n`;
