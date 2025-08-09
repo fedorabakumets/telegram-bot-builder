@@ -3792,6 +3792,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            logging.info(f"Ввод для узла {current_node_id} уже был обработан, игнорируем")\n';
   code += '            return  # Ввод для этого узла уже был обработан\n';
   code += '        \n';
+  code += '        # ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: если переменная уже сохранена inline кнопкой, не перезаписываем\n';
+  code += '        variable_name_preview = waiting_config.get("variable") if isinstance(waiting_config, dict) else user_data[user_id].get("input_variable", "user_response")\n';
+  code += '        if variable_name_preview in user_data[user_id] and user_data[user_id][variable_name_preview]:\n';
+  code += '            logging.info(f"Переменная {variable_name_preview} уже сохранена, игнорируем текстовый ввод")\n';
+  code += '            # Очищаем состояние ожидания и переходим дальше\n';
+  code += '            del user_data[user_id]["waiting_for_input"]\n';
+  code += '            return\n';
+  code += '        \n';
   code += '        # Проверяем формат конфигурации - новый (словарь) или старый (строка)\n';
   code += '        if isinstance(waiting_config, dict):\n';
   code += '            # Новый формат - извлекаем данные из словаря\n';
