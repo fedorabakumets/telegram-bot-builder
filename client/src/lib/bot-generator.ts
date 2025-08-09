@@ -1239,6 +1239,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    \n';
                 code += `    logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
                 code += '    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput\n';
+                code += '    # Инициализируем user_data для пользователя если не существует\n';
+                code += '    if user_id not in user_data:\n';
+                code += '        user_data[user_id] = {}\n';
                 code += '    user_data[user_id]["waiting_for_input"] = {\n';
                 code += `        "type": "${inputType}",\n`;
                 code += `        "variable": "${inputVariable}",\n`;
@@ -3921,8 +3924,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '                else:\n';
   code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
   code += '            \n';
-  code += '            # НЕ отправляем сообщение об успехе здесь и НЕ очищаем состояние\n';
-  code += '            # Это будет сделано после успешного перехода к следующему узлу\n';
+  code += '            # ИСПРАВЛЕНО: Отправляем подтверждающее сообщение\n';
+  code += '            success_message = waiting_config.get("success_message", "✅ Спасибо за ваш ответ!")\n';
+  code += '            await message.answer(success_message)\n';
+  code += '            logging.info(f"✅ Отправлено подтверждение: {success_message}")\n';
   code += '            \n';
   code += '            # ИСПРАВЛЕНИЕ: Добавляем маркер, что ввод был обработан для этого узла\n';
   code += '            if "processed_inputs" not in user_data[user_id]:\n';
