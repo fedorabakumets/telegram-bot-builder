@@ -3851,9 +3851,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       
       if (targetNode.type === 'message') {
         const messageText = targetNode.data.messageText || 'Сообщение';
-        const formattedText = formatTextForPython(messageText);
+        const cleanedMessageText = stripHtmlTags(messageText);
+        const formattedText = formatTextForPython(cleanedMessageText);
         code += `                        text = ${formattedText}\n`;
-        code += '                        await message.answer(text)\n';
+        
+        // Применяем замену переменных
+        code += '                        # Замена переменных в тексте\n';
+        code += generateUniversalVariableReplacement('                        ');
         
         // Если узел message собирает ввод, настраиваем ожидание
         if (targetNode.data.collectUserInput === true) {
@@ -3861,6 +3865,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
           const inputTargetNodeId = targetNode.data.inputTargetNodeId;
           
+          code += '                        await message.answer(text)\n';
           code += '                        # Настраиваем ожидание ввода для message узла\n';
           code += '                        user_data[user_id]["waiting_for_input"] = {\n';
           code += `                            "type": "${inputType}",\n`;
@@ -3873,6 +3878,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
           code += '                            "success_message": "Спасибо за ваш ответ!"\n';
           code += '                        }\n';
+        } else {
+          // Если узел не собирает ввод, проверяем есть ли inline кнопки
+          if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += '                        # Создаем inline клавиатуру\n';
+            code += '                        builder = InlineKeyboardBuilder()\n';
+            
+            // Добавляем кнопки
+            targetNode.data.buttons.forEach((btn, btnIndex) => {
+              if (btn.action === "goto" && btn.target) {
+                const callbackData = `${btn.target}`;
+                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+              } else if (btn.action === "url" && btn.url) {
+                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url}"))\n`;
+              }
+            });
+            
+            code += '                        keyboard = builder.as_markup()\n';
+            code += '                        await message.answer(text, reply_markup=keyboard)\n';
+          } else {
+            code += '                        await message.answer(text)\n';
+          }
         }
       } else if (targetNode.type === 'user-input') {
         const inputPrompt = formatTextForPython(targetNode.data.messageText || "Введите ваш ответ:");
@@ -4026,11 +4052,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             const nextInputTargetNodeId = targetNode.data.inputTargetNodeId;
             
             code += `                # Настраиваем новое ожидание ввода для узла ${targetNode.id}\n`;
-            code += `                user_data[user_id]["waiting_for_input"] = "${targetNode.id}"\n`;
-            code += `                user_data[user_id]["input_type"] = "${nextInputType}"\n`;
-            code += `                user_data[user_id]["input_variable"] = "${nextInputVariable}"\n`;
-            code += `                user_data[user_id]["save_to_database"] = True\n`;
-            code += `                user_data[user_id]["input_target_node_id"] = "${nextInputTargetNodeId || ''}"\n`;
+            code += `                user_data[user_id]["waiting_for_input"] = {\n`;
+            code += `                    "type": "${nextInputType}",\n`;
+            code += `                    "variable": "${nextInputVariable}",\n`;
+            code += `                    "save_to_database": True,\n`;
+            code += `                    "node_id": "${targetNode.id}",\n`;
+            code += `                    "next_node_id": "${nextInputTargetNodeId || ''}",\n`;
+            code += `                    "min_length": 0,\n`;
+            code += `                    "max_length": 0,\n`;
+            code += `                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
+            code += `                    "success_message": "Спасибо за ваш ответ!"\n`;
+            code += `                }\n`;
             code += `                \n`;
           }
           
