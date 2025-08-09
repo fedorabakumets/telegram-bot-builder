@@ -3799,6 +3799,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            return\n';
   code += '    \n';
   code += '    # Проверяем, ожидаем ли мы текстовый ввод от пользователя (универсальная система)\n';
+  code += '    has_waiting_state = user_id in user_data and "waiting_for_input" in user_data[user_id]\n';
+  code += '    logging.info(f"DEBUG: Получен текст {message.text}, состояние ожидания: {has_waiting_state}")\n';
   code += '    if user_id in user_data and "waiting_for_input" in user_data[user_id]:\n';
   code += '        # Обрабатываем ввод через универсальную систему\n';
   code += '        waiting_config = user_data[user_id]["waiting_for_input"]\n';
@@ -4035,6 +4037,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   // Генерируем проверку для каждого узла с универсальным сбором ввода (старый формат)
   const inputNodes = nodes.filter(node => node.data.collectUserInput);
+  code += `        logging.info(f"DEBUG old format: checking inputNodes: ${inputNodes.map(n => n.id).join(', ')}")\n`;
   inputNodes.forEach((node, index) => {
     const condition = index === 0 ? 'if' : 'elif';
     code += `        ${condition} waiting_node_id == "${node.id}":\n`;
