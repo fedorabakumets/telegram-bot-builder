@@ -2619,6 +2619,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   // Если узел message собирает ввод, настраиваем ожидание
                   if (navTargetNode.data.collectUserInput === true) {
                     const inputType = navTargetNode.data.inputType || 'text';
+                    // ИСПРАВЛЕНИЕ: Берем inputVariable именно из целевого узла, а не из родительского
                     const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                     const inputTargetNodeId = navTargetNode.data.inputTargetNodeId;
                     
@@ -2637,6 +2638,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     code += '                "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
                     code += '                "success_message": "Спасибо за ваш ответ!"\n';
                     code += '            }\n';
+                    code += `            logging.info(f"🔧 Настроено ожидание ввода для переменной: ${inputVariable} (узел ${navTargetNode.id})")\n`;
                   }
                 } else if (navTargetNode.type === 'command') {
                   // Для узлов команд вызываем соответствующий обработчик
@@ -2793,14 +2795,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                         
                         // Настраиваем ожидание текстового ввода для условного сообщения (если нужно)
                         if (condition.waitForTextInput) {
+                          // ИСПРАВЛЕНИЕ: Используем переменную из условия или из целевого узла
+                          const conditionalInputVariable = condition.textInputVariable || navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                           code += `                # Настраиваем ожидание текстового ввода для условного сообщения\n`;
                           code += `                user_data[user_id]["waiting_for_input"] = {\n`;
                           code += `                    "type": "text",\n`;
-                          code += `                    "variable": "${condition.textInputVariable || inputVariable}",\n`;
+                          code += `                    "variable": "${conditionalInputVariable}",\n`;
                           code += `                    "save_to_database": True,\n`;
                           code += `                    "node_id": "${navTargetNode.id}",\n`;
                           code += `                    "next_node_id": "${condition.nextNodeAfterInput || inputTargetNodeId}"\n`;
                           code += `                }\n`;
+                          code += `                logging.info(f"🔧 Настроено условное ожидание ввода для переменной: ${conditionalInputVariable} (узел ${navTargetNode.id})")\n`;
                         }
                       }
                     }
@@ -2808,31 +2813,37 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     // Fallback сообщение
                     code += `            else:\n`;
                     const formattedText = formatTextForPython(messageText);
+                    // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
+                    const fallbackInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                     code += `                # Fallback сообщение\n`;
                     code += `                nav_text = ${formattedText}\n`;
                     code += `                # Настраиваем ожидание ввода\n`;
                     code += `                user_data[user_id]["waiting_for_input"] = {\n`;
                     code += `                    "type": "text",\n`;
-                    code += `                    "variable": "${inputVariable}",\n`;
+                    code += `                    "variable": "${fallbackInputVariable}",\n`;
                     code += `                    "save_to_database": True,\n`;
                     code += `                    "node_id": "${navTargetNode.id}",\n`;
                     code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
                     code += `                }\n`;
+                    code += `                logging.info(f"🔧 Настроено fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
                     code += `                await bot.send_message(user_id, nav_text)\n`;
                   } else {
                     // Обычный узел без условных сообщений
                     const formattedText = formatTextForPython(messageText);
+                    // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
+                    const regularInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                     code += '            await callback_query.message.delete()\n';
                     code += `            nav_text = ${formattedText}\n`;
                     code += '            # Настраиваем ожидание ввода\n';
                     code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
                     code += '            user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
                     code += '                "type": "text",\n';
-                    code += `                "variable": "${inputVariable}",\n`;
+                    code += `                "variable": "${regularInputVariable}",\n`;
                     code += '                "save_to_database": True,\n';
                     code += `                "node_id": "${navTargetNode.id}",\n`;
                     code += `                "next_node_id": "${inputTargetNodeId}"\n`;
                     code += '            }\n';
+                    code += `            logging.info(f"🔧 Настроено ожидание ввода для переменной: ${regularInputVariable} (узел ${navTargetNode.id})")\n`;
                     code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
                   }
                 } else {
