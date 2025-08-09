@@ -1063,6 +1063,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
             code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
             code += '    \n';
+            
+            // КРИТИЧЕСКИ ВАЖНО: Очищаем состояние ожидания после сохранения переменной
+            code += '    # Очищаем состояние ожидания ввода для этой переменной\n';
+            code += '    if user_id in user_data:\n';
+            code += '        # Удаляем waiting_for_input чтобы текстовый обработчик не перезаписал данные\n';
+            code += '        if "waiting_for_input" in user_data[user_id]:\n';
+            code += `            if user_data[user_id]["waiting_for_input"] == "${parentNode.id}":\n`;
+            code += '                del user_data[user_id]["waiting_for_input"]\n';
+            code += `                logging.info(f"Состояние ожидания ввода очищено для переменной ${variableName} (пользователь {user_id})")\n`;
+            code += '    \n';
           } else {
             // Fallback: сохраняем кнопку как есть
             code += '    # Сохраняем кнопку в базу данных\n';
@@ -2623,22 +2633,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                     const inputTargetNodeId = navTargetNode.data.inputTargetNodeId;
                     
-                    code += '            # Настраиваем ожидание ввода для message узла в навигации\n';
+                    code += '            # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n';
                     code += '            user_id = callback_query.from_user.id\n';
                     code += '            if user_id not in user_data:\n';
                     code += '                user_data[user_id] = {}\n';
-                    code += '            user_data[user_id]["waiting_for_input"] = {\n';
-                    code += `                "type": "${inputType}",\n`;
-                    code += `                "variable": "${inputVariable}",\n`;
-                    code += '                "save_to_database": True,\n';
-                    code += `                "node_id": "${navTargetNode.id}",\n`;
-                    code += `                "next_node_id": "${inputTargetNodeId || ''}",\n`;
-                    code += `                "min_length": ${navTargetNode.data.minLength || 0},\n`;
-                    code += `                "max_length": ${navTargetNode.data.maxLength || 0},\n`;
-                    code += '                "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-                    code += '                "success_message": "Спасибо за ваш ответ!"\n';
-                    code += '            }\n';
-                    code += `            logging.info(f"🔧 Настроено ожидание ввода для переменной: ${inputVariable} (узел ${navTargetNode.id})")\n`;
+                    code += `            # Проверяем, не была ли переменная ${inputVariable} уже сохранена\n`;
+                    code += `            if "${inputVariable}" not in user_data[user_id] or not user_data[user_id]["${inputVariable}"]:\n`;
+                    code += '                # Переменная не сохранена - настраиваем ожидание ввода\n';
+                    code += '                user_data[user_id]["waiting_for_input"] = {\n';
+                    code += `                    "type": "${inputType}",\n`;
+                    code += `                    "variable": "${inputVariable}",\n`;
+                    code += '                    "save_to_database": True,\n';
+                    code += `                    "node_id": "${navTargetNode.id}",\n`;
+                    code += `                    "next_node_id": "${inputTargetNodeId || ''}",\n`;
+                    code += `                    "min_length": ${navTargetNode.data.minLength || 0},\n`;
+                    code += `                    "max_length": ${navTargetNode.data.maxLength || 0},\n`;
+                    code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+                    code += '                    "success_message": "Спасибо за ваш ответ!"\n';
+                    code += '                }\n';
+                    code += `                logging.info(f"🔧 Настроено ожидание ввода для переменной: ${inputVariable} (узел ${navTargetNode.id})")\n`;
+                    code += '            else:\n';
+                    code += `                logging.info(f"⏭️ Переменная ${inputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
                   }
                 } else if (navTargetNode.type === 'command') {
                   // Для узлов команд вызываем соответствующий обработчик
@@ -2819,15 +2834,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     code += `                nav_text = ${formattedText}\n`;
                     // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
                     if (navTargetNode.data.collectUserInput === true) {
-                      code += `                # Настраиваем ожидание ввода\n`;
-                      code += `                user_data[user_id]["waiting_for_input"] = {\n`;
-                      code += `                    "type": "text",\n`;
-                      code += `                    "variable": "${fallbackInputVariable}",\n`;
-                      code += `                    "save_to_database": True,\n`;
-                      code += `                    "node_id": "${navTargetNode.id}",\n`;
-                      code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
-                      code += `                }\n`;
-                      code += `                logging.info(f"🔧 Настроено fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
+                      code += `                # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n`;
+                      code += `                if "${fallbackInputVariable}" not in user_data[user_id] or not user_data[user_id]["${fallbackInputVariable}"]:\n`;
+                      code += `                    # Настраиваем ожидание ввода\n`;
+                      code += `                    user_data[user_id]["waiting_for_input"] = {\n`;
+                      code += `                        "type": "text",\n`;
+                      code += `                        "variable": "${fallbackInputVariable}",\n`;
+                      code += `                        "save_to_database": True,\n`;
+                      code += `                        "node_id": "${navTargetNode.id}",\n`;
+                      code += `                        "next_node_id": "${inputTargetNodeId}"\n`;
+                      code += `                    }\n`;
+                      code += `                    logging.info(f"🔧 Настроено fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
+                      code += `                else:\n`;
+                      code += `                    logging.info(f"⏭️ Переменная ${fallbackInputVariable} уже сохранена, пропускаем fallback ожидание ввода")\n`;
                     } else {
                       code += `                logging.info(f"Fallback переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
                     }
@@ -2842,16 +2861,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     if (navTargetNode.data.collectUserInput === true) {
                       // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
                       const regularInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
-                      code += '            # Настраиваем ожидание ввода\n';
+                      code += '            # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n';
                       code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
-                      code += '            user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-                      code += '                "type": "text",\n';
-                      code += `                "variable": "${regularInputVariable}",\n`;
-                      code += '                "save_to_database": True,\n';
-                      code += `                "node_id": "${navTargetNode.id}",\n`;
-                      code += `                "next_node_id": "${inputTargetNodeId}"\n`;
-                      code += '            }\n';
-                      code += `            logging.info(f"🔧 Настроено ожидание ввода для переменной: ${regularInputVariable} (узел ${navTargetNode.id})")\n`;
+                      code += `            if "${regularInputVariable}" not in user_data[callback_query.from_user.id] or not user_data[callback_query.from_user.id]["${regularInputVariable}"]:\n`;
+                      code += '                # Настраиваем ожидание ввода\n';
+                      code += '                user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+                      code += '                    "type": "text",\n';
+                      code += `                    "variable": "${regularInputVariable}",\n`;
+                      code += '                    "save_to_database": True,\n';
+                      code += `                    "node_id": "${navTargetNode.id}",\n`;
+                      code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
+                      code += '                }\n';
+                      code += `                logging.info(f"🔧 Настроено ожидание ввода для переменной: ${regularInputVariable} (узел ${navTargetNode.id})")\n`;
+                      code += '            else:\n';
+                      code += `                logging.info(f"⏭️ Переменная ${regularInputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
                     } else {
                       code += `            logging.info(f"Переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
                     }
