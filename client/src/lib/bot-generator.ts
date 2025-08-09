@@ -3842,6 +3842,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            if next_node_id:\n';
   code += '                try:\n';
   code += '                    logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+  code += '                    # Проверяем навигацию к узлам\n';
   
   // Добавляем навигацию для каждого узла
   if (nodes.length > 0) {
@@ -4115,6 +4116,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `                )\n`;
           code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
         }
+      } else {
+        // Если целевой узел не найден, добавляем заглушку
+        code += `                logging.warning(f"Целевой узел {node.data.inputTargetNodeId} не найден")\n`;
       }
       
       code += `            except Exception as e:\n`;
