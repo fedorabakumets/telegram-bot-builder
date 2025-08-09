@@ -3963,12 +3963,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       // Найдем целевой узел для навигации
       const targetNode = nodes.find(n => n.id === node.data.inputTargetNodeId);
       if (targetNode) {
-        if (targetNode.type === 'keyboard') {
-          // Для keyboard узлов отправляем сообщение с клавиатурой напрямую
+        if (targetNode.type === 'keyboard' || targetNode.type === 'message') {
+          // Для keyboard и message узлов отправляем сообщение напрямую
           const messageText = targetNode.data.messageText || 'Выберите действие';
           const formattedText = formatTextForPython(messageText);
-          code += `                # Отправляем сообщение с клавиатурой\n`;
+          code += `                # Отправляем сообщение для узла ${targetNode.id}\n`;
           code += `                text = ${formattedText}\n`;
+          
+          // Если целевой узел тоже собирает ввод, настраиваем новое ожидание
+          if (targetNode.data.collectUserInput === true) {
+            const nextInputType = targetNode.data.inputType || 'text';
+            const nextInputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+            const nextInputTargetNodeId = targetNode.data.inputTargetNodeId;
+            
+            code += `                # Настраиваем новое ожидание ввода для узла ${targetNode.id}\n`;
+            code += `                user_data[user_id]["waiting_for_input"] = "${targetNode.id}"\n`;
+            code += `                user_data[user_id]["input_type"] = "${nextInputType}"\n`;
+            code += `                user_data[user_id]["input_variable"] = "${nextInputVariable}"\n`;
+            code += `                user_data[user_id]["save_to_database"] = True\n`;
+            code += `                user_data[user_id]["input_target_node_id"] = "${nextInputTargetNodeId || ''}"\n`;
+            code += `                \n`;
+          }
           
           if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             code += `                builder = InlineKeyboardBuilder()\n`;
