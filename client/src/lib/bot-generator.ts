@@ -1180,9 +1180,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '            if conditional_next_node:\n';
                 code += '                next_node_id = conditional_next_node\n';
                 code += '            else:\n';
-                const currentNodeConnections = connections.filter(conn => conn.sourceNodeId === targetNode.id);
+                const currentNodeConnections = connections.filter(conn => conn.source === targetNode.id);
                 if (currentNodeConnections.length > 0) {
-                  const nextNodeId = currentNodeConnections[0].targetNodeId;
+                  const nextNodeId = currentNodeConnections[0].target;
                   code += `                next_node_id = "${nextNodeId}"\n`;
                 } else {
                   code += '                next_node_id = None\n';
@@ -4119,12 +4119,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       } else {
         // Если целевой узел не найден, добавляем заглушку
         code += `                logging.warning(f"Целевой узел {node.data.inputTargetNodeId} не найден")\n`;
+        code += `                await message.answer("❌ Ошибка перехода: целевой узел не найден")\n`;
       }
       
       code += `            except Exception as e:\n`;
       code += `                logging.error(f"Ошибка при переходе к следующему узлу: {e}")\n`;
       code += `            return\n`;
     } else {
+      // Если inputTargetNodeId равен null, это конец цепочки - это нормально
+      code += `            # Конец цепочки ввода - завершаем обработку\n`;
+      code += `            logging.info("Завершена цепочка сбора пользовательских данных")\n`;
       code += `            return\n`;
     }
   });
