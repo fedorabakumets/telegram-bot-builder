@@ -3938,6 +3938,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const inputTargetNodeId = targetNode.data.inputTargetNodeId;
           
           code += '                        await message.answer(text)\n';
+          code += `                        logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
           code += '                        # Настраиваем ожидание ввода для message узла\n';
           code += '                        user_data[user_id]["waiting_for_input"] = {\n';
           code += `                            "type": "${inputType}",\n`;
