@@ -2181,11 +2181,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    if callback_query.from_user.id not in user_data:\n';
                 code += '        user_data[callback_query.from_user.id] = {}\n';
                 code += '    \n';
-                code += `    user_data[callback_query.from_user.id]["waiting_for_input"] = "${targetNode.id}"\n`;
-                code += `    user_data[callback_query.from_user.id]["input_type"] = "${inputType}"\n`;
-                code += `    user_data[callback_query.from_user.id]["input_variable"] = "${inputVariable}"\n`;
-                code += `    user_data[callback_query.from_user.id]["save_to_database"] = ${toPythonBoolean(saveToDatabase)}\n`;
-                code += `    user_data[callback_query.from_user.id]["input_target_node_id"] = "${inputTargetNodeId || ''}"\n`;
+                code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+                code += `        "type": "${inputType}",\n`;
+                code += `        "variable": "${inputVariable}",\n`;
+                code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
+                code += `        "node_id": "${targetNode.id}",\n`;
+                code += `        "next_node_id": "${inputTargetNodeId || ''}",\n`;
+                code += `        "min_length": ${targetNode.data.minLength || 0},\n`;
+                code += `        "max_length": ${targetNode.data.maxLength || 0},\n`;
+                code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+                code += '        "success_message": "Спасибо за ваш ответ!"\n';
+                code += '    }\n';
                 code += '    \n';
                 
                 // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок с проверкой условной клавиатуры
