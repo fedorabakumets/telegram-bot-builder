@@ -1229,6 +1229,29 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
               code += '        else:\n';
               code += `            await callback_query.message.answer(text${parseMode})\n`;
+              
+              // КРИТИЧЕСКИ ВАЖНАЯ ЛОГИКА: Если этот узел имеет collectUserInput, настраиваем состояние ожидания
+              if (targetNode.data.collectUserInput === true) {
+                const inputType = targetNode.data.inputType || 'text';
+                const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+                const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+                
+                code += '    \n';
+                code += `    logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
+                code += '    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput\n';
+                code += '    user_data[user_id]["waiting_for_input"] = {\n';
+                code += `        "type": "${inputType}",\n`;
+                code += `        "variable": "${inputVariable}",\n`;
+                code += '        "save_to_database": True,\n';
+                code += `        "node_id": "${targetNode.id}",\n`;
+                code += `        "next_node_id": "${inputTargetNodeId || ''}",\n`;
+                code += `        "min_length": ${targetNode.data.minLength || 0},\n`;
+                code += `        "max_length": ${targetNode.data.maxLength || 0},\n`;
+                code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+                code += '        "success_message": "Спасибо за ваш ответ!"\n';
+                code += '    }\n';
+                code += `    logging.info(f"✅ Состояние ожидания настроено: {inputType} ввод для переменной {inputVariable}")\n`;
+              }
             }
             // Handle different target node types
             else if (targetNode.type === 'photo') {
