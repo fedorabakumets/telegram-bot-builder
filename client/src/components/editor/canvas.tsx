@@ -34,6 +34,9 @@ interface CanvasProps {
   onSave?: () => void;
   isSaving?: boolean;
   onFullscreen?: () => void;
+  onCopyToClipboard?: (nodeIds: string[]) => void;
+  onPasteFromClipboard?: () => void;
+  hasClipboardData?: boolean;
   
   // Кнопки управления интерфейсом
   onToggleHeader?: () => void;
@@ -67,6 +70,9 @@ export function Canvas({
   onSave,
   isSaving,
   onFullscreen,
+  onCopyToClipboard,
+  onPasteFromClipboard,
+  hasClipboardData,
   onToggleHeader,
   onToggleSidebar,
   onToggleProperties,
@@ -273,7 +279,11 @@ export function Canvas({
             break;
           case 'c':
             e.preventDefault();
-            if (selectedNodeId && onNodeDuplicate) {
+            if (e.shiftKey && selectedNodeId && onCopyToClipboard) {
+              // Shift+Ctrl+C - копировать в межпроектный буфер обмена
+              onCopyToClipboard([selectedNodeId]);
+            } else if (selectedNodeId && onNodeDuplicate) {
+              // Ctrl+C - дублировать в текущем проекте
               onNodeDuplicate(selectedNodeId);
             }
             break;
@@ -281,6 +291,13 @@ export function Canvas({
             e.preventDefault();
             if (selectedNodeId && onNodeDuplicate) {
               onNodeDuplicate(selectedNodeId);
+            }
+            break;
+          case 'v':
+            e.preventDefault();
+            if (e.shiftKey && onPasteFromClipboard) {
+              // Shift+Ctrl+V - вставить из межпроектного буфера обмена
+              onPasteFromClipboard();
             }
             break;
         }
@@ -637,6 +654,27 @@ export function Canvas({
                 ) : (
                   <i className="fas fa-save text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
                 )}
+              </button>
+            )}
+
+            {/* Межпроектное копирование/вставка */}
+            {onCopyToClipboard && selectedNodeId && (
+              <button 
+                onClick={() => onCopyToClipboard([selectedNodeId])}
+                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+                title="Копировать в буфер (Shift + Ctrl + C)"
+              >
+                <i className="fas fa-clipboard text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+              </button>
+            )}
+
+            {onPasteFromClipboard && hasClipboardData && (
+              <button 
+                onClick={onPasteFromClipboard}
+                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+                title="Вставить из буфера (Shift + Ctrl + V)"
+              >
+                <i className="fas fa-paste text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
               </button>
             )}
 

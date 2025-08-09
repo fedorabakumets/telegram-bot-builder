@@ -165,7 +165,10 @@ export default function Editor() {
     undo,
     redo,
     canUndo,
-    canRedo
+    canRedo,
+    copyToClipboard,
+    pasteFromClipboard,
+    hasClipboardData
   } = useBotEditor(currentProject?.data as BotData);
 
   // Обновляем данные бота при смене проекта
@@ -442,6 +445,9 @@ export default function Editor() {
             onSave={() => updateProjectMutation.mutate({})}
             isSaving={updateProjectMutation.isPending}
             onFullscreen={handleEnterFullscreen}
+            onCopyToClipboard={copyToClipboard}
+            onPasteFromClipboard={pasteFromClipboard}
+            hasClipboardData={hasClipboardData}
             onToggleHeader={handleToggleHeader}
             onToggleSidebar={handleToggleSidebar}
             onToggleProperties={handleToggleProperties}
@@ -608,6 +614,9 @@ export default function Editor() {
                   onSave={() => updateProjectMutation.mutate({})}
                   isSaving={updateProjectMutation.isPending}
                   onFullscreen={handleEnterFullscreen}
+                  onCopyToClipboard={copyToClipboard}
+                  onPasteFromClipboard={pasteFromClipboard}
+                  hasClipboardData={hasClipboardData}
                   onToggleHeader={handleToggleHeader}
                   onToggleSidebar={handleToggleSidebar}
                   onToggleProperties={handleToggleProperties}

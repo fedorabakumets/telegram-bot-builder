@@ -290,6 +290,108 @@ export function useBotEditor(initialData?: BotData) {
     connections
   }), [nodes, connections]);
 
+  // Копирование элементов в буфер обмена для вставки в другие проекты
+  const copyToClipboard = useCallback((nodeIds: string[]) => {
+    const nodesToCopy = nodes.filter(node => nodeIds.includes(node.id));
+    const connectionsToCopy = connections.filter(conn => 
+      nodeIds.includes(conn.source) && nodeIds.includes(conn.target)
+    );
+
+    const clipboardData = {
+      nodes: nodesToCopy,
+      connections: connectionsToCopy,
+      timestamp: Date.now(),
+      projectType: 'telegram-bot'
+    };
+
+    // Сохраняем в localStorage для межпроектного буфера обмена
+    localStorage.setItem('bot-clipboard', JSON.stringify(clipboardData));
+    
+    return clipboardData;
+  }, [nodes, connections]);
+
+  // Вставка элементов из буфера обмена
+  const pasteFromClipboard = useCallback((offsetX: number = 100, offsetY: number = 100) => {
+    try {
+      const clipboardDataStr = localStorage.getItem('bot-clipboard');
+      if (!clipboardDataStr) return false;
+
+      const clipboardData = JSON.parse(clipboardDataStr);
+      
+      // Проверяем что данные корректны и не слишком старые (24 часа)
+      if (!clipboardData.nodes || !Array.isArray(clipboardData.nodes) || 
+          !clipboardData.timestamp || Date.now() - clipboardData.timestamp > 24 * 60 * 60 * 1000) {
+        return false;
+      }
+
+      const idMapping: { [oldId: string]: string } = {};
+      const pastedNodes: Node[] = [];
+
+      // Создаем новые ID для всех узлов
+      clipboardData.nodes.forEach((node: Node) => {
+        const newId = `${node.id}_paste_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        idMapping[node.id] = newId;
+
+        const pastedNode: Node = {
+          ...JSON.parse(JSON.stringify(node)),
+          id: newId,
+          position: {
+            x: node.position.x + offsetX,
+            y: node.position.y + offsetY
+          }
+        };
+
+        pastedNodes.push(pastedNode);
+      });
+
+      // Создаем новые связи с обновленными ID
+      const pastedConnections: Connection[] = [];
+      clipboardData.connections.forEach((connection: Connection) => {
+        const sourceId = idMapping[connection.source];
+        const targetId = idMapping[connection.target];
+        
+        if (sourceId && targetId) {
+          const pastedConnection: Connection = {
+            ...JSON.parse(JSON.stringify(connection)),
+            id: `${connection.id}_paste_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            source: sourceId,
+            target: targetId
+          };
+          pastedConnections.push(pastedConnection);
+        }
+      });
+
+      // Добавляем элементы на холст
+      setNodes(prev => [...prev, ...pastedNodes]);
+      setConnections(prev => [...prev, ...pastedConnections]);
+
+      // Выбираем первый вставленный узел
+      if (pastedNodes.length > 0) {
+        setSelectedNodeId(pastedNodes[0].id);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Ошибка при вставке из буфера обмена:', error);
+      return false;
+    }
+  }, []);
+
+  // Проверка наличия данных в буфере обмена
+  const hasClipboardData = useCallback(() => {
+    try {
+      const clipboardDataStr = localStorage.getItem('bot-clipboard');
+      if (!clipboardDataStr) return false;
+
+      const clipboardData = JSON.parse(clipboardDataStr);
+      return !!(clipboardData.nodes && Array.isArray(clipboardData.nodes) && 
+               clipboardData.nodes.length > 0 && clipboardData.timestamp &&
+               Date.now() - clipboardData.timestamp <= 24 * 60 * 60 * 1000);
+    } catch {
+      return false;
+    }
+  }, []);
+
   return {
     nodes,
     connections,
@@ -314,6 +416,9 @@ export function useBotEditor(initialData?: BotData) {
     undo,
     redo,
     canUndo,
-    canRedo
+    canRedo,
+    copyToClipboard,
+    pasteFromClipboard,
+    hasClipboardData
   };
 }
