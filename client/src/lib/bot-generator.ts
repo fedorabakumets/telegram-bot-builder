@@ -4323,7 +4323,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
           code += '                }\n';
         } else if (targetNode.data.collectUserInput) {
-          // Также настраиваем ожидание, если включен collectUserInput
+          // ИСПРАВЛЕНИЕ: Настраиваем ожидание текстового ввода только если включен collectUserInput
           const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
           const nextConnection = connections.find(conn => conn.sourceNodeId === targetNode.id);
           const inputTargetNodeId = nextConnection ? nextConnection.targetNodeId : '';
