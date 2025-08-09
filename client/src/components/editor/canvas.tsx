@@ -827,6 +827,7 @@ export function Canvas({
                 isSelected={selectedNodeId === node.id}
                 onClick={() => onNodeSelect(node.id)}
                 onDelete={() => onNodeDelete(node.id)}
+                onDuplicate={onNodeDuplicate ? () => onNodeDuplicate(node.id) : undefined}
                 onMove={(position) => onNodeMove(node.id, position)}
                 onConnectionStart={handleConnectionStart}
                 connectionStart={connectionStart}

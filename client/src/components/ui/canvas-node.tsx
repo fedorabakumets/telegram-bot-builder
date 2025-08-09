@@ -167,6 +167,7 @@ interface CanvasNodeProps {
   isSelected?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
+  onDuplicate?: () => void;
   onMove?: (position: { x: number; y: number }) => void;
   onConnectionStart?: (nodeId: string, handle: 'source' | 'target') => void;
   connectionStart?: {
@@ -217,7 +218,7 @@ const nodeColors = {
   dice: 'bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/30 dark:to-gray-900/30 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
 };
 
-export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 } }: CanvasNodeProps) {
+export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 } }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -332,7 +333,22 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
         transition: isDragging ? 'none' : 'all 0.2s ease'
       }}
     >
-      {/* Delete button */}
+      {/* Action buttons */}
+      {/* Copy button - left top */}
+      {onDuplicate && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDuplicate();
+          }}
+          className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl border-2 border-white dark:border-slate-900"
+          title="Копировать элемент"
+        >
+          <i className="fas fa-copy text-sm"></i>
+        </button>
+      )}
+      
+      {/* Delete button - right top */}
       {onDelete && (
         <button
           onClick={(e) => {
@@ -340,6 +356,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onMove, onConn
             onDelete();
           }}
           className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl border-2 border-white dark:border-slate-900"
+          title="Удалить элемент"
         >
           <i className="fas fa-times text-sm"></i>
         </button>
