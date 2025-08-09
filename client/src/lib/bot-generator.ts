@@ -3896,12 +3896,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '                else:\n';
   code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
   code += '            \n';
-  code += '            # Отправляем сообщение об успехе\n';
-  code += '            success_message = waiting_config.get("success_message", "Спасибо за ваш ответ!")\n';
-  code += '            await message.answer(success_message)\n';
+  code += '            # НЕ отправляем сообщение об успехе здесь - это делается после перехода к следующему узлу\n';
+  code += '            # success_message = waiting_config.get("success_message", "✅ Спасибо за ваш ответ!")\n';
+  code += '            # await message.answer(success_message)\n';
   code += '            \n';
-  code += '            # Очищаем состояние ожидания ввода\n';
-  code += '            del user_data[user_id]["waiting_for_input"]\n';
+  code += '            # НЕ очищаем состояние здесь - это делается после успешного перехода\n';
+  code += '            # del user_data[user_id]["waiting_for_input"]\n';
   code += '            \n';
   code += '            # ИСПРАВЛЕНИЕ: Добавляем маркер, что ввод был обработан для этого узла\n';
   code += '            if "processed_inputs" not in user_data[user_id]:\n';
@@ -3972,6 +3972,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '                        await message.answer(text, reply_markup=keyboard)\n';
           } else {
             code += '                        await message.answer(text)\n';
+          }
+          
+          // Очищаем состояние ожидания ввода после успешного перехода для message узлов без сбора ввода
+          if (!targetNode.data.collectUserInput) {
+            code += '                        # Очищаем состояние ожидания ввода после успешного перехода\n';
+            code += '                        if "waiting_for_input" in user_data[user_id]:\n';
+            code += '                            del user_data[user_id]["waiting_for_input"]\n';
+            code += '                        \n';
+            code += '                        logging.info("✅ Переход к следующему узлу выполнен успешно")\n';
           }
         }
       } else if (targetNode.type === 'user-input') {
@@ -4091,15 +4100,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     code += `                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n`;
     code += `            \n`;
     
-    // Сообщение об успехе
-    code += `            await message.answer("✅ Спасибо за ваш ответ!")\n`;
-    code += `            \n`;
-    code += `            # Очищаем состояние ожидания ввода\n`;
-    code += `            del user_data[user_id]["waiting_for_input"]\n`;
-    if (node.data.inputType) {
-      code += `            if "input_type" in user_data[user_id]:\n`;
-      code += `                del user_data[user_id]["input_type"]\n`;
-    }
     code += `            \n`;
     code += `            logging.info(f"Получен пользовательский ввод: ${variableName} = {user_text}")\n`;
     code += `            \n`;
@@ -4172,6 +4172,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           } else {
             code += `                await message.answer(text)\n`;
           }
+          
+          code += `                # Очищаем состояние ожидания ввода после успешного перехода\n`;
+          code += `                if "waiting_for_input" in user_data[user_id]:\n`;
+          code += `                    del user_data[user_id]["waiting_for_input"]\n`;
+          if (node.data.inputType) {
+            code += `                if "input_type" in user_data[user_id]:\n`;
+            code += `                    del user_data[user_id]["input_type"]\n`;
+          }
+          code += `                \n`;
           code += `                logging.info("✅ Переход к следующему узлу выполнен успешно")\n`;
         } else {
           // Для других типов узлов используем callback
