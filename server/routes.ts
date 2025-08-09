@@ -953,13 +953,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/projects/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const deleted = await storage.deleteBotProject(id);
-      if (!deleted) {
+      console.log(`🗑️ Начинаем удаление проекта ${id}`);
+      
+      // Сначала проверяем, существует ли проект
+      const project = await storage.getBotProject(id);
+      if (!project) {
+        console.log(`❌ Проект ${id} не найден`);
         return res.status(404).json({ message: "Project not found" });
       }
+      console.log(`✅ Проект ${id} найден: ${project.name}`);
+
+      // Останавливаем бота, если он запущен
+      try {
+        const botInstance = await storage.getBotInstance(id);
+        console.log(`🤖 Экземпляр бота для проекта ${id}:`, botInstance ? `ID: ${botInstance.id}, статус: ${botInstance.status}` : 'не найден');
+        
+        if (botInstance && botInstance.status === 'running') {
+          console.log(`🛑 Останавливаем бота ${id} перед удалением проекта...`);
+          await stopBot(id);
+          console.log(`✅ Бот ${id} остановлен`);
+        }
+      } catch (stopError) {
+        console.error(`❌ Ошибка остановки бота ${id}:`, stopError);
+        // Продолжаем удаление даже если остановка не удалась
+      }
+
+      // Удаляем связанные данные в правильном порядке
+      try {
+        // 1. Удаляем экземпляр бота из базы (если он существует)
+        const botInstance = await storage.getBotInstance(id);
+        if (botInstance) {
+          console.log(`🗑️ Удаляем экземпляр бота ${botInstance.id} для проекта ${id}`);
+          const instanceDeleted = await storage.deleteBotInstance(botInstance.id);
+          console.log(`${instanceDeleted ? '✅' : '❌'} Экземпляр бота ${instanceDeleted ? 'удален' : 'не удален'}`);
+        }
+
+        // 2. Удаляем все токены проекта через SQL (CASCADE должен сработать автоматически, но делаем вручную для надежности)
+        try {
+          console.log(`🗑️ Удаляем токены проекта ${id}`);
+          await storage.db.delete(storage.botTokens).where(storage.eq(storage.botTokens.projectId, id));
+          console.log(`✅ Токены проекта ${id} удалены`);
+        } catch (tokenError) {
+          console.error(`❌ Ошибка удаления токенов:`, tokenError);
+        }
+
+        // 3. Удаляем медиафайлы
+        try {
+          console.log(`🗑️ Удаляем медиафайлы проекта ${id}`);
+          await storage.db.delete(storage.mediaFiles).where(storage.eq(storage.mediaFiles.projectId, id));
+          console.log(`✅ Медиафайлы проекта ${id} удалены`);
+        } catch (mediaError) {
+          console.error(`❌ Ошибка удаления медиафайлов:`, mediaError);
+        }
+
+        // 4. Удаляем пользовательские данные
+        try {
+          console.log(`🗑️ Удаляем пользовательские данные проекта ${id}`);
+          await storage.db.delete(storage.userBotData).where(storage.eq(storage.userBotData.projectId, id));
+          console.log(`✅ Пользовательские данные проекта ${id} удалены`);
+        } catch (userDataError) {
+          console.error(`❌ Ошибка удаления пользовательских данных:`, userDataError);
+        }
+        
+        // 5. Удаляем файл бота
+        const filePath = join(process.cwd(), 'bots', `bot_${id}.py`);
+        if (existsSync(filePath)) {
+          unlinkSync(filePath);
+          console.log(`✅ Файл бота ${id} удален`);
+        } else {
+          console.log(`📄 Файл бота ${id} не существует`);
+        }
+      } catch (cleanupError) {
+        console.error(`❌ Ошибка очистки данных бота ${id}:`, cleanupError);
+        // Продолжаем удаление проекта
+      }
+
+      // Удаляем проект
+      console.log(`🗑️ Удаляем проект ${id} из базы данных`);
+      const deleted = await storage.deleteBotProject(id);
+      console.log(`${deleted ? '✅' : '❌'} Проект ${deleted ? 'удален' : 'не удален'} из базы данных`);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete project from database" });
+      }
+      
+      console.log(`🎉 Проект ${id} успешно удален`);
       res.json({ message: "Project deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete project" });
+      console.error("❌ Критическая ошибка удаления проекта:", error);
+      console.error("❌ Стек ошибки:", error instanceof Error ? error.stack : 'Unknown error');
+      res.status(500).json({ message: "Failed to delete project", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
