@@ -5479,6 +5479,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   console.log(`🔧 ГЕНЕРАТОР: Количество узлов с множественным выбором: ${multiSelectNodes.length}`);
   multiSelectNodes.forEach((node, index) => {
     console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: ${node.id}, continueButtonTarget: ${node.data.continueButtonTarget}`);
+    const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
+    console.log(`🔧 ГЕНЕРАТОР: Целевой узел найден: ${!!targetNode}, тип: ${targetNode?.type}, allowMultipleSelection: ${targetNode?.data?.allowMultipleSelection}`);
+    console.log(`🔧 ГЕНЕРАТОР: Целевой узел кнопки: ${targetNode?.data?.buttons?.length || 0}, keyboardType: ${targetNode?.data?.keyboardType}`);
   });
   
   code += '# Обработчик для кнопок завершения множественного выбора\n';
@@ -5490,6 +5493,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    callback_data = callback_query.data\n';
   code += '    \n';
   code += '    logging.info(f"🏁 Завершение множественного выбора: {callback_data}")\n';
+  code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущее сообщение ID: {callback_query.message.message_id}")\n';
+  code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Текущий текст сообщения: {callback_query.message.text}")\n';
+  code += '    logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Есть ли клавиатура: {bool(callback_query.message.reply_markup)}")\n';
   code += '    \n';
   code += '    # Извлекаем node_id из callback_data\n';
   code += '    node_id = callback_data.replace("multi_select_done_", "")\n';
@@ -5501,14 +5507,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     const continueButtonTarget = node.data.continueButtonTarget;
     
     code += `    if node_id == "${node.id}":\n`;
+    code += `        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: Обрабатываем завершение для узла ${node.id}")\n`;
+    code += `        logging.info(f"🔍 ГЕНЕРАТОР DEBUG: continueButtonTarget = ${continueButtonTarget || 'НЕТ'}")\n`;
     code += `        # Получаем выбранные опции для узла ${node.id}\n`;
     code += `        selected_options = user_data.get(user_id, {}).get("multi_select_${node.id}", [])\n`;
-    code += `        logging.info(f"📋 Выбранные опции для ${node.id}: {selected_options}")\n`;
+    code += `        logging.info(f"📋 ГЕНЕРАТОР DEBUG: Выбранные опции для ${node.id}: {selected_options}")\n`;
     code += `        \n`;
     code += `        if selected_options:\n`;
     code += `            selected_text = ", ".join(selected_options)\n`;
     code += `            await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
-    code += `            logging.info(f"💾 Сохранили в БД: ${variableName} = {selected_text}")\n`;
+    code += `            logging.info(f"💾 ГЕНЕРАТОР DEBUG: Сохранили в БД: ${variableName} = {selected_text}")\n`;
+    code += `        else:\n`;
+    code += `            logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Нет выбранных опций для сохранения")\n`;
     code += `        \n`;
     
     if (continueButtonTarget) {
@@ -5516,19 +5526,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       if (targetNode) {
         code += `        # Переход к следующему узлу: ${continueButtonTarget}\n`;
         const safeFunctionName = continueButtonTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `        logging.info(f"🚀 Переходим к узлу: ${continueButtonTarget}")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Переходим к узлу {continueButtonTarget}")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Тип целевого узла: ${targetNode?.type || 'неизвестно'}")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: allowMultipleSelection: ${targetNode?.data?.allowMultipleSelection || false}")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Есть ли кнопки: ${targetNode?.data?.buttons?.length || 0}")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: keyboardType: ${targetNode?.data?.keyboardType || 'нет'}")\n`;
         
         // Специальная обработка для узлов с множественным выбором
         if (targetNode.data.allowMultipleSelection || targetNode.data.multiSelectEnabled) {
           code += `        # Узел ${continueButtonTarget} поддерживает множественный выбор - сохраняем состояние\n`;
+          code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Инициализируем множественный выбор для узла ${targetNode.id}")\n`;
           code += `        if user_id not in user_data:\n`;
           code += `            user_data[user_id] = {}\n`;
           code += `        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
           code += `        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
           code += `        user_data[user_id]["multi_select_type"] = "inline"\n`;
-          code += `        logging.info(f"🔧 Инициализирован множественный выбор для узла ${targetNode.id}")\n`;
+          code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Состояние множественного выбора установлено для узла ${targetNode.id}")\n`;
         }
         
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Вызываем handle_callback_{safeFunctionName}")\n`;
         code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
       }
     }
