@@ -5464,12 +5464,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += `    final_text = f"{selected_mark}${button.text}"\n`;
       code += `    logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}'")\n`;
       const shortTarget = (button.target || button.id || 'btn').slice(-8);
-      const callbackData = `ms_start_${shortTarget}`;
+      const callbackData = `multi_select_start_${shortTarget}`;
       code += `    builder.add(InlineKeyboardButton(text=final_text, callback_data="${callbackData}"))\n`;
     });
     
     // Добавляем кнопку "Готово"
-    code += '    builder.add(InlineKeyboardButton(text="Готово", callback_data="done_start"))\n';
+    code += '    builder.add(InlineKeyboardButton(text="Готово", callback_data="done_multi_select_start"))\n';
   }
   
   code += '    \n';
