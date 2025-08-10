@@ -1249,7 +1249,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
                 code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
                 code += '    }\n';
-                code += `    logging.info(f"✅ Состояние ожидания настроено: {inputType} ввод для переменной {inputVariable}")\n`;
+                code += `    logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable}")\n`;
               }
             }
             // Handle different target node types
