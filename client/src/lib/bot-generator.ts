@@ -83,6 +83,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${baseCallbackData}"))\n`;
     } else if (button.action === 'command') {
       const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
+      code += `${indentLevel}logging.info(f"Создана кнопка команды: ${button.text} -> ${commandCallback}")\n`;
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
     } else if (button.action === 'selection') {
       const callbackData = nodeId ? `multi_select_${nodeId}_${button.target || button.id}` : `selection_${button.target || button.id}`;
@@ -4766,6 +4767,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   // Добавляем обработчики для кнопок команд (типа cmd_start)
   const commandButtons = new Set<string>();
   nodes.forEach(node => {
+    // Обычные кнопки узла
     if (node.data.buttons) {
       node.data.buttons.forEach(button => {
         if (button.action === 'command' && button.target) {
@@ -4774,16 +4776,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         }
       });
     }
+    
+    // Кнопки в условных сообщениях
+    if (node.data.conditionalMessages) {
+      node.data.conditionalMessages.forEach((condition: any) => {
+        if (condition.buttons) {
+          condition.buttons.forEach((button: any) => {
+            if (button.action === 'command' && button.target) {
+              const commandCallback = `cmd_${button.target.replace('/', '')}`;
+              commandButtons.add(commandCallback);
+            }
+          });
+        }
+      });
+    }
   });
   
   if (commandButtons.size > 0) {
     code += '\n# Обработчики для кнопок команд\n';
+    code += `# Найдено ${commandButtons.size} кнопок команд: ${Array.from(commandButtons).join(', ')}\n`;
     
     commandButtons.forEach(commandCallback => {
       const command = commandCallback.replace('cmd_', '');
       code += `\n@dp.callback_query(lambda c: c.data == "${commandCallback}")\n`;
       code += `async def handle_${commandCallback}(callback_query: types.CallbackQuery):\n`;
       code += '    await callback_query.answer()\n';
+      code += `    logging.info(f"Обработка кнопки команды: ${commandCallback} -> /${command} (пользователь {callback_query.from_user.id})")\n`;
       code += `    # Симулируем выполнение команды /${command}\n`;
       code += '    \n';
       code += '    # Создаем fake message object для команды\n';
