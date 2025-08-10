@@ -5545,6 +5545,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         }
         
         code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Вызываем handle_callback_{safeFunctionName}")\n`;
+        
+        // ИСПРАВЛЕНИЕ: Специальная обработка для interests_result чтобы сохранить метро клавиатуру
+        if (continueButtonTarget === 'interests_result') {
+          code += `        # ИСПРАВЛЕНИЕ: Специальная обработка для interests_result - сохраняем метро клавиатуру\n`;
+          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Обрабатываем переход к interests_result - сохраняем метро состояние")\n`;
+          code += `        # Сохраняем состояние метро для следующего узла\n`;
+          code += `        metro_state = user_data.get(user_id, {}).get("multi_select_${node.id}", [])\n`;
+          code += `        if user_id not in user_data:\n`;
+          code += `            user_data[user_id] = {}\n`;
+          code += `        user_data[user_id]["saved_metro_selection"] = metro_state\n`;
+          code += `        user_data[user_id]["show_metro_keyboard"] = True\n`;
+          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Сохранили метро состояние: {metro_state}")\n`;
+        }
+        
         code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
       }
     }
