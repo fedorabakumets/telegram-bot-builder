@@ -143,12 +143,11 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       console.log(`🔧 ГЕНЕРАТОР: 🔍 ПРОВЕРЯЕМ галочки для ${button.text}: isMultipleSelection=${isMultipleSelection}`);
       if (isMultipleSelection) {
         console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ ГАЛОЧКИ для кнопки selection: ${button.text} (узел: ${nodeId})`);
-        const buttonValue = button.target || button.id || shortTarget;
         code += `${indentLevel}# Кнопка выбора с галочками: ${button.text}\n`;
-        code += `${indentLevel}selected_mark = "✅ " if "${buttonValue}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
-        code += `${indentLevel}logging.info(f"🔍 ГАЛОЧКА для '${button.text}' (значение: '${buttonValue}'): selected_mark='{selected_mark}', список={user_data[user_id]['multi_select_${nodeId}']}")\n`;
+        code += `${indentLevel}selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
+        code += `${indentLevel}logging.info(f"🔍 ГАЛОЧКА для '${button.text}': selected_mark='{selected_mark}', список={user_data[user_id]['multi_select_${nodeId}']}")\n`;
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
-        console.log(`🔧 ГЕНЕРАТОР: ✅ СГЕНЕРИРОВАН КОД ГАЛОЧЕК для ${button.text} с проверкой значения ${buttonValue}`);
+        console.log(`🔧 ГЕНЕРАТОР: ✅ СГЕНЕРИРОВАН КОД ГАЛОЧЕК для ${button.text}`);
       } else {
         console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем галочки для ${button.text} (isMultipleSelection=${isMultipleSelection})`);
         code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
@@ -6891,7 +6890,7 @@ function generateKeyboard(node: Node): string {
           const buttonValue = button.target || button.id || button.text;
           const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
           code += `        # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
-          code += `        ${safeVarName}_selected = "${buttonValue}" in saved_interests\n`;
+          code += `        ${safeVarName}_selected = "${button.text}" in saved_interests\n`;
           code += `        ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
           code += `        builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
         });
