@@ -996,11 +996,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   });
 
   // Add all connection targets to ensure every connected node gets a handler
-  connections.forEach(connection => {
+  console.log(`🔗 ГЕНЕРАТОР: Обрабатываем ${connections.length} соединений`);
+  connections.forEach((connection, index) => {
+    console.log(`🔗 ГЕНЕРАТОР: Соединение ${index}: source=${connection.source} -> target=${connection.target}`);
     if (connection.target) {
       allReferencedNodeIds.add(connection.target);
+      console.log(`✅ ГЕНЕРАТОР: Добавлен target ${connection.target} в allReferencedNodeIds`);
     }
   });
+  console.log(`🎯 ГЕНЕРАТОР: Финальный allReferencedNodeIds: ${Array.from(allReferencedNodeIds).join(', ')}`);
 
   if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
     code += '\n# Обработчики inline кнопок\n';
@@ -2455,10 +2459,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     }
 
     // Now generate callback handlers for all remaining referenced nodes that don't have inline buttons
+    console.log(`🔍 ГЕНЕРАТОР: Обработка allReferencedNodeIds: ${Array.from(allReferencedNodeIds).join(', ')}`);
+    console.log(`🔍 ГЕНЕРАТОР: Уже обработанные callbacks: ${Array.from(processedCallbacks).join(', ')}`);
+    
     allReferencedNodeIds.forEach(nodeId => {
+      console.log(`🔎 ГЕНЕРАТОР: Проверяем узел ${nodeId}`);
       if (!processedCallbacks.has(nodeId)) {
+        console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} НЕ был обработан ранее, создаем обработчик`);
         const targetNode = nodes.find(n => n.id === nodeId);
         if (targetNode) {
+          console.log(`📋 ГЕНЕРАТОР: Найден узел ${nodeId}, тип: ${targetNode.type}, allowMultipleSelection: ${targetNode.data.allowMultipleSelection}`);
           // ВАЖНО: Не создаваем обработчик для "start", если он уже был создан ранее (избегаем дублирования)
           if (nodeId === 'start') {
             console.log(`Пропускаем создание дублированной функции для узла ${nodeId} - уже создана ранее`);
@@ -2495,12 +2505,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += generateUniversalVariableReplacement('    ');
           
           // ИСПРАВЛЕНИЕ: Добавляем специальную обработку для узлов с множественным выбором
-          if (targetNode.data.allowMultipleSelection && targetNode.data.keyboardType === "inline") {
+          if (targetNode.data.allowMultipleSelection) {
             // Узел с множественным выбором - создаем специальную клавиатуру
-            console.log(`DEBUG: Генерируем inline клавиатуру с множественным выбором для узла ${nodeId}`);
-            
-            // Используем универсальную функцию замены переменных
-            code += generateUniversalVariableReplacement('    ');
+            console.log(`🎯 ГЕНЕРАТОР: Узел ${nodeId} имеет allowMultipleSelection=true, создаем специальную клавиатуру`);
+            console.log(`🔘 ГЕНЕРАТОР: Кнопки узла ${nodeId}:`, targetNode.data.buttons.map(b => `${b.text} (action: ${b.action})`).join(', '));
             
             // Добавляем логику инициализации множественного выбора
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
@@ -2549,11 +2557,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `    builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
             });
             
-            // Добавляем кнопку "Готово" если есть континыуе таргет
-            if (targetNode.data.continueButtonTarget) {
-              code += '    # Кнопка "Готово"\n';
-              code += `    builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="${targetNode.data.continueButtonTarget}"))\n`;
-            }
+            // Добавляем кнопку "Готово" для множественного выбора
+            code += '    # Кнопка "Готово"\n';
+            code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${nodeId}"))\n`;
             
             // Добавляем обычные кнопки (navigation и другие)
             regularButtons.forEach((btn, index) => {
