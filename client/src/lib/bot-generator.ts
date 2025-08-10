@@ -2242,6 +2242,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                       const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                       const uniqueCallbackData = `${callbackData}_btn_${targetNode.data.buttons.indexOf(btn)}`;
                       code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${uniqueCallbackData}"))\n`;
+                    } else if (btn.action === 'command') {
+                      // Для кнопок команд создаем специальную callback_data
+                      const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
+                      code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                     }
                   });
                   code += '        keyboard = builder.as_markup()\n';
@@ -2271,7 +2275,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 // Обычное отображение сообщения без сбора ввода
                 
                 // Handle keyboard for target node
+                console.log(`DEBUG: Узел ${targetNode.id}, keyboardType: ${targetNode.data.keyboardType}, buttons: ${targetNode.data.buttons?.length || 0}`);
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
+                  console.log(`DEBUG: Создаем клавиатуру для узла ${targetNode.id} с ${targetNode.data.buttons.length} кнопками`);
                   code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # Создаем inline клавиатуру\n';
@@ -2283,6 +2289,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                       // Если есть target, используем его, иначе используем ID кнопки как callback_data
                       const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                       code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                    } else if (btn.action === 'command') {
+                      // Для кнопок команд создаем специальную callback_data
+                      const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
+                      code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                     }
                   });
                   code += '        keyboard = builder.as_markup()\n';
