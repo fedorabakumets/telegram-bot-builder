@@ -5430,8 +5430,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        \n';
   code += '        # Перезагружаем клавиатуру для обновления галочек\n';
   code += '        if node_id == "start":\n';
-  code += '            # Для узла start перезагружаем клавиатуру напрямую\n';
-  code += '            await start_handler(callback_query.message)\n';
+  code += '            # Для узла start обновляем только клавиатуру без сброса сообщения\n';
+  code += '            await update_start_keyboard(callback_query.message, user_id)\n';
   code += '        else:\n';
   code += '            # Для других узлов ищем соответствующий обработчик\n';
   code += '            node_handler_name = f"handle_callback_{node_id.replace(\'-\', \'_\').replace(\'.\', \'_\')}"\n';
@@ -5440,6 +5440,48 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '                await handler_func(callback_query)\n';
   code += '            else:\n';
   code += '                logging.warning(f"Обработчик {node_handler_name} не найден")\n';
+  code += '\n';
+  
+  // Добавляем функцию обновления клавиатуры start узла
+  code += '# Функция для обновления клавиатуры start узла с сохранением состояния\n';
+  code += 'async def update_start_keyboard(message, user_id):\n';
+  code += '    # Получаем текущие выборы пользователя\n';
+  code += '    current_selections = user_data.get(user_id, {}).get("multi_select_start", [])\n';
+  code += '    logging.info(f"🔄 Обновляем клавиатуру start с текущими выборами: {current_selections}")\n';
+  code += '    \n';
+  code += '    # Создаем клавиатуру с галочками\n';
+  code += '    builder = InlineKeyboardBuilder()\n';
+  
+  // Добавляем кнопки с галочками для start узла
+  const startNode = nodes.find(node => node.type === 'start');
+  if (startNode && startNode.data.buttons) {
+    const selectionButtons = startNode.data.buttons.filter(btn => btn.action === 'selection');
+    selectionButtons.forEach(button => {
+      code += `    # Кнопка выбора с галочками: ${button.text}\n`;
+      code += `    logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '${button.text}' в списке: {current_selections}")\n`;
+      code += `    selected_mark = "✅ " if "${button.text}" in current_selections else ""\n`;
+      code += `    logging.info(f"🔍 РЕЗУЛЬТАТ ГАЛОЧКИ для '${button.text}': selected_mark='{selected_mark}'")\n`;
+      code += `    final_text = f"{selected_mark}${button.text}"\n`;
+      code += `    logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}'")\n`;
+      const shortTarget = (button.target || button.id || 'btn').slice(-8);
+      const callbackData = `ms_start_${shortTarget}`;
+      code += `    builder.add(InlineKeyboardButton(text=final_text, callback_data="${callbackData}"))\n`;
+    });
+    
+    // Добавляем кнопку "Готово"
+    code += '    builder.add(InlineKeyboardButton(text="Готово", callback_data="done_start"))\n';
+  }
+  
+  code += '    \n';
+  code += '    # Применяем автоматическое распределение колонок\n';
+  code += '    builder.adjust(2, 2, 2, 2, 1)\n';
+  code += '    keyboard = builder.as_markup()\n';
+  code += '    \n';
+  code += '    try:\n';
+  code += '        await message.edit_reply_markup(reply_markup=keyboard)\n';
+  code += '        logging.info("✅ Клавиатура успешно обновлена")\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"❌ Ошибка обновления клавиатуры: {e}")\n';
   code += '\n';
   
   // Обработчик для reply кнопок множественного выбора
