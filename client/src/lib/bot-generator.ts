@@ -162,21 +162,9 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
     }
   });
   
-  // КРИТИЧЕСКИ ВАЖНО: Добавляем кнопку "Готово" для множественного выбора
+  // ИСПРАВЛЕНИЕ: НЕ создаем кнопку "Готово" здесь - она создается в handle_multi_select_done
   if (hasSelectionButtons && isMultipleSelection && nodeData?.continueButtonTarget) {
-    console.log(`🔧 ГЕНЕРАТОР: ДОБАВЛЯЕМ кнопку "Готово" для узла ${nodeId}!`);
-    
-    const shortNodeIdDone = nodeId ? nodeId.slice(-10).replace(/^_+/, '') : 'done';
-    const doneCallbackData = `done_${shortNodeIdDone}`;
-    const continueText = nodeData.continueButtonText || 'Готово';
-    
-    console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово": "${continueText}" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
-    
-    code += `${indentLevel}# Кнопка "Готово" для множественного выбора\n`;
-    code += `${indentLevel}logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
-    code += `${indentLevel}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
-    
-    console.log(`🔧 ГЕНЕРАТОР: УСПЕШНО добавили кнопку "Готово" в generateInlineKeyboardCode!`);
+    console.log(`🔧 ГЕНЕРАТОР: ПРОПУСКАЕМ создание кнопки "Готово" для узла ${nodeId} - она будет создана в handle_multi_select_done`);
   } else if (hasSelectionButtons && isMultipleSelection) {
     console.log(`🔧 ГЕНЕРАТОР: ПРЕДУПРЕЖДЕНИЕ: Узел ${nodeId} имеет множественный выбор, но НЕТ continueButtonTarget!`);
   }
@@ -1209,15 +1197,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `        next_node_id = "${nextNodeId}"\n`;
               
               // ИСПРАВЛЕНИЕ: Специальная логика для metro_selection -> interests_result
+              console.log(`🔧 ГЕНЕРАТОР: Проверяем metro_selection -> interests_result: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
               if (targetNode.id.includes('metro_selection') && nextNodeId === 'interests_result') {
+                console.log(`🔧 ГЕНЕРАТОР: ✅ Применяем специальную логику metro_selection -> interests_result`);
                 code += '        # ИСПРАВЛЕНИЕ: Сохраняем метро выбор и устанавливаем флаг для показа клавиатуры\n';
                 code += `        selected_metro = user_data.get(user_id, {}).get("multi_select_${actualCallbackData}", [])\n`;
                 code += '        if user_id not in user_data:\n';
                 code += '            user_data[user_id] = {}\n';
                 code += '        user_data[user_id]["saved_metro_selection"] = selected_metro\n';
                 code += '        user_data[user_id]["show_metro_keyboard"] = True\n';
+                code += '        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: targetNode.id={targetNode.id}, nextNodeId={nextNodeId}")\n';
                 code += '        logging.info(f"🚇 Сохранили метро выбор: {selected_metro}, установлен флаг show_metro_keyboard=True")\n';
                 code += '        \n';
+              } else {
+                console.log(`🔧 ГЕНЕРАТОР: ❌ Не применяем специальную логику: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
               }
               
               code += '        try:\n';
@@ -2649,9 +2642,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
           });
           
-          // Добавляем кнопку "Готово"
-          const shortNodeId = metroNode.id.slice(-10).replace(/^_+/, '');
-          code += `        builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="done_${shortNodeId}"))\n`;
+          // Добавляем кнопку "Готово" с правильным callback_data для handle_multi_select_done
+          const metroCallbackData = `multi_select_done_${metroNode.id}`;
+          code += `        builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="${metroCallbackData}"))\n`;
           code += '        builder.adjust(2)  # 2 кнопки в ряд\n';
           code += '        metro_keyboard = builder.as_markup()\n';
           code += '        \n';
