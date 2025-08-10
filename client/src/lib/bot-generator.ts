@@ -5089,6 +5089,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
         } else {
           console.log(`⚠️ ГЕНЕРАТОР: Целевой узел не найден для continueButtonTarget: ${node.data.continueButtonTarget}`);
+          // Если целевой узел не найден, просто завершаем выбор без перехода
+          code += `            # Целевой узел не найден, завершаем выбор\n`;
+          code += `            logging.warning(f"⚠️ Целевой узел не найден: ${node.data.continueButtonTarget}")\n`;
+          code += `            await callback_query.message.edit_text("✅ Выбор завершен!")\n`;
+          hasContent = true;
         }
       } else {
         // Если нет continueButtonTarget, ищем соединения
@@ -5213,67 +5218,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        \n';
   code += '        logging.info(f"📋 Текущие выборы: {selected_list}")\n';
   code += '        \n';
-  code += '        # Обновляем клавиатуру с галочками\n';
-  code += '        builder = InlineKeyboardBuilder()\n';
-  
-  // Генерируем обновление клавиатуры для каждого узла
-  multiSelectNodes.forEach(node => {
-    const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
-    const regularButtons = node.data.buttons?.filter(btn => btn.action !== 'selection') || [];
-    
-    if (selectionButtons.length > 0) {
-      code += `        if node_id == "${node.id}":\n`;
-      
-      // Добавляем логику для умного расположения кнопок
-      code += `            # Оптимальное количество колонок для кнопок интересов\n`;
-      const allButtons = [...selectionButtons];
-      allButtons.push({ text: node.data.continueButtonText || 'Готово' });
-      const optimalColumns = calculateOptimalColumns(allButtons, node.data);
-      code += `            keyboard_width = ${optimalColumns}  # Консистентное количество колонок для множественного выбора\n`;
-      code += `            \n`;
-      
-      // Добавляем кнопки выбора с автоматическим расположением
-      code += `            # Добавляем кнопки выбора с умным расположением\n`;
-      selectionButtons.forEach((button, index) => {
-        const buttonValue = button.target || button.id || button.text;
-        const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        code += `            # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
-        code += `            ${safeVarName}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in selected_list)\n`;
-        code += `            ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
-        const shortNodeId = node.id.slice(-10);
-        const shortTarget = buttonValue.slice(-8);
-        const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-        code += `            builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="${callbackData}"))\n`;
-      });
-      
-      // Добавляем обычные кнопки
-      regularButtons.forEach(button => {
-        if (button.action === 'goto') {
-          const callbackData = button.target || button.id || 'no_action';
-          code += `            builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-        } else if (button.action === 'url') {
-          code += `            builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-        } else if (button.action === 'command') {
-          const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          code += `            builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
-        }
-      });
-      
-      // Добавляем кнопку завершения с новым коротким форматом
-      const continueText = node.data.continueButtonText || 'Готово';
-      const shortNodeIdDone = node.id.slice(-10);
-      const doneCallbackData = `done_${shortNodeIdDone}`;
-      console.log(`🔧 ГЕНЕРАТОР: Кнопка "${continueText}" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
-      code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
-      
-      // Применяем ширину клавиатуры ПОСЛЕ добавления всех кнопок
-      code += `            builder.adjust(keyboard_width)\n`;
-    }
-  });
-  
-  code += '            \n';
-  code += '            keyboard = builder.as_markup()\n';
-  code += '            await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
+  code += '        # Перезагружаем узел для обновления клавиатуры\n';
+  code += '        node_handler_name = f"handle_callback_{node_id.replace(\'-\', \'_\').replace(\'.\', \'_\')}"\n';
+  code += '        if node_handler_name in globals():\n';
+  code += '            handler_func = globals()[node_handler_name]\n';
+  code += '            await handler_func(callback_query)\n';
+  code += '        else:\n';
+  code += '            logging.warning(f"Обработчик {node_handler_name} не найден")\n';
   code += '\n';
   
   // Обработчик для reply кнопок множественного выбора
