@@ -2618,18 +2618,40 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += generateUniversalVariableReplacement('    ');
         
         // ИСПРАВЛЕНИЕ: Специальная логика для interests_result - показываем метро клавиатуру
+        console.log('🔧 ГЕНЕРАТОР: Обрабатываем interests_result узел - добавляем метро клавиатуру');
         code += '    # ИСПРАВЛЕНИЕ: Проверяем, нужно ли показать метро клавиатуру\n';
-        code += '    show_metro_keyboard = user_data.get(user_id, {}).get("show_metro_keyboard", False)\n';
+        code += '    logging.info("🔧 ГЕНЕРАТОР DEBUG: Вошли в узел interests_result")\n';
+        code += '    # Загружаем флаг из базы данных, если он там есть\n';
+        code += '    user_vars = await get_user_from_db(user_id)\n';
+        code += '    if not user_vars:\n';
+        code += '        user_vars = user_data.get(user_id, {})\n';
+        code += '        logging.info("🔧 ГЕНЕРАТОР DEBUG: user_vars загружены из user_data")\n';
+        code += '    else:\n';
+        code += '        logging.info("🔧 ГЕНЕРАТОР DEBUG: user_vars загружены из базы данных")\n';
+        code += '    \n';
+        code += '    show_metro_keyboard = False\n';
+        code += '    if isinstance(user_vars, dict):\n';
+        code += '        if "show_metro_keyboard" in user_vars:\n';
+        code += '            show_metro_keyboard = str(user_vars["show_metro_keyboard"]).lower() == "true"\n';
+        code += '            logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Нашли show_metro_keyboard в user_vars: {show_metro_keyboard}")\n';
+        code += '    \n';
+        code += '    # Также проверяем локальное хранилище\n';
+        code += '    if not show_metro_keyboard:\n';
+        code += '        show_metro_keyboard = user_data.get(user_id, {}).get("show_metro_keyboard", False)\n';
+        code += '        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Проверили локальное хранилище: {show_metro_keyboard}")\n';
+        code += '    \n';
         code += '    saved_metro = user_data.get(user_id, {}).get("saved_metro_selection", [])\n';
         code += '    logging.info(f"🚇 interests_result: show_metro_keyboard={show_metro_keyboard}, saved_metro={saved_metro}")\n';
         code += '    \n';
         
         // Находим узел metro_selection для восстановления его кнопок
         const metroNode = nodes.find(n => n.id.includes('metro_selection'));
+        console.log(`🔧 ГЕНЕРАТОР: Поиск узла metro_selection - найден: ${metroNode ? 'да' : 'нет'}`);
         if (metroNode && metroNode.data.buttons) {
+          console.log(`🔧 ГЕНЕРАТОР: Узел metro_selection найден: ${metroNode.id}, кнопок: ${metroNode.data.buttons.length}`);
           code += '    # Создаем метро клавиатуру если нужно\n';
           code += '    if show_metro_keyboard:\n';
-          code += '        logging.info("🚇 Показываем метро клавиатуру в interests_result")\n';
+          code += '        logging.info("🚇 ПОКАЗЫВАЕМ метро клавиатуру в interests_result")\n';
           code += '        builder = InlineKeyboardBuilder()\n';
           
           // Добавляем кнопки метро
@@ -2673,6 +2695,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '        await bot.send_message(user_id, text, reply_markup=metro_keyboard)\n';
           }
           
+          code += '        # НЕ сбрасываем флаг show_metro_keyboard, чтобы клавиатура оставалась активной\n';
+          code += '        logging.info("🚇 Клавиатура метро показана и остается активной")\n';
           code += '    else:\n';
           code += '        # Обычная логика без метро клавиатуры\n';
           
@@ -2696,7 +2720,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '        await bot.send_message(user_id, text)\n';
           }
         } else {
+          console.log('🔧 ГЕНЕРАТОР: Узел metro_selection НЕ найден или у него нет кнопок');
           // Обычная логика если узла метро нет
+          code += '        logging.info("🚇 Узел metro_selection не найден, используем обычную логику")\n';
           if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
             code += '    builder = InlineKeyboardBuilder()\n';
             interestsResultNode.data.buttons.forEach((btn, index) => {
@@ -5677,6 +5703,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         
         // ИСПРАВЛЕНИЕ: Специальная обработка для interests_result чтобы сохранить метро клавиатуру
         if (continueButtonTarget === 'interests_result') {
+          console.log('🔧 ГЕНЕРАТОР: Обнаружен переход к interests_result - добавляем сохранение метро флага');
           code += `        # ИСПРАВЛЕНИЕ: Специальная обработка для interests_result - сохраняем метро клавиатуру\n`;
           code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Обрабатываем переход к interests_result - сохраняем метро состояние")\n`;
           code += `        # Сохраняем состояние метро для следующего узла\n`;
@@ -5685,7 +5712,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `            user_data[user_id] = {}\n`;
           code += `        user_data[user_id]["saved_metro_selection"] = metro_state\n`;
           code += `        user_data[user_id]["show_metro_keyboard"] = True\n`;
+          code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: УСТАНОВИЛИ show_metro_keyboard = True в user_data")\n`;
+          code += `        await update_user_data_in_db(user_id, "show_metro_keyboard", "True")\n`;
+          code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: СОХРАНИЛИ show_metro_keyboard = True в базу данных")\n`;
           code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Сохранили метро состояние: {metro_state}")\n`;
+        } else {
+          console.log(`🔧 ГЕНЕРАТОР: Переход НЕ к interests_result, а к: ${continueButtonTarget}`);
         }
         
         code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
