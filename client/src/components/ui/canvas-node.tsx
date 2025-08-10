@@ -1031,60 +1031,129 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       {/* Buttons preview */}
       {node.data.buttons && node.data.buttons.length > 0 && node.data.keyboardType !== 'none' && (
         <div className="space-y-3">
-          <div className="flex items-center space-x-2 mb-3">
-            <div className="w-1 h-4 bg-amber-500 dark:bg-amber-400 rounded-full"></div>
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
-              {node.data.keyboardType === 'inline' ? 'Inline кнопки' : 'Reply кнопки'}
-            </span>
-          </div>
-          {node.data.keyboardType === 'inline' ? (
-            <div className="grid grid-cols-2 gap-2">
-              {node.data.buttons.slice(0, 4).map((button) => (
-                <div key={button.id} className="group relative">
-                  <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm">
-                    <div className="flex items-center justify-center space-x-1">
-                      <span className="truncate">{button.text}</span>
-                      {button.action === 'command' && (
-                        <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
-                      )}
-                      {button.action === 'url' && (
-                        <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
-                      )}
-                      {button.action === 'goto' && (
-                        <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
-                      )}
+          {(() => {
+            // Check if this is a multi-select node (has buttons with buttonType: "option")
+            const hasOptionButtons = node.data.buttons.some((button: any) => button.buttonType === 'option');
+            const isMultiSelect = hasOptionButtons && (node.data as any).allowMultipleSelection;
+            
+            return (
+              <>
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-1 h-4 bg-amber-500 dark:bg-amber-400 rounded-full"></div>
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                    {isMultiSelect ? 'Множественный выбор' : 
+                     node.data.keyboardType === 'inline' ? 'Inline кнопки' : 'Reply кнопки'}
+                  </span>
+                  {isMultiSelect && (
+                    <div className="text-xs text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded-full">
+                      <i className="fas fa-check-double text-xs mr-1"></i>
+                      Мульти-выбор
                     </div>
-                  </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {node.data.buttons.slice(0, 2).map((button) => (
-                <div key={button.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
-                  <div className="flex items-center space-x-1 ml-2">
-                    {button.action === 'command' && (
-                      <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
-                    )}
-                    {button.action === 'url' && (
-                      <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
-                    )}
-                    {button.action === 'goto' && (
-                      <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
+                
+                {node.data.keyboardType === 'inline' ? (
+                  <div className="space-y-3">
+                    {/* Option buttons for multi-select */}
+                    {isMultiSelect ? (
+                      <>
+                        <div className="grid grid-cols-2 gap-2">
+                          {node.data.buttons.filter((button: any) => button.buttonType === 'option').slice(0, 6).map((button: any) => (
+                            <div key={button.id} className="group relative">
+                              <div className="p-3 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg text-xs font-medium text-green-700 dark:text-green-300 text-center border border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 transition-all duration-200 shadow-sm relative">
+                              <div className="flex items-center justify-center space-x-1">
+                                <i className="fas fa-square text-green-600 dark:text-green-400 text-xs opacity-50" title="Невыбрано"></i>
+                                <span className="truncate">{button.text}</span>
+                              </div>
+                              {/* Simulated selected state */}
+                              <div className="absolute inset-0 bg-green-500/10 dark:bg-green-400/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
+                            </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Show "Done" button for multi-select */}
+                        <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 shadow-sm">
+                            <div className="flex items-center justify-center space-x-1">
+                              <i className="fas fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
+                              <span>Готово</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Show count of remaining option buttons */}
+                        {node.data.buttons.filter((button: any) => button.buttonType === 'option').length > 6 && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-1 font-medium">
+                            <span className="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-800 rounded-full">
+                              +{node.data.buttons.filter((button: any) => button.buttonType === 'option').length - 6} опций
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      /* Regular inline buttons */
+                      <div className="grid grid-cols-2 gap-2">
+                        {node.data.buttons.slice(0, 4).map((button: any) => (
+                          <div key={button.id} className="group relative">
+                            <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm">
+                              <div className="flex items-center justify-center space-x-1">
+                                <span className="truncate">{button.text}</span>
+                                {button.action === 'command' && (
+                                  <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
+                                )}
+                                {button.action === 'url' && (
+                                  <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
+                                )}
+                                {button.action === 'goto' && (
+                                  <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
+                                )}
+                                {button.action === 'selection' && (
+                                  <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {node.data.buttons && node.data.buttons.length > (node.data.keyboardType === 'inline' ? 4 : 2) && (
-            <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-2 font-medium">
-              <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
-                +{node.data.buttons.length - (node.data.keyboardType === 'inline' ? 4 : 2)} еще
-              </span>
-            </div>
-          )}
+                ) : (
+                  /* Reply keyboard buttons */
+                  <div className="space-y-2">
+                    {node.data.buttons.slice(0, 2).map((button: any) => (
+                      <div key={button.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
+                        <div className="flex items-center space-x-1 ml-2">
+                          {button.action === 'command' && (
+                            <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
+                          )}
+                          {button.action === 'url' && (
+                            <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
+                          )}
+                          {button.action === 'goto' && (
+                            <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
+                          )}
+                          {button.action === 'selection' && (
+                            <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Show remaining buttons count for non-multi-select */}
+                {!isMultiSelect && node.data.buttons && node.data.buttons.length > (node.data.keyboardType === 'inline' ? 4 : 2) && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-2 font-medium">
+                    <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+                      +{node.data.buttons.length - (node.data.keyboardType === 'inline' ? 4 : 2)} еще
+                    </span>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
       {/* Connection points */}
