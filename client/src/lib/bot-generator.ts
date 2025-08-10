@@ -2291,9 +2291,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 // Обычное отображение сообщения без сбора ввода
                 
                 // Handle keyboard for target node
-                console.log(`DEBUG: Узел ${targetNode.id}, keyboardType: ${targetNode.data.keyboardType}, buttons: ${targetNode.data.buttons?.length || 0}`);
+                code += `    # DEBUG: Узел ${targetNode.id} - hasRegularButtons=${targetNode.data.buttons && targetNode.data.buttons.length > 0}, hasInputCollection=false\n`;
+                code += `    logging.info(f"DEBUG: Узел ${targetNode.id} обработка кнопок - keyboardType=${targetNode.data.keyboardType}, buttons=${targetNode.data.buttons ? targetNode.data.buttons.length : 0}")\n`;
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-                  console.log(`DEBUG: Создаем клавиатуру для узла ${targetNode.id} с ${targetNode.data.buttons.length} кнопками`);
+                  code += `    logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${targetNode.id} с ${targetNode.data.buttons.length} кнопками")\n`;
                   code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # ИСПРАВЛЕНИЕ: Используем универсальную функцию создания клавиатуры\n';
@@ -6511,7 +6512,7 @@ function generateKeyboard(node: Node): string {
   // CASE 3: Только обычные кнопки БЕЗ сбора ввода = работает как раньше
   else {
     code += `    # DEBUG: Узел ${node.id} - hasRegularButtons=${hasRegularButtons}, hasInputCollection=${hasInputCollection}\n`;
-    code += `    logging.info(f"DEBUG: Узел ${node.id} обработка кнопок - keyboardType={node.data.keyboardType}, buttons={node.data.buttons?.length || 0}")\n`;
+    code += `    logging.info(f"DEBUG: Узел ${node.id} обработка кнопок - keyboardType=${node.data.keyboardType}, buttons=${node.data.buttons ? node.data.buttons.length : 0}")\n`;
     // Проверяем, есть ли условная клавиатура
     code += '    \n';
     code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
@@ -6672,7 +6673,7 @@ function generateKeyboard(node: Node): string {
       } else {
         // Обычная inline клавиатура
         code += '        # Создаем inline клавиатуру с кнопками\n';
-        code += `        logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${node.id} с {node.data.buttons?.length || 0} кнопками")\n`;
+        code += `        logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${node.id} с ${node.data.buttons ? node.data.buttons.length : 0} кнопками")\n`;
         code += '        builder = InlineKeyboardBuilder()\n';
         node.data.buttons.forEach(button => {
           if (button.action === "url") {
