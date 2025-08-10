@@ -1207,6 +1207,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               const nextNodeId = targetNode.data.continueButtonTarget;
               code += '        # Переход к следующему узлу\n';
               code += `        next_node_id = "${nextNodeId}"\n`;
+              
+              // ИСПРАВЛЕНИЕ: Специальная логика для metro_selection -> interests_result
+              if (targetNode.id.includes('metro_selection') && nextNodeId === 'interests_result') {
+                code += '        # ИСПРАВЛЕНИЕ: Сохраняем метро выбор и устанавливаем флаг для показа клавиатуры\n';
+                code += `        selected_metro = user_data.get(user_id, {}).get("multi_select_${actualCallbackData}", [])\n`;
+                code += '        if user_id not in user_data:\n';
+                code += '            user_data[user_id] = {}\n';
+                code += '        user_data[user_id]["saved_metro_selection"] = selected_metro\n';
+                code += '        user_data[user_id]["show_metro_keyboard"] = True\n';
+                code += '        logging.info(f"🚇 Сохранили метро выбор: {selected_metro}, установлен флаг show_metro_keyboard=True")\n';
+                code += '        \n';
+              }
+              
               code += '        try:\n';
               code += `            await handle_callback_${nextNodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
               code += '        except Exception as e:\n';
@@ -2611,25 +2624,104 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '    \n';
         code += generateUniversalVariableReplacement('    ');
         
-        // Handle buttons if any
-        if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
-          code += '    # Create inline keyboard\n';
-          code += '    builder = InlineKeyboardBuilder()\n';
-          interestsResultNode.data.buttons.forEach((btn, index) => {
-            if (btn.action === "goto" && btn.target) {
-              const btnCallbackData = `${btn.target}_btn_${index}`;
-              code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btnCallbackData}"))\n`;
-            } else if (btn.action === "command" && btn.target) {
-              const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-              code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
-            } else if (btn.action === "url") {
-              code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
-            }
+        // ИСПРАВЛЕНИЕ: Специальная логика для interests_result - показываем метро клавиатуру
+        code += '    # ИСПРАВЛЕНИЕ: Проверяем, нужно ли показать метро клавиатуру\n';
+        code += '    show_metro_keyboard = user_data.get(user_id, {}).get("show_metro_keyboard", False)\n';
+        code += '    saved_metro = user_data.get(user_id, {}).get("saved_metro_selection", [])\n';
+        code += '    logging.info(f"🚇 interests_result: show_metro_keyboard={show_metro_keyboard}, saved_metro={saved_metro}")\n';
+        code += '    \n';
+        
+        // Находим узел metro_selection для восстановления его кнопок
+        const metroNode = nodes.find(n => n.id.includes('metro_selection'));
+        if (metroNode && metroNode.data.buttons) {
+          code += '    # Создаем метро клавиатуру если нужно\n';
+          code += '    if show_metro_keyboard:\n';
+          code += '        logging.info("🚇 Показываем метро клавиатуру в interests_result")\n';
+          code += '        builder = InlineKeyboardBuilder()\n';
+          
+          // Добавляем кнопки метро
+          metroNode.data.buttons.forEach((btn, index) => {
+            const shortNodeId = metroNode.id.slice(-10).replace(/^_+/, '');
+            const callbackData = `ms_${shortNodeId}_${btn.target || `btn_${index}`}`;
+            code += `        # Кнопка метро: ${btn.text}\n`;
+            code += `        selected_metro = "${btn.text}" in saved_metro\n`;
+            code += `        button_text = "✅ " + "${btn.text}" if selected_metro else "${btn.text}"\n`;
+            code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
           });
-          code += '    keyboard = builder.as_markup()\n';
-          code += '    await bot.send_message(user_id, text, reply_markup=keyboard)\n';
+          
+          // Добавляем кнопку "Готово"
+          const shortNodeId = metroNode.id.slice(-10).replace(/^_+/, '');
+          code += `        builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="done_${shortNodeId}"))\n`;
+          code += '        builder.adjust(2)  # 2 кнопки в ряд\n';
+          code += '        metro_keyboard = builder.as_markup()\n';
+          code += '        \n';
+          
+          // Обычные кнопки interests_result
+          code += '        # Добавляем обычные кнопки interests_result\n';
+          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
+            code += '        result_builder = InlineKeyboardBuilder()\n';
+            interestsResultNode.data.buttons.forEach((btn, index) => {
+              if (btn.action === "goto" && btn.target) {
+                const btnCallbackData = `${btn.target}_btn_${index}`;
+                code += `        result_builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btnCallbackData}"))\n`;
+              } else if (btn.action === "command" && btn.target) {
+                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                code += `        result_builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+              } else if (btn.action === "url") {
+                code += `        result_builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+              }
+            });
+            code += '        result_keyboard = result_builder.as_markup()\n';
+            code += '        \n';
+            code += '        # Объединяем клавиатуры\n';
+            code += '        combined_keyboard = InlineKeyboardMarkup(inline_keyboard=metro_keyboard.inline_keyboard + result_keyboard.inline_keyboard)\n';
+            code += '        await bot.send_message(user_id, text, reply_markup=combined_keyboard)\n';
+          } else {
+            code += '        await bot.send_message(user_id, text, reply_markup=metro_keyboard)\n';
+          }
+          
+          code += '    else:\n';
+          code += '        # Обычная логика без метро клавиатуры\n';
+          
+          // Handle buttons if any (без метро клавиатуры)
+          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
+            code += '        builder = InlineKeyboardBuilder()\n';
+            interestsResultNode.data.buttons.forEach((btn, index) => {
+              if (btn.action === "goto" && btn.target) {
+                const btnCallbackData = `${btn.target}_btn_${index}`;
+                code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btnCallbackData}"))\n`;
+              } else if (btn.action === "command" && btn.target) {
+                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+              } else if (btn.action === "url") {
+                code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+              }
+            });
+            code += '        keyboard = builder.as_markup()\n';
+            code += '        await bot.send_message(user_id, text, reply_markup=keyboard)\n';
+          } else {
+            code += '        await bot.send_message(user_id, text)\n';
+          }
         } else {
-          code += '    await bot.send_message(user_id, text)\n';
+          // Обычная логика если узла метро нет
+          if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
+            code += '    builder = InlineKeyboardBuilder()\n';
+            interestsResultNode.data.buttons.forEach((btn, index) => {
+              if (btn.action === "goto" && btn.target) {
+                const btnCallbackData = `${btn.target}_btn_${index}`;
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btnCallbackData}"))\n`;
+              } else if (btn.action === "command" && btn.target) {
+                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+              } else if (btn.action === "url") {
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+              }
+            });
+            code += '    keyboard = builder.as_markup()\n';
+            code += '    await bot.send_message(user_id, text, reply_markup=keyboard)\n';
+          } else {
+            code += '    await bot.send_message(user_id, text)\n';
+          }
         }
         code += '\n';
       }
