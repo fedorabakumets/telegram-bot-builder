@@ -1140,15 +1140,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // Создаем обработчик для каждой кнопки используя target как callback_data
           const actualCallbackData = button.target || callbackData;
           
+          // ОТЛАДКА: Проверяем если это interests_result
+          if (button.target === 'interests_result') {
+            console.log('🔧 ГЕНЕРАТОР DEBUG: Создаем ПЕРВЫЙ обработчик для interests_result в основном цикле');
+            console.log('🔧 ГЕНЕРАТОР DEBUG: processedCallbacks до добавления:', Array.from(processedCallbacks));
+          }
+          
           // Mark the target node as processed ONLY if we create a handler for it
           if (button.target) {
             processedCallbacks.add(button.target);
-            console.log(`Узел ${button.target} добавлен в processedCallbacks из inline кнопок`);
+            console.log(`🔧 ГЕНЕРАТОР: Узел ${button.target} добавлен в processedCallbacks из inline кнопок`);
           }
           
           // Если целевой узел имеет множественный выбор, добавляем обработку кнопки "done_"
           const isDoneHandlerNeeded = targetNode && targetNode.data.allowMultipleSelection && targetNode.data.continueButtonTarget;
           const shortNodeIdForDone = isDoneHandlerNeeded ? actualCallbackData.slice(-10).replace(/^_+/, '') : '';
+          
+          // ЛОГИРОВАНИЕ: Отслеживаем создание обработчиков для interests_result
+          if (actualCallbackData === 'interests_result') {
+            console.log('🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: Создаем обработчик для interests_result!');
+            console.log('🚨 ГЕНЕРАТОР: Текущие processedCallbacks:', Array.from(processedCallbacks));
+          }
           
           if (isDoneHandlerNeeded) {
             code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
@@ -1158,6 +1170,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
           // Создаем безопасное имя функции на основе target или button ID
           const safeFunctionName = actualCallbackData.replace(/[^a-zA-Z0-9_]/g, '_');
+          
+          if (actualCallbackData === 'interests_result') {
+            console.log('🚨 ГЕНЕРАТОР: Создаем функцию handle_callback_interests_result в ОСНОВНОМ ЦИКЛЕ');
+          }
+          
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
           code += '    user_id = callback_query.from_user.id\n';
@@ -1193,8 +1210,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             // Переход к следующему узлу
             if (targetNode.data.continueButtonTarget) {
               const nextNodeId = targetNode.data.continueButtonTarget;
+              
+              // КРИТИЧЕСКАЯ ОТЛАДКА
+              console.log(`🚨 ГЕНЕРАТОР CONTINUEBUTTON DEBUG:`);
+              console.log(`🚨 ГЕНЕРАТОР: targetNode.id = "${targetNode.id}"`);
+              console.log(`🚨 ГЕНЕРАТОР: targetNode.data.continueButtonTarget = "${targetNode.data.continueButtonTarget}"`);
+              console.log(`🚨 ГЕНЕРАТОР: nextNodeId = "${nextNodeId}"`);
+              console.log(`🚨 ГЕНЕРАТОР: actualCallbackData = "${actualCallbackData}"`);
+              
               code += '        # Переход к следующему узлу\n';
               code += `        next_node_id = "${nextNodeId}"\n`;
+              code += `        logging.info(f"🚀 DEBUG: targetNode.id=${targetNode.id}, continueButtonTarget=${targetNode.data.continueButtonTarget}, nextNodeId=${nextNodeId}")\n`;
               
               // ИСПРАВЛЕНИЕ: Специальная логика для metro_selection -> interests_result
               console.log(`🔧 ГЕНЕРАТОР: Проверяем metro_selection -> interests_result: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
@@ -2595,10 +2621,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       });
     });
     
-    // CRITICAL FIX: Ensure interests_result gets a handler
-    // Remove interests_result from processedCallbacks to force handler creation
-    processedCallbacks.delete('interests_result');
-    if (!processedCallbacks.has('interests_result')) {
+    // CRITICAL FIX: Ensure interests_result gets a handler BUT avoid duplicates
+    console.log('🔧 ГЕНЕРАТОР CRITICAL FIX: Проверяем interests_result обработчик');
+    console.log('🔧 ГЕНЕРАТОР: processedCallbacks перед check:', Array.from(processedCallbacks));
+    
+    // Проверяем, был ли interests_result уже обработан в основном цикле
+    const wasInterestsResultProcessed = processedCallbacks.has('interests_result');
+    console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле?', wasInterestsResultProcessed);
+    
+    // ИСПРАВЛЕНИЕ: НЕ создаем дублирующий обработчик если он уже есть
+    if (wasInterestsResultProcessed) {
+      console.log('🔧 ГЕНЕРАТОР: ПРОПУСКАЕМ создание дублирующего обработчика для interests_result');
+      console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле, избегаем конфликта клавиатур');
+    } else {
+      console.log('🔧 ГЕНЕРАТОР: Создаем обработчик для interests_result (не найден в основном цикле)');
+      processedCallbacks.add('interests_result');
       const interestsResultNode = nodes.find(n => n.id === 'interests_result');
       if (interestsResultNode) {
         processedCallbacks.add('interests_result');
@@ -2763,14 +2800,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           console.log(`📋 ГЕНЕРАТОР: continueButtonTarget: ${targetNode.data.continueButtonTarget || 'нет'}`);
           
           if (nodeId === 'interests_result') {
-            console.log(`🚨 ГЕНЕРАТОР: СОЗДАЕМ ОБРАБОТЧИК ДЛЯ interests_result!`);
-            console.log(`🚨 ГЕНЕРАТОР: interests_result данные:`, JSON.stringify(targetNode.data, null, 2));
+            console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: СОЗДАЕМ ТРЕТИЙ ОБРАБОТЧИК ДЛЯ interests_result!`);
+            console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: interests_result данные:`, JSON.stringify(targetNode.data, null, 2));
+            console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: ЭТО МОЖЕТ БЫТЬ ИСТОЧНИКОМ КОНФЛИКТА КЛАВИАТУР!`);
           }
           
           // ВАЖНО: Не создаваем обработчик для "start", если он уже был создан ранее (избегаем дублирования)
           if (nodeId === 'start') {
             console.log(`Пропускаем создание дублированной функции для узла ${nodeId} - уже создана ранее`);
             return; // Пропускаем создание дублированной функции
+          }
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также проверяем interests_result
+          if (nodeId === 'interests_result') {
+            console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для interests_result - уже создан в основном цикле`);
+            return; // Избегаем дублирования обработчика interests_result
           }
           
           processedCallbacks.add(nodeId);
@@ -3108,9 +3152,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    \n';
           
           // ИСПРАВЛЕНИЕ: Правильная переадресация к целевому узлу
-          // Кнопка должна вести к узлу, указанному в её target
+          // Определяем целевой узел в зависимости от типа кнопки
           const shouldRedirect = true;
-          const redirectTarget = nodeId; // nodeId - это уже целевой узел кнопки
+          
+          // Для узлов с множественным выбором - используем continueButtonTarget
+          const currentNode = nodes.find(n => n.id === nodeId);
+          let redirectTarget = nodeId; // По умолчанию остаемся в том же узле
+          
+          if (currentNode && currentNode.data.allowMultipleSelection && currentNode.data.continueButtonTarget) {
+            // Для узлов с множественным выбором переходим к continueButtonTarget после выбора
+            redirectTarget = currentNode.data.continueButtonTarget;
+            console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} с множественным выбором переходит к ${redirectTarget}`);
+          } else {
+            // Для обычных узлов ищем следующий узел через соединения
+            const nodeConnections = connections.filter(conn => conn.sourceNodeId === nodeId);
+            if (nodeConnections.length > 0) {
+              redirectTarget = nodeConnections[0].targetNodeId;
+              console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит через соединение к ${redirectTarget}`);
+            } else {
+              console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} остается в том же узле (нет соединений)`);
+            }
+          }
           
           if (shouldRedirect && redirectTarget) {
             code += '    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных\n';
