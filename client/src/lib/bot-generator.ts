@@ -6489,6 +6489,8 @@ function generateKeyboard(node: Node): string {
   
   // CASE 3: Только обычные кнопки БЕЗ сбора ввода = работает как раньше
   else {
+    code += `    # DEBUG: Узел ${node.id} - hasRegularButtons=${hasRegularButtons}, hasInputCollection=${hasInputCollection}\n`;
+    code += `    logging.info(f"DEBUG: Узел ${node.id} обработка кнопок - keyboardType={node.data.keyboardType}, buttons={node.data.buttons?.length || 0}")\n`;
     // Проверяем, есть ли условная клавиатура
     code += '    \n';
     code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
@@ -6649,6 +6651,7 @@ function generateKeyboard(node: Node): string {
       } else {
         // Обычная inline клавиатура
         code += '        # Создаем inline клавиатуру с кнопками\n';
+        code += `        logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${node.id} с {node.data.buttons?.length || 0} кнопками")\n`;
         code += '        builder = InlineKeyboardBuilder()\n';
         node.data.buttons.forEach(button => {
           if (button.action === "url") {
