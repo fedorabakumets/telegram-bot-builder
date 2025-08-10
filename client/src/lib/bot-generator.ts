@@ -2494,8 +2494,88 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    \n';
           code += generateUniversalVariableReplacement('    ');
           
-          // Handle buttons if any
-          if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+          // ИСПРАВЛЕНИЕ: Добавляем специальную обработку для узлов с множественным выбором
+          if (targetNode.data.allowMultipleSelection && targetNode.data.keyboardType === "inline") {
+            // Узел с множественным выбором - создаем специальную клавиатуру
+            console.log(`DEBUG: Генерируем inline клавиатуру с множественным выбором для узла ${nodeId}`);
+            
+            // Используем универсальную функцию замены переменных
+            code += generateUniversalVariableReplacement('    ');
+            
+            // Добавляем логику инициализации множественного выбора
+            const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
+            
+            code += '    # Инициализация состояния множественного выбора\n';
+            code += '    if user_id not in user_data:\n';
+            code += '        user_data[user_id] = {}\n';
+            code += '    \n';
+            code += '    # Загружаем ранее выбранные варианты\n';
+            code += '    saved_selections = []\n';
+            code += '    if user_vars:\n';
+            code += `        for var_name, var_data in user_vars.items():\n`;
+            code += `            if var_name == "${multiSelectVariable}":\n`;
+            code += '                if isinstance(var_data, dict) and "value" in var_data:\n';
+            code += '                    selections_str = var_data["value"]\n';
+            code += '                elif isinstance(var_data, str):\n';
+            code += '                    selections_str = var_data\n';
+            code += '                else:\n';
+            code += '                    continue\n';
+            code += '                if selections_str and selections_str.strip():\n';
+            code += '                    saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]\n';
+            code += '                    break\n';
+            code += '    \n';
+            code += '    # Инициализируем состояние если его нет\n';
+            code += `    if "multi_select_${nodeId}" not in user_data[user_id]:\n`;
+            code += `        user_data[user_id]["multi_select_${nodeId}"] = saved_selections.copy()\n`;
+            code += `    user_data[user_id]["multi_select_node"] = "${nodeId}"\n`;
+            code += `    user_data[user_id]["multi_select_type"] = "inline"\n`;
+            code += `    user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
+            code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")\n';
+            code += '    \n';
+            
+            // Создаем inline клавиатуру с кнопками выбора
+            code += '    # Создаем inline клавиатуру с поддержкой множественного выбора\n';
+            code += '    builder = InlineKeyboardBuilder()\n';
+            
+            // Разделяем кнопки на опции выбора и обычные кнопки
+            const selectionButtons = targetNode.data.buttons.filter(button => button.action === 'selection');
+            const regularButtons = targetNode.data.buttons.filter(button => button.action !== 'selection');
+            
+            // Добавляем кнопки выбора с отметками о состоянии
+            selectionButtons.forEach(button => {
+              const callbackData = `multi_select_${nodeId}_${button.target || button.id}`;
+              code += `    # Кнопка выбора: ${button.text}\n`;
+              code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
+              code += `    builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
+            });
+            
+            // Добавляем кнопку "Готово" если есть континыуе таргет
+            if (targetNode.data.continueButtonTarget) {
+              code += '    # Кнопка "Готово"\n';
+              code += `    builder.add(InlineKeyboardButton(text="✅ Готово", callback_data="${targetNode.data.continueButtonTarget}"))\n`;
+            }
+            
+            // Добавляем обычные кнопки (navigation и другие)
+            regularButtons.forEach((btn, index) => {
+              if (btn.action === "goto" && btn.target) {
+                const btnCallbackData = `${btn.target}_btn_${index}`;
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btnCallbackData}"))\n`;
+              } else if (btn.action === "url") {
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+              } else if (btn.action === "command" && btn.target) {
+                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+              }
+            });
+            
+            // Автоматическое распределение колонок
+            const totalButtons = selectionButtons.length + (targetNode.data.continueButtonTarget ? 1 : 0) + regularButtons.length;
+            const columns = calculateOptimalColumns(selectionButtons, targetNode.data);
+            code += `    builder.adjust(${columns})\n`;
+            code += '    keyboard = builder.as_markup()\n';
+            
+          } else if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            // Обычные кнопки без множественного выбора
             code += '    # Create inline keyboard\n';
             code += '    builder = InlineKeyboardBuilder()\n';
             targetNode.data.buttons.forEach((btn, index) => {
@@ -2509,6 +2589,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 const commandCallback = `cmd_${btn.target.replace('/', '')}`;
                 code += `    # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
                 code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+              } else if (btn.action === "selection") {
+                // Добавляем поддержку кнопок выбора для обычных узлов
+                const callbackData = `multi_select_${nodeId}_${btn.target || btn.id}`;
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
               }
             });
             code += '    keyboard = builder.as_markup()\n';
