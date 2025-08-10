@@ -694,6 +694,40 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
 export function generatePythonCode(botData: BotData, botName: string = "MyBot"): string {
   const { nodes, connections } = botData;
   
+  // ЛОГИРОВАНИЕ ГЕНЕРАТОРА: Подробная информация о данных бота
+  console.log(`🔧 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
+  
+  // Логируем все узлы с их свойствами
+  if (nodes && nodes.length > 0) {
+    console.log('🔧 ГЕНЕРАТОР: Анализируем все узлы:');
+    nodes.forEach((node, index) => {
+      const hasMultiSelect = node.data.allowMultipleSelection || node.data.multiSelectEnabled;
+      const hasButtons = node.data.buttons && node.data.buttons.length > 0;
+      const continueTarget = node.data.continueButtonTarget;
+      
+      console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: "${node.id}" (тип: ${node.type})`);
+      console.log(`🔧 ГЕНЕРАТОР:   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
+      console.log(`🔧 ГЕНЕРАТОР:   - multiSelectEnabled: ${node.data.multiSelectEnabled}`);
+      console.log(`🔧 ГЕНЕРАТОР:   - hasMultiSelect: ${hasMultiSelect}`);
+      console.log(`🔧 ГЕНЕРАТОР:   - кнопок: ${node.data.buttons?.length || 0}`);
+      console.log(`🔧 ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
+      console.log(`🔧 ГЕНЕРАТОР:   - continueButtonTarget: ${continueTarget || 'нет'}`);
+      
+      if (node.id === 'interests_result') {
+        console.log(`🚨 ГЕНЕРАТОР: НАЙДЕН interests_result!`);
+        console.log(`🚨 ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
+      }
+    });
+    
+    // Проверим связи
+    if (connections && connections.length > 0) {
+      console.log('🔧 ГЕНЕРАТОР: Анализируем связи:');
+      connections.forEach((conn, index) => {
+        console.log(`🔧 ГЕНЕРАТОР: Связь ${index + 1}: ${conn.sourceNodeId} -> ${conn.targetNodeId}`);
+      });
+    }
+  }
+  
   let code = '"""\n';
   code += `${botName} - Telegram Bot\n`;
   code += 'Сгенерировано с помощью TelegramBot Builder\n';
@@ -2611,7 +2645,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} НЕ был обработан ранее, создаем обработчик`);
         const targetNode = nodes.find(n => n.id === nodeId);
         if (targetNode) {
-          console.log(`📋 ГЕНЕРАТОР: Найден узел ${nodeId}, тип: ${targetNode.type}, allowMultipleSelection: ${targetNode.data.allowMultipleSelection}`);
+          console.log(`📋 ГЕНЕРАТОР: Найден узел ${nodeId}, тип: ${targetNode.type}`);
+          console.log(`📋 ГЕНЕРАТОР: allowMultipleSelection: ${targetNode.data.allowMultipleSelection}`);
+          console.log(`📋 ГЕНЕРАТОР: keyboardType: ${targetNode.data.keyboardType}`);
+          console.log(`📋 ГЕНЕРАТОР: кнопок: ${targetNode.data.buttons?.length || 0}`);
+          console.log(`📋 ГЕНЕРАТОР: continueButtonTarget: ${targetNode.data.continueButtonTarget || 'нет'}`);
+          
+          if (nodeId === 'interests_result') {
+            console.log(`🚨 ГЕНЕРАТОР: СОЗДАЕМ ОБРАБОТЧИК ДЛЯ interests_result!`);
+            console.log(`🚨 ГЕНЕРАТОР: interests_result данные:`, JSON.stringify(targetNode.data, null, 2));
+          }
+          
           // ВАЖНО: Не создаваем обработчик для "start", если он уже был создан ранее (избегаем дублирования)
           if (nodeId === 'start') {
             console.log(`Пропускаем создание дублированной функции для узла ${nodeId} - уже создана ранее`);
