@@ -86,7 +86,11 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       code += `${indentLevel}logging.info(f"Создана кнопка команды: ${button.text} -> ${commandCallback}")\n`;
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
     } else if (button.action === 'selection') {
-      const callbackData = nodeId ? `multi_select_${nodeId}_${button.target || button.id}` : `selection_${button.target || button.id}`;
+      // Укорачиваем callback_data для соблюдения лимита Telegram в 64 байта
+      const shortNodeId = nodeId ? nodeId.slice(-10) : 'sel'; // Берем последние 10 символов
+      const shortTarget = (button.target || button.id || 'btn').slice(-8); // Берем последние 8 символов
+      const callbackData = `ms_${shortNodeId}_${shortTarget}`;
+      console.log(`🔧 ГЕНЕРАТОР: Создана кнопка selection: ${button.text} -> ${callbackData} (длина: ${callbackData.length})`);
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
     } else {
       const callbackData = button.target || button.id || 'no_action';
@@ -2547,20 +2551,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '    builder = InlineKeyboardBuilder()\n';
             
             // Разделяем кнопки на опции выбора и обычные кнопки
+            console.log(`🔧 ГЕНЕРАТОР: targetNode.data.buttons:`, targetNode.data.buttons);
             const selectionButtons = targetNode.data.buttons.filter(button => button.action === 'selection');
             const regularButtons = targetNode.data.buttons.filter(button => button.action !== 'selection');
+            console.log(`🔧 ГЕНЕРАТОР: Найдено ${selectionButtons.length} кнопок выбора и ${regularButtons.length} обычных кнопок`);
             
             // Добавляем кнопки выбора с отметками о состоянии
-            selectionButtons.forEach(button => {
-              const callbackData = `multi_select_${nodeId}_${button.target || button.id}`;
-              code += `    # Кнопка выбора: ${button.text}\n`;
+            console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
+            selectionButtons.forEach((button, index) => {
+              // Используем короткие callback_data
+              const shortNodeId = nodeId.slice(-10);
+              const shortTarget = (button.target || button.id || 'btn').slice(-8);
+              const callbackData = `ms_${shortNodeId}_${shortTarget}`;
+              console.log(`🔧 ГЕНЕРАТОР: Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (длина: ${callbackData.length})`);
+              code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
+              code += `    logging.info(f"🔘 Создаем кнопку: ${button.text} -> ${callbackData}")\n`;
               code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
               code += `    builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
             });
             
             // Добавляем кнопку "Готово" для множественного выбора
             code += '    # Кнопка "Готово"\n';
-            code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${nodeId}"))\n`;
+            const shortNodeIdDone = nodeId.slice(-10);
+            const doneCallbackData = `done_${shortNodeIdDone}`;
+            console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
+            code += `    logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
+            code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="${doneCallbackData}"))\n`;
             
             // Добавляем обычные кнопки (navigation и другие)
             regularButtons.forEach((btn, index) => {
@@ -4984,14 +5000,26 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   );
   
   // Обработчик для inline кнопок множественного выбора
-  code += '@dp.callback_query(lambda c: c.data.startswith("multi_select_"))\n';
+  code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
   code += 'async def handle_multi_select_callback(callback_query: types.CallbackQuery):\n';
   code += '    await callback_query.answer()\n';
   code += '    user_id = callback_query.from_user.id\n';
   code += '    callback_data = callback_query.data\n';
   code += '    \n';
-  code += '    if callback_data.startswith("multi_select_done_"):\n';
-  code += '        # Завершение множественного выбора\n';
+  code += '    # Обработка кнопки "Готово"\n';
+  code += '    if callback_data.startswith("done_"):\n';
+  code += '        # Завершение множественного выбора (новый формат)\n';
+  code += '        logging.info(f"🏁 Обработка кнопки Готово: {callback_data}")\n';
+  code += '        short_node_id = callback_data.replace("done_", "")\n';
+  code += '        # Находим полный node_id по короткому суффиксу\n';
+  code += '        node_id = None\n';
+  multiSelectNodes.forEach(node => {
+    code += `        if "${node.id}".endswith(short_node_id):\n`;
+    code += `            node_id = "${node.id}"\n`;
+    code += `            logging.info(f"✅ Найден узел: ${node.id}")\n`;
+  });
+  code += '    elif callback_data.startswith("multi_select_done_"):\n';
+  code += '        # Завершение множественного выбора (старый формат)\n';
   code += '        node_id = callback_data.replace("multi_select_done_", "")\n';
   code += '        selected_options = user_data.get(user_id, {}).get(f"multi_select_{node_id}", [])\n';
   code += '        \n';
@@ -5020,22 +5048,47 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   // Добавим переходы для узлов с множественным выбором
   
   if (multiSelectNodes.length > 0) {
+    console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
     code += '        # Определяем следующий узел для каждого node_id\n';
     multiSelectNodes.forEach(node => {
+      console.log(`🔧 ГЕНЕРАТОР: Создаем блок if для узла ${node.id}`);
+      console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget: ${node.data.continueButtonTarget}`);
+      console.log(`🔧 ГЕНЕРАТОР: соединения из узла: ${connections.filter(conn => conn.source === node.id).map(c => c.target).join(', ')}`);
+      
       code += `        if node_id == "${node.id}":\n`;
+      
+      let hasContent = false;
       
       // Сначала проверяем continueButtonTarget
       if (node.data.continueButtonTarget) {
         const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
         if (targetNode) {
+          console.log(`🔧 ГЕНЕРАТОР: Найден целевой узел ${targetNode.id} через continueButtonTarget`);
+          console.log(`🔧 ГЕНЕРАТОР: Тип целевого узла: ${targetNode.type}`);
           code += `            # Переход к узлу ${targetNode.id}\n`;
+          code += `            logging.info(f"🔄 Переходим к узлу ${targetNode.id} (тип: ${targetNode.type})")\n`;
           if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
             const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            console.log(`🔧 ГЕНЕРАТОР: Добавляем вызов handle_callback_${safeFunctionName}`);
             code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
+            hasContent = true;
           } else if (targetNode.type === 'command') {
             const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
+            console.log(`🔧 ГЕНЕРАТОР: Добавляем вызов handle_command_${safeCommandName}`);
             code += `            await handle_command_${safeCommandName}(callback_query.message)\n`;
+            hasContent = true;
+          } else if (targetNode.type === 'start') {
+            console.log(`🔧 ГЕНЕРАТОР: Добавляем вызов handle_callback_start`);
+            code += `            await handle_callback_start(callback_query)\n`;
+            hasContent = true;
+          } else {
+            console.log(`⚠️ ГЕНЕРАТОР: Неизвестный тип узла ${targetNode.type}, добавляем pass`);
+            code += `            logging.warning(f"⚠️ Неизвестный тип узла: ${targetNode.type}")\n`;
+            code += `            pass\n`;
+            hasContent = true;
           }
+        } else {
+          console.log(`⚠️ ГЕНЕРАТОР: Целевой узел не найден для continueButtonTarget: ${node.data.continueButtonTarget}`);
         }
       } else {
         // Если нет continueButtonTarget, ищем соединения
@@ -5043,6 +5096,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         if (nodeConnections.length > 0) {
           const targetNode = nodes.find(n => n.id === nodeConnections[0].target);
           if (targetNode) {
+            console.log(`🔧 ГЕНЕРАТОР: Найден целевой узел ${targetNode.id} через соединение`);
             code += `            # Переход к узлу ${targetNode.id} через соединение\n`;
             if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
               const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -5051,8 +5105,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
               code += `            await handle_command_${safeCommandName}(callback_query.message)\n`;
             }
+            hasContent = true;
           }
         }
+      }
+      
+      // Если блок if остался пустым, добавляем return
+      if (!hasContent) {
+        console.log(`⚠️ ГЕНЕРАТОР: Блок if для узла ${node.id} остался пустым, добавляем return`);
+        code += `            return\n`;
+      } else {
+        console.log(`✅ ГЕНЕРАТОР: Блок if для узла ${node.id} заполнен контентом`);
       }
     });
   }
@@ -5060,67 +5123,98 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        return\n';
   code += '    \n';
   code += '    # Обработка выбора опции\n';
-  code += '    parts = callback_data.split("_")\n';
-  code += '    if len(parts) >= 3:\n';
-  code += '        node_id = parts[2]\n';
-  code += '        button_id = "_".join(parts[3:]) if len(parts) > 3 else parts[2]\n';
+  code += '    logging.info(f"📱 Обрабатываем callback_data: {callback_data}")\n';
+  code += '    \n';
+  code += '    # Поддерживаем и новый формат ms_ и старый multi_select_\n';
+  code += '    if callback_data.startswith("ms_"):\n';
+  code += '        # Новый короткий формат: ms_shortNodeId_shortTarget\n';
+  code += '        parts = callback_data.split("_")\n';
+  code += '        if len(parts) >= 3:\n';
+  code += '            short_node_id = parts[1]\n';
+  code += '            button_id = "_".join(parts[2:])\n';
+  code += '            # Находим полный node_id по короткому суффиксу\n';
+  code += '            node_id = None\n';
+  multiSelectNodes.forEach(node => {
+    code += `            if "${node.id}".endswith(short_node_id):\n`;
+    code += `                node_id = "${node.id}"\n`;
+  });
+  code += '    elif callback_data.startswith("multi_select_"):\n';
+  code += '        # Старый формат для обратной совместимости\n';
+  code += '        parts = callback_data.split("_")\n';
+  code += '        if len(parts) >= 3:\n';
+  code += '            node_id = parts[2]\n';
+  code += '            button_id = "_".join(parts[3:]) if len(parts) > 3 else parts[2]\n';
+  code += '    else:\n';
+  code += '        logging.warning(f"⚠️ Неизвестный формат callback_data: {callback_data}")\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    if not node_id:\n';
+  code += '        logging.warning(f"⚠️ Не удалось найти node_id для callback_data: {callback_data}")\n';
+  code += '        return\n';
+  code += '    \n';
+  code += '    logging.info(f"📱 Определили node_id: {node_id}, button_id: {button_id}")\n';
+  code += '    \n';
+  code += '    # Инициализируем список выбранных опций с восстановлением из БД\n';
+  code += '    if user_id not in user_data:\n';
+  code += '        user_data[user_id] = {}\n';
+  code += '    \n';
+  code += '    # Восстанавливаем ранее выбранные опции из базы данных\n';
+  code += '    if f"multi_select_{node_id}" not in user_data[user_id]:\n';
+  code += '        # Загружаем сохраненные данные из базы\n';
+  code += '        user_vars = await get_user_from_db(user_id)\n';
+  code += '        saved_selections = []\n';
   code += '        \n';
-  code += '        # Инициализируем список выбранных опций с восстановлением из БД\n';
-  code += '        if user_id not in user_data:\n';
-  code += '            user_data[user_id] = {}\n';
+  code += '        if user_vars:\n';
+  code += '            # Ищем переменную с интересами\n';
+  code += '            for var_name, var_data in user_vars.items():\n';
+  code += '                if "интерес" in var_name.lower() or var_name == "interests" or var_name.startswith("multi_select_"):\n';
+  code += '                    if isinstance(var_data, dict) and "value" in var_data:\n';
+  code += '                        saved_str = var_data["value"]\n';
+  code += '                    elif isinstance(var_data, str):\n';
+  code += '                        saved_str = var_data\n';
+  code += '                    else:\n';
+  code += '                        saved_str = str(var_data) if var_data else ""\n';
+  code += '                    \n';
+  code += '                    if saved_str:\n';
+  code += '                        saved_selections = [item.strip() for item in saved_str.split(",")]\n';
+  code += '                        break\n';
   code += '        \n';
-  code += '        # Восстанавливаем ранее выбранные опции из базы данных\n';
-  code += '        if f"multi_select_{node_id}" not in user_data[user_id]:\n';
-  code += '            # Загружаем сохраненные данные из базы\n';
-  code += '            user_vars = await get_user_from_db(user_id)\n';
-  code += '            saved_selections = []\n';
-  code += '            \n';
-  code += '            if user_vars:\n';
-  code += '                # Ищем переменную с интересами\n';
-  code += '                for var_name, var_data in user_vars.items():\n';
-  code += '                    if "интерес" in var_name.lower() or var_name == "interests" or var_name.startswith("multi_select_"):\n';
-  code += '                        if isinstance(var_data, dict) and "value" in var_data:\n';
-  code += '                            saved_str = var_data["value"]\n';
-  code += '                        elif isinstance(var_data, str):\n';
-  code += '                            saved_str = var_data\n';
-  code += '                        else:\n';
-  code += '                            saved_str = str(var_data) if var_data else ""\n';
-  code += '                        \n';
-  code += '                        if saved_str:\n';
-  code += '                            saved_selections = [item.strip() for item in saved_str.split(",")]\n';
-  code += '                            break\n';
-  code += '            \n';
-  code += '            user_data[user_id][f"multi_select_{node_id}"] = saved_selections\n';
-  code += '        \n';
-  code += '        # Находим текст кнопки по button_id\n';
-  code += '        button_text = None\n';
+  code += '        user_data[user_id][f"multi_select_{node_id}"] = saved_selections\n';
+  code += '    \n';
+  code += '    # Находим текст кнопки по button_id\n';
+  code += '    button_text = None\n';
   
   // Добавляем маппинг кнопок для каждого узла с множественным выбором
   multiSelectNodes.forEach(node => {
     const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
     if (selectionButtons.length > 0) {
-      code += `        if node_id == "${node.id}":\n`;
+      code += `    if node_id == "${node.id}":\n`;
       selectionButtons.forEach(button => {
         // Используем target или id для маппинга, как в генераторе клавиатуры
         const buttonValue = button.target || button.id || button.text;
-        code += `            if button_id == "${buttonValue}":\n`;
-        code += `                button_text = "${button.text}"\n`;
+        code += `        if button_id == "${buttonValue}":\n`;
+        code += `            button_text = "${button.text}"\n`;
       });
     }
   });
   
+  code += '    \n';
+  code += '    if button_text:\n';
+  code += '        logging.info(f"🔘 Обрабатываем кнопку: {button_text}")\n';
+  code += '        selected_list = user_data[user_id][f"multi_select_{node_id}"]\n';
+  code += '        if button_text in selected_list:\n';
+  code += '            # Убираем из выбранных\n';
+  code += '            selected_list.remove(button_text)\n';
+  code += '            logging.info(f"➖ Убрали выбор: {button_text}")\n';
+  code += '        else:\n';
+  code += '            # Добавляем к выбранным\n';
+  code += '            selected_list.append(button_text)\n';
+  code += '            logging.info(f"➕ Добавили выбор: {button_text}")\n';
   code += '        \n';
-  code += '        if button_text:\n';
-  code += '            selected_list = user_data[user_id][f"multi_select_{node_id}"]\n';
-  code += '            if button_text in selected_list:\n';
-  code += '                # Убираем из выбранных\n';
-  code += '                selected_list.remove(button_text)\n';
-  code += '            else:\n';
-  code += '                # Добавляем к выбранным\n';
-  code += '                selected_list.append(button_text)\n';
-  code += '            \n';
-  code += '            # Обновляем клавиатуру с галочками\n';
-  code += '            builder = InlineKeyboardBuilder()\n';
+  code += '        logging.info(f"📋 Текущие выборы: {selected_list}")\n';
+  code += '        \n';
+  code += '        # Обновляем клавиатуру с галочками\n';
+  code += '        builder = InlineKeyboardBuilder()\n';
   
   // Генерируем обновление клавиатуры для каждого узла
   multiSelectNodes.forEach(node => {
@@ -5128,46 +5222,52 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     const regularButtons = node.data.buttons?.filter(btn => btn.action !== 'selection') || [];
     
     if (selectionButtons.length > 0) {
-      code += `            if node_id == "${node.id}":\n`;
+      code += `        if node_id == "${node.id}":\n`;
       
       // Добавляем логику для умного расположения кнопок
-      code += `                # Оптимальное количество колонок для кнопок интересов\n`;
+      code += `            # Оптимальное количество колонок для кнопок интересов\n`;
       const allButtons = [...selectionButtons];
       allButtons.push({ text: node.data.continueButtonText || 'Готово' });
       const optimalColumns = calculateOptimalColumns(allButtons, node.data);
-      code += `                keyboard_width = ${optimalColumns}  # Консистентное количество колонок для множественного выбора\n`;
-      code += `                \n`;
+      code += `            keyboard_width = ${optimalColumns}  # Консистентное количество колонок для множественного выбора\n`;
+      code += `            \n`;
       
       // Добавляем кнопки выбора с автоматическим расположением
-      code += `                # Добавляем кнопки выбора с умным расположением\n`;
+      code += `            # Добавляем кнопки выбора с умным расположением\n`;
       selectionButtons.forEach((button, index) => {
         const buttonValue = button.target || button.id || button.text;
         const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
-        code += `                # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
-        code += `                ${safeVarName}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in selected_list)\n`;
-        code += `                ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
-        code += `                builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_${node.id}_${buttonValue}"))\n`;
+        code += `            # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
+        code += `            ${safeVarName}_selected = any("${button.text}" in interest or "${buttonValue.toLowerCase()}" in interest.lower() for interest in selected_list)\n`;
+        code += `            ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
+        const shortNodeId = node.id.slice(-10);
+        const shortTarget = buttonValue.slice(-8);
+        const callbackData = `ms_${shortNodeId}_${shortTarget}`;
+        code += `            builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="${callbackData}"))\n`;
       });
       
       // Добавляем обычные кнопки
       regularButtons.forEach(button => {
         if (button.action === 'goto') {
           const callbackData = button.target || button.id || 'no_action';
-          code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+          code += `            builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
         } else if (button.action === 'url') {
-          code += `                builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
+          code += `            builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
         } else if (button.action === 'command') {
           const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+          code += `            builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
         }
       });
       
-      // Добавляем кнопку завершения
+      // Добавляем кнопку завершения с новым коротким форматом
       const continueText = node.data.continueButtonText || 'Готово';
-      code += `                builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
+      const shortNodeIdDone = node.id.slice(-10);
+      const doneCallbackData = `done_${shortNodeIdDone}`;
+      console.log(`🔧 ГЕНЕРАТОР: Кнопка "${continueText}" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
+      code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
       
       // Применяем ширину клавиатуры ПОСЛЕ добавления всех кнопок
-      code += `                builder.adjust(keyboard_width)\n`;
+      code += `            builder.adjust(keyboard_width)\n`;
     }
   });
   
