@@ -1158,6 +1158,409 @@ async function seedDefaultTemplates(force = false) {
     });
 
     console.log('✅ Базовый шаблон "маша" создан');
+
+    // Создаем базовый шаблон "Федя" - простой бот для общения
+    await storage.createBotTemplate({
+      name: "федя",
+      description: "Простой базовый шаблон для общения с пользователями",
+      category: "official",
+      tags: ["общение", "простой", "базовый", "диалог"],
+      isPublic: 1,
+      difficulty: "easy",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 2,
+      estimatedTime: 5,
+      data: {
+        nodes: [
+          {
+            id: "start",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              description: "Приветствие",
+              messageText: "👋 Привет! Меня зовут Федя!\n\nЯ простой бот для общения. Как дела?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-good",
+                  text: "Хорошо 😊",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "good_response",
+                  value: "good"
+                },
+                {
+                  id: "btn-bad",
+                  text: "Плохо 😔",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "bad_response",
+                  value: "bad"
+                },
+                {
+                  id: "btn-normal",
+                  text: "Нормально 😐",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "normal_response",
+                  value: "normal"
+                }
+              ],
+              markdown: false,
+              oneTimeKeyboard: true,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "good_response",
+            type: "message",
+            position: { x: 400, y: 50 },
+            data: {
+              messageText: "😊 Отлично! Рад слышать, что у тебя всё хорошо!\n\nЧто планируешь делать сегодня?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-work",
+                  text: "Работать 💼",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "activity_response"
+                },
+                {
+                  id: "btn-relax",
+                  text: "Отдыхать 🛋️",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "activity_response"
+                },
+                {
+                  id: "btn-study",
+                  text: "Учиться 📚",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "activity_response"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "bad_response",
+            type: "message",
+            position: { x: 400, y: 150 },
+            data: {
+              messageText: "😔 Жаль, что дела идут не очень...\n\nХочешь поговорить об этом или лучше отвлечься?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-talk",
+                  text: "Поговорить 💬",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "support_response"
+                },
+                {
+                  id: "btn-distract",
+                  text: "Отвлечься 🎮",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "distraction_response"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "normal_response",
+            type: "message",
+            position: { x: 400, y: 250 },
+            data: {
+              messageText: "😐 Понятно, обычный день значит!\n\nМожет, расскажешь что-нибудь интересное?",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-story",
+                  text: "Расскажу историю 📖",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "story_response"
+                },
+                {
+                  id: "btn-question",
+                  text: "Задам вопрос ❓",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "question_response"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "activity_response",
+            type: "message",
+            position: { x: 700, y: 50 },
+            data: {
+              messageText: "👍 Звучит как отличный план!\n\nУдачи тебе в делах! Если захочешь ещё поболтать, напиши /start",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-restart",
+                  text: "Начать сначала 🔄",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "start"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "support_response",
+            type: "message",
+            position: { x: 700, y: 150 },
+            data: {
+              messageText: "💙 Помни, что плохие дни случаются у всех. Главное - не сдаваться!\n\nТы справишься! 💪",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-thanks",
+                  text: "Спасибо! 🙏",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "final_response"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "distraction_response",
+            type: "message",
+            position: { x: 700, y: 200 },
+            data: {
+              messageText: "🎮 Хорошая идея! Иногда нужно просто переключиться на что-то приятное.\n\nНадеюсь, это поможет!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-restart2",
+                  text: "Начать сначала 🔄",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "start"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "story_response",
+            type: "message",
+            position: { x: 700, y: 250 },
+            data: {
+              messageText: "📖 Интересно! Я люблю слушать истории.\n\nРасскажи, что у тебя происходило интересного?",
+              keyboardType: "none",
+              collectUserInput: true,
+              enableTextInput: true,
+              inputVariable: "user_story",
+              nextNodeId: "story_reaction",
+              markdown: false
+            }
+          },
+          {
+            id: "question_response",
+            type: "message",
+            position: { x: 700, y: 300 },
+            data: {
+              messageText: "❓ О, я готов ответить! Задавай любой вопрос.\n\nЧто тебя интересует?",
+              keyboardType: "none",
+              collectUserInput: true,
+              enableTextInput: true,
+              inputVariable: "user_question",
+              nextNodeId: "question_reaction",
+              markdown: false
+            }
+          },
+          {
+            id: "story_reaction",
+            type: "message",
+            position: { x: 1000, y: 250 },
+            data: {
+              messageText: "😊 Спасибо за историю! Очень интересно!\n\nТвоя история: {user_story}",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-more",
+                  text: "Ещё поболтать 💬",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "start"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "question_reaction",
+            type: "message",
+            position: { x: 1000, y: 300 },
+            data: {
+              messageText: "🤔 Интересный вопрос! Твой вопрос: {user_question}\n\nЯ думаю над ответом... А пока давай ещё поболтаем!",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-continue",
+                  text: "Продолжить общение 🗣️",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "start"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "final_response",
+            type: "message",
+            position: { x: 1000, y: 150 },
+            data: {
+              messageText: "😊 Всегда пожалуйста! Помни - ты не один!\n\nБудь на связи! 📱",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-final-restart",
+                  text: "Начать сначала 🔄",
+                  action: "goto",
+                  buttonType: "option",
+                  target: "start"
+                }
+              ],
+              markdown: false
+            }
+          }
+        ],
+        connections: [
+          {
+            id: "conn-1",
+            sourceNodeId: "start",
+            targetNodeId: "good_response",
+            sourceHandle: "btn-good",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-2",
+            sourceNodeId: "start",
+            targetNodeId: "bad_response",
+            sourceHandle: "btn-bad",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-3",
+            sourceNodeId: "start",
+            targetNodeId: "normal_response",
+            sourceHandle: "btn-normal",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-4",
+            sourceNodeId: "good_response",
+            targetNodeId: "activity_response",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-5",
+            sourceNodeId: "bad_response",
+            targetNodeId: "support_response",
+            sourceHandle: "btn-talk",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-6",
+            sourceNodeId: "bad_response",
+            targetNodeId: "distraction_response",
+            sourceHandle: "btn-distract",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-7",
+            sourceNodeId: "normal_response",
+            targetNodeId: "story_response",
+            sourceHandle: "btn-story",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8",
+            sourceNodeId: "normal_response",
+            targetNodeId: "question_response",
+            sourceHandle: "btn-question",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-9",
+            sourceNodeId: "story_response",
+            targetNodeId: "story_reaction",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-10",
+            sourceNodeId: "question_response",
+            targetNodeId: "question_reaction",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-11",
+            sourceNodeId: "activity_response",
+            targetNodeId: "start",
+            sourceHandle: "btn-restart",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-12",
+            sourceNodeId: "support_response",
+            targetNodeId: "final_response",
+            sourceHandle: "btn-thanks",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-13",
+            sourceNodeId: "distraction_response",
+            targetNodeId: "start",
+            sourceHandle: "btn-restart2",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-14",
+            sourceNodeId: "story_reaction",
+            targetNodeId: "start",
+            sourceHandle: "btn-more",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-15",
+            sourceNodeId: "question_reaction",
+            targetNodeId: "start",
+            sourceHandle: "btn-continue",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-16",
+            sourceNodeId: "final_response",
+            targetNodeId: "start",
+            sourceHandle: "btn-final-restart",
+            targetHandle: "target"
+          }
+        ]
+      }
+    });
+
+    console.log('✅ Базовый шаблон "федя" создан');
     console.log('✅ Системные шаблоны созданы');
 
   } catch (error) {
