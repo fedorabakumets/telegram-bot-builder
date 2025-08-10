@@ -5440,9 +5440,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += `        if node_id == "${node.id}":\n`;
       
       // Добавляем кнопки выбора с галочками
+      console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
       selectionButtons.forEach((button, index) => {
-        code += `            selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
         const shortTarget = (button.target || button.id || 'btn').slice(-8);
+        console.log(`🔧 ГЕНЕРАТОР: Кнопка ${index + 1}: "${button.text}" -> callback_data: multi_select_${node.id}_${shortTarget}`);
+        code += `            selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
         code += `            builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="multi_select_${node.id}_${shortTarget}"))\n`;
       });
       
@@ -5461,7 +5463,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       
       // Добавляем кнопку завершения
       const continueText = node.data.continueButtonText || 'Готово';
-      code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="done_multi_select_${node.id}"))\n`;
+      console.log(`🔧 ГЕНЕРАТОР: Добавляем кнопку завершения "${continueText}" с callback_data: multi_select_done_${node.id}`);
+      code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
       code += `            builder.adjust(2, 2, 2, 2, 1)\n`;
     }
   });
@@ -5472,9 +5475,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '\n';
   
   // Генерируем обработчики для кнопок "Готово" многомерного выбора
+  console.log(`🔧 ГЕНЕРАТОР: Создаем обработчик для кнопок завершения множественного выбора`);
+  console.log(`🔧 ГЕНЕРАТОР: Количество узлов с множественным выбором: ${multiSelectNodes.length}`);
+  multiSelectNodes.forEach((node, index) => {
+    console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: ${node.id}, continueButtonTarget: ${node.data.continueButtonTarget}`);
+  });
+  
   code += '# Обработчик для кнопок завершения множественного выбора\n';
-  code += '@dp.callback_query(lambda callback_query: callback_query.data.startswith("done_multi_select_"))\n';
+  code += '@dp.callback_query(lambda callback_query: callback_query.data and callback_query.data.startswith("multi_select_done_"))\n';
   code += 'async def handle_multi_select_done(callback_query: types.CallbackQuery):\n';
+  code += '    logging.info(f"🏁 ОБРАБОТЧИК ГОТОВО АКТИВИРОВАН! callback_data: {callback_query.data}")\n';
   code += '    await callback_query.answer()\n';
   code += '    user_id = callback_query.from_user.id\n';
   code += '    callback_data = callback_query.data\n';
@@ -5482,7 +5492,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    logging.info(f"🏁 Завершение множественного выбора: {callback_data}")\n';
   code += '    \n';
   code += '    # Извлекаем node_id из callback_data\n';
-  code += '    node_id = callback_data.replace("done_multi_select_", "")\n';
+  code += '    node_id = callback_data.replace("multi_select_done_", "")\n';
   code += '    logging.info(f"🎯 Node ID для завершения: {node_id}")\n';
   code += '    \n';
   
@@ -5492,7 +5502,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     
     code += `    if node_id == "${node.id}":\n`;
     code += `        # Получаем выбранные опции для узла ${node.id}\n`;
-    code += `        selected_options = user_data.get(user_id, {}).get("multi_select_{node_id}", [])\n`;
+    code += `        selected_options = user_data.get(user_id, {}).get("multi_select_${node.id}", [])\n`;
     code += `        logging.info(f"📋 Выбранные опции для ${node.id}: {selected_options}")\n`;
     code += `        \n`;
     code += `        if selected_options:\n`;
