@@ -72,7 +72,54 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   if (!buttons || buttons.length === 0) return '';
   
   let code = '';
+  
+  // Проверяем, есть ли кнопки выбора (selection) - если да, то это множественный выбор
+  const hasSelectionButtons = buttons.some(button => button.action === 'selection');
+  const isMultipleSelection = nodeData?.allowMultipleSelection === true;
+  
+  // Если есть множественный выбор, добавляем инициализацию состояния
+  if (hasSelectionButtons && isMultipleSelection) {
+    console.log(`🔧 ГЕНЕРАТОР: ИНИЦИАЛИЗИРУЕМ состояние множественного выбора для узла ${nodeId}`);
+    const multiSelectVariable = nodeData?.multiSelectVariable || 'user_interests';
+    
+    code += `${indentLevel}# Инициализация состояния множественного выбора\n`;
+    code += `${indentLevel}if user_id not in user_data:\n`;
+    code += `${indentLevel}    user_data[user_id] = {}\n`;
+    code += `${indentLevel}\n`;
+    code += `${indentLevel}# Загружаем ранее выбранные варианты\n`;
+    code += `${indentLevel}saved_selections = []\n`;
+    code += `${indentLevel}if user_vars:\n`;
+    code += `${indentLevel}    for var_name, var_data in user_vars.items():\n`;
+    code += `${indentLevel}        if var_name == "${multiSelectVariable}":\n`;
+    code += `${indentLevel}            if isinstance(var_data, dict) and "value" in var_data:\n`;
+    code += `${indentLevel}                selections_str = var_data["value"]\n`;
+    code += `${indentLevel}            elif isinstance(var_data, str):\n`;
+    code += `${indentLevel}                selections_str = var_data\n`;
+    code += `${indentLevel}            else:\n`;
+    code += `${indentLevel}                continue\n`;
+    code += `${indentLevel}            if selections_str and selections_str.strip():\n`;
+    code += `${indentLevel}                saved_selections = [sel.strip() for sel in selections_str.split(",") if sel.strip()]\n`;
+    code += `${indentLevel}                break\n`;
+    code += `${indentLevel}\n`;
+    code += `${indentLevel}# Инициализируем состояние если его нет\n`;
+    code += `${indentLevel}if "multi_select_${nodeId}" not in user_data[user_id]:\n`;
+    code += `${indentLevel}    user_data[user_id]["multi_select_${nodeId}"] = saved_selections.copy()\n`;
+    code += `${indentLevel}user_data[user_id]["multi_select_node"] = "${nodeId}"\n`;
+    code += `${indentLevel}user_data[user_id]["multi_select_type"] = "inline"\n`;
+    code += `${indentLevel}user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
+    code += `${indentLevel}logging.info(f"Инициализировано состояние множественного выбора с {len(saved_selections)} элементами")\n`;
+    code += `${indentLevel}\n`;
+  }
+  
   code += `${indentLevel}builder = InlineKeyboardBuilder()\n`;
+  
+  console.log(`🔧 ГЕНЕРАТОР: generateInlineKeyboardCode для узла ${nodeId}`);
+  console.log(`🔧 ГЕНЕРАТОР: nodeData.allowMultipleSelection = ${nodeData?.allowMultipleSelection}`);
+  console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons = ${hasSelectionButtons}, isMultipleSelection = ${isMultipleSelection}`);
+  console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${nodeData?.continueButtonTarget}`);
+  console.log(`🔧 ГЕНЕРАТОР: Полный объект nodeData:`, JSON.stringify(nodeData, null, 2));
+  console.log(`🔧 ГЕНЕРАТОР: Проверяем условие инициализации: hasSelectionButtons=${hasSelectionButtons} && isMultipleSelection=${isMultipleSelection}`);
+  console.log(`🔧 ГЕНЕРАТОР: Результат проверки: ${hasSelectionButtons && isMultipleSelection}`);
   
   buttons.forEach((button, index) => {
     if (button.action === "url") {
@@ -91,12 +138,44 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       const shortTarget = (button.target || button.id || 'btn').slice(-8); // Берем последние 8 символов
       const callbackData = `ms_${shortNodeId}_${shortTarget}`;
       console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
-      code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      
+      // Добавляем галочки для множественного выбора
+      console.log(`🔧 ГЕНЕРАТОР: 🔍 ПРОВЕРЯЕМ галочки для ${button.text}: isMultipleSelection=${isMultipleSelection}`);
+      if (isMultipleSelection) {
+        console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ ГАЛОЧКИ для кнопки selection: ${button.text} (узел: ${nodeId})`);
+        code += `${indentLevel}# Кнопка выбора с галочками: ${button.text}\n`;
+        code += `${indentLevel}selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
+        code += `${indentLevel}logging.info(f"🔍 ГАЛОЧКА для '${button.text}': selected_mark='{selected_mark}', список={user_data[user_id]['multi_select_${nodeId}']}")\n`;
+        code += `${indentLevel}builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
+        console.log(`🔧 ГЕНЕРАТОР: ✅ СГЕНЕРИРОВАН КОД ГАЛОЧЕК для ${button.text}`);
+      } else {
+        console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем галочки для ${button.text} (isMultipleSelection=${isMultipleSelection})`);
+        code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      }
     } else {
       const callbackData = button.target || button.id || 'no_action';
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
     }
   });
+  
+  // КРИТИЧЕСКИ ВАЖНО: Добавляем кнопку "Готово" для множественного выбора
+  if (hasSelectionButtons && isMultipleSelection && nodeData?.continueButtonTarget) {
+    console.log(`🔧 ГЕНЕРАТОР: ДОБАВЛЯЕМ кнопку "Готово" для узла ${nodeId}!`);
+    
+    const shortNodeIdDone = nodeId ? nodeId.slice(-10).replace(/^_+/, '') : 'done';
+    const doneCallbackData = `done_${shortNodeIdDone}`;
+    const continueText = nodeData.continueButtonText || 'Готово';
+    
+    console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово": "${continueText}" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
+    
+    code += `${indentLevel}# Кнопка "Готово" для множественного выбора\n`;
+    code += `${indentLevel}logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
+    code += `${indentLevel}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
+    
+    console.log(`🔧 ГЕНЕРАТОР: УСПЕШНО добавили кнопку "Готово" в generateInlineKeyboardCode!`);
+  } else if (hasSelectionButtons && isMultipleSelection) {
+    console.log(`🔧 ГЕНЕРАТОР: ПРЕДУПРЕЖДЕНИЕ: Узел ${nodeId} имеет множественный выбор, но НЕТ continueButtonTarget!`);
+  }
   
   // Автоматическое распределение колонок с учетом данных узла
   const columns = calculateOptimalColumns(buttons, nodeData);
@@ -1041,17 +1120,72 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             console.log(`Узел ${button.target} добавлен в processedCallbacks из inline кнопок`);
           }
           
-          code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_"))\n`;
+          // Если целевой узел имеет множественный выбор, добавляем обработку кнопки "done_"
+          const isDoneHandlerNeeded = targetNode && targetNode.data.allowMultipleSelection && targetNode.data.continueButtonTarget;
+          const shortNodeIdForDone = isDoneHandlerNeeded ? actualCallbackData.slice(-10).replace(/^_+/, '') : '';
+          
+          if (isDoneHandlerNeeded) {
+            code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
+            console.log(`🔧 ГЕНЕРАТОР: Добавлен обработчик кнопки "done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
+          } else {
+            code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_"))\n`;
+          }
           // Создаем безопасное имя функции на основе target или button ID
           const safeFunctionName = actualCallbackData.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
+          code += '    user_id = callback_query.from_user.id\n';
+          code += '    callback_data = callback_query.data\n';
+          code += '    \n';
+          
+          // Добавляем обработку кнопки "done_" для множественного выбора
+          if (isDoneHandlerNeeded) {
+            code += '    # Проверяем, является ли это кнопкой "Готово" для множественного выбора\n';
+            code += `    if callback_data == "done_${shortNodeIdForDone}":\n`;
+            code += '        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")\n';
+            code += '        \n';
+            
+            // Сохраняем выбранные значения в базу данных
+            const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
+            code += '        # Сохраняем выбранные значения в базу данных\n';
+            code += `        selected_options = user_data.get(user_id, {}).get("multi_select_${actualCallbackData}", [])\n`;
+            code += '        if selected_options:\n';
+            code += '            selected_text = ", ".join(selected_options)\n';
+            code += `            await update_user_data_in_db(user_id, "${multiSelectVariable}", selected_text)\n`;
+            code += `            logging.info(f"✅ Сохранено в переменную ${multiSelectVariable}: {selected_text}")\n`;
+            code += '        \n';
+            
+            // Очищаем состояние множественного выбора
+            code += '        # Очищаем состояние множественного выбора\n';
+            code += '        if user_id in user_data:\n';
+            code += `            user_data[user_id].pop("multi_select_${actualCallbackData}", None)\n`;
+            code += '            user_data[user_id].pop("multi_select_node", None)\n';
+            code += '            user_data[user_id].pop("multi_select_type", None)\n';
+            code += '            user_data[user_id].pop("multi_select_variable", None)\n';
+            code += '        \n';
+            
+            // Переход к следующему узлу
+            if (targetNode.data.continueButtonTarget) {
+              const nextNodeId = targetNode.data.continueButtonTarget;
+              code += '        # Переход к следующему узлу\n';
+              code += `        next_node_id = "${nextNodeId}"\n`;
+              code += '        try:\n';
+              code += `            await handle_callback_${nextNodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
+              code += '        except Exception as e:\n';
+              code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+              code += `            await callback_query.message.edit_text("Переход завершен")\n`;
+            } else {
+              code += '        # Завершение множественного выбора\n';
+              code += `        await callback_query.message.edit_text("✅ Выбор завершен!")\n`;
+            }
+            code += '        return\n';
+            code += '    \n';
+          }
           
           // Специальная обработка для кнопок "Изменить выбор" и "Начать заново"
           // Эти кнопки должны обрабатываться как обычные goto кнопки к start узлу
           
           // Правильная логика сохранения переменной на основе кнопки
-          code += '    user_id = callback_query.from_user.id\n';
           code += `    button_text = "${button.text}"\n`;
           code += '    \n';
           
@@ -2482,14 +2616,61 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           processedCallbacks.add(nodeId);
           
-          // Create callback handler for this node that can handle multiple buttons
+          // Create callback handler for this node that can handle multiple buttons AND multi-select "done" button
           const safeFunctionName = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
-          code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startswith("${nodeId}_btn_"))\n`;
+          const shortNodeIdForDone = nodeId.slice(-10).replace(/^_+/, ''); // Такой же как в генерации кнопки
+          code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startswith("${nodeId}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
           code += '    await callback_query.answer()\n';
+          code += '    user_id = callback_query.from_user.id\n';
+          code += '    callback_data = callback_query.data\n';
+          code += '    \n';
+          
+          // Добавляем обработку кнопки "Готово" для множественного выбора
+          if (targetNode.data.allowMultipleSelection) {
+            code += '    # Проверяем, является ли это кнопкой "Готово"\n';
+            code += `    if callback_data == "done_${shortNodeIdForDone}":\n`;
+            code += '        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")\n';
+            code += '        \n';
+            
+            // Сохраняем выбранные значения в базу данных
+            const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
+            code += '        # Сохраняем выбранные значения в базу данных\n';
+            code += `        selected_options = user_data.get(user_id, {}).get("multi_select_${nodeId}", [])\n`;
+            code += '        if selected_options:\n';
+            code += '            selected_text = ", ".join(selected_options)\n';
+            code += `            await update_user_data_in_db(user_id, "${multiSelectVariable}", selected_text)\n`;
+            code += `            logging.info(f"✅ Сохранено в переменную ${multiSelectVariable}: {selected_text}")\n`;
+            code += '        \n';
+            
+            // Очищаем состояние множественного выбора
+            code += '        # Очищаем состояние множественного выбора\n';
+            code += '        if user_id in user_data:\n';
+            code += `            user_data[user_id].pop("multi_select_${nodeId}", None)\n`;
+            code += '            user_data[user_id].pop("multi_select_node", None)\n';
+            code += '            user_data[user_id].pop("multi_select_type", None)\n';
+            code += '            user_data[user_id].pop("multi_select_variable", None)\n';
+            code += '        \n';
+            
+            // Переход к следующему узлу
+            if (targetNode.data.continueButtonTarget) {
+              const nextNodeId = targetNode.data.continueButtonTarget;
+              code += '        # Переход к следующему узлу\n';
+              code += `        next_node_id = "${nextNodeId}"\n`;
+              code += '        try:\n';
+              code += `            await handle_callback_${nextNodeId.replace(/[^a-zA-Z0-9_]/g, '_')}(callback_query)\n`;
+              code += '        except Exception as e:\n';
+              code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+              code += `            await callback_query.message.edit_text("Переход завершен")\n`;
+            } else {
+              code += '        # Завершение множественного выбора\n';
+              code += `        await callback_query.message.edit_text("✅ Выбор завершен!")\n`;
+            }
+            code += '        return\n';
+            code += '    \n';
+          }
           
           // Обычная обработка узлов без специальной логики
-          code += '    user_id = callback_query.from_user.id\n';
           
           // Определяем переменную для сохранения на основе родительского узла  
           if (targetNode && targetNode.data.inputVariable) {
@@ -2512,8 +2693,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // ИСПРАВЛЕНИЕ: Добавляем специальную обработку для узлов с множественным выбором
           if (targetNode.data.allowMultipleSelection) {
             // Узел с множественным выбором - создаем специальную клавиатуру
-            console.log(`🎯 ГЕНЕРАТОР: Узел ${nodeId} имеет allowMultipleSelection=true, создаем специальную клавиатуру`);
+            console.log(`🎯 ГЕНЕРАТОР: ========================================`);
+            console.log(`🎯 ГЕНЕРАТОР: УЗЕЛ ${nodeId} ИМЕЕТ allowMultipleSelection=true`);
+            console.log(`🎯 ГЕНЕРАТОР: ЭТО ПРАВИЛЬНЫЙ ПУТЬ ВЫПОЛНЕНИЯ!`);
             console.log(`🔘 ГЕНЕРАТОР: Кнопки узла ${nodeId}:`, targetNode.data.buttons.map(b => `${b.text} (action: ${b.action})`).join(', '));
+            console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget для ${nodeId}: ${targetNode.data.continueButtonTarget}`);
+            console.log(`🔧 ГЕНЕРАТОР: multiSelectVariable для ${nodeId}: ${targetNode.data.multiSelectVariable}`);
+            console.log(`🎯 ГЕНЕРАТОР: ========================================`);
             
             // Добавляем логику инициализации множественного выбора
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
@@ -2571,12 +2757,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             });
             
             // Добавляем кнопку "Готово" для множественного выбора
-            code += '    # Кнопка "Готово"\n';
-            const shortNodeIdDone = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
-            const doneCallbackData = `done_${shortNodeIdDone}`;
-            console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
-            code += `    logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
-            code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="${doneCallbackData}"))\n`;
+            console.log(`🔧 ГЕНЕРАТОР: НАЧИНАЕМ создание кнопки "Готово" для узла ${nodeId}`);
+            console.log(`🔧 ГЕНЕРАТОР: allowMultipleSelection = ${targetNode.data.allowMultipleSelection}`);
+            console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${targetNode.data.continueButtonTarget}`);
+            console.log(`🔧 ГЕНЕРАТОР: selectionButtons.length = ${selectionButtons.length}`);
+            
+            // ВСЕГДА добавляем кнопку "Готово" если есть кнопки выбора
+            if (selectionButtons.length > 0) {
+              console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "Готово" (есть ${selectionButtons.length} кнопок выбора)`);
+              code += '    # Кнопка "Готово" для множественного выбора\n';
+              const shortNodeIdDone = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
+              const doneCallbackData = `done_${shortNodeIdDone}`;
+              console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
+              console.log(`🔧 ГЕНЕРАТОР: ГЕНЕРИРУЕМ код кнопки "Готово"!`);
+              
+              code += `    logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
+              code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="${doneCallbackData}"))\n`;
+              
+              console.log(`🔧 ГЕНЕРАТОР: ✅ УСПЕШНО добавили кнопку "Готово" в код генерации`);
+            } else {
+              console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем кнопку "Готово" - нет кнопок выбора`);
+            }  
             
             // Добавляем обычные кнопки (navigation и другие)
             regularButtons.forEach((btn, index) => {
