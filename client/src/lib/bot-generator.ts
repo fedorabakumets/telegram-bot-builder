@@ -87,10 +87,10 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
     } else if (button.action === 'selection') {
       // Укорачиваем callback_data для соблюдения лимита Telegram в 64 байта
-      const shortNodeId = nodeId ? nodeId.slice(-10) : 'sel'; // Берем последние 10 символов
+      const shortNodeId = nodeId ? nodeId.slice(-10).replace(/^_+/, '') : 'sel'; // Берем последние 10 символов и убираем ведущие underscores
       const shortTarget = (button.target || button.id || 'btn').slice(-8); // Берем последние 8 символов
       const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-      console.log(`🔧 ГЕНЕРАТОР: Создана кнопка selection: ${button.text} -> ${callbackData} (длина: ${callbackData.length})`);
+      console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
     } else {
       const callbackData = button.target || button.id || 'no_action';
@@ -2560,10 +2560,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
             selectionButtons.forEach((button, index) => {
               // Используем короткие callback_data
-              const shortNodeId = nodeId.slice(-10);
+              const shortNodeId = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
               const shortTarget = (button.target || button.id || 'btn').slice(-8);
               const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-              console.log(`🔧 ГЕНЕРАТОР: Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (длина: ${callbackData.length})`);
+              console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
               code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
               code += `    logging.info(f"🔘 Создаем кнопку: ${button.text} -> ${callbackData}")\n`;
               code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
@@ -2572,7 +2572,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Добавляем кнопку "Готово" для множественного выбора
             code += '    # Кнопка "Готово"\n';
-            const shortNodeIdDone = nodeId.slice(-10);
+            const shortNodeIdDone = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
             const doneCallbackData = `done_${shortNodeIdDone}`;
             console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
             code += `    logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
@@ -4996,8 +4996,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   // Найдем узлы с множественным выбором для использования в обработчиках
   const multiSelectNodes = nodes.filter(node => 
-    node.data.allowMultipleSelection && node.data.continueButtonTarget
+    node.data.allowMultipleSelection
   );
+  console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
   
   // Обработчик для inline кнопок множественного выбора
   code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
@@ -5014,7 +5015,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        # Находим полный node_id по короткому суффиксу\n';
   code += '        node_id = None\n';
   multiSelectNodes.forEach(node => {
-    code += `        if "${node.id}".endswith(short_node_id):\n`;
+    const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
+    code += `        if short_node_id == "${shortNodeId}":\n`;
     code += `            node_id = "${node.id}"\n`;
     code += `            logging.info(f"✅ Найден узел: ${node.id}")\n`;
   });
@@ -5139,9 +5141,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            button_id = "_".join(parts[2:])\n';
   code += '            # Находим полный node_id по короткому суффиксу\n';
   code += '            node_id = None\n';
+  code += '            logging.info(f"🔍 Ищем узел по короткому ID: {short_node_id}")\n';
   multiSelectNodes.forEach(node => {
-    code += `            if "${node.id}".endswith(short_node_id):\n`;
+    const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
+    code += `            if short_node_id == "${shortNodeId}":\n`;
     code += `                node_id = "${node.id}"\n`;
+    code += `                logging.info(f"✅ Найден узел: {node_id}")\n`;
   });
   code += '    elif callback_data.startswith("multi_select_"):\n';
   code += '        # Старый формат для обратной совместимости\n';
