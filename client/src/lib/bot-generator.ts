@@ -5428,13 +5428,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        \n';
   code += '        logging.info(f"📋 Текущие выборы: {selected_list}")\n';
   code += '        \n';
-  code += '        # Перезагружаем узел для обновления клавиатуры\n';
-  code += '        node_handler_name = f"handle_callback_{node_id.replace(\'-\', \'_\').replace(\'.\', \'_\')}"\n';
-  code += '        if node_handler_name in globals():\n';
-  code += '            handler_func = globals()[node_handler_name]\n';
-  code += '            await handler_func(callback_query)\n';
+  code += '        # Перезагружаем клавиатуру для обновления галочек\n';
+  code += '        if node_id == "start":\n';
+  code += '            # Для узла start перезагружаем клавиатуру напрямую\n';
+  code += '            await start_handler(callback_query.message)\n';
   code += '        else:\n';
-  code += '            logging.warning(f"Обработчик {node_handler_name} не найден")\n';
+  code += '            # Для других узлов ищем соответствующий обработчик\n';
+  code += '            node_handler_name = f"handle_callback_{node_id.replace(\'-\', \'_\').replace(\'.\', \'_\')}"\n';
+  code += '            if node_handler_name in globals():\n';
+  code += '                handler_func = globals()[node_handler_name]\n';
+  code += '                await handler_func(callback_query)\n';
+  code += '            else:\n';
+  code += '                logging.warning(f"Обработчик {node_handler_name} не найден")\n';
   code += '\n';
   
   // Обработчик для reply кнопок множественного выбора
