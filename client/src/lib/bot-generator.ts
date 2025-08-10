@@ -5471,6 +5471,52 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
   code += '\n';
   
+  // Генерируем обработчики для кнопок "Готово" многомерного выбора
+  code += '# Обработчик для кнопок завершения множественного выбора\n';
+  code += '@dp.callback_query(lambda callback_query: callback_query.data.startswith("done_multi_select_"))\n';
+  code += 'async def handle_multi_select_done(callback_query: types.CallbackQuery):\n';
+  code += '    await callback_query.answer()\n';
+  code += '    user_id = callback_query.from_user.id\n';
+  code += '    callback_data = callback_query.data\n';
+  code += '    \n';
+  code += '    logging.info(f"🏁 Завершение множественного выбора: {callback_data}")\n';
+  code += '    \n';
+  code += '    # Извлекаем node_id из callback_data\n';
+  code += '    node_id = callback_data.replace("done_multi_select_", "")\n';
+  code += '    logging.info(f"🎯 Node ID для завершения: {node_id}")\n';
+  code += '    \n';
+  
+  multiSelectNodes.forEach(node => {
+    const variableName = node.data.multiSelectVariable || `multi_select_${node.id}`;
+    const continueButtonTarget = node.data.continueButtonTarget;
+    
+    code += `    if node_id == "${node.id}":\n`;
+    code += `        # Получаем выбранные опции для узла ${node.id}\n`;
+    code += `        selected_options = user_data.get(user_id, {}).get("multi_select_{node_id}", [])\n`;
+    code += `        logging.info(f"📋 Выбранные опции для ${node.id}: {selected_options}")\n`;
+    code += `        \n`;
+    code += `        if selected_options:\n`;
+    code += `            selected_text = ", ".join(selected_options)\n`;
+    code += `            await save_user_data_to_db(user_id, "${variableName}", selected_text)\n`;
+    code += `            logging.info(f"💾 Сохранили в БД: ${variableName} = {selected_text}")\n`;
+    code += `        \n`;
+    
+    if (continueButtonTarget) {
+      const targetNode = nodes.find(n => n.id === continueButtonTarget);
+      if (targetNode) {
+        code += `        # Переход к следующему узлу: ${continueButtonTarget}\n`;
+        const safeFunctionName = continueButtonTarget.replace(/[^a-zA-Z0-9_]/g, '_');
+        code += `        logging.info(f"🚀 Переходим к узлу: ${continueButtonTarget}")\n`;
+        code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
+      }
+    }
+    
+    code += `        return\n`;
+    code += `    \n`;
+  });
+  
+  code += '\n';
+  
 
   
   // Обработчик для reply кнопок множественного выбора
