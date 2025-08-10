@@ -1153,24 +1153,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                 code += '    # Проверяем, есть ли условная клавиатура\n';
                 code += '    if keyboard is None:\n';
-                code += '        # Создаем inline клавиатуру для целевого узла\n';
-                code += '        builder = InlineKeyboardBuilder()\n';
-                targetNode.data.buttons.forEach((btn, index) => {
-                  if (btn.action === "url") {
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
-                  } else if (btn.action === 'goto') {
-                    // Создаем уникальный callback_data для каждой кнопки
-                    const baseCallbackData = btn.target || btn.id || 'no_action';
-                    const callbackData = `${baseCallbackData}_btn_${index}`;
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
-                  } else if (btn.action === 'command') {
-                    // Для кнопок команд создаем специальную callback_data
-                    const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
-                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
-                  }
-                });
-                code += '        builder.adjust(2)  # Используем 2 колонки для консистентности\n';
-                code += '        keyboard = builder.as_markup()\n';
+                code += '        # ИСПРАВЛЕНИЕ: Используем универсальную функцию создания клавиатуры\n';
+                // ИСПРАВЛЕНИЕ: Используем универсальную функцию generateInlineKeyboardCode
+                const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+                code += keyboardCode;
               } else if (targetNode.data.keyboardType !== "inline") {
                 // Сохраняем keyboard = None только если это не inline клавиатура
                 code += '    if keyboard is None:\n';
@@ -1515,6 +1501,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `            builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command' && btn.target) {
+                    // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд для audio nodes
+                    const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                    code += `            # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
+                    code += `            builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
                 code += '            keyboard = builder.as_markup()\n';
@@ -1570,6 +1561,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command' && btn.target) {
+                    // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд для document nodes
+                    const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                    code += `        # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
@@ -1610,6 +1606,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command' && btn.target) {
+                    // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд для sticker nodes
+                    const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                    code += `        # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
@@ -1652,6 +1653,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command' && btn.target) {
+                    // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд для voice nodes
+                    const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                    code += `        # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
@@ -1700,6 +1706,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   } else if (btn.action === 'goto') {
                     const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                  } else if (btn.action === 'command' && btn.target) {
+                    // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд для animation nodes
+                    const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                    code += `        # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
+                    code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
@@ -2281,22 +2292,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   console.log(`DEBUG: Создаем клавиатуру для узла ${targetNode.id} с ${targetNode.data.buttons.length} кнопками`);
                   code += '    # Проверяем, есть ли уже клавиатура из условных сообщений\n';
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
-                  code += '        # Создаем inline клавиатуру\n';
-                  code += '        builder = InlineKeyboardBuilder()\n';
-                  targetNode.data.buttons.forEach((btn, index) => {
-                    if (btn.action === "url") {
-                      code += `        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
-                    } else if (btn.action === 'goto') {
-                      // Если есть target, используем его, иначе используем ID кнопки как callback_data
-                      const baseCallbackData = btn.target || btn.id || 'no_action'; const callbackData = `${baseCallbackData}_btn_${index}`;
-                      code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
-                    } else if (btn.action === 'command') {
-                      // Для кнопок команд создаем специальную callback_data
-                      const commandCallback = `cmd_${btn.target ? btn.target.replace('/', '') : 'unknown'}`;
-                      code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
-                    }
-                  });
-                  code += '        keyboard = builder.as_markup()\n';
+                  code += '        # ИСПРАВЛЕНИЕ: Используем универсальную функцию создания клавиатуры\n';
+                  // ИСПРАВЛЕНИЕ: Используем универсальную функцию generateInlineKeyboardCode
+                  const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+                  code += keyboardCode;
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';
                   if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -2505,6 +2504,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${btnCallbackData}"))\n`;
               } else if (btn.action === "url") {
                 code += `    builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url || '#'}"))\n`;
+              } else if (btn.action === "command" && btn.target) {
+                // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд
+                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                code += `    # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
+                code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
               }
             });
             code += '    keyboard = builder.as_markup()\n';
@@ -4000,9 +4004,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
               } else if (btn.action === "url" && btn.url) {
                 code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url}"))\n`;
+              } else if (btn.action === "command" && btn.target) {
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд
+                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                code += `                        logging.info(f"Создана кнопка команды: ${btn.text} -> ${commandCallback}")\n`;
+                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
               }
             });
             
+            // ВОССТАНОВЛЕНИЕ: Добавляем умное расположение кнопок по колонкам
+            const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+            code += `                        builder.adjust(${columns})\n`;
             code += '                        keyboard = builder.as_markup()\n';
             code += '                        await message.answer(text, reply_markup=keyboard)\n';
           } else {
@@ -4181,33 +4193,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
           
           if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            code += `                builder = InlineKeyboardBuilder()\n`;
-            
-            // Добавляем логику для умного расположения кнопок
-            code += '                # Функция для определения количества колонок на основе текста кнопок\n';
-            code += '                def calculate_keyboard_width(buttons_data):\n';
-            code += '                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
-            code += '                    if max_text_length <= 6:  # Короткие тексты\n';
-            code += '                        return 3  # 3 колонки\n';
-            code += '                    elif max_text_length <= 12:  # Средние тексты\n';
-            code += '                        return 2  # 2 колонки\n';
-            code += '                    else:  # Длинные тексты\n';
-            code += '                        return 1  # 1 колонка\n';
-            code += '                \n';
-            
-            // Создаем массив текстов кнопок для расчета
-            const targetButtonTexts = targetNode.data.buttons.map(btn => btn.text || 'Кнопка');
-            code += `                button_texts = [${targetButtonTexts.map(text => `"${text}"`).join(', ')}]\n`;
-            code += '                keyboard_width = calculate_keyboard_width(button_texts)\n';
-            code += '                \n';
-            
-            targetNode.data.buttons.forEach(button => {
-              const buttonText = button.text || 'Кнопка';
-              const buttonTarget = button.target || button.id;
-              code += `                builder.add(InlineKeyboardButton(text="${buttonText}", callback_data="${buttonTarget}"))\n`;
-            });
-            code += '                builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
-            code += `                keyboard = builder.as_markup()\n`;
+            // Используем универсальную функцию для создания inline клавиатуры
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
             code += `                await message.answer(text, reply_markup=keyboard)\n`;
           } else {
             code += `                await message.answer(text)\n`;
@@ -4505,40 +4492,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         
         // Добавляем кнопки если есть
         if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
-          code += '                builder = InlineKeyboardBuilder()\n';
-          
-          // Добавляем логику для умного расположения кнопок
-          code += '                # Функция для определения количества колонок на основе текста кнопок\n';
-          code += '                def calculate_keyboard_width(buttons_data):\n';
-          code += '                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
-          code += '                    if max_text_length <= 6:  # Короткие тексты\n';
-          code += '                        return 3  # 3 колонки\n';
-          code += '                    elif max_text_length <= 12:  # Средние тексты\n';
-          code += '                        return 2  # 2 колонки\n';
-          code += '                    else:  # Длинные тексты\n';
-          code += '                        return 1  # 1 колонка\n';
-          code += '                \n';
-          
-          // Создаем массив текстов кнопок для расчета
-          const buttonTexts = targetNode.data.buttons.map(btn => btn.text);
-          code += `                button_texts = [${buttonTexts.map(text => `"${text}"`).join(', ')}]\n`;
-          code += '                keyboard_width = calculate_keyboard_width(button_texts)\n';
-          code += '                \n';
-          
-          targetNode.data.buttons.forEach(button => {
-            if (button.action === "url") {
-              code += `                builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-            } else if (button.action === 'goto') {
-              const callbackData = button.target || button.id || 'no_action';
-              code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-            } else if (button.action === 'command') {
-              // Для кнопок команд создаем специальную callback_data
-              const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-              code += `                builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
-            }
-          });
-          code += '                builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
-          code += '                keyboard = builder.as_markup()\n';
+          // Используем универсальную функцию для создания inline клавиатуры
+          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
           code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
         } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
           code += '                builder = ReplyKeyboardBuilder()\n';
@@ -4579,35 +4534,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '                # Создаем кнопки для выбора ответа\n';
           code += '                builder = InlineKeyboardBuilder()\n';
           
-          // Добавляем логику для умного расположения кнопок
-          code += '                # Функция для определения количества колонок на основе текста кнопок\n';
-          code += '                def calculate_keyboard_width(buttons_data):\n';
-          code += '                    max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
-          code += '                    if max_text_length <= 6:  # Короткие тексты\n';
-          code += '                        return 3  # 3 колонки\n';
-          code += '                    elif max_text_length <= 12:  # Средние тексты\n';
-          code += '                        return 2  # 2 колонки\n';
-          code += '                    else:  # Длинные тексты\n';
-          code += '                        return 1  # 1 колонка\n';
-          code += '                \n';
-          
-          // Создаем массив текстов кнопок для расчета
-          const responseButtonTexts = responseOptions.map(option => option.text || option);
-          code += `                button_texts = [${responseButtonTexts.map(text => `"${text}"`).join(', ')}]\n`;
-          code += '                keyboard_width = calculate_keyboard_width(button_texts)\n';
-          code += '                \n';
-          
-          responseOptions.forEach((option, index) => {
-            const optionValue = option.value || option.text;
-            code += `                builder.add(InlineKeyboardButton(text="${option.text}", callback_data="response_${targetNode.id}_${index}"))\n`;
-          });
+          // Создаем кнопки для вариантов ответа
+          const responseButtons = responseOptions.map((option, index) => ({
+            text: option.text,
+            action: 'goto',
+            target: `response_${targetNode.id}_${index}`,
+            id: `response_${targetNode.id}_${index}`
+          }));
           
           if (allowSkip) {
-            code += `                builder.add(InlineKeyboardButton(text="⏭️ Пропустить", callback_data="skip_${targetNode.id}"))\n`;
+            responseButtons.push({
+              text: "⏭️ Пропустить",
+              action: 'goto',
+              target: `skip_${targetNode.id}`,
+              id: `skip_${targetNode.id}`
+            });
           }
           
-          code += '                builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
-          code += '                keyboard = builder.as_markup()\n';
+          // Используем универсальную функцию для создания inline клавиатуры
+          code += generateInlineKeyboardCode(responseButtons, '                ', targetNode.id, targetNode.data);
           code += '                await message.answer(prompt_text, reply_markup=keyboard)\n';
           code += '                \n';
           code += '                # Настраиваем конфигурацию кнопочного ответа\n';
@@ -4764,26 +4709,38 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        await callback_query.answer("❌ Ошибка обработки кнопки", show_alert=True)\n';
   code += '\n';
 
-  // Добавляем обработчики для кнопок команд (типа cmd_start)
+  // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логированием
   const commandButtons = new Set<string>();
+  console.log('🔍 НАЧИНАЕМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
+  
   nodes.forEach(node => {
+    console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
+    
     // Обычные кнопки узла
     if (node.data.buttons) {
-      node.data.buttons.forEach(button => {
+      console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
+      node.data.buttons.forEach((button: any, index: number) => {
+        console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
         if (button.action === 'command' && button.target) {
           const commandCallback = `cmd_${button.target.replace('/', '')}`;
+          console.log(`✅ НАЙДЕНА кнопка команды: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
           commandButtons.add(commandCallback);
         }
       });
+    } else {
+      console.log(`❌ Узел ${node.id} не имеет кнопок`);
     }
     
     // Кнопки в условных сообщениях
     if (node.data.conditionalMessages) {
+      console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
       node.data.conditionalMessages.forEach((condition: any) => {
         if (condition.buttons) {
           condition.buttons.forEach((button: any) => {
+            console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
             if (button.action === 'command' && button.target) {
               const commandCallback = `cmd_${button.target.replace('/', '')}`;
+              console.log(`✅ НАЙДЕНА кнопка команды в условном сообщении: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
               commandButtons.add(commandCallback);
             }
           });
@@ -4791,6 +4748,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       });
     }
   });
+  
+  console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
+  console.log('📝 Список найденных кнопок команд:', Array.from(commandButtons));
   
   if (commandButtons.size > 0) {
     code += '\n# Обработчики для кнопок команд\n';
@@ -5560,37 +5520,8 @@ function generatePhotoHandler(node: Node): string {
     
     // Обрабатываем клавиатуру для фото
     if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-      code += '        # Создаем inline клавиатуру с кнопками\n';
-      code += '        builder = InlineKeyboardBuilder()\n';
-      
-      // Добавляем логику для умного расположения кнопок
-      code += '        # Функция для определения количества колонок на основе текста кнопок\n';
-      code += '        def calculate_keyboard_width(buttons_data):\n';
-      code += '            max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
-      code += '            if max_text_length <= 6:  # Короткие тексты\n';
-      code += '                return 3  # 3 колонки\n';
-      code += '            elif max_text_length <= 12:  # Средние тексты\n';
-      code += '                return 2  # 2 колонки\n';
-      code += '            else:  # Длинные тексты\n';
-      code += '                return 1  # 1 колонка\n';
-      code += '        \n';
-      
-      // Создаем массив текстов кнопок для расчета
-      const photoButtonTexts = node.data.buttons.map(btn => btn.text);
-      code += `        button_texts = [${photoButtonTexts.map(text => `"${text}"`).join(', ')}]\n`;
-      code += '        keyboard_width = calculate_keyboard_width(button_texts)\n';
-      code += '        \n';
-      
-      node.data.buttons.forEach(button => {
-        if (button.action === "url") {
-          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-        } else if (button.action === 'goto') {
-          const callbackData = button.target || button.id || 'no_action';
-          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-        }
-      });
-      code += '        builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
-      code += '        keyboard = builder.as_markup()\n';
+      // Используем универсальную функцию для создания inline клавиатуры
+      code += generateInlineKeyboardCode(node.data.buttons, '        ', node.id, node.data);
       code += '        # Отправляем фото с подписью и inline кнопками\n';
       code += '        await message.answer_photo(photo_file, caption=caption, reply_markup=keyboard)\n';
     } else if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
@@ -5678,36 +5609,8 @@ function generateVideoHandler(node: Node): string {
     code += '        \n';
     
     if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
-      code += '        builder = InlineKeyboardBuilder()\n';
-      
-      // Добавляем логику для умного расположения кнопок
-      code += '        # Функция для определения количества колонок на основе текста кнопок\n';
-      code += '        def calculate_keyboard_width(buttons_data):\n';
-      code += '            max_text_length = max([len(btn_text) for btn_text in buttons_data] + [0])\n';
-      code += '            if max_text_length <= 6:  # Короткие тексты\n';
-      code += '                return 3  # 3 колонки\n';
-      code += '            elif max_text_length <= 12:  # Средние тексты\n';
-      code += '                return 2  # 2 колонки\n';
-      code += '            else:  # Длинные тексты\n';
-      code += '                return 1  # 1 колонка\n';
-      code += '        \n';
-      
-      // Создаем массив текстов кнопок для расчета
-      const videoButtonTexts = node.data.buttons.map(btn => btn.text);
-      code += `        button_texts = [${videoButtonTexts.map(text => `"${text}"`).join(', ')}]\n`;
-      code += '        keyboard_width = calculate_keyboard_width(button_texts)\n';
-      code += '        \n';
-      
-      node.data.buttons.forEach(button => {
-        if (button.action === "url") {
-          code += `        builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url || '#'}"))\n`;
-        } else if (button.action === 'goto') {
-          const callbackData = button.target || button.id || 'no_action';
-          code += `        builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-        }
-      });
-      code += '        builder.adjust(keyboard_width)  # Умное расположение кнопок\n';
-      code += '        keyboard = builder.as_markup()\n';
+      // Используем универсальную функцию для создания inline клавиатуры
+      code += generateInlineKeyboardCode(node.data.buttons, '        ', node.id, node.data);
       code += '        await message.answer_video(\n';
       code += '            video_file,\n';
       code += '            caption=caption';
