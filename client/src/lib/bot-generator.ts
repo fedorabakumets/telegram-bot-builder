@@ -5517,6 +5517,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `        # Переход к следующему узлу: ${continueButtonTarget}\n`;
         const safeFunctionName = continueButtonTarget.replace(/[^a-zA-Z0-9_]/g, '_');
         code += `        logging.info(f"🚀 Переходим к узлу: ${continueButtonTarget}")\n`;
+        
+        // Специальная обработка для узлов с множественным выбором
+        if (targetNode.data.allowMultipleSelection || targetNode.data.multiSelectEnabled) {
+          code += `        # Узел ${continueButtonTarget} поддерживает множественный выбор - сохраняем состояние\n`;
+          code += `        if user_id not in user_data:\n`;
+          code += `            user_data[user_id] = {}\n`;
+          code += `        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+          code += `        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+          code += `        user_data[user_id]["multi_select_type"] = "inline"\n`;
+          code += `        logging.info(f"🔧 Инициализирован множественный выбор для узла ${targetNode.id}")\n`;
+        }
+        
         code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
       }
     }
