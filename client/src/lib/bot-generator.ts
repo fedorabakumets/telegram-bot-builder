@@ -5670,10 +5670,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       // Добавляем кнопки выбора с галочками
       console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
       selectionButtons.forEach((button, index) => {
+        // ИСПРАВЛЕНИЕ: используем тот же формат callback_data как при создании кнопок
+        const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
         const shortTarget = (button.target || button.id || 'btn').slice(-8);
-        console.log(`🔧 ГЕНЕРАТОР: Кнопка ${index + 1}: "${button.text}" -> callback_data: multi_select_${node.id}_${shortTarget}`);
+        const callbackData = `ms_${shortNodeId}_${shortTarget}`;
+        console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> callback_data: ${callbackData}`);
         code += `            selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
-        code += `            builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="multi_select_${node.id}_${shortTarget}"))\n`;
+        code += `            builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
       });
       
       // Добавляем обычные кнопки
@@ -5689,10 +5692,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         }
       });
       
-      // Добавляем кнопку завершения
+      // Добавляем кнопку завершения  
       const continueText = node.data.continueButtonText || 'Готово';
-      console.log(`🔧 ГЕНЕРАТОР: Добавляем кнопку завершения "${continueText}" с callback_data: multi_select_done_${node.id}`);
-      code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
+      const shortNodeIdDone = node.id.slice(-10).replace(/^_+/, '');
+      const doneCallbackData = `done_${shortNodeIdDone}`;
+      console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
+      code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
       code += `            builder.adjust(2, 2, 2, 2, 1)\n`;
     }
   });
