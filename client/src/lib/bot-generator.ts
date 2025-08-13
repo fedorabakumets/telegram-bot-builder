@@ -162,15 +162,22 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
     }
   });
   
-  // ИСПРАВЛЕНИЕ: НЕ создаем кнопку "Готово" здесь - она создается в handle_multi_select_done
-  if (hasSelectionButtons && isMultipleSelection && nodeData?.continueButtonTarget) {
-    console.log(`🔧 ГЕНЕРАТОР: ПРОПУСКАЕМ создание кнопки "Готово" для узла ${nodeId} - она будет создана в handle_multi_select_done`);
-  } else if (hasSelectionButtons && isMultipleSelection) {
-    console.log(`🔧 ГЕНЕРАТОР: ПРЕДУПРЕЖДЕНИЕ: Узел ${nodeId} имеет множественный выбор, но НЕТ continueButtonTarget!`);
+  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: ДОБАВЛЯЕМ кнопку "Готово" для множественного выбора
+  if (hasSelectionButtons && isMultipleSelection) {
+    const continueText = nodeData?.continueButtonText || 'Готово';
+    const callbackData = `multi_select_done_${nodeId}`;
+    console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "${continueText}" для узла ${nodeId} с callback_data: ${callbackData}`);
+    code += `${indentLevel}# Добавляем кнопку "Готово" для множественного выбора\n`;
+    code += `${indentLevel}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${callbackData}"))\n`;
   }
   
-  // Автоматическое распределение колонок с учетом данных узла
-  const columns = calculateOptimalColumns(buttons, nodeData);
+  // Автоматическое распределение колонок с учетом данных узла и кнопки "Готово"
+  let allButtons = [...buttons];
+  if (hasSelectionButtons && isMultipleSelection) {
+    // Добавляем виртуальную кнопку "Готово" для правильного подсчета колонок
+    allButtons.push({ text: nodeData?.continueButtonText || 'Готово' });
+  }
+  const columns = calculateOptimalColumns(allButtons, nodeData);
   code += `${indentLevel}builder.adjust(${columns})\n`;
   code += `${indentLevel}keyboard = builder.as_markup()\n`;
   
@@ -5893,12 +5900,26 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено, ЗАВЕРШАЕМ функцию")\n`;
             code += `        return\n`;
           } else {
-            // Обычная клавиатура без множественного выбора - НЕ ВЫЗЫВАЕМ АВТОМАТИЧЕСКИ!
-            code += `        # ИСПРАВЛЕНИЕ: НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
-            code += `        # Отправляем только сообщение и ждем пользовательского ввода\n`;
-            code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Отправляем сообщение и ОСТАНАВЛИВАЕМСЯ")\n`;
-            code += `        await callback_query.message.answer(text)\n`;
-            code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено для обычного узла, ЗАВЕРШАЕМ функцию")\n`;
+            // Обычная клавиатура без множественного выбора
+            code += `        # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, нужна ли клавиатура для целевого узла\n`;
+            if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
+              code += `        # Добавляем клавиатуру для целевого узла\n`;
+              code += `        # Загружаем пользовательские данные для клавиатуры\n`;
+              code += `        user_vars = await get_user_from_db(user_id)\n`;
+              code += `        if not user_vars:\n`;
+              code += `            user_vars = user_data.get(user_id, {})\n`;
+              code += `        if not isinstance(user_vars, dict):\n`;
+              code += `            user_vars = {}\n`;
+              code += `        \n`;
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+              code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+              code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено С КЛАВИАТУРОЙ для узла ${targetNode.id}")\n`;
+            } else {
+              code += `        # Отправляем только сообщение без клавиатуры\n`;
+              code += `        await callback_query.message.answer(text)\n`;
+              code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено БЕЗ КЛАВИАТУРЫ для узла ${targetNode.id}")\n`;
+            }
             code += `        return\n`;
           }
         } else {
