@@ -2772,7 +2772,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         } else {
           console.log('🔧 ГЕНЕРАТОР: Узел metro_selection НЕ найден или у него нет кнопок');
           // Обычная логика если узла метро нет
-          code += '        logging.info("🚇 Узел metro_selection не найден, используем обычную логику")\n';
+          code += '    logging.info("🚇 Узел metro_selection не найден, используем обычную логику")\n';
           if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
             code += '    builder = InlineKeyboardBuilder()\n';
             interestsResultNode.data.buttons.forEach((btn, index) => {
