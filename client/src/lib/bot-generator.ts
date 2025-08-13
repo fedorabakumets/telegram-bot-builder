@@ -3157,27 +3157,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += '    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")\n';
           code += '    \n';
           
-          // ИСПРАВЛЕНИЕ: Правильная переадресация к целевому узлу
-          // Определяем целевой узел в зависимости от типа кнопки
-          const shouldRedirect = true;
-          
-          // Для узлов с множественным выбором - используем continueButtonTarget
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Для узлов с множественным выбором НЕ делаем автоматической переадресации
           const currentNode = nodes.find(n => n.id === nodeId);
+          
+          // Для узлов с множественным выбором - НЕ делаем автоматический переход при первичном заходе в узел
+          const shouldRedirect = !(currentNode && currentNode.data.allowMultipleSelection);
+          console.log(`🔧 ГЕНЕРАТОР КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Узел ${nodeId} allowMultipleSelection: ${currentNode?.data.allowMultipleSelection}, shouldRedirect: ${shouldRedirect}`);
+          
           let redirectTarget = nodeId; // По умолчанию остаемся в том же узле
           
-          if (currentNode && currentNode.data.allowMultipleSelection && currentNode.data.continueButtonTarget) {
-            // Для узлов с множественным выбором переходим к continueButtonTarget после выбора
-            redirectTarget = currentNode.data.continueButtonTarget;
-            console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} с множественным выбором переходит к ${redirectTarget}`);
-          } else {
-            // Для обычных узлов ищем следующий узел через соединения
-            const nodeConnections = connections.filter(conn => conn.sourceNodeId === nodeId);
-            if (nodeConnections.length > 0) {
-              redirectTarget = nodeConnections[0].targetNodeId;
-              console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит через соединение к ${redirectTarget}`);
+          if (shouldRedirect) {
+            if (currentNode && currentNode.data.continueButtonTarget) {
+              // Для обычных узлов используем continueButtonTarget если есть
+              redirectTarget = currentNode.data.continueButtonTarget;
+              console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит к continueButtonTarget ${redirectTarget}`);
             } else {
-              console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} остается в том же узле (нет соединений)`);
+              // Для обычных узлов ищем следующий узел через соединения
+              const nodeConnections = connections.filter(conn => conn.sourceNodeId === nodeId);
+              if (nodeConnections.length > 0) {
+                redirectTarget = nodeConnections[0].targetNodeId;
+                console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит через соединение к ${redirectTarget}`);
+              } else {
+                console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} остается в том же узле (нет соединений)`);
+              }
             }
+          } else {
+            console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} с множественным выбором - НЕ делаем автоматическую переадресацию`);
           }
           
           if (shouldRedirect && redirectTarget) {
