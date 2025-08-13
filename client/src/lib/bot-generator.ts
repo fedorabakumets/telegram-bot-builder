@@ -3205,10 +3205,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `        ${condition} next_node_id == "${navTargetNode.id}":\n`;
                 
                 if (navTargetNode.type === 'message') {
-                  const messageText = navTargetNode.data.messageText || 'Сообщение';
-                  const formattedText = formatTextForPython(messageText);
-                  code += `            nav_text = ${formattedText}\n`;
-                  code += '            await callback_query.message.edit_text(nav_text)\n';
+                  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
+                  if (navTargetNode.data.allowMultipleSelection === true) {
+                    // Для узлов с множественным выбором вызываем полноценный обработчик
+                    const safeFunctionName = navTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+                    code += `            # Узел с множественным выбором - вызываем полноценный обработчик\n`;
+                    code += `            logging.info(f"🔧 Callback навигация к узлу с множественным выбором: ${navTargetNode.id}")\n`;
+                    code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
+                  } else {
+                    const messageText = navTargetNode.data.messageText || 'Сообщение';
+                    const formattedText = formatTextForPython(messageText);
+                    code += `            nav_text = ${formattedText}\n`;
+                    code += '            await callback_query.message.edit_text(nav_text)\n';
+                  }
                   
                   // Если узел message собирает ввод, настраиваем ожидание
                   if (navTargetNode.data.collectUserInput === true) {
@@ -4509,17 +4518,33 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
       
       if (targetNode.type === 'message') {
-        const messageText = targetNode.data.messageText || 'Сообщение';
-        const cleanedMessageText = stripHtmlTags(messageText);
-        const formattedText = formatTextForPython(cleanedMessageText);
-        code += `                        text = ${formattedText}\n`;
-        
-        // Применяем замену переменных
-        code += '                        # Замена переменных в тексте\n';
-        code += generateUniversalVariableReplacement('                        ');
-        
-        // Если узел message собирает ввод, настраиваем ожидание
-        if (targetNode.data.collectUserInput === true) {
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
+        if (targetNode.data.allowMultipleSelection === true) {
+          // Для узлов с множественным выбором вызываем полноценный обработчик
+          code += `                        # Узел с множественным выбором - вызываем полноценный обработчик\n`;
+          const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+          code += `                        logging.info(f"🔧 Переходим к узлу с множественным выбором: ${targetNode.id}")\n`;
+          code += '                        # Создаем fake callback для вызова обработчика\n';
+          code += '                        fake_callback = types.CallbackQuery(\n';
+          code += '                            id="text_nav",\n';
+          code += '                            from_user=message.from_user,\n';
+          code += '                            chat_instance="",\n';
+          code += `                            data="${targetNode.id}",\n`;
+          code += '                            message=message\n';
+          code += '                        )\n';
+          code += `                        await handle_callback_${safeFunctionName}(fake_callback)\n`;
+        } else {
+          const messageText = targetNode.data.messageText || 'Сообщение';
+          const cleanedMessageText = stripHtmlTags(messageText);
+          const formattedText = formatTextForPython(cleanedMessageText);
+          code += `                        text = ${formattedText}\n`;
+          
+          // Применяем замену переменных
+          code += '                        # Замена переменных в тексте\n';
+          code += generateUniversalVariableReplacement('                        ');
+          
+          // Если узел message собирает ввод, настраиваем ожидание
+          if (targetNode.data.collectUserInput === true) {
           const inputType = targetNode.data.inputType || 'text';
           const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
           const inputTargetNodeId = targetNode.data.inputTargetNodeId;
@@ -4578,6 +4603,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += '                        logging.info("✅ Переход к следующему узлу выполнен успешно")\n';
           }
         }
+        } // Закрываем блок else для allowMultipleSelection
       } else if (targetNode.type === 'user-input') {
         const inputPrompt = formatTextForPython(targetNode.data.messageText || "Введите ваш ответ:");
         code += `                        prompt_text = ${inputPrompt}\n`;
