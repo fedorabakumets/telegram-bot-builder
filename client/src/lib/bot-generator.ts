@@ -1361,8 +1361,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    keyboard = None\n';
               }
               
-              // Проверяем, есть ли у узла inline кнопки (только если нет условной клавиатуры)
-              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем множественный выбор ИЛИ обычные inline кнопки
+              const hasMultipleSelection = targetNode.data.allowMultipleSelection && targetNode.data.buttons && targetNode.data.buttons.length > 0;
+              const hasRegularInlineButtons = targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0;
+              
+              console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} - allowMultipleSelection: ${targetNode.data.allowMultipleSelection}, кнопок: ${targetNode.data.buttons?.length}, keyboardType: ${targetNode.data.keyboardType}`);
+              
+              if (hasMultipleSelection || hasRegularInlineButtons) {
+                console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ клавиатуру для узла ${targetNode.id} (множественный выбор: ${hasMultipleSelection})`);
                 code += '    # Проверяем, есть ли условная клавиатура\n';
                 code += '    if keyboard is None:\n';
                 code += '        # ИСПРАВЛЕНИЕ: Используем универсальную функцию создания клавиатуры\n';
