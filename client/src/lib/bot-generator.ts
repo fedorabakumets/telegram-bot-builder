@@ -2907,14 +2907,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += generateUniversalVariableReplacement('    ');
           
           // ИСПРАВЛЕНИЕ: Добавляем специальную обработку для узлов с множественным выбором
-          if (targetNode.data.allowMultipleSelection) {
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Все узлы с кнопками selection обрабатываются как множественный выбор
+          const hasSelectionButtons = targetNode.data.buttons && targetNode.data.buttons.some(btn => btn.action === 'selection');
+          if (targetNode.data.allowMultipleSelection || hasSelectionButtons) {
             // Узел с множественным выбором - создаем специальную клавиатуру
             console.log(`🎯 ГЕНЕРАТОР: ========================================`);
-            console.log(`🎯 ГЕНЕРАТОР: УЗЕЛ ${nodeId} ИМЕЕТ allowMultipleSelection=true`);
+            const reason = hasSelectionButtons ? 'ИМЕЕТ КНОПКИ SELECTION' : 'ИМЕЕТ allowMultipleSelection=true';
+            console.log(`🎯 ГЕНЕРАТОР: УЗЕЛ ${nodeId} ${reason}`);
             console.log(`🎯 ГЕНЕРАТОР: ЭТО ПРАВИЛЬНЫЙ ПУТЬ ВЫПОЛНЕНИЯ!`);
-            console.log(`🔘 ГЕНЕРАТОР: Кнопки узла ${nodeId}:`, targetNode.data.buttons.map(b => `${b.text} (action: ${b.action})`).join(', '));
+            console.log(`🔘 ГЕНЕРАТОР: Кнопки узла ${nodeId}:`, targetNode.data.buttons?.map(b => `${b.text} (action: ${b.action})`)?.join(', ') || 'НЕТ КНОПОК');
             console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget для ${nodeId}: ${targetNode.data.continueButtonTarget}`);
             console.log(`🔧 ГЕНЕРАТОР: multiSelectVariable для ${nodeId}: ${targetNode.data.multiSelectVariable}`);
+            console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons: ${hasSelectionButtons}`);
             console.log(`🎯 ГЕНЕРАТОР: ========================================`);
             
             // Добавляем логику инициализации множественного выбора
@@ -2954,8 +2958,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Разделяем кнопки на опции выбора и обычные кнопки
             console.log(`🔧 ГЕНЕРАТОР: targetNode.data.buttons:`, targetNode.data.buttons);
-            const selectionButtons = targetNode.data.buttons.filter(button => button.action === 'selection');
-            const regularButtons = targetNode.data.buttons.filter(button => button.action !== 'selection');
+            
+            let buttonsToUse = targetNode.data.buttons || [];
+            
+            const selectionButtons = buttonsToUse.filter(button => button.action === 'selection');
+            const regularButtons = buttonsToUse.filter(button => button.action !== 'selection');
             console.log(`🔧 ГЕНЕРАТОР: Найдено ${selectionButtons.length} кнопок выбора и ${regularButtons.length} обычных кнопок`);
             
             // Добавляем кнопки выбора с отметками о состоянии
@@ -3420,13 +3427,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     
                     // Fallback сообщение
                     code += `            else:\n`;
-                    const formattedText = formatTextForPython(messageText);
-                    // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
-                    const fallbackInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
-                    code += `                # Fallback сообщение\n`;
-                    code += `                nav_text = ${formattedText}\n`;
-                    // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
-                    if (navTargetNode.data.collectUserInput === true) {
+                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
+                    if (navTargetNode.data.allowMultipleSelection === true) {
+                      // Для узлов с множественным выбором вызываем полноценный обработчик
+                      code += '                # Узел с множественным выбором - вызываем полноценный обработчик\n';
+                      const safeFunctionName = navTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+                      code += `                logging.info(f"🔧 Fallback переход к узлу с множественным выбором: ${navTargetNode.id}")\n`;
+                      code += '                # Создаем fake callback для вызова обработчика\n';
+                      code += '                from types import SimpleNamespace\n';
+                      code += '                fake_callback = SimpleNamespace()\n';
+                      code += '                fake_callback.id = "text_nav"\n';
+                      code += '                fake_callback.from_user = types.User(id=user_id, is_bot=False, first_name="User")\n';
+                      code += '                fake_callback.chat_instance = ""\n';
+                      code += `                fake_callback.data = "${navTargetNode.id}"\n`;
+                      code += '                # Создаем упрощенное сообщение для fallback\n';
+                      code += '                fake_message = SimpleNamespace()\n';
+                      code += '                fake_message.chat = SimpleNamespace()\n';
+                      code += '                fake_message.chat.id = user_id\n';
+                      code += '                fake_callback.message = fake_message\n';
+                      code += '                fake_callback.answer = lambda text="", show_alert=False: None\n';
+                      code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
+                    } else {
+                      const formattedText = formatTextForPython(messageText);
+                      // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
+                      const fallbackInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
+                      code += `                # Fallback сообщение\n`;
+                      code += `                nav_text = ${formattedText}\n`;
+                      // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
+                      if (navTargetNode.data.collectUserInput === true) {
                       code += `                # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n`;
                       code += `                if "${fallbackInputVariable}" not in user_data[user_id] or not user_data[user_id]["${fallbackInputVariable}"]:\n`;
                       code += `                    # Настраиваем ожидание ввода\n`;
@@ -3439,39 +3467,58 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                       code += `                    }\n`;
                       code += `                    logging.info(f"🔧 Настроено fallback ожидание ввода для переменной: ${fallbackInputVariable} (узел ${navTargetNode.id})")\n`;
                       code += `                else:\n`;
-                      code += `                    logging.info(f"⏭️ Переменная ${fallbackInputVariable} уже сохранена, пропускаем fallback ожидание ввода")\n`;
-                    } else {
-                      code += `                logging.info(f"Fallback переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
+                        code += `                    logging.info(f"⏭️ Переменная ${fallbackInputVariable} уже сохранена, пропускаем fallback ожидание ввода")\n`;
+                      } else {
+                        code += `                logging.info(f"Fallback переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
+                      }
+                      code += `                await bot.send_message(user_id, nav_text)\n`;
                     }
-                    code += `                await bot.send_message(user_id, nav_text)\n`;
                   } else {
                     // Обычный узел без условных сообщений
-                    const formattedText = formatTextForPython(messageText);
-                    code += '            await callback_query.message.delete()\n';
-                    code += `            nav_text = ${formattedText}\n`;
-                    
-                    // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
-                    if (navTargetNode.data.collectUserInput === true) {
-                      // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
-                      const regularInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
-                      code += '            # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n';
-                      code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
-                      code += `            if "${regularInputVariable}" not in user_data[callback_query.from_user.id] or not user_data[callback_query.from_user.id]["${regularInputVariable}"]:\n`;
-                      code += '                # Настраиваем ожидание ввода\n';
-                      code += '                user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-                      code += '                    "type": "text",\n';
-                      code += `                    "variable": "${regularInputVariable}",\n`;
-                      code += '                    "save_to_database": True,\n';
-                      code += `                    "node_id": "${navTargetNode.id}",\n`;
-                      code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
-                      code += '                }\n';
-                      code += `                logging.info(f"🔧 Настроено ожидание ввода для переменной: ${regularInputVariable} (узел ${navTargetNode.id})")\n`;
-                      code += '            else:\n';
-                      code += `                logging.info(f"⏭️ Переменная ${regularInputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
+                    // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
+                    if (navTargetNode.data.allowMultipleSelection === true) {
+                      // Для узлов с множественным выбором вызываем полноценный обработчик
+                      code += '            # Узел с множественным выбором - вызываем полноценный обработчик\n';
+                      const safeFunctionName = navTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+                      code += `            logging.info(f"🔧 Переходим к узлу с множественным выбором: ${navTargetNode.id}")\n`;
+                      code += '            # Создаем fake callback для вызова обработчика\n';
+                      code += '            from types import SimpleNamespace\n';
+                      code += '            fake_callback = SimpleNamespace()\n';
+                      code += '            fake_callback.id = "text_nav"\n';
+                      code += '            fake_callback.from_user = callback_query.from_user\n';
+                      code += '            fake_callback.chat_instance = ""\n';
+                      code += `            fake_callback.data = "${navTargetNode.id}"\n`;
+                      code += '            fake_callback.message = callback_query.message\n';
+                      code += '            fake_callback.answer = lambda text="", show_alert=False: None\n';
+                      code += `            await handle_callback_${safeFunctionName}(fake_callback)\n`;
                     } else {
-                      code += `            logging.info(f"Переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
+                      const formattedText = formatTextForPython(messageText);
+                      code += '            await callback_query.message.delete()\n';
+                      code += `            nav_text = ${formattedText}\n`;
+                    
+                      // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
+                      if (navTargetNode.data.collectUserInput === true) {
+                        // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
+                        const regularInputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
+                        code += '            # ИСПРАВЛЕНИЕ: Проверяем, не была ли переменная уже сохранена inline кнопкой\n';
+                        code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
+                        code += `            if "${regularInputVariable}" not in user_data[callback_query.from_user.id] or not user_data[callback_query.from_user.id]["${regularInputVariable}"]:\n`;
+                        code += '                # Настраиваем ожидание ввода\n';
+                        code += '                user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
+                        code += '                    "type": "text",\n';
+                        code += `                    "variable": "${regularInputVariable}",\n`;
+                        code += '                    "save_to_database": True,\n';
+                        code += `                    "node_id": "${navTargetNode.id}",\n`;
+                        code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
+                        code += '                }\n';
+                        code += `                logging.info(f"🔧 Настроено ожидание ввода для переменной: ${regularInputVariable} (узел ${navTargetNode.id})")\n`;
+                        code += '            else:\n';
+                        code += `                logging.info(f"⏭️ Переменная ${regularInputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
+                      } else {
+                        code += `            logging.info(f"Переход к узлу ${navTargetNode.id} без сбора ввода")\n`;
+                      }
+                      code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
                     }
-                    code += '            await bot.send_message(callback_query.from_user.id, nav_text)\n';
                   }
                 } else {
                   code += `            logging.info("Переход к узлу ${navTargetNode.id}")\n`;
@@ -3709,6 +3756,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               }
             } // Закрываем else блок для обычного отображения
           } // Закрываем else блок для regular message nodes
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем обязательный return в конец функции
+          code += '    return\n';
         }
       }
     });
@@ -4236,7 +4286,33 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       const condition = index === 0 ? 'if' : 'elif';
       const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
       code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
-      code += `                        await handle_callback_${safeFunctionName}(fake_callback)\n`;
+      
+      // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
+      if (targetNode.data.allowMultipleSelection === true) {
+        // Для узлов с множественным выбором вызываем полноценный обработчик напрямую
+        code += `                        # Узел с множественным выбором - вызываем полноценный обработчик\n`;
+        code += `                        logging.info(f"🔧 Условная навигация к узлу с множественным выбором: ${targetNode.id}")\n`;
+        code += `                        await handle_callback_${safeFunctionName}(fake_callback)\n`;
+      } else {
+        // Для обычных узлов проверяем сначала, собирают ли они ввод
+        if (targetNode.data.collectUserInput === true) {
+          code += `                        # Узел собирает пользовательский ввод\n`;
+          code += `                        logging.info(f"🔧 Условная навигация к узлу с вводом: ${targetNode.id}")\n`;
+          code += `                        await handle_callback_${safeFunctionName}(fake_callback)\n`;
+        } else {
+          // Обычная навигация с простым сообщением
+          const messageText = targetNode.data.messageText || 'Сообщение';
+          const formattedText = formatTextForPython(messageText);
+          code += `                        # Обычный узел - отправляем сообщение\n`;
+          code += `                        nav_text = ${formattedText}\n`;
+          
+          // Добавляем замену переменных
+          code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
+          code += generateUniversalVariableReplacement('                        ');
+          code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
+          code += '                        await message.answer(nav_text)\n';
+        }
+      }
     });
     code += '                    else:\n';
     code += '                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
@@ -4525,13 +4601,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
           code += `                        logging.info(f"🔧 Переходим к узлу с множественным выбором: ${targetNode.id}")\n`;
           code += '                        # Создаем fake callback для вызова обработчика\n';
-          code += '                        fake_callback = types.CallbackQuery(\n';
-          code += '                            id="text_nav",\n';
-          code += '                            from_user=message.from_user,\n';
-          code += '                            chat_instance="",\n';
-          code += `                            data="${targetNode.id}",\n`;
-          code += '                            message=message\n';
-          code += '                        )\n';
+          code += '                        from types import SimpleNamespace\n';
+          code += '                        fake_callback = SimpleNamespace()\n';
+          code += '                        fake_callback.id = "text_nav"\n';
+          code += '                        fake_callback.from_user = message.from_user\n';
+          code += '                        fake_callback.chat_instance = ""\n';
+          code += `                        fake_callback.data = "${targetNode.id}"\n`;
+          code += '                        fake_callback.message = message\n';
+          code += '                        fake_callback.answer = lambda text="", show_alert=False: None\n';
           code += `                        await handle_callback_${safeFunctionName}(fake_callback)\n`;
         } else {
           const messageText = targetNode.data.messageText || 'Сообщение';
@@ -4783,20 +4860,38 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `                \n`;
           code += `                logging.info("✅ Переход к следующему узлу выполнен успешно")\n`;
         } else {
-          // Для других типов узлов используем callback
-          const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-          code += `                # Создаем фиктивный callback_query для навигации\n`;
-          code += `                import types as aiogram_types\n`;
-          code += `                import asyncio\n`;
-          code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
-          code += `                    id="input_nav",\n`;
-          code += `                    from_user=message.from_user,\n`;
-          code += `                    chat_instance="",\n`;
-          code += `                    data="${targetNode.id}",\n`;
-          code += `                    message=message,\n`;
-          code += `                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n`;
-          code += `                )\n`;
-          code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
+          if (targetNode.data.allowMultipleSelection === true) {
+            // Для узлов с множественным выбором вызываем полноценный обработчик
+            const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            code += `                # Узел с множественным выбором - вызываем полноценный обработчик\n`;
+            code += `                logging.info(f"🔧 Ввод навигация к узлу с множественным выбором: ${targetNode.id}")\n`;
+            code += `                # Создаем фиктивный callback_query для навигации\n`;
+            code += `                import types as aiogram_types\n`;
+            code += `                import asyncio\n`;
+            code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
+            code += `                    id="input_nav",\n`;
+            code += `                    from_user=message.from_user,\n`;
+            code += `                    chat_instance="",\n`;
+            code += `                    data="${targetNode.id}",\n`;
+            code += `                    message=message,\n`;
+            code += `                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n`;
+            code += `                )\n`;
+            code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
+          } else {
+            // Для обычных узлов используем обычную навигацию
+            const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+            const messageText = targetNode.data.messageText || 'Сообщение';
+            const formattedText = formatTextForPython(messageText);
+            code += `                # Обычный узел - отправляем сообщение\n`;
+            code += `                nav_text = ${formattedText}\n`;
+            
+            // Добавляем замену переменных
+            code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+            code += generateUniversalVariableReplacement('                ');
+            code += `                logging.info(f"Ввод навигация к обычному узлу: ${targetNode.id}")\n`;
+            code += '                await message.answer(nav_text)\n';
+          }
         }
       } else {
         // Если целевой узел не найден, добавляем заглушку
