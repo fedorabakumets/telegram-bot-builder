@@ -5492,9 +5492,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `            # Переход к узлу ${targetNode.id}\n`;
           code += `            logging.info(f"🔄 Переходим к узлу ${targetNode.id} (тип: ${targetNode.type})")\n`;
           if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
-            const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-            console.log(`🔧 ГЕНЕРАТОР: Добавляем вызов handle_callback_${safeFunctionName}`);
-            code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
+            console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик, отправляем сообщение`);
+            const messageText = targetNode.data.messageText || "Продолжение...";
+            const formattedText = formatTextForPython(messageText);
+            code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
+            code += `            text = ${formattedText}\n`;
+            code += `            await callback_query.message.answer(text)\n`;
+            code += `            return\n`;
             hasContent = true;
           } else if (targetNode.type === 'command') {
             const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
@@ -5502,8 +5506,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `            await handle_command_${safeCommandName}(callback_query.message)\n`;
             hasContent = true;
           } else if (targetNode.type === 'start') {
-            console.log(`🔧 ГЕНЕРАТОР: Добавляем вызов handle_callback_start`);
-            code += `            await handle_callback_start(callback_query)\n`;
+            console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем handle_callback_start`);
+            code += `            # НЕ ВЫЗЫВАЕМ START АВТОМАТИЧЕСКИ!\n`;
+            code += `            await callback_query.message.answer("Возврат к началу")\n`;
+            code += `            return\n`;
             hasContent = true;
           } else {
             console.log(`⚠️ ГЕНЕРАТОР: Неизвестный тип узла ${targetNode.type}, добавляем pass`);
@@ -5528,8 +5534,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             console.log(`🔧 ГЕНЕРАТОР: Найден целевой узел ${targetNode.id} через соединение`);
             code += `            # Переход к узлу ${targetNode.id} через соединение\n`;
             if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
-              const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-              code += `            await handle_callback_${safeFunctionName}(callback_query)\n`;
+              console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик через соединение`);
+              const messageText = targetNode.data.messageText || "Продолжение...";
+              const formattedText = formatTextForPython(messageText);
+              code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
+              code += `            text = ${formattedText}\n`;
+              code += `            await callback_query.message.answer(text)\n`;
+              code += `            return\n`;
             } else if (targetNode.type === 'command') {
               const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
               code += `            await handle_command_${safeCommandName}(callback_query.message)\n`;
@@ -5693,6 +5704,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   // Генерируем обработчики для кнопок "Готово" многомерного выбора
   console.log(`🔧 ГЕНЕРАТОР: Создаем обработчик для кнопок завершения множественного выбора`);
+  console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ - добавлен return после отправки сообщения для остановки выполнения`);
+  console.log(`🔧 ГЕНЕРАТОР: УБРАНЫ ВСЕ АВТОМАТИЧЕСКИЕ ВЫЗОВЫ handle_callback_* после кнопки Готово`);
+  console.log(`🔧 ГЕНЕРАТОР: Теперь после Готово - только отправка сообщения и return`);
   console.log(`🔧 ГЕНЕРАТОР: Количество узлов с множественным выбором: ${multiSelectNodes.length}`);
   multiSelectNodes.forEach((node, index) => {
     console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: ${node.id}, continueButtonTarget: ${node.data.continueButtonTarget}`);
@@ -5743,7 +5757,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       if (targetNode) {
         code += `        # Переход к следующему узлу: ${continueButtonTarget}\n`;
         const safeFunctionName = continueButtonTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Переходим к узлу {continueButtonTarget}")\n`;
+        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Переходим к узлу '${continueButtonTarget}'")\n`;
         code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Тип целевого узла: ${targetNode?.type || 'неизвестно'}")\n`;
         code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: allowMultipleSelection: ${targetNode?.data?.allowMultipleSelection || false}")\n`;
         code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Есть ли кнопки: ${targetNode?.data?.buttons?.length || 0}")\n`;
@@ -5830,14 +5844,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `        keyboard = builder.as_markup()\n`;
             code += `        \n`;
             code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+            code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено, ЗАВЕРШАЕМ функцию")\n`;
+            code += `        return\n`;
           } else {
-            // Обычная клавиатура без множественного выбора
-            code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Вызываем handle_callback_{safeFunctionName}")\n`;
-            code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
+            // Обычная клавиатура без множественного выбора - НЕ ВЫЗЫВАЕМ АВТОМАТИЧЕСКИ!
+            code += `        # ИСПРАВЛЕНИЕ: НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
+            code += `        # Отправляем только сообщение и ждем пользовательского ввода\n`;
+            code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Отправляем сообщение и ОСТАНАВЛИВАЕМСЯ")\n`;
+            code += `        await callback_query.message.answer(text)\n`;
+            code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено для обычного узла, ЗАВЕРШАЕМ функцию")\n`;
+            code += `        return\n`;
           }
         } else {
-          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Вызываем handle_callback_{safeFunctionName}")\n`;
-          code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
+          // Узел не найден - отправляем простое сообщение
+          code += `        logging.info(f"⚠️ ГЕНЕРАТОР DEBUG: Целевой узел не найден, отправляем простое сообщение")\n`;
+          code += `        await callback_query.message.answer("Переход завершен")\n`;
+          code += `        return\n`;
         }
       }
     }
@@ -5884,8 +5906,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       if (targetNode) {
         code += `            # Переход к следующему узлу\n`;
         if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
-          const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-          code += `            await handle_callback_${safeFunctionName}(types.CallbackQuery(id="multi_select", from_user=message.from_user, chat_instance="", data="${targetNode.id}", message=message))\n`;
+          console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик в reply mode`);
+          const messageText = targetNode.data.messageText || "Продолжение...";
+          const formattedText = formatTextForPython(messageText);
+          code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
+          code += `            text = ${formattedText}\n`;
+          code += `            await message.answer(text)\n`;
         } else if (targetNode.type === 'command') {
           const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
           code += `            await handle_command_${safeCommandName}(message)\n`;
