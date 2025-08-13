@@ -1163,8 +1163,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
           
           if (isDoneHandlerNeeded) {
-            code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
-            console.log(`🔧 ГЕНЕРАТОР: Добавлен обработчик кнопки "done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
+            code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_") or c.data == "multi_select_done_${shortNodeIdForDone}")\n`;
+            console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавлен обработчик кнопки "multi_select_done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
           } else {
             code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_"))\n`;
           }
@@ -1184,7 +1184,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // Добавляем обработку кнопки "done_" для множественного выбора
           if (isDoneHandlerNeeded) {
             code += '    # Проверяем, является ли это кнопкой "Готово" для множественного выбора\n';
-            code += `    if callback_data == "done_${shortNodeIdForDone}":\n`;
+            code += `    if callback_data == "multi_select_done_${shortNodeIdForDone}":\n`;
             code += '        logging.info(f"🏁 Обработка кнопки Готово для множественного выбора: {callback_data}")\n';
             code += '        \n';
             
@@ -5706,8 +5706,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       // Добавляем кнопку завершения  
       const continueText = node.data.continueButtonText || 'Готово';
       const shortNodeIdDone = node.id.slice(-10).replace(/^_+/, '');
-      const doneCallbackData = `done_${shortNodeIdDone}`;
-      console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
+      const doneCallbackData = `multi_select_done_${shortNodeIdDone}`;
+      console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
       code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
       code += `            builder.adjust(2, 2, 2, 2, 1)\n`;
     }
