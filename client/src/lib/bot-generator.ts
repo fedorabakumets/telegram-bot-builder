@@ -135,7 +135,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
     } else if (button.action === 'selection') {
       // Укорачиваем callback_data для соблюдения лимита Telegram в 64 байта
       const shortNodeId = nodeId ? nodeId.slice(-10).replace(/^_+/, '') : 'sel'; // Берем последние 10 символов и убираем ведущие underscores
-      const shortTarget = (button.target || button.id || 'btn').slice(-8); // Берем последние 8 символов
+      const shortTarget = button.target || button.id || 'btn'; // Используем полный target без обрезки для совместимости с обработчиком
       const callbackData = `ms_${shortNodeId}_${shortTarget}`;
       console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
       
@@ -5508,7 +5508,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             const formattedText = formatTextForPython(messageText);
             code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
             code += `            text = ${formattedText}\n`;
-            code += `            await callback_query.message.answer(text)\n`;
+            
+            // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла
+            if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
+              code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для целевого узла\n`;
+              code += `            # Загружаем пользовательские данные для клавиатуры\n`;
+              code += `            user_vars = await get_user_from_db(user_id)\n`;
+              code += `            if not user_vars:\n`;
+              code += `                user_vars = user_data.get(user_id, {})\n`;
+              code += `            if not isinstance(user_vars, dict):\n`;
+              code += `                user_vars = {}\n`;
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data);
+              code += `            await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+            } else {
+              code += `            await callback_query.message.answer(text)\n`;
+            }
             code += `            return\n`;
             hasContent = true;
           } else if (targetNode.type === 'command') {
@@ -5550,7 +5565,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               const formattedText = formatTextForPython(messageText);
               code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
               code += `            text = ${formattedText}\n`;
-              code += `            await callback_query.message.answer(text)\n`;
+              
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла
+              if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+                console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для соединения ${targetNode.id}`);
+                code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для соединения\n`;
+                code += `            # Загружаем пользовательские данные для клавиатуры\n`;
+                code += `            user_vars = await get_user_from_db(user_id)\n`;
+                code += `            if not user_vars:\n`;
+                code += `                user_vars = user_data.get(user_id, {})\n`;
+                code += `            if not isinstance(user_vars, dict):\n`;
+                code += `                user_vars = {}\n`;
+                code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data);
+                code += `            await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+              } else {
+                code += `            await callback_query.message.answer(text)\n`;
+              }
               code += `            return\n`;
             } else if (targetNode.type === 'command') {
               const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
@@ -5683,7 +5713,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       selectionButtons.forEach((button, index) => {
         // ИСПРАВЛЕНИЕ: используем тот же формат callback_data как при создании кнопок
         const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
-        const shortTarget = (button.target || button.id || 'btn').slice(-8);
+        const shortTarget = button.target || button.id || 'btn';
         const callbackData = `ms_${shortNodeId}_${shortTarget}`;
         console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> callback_data: ${callbackData}`);
         code += `            selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
@@ -5927,7 +5957,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const formattedText = formatTextForPython(messageText);
           code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
           code += `            text = ${formattedText}\n`;
-          code += `            await message.answer(text)\n`;
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла в reply mode
+          if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для reply mode ${targetNode.id}`);
+            code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для reply mode\n`;
+            code += `            # Загружаем пользовательские данные для клавиатуры\n`;
+            code += `            user_vars = await get_user_from_db(user_id)\n`;
+            code += `            if not user_vars:\n`;
+            code += `                user_vars = user_data.get(user_id, {})\n`;
+            code += `            if not isinstance(user_vars, dict):\n`;
+            code += `                user_vars = {}\n`;
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data);
+            code += `            await message.answer(text, reply_markup=keyboard)\n`;
+          } else {
+            code += `            await message.answer(text)\n`;
+          };
         } else if (targetNode.type === 'command') {
           const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
           code += `            await handle_command_${safeCommandName}(message)\n`;
