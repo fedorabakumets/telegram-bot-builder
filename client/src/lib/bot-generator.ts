@@ -5761,28 +5761,84 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Состояние множественного выбора установлено для узла ${targetNode.id}")\n`;
         }
         
-        code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Вызываем handle_callback_{safeFunctionName}")\n`;
+        // ИСПРАВЛЕНИЕ: НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!
+        // Пользователь должен сам выбрать продолжение
         
-        // ИСПРАВЛЕНИЕ: Специальная обработка для interests_result чтобы сохранить метро клавиатуру
-        if (continueButtonTarget === 'interests_result') {
-          console.log('🔧 ГЕНЕРАТОР: Обнаружен переход к interests_result - добавляем сохранение метро флага');
-          code += `        # ИСПРАВЛЕНИЕ: Специальная обработка для interests_result - сохраняем метро клавиатуру\n`;
-          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Обрабатываем переход к interests_result - сохраняем метро состояние")\n`;
-          code += `        # Сохраняем состояние метро для следующего узла\n`;
-          code += `        metro_state = user_data.get(user_id, {}).get("multi_select_${node.id}", [])\n`;
-          code += `        if user_id not in user_data:\n`;
-          code += `            user_data[user_id] = {}\n`;
-          code += `        user_data[user_id]["saved_metro_selection"] = metro_state\n`;
-          code += `        user_data[user_id]["show_metro_keyboard"] = True\n`;
-          code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: УСТАНОВИЛИ show_metro_keyboard = True в user_data")\n`;
-          code += `        await update_user_data_in_db(user_id, "show_metro_keyboard", "True")\n`;
-          code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: СОХРАНИЛИ show_metro_keyboard = True в базу данных")\n`;
-          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Сохранили метро состояние: {metro_state}")\n`;
+        // Отправляем сообщение для следующего узла с ожиданием пользовательского ввода
+        if (targetNode.type === 'message' || targetNode.type === 'keyboard') {
+          // Показываем сообщение следующего узла
+          const messageText = targetNode.data.messageText || "Выберите опции:";
+          const formattedText = formatTextForPython(messageText);
+          
+          code += `        # Отправляем сообщение для следующего узла с ожиданием пользовательского ввода\n`;
+          code += `        text = ${formattedText}\n`;
+          code += `        \n`;
+          code += `        # Инициализируем состояние множественного выбора для следующего узла\n`;
+          
+          // Генерируем клавиатуру для следующего узла
+          if (targetNode.data.allowMultipleSelection && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
+            
+            code += `        # Инициализируем состояние множественного выбора\n`;
+            code += `        if user_id not in user_data:\n`;
+            code += `            user_data[user_id] = {}\n`;
+            code += `        \n`;
+            code += `        # Загружаем ранее выбранные варианты из БД\n`;
+            code += `        saved_selections = []\n`;
+            code += `        user_record = await get_user_from_db(user_id)\n`;
+            code += `        if user_record and isinstance(user_record, dict):\n`;
+            code += `            user_data_field = user_record.get("user_data", {})\n`;
+            code += `            if isinstance(user_data_field, str):\n`;
+            code += `                import json\n`;
+            code += `                try:\n`;
+            code += `                    user_vars = json.loads(user_data_field)\n`;
+            code += `                except:\n`;
+            code += `                    user_vars = {}\n`;
+            code += `            elif isinstance(user_data_field, dict):\n`;
+            code += `                user_vars = user_data_field\n`;
+            code += `            else:\n`;
+            code += `                user_vars = {}\n`;
+            code += `            \n`;
+            code += `            if "${multiSelectVariable}" in user_vars:\n`;
+            code += `                var_data = user_vars["${multiSelectVariable}"]\n`;
+            code += `                if isinstance(var_data, str) and var_data.strip():\n`;
+            code += `                    saved_selections = [sel.strip() for sel in var_data.split(",") if sel.strip()]\n`;
+            code += `        \n`;
+            code += `        # Инициализируем состояние с восстановленными значениями\n`;
+            code += `        user_data[user_id]["multi_select_${targetNode.id}"] = saved_selections.copy()\n`;
+            code += `        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+            code += `        user_data[user_id]["multi_select_type"] = "inline"\n`;
+            code += `        user_data[user_id]["multi_select_variable"] = "${multiSelectVariable}"\n`;
+            code += `        \n`;
+            code += `        builder = InlineKeyboardBuilder()\n`;
+            
+            // Добавляем кнопки выбора с учетом ранее сохраненных значений
+            targetNode.data.buttons.forEach((button, index) => {
+              if (button.action === 'selection') {
+                const cleanText = button.text.replace(/"/g, '\\"');
+                const callbackData = `ms_${targetNode.id.slice(-8)}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
+                code += `        # Кнопка с галочкой: ${cleanText}\n`;
+                code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
+                code += `        button_text = f"{selected_mark}${cleanText}"\n`;
+                code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data="${callbackData}"))\n`;
+              }
+            });
+            
+            // Добавляем кнопку "Готово"
+            code += `        builder.add(InlineKeyboardButton(text="Готово", callback_data="multi_select_done_${targetNode.id}"))\n`;
+            code += `        builder.adjust(2)\n`;
+            code += `        keyboard = builder.as_markup()\n`;
+            code += `        \n`;
+            code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+          } else {
+            // Обычная клавиатура без множественного выбора
+            code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Вызываем handle_callback_{safeFunctionName}")\n`;
+            code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
+          }
         } else {
-          console.log(`🔧 ГЕНЕРАТОР: Переход НЕ к interests_result, а к: ${continueButtonTarget}`);
+          code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: Вызываем handle_callback_{safeFunctionName}")\n`;
+          code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
         }
-        
-        code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
       }
     }
     
