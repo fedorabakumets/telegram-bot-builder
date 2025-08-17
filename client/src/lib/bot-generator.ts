@@ -7346,14 +7346,24 @@ function generateKeyboard(node: Node): string {
       code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
     }
     
-    // Дополнительно настраиваем сбор ответов
-    code += '    \n';
-    code += '    # Дополнительно: настраиваем сбор пользовательских ответов\n';
-    code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
-    code += `    user_data[message.from_user.id]["input_collection_enabled"] = True\n`;
-    code += `    user_data[message.from_user.id]["input_node_id"] = "${node.id}"\n`;
-    if (node.data.inputVariable) {
-      code += `    user_data[message.from_user.id]["input_variable"] = "${node.data.inputVariable}"\n`;
+    // Дополнительно настраиваем сбор ответов (но НЕ для стартового узла с навигационными кнопками)
+    const hasNavigationButtons = node.data.buttons && node.data.buttons.some(btn => btn.action === 'goto');
+    const isStartNode = node.type === 'start';
+    
+    // Если это стартовый узел с навигационными кнопками - НЕ включаем дополнительный сбор ответов
+    if (!isStartNode || !hasNavigationButtons) {
+      code += '    \n';
+      code += '    # Дополнительно: настраиваем сбор пользовательских ответов\n';
+      code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
+      code += `    user_data[message.from_user.id]["input_collection_enabled"] = True\n`;
+      code += `    user_data[message.from_user.id]["input_node_id"] = "${node.id}"\n`;
+      if (node.data.inputVariable) {
+        code += `    user_data[message.from_user.id]["input_variable"] = "${node.data.inputVariable}"\n`;
+      }
+    } else {
+      code += '    \n';
+      code += '    # ПРИМЕЧАНИЕ: Дополнительный сбор ответов отключен для стартового узла с навигационными кнопками\n';
+      code += '    # Это предотвращает конфликт между кнопками навигации и текстовым вводом\n';
     }
     
     return code;
