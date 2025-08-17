@@ -3429,24 +3429,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     code += `            else:\n`;
                     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
                     if (navTargetNode.data.allowMultipleSelection === true) {
-                      // Для узлов с множественным выбором вызываем полноценный обработчик
-                      code += '                # Узел с множественным выбором - вызываем полноценный обработчик\n';
-                      const safeFunctionName = navTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+                      // Для узлов с множественным выбором создаем прямую навигацию
+                      const messageText = navTargetNode.data.messageText || 'Сообщение';
+                      const formattedText = formatTextForPython(messageText);
+                      code += `                # Прямая навигация к узлу с множественным выбором ${navTargetNode.id}\n`;
                       code += `                logging.info(f"🔧 Fallback переход к узлу с множественным выбором: ${navTargetNode.id}")\n`;
-                      code += '                # Создаем fake callback для вызова обработчика\n';
-                      code += '                from types import SimpleNamespace\n';
-                      code += '                fake_callback = SimpleNamespace()\n';
-                      code += '                fake_callback.id = "text_nav"\n';
-                      code += '                fake_callback.from_user = types.User(id=user_id, is_bot=False, first_name="User")\n';
-                      code += '                fake_callback.chat_instance = ""\n';
-                      code += `                fake_callback.data = "${navTargetNode.id}"\n`;
-                      code += '                # Создаем упрощенное сообщение для fallback\n';
-                      code += '                fake_message = SimpleNamespace()\n';
-                      code += '                fake_message.chat = SimpleNamespace()\n';
-                      code += '                fake_message.chat.id = user_id\n';
-                      code += '                fake_callback.message = fake_message\n';
-                      code += '                fake_callback.answer = lambda text="", show_alert=False: None\n';
-                      code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
+                      code += `                nav_text = ${formattedText}\n`;
+                      
+                      // Замена переменных
+                      code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+                      code += generateUniversalVariableReplacement('                ');
+                      
+                      // Инициализируем состояние множественного выбора
+                      code += `                # Инициализируем состояние множественного выбора\n`;
+                      code += `                user_data[user_id]["multi_select_${navTargetNode.id}"] = []\n`;
+                      code += `                user_data[user_id]["multi_select_node"] = "${navTargetNode.id}"\n`;
+                      code += `                user_data[user_id]["multi_select_type"] = "selection"\n`;
+                      if (navTargetNode.data.multiSelectVariable) {
+                        code += `                user_data[user_id]["multi_select_variable"] = "${navTargetNode.data.multiSelectVariable}"\n`;
+                      }
+                      
+                      // Создаем inline клавиатуру с кнопками выбора
+                      if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
+                        code += generateInlineKeyboardCode(navTargetNode.data.buttons, '                ', navTargetNode.id, navTargetNode.data);
+                        code += `                await bot.send_message(user_id, nav_text, reply_markup=keyboard)\n`;
+                      } else {
+                        code += `                await bot.send_message(user_id, nav_text)\n`;
+                      }
+                      code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполнена")\n`;
                     } else {
                       const formattedText = formatTextForPython(messageText);
                       // ИСПРАВЛЕНИЕ: Используем переменную из целевого узла
@@ -3477,20 +3487,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     // Обычный узел без условных сообщений
                     // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
                     if (navTargetNode.data.allowMultipleSelection === true) {
-                      // Для узлов с множественным выбором вызываем полноценный обработчик
-                      code += '            # Узел с множественным выбором - вызываем полноценный обработчик\n';
-                      const safeFunctionName = navTargetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+                      // Для узлов с множественным выбором создаем прямую навигацию
+                      const messageText = navTargetNode.data.messageText || 'Сообщение';
+                      const formattedText = formatTextForPython(messageText);
+                      code += `            # Прямая навигация к узлу с множественным выбором ${navTargetNode.id}\n`;
                       code += `            logging.info(f"🔧 Переходим к узлу с множественным выбором: ${navTargetNode.id}")\n`;
-                      code += '            # Создаем fake callback для вызова обработчика\n';
-                      code += '            from types import SimpleNamespace\n';
-                      code += '            fake_callback = SimpleNamespace()\n';
-                      code += '            fake_callback.id = "text_nav"\n';
-                      code += '            fake_callback.from_user = callback_query.from_user\n';
-                      code += '            fake_callback.chat_instance = ""\n';
-                      code += `            fake_callback.data = "${navTargetNode.id}"\n`;
-                      code += '            fake_callback.message = callback_query.message\n';
-                      code += '            fake_callback.answer = lambda text="", show_alert=False: None\n';
-                      code += `            await handle_callback_${safeFunctionName}(fake_callback)\n`;
+                      code += '            await callback_query.message.delete()\n';
+                      code += `            text = ${formattedText}\n`;
+                      
+                      // Замена переменных
+                      code += '            user_data[callback_query.from_user.id] = user_data.get(callback_query.from_user.id, {})\n';
+                      code += generateUniversalVariableReplacement('            ');
+                      
+                      // Инициализируем состояние множественного выбора
+                      code += `            # Инициализируем состояние множественного выбора\n`;
+                      code += `            user_data[callback_query.from_user.id]["multi_select_${navTargetNode.id}"] = []\n`;
+                      code += `            user_data[callback_query.from_user.id]["multi_select_node"] = "${navTargetNode.id}"\n`;
+                      code += `            user_data[callback_query.from_user.id]["multi_select_type"] = "selection"\n`;
+                      if (navTargetNode.data.multiSelectVariable) {
+                        code += `            user_data[callback_query.from_user.id]["multi_select_variable"] = "${navTargetNode.data.multiSelectVariable}"\n`;
+                      }
+                      
+                      // Создаем inline клавиатуру с кнопками выбора
+                      if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
+                        code += generateInlineKeyboardCode(navTargetNode.data.buttons, '            ', navTargetNode.id, navTargetNode.data);
+                        code += `            await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n`;
+                      } else {
+                        code += `            await bot.send_message(callback_query.from_user.id, text)\n`;
+                      }
+                      code += `            logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполнена")\n`;
                     } else {
                       const formattedText = formatTextForPython(messageText);
                       code += '            await callback_query.message.delete()\n';
@@ -4289,16 +4314,55 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       
       // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
       if (targetNode.data.allowMultipleSelection === true) {
-        // Для узлов с множественным выбором вызываем полноценный обработчик напрямую
-        code += `                        # Узел с множественным выбором - вызываем полноценный обработчик\n`;
+        // Для узлов с множественным выбором создаем прямую навигацию
+        const messageText = targetNode.data.messageText || 'Сообщение';
+        const formattedText = formatTextForPython(messageText);
+        code += `                        # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
         code += `                        logging.info(f"🔧 Условная навигация к узлу с множественным выбором: ${targetNode.id}")\n`;
-        code += `                        await handle_callback_${safeFunctionName}(fake_callback)\n`;
+        code += `                        text = ${formattedText}\n`;
+        
+        // Замена переменных
+        code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
+        code += generateUniversalVariableReplacement('                        ');
+        
+        // Инициализируем состояние множественного выбора
+        code += `                        # Инициализируем состояние множественного выбора\n`;
+        code += `                        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+        code += `                        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+        code += `                        user_data[user_id]["multi_select_type"] = "selection"\n`;
+        if (targetNode.data.multiSelectVariable) {
+          code += `                        user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
+        }
+        
+        // Создаем inline клавиатуру с кнопками выбора
+        if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+          code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data);
+          code += `                        await message.answer(text, reply_markup=keyboard)\n`;
+        } else {
+          code += `                        await message.answer(text)\n`;
+        }
+        code += `                        logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
       } else {
         // Для обычных узлов проверяем сначала, собирают ли они ввод
         if (targetNode.data.collectUserInput === true) {
+          const messageText = targetNode.data.messageText || 'Сообщение';
+          const formattedText = formatTextForPython(messageText);
           code += `                        # Узел собирает пользовательский ввод\n`;
           code += `                        logging.info(f"🔧 Условная навигация к узлу с вводом: ${targetNode.id}")\n`;
-          code += `                        await handle_callback_${safeFunctionName}(fake_callback)\n`;
+          code += `                        text = ${formattedText}\n`;
+          
+          // Настраиваем ожидание ввода
+          const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+          const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+          code += `                        await message.answer(text)\n`;
+          code += `                        # Настраиваем ожидание ввода\n`;
+          code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
+          code += `                            "type": "text",\n`;
+          code += `                            "variable": "${inputVariable}",\n`;
+          code += `                            "save_to_database": True,\n`;
+          code += `                            "node_id": "${targetNode.id}",\n`;
+          code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
+          code += `                        }\n`;
         } else {
           // Обычная навигация с простым сообщением
           const messageText = targetNode.data.messageText || 'Сообщение';
@@ -4596,20 +4660,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       if (targetNode.type === 'message') {
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
         if (targetNode.data.allowMultipleSelection === true) {
-          // Для узлов с множественным выбором вызываем полноценный обработчик
-          code += `                        # Узел с множественным выбором - вызываем полноценный обработчик\n`;
-          const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+          // Для узлов с множественным выбором создаем прямую навигацию
+          const messageText = targetNode.data.messageText || 'Сообщение';
+          const formattedText = formatTextForPython(messageText);
+          code += `                        # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
           code += `                        logging.info(f"🔧 Переходим к узлу с множественным выбором: ${targetNode.id}")\n`;
-          code += '                        # Создаем fake callback для вызова обработчика\n';
-          code += '                        from types import SimpleNamespace\n';
-          code += '                        fake_callback = SimpleNamespace()\n';
-          code += '                        fake_callback.id = "text_nav"\n';
-          code += '                        fake_callback.from_user = message.from_user\n';
-          code += '                        fake_callback.chat_instance = ""\n';
-          code += `                        fake_callback.data = "${targetNode.id}"\n`;
-          code += '                        fake_callback.message = message\n';
-          code += '                        fake_callback.answer = lambda text="", show_alert=False: None\n';
-          code += `                        await handle_callback_${safeFunctionName}(fake_callback)\n`;
+          code += `                        text = ${formattedText}\n`;
+          
+          // Замена переменных
+          code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
+          code += generateUniversalVariableReplacement('                        ');
+          
+          // Инициализируем состояние множественного выбора
+          code += `                        # Инициализируем состояние множественного выбора\n`;
+          code += `                        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+          code += `                        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+          code += `                        user_data[user_id]["multi_select_type"] = "selection"\n`;
+          if (targetNode.data.multiSelectVariable) {
+            code += `                        user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
+          }
+          
+          // Создаем inline клавиатуру с кнопками выбора
+          if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data);
+            code += `                        await message.answer(text, reply_markup=keyboard)\n`;
+          } else {
+            code += `                        await message.answer(text)\n`;
+          }
+          code += `                        logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
         } else {
           const messageText = targetNode.data.messageText || 'Сообщение';
           const cleanedMessageText = stripHtmlTags(messageText);
