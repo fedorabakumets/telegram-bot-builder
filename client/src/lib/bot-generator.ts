@@ -4862,25 +4862,35 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         } else {
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
           if (targetNode.data.allowMultipleSelection === true) {
-            // Для узлов с множественным выбором вызываем полноценный обработчик
-            const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-            code += `                # Узел с множественным выбором - вызываем полноценный обработчик\n`;
-            code += `                logging.info(f"🔧 Ввод навигация к узлу с множественным выбором: ${targetNode.id}")\n`;
-            code += `                # Создаем фиктивный callback_query для навигации\n`;
-            code += `                import types as aiogram_types\n`;
-            code += `                import asyncio\n`;
-            code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
-            code += `                    id="input_nav",\n`;
-            code += `                    from_user=message.from_user,\n`;
-            code += `                    chat_instance="",\n`;
-            code += `                    data="${targetNode.id}",\n`;
-            code += `                    message=message,\n`;
-            code += `                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n`;
-            code += `                )\n`;
-            code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
+            // Для узлов с множественным выбором создаем прямую навигацию
+            const messageText = targetNode.data.messageText || 'Сообщение';
+            const formattedText = formatTextForPython(messageText);
+            code += `                # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
+            code += `                text = ${formattedText}\n`;
+            
+            // Замена переменных
+            code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+            code += generateUniversalVariableReplacement('                ');
+            
+            // Инициализируем состояние множественного выбора
+            code += `                # Инициализируем состояние множественного выбора\n`;
+            code += `                user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+            code += `                user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+            code += `                user_data[user_id]["multi_select_type"] = "selection"\n`;
+            if (targetNode.data.multiSelectVariable) {
+              code += `                user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
+            }
+            
+            // Создаем inline клавиатуру с кнопками выбора
+            if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+              code += `                await message.answer(text, reply_markup=keyboard)\n`;
+            } else {
+              code += `                await message.answer(text)\n`;
+            }
+            code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
           } else {
             // Для обычных узлов используем обычную навигацию
-            const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
             const messageText = targetNode.data.messageText || 'Сообщение';
             const formattedText = formatTextForPython(messageText);
             code += `                # Обычный узел - отправляем сообщение\n`;
@@ -4889,8 +4899,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             // Добавляем замену переменных
             code += '                user_data[user_id] = user_data.get(user_id, {})\n';
             code += generateUniversalVariableReplacement('                ');
-            code += `                logging.info(f"Ввод навигация к обычному узлу: ${targetNode.id}")\n`;
-            code += '                await message.answer(nav_text)\n';
+            
+            // Создаем inline клавиатуру если есть кнопки
+            if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+              code += `                await message.answer(nav_text, reply_markup=keyboard)\n`;
+            } else {
+              code += '                await message.answer(nav_text)\n';
+            }
+            code += `                logging.info(f"✅ Ввод навигация к обычному узлу: ${targetNode.id}")\n`;
           }
         }
       } else {
@@ -4977,21 +4994,52 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                await message.answer(text)\n`;
       }
       code += `                logging.info(f"Переход к узлу ${targetNode.id} выполнен")\n`;
+    } else if (targetNode.data.allowMultipleSelection) {
+      // Для узлов с множественным выбором создаем прямую навигацию
+      const messageText = targetNode.data.messageText || 'Сообщение';
+      const formattedText = formatTextForPython(messageText);
+      code += `                # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
+      code += `                text = ${formattedText}\n`;
+      
+      // Замена переменных
+      code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+      code += generateUniversalVariableReplacement('                ');
+      
+      // Инициализируем состояние множественного выбора
+      code += `                # Инициализируем состояние множественного выбора\n`;
+      code += `                user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+      code += `                user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+      code += `                user_data[user_id]["multi_select_type"] = "selection"\n`;
+      if (targetNode.data.multiSelectVariable) {
+        code += `                user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
+      }
+      
+      // Создаем inline клавиатуру с кнопками выбора
+      if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+        code += `                await message.answer(text, reply_markup=keyboard)\n`;
+      } else {
+        code += `                await message.answer(text)\n`;
+      }
+      code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
     } else {
-      // Для других типов узлов вызываем соответствующий обработчик
-      const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
-      code += `                # Вызываем обработчик для узла ${targetNode.id}\n`;
-      code += `                import types as aiogram_types\n`;
-      code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
-      code += `                    id="text_nav",\n`;
-      code += `                    from_user=message.from_user,\n`;
-      code += `                    chat_instance="",\n`;
-      code += `                    data="${targetNode.id}",\n`;
-      code += `                    message=message,\n`;
-      code += `                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n`;
-      code += `                )\n`;
-      code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
-      code += `                logging.info(f"Вызван обработчик для узла ${targetNode.id}")\n`;
+      // Для обычных узлов отправляем простое сообщение
+      const messageText = targetNode.data.messageText || 'Сообщение';
+      const formattedText = formatTextForPython(messageText);
+      code += `                # Обычный узел - отправляем сообщение ${targetNode.id}\n`;
+      code += `                text = ${formattedText}\n`;
+      
+      // Замена переменных
+      code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+      code += generateUniversalVariableReplacement('                ');
+      
+      if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+        code += `                await message.answer(text, reply_markup=keyboard)\n`;
+      } else {
+        code += `                await message.answer(text)\n`;
+      }
+      code += `                logging.info(f"✅ Навигация к обычному узлу ${targetNode.id} выполнена")\n`;
     }
   });
   code += '            return\n';
