@@ -11,10 +11,11 @@ function initializeDatabase() {
     return { pool, db };
   }
 
-  // Get DATABASE_URL from environment variables
-  const databaseUrl = process.env.DATABASE_URL;
+  // Get DATABASE_URL from environment variables (try multiple possible vars)
+  const databaseUrl = process.env.DATABASE_URL || process.env.REPLIT_DB_URL;
 
   if (!databaseUrl) {
+    console.error('Available environment variables:', Object.keys(process.env).filter(key => key.includes('DB') || key.includes('DATABASE')));
     throw new Error(
       "DATABASE_URL must be set. Did you forget to provision a database?",
     );

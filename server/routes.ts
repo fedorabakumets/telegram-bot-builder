@@ -15,6 +15,7 @@ import { URL } from "url";
 import dbRoutes from "./db-routes";
 import { Pool } from "pg";
 import { generatePythonCode } from "../client/src/lib/bot-generator";
+import { initializeDatabaseTables } from "./init-db";
 
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
@@ -871,6 +872,14 @@ async function ensureDefaultProject() {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize database tables first
+  console.log('🔧 Initializing database...');
+  const dbInitSuccess = await initializeDatabaseTables();
+  if (!dbInitSuccess) {
+    console.error('❌ Failed to initialize database tables');
+    throw new Error('Database initialization failed');
+  }
+  
   // Initialize default templates on startup
   await seedDefaultTemplates();
   
@@ -988,10 +997,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`${instanceDeleted ? '✅' : '❌'} Экземпляр бота ${instanceDeleted ? 'удален' : 'не удален'}`);
         }
 
-        // 2. Удаляем все токены проекта через SQL (CASCADE должен сработать автоматически, но делаем вручную для надежности)
+        // 2. Удаляем все токены проекта (CASCADE должен сработать автоматически)
         try {
           console.log(`🗑️ Удаляем токены проекта ${id}`);
-          await storage.db.delete(storage.botTokens).where(storage.eq(storage.botTokens.projectId, id));
+          const tokens = await storage.getBotTokensByProject(id);
+          for (const token of tokens) {
+            await storage.deleteBotToken(token.id);
+          }
           console.log(`✅ Токены проекта ${id} удалены`);
         } catch (tokenError) {
           console.error(`❌ Ошибка удаления токенов:`, tokenError);
@@ -1000,7 +1012,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // 3. Удаляем медиафайлы
         try {
           console.log(`🗑️ Удаляем медиафайлы проекта ${id}`);
-          await storage.db.delete(storage.mediaFiles).where(storage.eq(storage.mediaFiles.projectId, id));
+          const mediaFiles = await storage.getMediaFilesByProject(id);
+          for (const mediaFile of mediaFiles) {
+            await storage.deleteMediaFile(mediaFile.id);
+          }
           console.log(`✅ Медиафайлы проекта ${id} удалены`);
         } catch (mediaError) {
           console.error(`❌ Ошибка удаления медиафайлов:`, mediaError);
@@ -1009,7 +1024,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // 4. Удаляем пользовательские данные
         try {
           console.log(`🗑️ Удаляем пользовательские данные проекта ${id}`);
-          await storage.db.delete(storage.userBotData).where(storage.eq(storage.userBotData.projectId, id));
+          const userData = await storage.getUserBotDataByProject(id);
+          for (const data of userData) {
+            await storage.deleteUserBotData(data.id);
+          }
           console.log(`✅ Пользовательские данные проекта ${id} удалены`);
         } catch (userDataError) {
           console.error(`❌ Ошибка удаления пользовательских данных:`, userDataError);
