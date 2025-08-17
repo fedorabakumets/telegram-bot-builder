@@ -4512,7 +4512,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            save_to_database = user_data[user_id].get("save_to_database", False)\n';
   code += '            min_length = 0\n';
   code += '            max_length = 0\n';
-  code += '            next_node_id = user_data[user_id].get("input_target_node_id")\n';
+  code += '            next_node_id = user_data[user_id].get("waiting_input_target_node_id") or user_data[user_id].get("input_target_node_id")\n';
   code += '        \n';
   code += '        user_text = message.text\n';
   code += '        \n';
@@ -7429,8 +7429,8 @@ function generateKeyboard(node: Node): string {
       code += `    user_data[message.from_user.id]["input_variable"] = "${node.data.inputVariable}"\n`;
     }
     
-    // Для стартового узла с кнопками и сбором ввода сохраняем информацию о целевом узле
-    if (node.type === 'start' && node.data.inputTargetNodeId) {
+    // Для узлов с кнопками и сбором ввода сохраняем информацию о целевом узле
+    if (node.data.inputTargetNodeId) {
       code += `    user_data[message.from_user.id]["input_target_node_id"] = "${node.data.inputTargetNodeId}"\n`;
     }
     
@@ -7485,6 +7485,10 @@ function generateKeyboard(node: Node): string {
     code += `    user_data[message.from_user.id]["waiting_for_input"] = "${node.id}"\n`;
     if (node.data.inputType) {
       code += `    user_data[message.from_user.id]["input_type"] = "${node.data.inputType}"\n`;
+    }
+    // Также сохраняем информацию о целевом узле для навигации
+    if (node.data.inputTargetNodeId) {
+      code += `    user_data[message.from_user.id]["waiting_input_target_node_id"] = "${node.data.inputTargetNodeId}"\n`;
     }
     
     return code;
