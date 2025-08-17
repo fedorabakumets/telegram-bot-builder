@@ -6062,8 +6062,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       
       // Добавляем кнопку завершения  
       const continueText = node.data.continueButtonText || 'Готово';
-      const shortNodeIdDone = node.id.slice(-10).replace(/^_+/, '');
-      const doneCallbackData = `multi_select_done_${shortNodeIdDone}`;
+      const doneCallbackData = `multi_select_done_${node.id}`;
       console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
       code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
       code += `            builder.adjust(2, 2, 2, 2, 1)\n`;
