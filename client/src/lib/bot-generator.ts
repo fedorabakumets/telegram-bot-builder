@@ -4920,20 +4920,93 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '    if user_id in user_data and user_data[user_id].get("input_collection_enabled"):\n';
   code += '        input_node_id = user_data[user_id].get("input_node_id")\n';
   code += '        input_variable = user_data[user_id].get("input_variable", "button_response")\n';
+  code += '        input_target_node_id = user_data[user_id].get("input_target_node_id")\n';
   code += '        user_text = message.text\n';
   code += '        \n';
-  code += '        # Сохраняем любой текст как дополнительный ответ\n';
-  code += '        timestamp = get_moscow_time()\n';
-  code += '        \n';
-  code += '        response_data = user_text  # Простое значение\n';
-  code += '        \n';
-  code += '        # Сохраняем в пользовательские данные\n';
-  code += '        user_data[user_id][f"{input_variable}_additional"] = response_data\n';
-  code += '        \n';
-  code += '        # Уведомляем пользователя\n';
-  code += '        await message.answer("✅ Дополнительный комментарий сохранен!")\n';
-  code += '        \n';
-  code += '        logging.info(f"Дополнительный текстовый ввод: {input_variable}_additional = {user_text} (пользователь {user_id})")\n';
+  code += '        # Если есть целевой узел для перехода - это основной ввод, а не дополнительный\n';
+  code += '        if input_target_node_id:\n';
+  code += '            # Это основной ввод с переходом к следующему узлу\n';
+  code += '            timestamp = get_moscow_time()\n';
+  code += '            response_data = user_text\n';
+  code += '            \n';
+  code += '            # Сохраняем в пользовательские данные\n';
+  code += '            user_data[user_id][input_variable] = response_data\n';
+  code += '            \n';
+  code += '            # Сохраняем в базу данных\n';
+  code += '            saved_to_db = await update_user_data_in_db(user_id, input_variable, response_data)\n';
+  code += '            if saved_to_db:\n';
+  code += '                logging.info(f"✅ Данные сохранены в БД: {input_variable} = {user_text} (пользователь {user_id})")\n';
+  code += '            else:\n';
+  code += '                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
+  code += '            \n';
+  code += '            # Уведомляем пользователя об успешном сохранении\n';
+  code += '            await message.answer("✅ Спасибо за ваш ответ!")\n';
+  code += '            \n';
+  code += '            logging.info(f"Получен основной пользовательский ввод: {input_variable} = {user_text}")\n';
+  code += '            \n';
+  code += '            # Переходим к целевому узлу\n';
+  code += '            # Очищаем состояние сбора ввода\n';
+  code += '            del user_data[user_id]["input_collection_enabled"]\n';
+  code += '            if "input_node_id" in user_data[user_id]:\n';
+  code += '                del user_data[user_id]["input_node_id"]\n';
+  code += '            if "input_variable" in user_data[user_id]:\n';
+  code += '                del user_data[user_id]["input_variable"]\n';
+  code += '            if "input_target_node_id" in user_data[user_id]:\n';
+  code += '                del user_data[user_id]["input_target_node_id"]\n';
+  code += '            \n';
+  code += '            # Находим и вызываем обработчик целевого узла\n';
+  
+  // Добавляем навигацию к целевому узлу
+  nodes.forEach((targetNode) => {
+    code += `            if input_target_node_id == "${targetNode.id}":\n`;
+    if (targetNode.type === 'keyboard' || targetNode.type === 'message') {
+      const messageText = targetNode.data.messageText || 'Сообщение';
+      const formattedText = formatTextForPython(messageText);
+      code += `                # Переход к узлу ${targetNode.id}\n`;
+      code += `                text = ${formattedText}\n`;
+      
+      // Замена переменных
+      code += '                user_data[user_id] = user_data.get(user_id, {})\n';
+      code += generateUniversalVariableReplacement('                ');
+      
+      // Отправляем сообщение с кнопками если есть
+      if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+        code += `                await message.answer(text, reply_markup=keyboard)\n`;
+      } else {
+        code += `                await message.answer(text)\n`;
+      }
+      code += `                logging.info(f"Переход к узлу ${targetNode.id} выполнен")\n`;
+    } else {
+      // Для других типов узлов вызываем соответствующий обработчик
+      const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+      code += `                # Вызываем обработчик для узла ${targetNode.id}\n`;
+      code += `                import types as aiogram_types\n`;
+      code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
+      code += `                    id="text_nav",\n`;
+      code += `                    from_user=message.from_user,\n`;
+      code += `                    chat_instance="",\n`;
+      code += `                    data="${targetNode.id}",\n`;
+      code += `                    message=message,\n`;
+      code += `                    answer=lambda text="", show_alert=False: asyncio.sleep(0)\n`;
+      code += `                )\n`;
+      code += `                await handle_callback_${safeFunctionName}(fake_callback)\n`;
+      code += `                logging.info(f"Вызван обработчик для узла ${targetNode.id}")\n`;
+    }
+  });
+  code += '            return\n';
+  code += '        else:\n';
+  code += '            # Это дополнительный комментарий (нет целевого узла)\n';
+  code += '            timestamp = get_moscow_time()\n';
+  code += '            response_data = user_text\n';
+  code += '            \n';
+  code += '            # Сохраняем в пользовательские данные\n';
+  code += '            user_data[user_id][f"{input_variable}_additional"] = response_data\n';
+  code += '            \n';
+  code += '            # Уведомляем пользователя\n';
+  code += '            await message.answer("✅ Дополнительный комментарий сохранен!")\n';
+  code += '            \n';
+  code += '            logging.info(f"Дополнительный текстовый ввод: {input_variable}_additional = {user_text} (пользователь {user_id})")\n';
   code += '        return\n';
   code += '    \n';
   code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
@@ -7346,24 +7419,19 @@ function generateKeyboard(node: Node): string {
       code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
     }
     
-    // Дополнительно настраиваем сбор ответов (но НЕ для стартового узла с навигационными кнопками)
-    const hasNavigationButtons = node.data.buttons && node.data.buttons.some(btn => btn.action === 'goto');
-    const isStartNode = node.type === 'start';
+    // Дополнительно настраиваем сбор ответов
+    code += '    \n';
+    code += '    # Дополнительно: настраиваем сбор пользовательских ответов\n';
+    code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
+    code += `    user_data[message.from_user.id]["input_collection_enabled"] = True\n`;
+    code += `    user_data[message.from_user.id]["input_node_id"] = "${node.id}"\n`;
+    if (node.data.inputVariable) {
+      code += `    user_data[message.from_user.id]["input_variable"] = "${node.data.inputVariable}"\n`;
+    }
     
-    // Если это стартовый узел с навигационными кнопками - НЕ включаем дополнительный сбор ответов
-    if (!isStartNode || !hasNavigationButtons) {
-      code += '    \n';
-      code += '    # Дополнительно: настраиваем сбор пользовательских ответов\n';
-      code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
-      code += `    user_data[message.from_user.id]["input_collection_enabled"] = True\n`;
-      code += `    user_data[message.from_user.id]["input_node_id"] = "${node.id}"\n`;
-      if (node.data.inputVariable) {
-        code += `    user_data[message.from_user.id]["input_variable"] = "${node.data.inputVariable}"\n`;
-      }
-    } else {
-      code += '    \n';
-      code += '    # ПРИМЕЧАНИЕ: Дополнительный сбор ответов отключен для стартового узла с навигационными кнопками\n';
-      code += '    # Это предотвращает конфликт между кнопками навигации и текстовым вводом\n';
+    // Для стартового узла с кнопками и сбором ввода сохраняем информацию о целевом узле
+    if (node.type === 'start' && node.data.inputTargetNodeId) {
+      code += `    user_data[message.from_user.id]["input_target_node_id"] = "${node.data.inputTargetNodeId}"\n`;
     }
     
     return code;
