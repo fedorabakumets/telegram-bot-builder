@@ -694,6 +694,27 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                         <div>• Проверьте работу всех команд и кнопок</div>
                         <div>• Для остановки бота нажмите <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded">Ctrl+C</code> в терминале</div>
                       </div>
+                      
+                      <div className="mt-4 bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg border border-amber-200 dark:border-amber-800/40">
+                        <div className="font-medium text-amber-800 dark:text-amber-200 mb-2">🖥️ Для пользователей Windows:</div>
+                        <div className="text-amber-700 dark:text-amber-300 text-sm space-y-2">
+                          <div>Если видите ошибку кодировки (emoji не отображаются), выполните:</div>
+                          <div className="bg-muted/30 dark:bg-muted/10 p-2 rounded border">
+                            <div className="flex justify-between items-center">
+                              <code className="text-sm font-mono">chcp 65001</code>
+                              <Button 
+                                onClick={() => navigator.clipboard.writeText('chcp 65001')}
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 px-2"
+                              >
+                                <i className="fas fa-copy text-xs"></i>
+                              </Button>
+                            </div>
+                          </div>
+                          <div>Затем запустите бот обычным способом. Эта команда включает поддержку UTF-8.</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

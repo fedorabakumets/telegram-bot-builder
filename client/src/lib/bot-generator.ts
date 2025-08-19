@@ -738,6 +738,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'import asyncio\n';
   code += 'import logging\n';
   code += 'import os\n';
+  code += 'import sys\n';
+  code += 'import locale\n';
   code += 'from aiogram import Bot, Dispatcher, types, F\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
   code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile\n';
@@ -747,6 +749,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += 'import asyncpg\n';
   code += 'from datetime import datetime, timezone, timedelta\n';
   code += 'import json\n\n';
+  
+  code += '# Настройка кодировки для Windows\n';
+  code += 'if sys.platform.startswith("win"):\n';
+  code += '    # Устанавливаем UTF-8 кодировку для stdout и stderr\n';
+  code += '    import codecs\n';
+  code += '    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())\n';
+  code += '    sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())\n';
+  code += '    \n';
+  code += '    # Альтернативный способ для старых версий Python\n';
+  code += '    if hasattr(sys.stdout, "reconfigure"):\n';
+  code += '        sys.stdout.reconfigure(encoding="utf-8")\n';
+  code += '        sys.stderr.reconfigure(encoding="utf-8")\n';
+  code += '    \n';
+  code += '    # Устанавливаем locale для корректной работы с UTF-8\n';
+  code += '    try:\n';
+  code += '        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")\n';
+  code += '    except locale.Error:\n';
+  code += '        try:\n';
+  code += '            locale.setlocale(locale.LC_ALL, "C.UTF-8")\n';
+  code += '        except locale.Error:\n';
+  code += '            pass  # Игнорируем ошибки locale на Windows\n\n';
   
   code += '# Функция для получения московского времени\n';
   code += 'def get_moscow_time():\n';
