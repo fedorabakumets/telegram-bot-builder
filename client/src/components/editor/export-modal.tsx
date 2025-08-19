@@ -700,6 +700,151 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
                 <Separator className="my-4" />
 
+                <div className="bg-cyan-50 dark:bg-cyan-950/30 p-4 rounded-lg border border-cyan-200 dark:border-cyan-800/40">
+                  <h5 className="font-medium text-cyan-800 dark:text-cyan-200 mb-2">Шаг 5: База данных (опционально)</h5>
+                  <div className="space-y-3 text-sm">
+                    <div className="text-cyan-700 dark:text-cyan-300">
+                      <div className="font-medium mb-2">По умолчанию бот использует встроенную базу данных SQLite</div>
+                      <div className="space-y-2 text-sm">
+                        <div>• Автоматически создается файл <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded">bot_database.db</code></div>
+                        <div>• Сохраняет данные пользователей, ответы на вопросы, статистику</div>
+                        <div>• Не требует дополнительной настройки</div>
+                        <div>• Подходит для большинства ботов</div>
+                      </div>
+                    </div>
+
+                    <div className="text-cyan-700 dark:text-cyan-300">
+                      <div className="font-medium mb-2">Для больших проектов можно настроить PostgreSQL:</div>
+                      <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs text-muted-foreground">Установка PostgreSQL:</span>
+                          <Button 
+                            onClick={() => navigator.clipboard.writeText('pip install asyncpg')}
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2"
+                          >
+                            <i className="fas fa-copy text-xs mr-1"></i>
+                            <span className="text-xs">Копировать</span>
+                          </Button>
+                        </div>
+                        <code className="text-sm font-mono">pip install asyncpg</code>
+                      </div>
+                    </div>
+
+                    <div className="text-cyan-700 dark:text-cyan-300">
+                      <div className="font-medium mb-2">Настройка подключения к PostgreSQL:</div>
+                      <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border space-y-2">
+                        <div className="text-xs text-muted-foreground mb-1">Найдите в коде бота строку:</div>
+                        <code className="text-sm font-mono block">DATABASE_URL = "sqlite:///bot_database.db"</code>
+                        <div className="text-xs text-muted-foreground mb-1">Замените на:</div>
+                        <code className="text-sm font-mono block break-all">DATABASE_URL = "postgresql://user:password@localhost/dbname"</code>
+                        <Button 
+                          onClick={() => navigator.clipboard.writeText('DATABASE_URL = "postgresql://user:password@localhost/dbname"')}
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2 mt-2"
+                        >
+                          <i className="fas fa-copy text-xs mr-1"></i>
+                          <span className="text-xs">Копировать</span>
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="text-cyan-700 dark:text-cyan-300 space-y-1">
+                      <div className="font-medium">Что сохраняется в базе данных:</div>
+                      <div className="ml-4 space-y-1 text-sm">
+                        <div>• <strong>Пользователи:</strong> ID, имя, дата регистрации</div>
+                        <div>• <strong>Ответы:</strong> все ответы на вопросы и выбранные кнопки</div>
+                        <div>• <strong>Статистика:</strong> количество использований команд</div>
+                        <div>• <strong>Медиа:</strong> информация о загруженных файлах</div>
+                        <div>• <strong>Сессии:</strong> состояние многошагових диалогов</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border">
+                      <div className="text-xs text-muted-foreground mb-1">Просмотр данных (SQLite):</div>
+                      <div className="space-y-2">
+                        <div>
+                          <code className="text-sm font-mono">sqlite3 bot_database.db</code>
+                          <Button 
+                            onClick={() => navigator.clipboard.writeText('sqlite3 bot_database.db')}
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 ml-2"
+                          >
+                            <i className="fas fa-copy text-xs"></i>
+                          </Button>
+                        </div>
+                        <div>
+                          <code className="text-sm font-mono">.tables</code>
+                          <Button 
+                            onClick={() => navigator.clipboard.writeText('.tables')}
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 ml-2"
+                          >
+                            <i className="fas fa-copy text-xs"></i>
+                          </Button>
+                        </div>
+                        <div>
+                          <code className="text-sm font-mono">SELECT * FROM users LIMIT 10;</code>
+                          <Button 
+                            onClick={() => navigator.clipboard.writeText('SELECT * FROM users LIMIT 10;')}
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 ml-2"
+                          >
+                            <i className="fas fa-copy text-xs"></i>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-cyan-700 dark:text-cyan-300">
+                      <div className="font-medium mb-2">Резервное копирование данных:</div>
+                      <div className="bg-muted/30 dark:bg-muted/10 p-3 rounded border space-y-2">
+                        <div className="text-xs text-muted-foreground mb-1">Создание резервной копии (SQLite):</div>
+                        <div>
+                          <code className="text-sm font-mono">cp bot_database.db bot_database_backup_$(date +%Y%m%d).db</code>
+                          <Button 
+                            onClick={() => navigator.clipboard.writeText('cp bot_database.db bot_database_backup_$(date +%Y%m%d).db')}
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 ml-2"
+                          >
+                            <i className="fas fa-copy text-xs"></i>
+                          </Button>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-2">Экспорт в CSV:</div>
+                        <div>
+                          <code className="text-sm font-mono">sqlite3 -header -csv bot_database.db "SELECT * FROM users;" &gt; users.csv</code>
+                          <Button 
+                            onClick={() => navigator.clipboard.writeText('sqlite3 -header -csv bot_database.db "SELECT * FROM users;" > users.csv')}
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 px-2 ml-2"
+                          >
+                            <i className="fas fa-copy text-xs"></i>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-cyan-700 dark:text-cyan-300 text-sm space-y-1">
+                      <div className="font-medium">Важные файлы для резервного копирования:</div>
+                      <div className="ml-4 space-y-1">
+                        <div>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded">bot_database.db</code> - основная база данных</div>
+                        <div>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded">uploads/</code> - папка с медиафайлами пользователей</div>
+                        <div>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded">*.py</code> - файлы кода бота</div>
+                        <div>• <code className="bg-muted/60 dark:bg-muted/40 px-1 rounded">config.yaml</code> - конфигурационные файлы</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="my-4" />
+
                 <div className="space-y-3">
                   <h4 className="font-medium">Настройка меню команд в @BotFather:</h4>
                   
