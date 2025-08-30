@@ -4671,7 +4671,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        # Проверяем, был ли уже обработан ввод для данного узла\n';
   code += '        current_node_id = waiting_config.get("node_id") if isinstance(waiting_config, dict) else waiting_config\n';
   code += '        processed_inputs = user_data[user_id].get("processed_inputs", set())\n';
-  code += '        if current_node_id in processed_inputs:\n';
+  code += '        if current_node_id in processed_inputs and current_node_id != "name_input":\n';
   code += '            logging.info(f"Ввод для узла {current_node_id} уже был обработан, игнорируем")\n';
   code += '            return  # Ввод для этого узла уже был обработан\n';
   code += '        \n';
