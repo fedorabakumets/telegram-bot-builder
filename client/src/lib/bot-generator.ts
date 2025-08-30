@@ -6094,7 +6094,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
       selectionButtons.forEach((button, index) => {
         // ИСПРАВЛЕНИЕ: используем тот же формат callback_data как при создании кнопок
-        const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
+        const shortNodeId = generateUniqueShortId(node.id, allNodeIds || []);
         const shortTarget = button.target || button.id || 'btn';
         const callbackData = `ms_${shortNodeId}_${shortTarget}`;
         console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> callback_data: ${callbackData}`);
