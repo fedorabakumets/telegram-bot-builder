@@ -1087,6 +1087,34 @@ async function seedDefaultTemplates(force = false) {
               messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nО себе: {extra_info}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
               keyboardType: "inline",
               removeKeyboard: false,
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "with_telegram",
+                  condition: "user_data_exists",
+                  variableNames: ["telegram_channel"],
+                  messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+                  formatMode: "text",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-profile",
+                      text: "📋 Показать анкету",
+                      action: "goto",
+                      target: "show_profile",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-chat-link",
+                      text: "🔗 Получить ссылку на чат",
+                      action: "goto",
+                      target: "chat_link",
+                      buttonType: "option"
+                    }
+                  ],
+                  priority: 1
+                }
+              ],
               buttons: [
                 {
                   id: "btn-profile",
@@ -1114,6 +1142,34 @@ async function seedDefaultTemplates(force = false) {
             data: {
               messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
               keyboardType: "inline",
+              enableConditionalMessages: true,
+              conditionalMessages: [
+                {
+                  id: "with_telegram",
+                  condition: "user_data_exists",
+                  variableNames: ["telegram_channel"],
+                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
+                  formatMode: "text",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-get-link",
+                      text: "🔗 Получить ссылку",
+                      action: "goto",
+                      target: "chat_link",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-restart-from-profile",
+                      text: "🔄 Начать заново",
+                      action: "command",
+                      target: "/start",
+                      buttonType: "navigation"
+                    }
+                  ],
+                  priority: 1
+                }
+              ],
               buttons: [
                 {
                   id: "btn-get-link",
