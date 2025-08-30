@@ -3099,9 +3099,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               }
             });
             
-            // Автоматическое распределение колонок
+            // Автоматическое распределение колонок для множественного выбора
             const totalButtons = selectionButtons.length + (targetNode.data.continueButtonTarget ? 1 : 0) + regularButtons.length;
-            const columns = calculateOptimalColumns(selectionButtons, targetNode.data, allNodeIds);
+            // Для множественного выбора всегда используем nodeData с включенным флагом
+            const multiSelectNodeData = { ...targetNode.data, allowMultipleSelection: true };
+            const columns = calculateOptimalColumns(selectionButtons, multiSelectNodeData);
             code += `    builder.adjust(${columns})\n`;
             code += '    keyboard = builder.as_markup()\n';
             
