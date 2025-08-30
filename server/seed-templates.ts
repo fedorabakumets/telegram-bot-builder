@@ -31,7 +31,7 @@ async function seedDefaultTemplates(force = false) {
       isPublic: 1,
       difficulty: "hard",
       authorName: "Система",
-      version: "2.0.0",
+      version: "3.0.0",
       featured: 1,
       language: "ru",
       complexity: 9,
@@ -174,65 +174,229 @@ async function seedDefaultTemplates(force = false) {
             type: "message",
             position: { x: 100, y: 450 },
             data: {
-              messageText: "На какой станции метро ты обычно бываешь? 🚇\n\nМожешь выбрать несколько веток:",
+              messageText: "На какой станции метро ты обычно бываешь? 🚇\n\nВыбери свою ветку:",
               keyboardType: "inline",
-              allowMultipleSelection: true,
-              multiSelectVariable: "metro_lines",
-              continueButtonTarget: "interests_categories",
+              collectUserInput: true,
+              inputVariable: "metro_choice",
               buttons: [
                 {
                   id: "btn-red",
                   text: "Красная ветка 🟥",
-                  action: "selection",
-                  target: "red_line",
+                  action: "goto",
+                  target: "red_line_stations",
                   buttonType: "option"
                 },
                 {
                   id: "btn-blue",
                   text: "Синяя ветка 🟦",
-                  action: "selection",
-                  target: "blue_line",
+                  action: "goto", 
+                  target: "blue_line_stations",
                   buttonType: "option"
                 },
                 {
                   id: "btn-green",
                   text: "Зелёная ветка 🟩",
-                  action: "selection",
-                  target: "green_line",
+                  action: "goto",
+                  target: "green_line_stations",
                   buttonType: "option"
                 },
                 {
                   id: "btn-orange",
                   text: "Оранжевая ветка 🟧",
-                  action: "selection",
-                  target: "orange_line",
+                  action: "goto",
+                  target: "orange_line_stations",
                   buttonType: "option"
                 },
                 {
                   id: "btn-purple",
                   text: "Фиолетовая ветка 🟪",
-                  action: "selection",
-                  target: "purple_line",
+                  action: "goto",
+                  target: "purple_line_stations",
                   buttonType: "option"
                 },
                 {
                   id: "btn-lo",
                   text: "Я из ЛО 🏡",
-                  action: "selection",
-                  target: "lo_cities",
+                  value: "ЛО",
+                  action: "goto",
+                  target: "interests_categories",
                   buttonType: "option"
                 },
                 {
                   id: "btn-not-spb",
                   text: "Я не в Питере 🌍",
-                  action: "selection",
-                  target: "not_in_spb",
+                  value: "Не в СПб",
+                  action: "goto",
+                  target: "interests_categories",
                   buttonType: "option"
                 }
               ],
               markdown: false,
               oneTimeKeyboard: true,
               resizeKeyboard: true
+            }
+          },
+
+          // Красная ветка (Кировско-Выборгская) - станции
+          {
+            id: "red_line_stations",
+            type: "message",
+            position: { x: 1500, y: 450 },
+            data: {
+              messageText: "🟥 Кировско-Выборгская линия\n\nВыбери свою станцию:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "metro_stations",
+              continueButtonTarget: "interests_categories",
+              buttons: [
+                { id: "red-devyatkino", text: "Девяткино", action: "selection", target: "devyatkino", buttonType: "option" },
+                { id: "red-grazhdansky", text: "Гражданский проспект", action: "selection", target: "grazhdansky", buttonType: "option" },
+                { id: "red-akademicheskaya", text: "Академическая", action: "selection", target: "akademicheskaya", buttonType: "option" },
+                { id: "red-politehnicheskaya", text: "Политехническая", action: "selection", target: "politehnicheskaya", buttonType: "option" },
+                { id: "red-pl-muzhestva", text: "Площадь Мужества", action: "selection", target: "pl_muzhestva", buttonType: "option" },
+                { id: "red-lesnaya", text: "Лесная", action: "selection", target: "lesnaya", buttonType: "option" },
+                { id: "red-vyborgskaya", text: "Выборгская", action: "selection", target: "vyborgskaya", buttonType: "option" },
+                { id: "red-pl-lenina", text: "Площадь Ленина", action: "selection", target: "pl_lenina", buttonType: "option" },
+                { id: "red-chernyshevskaya", text: "Чернышевская", action: "selection", target: "chernyshevskaya", buttonType: "option" },
+                { id: "red-pl-vosstaniya", text: "Площадь Восстания", action: "selection", target: "pl_vosstaniya", buttonType: "option" },
+                { id: "red-vladimirskaya", text: "Владимирская", action: "selection", target: "vladimirskaya", buttonType: "option" },
+                { id: "red-pushkinskaya", text: "Пушкинская", action: "selection", target: "pushkinskaya", buttonType: "option" },
+                { id: "red-tehinstitut1", text: "Технологический институт-1", action: "selection", target: "tehinstitut1", buttonType: "option" },
+                { id: "red-baltiyskaya", text: "Балтийская", action: "selection", target: "baltiyskaya", buttonType: "option" },
+                { id: "red-narvskaya", text: "Нарвская", action: "selection", target: "narvskaya", buttonType: "option" },
+                { id: "red-kirovsky", text: "Кировский завод", action: "selection", target: "kirovsky", buttonType: "option" },
+                { id: "red-avtovo", text: "Автово", action: "selection", target: "avtovo", buttonType: "option" },
+                { id: "red-leninsky", text: "Ленинский проспект", action: "selection", target: "leninsky", buttonType: "option" },
+                { id: "red-veteranov", text: "Проспект Ветеранов", action: "selection", target: "veteranov", buttonType: "option" },
+                { id: "btn-back-metro", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+              ],
+              markdown: false
+            }
+          },
+
+          // Синяя ветка (Московско-Петроградская) - станции
+          {
+            id: "blue_line_stations",
+            type: "message",
+            position: { x: 1900, y: 450 },
+            data: {
+              messageText: "🟦 Московско-Петроградская линия\n\nВыбери свою станцию:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "metro_stations",
+              continueButtonTarget: "interests_categories",
+              buttons: [
+                { id: "blue-parnas", text: "Парнас", action: "selection", target: "parnas", buttonType: "option" },
+                { id: "blue-prosp-prosvesh", text: "Проспект Просвещения", action: "selection", target: "prosp_prosvesh", buttonType: "option" },
+                { id: "blue-ozerki", text: "Озерки", action: "selection", target: "ozerki", buttonType: "option" },
+                { id: "blue-udelnaya", text: "Удельная", action: "selection", target: "udelnaya", buttonType: "option" },
+                { id: "blue-pionerskaya", text: "Пионерская", action: "selection", target: "pionerskaya", buttonType: "option" },
+                { id: "blue-chernaya", text: "Черная речка", action: "selection", target: "chernaya", buttonType: "option" },
+                { id: "blue-petrogradskaya", text: "Петроградская", action: "selection", target: "petrogradskaya", buttonType: "option" },
+                { id: "blue-gorkovskaya", text: "Горьковская", action: "selection", target: "gorkovskaya", buttonType: "option" },
+                { id: "blue-nevsky", text: "Невский проспект", action: "selection", target: "nevsky", buttonType: "option" },
+                { id: "blue-sennaya", text: "Сенная площадь", action: "selection", target: "sennaya", buttonType: "option" },
+                { id: "blue-tehinstitut2", text: "Технологический институт-2", action: "selection", target: "tehinstitut2", buttonType: "option" },
+                { id: "blue-frunzenskaya", text: "Фрунзенская", action: "selection", target: "frunzenskaya", buttonType: "option" },
+                { id: "blue-mosk-vorota", text: "Московские ворота", action: "selection", target: "mosk_vorota", buttonType: "option" },
+                { id: "blue-elektrosila", text: "Электросила", action: "selection", target: "elektrosila", buttonType: "option" },
+                { id: "blue-park-pobedy", text: "Парк Победы", action: "selection", target: "park_pobedy", buttonType: "option" },
+                { id: "blue-moskovskaya", text: "Московская", action: "selection", target: "moskovskaya", buttonType: "option" },
+                { id: "blue-zvezdnaya", text: "Звездная", action: "selection", target: "zvezdnaya", buttonType: "option" },
+                { id: "blue-kupchino", text: "Купчино", action: "selection", target: "kupchino", buttonType: "option" },
+                { id: "btn-back-metro-blue", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+              ],
+              markdown: false
+            }
+          },
+
+          // Зелёная ветка (Невско-Василеостровская) - станции
+          {
+            id: "green_line_stations",
+            type: "message",
+            position: { x: 2300, y: 450 },
+            data: {
+              messageText: "🟩 Невско-Василеостровская линия\n\nВыбери свою станцию:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "metro_stations",
+              continueButtonTarget: "interests_categories",
+              buttons: [
+                { id: "green-primorskaya", text: "Приморская", action: "selection", target: "primorskaya", buttonType: "option" },
+                { id: "green-vasileostr", text: "Василеостровская", action: "selection", target: "vasileostr", buttonType: "option" },
+                { id: "green-gostiny", text: "Гостиный двор", action: "selection", target: "gostiny", buttonType: "option" },
+                { id: "green-mayakovskaya", text: "Маяковская", action: "selection", target: "mayakovskaya", buttonType: "option" },
+                { id: "green-pl-nevsk", text: "Площадь Александра Невского-1", action: "selection", target: "pl_nevsk", buttonType: "option" },
+                { id: "green-elizarovskaya", text: "Елизаровская", action: "selection", target: "elizarovskaya", buttonType: "option" },
+                { id: "green-lomonosovskaya", text: "Ломоносовская", action: "selection", target: "lomonosovskaya", buttonType: "option" },
+                { id: "green-proletarskaya", text: "Пролетарская", action: "selection", target: "proletarskaya", buttonType: "option" },
+                { id: "green-obuhovo", text: "Обухово", action: "selection", target: "obuhovo", buttonType: "option" },
+                { id: "green-rybackoe", text: "Рыбацкое", action: "selection", target: "rybackoe", buttonType: "option" },
+                { id: "green-novokrestovsk", text: "Новокрестовская", action: "selection", target: "novokrestovsk", buttonType: "option" },
+                { id: "green-begovaya", text: "Беговая", action: "selection", target: "begovaya", buttonType: "option" },
+                { id: "btn-back-metro-green", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+              ],
+              markdown: false
+            }
+          },
+
+          // Оранжевая ветка (Правобережная) - станции
+          {
+            id: "orange_line_stations",
+            type: "message",
+            position: { x: 2700, y: 450 },
+            data: {
+              messageText: "🟧 Правобережная линия\n\nВыбери свою станцию:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "metro_stations",
+              continueButtonTarget: "interests_categories",
+              buttons: [
+                { id: "orange-spasskaya", text: "Спасская", action: "selection", target: "spasskaya", buttonType: "option" },
+                { id: "orange-dostoevskaya", text: "Достоевская", action: "selection", target: "dostoevskaya", buttonType: "option" },
+                { id: "orange-ligovsky", text: "Лиговский проспект", action: "selection", target: "ligovsky", buttonType: "option" },
+                { id: "orange-pl-nevsk2", text: "Площадь Александра Невского-2", action: "selection", target: "pl_nevsk2", buttonType: "option" },
+                { id: "orange-novocherk", text: "Новочеркасская", action: "selection", target: "novocherk", buttonType: "option" },
+                { id: "orange-ladozhskaya", text: "Ладожская", action: "selection", target: "ladozhskaya", buttonType: "option" },
+                { id: "orange-bolshevikov", text: "Проспект Большевиков", action: "selection", target: "bolshevikov", buttonType: "option" },
+                { id: "orange-dybenko", text: "Дыбенко", action: "selection", target: "dybenko", buttonType: "option" },
+                { id: "orange-gorny", text: "Горный институт", action: "selection", target: "gorny", buttonType: "option" },
+                { id: "btn-back-metro-orange", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+              ],
+              markdown: false
+            }
+          },
+
+          // Фиолетовая ветка (Фрунзенско-Приморская) - станции
+          {
+            id: "purple_line_stations",
+            type: "message",
+            position: { x: 3100, y: 450 },
+            data: {
+              messageText: "🟪 Фрунзенско-Приморская линия\n\nВыбери свою станцию:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "metro_stations",
+              continueButtonTarget: "interests_categories",
+              buttons: [
+                { id: "purple-komendantsky", text: "Комендантский проспект", action: "selection", target: "komendantsky", buttonType: "option" },
+                { id: "purple-staraya", text: "Старая Деревня", action: "selection", target: "staraya", buttonType: "option" },
+                { id: "purple-krestovsky", text: "Крестовский остров", action: "selection", target: "krestovsky", buttonType: "option" },
+                { id: "purple-chkalovskaya", text: "Чкаловская", action: "selection", target: "chkalovskaya", buttonType: "option" },
+                { id: "purple-sportivnaya", text: "Спортивная", action: "selection", target: "sportivnaya", buttonType: "option" },
+                { id: "purple-admiralteyskaya", text: "Адмиралтейская", action: "selection", target: "admiralteyskaya", buttonType: "option" },
+                { id: "purple-sadovaya", text: "Садовая", action: "selection", target: "sadovaya", buttonType: "option" },
+                { id: "purple-zvenigorodskaya", text: "Звенигородская", action: "selection", target: "zvenigorodskaya", buttonType: "option" },
+                { id: "purple-obvodniy", text: "Обводный канал", action: "selection", target: "obvodniy", buttonType: "option" },
+                { id: "purple-volkovskaya", text: "Волковская", action: "selection", target: "volkovskaya", buttonType: "option" },
+                { id: "purple-buharestskaya", text: "Бухарестская", action: "selection", target: "buharestskaya", buttonType: "option" },
+                { id: "purple-mezhdunar", text: "Международная", action: "selection", target: "mezhdunar", buttonType: "option" },
+                { id: "purple-slavy", text: "Проспект Славы", action: "selection", target: "slavy", buttonType: "option" },
+                { id: "purple-dunayskaya", text: "Дунайская", action: "selection", target: "dunayskaya", buttonType: "option" },
+                { id: "purple-shushary", text: "Шушары", action: "selection", target: "shushary", buttonType: "option" },
+                { id: "btn-back-metro-purple", text: "⬅️ Назад к веткам", action: "goto", target: "metro_selection", buttonType: "navigation" }
+              ],
+              markdown: false
             }
           },
 
@@ -1047,9 +1211,125 @@ async function seedDefaultTemplates(force = false) {
             sourceHandle: "source",
             targetHandle: "target"
           },
+          // Connections from metro_selection to different line stations
           {
-            id: "conn-8",
+            id: "conn-8a",
+            sourceNodeId: "metro_selection", 
+            targetNodeId: "red_line_stations",
+            sourceHandle: "btn-red",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8b",
             sourceNodeId: "metro_selection",
+            targetNodeId: "blue_line_stations", 
+            sourceHandle: "btn-blue",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8c",
+            sourceNodeId: "metro_selection",
+            targetNodeId: "green_line_stations",
+            sourceHandle: "btn-green", 
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8d",
+            sourceNodeId: "metro_selection",
+            targetNodeId: "orange_line_stations",
+            sourceHandle: "btn-orange",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8e",
+            sourceNodeId: "metro_selection",
+            targetNodeId: "purple_line_stations",
+            sourceHandle: "btn-purple",
+            targetHandle: "target"
+          },
+          // Direct connections to interests for ЛО and non-SPb users
+          {
+            id: "conn-8f",
+            sourceNodeId: "metro_selection",
+            targetNodeId: "interests_categories",
+            sourceHandle: "btn-lo",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8g",
+            sourceNodeId: "metro_selection",
+            targetNodeId: "interests_categories",
+            sourceHandle: "btn-not-spb",
+            targetHandle: "target"
+          },
+          // Back connections from station nodes to metro selection
+          {
+            id: "conn-8h",
+            sourceNodeId: "red_line_stations",
+            targetNodeId: "metro_selection",
+            sourceHandle: "btn-back-metro",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8i",
+            sourceNodeId: "blue_line_stations",
+            targetNodeId: "metro_selection",
+            sourceHandle: "btn-back-metro-blue",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8j",
+            sourceNodeId: "green_line_stations",
+            targetNodeId: "metro_selection",
+            sourceHandle: "btn-back-metro-green",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8k",
+            sourceNodeId: "orange_line_stations",
+            targetNodeId: "metro_selection",
+            sourceHandle: "btn-back-metro-orange",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8l",
+            sourceNodeId: "purple_line_stations",
+            targetNodeId: "metro_selection",
+            sourceHandle: "btn-back-metro-purple",
+            targetHandle: "target"
+          },
+          // Forward connections from station nodes to interests
+          {
+            id: "conn-8m",
+            sourceNodeId: "red_line_stations",
+            targetNodeId: "interests_categories",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8n",
+            sourceNodeId: "blue_line_stations",
+            targetNodeId: "interests_categories",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8o",
+            sourceNodeId: "green_line_stations",
+            targetNodeId: "interests_categories",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8p",
+            sourceNodeId: "orange_line_stations",
+            targetNodeId: "interests_categories",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-8q",
+            sourceNodeId: "purple_line_stations",
             targetNodeId: "interests_categories",
             sourceHandle: "source",
             targetHandle: "target"
