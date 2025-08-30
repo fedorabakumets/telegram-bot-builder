@@ -384,6 +384,359 @@ async function seedDefaultTemplates(force = false) {
           },
 
           {
+            id: "social_interests",
+            type: "message",
+            position: { x: 1300, y: 450 },
+            data: {
+              messageText: "Выбери интересы в категории 👥 Социальная жизнь:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "user_interests",
+              continueButtonTarget: "marital_status",
+              buttons: [
+                {
+                  id: "social-parties",
+                  text: "🎉 Вечеринки",
+                  action: "selection",
+                  target: "parties",
+                  buttonType: "option"
+                },
+                {
+                  id: "social-networking",
+                  text: "🤝 Нетворкинг",
+                  action: "selection",
+                  target: "networking",
+                  buttonType: "option"
+                },
+                {
+                  id: "social-dating",
+                  text: "💕 Знакомства",
+                  action: "selection",
+                  target: "dating",
+                  buttonType: "option"
+                },
+                {
+                  id: "social-volunteering",
+                  text: "🤲 Волонтёрство",
+                  action: "selection",
+                  target: "volunteering",
+                  buttonType: "option"
+                },
+                {
+                  id: "social-events",
+                  text: "🎪 Мероприятия",
+                  action: "selection",
+                  target: "events",
+                  buttonType: "option"
+                },
+                {
+                  id: "social-community",
+                  text: "👥 Сообщества",
+                  action: "selection",
+                  target: "community",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-back-categories-social",
+                  text: "⬅️ К категориям",
+                  action: "goto",
+                  target: "interests_categories",
+                  buttonType: "navigation"
+                }
+              ],
+              markdown: false
+            }
+          },
+
+          {
+            id: "creativity_interests",
+            type: "message",
+            position: { x: 100, y: 650 },
+            data: {
+              messageText: "Выбери интересы в категории 🎨 Творчество:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "user_interests",
+              continueButtonTarget: "marital_status",
+              buttons: [
+                {
+                  id: "creativity-art",
+                  text: "🎨 Рисование",
+                  action: "selection",
+                  target: "art",
+                  buttonType: "option"
+                },
+                {
+                  id: "creativity-music",
+                  text: "🎵 Музыка",
+                  action: "selection",
+                  target: "music",
+                  buttonType: "option"
+                },
+                {
+                  id: "creativity-photography",
+                  text: "📸 Фотография",
+                  action: "selection",
+                  target: "photography",
+                  buttonType: "option"
+                },
+                {
+                  id: "creativity-writing",
+                  text: "✍️ Писательство",
+                  action: "selection",
+                  target: "writing",
+                  buttonType: "option"
+                },
+                {
+                  id: "creativity-design",
+                  text: "🖌️ Дизайн",
+                  action: "selection",
+                  target: "design",
+                  buttonType: "option"
+                },
+                {
+                  id: "creativity-handmade",
+                  text: "🧶 Рукоделие",
+                  action: "selection",
+                  target: "handmade",
+                  buttonType: "option"
+                },
+                {
+                  id: "creativity-theater",
+                  text: "🎭 Театр",
+                  action: "selection",
+                  target: "theater",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-back-categories-creativity",
+                  text: "⬅️ К категориям",
+                  action: "goto",
+                  target: "interests_categories",
+                  buttonType: "navigation"
+                }
+              ],
+              markdown: false
+            }
+          },
+
+          {
+            id: "active_interests",
+            type: "message",
+            position: { x: 500, y: 650 },
+            data: {
+              messageText: "Выбери интересы в категории 🏃 Активный образ жизни:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "user_interests",
+              continueButtonTarget: "marital_status",
+              buttons: [
+                {
+                  id: "active-running",
+                  text: "🏃 Бег",
+                  action: "selection",
+                  target: "running",
+                  buttonType: "option"
+                },
+                {
+                  id: "active-gym",
+                  text: "💪 Тренажёрный зал",
+                  action: "selection",
+                  target: "gym",
+                  buttonType: "option"
+                },
+                {
+                  id: "active-cycling",
+                  text: "🚴 Велосипед",
+                  action: "selection",
+                  target: "cycling",
+                  buttonType: "option"
+                },
+                {
+                  id: "active-hiking",
+                  text: "🥾 Походы",
+                  action: "selection",
+                  target: "hiking",
+                  buttonType: "option"
+                },
+                {
+                  id: "active-yoga",
+                  text: "🧘 Йога",
+                  action: "selection",
+                  target: "yoga",
+                  buttonType: "option"
+                },
+                {
+                  id: "active-swimming",
+                  text: "🏊 Плавание",
+                  action: "selection",
+                  target: "swimming",
+                  buttonType: "option"
+                },
+                {
+                  id: "active-dancing",
+                  text: "💃 Танцы",
+                  action: "selection",
+                  target: "dancing",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-back-categories-active",
+                  text: "⬅️ К категориям",
+                  action: "goto",
+                  target: "interests_categories",
+                  buttonType: "navigation"
+                }
+              ],
+              markdown: false
+            }
+          },
+
+          {
+            id: "food_interests",
+            type: "message",
+            position: { x: 900, y: 650 },
+            data: {
+              messageText: "Выбери интересы в категории 🍕 Еда и напитки:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "user_interests",
+              continueButtonTarget: "marital_status",
+              buttons: [
+                {
+                  id: "food-cooking",
+                  text: "👨‍🍳 Готовка",
+                  action: "selection",
+                  target: "cooking",
+                  buttonType: "option"
+                },
+                {
+                  id: "food-restaurants",
+                  text: "🍽️ Рестораны",
+                  action: "selection",
+                  target: "restaurants",
+                  buttonType: "option"
+                },
+                {
+                  id: "food-wine",
+                  text: "🍷 Вино",
+                  action: "selection",
+                  target: "wine",
+                  buttonType: "option"
+                },
+                {
+                  id: "food-coffee",
+                  text: "☕ Кофе",
+                  action: "selection",
+                  target: "coffee",
+                  buttonType: "option"
+                },
+                {
+                  id: "food-baking",
+                  text: "🧁 Выпечка",
+                  action: "selection",
+                  target: "baking",
+                  buttonType: "option"
+                },
+                {
+                  id: "food-street",
+                  text: "🌮 Стрит-фуд",
+                  action: "selection",
+                  target: "street_food",
+                  buttonType: "option"
+                },
+                {
+                  id: "food-healthy",
+                  text: "🥗 Здоровое питание",
+                  action: "selection",
+                  target: "healthy_food",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-back-categories-food",
+                  text: "⬅️ К категориям",
+                  action: "goto",
+                  target: "interests_categories",
+                  buttonType: "navigation"
+                }
+              ],
+              markdown: false
+            }
+          },
+
+          {
+            id: "sport_interests",
+            type: "message",
+            position: { x: 1300, y: 650 },
+            data: {
+              messageText: "Выбери интересы в категории ⚽ Спорт:",
+              keyboardType: "inline",
+              allowMultipleSelection: true,
+              multiSelectVariable: "user_interests",
+              continueButtonTarget: "marital_status",
+              buttons: [
+                {
+                  id: "sport-football",
+                  text: "⚽ Футбол",
+                  action: "selection",
+                  target: "football",
+                  buttonType: "option"
+                },
+                {
+                  id: "sport-basketball",
+                  text: "🏀 Баскетбол",
+                  action: "selection",
+                  target: "basketball",
+                  buttonType: "option"
+                },
+                {
+                  id: "sport-tennis",
+                  text: "🎾 Теннис",
+                  action: "selection",
+                  target: "tennis",
+                  buttonType: "option"
+                },
+                {
+                  id: "sport-hockey",
+                  text: "🏒 Хоккей",
+                  action: "selection",
+                  target: "hockey",
+                  buttonType: "option"
+                },
+                {
+                  id: "sport-volleyball",
+                  text: "🏐 Волейбол",
+                  action: "selection",
+                  target: "volleyball",
+                  buttonType: "option"
+                },
+                {
+                  id: "sport-mma",
+                  text: "🥊 Единоборства",
+                  action: "selection",
+                  target: "mma",
+                  buttonType: "option"
+                },
+                {
+                  id: "sport-esports",
+                  text: "🎮 Киберспорт",
+                  action: "selection",
+                  target: "esports",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-back-categories-sport",
+                  text: "⬅️ К категориям",
+                  action: "goto",
+                  target: "interests_categories",
+                  buttonType: "navigation"
+                }
+              ],
+              markdown: false
+            }
+          },
+
+          {
             id: "marital_status",
             type: "message",
             position: { x: 1300, y: 450 },
@@ -718,6 +1071,111 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "conn-11",
             sourceNodeId: "hobby_interests",
+            targetNodeId: "marital_status",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-30",
+            sourceNodeId: "interests_categories",
+            targetNodeId: "social_interests",
+            sourceHandle: "btn-social",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-31",
+            sourceNodeId: "social_interests",
+            targetNodeId: "interests_categories",
+            sourceHandle: "btn-back-categories-social",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-32",
+            sourceNodeId: "social_interests",
+            targetNodeId: "marital_status",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-33",
+            sourceNodeId: "interests_categories",
+            targetNodeId: "creativity_interests",
+            sourceHandle: "btn-creativity",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-34",
+            sourceNodeId: "creativity_interests",
+            targetNodeId: "interests_categories",
+            sourceHandle: "btn-back-categories-creativity",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-35",
+            sourceNodeId: "creativity_interests",
+            targetNodeId: "marital_status",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-36",
+            sourceNodeId: "interests_categories",
+            targetNodeId: "active_interests",
+            sourceHandle: "btn-active",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-37",
+            sourceNodeId: "active_interests",
+            targetNodeId: "interests_categories",
+            sourceHandle: "btn-back-categories-active",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-38",
+            sourceNodeId: "active_interests",
+            targetNodeId: "marital_status",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-39",
+            sourceNodeId: "interests_categories",
+            targetNodeId: "food_interests",
+            sourceHandle: "btn-food",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-40",
+            sourceNodeId: "food_interests",
+            targetNodeId: "interests_categories",
+            sourceHandle: "btn-back-categories-food",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-41",
+            sourceNodeId: "food_interests",
+            targetNodeId: "marital_status",
+            sourceHandle: "source",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-42",
+            sourceNodeId: "interests_categories",
+            targetNodeId: "sport_interests",
+            sourceHandle: "btn-sport",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-43",
+            sourceNodeId: "sport_interests",
+            targetNodeId: "interests_categories",
+            sourceHandle: "btn-back-categories-sport",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-44",
+            sourceNodeId: "sport_interests",
             targetNodeId: "marital_status",
             sourceHandle: "source",
             targetHandle: "target"
