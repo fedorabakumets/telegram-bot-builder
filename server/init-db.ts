@@ -1,14 +1,36 @@
 import { sql } from 'drizzle-orm';
 import { getDb } from './db';
 
+async function executeWithRetry(db: any, query: any, description: string, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await db.execute(query);
+      console.log(`✅ ${description} - успешно`);
+      return;
+    } catch (error) {
+      console.warn(`⚠️ ${description} - попытка ${attempt}/${maxRetries} не удалась:`, error);
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+}
+
 export async function initializeDatabaseTables() {
   console.log('🔧 Initializing database tables...');
   
   try {
     const db = getDb();
     
+    // First, test the connection
+    console.log('Testing database connection...');
+    await db.execute(sql`SELECT 1 as health`);
+    console.log('✅ Database connection successful!');
+    
     // Создаем таблицы если их нет (с поддержкой IF NOT EXISTS)
-    await db.execute(sql`
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_projects (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -18,9 +40,9 @@ export async function initializeDatabaseTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
-    `);
+    `, "Создание таблицы bot_projects");
 
-    await db.execute(sql`
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_instances (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) NOT NULL,
@@ -31,9 +53,9 @@ export async function initializeDatabaseTables() {
         stopped_at TIMESTAMP,
         error_message TEXT
       );
-    `);
+    `, "Создание таблицы bot_instances");
 
-    await db.execute(sql`
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_templates (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -63,9 +85,9 @@ export async function initializeDatabaseTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
-    `);
+    `, "Создание таблицы bot_templates");
 
-    await db.execute(sql`
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_tokens (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
@@ -78,9 +100,9 @@ export async function initializeDatabaseTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
-    `);
+    `, "Создание таблицы bot_tokens");
 
-    await db.execute(sql`
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS media_files (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
@@ -97,9 +119,9 @@ export async function initializeDatabaseTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
-    `);
+    `, "Создание таблицы media_files");
 
-    await db.execute(sql`
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS user_bot_data (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
@@ -129,9 +151,9 @@ export async function initializeDatabaseTables() {
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
-    `);
+    `, "Создание таблицы user_bot_data");
 
-    await db.execute(sql`
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_users (
         user_id BIGINT PRIMARY KEY,
         username TEXT,
@@ -143,7 +165,7 @@ export async function initializeDatabaseTables() {
         user_data JSONB DEFAULT '{}',
         is_active INTEGER DEFAULT 1
       );
-    `);
+    `, "Создание таблицы bot_users");
 
     console.log('✅ Database tables initialized successfully!');
     return true;
