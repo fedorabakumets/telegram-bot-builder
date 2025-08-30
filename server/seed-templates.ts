@@ -1100,8 +1100,8 @@ async function seedDefaultTemplates(force = false) {
                     {
                       id: "btn-profile",
                       text: "📋 Показать анкету",
-                      action: "goto",
-                      target: "show_profile",
+                      action: "command",
+                      target: "/профиль",
                       buttonType: "option"
                     },
                     {
@@ -1119,8 +1119,8 @@ async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-profile",
                   text: "📋 Показать анкету",
-                  action: "goto",
-                  target: "show_profile",
+                  action: "command",
+                  target: "/профиль",
                   buttonType: "option"
                 },
                 {
@@ -1137,9 +1137,10 @@ async function seedDefaultTemplates(force = false) {
 
           {
             id: "show_profile",
-            type: "message",
+            type: "command",
             position: { x: 500, y: 850 },
             data: {
+              commandName: "/профиль",
               messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
               keyboardType: "inline",
               enableConditionalMessages: true,
@@ -1201,8 +1202,8 @@ async function seedDefaultTemplates(force = false) {
                 {
                   id: "btn-back-profile",
                   text: "⬅️ Назад к анкете",
-                  action: "goto",
-                  target: "show_profile",
+                  action: "command",
+                  target: "/профиль",
                   buttonType: "navigation"
                 },
                 {
@@ -1615,13 +1616,6 @@ async function seedDefaultTemplates(force = false) {
             targetHandle: "target"
           },
           {
-            id: "conn-26",
-            sourceNodeId: "profile_complete",
-            targetNodeId: "show_profile",
-            sourceHandle: "btn-profile",
-            targetHandle: "target"
-          },
-          {
             id: "conn-27",
             sourceNodeId: "profile_complete",
             targetNodeId: "chat_link",
@@ -1633,13 +1627,6 @@ async function seedDefaultTemplates(force = false) {
             sourceNodeId: "show_profile",
             targetNodeId: "chat_link",
             sourceHandle: "btn-get-link",
-            targetHandle: "target"
-          },
-          {
-            id: "conn-29",
-            sourceNodeId: "chat_link",
-            targetNodeId: "show_profile",
-            sourceHandle: "btn-back-profile",
             targetHandle: "target"
           }
         ]
