@@ -881,7 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
   
   // Initialize default templates on startup
-  await seedDefaultTemplates();
+  await seedDefaultTemplates(true);
   
   // Ensure at least one default project exists
   await ensureDefaultProject();

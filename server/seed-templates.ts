@@ -766,9 +766,18 @@ async function seedDefaultTemplates(force = false) {
             type: "message",
             position: { x: 100, y: 900 },
             data: {
-              messageText: "Хочешь добавить что-то ещё о себе? 📝\n\nРасскажи о себе (до 2000 символов) или напиши 'пропустить':",
-              keyboardType: "none",
-              buttons: [],
+              messageText: "Хочешь добавить что-то ещё о себе? 📝\n\nРасскажи о себе (до 2000 символов):",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-skip",
+                  text: "⏭️ Пропустить",
+                  action: "goto",
+                  buttonType: "navigation",
+                  target: "profile_complete",
+                  value: "skip"
+                }
+              ],
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "extra_info",
