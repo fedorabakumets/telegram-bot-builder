@@ -1140,7 +1140,7 @@ async function seedDefaultTemplates(force = false) {
             type: "command",
             position: { x: 500, y: 850 },
             data: {
-              commandName: ["/профиль", "/profile"],
+              commandName: "/profile",
               messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
               keyboardType: "inline",
               enableConditionalMessages: true,
