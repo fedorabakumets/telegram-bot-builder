@@ -1193,25 +1193,41 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // Avoid duplicate handlers for button IDs (not target IDs)
           if (processedCallbacks.has(callbackData)) return;
           
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Избегаем дублированных обработчиков для target узлов
+          if (button.target && processedCallbacks.has(button.target)) {
+            console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
+            return;
+          }
+          
           // Find target node (может быть null если нет target)
           const targetNode = button.target ? nodes.find(n => n.id === button.target) : null;
-          
-          // Mark this button ID as processed
-          processedCallbacks.add(callbackData);
           
           // Создаем обработчик для каждой кнопки используя target как callback_data
           const actualCallbackData = button.target || callbackData;
           
-          // ОТЛАДКА: Проверяем если это interests_result
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем target узел перед созданием обработчика
+          if (button.target && processedCallbacks.has(button.target)) {
+            console.log(`🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
+            return;
+          }
+          
+          // Mark this button ID as processed
+          processedCallbacks.add(callbackData);
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем target в processedCallbacks СРАЗУ, чтобы избежать дублирования
+          if (button.target) {
+            processedCallbacks.add(button.target);
+            console.log(`🔧 ГЕНЕРАТОР: Узел ${button.target} добавлен в processedCallbacks ДО создания обработчика`);
+          }
+          
+          // ОТЛАДКА: Проверяем если это interests_result или metro_selection
           if (button.target === 'interests_result') {
             console.log('🔧 ГЕНЕРАТОР DEBUG: Создаем ПЕРВЫЙ обработчик для interests_result в основном цикле');
             console.log('🔧 ГЕНЕРАТОР DEBUG: processedCallbacks до добавления:', Array.from(processedCallbacks));
           }
-          
-          // Mark the target node as processed ONLY if we create a handler for it
-          if (button.target) {
-            processedCallbacks.add(button.target);
-            console.log(`🔧 ГЕНЕРАТОР: Узел ${button.target} добавлен в processedCallbacks из inline кнопок`);
+          if (button.target === 'metro_selection') {
+            console.log('🔧 ГЕНЕРАТОР DEBUG: Создаем ПЕРВЫЙ обработчик для metro_selection в основном цикле');
+            console.log('🔧 ГЕНЕРАТОР DEBUG: processedCallbacks до добавления:', Array.from(processedCallbacks));
           }
           
           // Если целевой узел имеет множественный выбор, добавляем обработку кнопки "done_"
@@ -1499,24 +1515,31 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 const inputTargetNodeId = targetNode.data.inputTargetNodeId;
                 
-                code += '    \n';
-                code += `    logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
-                code += '    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput\n';
-                code += '    # Инициализируем user_data для пользователя если не существует\n';
-                code += '    if user_id not in user_data:\n';
-                code += '        user_data[user_id] = {}\n';
-                code += '    user_data[user_id]["waiting_for_input"] = {\n';
-                code += `        "type": "${inputType}",\n`;
-                code += `        "variable": "${inputVariable}",\n`;
-                code += '        "save_to_database": True,\n';
-                code += `        "node_id": "${targetNode.id}",\n`;
-                code += `        "next_node_id": "${inputTargetNodeId || ''}",\n`;
-                code += `        "min_length": ${targetNode.data.minLength || 0},\n`;
-                code += `        "max_length": ${targetNode.data.maxLength || 0},\n`;
-                code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-                code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
-                code += '    }\n';
-                code += `    logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable}")\n`;
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки, НЕ настраиваем ожидание ввода
+                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+                  code += '    \n';
+                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет кнопки - НЕ настраиваем ожидание ввода")\n`;
+                  code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки, они уже отображены выше\n`;
+                } else {
+                  code += '    \n';
+                  code += `    logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
+                  code += '    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput\n';
+                  code += '    # Инициализируем user_data для пользователя если не существует\n';
+                  code += '    if user_id not in user_data:\n';
+                  code += '        user_data[user_id] = {}\n';
+                  code += '    user_data[user_id]["waiting_for_input"] = {\n';
+                  code += `        "type": "${inputType}",\n`;
+                  code += `        "variable": "${inputVariable}",\n`;
+                  code += '        "save_to_database": True,\n';
+                  code += `        "node_id": "${targetNode.id}",\n`;
+                  code += `        "next_node_id": "${inputTargetNodeId || ''}",\n`;
+                  code += `        "min_length": ${targetNode.data.minLength || 0},\n`;
+                  code += `        "max_length": ${targetNode.data.maxLength || 0},\n`;
+                  code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+                  code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
+                  code += '    }\n';
+                  code += `    logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable}")\n`;
+                }
               }
             }
             // Handle different target node types
@@ -2879,10 +2902,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             return; // Пропускаем создание дублированной функции
           }
           
-          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также проверяем interests_result
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также проверяем interests_result и metro_selection
           if (nodeId === 'interests_result') {
             console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для interests_result - уже создан в основном цикле`);
             return; // Избегаем дублирования обработчика interests_result
+          }
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Пропускаем дублирующий обработчик для metro_selection
+          if (nodeId === 'metro_selection') {
+            console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для metro_selection - уже создан в основном цикле`);
+            return; // Избегаем дублирования обработчика metro_selection
           }
           
           processedCallbacks.add(nodeId);
@@ -4402,22 +4431,39 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         if (targetNode.data.collectUserInput === true) {
           const messageText = targetNode.data.messageText || 'Сообщение';
           const formattedText = formatTextForPython(messageText);
-          code += `                        # Узел собирает пользовательский ввод\n`;
-          code += `                        logging.info(f"🔧 Условная навигация к узлу с вводом: ${targetNode.id}")\n`;
-          code += `                        text = ${formattedText}\n`;
           
-          // Настраиваем ожидание ввода
-          const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-          const inputTargetNodeId = targetNode.data.inputTargetNodeId;
-          code += `                        await message.answer(text)\n`;
-          code += `                        # Настраиваем ожидание ввода\n`;
-          code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
-          code += `                            "type": "text",\n`;
-          code += `                            "variable": "${inputVariable}",\n`;
-          code += `                            "save_to_database": True,\n`;
-          code += `                            "node_id": "${targetNode.id}",\n`;
-          code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
-          code += `                        }\n`;
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их вместо ожидания ввода
+          if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += `                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их, а не ожидаем ввод\n`;
+            code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput=true")\n`;
+            code += `                        text = ${formattedText}\n`;
+            
+            // Добавляем замену переменных
+            code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
+            code += generateUniversalVariableReplacement('                        ');
+            
+            // Генерируем inline клавиатуру
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+            code += `                        await message.answer(text, reply_markup=keyboard)\n`;
+          } else {
+            // Обычное ожидание ввода если кнопок нет
+            code += `                        # Узел собирает пользовательский ввод\n`;
+            code += `                        logging.info(f"🔧 Условная навигация к узлу с вводом: ${targetNode.id}")\n`;
+            code += `                        text = ${formattedText}\n`;
+            
+            // Настраиваем ожидание ввода
+            const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
+            const inputTargetNodeId = targetNode.data.inputTargetNodeId;
+            code += `                        await message.answer(text)\n`;
+            code += `                        # Настраиваем ожидание ввода\n`;
+            code += `                        user_data[user_id]["waiting_for_input"] = {\n`;
+            code += `                            "type": "text",\n`;
+            code += `                            "variable": "${inputVariable}",\n`;
+            code += `                            "save_to_database": True,\n`;
+            code += `                            "node_id": "${targetNode.id}",\n`;
+            code += `                            "next_node_id": "${inputTargetNodeId || ''}"\n`;
+            code += `                        }\n`;
+          }
         } else {
           // Обычная навигация с простым сообщением
           const messageText = targetNode.data.messageText || 'Сообщение';
@@ -4759,20 +4805,47 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
           const inputTargetNodeId = targetNode.data.inputTargetNodeId;
           
-          code += '                        await message.answer(text)\n';
-          code += `                        logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
-          code += '                        # Настраиваем ожидание ввода для message узла\n';
-          code += '                        user_data[user_id]["waiting_for_input"] = {\n';
-          code += `                            "type": "${inputType}",\n`;
-          code += `                            "variable": "${inputVariable}",\n`;
-          code += '                            "save_to_database": True,\n';
-          code += `                            "node_id": "${targetNode.id}",\n`;
-          code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
-          code += `                            "min_length": ${targetNode.data.minLength || 0},\n`;
-          code += `                            "max_length": ${targetNode.data.maxLength || 0},\n`;
-          code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-          code += '                            "success_message": "✅ Спасибо за ваш ответ!"\n';
-          code += '                        }\n';
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки, показываем их ВМЕСТО ожидания текста
+          if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += '                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их вместо ожидания текста\n';
+            code += '                        builder = InlineKeyboardBuilder()\n';
+            
+            // Добавляем кнопки для узла с collectUserInput + buttons
+            targetNode.data.buttons.forEach((btn, btnIndex) => {
+              if (btn.action === "goto" && btn.target) {
+                const callbackData = `${btn.target}`;
+                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+              } else if (btn.action === "url" && btn.url) {
+                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url}"))\n`;
+              } else if (btn.action === "command" && btn.target) {
+                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+              }
+            });
+            
+            const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data, allNodeIds);
+            code += `                        builder.adjust(${columns})\n`;
+            code += '                        keyboard = builder.as_markup()\n';
+            code += '                        await message.answer(text, reply_markup=keyboard)\n';
+            code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput")\n`;
+          } else {
+            code += '                        await message.answer(text)\n';
+            
+            // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок
+            code += `                        logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
+            code += '                        # Настраиваем ожидание ввода для message узла\n';
+            code += '                        user_data[user_id]["waiting_for_input"] = {\n';
+            code += `                            "type": "${inputType}",\n`;
+            code += `                            "variable": "${inputVariable}",\n`;
+            code += '                            "save_to_database": True,\n';
+            code += `                            "node_id": "${targetNode.id}",\n`;
+            code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
+            code += `                            "min_length": ${targetNode.data.minLength || 0},\n`;
+            code += `                            "max_length": ${targetNode.data.maxLength || 0},\n`;
+            code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+            code += '                            "success_message": "✅ Спасибо за ваш ответ!"\n';
+            code += '                        }\n';
+          }
         } else {
           // Если узел не собирает ввод, проверяем есть ли inline кнопки
           if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
