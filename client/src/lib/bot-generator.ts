@@ -1430,6 +1430,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений\n';
+                code += '    user_record = await get_user_from_db(user_id)\n';
+                code += '    if not user_record:\n';
+                code += '        user_record = user_data.get(user_id, {})\n';
                 code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
                 code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                 code += '    \n';
@@ -1576,6 +1579,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений для фото\n';
+                code += '    user_record = await get_user_from_db(user_id)\n';
+                code += '    if not user_record:\n';
+                code += '        user_record = user_data.get(user_id, {})\n';
                 code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
                 code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                 code += '    \n';
@@ -1671,6 +1677,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений для видео\n';
+                code += '    user_record = await get_user_from_db(user_id)\n';
+                code += '    if not user_record:\n';
+                code += '        user_record = user_data.get(user_id, {})\n';
                 code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
                 code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                 code += '    \n';
@@ -1766,6 +1775,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений для аудио\n';
+                code += '    user_record = await get_user_from_db(user_id)\n';
+                code += '    if not user_record:\n';
+                code += '        user_record = user_data.get(user_id, {})\n';
                 code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
                 code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                 code += '    \n';
@@ -2355,6 +2367,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений для start узла\n';
+                code += '    user_record = await get_user_from_db(user_id)\n';
+                code += '    if not user_record:\n';
+                code += '        user_record = user_data.get(user_id, {})\n';
                 code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
                 code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                 code += '    \n';
@@ -2511,6 +2526,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                   code += '    \n';
                   code += '    # Проверка условных сообщений для keyboard узла\n';
+                  code += '    user_record = await get_user_from_db(callback_query.from_user.id)\n';
+                  code += '    if not user_record:\n';
+                  code += '        user_record = user_data.get(callback_query.from_user.id, {})\n';
                   code += '    user_data_dict = user_record if user_record else user_data.get(callback_query.from_user.id, {})\n';
                   code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                   code += '    \n';
@@ -3976,6 +3994,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               // Добавляем поддержку условных сообщений для целевого узла
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    # Проверка условных сообщений для целевого узла\n';
+                code += '    user_record = await get_user_from_db(user_id)\n';
+                code += '    if not user_record:\n';
+                code += '        user_record = user_data.get(user_id, {})\n';
                 code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
                 code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
                 code += '    \n';
@@ -7640,6 +7661,9 @@ function generateKeyboard(node: Node): string {
     code += '    text = replace_variables_in_text(text, user_vars)\n';
     code += '    \n';
     code += '    # Проверка условных сообщений для клавиатуры\n';
+    code += '    user_record = await get_user_from_db(user_id)\n';
+    code += '    if not user_record:\n';
+    code += '        user_record = user_data.get(user_id, {})\n';
     code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
     code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
     code += '    \n';
