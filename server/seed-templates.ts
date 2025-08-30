@@ -1084,7 +1084,7 @@ async function seedDefaultTemplates(force = false) {
             type: "message",
             position: { x: 100, y: 850 },
             data: {
-              messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_selection} {metro_choice}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм: {telegram_channel}\nО себе: {extra_info}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+              messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_choice} {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм: {telegram_channel}\nО себе: {extra_info}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
               keyboardType: "inline",
               removeKeyboard: false,
               buttons: [
@@ -1112,7 +1112,7 @@ async function seedDefaultTemplates(force = false) {
             type: "message",
             position: { x: 500, y: 850 },
             data: {
-              messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_selection} {metro_choice} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
+              messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_choice} {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
               keyboardType: "inline",
               buttons: [
                 {
