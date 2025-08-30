@@ -5847,55 +5847,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     });
   }
 
-  // Добавляем функцию profile_handler с поддержкой variableLabel
-  code += '\n\n# Обработчик команды профиля с поддержкой variableLabel\n';
-  code += '@dp.message(Command("profile"))\n';
-  code += 'async def profile_handler(message: types.Message):\n';
-  code += '    user_id = message.from_user.id\n';
-  code += '    \n';
-  code += '    # Получаем данные пользователя из базы данных\n';
-  code += '    user_record = await get_user_from_db(user_id)\n';
-  code += '    if not user_record:\n';
-  code += '        user_record = user_data.get(user_id, {})\n';
-  code += '    \n';
-  code += '    # Извлекаем пользовательские данные\n';
-  code += '    if isinstance(user_record, dict):\n';
-  code += '        if "user_data" in user_record:\n';
-  code += '            if isinstance(user_record["user_data"], str):\n';
-  code += '                try:\n';
-  code += '                    import json\n';
-  code += '                    user_vars = json.loads(user_record["user_data"])\n';
-  code += '                except (json.JSONDecodeError, TypeError):\n';
-  code += '                    user_vars = {}\n';
-  code += '            elif isinstance(user_record["user_data"], dict):\n';
-  code += '                user_vars = user_record["user_data"]\n';
-  code += '            else:\n';
-  code += '                user_vars = {}\n';
-  code += '        else:\n';
-  code += '            user_vars = user_record\n';
-  code += '    else:\n';
-  code += '        user_vars = {}\n';
-  code += '    \n';
-  code += '    if not user_vars:\n';
-  code += '        await message.answer("👤 Профиль недоступен\\n\\nПохоже, вы еще не прошли опрос. Пожалуйста, введите /start чтобы заполнить профиль.")\n';
-  code += '        return\n';
-  code += '    \n';
-  code += '    # Формируем сообщение профиля с поддержкой variableLabel\n';
-  code += '    profile_text = "👤 Ваш профиль:\\n\\n"\n';
-  code += '    \n';
-  
-  // Отображаем все доступные переменные (удалена поддержка устаревшего типа узла 'input')
-  code += '    # Отображаем все доступные переменные\n';
-  code += '    for var_name, var_data in user_vars.items():\n';
-  code += '        if isinstance(var_data, dict) and "value" in var_data:\n';
-  code += '            value = var_data["value"]\n';
-  code += '        else:\n';
-  code += '            value = var_data\n';
-  code += '        profile_text += f"{var_name}: {value}\\n"\n';
-  
-  code += '    \n';
-  code += '    await message.answer(profile_text)\n';
-  code += '    logging.info(f"Профиль отображен для пользователя {user_id}")\n';
+  // УДАЛЕН универсальный profile_handler - он конфликтует с основным обработчиком команды из узла
   code += '\n';
 
   code += '\n\n# Запуск бота\n';
