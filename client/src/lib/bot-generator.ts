@@ -1351,33 +1351,41 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           // Определяем переменную для сохранения на основе родительского узла
           const parentNode = node; // Используем текущий узел как родительский
           
-          if (parentNode && parentNode.data.inputVariable) {
-            const variableName = parentNode.data.inputVariable;
-            
-            // Используем текст кнопки как значение переменной
-            const variableValue = 'button_text';
-            
-            code += '    # Сохраняем правильную переменную в базу данных\n';
-            code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
-            code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
-            code += '    \n';
-            
-            // КРИТИЧЕСКИ ВАЖНО: Очищаем состояние ожидания после сохранения переменной
-            code += '    # Очищаем состояние ожидания ввода для этой переменной\n';
-            code += '    if user_id in user_data:\n';
-            code += '        # Удаляем waiting_for_input чтобы текстовый обработчик не перезаписал данные\n';
-            code += '        if "waiting_for_input" in user_data[user_id]:\n';
-            code += `            if user_data[user_id]["waiting_for_input"] == "${parentNode.id}":\n`;
-            code += '                del user_data[user_id]["waiting_for_input"]\n';
-            code += `                logging.info(f"Состояние ожидания ввода очищено для переменной ${variableName} (пользователь {user_id})")\n`;
-            code += '    \n';
+          // Проверяем настройку skipDataCollection для кнопки
+          const shouldSkipDataCollection = button.skipDataCollection === true;
+          
+          if (!shouldSkipDataCollection) {
+            if (parentNode && parentNode.data.inputVariable) {
+              const variableName = parentNode.data.inputVariable;
+              
+              // Используем текст кнопки как значение переменной
+              const variableValue = 'button_text';
+              
+              code += '    # Сохраняем правильную переменную в базу данных\n';
+              code += `    await update_user_data_in_db(user_id, "${variableName}", ${variableValue})\n`;
+              code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
+              code += '    \n';
+              
+              // КРИТИЧЕСКИ ВАЖНО: Очищаем состояние ожидания после сохранения переменной
+              code += '    # Очищаем состояние ожидания ввода для этой переменной\n';
+              code += '    if user_id in user_data:\n';
+              code += '        # Удаляем waiting_for_input чтобы текстовый обработчик не перезаписал данные\n';
+              code += '        if "waiting_for_input" in user_data[user_id]:\n';
+              code += `            if user_data[user_id]["waiting_for_input"] == "${parentNode.id}":\n`;
+              code += '                del user_data[user_id]["waiting_for_input"]\n';
+              code += `                logging.info(f"Состояние ожидания ввода очищено для переменной ${variableName} (пользователь {user_id})")\n`;
+              code += '    \n';
+            } else {
+              // Fallback: сохраняем кнопку как есть
+              code += '    # Сохраняем кнопку в базу данных\n';
+              code += '    timestamp = get_moscow_time()\n';
+              code += '    response_data = button_text  # Простое значение\n';
+              code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
+              code += '    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")\n';
+            }
           } else {
-            // Fallback: сохраняем кнопку как есть
-            code += '    # Сохраняем кнопку в базу данных\n';
-            code += '    timestamp = get_moscow_time()\n';
-            code += '    response_data = button_text  # Простое значение\n';
-            code += '    await update_user_data_in_db(user_id, button_text, response_data)\n';
-            code += '    logging.info(f"Кнопка сохранена: {button_text} (пользователь {user_id})")\n';
+            code += '    # Кнопка настроена для пропуска сбора данных (skipDataCollection=true)\n';
+            code += `    logging.info(f"Кнопка пропущена: {button_text} (не сохраняется из-за skipDataCollection)")\n`;
           }
           code += '    \n';
           

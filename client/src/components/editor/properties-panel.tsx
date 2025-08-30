@@ -421,7 +421,9 @@ export function PropertiesPanel({
       id: nanoid(),
       text: 'Новая кнопка',
       action: 'goto',
-      target: ''
+      target: '',
+      buttonType: 'normal',
+      skipDataCollection: false
     };
     onButtonAdd(selectedNode.id, newButton);
   };
@@ -1364,7 +1366,7 @@ export function PropertiesPanel({
                       </Label>
                       <select
                         value={selectedNode.data.mapService || 'custom'}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { mapService: e.target.value })}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { mapService: e.target.value as 'custom' | 'yandex' | 'google' | '2gis' })}
                         className="w-full px-3 py-2 border border-orange-200 dark:border-orange-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:border-orange-500 focus:ring-orange-200"
                       >
                         <option value="custom">Пользовательские координаты</option>
@@ -1706,260 +1708,6 @@ export function PropertiesPanel({
               </div>
             )}
 
-            {/* User Input Configuration */}
-            {selectedNode.type === 'user-input' && (
-              <div className="space-y-6">
-                {/* Input Configuration Section */}
-                <div className="bg-gradient-to-br from-purple-50/50 to-violet-50/30 dark:from-purple-950/20 dark:to-violet-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-                      <i className="fas fa-comments text-purple-600 dark:text-purple-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-purple-900 dark:text-purple-100">Настройки сбора ввода</Label>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
-                        <i className="fas fa-question-circle mr-1"></i>
-                        Текст запроса
-                      </Label>
-                      <Textarea
-                        value={selectedNode.data.inputPrompt || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { inputPrompt: e.target.value })}
-                        className="resize-none border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200 transition-all duration-200"
-                        rows={3}
-                        placeholder="Пожалуйста, введите ваш ответ..."
-                      />
-                    </div>
-
-                    {/* Text Input Toggle */}
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
-                      <div className="flex-1">
-                        <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                          <i className="fas fa-keyboard mr-1"></i>
-                          Текстовый ввод
-                        </Label>
-                        <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-                          Если выбран текстовый ввод, то как варианты ответа воспринимаются и кнопки и текстовой ввод
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <Switch
-                          checked={selectedNode.data.enableTextInput ?? false}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableTextInput: checked })}
-                        />
-                      </div>
-                    </div>
-
-                    
-                    <div>
-                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
-                        <i className="fas fa-code mr-1"></i>
-                        Имя переменной
-                      </Label>
-                      <Input
-                        value={selectedNode.data.inputVariable || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { inputVariable: e.target.value })}
-                        className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
-                        placeholder="user_response"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-
-
-                {/* Validation Section */}
-                <div className="bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 border border-amber-200/30 dark:border-amber-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
-                      <i className="fas fa-check-circle text-amber-600 dark:text-amber-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-amber-900 dark:text-amber-100">Валидация и ограничения</Label>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-xs font-medium text-amber-700 dark:text-amber-300 mb-2 block">
-                        <i className="fas fa-code mr-1"></i>
-                        Правило валидации (regex)
-                      </Label>
-                      <Input
-                        value={selectedNode.data.inputValidation || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { inputValidation: e.target.value })}
-                        className="border-amber-200 dark:border-amber-700 focus:border-amber-500 focus:ring-amber-200"
-                        placeholder="^[a-zA-Z0-9]+$"
-                      />
-                      <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                        Регулярное выражение для проверки ввода (необязательно)
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-xs font-medium text-amber-700 dark:text-amber-300 mb-2 block">
-                          <i className="fas fa-sort-amount-down mr-1"></i>
-                          Мин. длина
-                        </Label>
-                        <Input
-                          type="number"
-                          value={selectedNode.data.minLength || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { minLength: parseInt(e.target.value) || 0 })}
-                          className="border-amber-200 dark:border-amber-700 focus:border-amber-500 focus:ring-amber-200"
-                          placeholder="0"
-                          min="0"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs font-medium text-amber-700 dark:text-amber-300 mb-2 block">
-                          <i className="fas fa-sort-amount-up mr-1"></i>
-                          Макс. длина
-                        </Label>
-                        <Input
-                          type="number"
-                          value={selectedNode.data.maxLength || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { maxLength: parseInt(e.target.value) || 0 })}
-                          className="border-amber-200 dark:border-amber-700 focus:border-amber-500 focus:ring-amber-200"
-                          placeholder="500"
-                          min="0"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-xs font-medium text-amber-700 dark:text-amber-300 mb-2 block">
-                        <i className="fas fa-clock mr-1"></i>
-                        Таймаут ожидания (секунды)
-                      </Label>
-                      <Input
-                        type="number"
-                        value={selectedNode.data.inputTimeout || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { inputTimeout: parseInt(e.target.value) || 60 })}
-                        className="border-amber-200 dark:border-amber-700 focus:border-amber-500 focus:ring-amber-200"
-                        placeholder="60"
-                        min="5"
-                        max="600"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Messages Section */}
-                <div className="bg-gradient-to-br from-blue-50/50 to-cyan-50/30 dark:from-blue-950/20 dark:to-cyan-950/10 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                      <i className="fas fa-comment-dots text-blue-600 dark:text-blue-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-blue-900 dark:text-blue-100">Сообщения обратной связи</Label>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                        <i className="fas fa-exclamation-triangle mr-1"></i>
-                        Сообщение при ошибке
-                      </Label>
-                      <Textarea
-                        value={selectedNode.data.inputRetryMessage || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { inputRetryMessage: e.target.value })}
-                        className="resize-none border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200 transition-all duration-200"
-                        rows={2}
-                        placeholder="Пожалуйста, попробуйте еще раз."
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                        <i className="fas fa-check mr-1"></i>
-                        Сообщение при успехе
-                      </Label>
-                      <Textarea
-                        value={selectedNode.data.inputSuccessMessage || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { inputSuccessMessage: e.target.value })}
-                        className="resize-none border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200 transition-all duration-200"
-                        rows={2}
-                        placeholder="Спасибо за ваш ответ!"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                        <i className="fas fa-lightbulb mr-1"></i>
-                        Подсказка для пользователя
-                      </Label>
-                      <Input
-                        value={selectedNode.data.placeholder || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { placeholder: e.target.value })}
-                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
-                        placeholder="Введите ваш ответ здесь..."
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                        <i className="fas fa-star mr-1"></i>
-                        Значение по умолчанию
-                      </Label>
-                      <Input
-                        value={selectedNode.data.defaultValue || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { defaultValue: e.target.value })}
-                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
-                        placeholder="Значение по умолчанию"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Settings Section */}
-                <div className="bg-gradient-to-br from-green-50/50 to-teal-50/30 dark:from-green-950/20 dark:to-teal-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <i className="fas fa-cog text-green-600 dark:text-green-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Дополнительные настройки</Label>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
-                      <div className="flex-1">
-                        <Label className="text-xs font-medium text-green-700 dark:text-green-300">
-                          Обязательный ввод
-                        </Label>
-                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                          Пользователь должен ввести ответ
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <Switch
-                          checked={selectedNode.data.inputRequired ?? true}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { inputRequired: checked })}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
-                      <div className="flex-1">
-                        <Label className="text-xs font-medium text-green-700 dark:text-green-300">
-                          Разрешить пропуск
-                        </Label>
-                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                          Пользователь может пропустить ввод
-                        </div>
-                      </div>
-                      <div className="ml-4">
-                        <Switch
-                          checked={selectedNode.data.allowSkip ?? false}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { allowSkip: checked })}
-                        />
-                      </div>
-                    </div>
-                    
-
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -2081,6 +1829,7 @@ export function PropertiesPanel({
                               action: 'selection' as const,
                               target: '',
                               buttonType: 'option' as const,
+                              skipDataCollection: false
                             };
                             
                             const currentButtons = selectedNode.data.buttons || [];
@@ -2101,6 +1850,7 @@ export function PropertiesPanel({
                               action: 'goto' as const,
                               target: '',
                               buttonType: 'complete' as const,
+                              skipDataCollection: false
                             };
                             
                             const currentButtons = selectedNode.data.buttons || [];
@@ -2315,6 +2065,28 @@ export function PropertiesPanel({
                           </SelectContent>
                         </Select>
                       )}
+
+                      {/* Skip Data Collection Toggle - Only show when collectUserInput is enabled */}
+                      {selectedNode.data.collectUserInput && (
+                        <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 mt-3">
+                          <div className="flex-1">
+                            <Label className="text-xs font-medium text-foreground">
+                              Не сохранять ответы
+                            </Label>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Кнопка будет работать только для навигации, без сбора данных пользователя
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <Switch
+                              checked={button.skipDataCollection ?? false}
+                              onCheckedChange={(checked) => 
+                                onButtonUpdate(selectedNode.id, button.id, { skipDataCollection: checked })
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Button Type Info Blocks */}
                       {selectedNode.data.allowMultipleSelection && (
@@ -2456,7 +2228,7 @@ export function PropertiesPanel({
                                     node.type === 'photo' ? 'Фото' :
                                     node.type === 'keyboard' ? 'Клавиатура' :
                                     node.type === 'condition' ? 'Условие' :
-                                    node.type === 'input' ? 'Ввод' : 'Узел';
+                                    'Узел';
                                   
                                   return (
                                     <SelectItem key={node.id} value={node.id}>
@@ -2609,8 +2381,10 @@ export function PropertiesPanel({
                               variableNames: [],
                               logicOperator: 'AND' as const,
                               messageText: 'Добро пожаловать обратно!',
+                              formatMode: 'text' as const,
                               keyboardType: 'none' as const,
                               buttons: [],
+                              waitForTextInput: false,
                               priority: nextPriority
                             };
                             onNodeUpdate(selectedNode.id, { 
@@ -2982,7 +2756,7 @@ export function PropertiesPanel({
                                 onMarkdownToggle={(enabled) => {
                                   const currentConditions = selectedNode.data.conditionalMessages || [];
                                   const updatedConditions = currentConditions.map(c => 
-                                    c.id === condition.id ? { ...c, formatMode: enabled ? 'markdown' : 'text' } : c
+                                    c.id === condition.id ? { ...c, formatMode: (enabled ? 'markdown' : 'text') as 'text' | 'markdown' | 'html' } : c
                                   );
                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                 }}
@@ -3144,7 +2918,9 @@ export function PropertiesPanel({
                                           text: 'Новая кнопка',
                                           action: 'goto' as const,
                                           target: '',
-                                          url: ''
+                                          url: '',
+                                          buttonType: 'normal' as const,
+                                          skipDataCollection: false
                                         };
                                         const currentConditions = selectedNode.data.conditionalMessages || [];
                                         const updatedConditions = currentConditions.map(c => 
@@ -3384,8 +3160,75 @@ export function PropertiesPanel({
           </div>
         )}
 
+        {/* User Input Configuration */}
+        {selectedNode.data.collectUserInput && (
+          <div className="space-y-6">
+            {/* Input Configuration Section */}
+            <div className="bg-gradient-to-br from-purple-50/50 to-violet-50/30 dark:from-purple-950/20 dark:to-violet-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                  <i className="fas fa-comments text-purple-600 dark:text-purple-400 text-xs"></i>
+                </div>
+                <Label className="text-sm font-semibold text-purple-900 dark:text-purple-100">Настройки сбора ввода</Label>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Enable/Disable Input Collection Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                  <div className="flex-1">
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                      Дополнительный сбор ответов
+                    </Label>
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      Обычные кнопки работают как прежде + дополнительно сохраняются ответы пользователей
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <Switch
+                      checked={selectedNode.data.collectUserInput ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { collectUserInput: checked })}
+                    />
+                  </div>
+                </div>
+
+                {/* Text Input Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                  <div className="flex-1">
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                      <i className="fas fa-keyboard mr-1"></i>
+                      Текстовый ввод
+                    </Label>
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      Если выбран текстовый ввод, то как варианты ответа воспринимаются и кнопки и текстовой ввод
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <Switch
+                      checked={selectedNode.data.enableTextInput ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableTextInput: checked })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                    <i className="fas fa-code mr-1"></i>
+                    Имя переменной
+                  </Label>
+                  <Input
+                    value={selectedNode.data.inputVariable || ''}
+                    onChange={(e) => onNodeUpdate(selectedNode.id, { inputVariable: e.target.value })}
+                    className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                    placeholder="user_response"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Universal User Input Collection */}
-        {selectedNode.type !== 'user-input' && (
+        {selectedNode.type !== 'input' && !selectedNode.data.collectUserInput && (
           <div>
             <h3 className="text-sm font-medium text-foreground mb-3">✨ Дополнительный сбор ответов</h3>
             <div className="space-y-4">
@@ -3617,8 +3460,8 @@ export function PropertiesPanel({
                                             node.type === 'document' ? 'Документ' :
                                             node.type === 'keyboard' ? 'Клавиатура' :
                                             node.type === 'condition' ? 'Условие' :
-                                            node.type === 'input' ? 'Ввод' :
-                                            node.type === 'user-input' ? 'Сбор данных' :
+                                            node.data?.collectUserInput ? 'Сбор данных' :
+                                            node.data?.collectUserInput ? 'Сбор данных' :
                                             node.type === 'location' ? 'Геолокация' :
                                             node.type === 'contact' ? 'Контакт' :
                                             node.type === 'sticker' ? 'Стикер' :
@@ -3633,8 +3476,8 @@ export function PropertiesPanel({
                                             node.type === 'document' ? 'fas fa-file text-gray-500' :
                                             node.type === 'keyboard' ? 'fas fa-keyboard text-yellow-500' :
                                             node.type === 'condition' ? 'fas fa-code-branch text-purple-500' :
-                                            node.type === 'input' ? 'fas fa-edit text-cyan-500' :
-                                            node.type === 'user-input' ? 'fas fa-user-edit text-indigo-500' :
+                                            node.data?.collectUserInput ? 'fas fa-user-edit text-indigo-500' :
+                                            node.data?.collectUserInput ? 'fas fa-user-edit text-indigo-500' :
                                             node.type === 'location' ? 'fas fa-map-marker-alt text-pink-500' :
                                             node.type === 'contact' ? 'fas fa-address-book text-teal-500' :
                                             node.type === 'sticker' ? 'fas fa-smile text-yellow-400' :
@@ -3765,7 +3608,7 @@ export function PropertiesPanel({
                               node.type === 'keyboard' ? 'Клавиатура' :
                               node.type === 'condition' ? 'Условие' :
                               node.type === 'input' ? 'Ввод' :
-                              node.type === 'user-input' ? 'Сбор данных' :
+                              node.data?.collectUserInput ? 'Сбор данных' :
                               node.type === 'location' ? 'Геолокация' :
                               node.type === 'contact' ? 'Контакт' :
                               node.type === 'sticker' ? 'Стикер' :
@@ -3781,7 +3624,7 @@ export function PropertiesPanel({
                               node.type === 'keyboard' ? 'fas fa-keyboard text-yellow-500' :
                               node.type === 'condition' ? 'fas fa-code-branch text-purple-500' :
                               node.type === 'input' ? 'fas fa-edit text-cyan-500' :
-                              node.type === 'user-input' ? 'fas fa-user-edit text-indigo-500' :
+                              node.data?.collectUserInput ? 'fas fa-user-edit text-indigo-500' :
                               node.type === 'location' ? 'fas fa-map-marker-alt text-pink-500' :
                               node.type === 'contact' ? 'fas fa-address-book text-teal-500' :
                               node.type === 'sticker' ? 'fas fa-smile text-yellow-400' :

@@ -296,6 +296,7 @@ export const buttonSchema = z.object({
   requestContact: z.boolean().optional(),
   requestLocation: z.boolean().optional(),
   buttonType: z.enum(['normal', 'option', 'complete']).default('normal'),
+  skipDataCollection: z.boolean().default(false), // Отключить сбор ответов для этой кнопки
 });
 
 export const nodeSchema = z.object({
