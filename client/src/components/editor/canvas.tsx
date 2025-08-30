@@ -104,7 +104,7 @@ export function Canvas({
   }, []);
 
   const zoomOut = useCallback(() => {
-    setZoom(prev => Math.max(prev - 25, 25));
+    setZoom(prev => Math.max(prev - 25, 1));
   }, []);
 
   const resetZoom = useCallback(() => {
@@ -113,7 +113,7 @@ export function Canvas({
   }, []);
 
   const setZoomLevel = useCallback((level: number) => {
-    setZoom(Math.max(Math.min(level, 200), 25));
+    setZoom(Math.max(Math.min(level, 200), 1));
   }, []);
 
   const fitToContent = useCallback(() => {
@@ -144,7 +144,7 @@ export function Canvas({
       const scaleY = (containerHeight * 0.8) / contentHeight;
       const scale = Math.min(scaleX, scaleY, 2); // Max 200% zoom
       
-      const newZoom = Math.max(Math.min(scale * 100, 200), 25);
+      const newZoom = Math.max(Math.min(scale * 100, 200), 1);
       setZoom(newZoom);
       
       // Center the content
@@ -172,7 +172,7 @@ export function Canvas({
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
         
-        const newZoom = Math.max(Math.min(zoom * zoomFactor, 200), 25);
+        const newZoom = Math.max(Math.min(zoom * zoomFactor, 200), 1);
         const zoomRatio = newZoom / zoom;
         
         setPan(prev => ({
@@ -534,7 +534,7 @@ export function Canvas({
           <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 flex items-center overflow-hidden zoom-controls">
             <button 
               onClick={zoomOut}
-              disabled={zoom <= 25}
+              disabled={zoom <= 1}
               className="px-3 py-2 zoom-button disabled:opacity-50 disabled:cursor-not-allowed"
               title="Уменьшить масштаб (Ctrl + -)"
             >
@@ -555,7 +555,7 @@ export function Canvas({
               <PopoverContent side="bottom" className="w-40 p-2">
                 <div className="space-y-1">
                   <div className="text-xs font-medium text-gray-600 dark:text-gray-400 px-2 py-1">Быстрый масштаб</div>
-                  {[25, 50, 75, 100, 125, 150, 200].map((level) => (
+                  {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200].map((level) => (
                     <button
                       key={level}
                       onClick={() => setZoomLevel(level)}
@@ -567,7 +567,7 @@ export function Canvas({
                         <span>{level}%</span>
                         {level === 100 && <span className="text-xs opacity-60">По умолчанию</span>}
                         {level === 200 && <span className="text-xs opacity-60">Максимум</span>}
-                        {level === 25 && <span className="text-xs opacity-60">Минимум</span>}
+                        {level === 1 && <span className="text-xs opacity-60">Минимум</span>}
                       </div>
                     </button>
                   ))}
