@@ -246,7 +246,7 @@ async function seedDefaultTemplates(force = false) {
               messageText: "🟥 Кировско-Выборгская линия\n\nВыбери свою станцию:",
               keyboardType: "inline",
               allowMultipleSelection: true,
-              multiSelectVariable: "red_metro_stations",
+              multiSelectVariable: "metro_stations",
               continueButtonTarget: "interests_categories",
               buttons: [
                 { id: "red-devyatkino", text: "Девяткино", action: "selection", target: "devyatkino", buttonType: "option" },
@@ -283,7 +283,7 @@ async function seedDefaultTemplates(force = false) {
               messageText: "🟦 Московско-Петроградская линия\n\nВыбери свою станцию:",
               keyboardType: "inline",
               allowMultipleSelection: true,
-              multiSelectVariable: "blue_metro_stations",
+              multiSelectVariable: "metro_stations",
               continueButtonTarget: "interests_categories",
               buttons: [
                 { id: "blue-parnas", text: "Парнас", action: "selection", target: "parnas", buttonType: "option" },
@@ -319,7 +319,7 @@ async function seedDefaultTemplates(force = false) {
               messageText: "🟩 Невско-Василеостровская линия\n\nВыбери свою станцию:",
               keyboardType: "inline",
               allowMultipleSelection: true,
-              multiSelectVariable: "green_metro_stations",
+              multiSelectVariable: "metro_stations",
               continueButtonTarget: "interests_categories",
               buttons: [
                 { id: "green-primorskaya", text: "Приморская", action: "selection", target: "primorskaya", buttonType: "option" },
@@ -349,7 +349,7 @@ async function seedDefaultTemplates(force = false) {
               messageText: "🟧 Правобережная линия\n\nВыбери свою станцию:",
               keyboardType: "inline",
               allowMultipleSelection: true,
-              multiSelectVariable: "orange_metro_stations",
+              multiSelectVariable: "metro_stations",
               continueButtonTarget: "interests_categories",
               buttons: [
                 { id: "orange-spasskaya", text: "Спасская", action: "selection", target: "spasskaya", buttonType: "option" },
@@ -376,7 +376,7 @@ async function seedDefaultTemplates(force = false) {
               messageText: "🟪 Фрунзенско-Приморская линия\n\nВыбери свою станцию:",
               keyboardType: "inline",
               allowMultipleSelection: true,
-              multiSelectVariable: "purple_metro_stations",
+              multiSelectVariable: "metro_stations",
               continueButtonTarget: "interests_categories",
               buttons: [
                 { id: "purple-komendantsky", text: "Комендантский проспект", action: "selection", target: "komendantsky", buttonType: "option" },

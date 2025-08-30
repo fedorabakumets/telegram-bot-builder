@@ -1272,8 +1272,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `        selected_options = user_data.get(user_id, {}).get("multi_select_${actualCallbackData}", [])\n`;
             code += '        if selected_options:\n';
             code += '            selected_text = ", ".join(selected_options)\n';
-            code += `            await update_user_data_in_db(user_id, "${multiSelectVariable}", selected_text)\n`;
-            code += `            logging.info(f"✅ Сохранено в переменную ${multiSelectVariable}: {selected_text}")\n`;
+            code += `            \n`;
+            code += `            # Универсальная логика аккумуляции для всех множественных выборов\n`;
+            code += `            # Загружаем существующие значения\n`;
+            code += `            existing_data = await get_user_data_from_db(user_id, "${multiSelectVariable}")\n`;
+            code += `            existing_selections = []\n`;
+            code += `            if existing_data and existing_data.strip():\n`;
+            code += `                existing_selections = [s.strip() for s in existing_data.split(",") if s.strip()]\n`;
+            code += `            \n`;
+            code += `            # Объединяем существующие и новые выборы (убираем дубли)\n`;
+            code += `            all_selections = list(set(existing_selections + selected_options))\n`;
+            code += `            final_text = ", ".join(all_selections)\n`;
+            code += `            await update_user_data_in_db(user_id, "${multiSelectVariable}", final_text)\n`;
+            code += `            logging.info(f"✅ Аккумулировано в переменную ${multiSelectVariable}: {final_text}")\n`;
             code += '        \n';
             
             // Очищаем состояние множественного выбора
@@ -2939,8 +2950,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `        selected_options = user_data.get(user_id, {}).get("multi_select_${nodeId}", [])\n`;
             code += '        if selected_options:\n';
             code += '            selected_text = ", ".join(selected_options)\n';
-            code += `            await update_user_data_in_db(user_id, "${multiSelectVariable}", selected_text)\n`;
-            code += `            logging.info(f"✅ Сохранено в переменную ${multiSelectVariable}: {selected_text}")\n`;
+            code += `            \n`;
+            code += `            # Универсальная логика аккумуляции для всех множественных выборов\n`;
+            code += `            # Загружаем существующие значения\n`;
+            code += `            existing_data = await get_user_data_from_db(user_id, "${multiSelectVariable}")\n`;
+            code += `            existing_selections = []\n`;
+            code += `            if existing_data and existing_data.strip():\n`;
+            code += `                existing_selections = [s.strip() for s in existing_data.split(",") if s.strip()]\n`;
+            code += `            \n`;
+            code += `            # Объединяем существующие и новые выборы (убираем дубли)\n`;
+            code += `            all_selections = list(set(existing_selections + selected_options))\n`;
+            code += `            final_text = ", ".join(all_selections)\n`;
+            code += `            await update_user_data_in_db(user_id, "${multiSelectVariable}", final_text)\n`;
+            code += `            logging.info(f"✅ Аккумулировано в переменную ${multiSelectVariable}: {final_text}")\n`;
             code += '        \n';
             
             // Очищаем состояние множественного выбора
