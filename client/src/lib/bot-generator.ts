@@ -5998,11 +5998,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            # Находим полный node_id по короткому суффиксу\n';
   code += '            node_id = None\n';
   code += '            logging.info(f"🔍 Ищем узел по короткому ID: {short_node_id}")\n';
+  code += '            \n';
+  code += '            # Для станций метро ищем по содержимому кнопки, а не по короткому ID\n';
+  code += '            if short_node_id == "stations":\n';
+  code += '                # Проверяем каждый узел станций на наличие нужной кнопки\n';
   multiSelectNodes.forEach(node => {
     const shortNodeId = generateUniqueShortId(node.id, allNodeIds);
-    code += `            if short_node_id == "${shortNodeId}":\n`;
-    code += `                node_id = "${node.id}"\n`;
-    code += `                logging.info(f"✅ Найден узел: {node_id}")\n`;
+    if (shortNodeId === 'stations') {
+      const selectionButtons = node.data.buttons?.filter(btn => btn.action === 'selection') || [];
+      code += `                # Проверяем узел ${node.id}\n`;
+      selectionButtons.forEach(button => {
+        const buttonValue = button.target || button.id || button.text;
+        code += `                if button_id == "${buttonValue}":\n`;
+        code += `                    node_id = "${node.id}"\n`;
+        code += `                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")\n`;
+      });
+    }
+  });
+  code += '            else:\n';
+  code += '                # Обычная логика для других узлов\n';
+  multiSelectNodes.forEach(node => {
+    const shortNodeId = generateUniqueShortId(node.id, allNodeIds);
+    if (shortNodeId !== 'stations') {
+      code += `                if short_node_id == "${shortNodeId}":\n`;
+      code += `                    node_id = "${node.id}"\n`;
+      code += `                    logging.info(f"✅ Найден узел: {node_id}")\n`;
+    }
   });
   code += '    elif callback_data.startswith("multi_select_"):\n';
   code += '        # Старый формат для обратной совместимости\n';
@@ -6126,6 +6147,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   code += '        \n';
   code += '        keyboard = builder.as_markup()\n';
+  code += '        logging.info(f"🔄 ОБНОВЛЯЕМ клавиатуру для узла {node_id} с галочками")\n';
   code += '        await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
   code += '\n';
   
