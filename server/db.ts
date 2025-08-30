@@ -23,18 +23,14 @@ function initializeDatabase() {
 
   console.log('Initializing database connection...');
 
+  // Use simpler configuration optimized for cloud databases
   pool = new Pool({ 
     connectionString: databaseUrl,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 20,
-    min: 2,
-    idleTimeoutMillis: 60000,
-    connectionTimeoutMillis: 30000,
-    statement_timeout: 30000,
-    query_timeout: 30000,
-    keepAlive: true,
-    keepAliveInitialDelayMillis: 5000,
-    allowExitOnIdle: true,
+    ssl: { rejectUnauthorized: false },
+    max: 5,
+    min: 0,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 10000,
   });
 
   // Add error handling for the pool
