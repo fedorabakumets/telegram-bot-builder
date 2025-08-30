@@ -26,13 +26,14 @@ function initializeDatabase() {
   pool = new Pool({ 
     connectionString: databaseUrl,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 20,
-    idleTimeoutMillis: 120000,
-    connectionTimeoutMillis: 60000,
-    statement_timeout: 60000,
-    query_timeout: 60000,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 20000,
+    statement_timeout: 20000,
+    query_timeout: 20000,
     keepAlive: true,
-    keepAliveInitialDelayMillis: 0,
+    keepAliveInitialDelayMillis: 10000,
+    allowExitOnIdle: true,
   });
 
   // Add error handling for the pool

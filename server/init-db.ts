@@ -12,8 +12,8 @@ async function executeWithRetry(db: any, query: any, description: string, maxRet
       if (attempt === maxRetries) {
         throw error;
       }
-      // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      // Wait before retry (reduced wait time)
+      await new Promise(resolve => setTimeout(resolve, 500 * attempt));
     }
   }
 }
@@ -24,9 +24,14 @@ export async function initializeDatabaseTables() {
   try {
     const db = getDb();
     
-    // First, test the connection
+    // First, test the connection with timeout
     console.log('Testing database connection...');
-    await db.execute(sql`SELECT 1 as health`);
+    const healthCheckPromise = db.execute(sql`SELECT 1 as health`);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database connection timeout')), 15000)
+    );
+    
+    await Promise.race([healthCheckPromise, timeoutPromise]);
     console.log('✅ Database connection successful!');
     
     // Создаем таблицы если их нет (с поддержкой IF NOT EXISTS)
