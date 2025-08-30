@@ -51,7 +51,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_source",
-              nextNodeId: "join_request",
+              inputTargetNodeId: "join_request",
               markdown: false,
               oneTimeKeyboard: false,
               resizeKeyboard: true
@@ -147,7 +147,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_name",
-              nextNodeId: "age_input",
+              inputTargetNodeId: "age_input",
               buttons: [],
               markdown: false
             }
@@ -163,7 +163,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_age",
-              nextNodeId: "metro_selection",
+              inputTargetNodeId: "metro_selection",
               buttons: [],
               markdown: false
             }
@@ -885,7 +885,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "telegram_channel",
-              nextNodeId: "extra_info",
+              inputTargetNodeId: "extra_info",
               buttons: [],
               markdown: false
             }
@@ -901,7 +901,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "extra_info",
-              nextNodeId: "profile_complete",
+              inputTargetNodeId: "profile_complete",
               buttons: [
                 {
                   id: "btn-skip-extra",
