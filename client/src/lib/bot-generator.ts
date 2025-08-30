@@ -6099,6 +6099,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            # Для станций метро ищем по содержимому кнопки, а не по короткому ID\n';
   code += '            if short_node_id == "stations":\n';
   code += '                # Проверяем каждый узел станций на наличие нужной кнопки\n';
+  
+  let hasStationsCode = false;
   multiSelectNodes.forEach(node => {
     const shortNodeId = generateUniqueShortId(node.id, allNodeIds);
     if (shortNodeId === 'stations') {
@@ -6109,19 +6111,34 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += `                if button_id == "${buttonValue}":\n`;
         code += `                    node_id = "${node.id}"\n`;
         code += `                    logging.info(f"✅ Найден правильный узел по кнопке: {node_id}")\n`;
+        hasStationsCode = true;
       });
     }
   });
+  
+  // Добавляем pass если в if блоке нет кода
+  if (!hasStationsCode) {
+    code += '                pass\n';
+  }
+  
   code += '            else:\n';
   code += '                # Обычная логика для других узлов\n';
+  
+  let hasElseCode = false;
   multiSelectNodes.forEach(node => {
     const shortNodeId = generateUniqueShortId(node.id, allNodeIds);
     if (shortNodeId !== 'stations') {
       code += `                if short_node_id == "${shortNodeId}":\n`;
       code += `                    node_id = "${node.id}"\n`;
       code += `                    logging.info(f"✅ Найден узел: {node_id}")\n`;
+      hasElseCode = true;
     }
   });
+  
+  // Добавляем pass если в else блоке нет кода
+  if (!hasElseCode) {
+    code += '                pass\n';
+  }
   code += '    elif callback_data.startswith("multi_select_"):\n';
   code += '        # Старый формат для обратной совместимости\n';
   code += '        parts = callback_data.split("_")\n';
