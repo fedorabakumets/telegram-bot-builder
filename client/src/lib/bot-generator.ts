@@ -81,7 +81,7 @@ function calculateOptimalColumns(buttons: any[], nodeData?: any): number {
   
   const totalButtons = buttons.length;
   
-  // Если это множественный выбор, всегда используем 2 колонки для консистентности
+  // Если это множественный выбор, всегда используем 2 колонки для красивого вида
   if (nodeData?.multiSelectEnabled || nodeData?.allowMultipleSelection) {
     return 2;
   }
