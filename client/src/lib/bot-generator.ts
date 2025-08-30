@@ -40,6 +40,35 @@ function toPythonBoolean(value: any): string {
   return value ? 'True' : 'False';
 }
 
+// Функция для создания уникальных коротких ID для узлов
+function generateUniqueShortId(nodeId: string, allNodeIds: string[]): string {
+  if (!nodeId) return 'node';
+  
+  // Особая обработка для узлов интересов
+  if (nodeId.endsWith('_interests')) {
+    const prefix = nodeId.replace('_interests', '');
+    // Возвращаем первые 5-6 символов префикса для уникальности
+    return prefix.substring(0, Math.min(6, prefix.length));
+  }
+  
+  // Для метро и других узлов используем старую логику
+  const baseShortId = nodeId.slice(-10).replace(/^_+/, '');
+  
+  // Проверяем уникальность среди всех узлов
+  const conflicts = allNodeIds.filter(id => {
+    const otherShortId = id.slice(-10).replace(/^_+/, '');
+    return otherShortId === baseShortId && id !== nodeId;
+  });
+  
+  // Если конфликтов нет, возвращаем базовый ID
+  if (conflicts.length === 0) {
+    return baseShortId;
+  }
+  
+  // Если есть конфликты, берем более уникальную часть
+  return nodeId.replace(/[^a-zA-Z0-9]/g, '').slice(-8);
+}
+
 // Функция для правильного экранирования строк в JSON контексте
 function escapeForJsonString(text: string): string {
   if (!text) return '';
@@ -68,7 +97,7 @@ function calculateOptimalColumns(buttons: any[], nodeData?: any): number {
 }
 
 // Функция для генерации inline клавиатуры с автоматической настройкой колонок
-function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any): string {
+function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?: string, nodeData?: any, allNodeIds?: string[]): string {
   if (!buttons || buttons.length === 0) return '';
   
   let code = '';
@@ -134,7 +163,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       code += `${indentLevel}builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
     } else if (button.action === 'selection') {
       // Укорачиваем callback_data для соблюдения лимита Telegram в 64 байта
-      const shortNodeId = nodeId ? nodeId.slice(-10).replace(/^_+/, '') : 'sel'; // Берем последние 10 символов и убираем ведущие underscores
+      const shortNodeId = nodeId ? generateUniqueShortId(nodeId, allNodeIds || []) : 'sel';
       const shortTarget = button.target || button.id || 'btn'; // Используем полный target без обрезки для совместимости с обработчиком
       const callbackData = `ms_${shortNodeId}_${shortTarget}`;
       console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
@@ -688,6 +717,9 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
 
 export function generatePythonCode(botData: BotData, botName: string = "MyBot"): string {
   const { nodes, connections } = botData;
+  
+  // Собираем все ID узлов для генерации уникальных коротких ID
+  const allNodeIds = nodes ? nodes.map(node => node.id) : [];
   
   // ЛОГИРОВАНИЕ ГЕНЕРАТОРА: Подробная информация о данных бота
   console.log(`🔧 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
@@ -1403,7 +1435,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += '    if keyboard is None:\n';
                 code += '        # ИСПРАВЛЕНИЕ: Используем универсальную функцию создания клавиатуры\n';
                 // ИСПРАВЛЕНИЕ: Используем универсальную функцию generateInlineKeyboardCode
-                const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+                const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
                 code += keyboardCode;
               } else if (targetNode.data.keyboardType !== "inline") {
                 // Сохраняем keyboard = None только если это не inline клавиатура
@@ -2543,7 +2575,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   code += '    if "keyboard" not in locals() or keyboard is None:\n';
                   code += '        # ИСПРАВЛЕНИЕ: Используем универсальную функцию создания клавиатуры\n';
                   // ИСПРАВЛЕНИЕ: Используем универсальную функцию generateInlineKeyboardCode
-                  const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+                  const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
                   code += keyboardCode;
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';
@@ -2992,7 +3024,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
             selectionButtons.forEach((button, index) => {
               // Используем короткие callback_data
-              const shortNodeId = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
+              const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []); // Используем новую функцию
               const shortTarget = (button.target || button.id || 'btn').slice(-8);
               const callbackData = `ms_${shortNodeId}_${shortTarget}`;
               console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
@@ -3040,7 +3072,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Автоматическое распределение колонок
             const totalButtons = selectionButtons.length + (targetNode.data.continueButtonTarget ? 1 : 0) + regularButtons.length;
-            const columns = calculateOptimalColumns(selectionButtons, targetNode.data);
+            const columns = calculateOptimalColumns(selectionButtons, targetNode.data, allNodeIds);
             code += `    builder.adjust(${columns})\n`;
             code += '    keyboard = builder.as_markup()\n';
             
@@ -3474,7 +3506,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                       
                       // Создаем inline клавиатуру с кнопками выбора
                       if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
-                        code += generateInlineKeyboardCode(navTargetNode.data.buttons, '                ', navTargetNode.id, navTargetNode.data);
+                        code += generateInlineKeyboardCode(navTargetNode.data.buttons, '                ', navTargetNode.id, navTargetNode.data, allNodeIds);
                         code += `                await bot.send_message(user_id, nav_text, reply_markup=keyboard)\n`;
                       } else {
                         code += `                await bot.send_message(user_id, nav_text)\n`;
@@ -3533,7 +3565,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                       
                       // Создаем inline клавиатуру с кнопками выбора
                       if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
-                        code += generateInlineKeyboardCode(navTargetNode.data.buttons, '            ', navTargetNode.id, navTargetNode.data);
+                        code += generateInlineKeyboardCode(navTargetNode.data.buttons, '            ', navTargetNode.id, navTargetNode.data, allNodeIds);
                         code += `            await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n`;
                       } else {
                         code += `            await bot.send_message(callback_query.from_user.id, text)\n`;
@@ -4359,7 +4391,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         
         // Создаем inline клавиатуру с кнопками выбора
         if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-          code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data);
+          code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
           code += `                        await message.answer(text, reply_markup=keyboard)\n`;
         } else {
           code += `                        await message.answer(text)\n`;
@@ -4705,7 +4737,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           // Создаем inline клавиатуру с кнопками выбора
           if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data);
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
             code += `                        await message.answer(text, reply_markup=keyboard)\n`;
           } else {
             code += `                        await message.answer(text)\n`;
@@ -4763,7 +4795,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             });
             
             // ВОССТАНОВЛЕНИЕ: Добавляем умное расположение кнопок по колонкам
-            const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+            const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data, allNodeIds);
             code += `                        builder.adjust(${columns})\n`;
             code += '                        keyboard = builder.as_markup()\n';
             code += '                        await message.answer(text, reply_markup=keyboard)\n';
@@ -4945,7 +4977,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           
           if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             // Используем универсальную функцию для создания inline клавиатуры
-            code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
             code += `                await message.answer(text, reply_markup=keyboard)\n`;
           } else {
             code += `                await message.answer(text)\n`;
@@ -4984,7 +5016,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Создаем inline клавиатуру с кнопками выбора
             if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-              code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
               code += `                await message.answer(text, reply_markup=keyboard)\n`;
             } else {
               code += `                await message.answer(text)\n`;
@@ -5003,7 +5035,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             
             // Создаем inline клавиатуру если есть кнопки
             if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-              code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
               code += `                await message.answer(nav_text, reply_markup=keyboard)\n`;
             } else {
               code += '                await message.answer(nav_text)\n';
@@ -5089,7 +5121,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       
       // Отправляем сообщение с кнопками если есть
       if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
         code += `                await message.answer(text, reply_markup=keyboard)\n`;
       } else {
         code += `                await message.answer(text)\n`;
@@ -5117,7 +5149,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       
       // Создаем inline клавиатуру с кнопками выбора
       if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
         code += `                await message.answer(text, reply_markup=keyboard)\n`;
       } else {
         code += `                await message.answer(text)\n`;
@@ -5135,7 +5167,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       code += generateUniversalVariableReplacement('                ');
       
       if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+        code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
         code += `                await message.answer(text, reply_markup=keyboard)\n`;
       } else {
         code += `                await message.answer(text)\n`;
@@ -5383,7 +5415,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         // Добавляем кнопки если есть
         if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
           // Используем универсальную функцию для создания inline клавиатуры
-          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data);
+          code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
           code += '                await message.answer(text, reply_markup=keyboard, parse_mode=parse_mode)\n';
         } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons.length > 0) {
           code += '                builder = ReplyKeyboardBuilder()\n';
@@ -5442,7 +5474,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
           }
           
           // Используем универсальную функцию для создания inline клавиатуры
-          code += generateInlineKeyboardCode(responseButtons, '                ', targetNode.id, targetNode.data);
+          code += generateInlineKeyboardCode(responseButtons, '                ', targetNode.id, targetNode.data, allNodeIds);
           code += '                await message.answer(prompt_text, reply_markup=keyboard)\n';
           code += '                \n';
           code += '                # Настраиваем конфигурацию кнопочного ответа\n';
@@ -5869,7 +5901,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `                user_vars = user_data.get(user_id, {})\n`;
               code += `            if not isinstance(user_vars, dict):\n`;
               code += `                user_vars = {}\n`;
-              code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data);
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data, allNodeIds);
               code += `            await callback_query.message.answer(text, reply_markup=keyboard)\n`;
             } else {
               code += `            await callback_query.message.answer(text)\n`;
@@ -5926,7 +5958,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 code += `                user_vars = user_data.get(user_id, {})\n`;
                 code += `            if not isinstance(user_vars, dict):\n`;
                 code += `                user_vars = {}\n`;
-                code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data);
+                code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data, allNodeIds);
                 code += `            await callback_query.message.answer(text, reply_markup=keyboard)\n`;
               } else {
                 code += `            await callback_query.message.answer(text)\n`;
@@ -5967,7 +5999,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '            node_id = None\n';
   code += '            logging.info(f"🔍 Ищем узел по короткому ID: {short_node_id}")\n';
   multiSelectNodes.forEach(node => {
-    const shortNodeId = node.id.slice(-10).replace(/^_+/, '');
+    const shortNodeId = generateUniqueShortId(node.id, allNodeIds);
     code += `            if short_node_id == "${shortNodeId}":\n`;
     code += `                node_id = "${node.id}"\n`;
     code += `                logging.info(f"✅ Найден узел: {node_id}")\n`;
@@ -6225,7 +6257,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             targetNode.data.buttons.forEach((button, index) => {
               if (button.action === 'selection') {
                 const cleanText = button.text.replace(/"/g, '\\"');
-                const callbackData = `ms_${targetNode.id.slice(-8)}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
+                const callbackData = `ms_${generateUniqueShortId(targetNode.id, allNodeIds || [])}_${button.target || button.id || `btn${index}`}`.replace(/[^a-zA-Z0-9_]/g, '_');
                 code += `        # Кнопка с галочкой: ${cleanText}\n`;
                 code += `        selected_mark = "✅ " if "${cleanText}" in user_data[user_id]["multi_select_${targetNode.id}"] else ""\n`;
                 code += `        button_text = f"{selected_mark}${cleanText}"\n`;
@@ -6254,7 +6286,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
               code += `        if not isinstance(user_vars, dict):\n`;
               code += `            user_vars = {}\n`;
               code += `        \n`;
-              code += generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
+              code += generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
               code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
               code += `        logging.info(f"🏁 ГЕНЕРАТОР DEBUG: Сообщение отправлено С КЛАВИАТУРОЙ для узла ${targetNode.id}")\n`;
             } else {
@@ -6331,7 +6363,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `                user_vars = user_data.get(user_id, {})\n`;
             code += `            if not isinstance(user_vars, dict):\n`;
             code += `                user_vars = {}\n`;
-            code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data);
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '            ', targetNode.id, targetNode.data, allNodeIds);
             code += `            await message.answer(text, reply_markup=keyboard)\n`;
           } else {
             code += `            await message.answer(text)\n`;
