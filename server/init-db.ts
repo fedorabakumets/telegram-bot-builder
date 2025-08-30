@@ -28,7 +28,7 @@ export async function initializeDatabaseTables() {
     console.log('Testing database connection...');
     const healthCheckPromise = db.execute(sql`SELECT 1 as health`);
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database connection timeout')), 30000)
+      setTimeout(() => reject(new Error('Database connection timeout')), 60000)
     );
     
     await Promise.race([healthCheckPromise, timeoutPromise]);

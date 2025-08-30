@@ -27,10 +27,12 @@ function initializeDatabase() {
   pool = new Pool({ 
     connectionString: databaseUrl,
     ssl: { rejectUnauthorized: false },
-    max: 5,
-    min: 0,
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 10000,
+    max: 10,
+    min: 2,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 60000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 0,
   });
 
   // Add error handling for the pool
