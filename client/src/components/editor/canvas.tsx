@@ -812,8 +812,8 @@ export function Canvas({
             `,
             backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px, ${24 * zoom / 100}px ${24 * zoom / 100}px, ${24 * zoom / 100}px ${24 * zoom / 100}px`,
             backgroundPosition: `${pan.x}px ${pan.y}px`,
-            minHeight: '500vh',
-            minWidth: '500vw',
+            minHeight: '2000vh',
+            minWidth: '2000vw',
             cursor: isPanning ? 'grabbing' : 'grab'
           }}
           data-drag-over={isDragOver}
