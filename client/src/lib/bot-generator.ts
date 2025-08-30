@@ -6216,7 +6216,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
       const doneCallbackData = `multi_select_done_${node.id}`;
       console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
       code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
-      code += `            builder.adjust(2, 2, 2, 2, 1)\n`;
+      code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла ${node.id} (multi-select)")\n`;
+      code += `            builder.adjust(2)\n`;
     }
   });
   
