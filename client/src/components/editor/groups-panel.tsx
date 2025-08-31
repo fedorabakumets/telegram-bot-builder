@@ -117,7 +117,23 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       memberCount: null,
       isActive: 1,
       description: null,
-      settings: {}
+      settings: {},
+      chatType: 'group' as const,
+      adminRights: {
+        can_manage_chat: false,
+        can_change_info: false,
+        can_delete_messages: false,
+        can_invite_users: false,
+        can_restrict_members: false,
+        can_pin_messages: false,
+        can_promote_members: false,
+        can_manage_video_chats: false
+      },
+      messagesCount: 0,
+      activeUsers: 0,
+      isPublic: 0,
+      language: 'ru' as const,
+      tags: []
     });
     
     // Закрываем модалка и очищаем форму
@@ -219,7 +235,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         setMakeAdmin(group.isAdmin === 1);
                         setIsPublicGroup(Boolean(group.isPublic));
                         setChatType((group.chatType as 'group' | 'supergroup' | 'channel') || 'group');
-                        setAdminRights(group.adminRights || {
+                        setAdminRights((group.adminRights as any) || {
                           can_manage_chat: false,
                           can_change_info: false,
                           can_delete_messages: false,
@@ -626,7 +642,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         url: groupUrl || selectedGroup.url,
                         description: groupDescription,
                         avatarUrl: groupAvatarUrl,
-                        language: groupLanguage,
+                        language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
                         timezone: groupTimezone,
                         tags: groupTags,
                         notes: groupNotes,
