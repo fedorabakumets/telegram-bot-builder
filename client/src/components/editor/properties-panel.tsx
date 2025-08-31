@@ -1732,6 +1732,59 @@ export function PropertiesPanel({
           </div>
         </div>
 
+        {/* Synonyms */}
+        <div>
+          <h3 className="text-sm font-medium text-foreground mb-3">Синонимы</h3>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs font-medium text-muted-foreground">Альтернативные фразы</Label>
+              <div className="text-xs text-muted-foreground mt-1 mb-2">
+                Добавьте слова или фразы, при написании которых будет срабатывать этот узел
+              </div>
+              <div className="space-y-2">
+                {(selectedNode.data.synonyms || []).map((synonym: string, index: number) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      value={synonym}
+                      onChange={(e) => {
+                        const newSynonyms = [...(selectedNode.data.synonyms || [])];
+                        newSynonyms[index] = e.target.value;
+                        onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
+                      }}
+                      placeholder="имя, профиль, анкета..."
+                      className="text-xs flex-1"
+                    />
+                    <UIButton
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const newSynonyms = [...(selectedNode.data.synonyms || [])];
+                        newSynonyms.splice(index, 1);
+                        onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
+                      }}
+                      className="px-2 h-8"
+                    >
+                      <i className="fas fa-trash text-xs"></i>
+                    </UIButton>
+                  </div>
+                ))}
+                <UIButton
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const newSynonyms = [...(selectedNode.data.synonyms || []), ''];
+                    onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
+                  }}
+                  className="w-full text-xs"
+                >
+                  <i className="fas fa-plus mr-2"></i>
+                  Добавить синоним
+                </UIButton>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Keyboard Settings */}
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Клавиатура</h3>

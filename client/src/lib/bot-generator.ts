@@ -1097,19 +1097,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
     // Note: user-input and message nodes are handled via callback handlers, not as separate command handlers
   });
 
-  // Generate synonym handlers for commands
+  // Generate synonym handlers for all nodes
   const nodesWithSynonyms = (nodes || []).filter(node => 
-    (node.type === 'start' || node.type === 'command') && 
     node.data.synonyms && 
     node.data.synonyms.length > 0
   );
 
   if (nodesWithSynonyms.length > 0) {
-    code += '\n# Обработчики синонимов команд\n';
+    code += '\n# Обработчики синонимов\n';
     nodesWithSynonyms.forEach(node => {
       if (node.data.synonyms) {
         node.data.synonyms.forEach((synonym: string) => {
-          code += generateSynonymHandler(node, synonym);
+          if (node.type === 'start' || node.type === 'command') {
+            code += generateSynonymHandler(node, synonym);
+          } else {
+            code += generateMessageSynonymHandler(node, synonym);
+          }
         });
       }
     });
@@ -7608,6 +7611,28 @@ function generateSynonymHandler(node: Node, synonym: string): string {
   } else {
     code += `    await ${functionName}_handler(message)\n`;
   }
+  
+  return code;
+}
+
+function generateMessageSynonymHandler(node: Node, synonym: string): string {
+  const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+  const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  
+  let code = `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
+  code += `async def message_${sanitizedNodeId}_synonym_${sanitizedSynonym}_handler(message: types.Message):\n`;
+  code += `    # Синоним для сообщения ${node.id}\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    logging.info(f"Пользователь {user_id} написал синоним '${synonym}' для узла ${node.id}")\n`;
+  code += `    \n`;
+  code += `    # Вызываем callback handler для узла ${node.id}\n`;
+  code += `    callback_query = types.CallbackQuery(\n`;
+  code += `        id="synonym_${node.id}_" + str(user_id),\n`;
+  code += `        from_user=message.from_user,\n`;
+  code += `        message=message,\n`;
+  code += `        data="${node.id}"\n`;
+  code += `    )\n`;
+  code += `    await callback_${sanitizedNodeId}_handler(callback_query)\n`;
   
   return code;
 }
