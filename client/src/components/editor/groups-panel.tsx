@@ -12,16 +12,39 @@ interface GroupsPanelProps {
   projectName: string;
 }
 
+interface GroupData {
+  id: string;
+  name: string;
+  url: string;
+  isAdmin: boolean;
+  memberCount?: number;
+  addedAt: Date;
+}
+
 export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
+  const [groups, setGroups] = useState<GroupData[]>([]);
   const [showAddGroup, setShowAddGroup] = useState(false);
   const [groupUrl, setGroupUrl] = useState('');
   const [groupName, setGroupName] = useState('');
   const [makeAdmin, setMakeAdmin] = useState(false);
 
   const handleAddGroup = () => {
-    // Здесь будет логика подключения группы
-    console.log('Подключение группы:', { groupUrl, groupName, makeAdmin });
-    // Пока просто закрываем модалку
+    if (!groupUrl.trim() || !groupName.trim()) {
+      alert('Пожалуйста, заполните все поля');
+      return;
+    }
+
+    const newGroup: GroupData = {
+      id: Date.now().toString(),
+      name: groupName,
+      url: groupUrl,
+      isAdmin: makeAdmin,
+      addedAt: new Date()
+    };
+
+    setGroups(prev => [...prev, newGroup]);
+    
+    // Закрываем модалку и очищаем форму
     setShowAddGroup(false);
     setGroupUrl('');
     setGroupName('');
@@ -38,21 +61,82 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           </p>
         </div>
         
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8 text-muted-foreground" />
+        {groups.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium text-muted-foreground mb-2">
+              Нет подключенных групп
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Добавьте первую группу для управления участниками и контентом
+            </p>
+            <Button onClick={() => setShowAddGroup(true)}>
+              <UserPlus className="w-4 h-4 mr-2" />
+              Подключить группу
+            </Button>
           </div>
-          <h3 className="text-lg font-medium text-muted-foreground mb-2">
-            Нет подключенных групп
-          </h3>
-          <p className="text-sm text-muted-foreground mb-6">
-            Добавьте первую группу для управления участниками и контентом
-          </p>
-          <Button onClick={() => setShowAddGroup(true)}>
-            <UserPlus className="w-4 h-4 mr-2" />
-            Подключить группу
-          </Button>
-        </div>
+        ) : (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-lg font-semibold">Подключенные группы ({groups.length})</h2>
+                <p className="text-sm text-muted-foreground">Управление вашими Telegram группами</p>
+              </div>
+              <Button onClick={() => setShowAddGroup(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Добавить группу
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {groups.map((group) => (
+                <Card key={group.id} className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                        <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{group.name}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {group.isAdmin ? 'Администратор' : 'Участник'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ссылка:</span>
+                      <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                        {group.url.length > 20 ? group.url.substring(0, 20) + '...' : group.url}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Добавлено:</span>
+                      <span>{group.addedAt.toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 mt-4">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      Настройки
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setGroups(prev => prev.filter(g => g.id !== group.id))}
+                    >
+                      Удалить
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Модальное окно подключения группы */}
         <Dialog open={showAddGroup} onOpenChange={setShowAddGroup}>
