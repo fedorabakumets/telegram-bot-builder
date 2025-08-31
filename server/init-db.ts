@@ -162,7 +162,7 @@ export async function initializeDatabaseTables() {
       CREATE TABLE IF NOT EXISTS bot_groups (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
-        group_id TEXT NOT NULL,
+        group_id TEXT,
         name TEXT NOT NULL,
         url TEXT NOT NULL,
         is_admin INTEGER DEFAULT 0,
@@ -170,11 +170,45 @@ export async function initializeDatabaseTables() {
         is_active INTEGER DEFAULT 1,
         description TEXT,
         settings JSONB DEFAULT '{}',
+        avatar_url TEXT,
+        chat_type TEXT DEFAULT 'group',
+        invite_link TEXT,
+        admin_rights JSONB DEFAULT '{"can_manage_chat": false, "can_change_info": false, "can_delete_messages": false, "can_invite_users": false, "can_restrict_members": false, "can_pin_messages": false, "can_promote_members": false, "can_manage_video_chats": false}',
+        messages_count INTEGER DEFAULT 0,
+        active_users INTEGER DEFAULT 0,
+        last_activity TIMESTAMP,
+        is_public INTEGER DEFAULT 0,
+        language TEXT DEFAULT 'ru',
+        timezone TEXT,
+        tags TEXT[] DEFAULT '{}',
+        notes TEXT,
         created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW(),
-        UNIQUE(project_id, group_id)
+        updated_at TIMESTAMP DEFAULT NOW()
       );
     `, "Создание таблицы bot_groups");
+
+    await executeWithRetry(db, sql`
+      CREATE TABLE IF NOT EXISTS group_members (
+        id SERIAL PRIMARY KEY,
+        group_id INTEGER REFERENCES bot_groups(id) ON DELETE CASCADE NOT NULL,
+        user_id BIGINT NOT NULL,
+        username TEXT,
+        first_name TEXT,
+        last_name TEXT,
+        status TEXT DEFAULT 'member',
+        is_bot INTEGER DEFAULT 0,
+        admin_rights JSONB DEFAULT '{}',
+        custom_title TEXT,
+        restrictions JSONB DEFAULT '{}',
+        restricted_until TIMESTAMP,
+        joined_at TIMESTAMP DEFAULT NOW(),
+        last_seen TIMESTAMP,
+        message_count INTEGER DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `, "Создание таблицы group_members");
 
     await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_users (
@@ -189,6 +223,21 @@ export async function initializeDatabaseTables() {
         is_active INTEGER DEFAULT 1
       );
     `, "Создание таблицы bot_users");
+
+    await executeWithRetry(db, sql`
+      CREATE TABLE IF NOT EXISTS user_telegram_settings (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        api_id TEXT,
+        api_hash TEXT,
+        phone_number TEXT,
+        session_string TEXT,
+        is_active INTEGER DEFAULT 1,
+        last_login TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `, "Создание таблицы user_telegram_settings");
 
     console.log('✅ Database tables initialized successfully!');
     return true;
