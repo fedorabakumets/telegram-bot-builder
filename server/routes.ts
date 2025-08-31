@@ -3422,71 +3422,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Try to get all members for small groups
-      const allMembers = [];
-      let offset = 0;
-      const limit = 200;
-
+      // For most groups, we can only get administrators
+      // Telegram API doesn't provide getChatMembers - only getChatAdministrators
       try {
-        // Get members in batches
-        while (true) {
-          const membersResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChatMembers`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              chat_id: groupId,
-              offset: offset,
-              limit: limit
-            })
+        const adminsResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChatAdministrators`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: groupId
+          })
+        });
+
+        const adminsResult = await adminsResponse.json();
+        
+        if (!adminsResponse.ok) {
+          return res.status(400).json({ 
+            message: "Failed to get members", 
+            error: adminsResult.description || "Unknown error"
           });
-
-          const membersResult = await membersResponse.json();
-          
-          if (!membersResponse.ok) {
-            // If getChatMembers is not available, fall back to just administrators
-            const adminsResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChatAdministrators`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                chat_id: groupId
-              })
-            });
-
-            const adminsResult = await adminsResponse.json();
-            
-            if (!adminsResponse.ok) {
-              return res.status(400).json({ 
-                message: "Failed to get members", 
-                error: adminsResult.description || "Unknown error"
-              });
-            }
-
-            return res.json({ 
-              members: adminsResult.result,
-              isPartialList: true,
-              message: "Only administrators are available for this group type"
-            });
-          }
-
-          const members = membersResult.result;
-          allMembers.push(...members);
-
-          // If we got less than the limit, we've reached the end
-          if (members.length < limit) {
-            break;
-          }
-
-          offset += limit;
         }
 
-        res.json({ 
-          members: allMembers,
-          isPartialList: false,
-          totalCount: allMembers.length
+        return res.json({ 
+          members: adminsResult.result,
+          isPartialList: true,
+          totalCount: adminsResult.result.length,
+          message: "Показаны только администраторы. Telegram API не предоставляет полный список участников для групп.",
+          explanation: "Полный список участников недоступен из-за ограничений Telegram API по приватности"
         });
 
       } catch (error) {

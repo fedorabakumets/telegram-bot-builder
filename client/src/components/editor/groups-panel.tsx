@@ -245,8 +245,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       setAllMembers(data.members || []);
       setShowAllMembers(true);
       toast({ 
-        title: `Получено участников: ${data.totalCount || data.members?.length || 0}`,
-        description: data.isPartialList ? "Показаны только администраторы для больших групп" : "Полный список участников"
+        title: data.isPartialList ? `Показаны администраторы: ${data.totalCount || 0}` : `Все участники: ${data.totalCount || 0}`,
+        description: data.message || data.explanation || (data.isPartialList ? "Telegram API не предоставляет полный список" : "Полный список участников")
       });
     },
     onError: (error: any) => {
