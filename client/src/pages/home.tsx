@@ -16,6 +16,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import type { BotProject } from '@shared/schema';
+import { SheetsManager } from '@/utils/sheets-manager';
 
 const createProjectSchema = z.object({
   name: z.string().min(1, 'Название проекта обязательно'),
@@ -124,8 +125,34 @@ export default function Home() {
 
   const getNodeCount = (project: BotProject) => {
     if (!project.data || typeof project.data !== 'object') return 0;
-    const data = project.data as { nodes?: any[] };
-    return data.nodes?.length || 0;
+    
+    // Проверяем, новый формат с листами или старый
+    if (SheetsManager.isNewFormat(project.data)) {
+      const sheets = (project.data as any).sheets || [];
+      return sheets.reduce((total: number, sheet: any) => total + (sheet.nodes?.length || 0), 0);
+    } else {
+      const data = project.data as { nodes?: any[] };
+      return data.nodes?.length || 0;
+    }
+  };
+
+  const getSheetsInfo = (project: BotProject) => {
+    if (!project.data || typeof project.data !== 'object') return { count: 0, names: [] };
+    
+    // Проверяем, новый формат с листами или старый
+    if (SheetsManager.isNewFormat(project.data)) {
+      const sheets = (project.data as any).sheets || [];
+      return {
+        count: sheets.length,
+        names: sheets.map((sheet: any) => sheet.name || 'Лист')
+      };
+    } else {
+      // Старый формат - один лист
+      return {
+        count: 1,
+        names: ['Главный лист']
+      };
+    }
   };
 
   if (isLoading) {
@@ -271,15 +298,42 @@ export default function Home() {
                 <CardContent className="pt-0">
                   <div className="space-y-3">
                     {/* Статистика */}
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <User className="h-4 w-4 mr-1" />
-                        {getNodeCount(project)} узлов
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                        <div className="flex items-center">
+                          <User className="h-4 w-4 mr-1" />
+                          {getNodeCount(project)} узлов
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {formatDate(project.updatedAt)}
+                        </div>
                       </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {formatDate(project.updatedAt)}
-                      </div>
+                      
+                      {/* Информация о листах */}
+                      {(() => {
+                        const sheetsInfo = getSheetsInfo(project);
+                        return (
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            <div className="flex items-center">
+                              <Bot className="h-4 w-4 mr-1" />
+                              {sheetsInfo.count} {sheetsInfo.count === 1 ? 'лист' : sheetsInfo.count < 5 ? 'листа' : 'листов'}:
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {sheetsInfo.names.slice(0, 3).map((name, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs px-2 py-0.5">
+                                  {name}
+                                </Badge>
+                              ))}
+                              {sheetsInfo.names.length > 3 && (
+                                <Badge variant="outline" className="text-xs px-2 py-0.5">
+                                  +{sheetsInfo.names.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
 
 

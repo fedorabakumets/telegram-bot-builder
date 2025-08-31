@@ -186,6 +186,34 @@ export default function Editor() {
     }
   }, [setBotData]);
 
+  // Обертка для обновления узлов, которая синхронизирует изменения с системой листов
+  const handleNodeUpdateWithSheets = useCallback((nodeId: string, updates: Partial<Node['data']>) => {
+    // Обновляем в старой системе
+    updateNodeData(nodeId, updates);
+    
+    // Также обновляем в новой системе листов
+    if (botDataWithSheets && botDataWithSheets.activeSheetId) {
+      const updatedSheets = botDataWithSheets.sheets.map(sheet => {
+        if (sheet.id === botDataWithSheets.activeSheetId) {
+          return {
+            ...sheet,
+            nodes: sheet.nodes.map(node => 
+              node.id === nodeId 
+                ? { ...node, data: { ...node.data, ...updates } }
+                : node
+            )
+          };
+        }
+        return sheet;
+      });
+      
+      setBotDataWithSheets({
+        ...botDataWithSheets,
+        sheets: updatedSheets
+      });
+    }
+  }, [updateNodeData, botDataWithSheets]);
+
   // Обновляем данные бота при смене проекта
   useEffect(() => {
     if (currentProject?.data) {
@@ -521,7 +549,9 @@ export default function Editor() {
         projectId={currentProject.id}
         selectedNode={selectedNode}
         allNodes={nodes}
-        onNodeUpdate={handleNodeUpdate}
+        allSheets={botDataWithSheets?.sheets || []}
+        currentSheetId={botDataWithSheets?.activeSheetId || undefined}
+        onNodeUpdate={handleNodeUpdateWithSheets}
         onButtonAdd={addButton}
         onButtonUpdate={updateButton}
         onButtonDelete={deleteButton}
@@ -691,7 +721,9 @@ export default function Editor() {
               projectId={currentProject.id}
               selectedNode={selectedNode}
               allNodes={nodes}
-              onNodeUpdate={updateNodeData}
+              allSheets={botDataWithSheets?.sheets || []}
+              currentSheetId={botDataWithSheets?.activeSheetId || undefined}
+              onNodeUpdate={handleNodeUpdateWithSheets}
               onButtonAdd={addButton}
               onButtonUpdate={updateButton}
               onButtonDelete={deleteButton}
@@ -788,7 +820,9 @@ export default function Editor() {
                   projectId={currentProject.id}
                   selectedNode={selectedNode}
                   allNodes={nodes}
-                  onNodeUpdate={updateNodeData}
+                  allSheets={botDataWithSheets?.sheets || []}
+                  currentSheetId={botDataWithSheets?.activeSheetId || undefined}
+                  onNodeUpdate={handleNodeUpdateWithSheets}
                   onButtonAdd={addButton}
                   onButtonUpdate={updateButton}
                   onButtonDelete={deleteButton}
@@ -837,7 +871,9 @@ export default function Editor() {
               projectId={currentProject.id}
               selectedNode={selectedNode}
               allNodes={nodes}
-              onNodeUpdate={updateNodeData}
+              allSheets={botDataWithSheets?.sheets || []}
+              currentSheetId={botDataWithSheets?.activeSheetId || undefined}
+              onNodeUpdate={handleNodeUpdateWithSheets}
               onButtonAdd={addButton}
               onButtonUpdate={updateButton}
               onButtonDelete={deleteButton}

@@ -1999,14 +1999,15 @@ export function PropertiesPanel({
                           </SelectTrigger>
                           <SelectContent className="max-h-48 overflow-y-auto">
                             <SelectItem value="none">Не выбрано</SelectItem>
-                            {allNodes
-                              .filter(node => node.id !== selectedNode.id)
-                              .map((node) => (
+                            {getAllNodesFromAllSheets
+                              .filter(n => n.node.id !== selectedNode.id)
+                              .map(({node, sheetName}) => (
                                 <SelectItem key={node.id} value={node.id}>
                                   <div className="flex items-center space-x-2">
                                     <i className={`${nodeIcons[node.type]} text-xs`}></i>
                                     <span className="truncate">{node.id}</span>
                                     <span className="text-muted-foreground text-xs">({nodeTypeNames[node.type]})</span>
+                                    <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                   </div>
                                 </SelectItem>
                               ))
@@ -2292,9 +2293,9 @@ export function PropertiesPanel({
                               <SelectValue placeholder="Выберите экран" />
                             </SelectTrigger>
                             <SelectContent>
-                              {allNodes
-                                .filter(node => node.id !== selectedNode.id)
-                                .map((node) => {
+                              {getAllNodesFromAllSheets
+                                .filter(n => n.node.id !== selectedNode.id)
+                                .map(({node, sheetName}) => {
                                   const nodeName = 
                                     node.type === 'start' ? node.data.command :
                                     node.type === 'command' ? node.data.command :
@@ -2306,11 +2307,14 @@ export function PropertiesPanel({
                                   
                                   return (
                                     <SelectItem key={node.id} value={node.id}>
-                                      {nodeName} ({node.id})
+                                      <div className="flex items-center gap-2">
+                                        <span>{nodeName} ({node.id})</span>
+                                        <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
+                                      </div>
                                     </SelectItem>
                                   );
                                 })}
-                              {allNodes.filter(node => node.id !== selectedNode.id).length === 0 && (
+                              {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).length === 0 && (
                                 <SelectItem value="no-nodes" disabled>
                                   Создайте другие экраны для выбора
                                 </SelectItem>
@@ -2907,7 +2911,7 @@ export function PropertiesPanel({
                                         </SelectTrigger>
                                         <SelectContent>
                                           <SelectItem value="no-transition">Не переходить</SelectItem>
-                                          {allNodes.filter(n => n.id !== selectedNode.id).map(node => {
+                                          {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
                                             const nodeLabel = node.data.label || 
                                               (node.type === 'command' ? `Команда: ${node.data.command}` : 
                                                node.type === 'message' ? `Сообщение: ${(node.data.messageText || '').slice(0, 30)}...` :
@@ -2917,6 +2921,7 @@ export function PropertiesPanel({
                                                 <div className="flex items-center gap-2">
                                                   <span className="text-xs text-muted-foreground">{node.type}</span>
                                                   <span>{nodeLabel}</span>
+                                                  <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                                 </div>
                                               </SelectItem>
                                             );
@@ -3100,16 +3105,19 @@ export function PropertiesPanel({
                                                 <SelectValue placeholder="Выберите узел" />
                                               </SelectTrigger>
                                               <SelectContent>
-                                                {allNodes
-                                                  .filter(node => node.id !== selectedNode.id)
-                                                  .map((node) => {
+                                                {getAllNodesFromAllSheets
+                                                  .filter(n => n.node.id !== selectedNode.id)
+                                                  .map(({node, sheetName}) => {
                                                     const nodeName = 
                                                       node.type === 'start' ? node.data.command :
                                                       node.type === 'command' ? node.data.command :
                                                       node.data.messageText?.slice(0, 30) + '...' || `${node.type} ${node.id}`;
                                                     return (
                                                       <SelectItem key={node.id} value={node.id}>
-                                                        {nodeName}
+                                                        <div className="flex items-center gap-2">
+                                                          <span>{nodeName}</span>
+                                                          <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
+                                                        </div>
                                                       </SelectItem>
                                                     );
                                                   })}
@@ -3609,21 +3617,22 @@ export function PropertiesPanel({
                                     </SelectTrigger>
                                     <SelectContent>
                                       {/* Команды */}
-                                      {allNodes
-                                        ?.filter(node => node.id !== selectedNode.id && (node.type === 'start' || node.type === 'command'))
-                                        .map((node) => (
+                                      {getAllNodesFromAllSheets
+                                        ?.filter(n => n.node.id !== selectedNode.id && (n.node.type === 'start' || n.node.type === 'command'))
+                                        .map(({node, sheetName}) => (
                                           <SelectItem key={node.id} value={node.id}>
                                             <div className="flex items-center gap-2">
                                               <i className="fas fa-terminal text-xs text-purple-500"></i>
                                               <span>{node.data.command}</span>
+                                              <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                             </div>
                                           </SelectItem>
                                         ))}
                                       
                                       {/* Другие узлы */}
-                                      {allNodes
-                                        ?.filter(node => node.id !== selectedNode.id && node.type !== 'start' && node.type !== 'command')
-                                        .map((node) => {
+                                      {getAllNodesFromAllSheets
+                                        ?.filter(n => n.node.id !== selectedNode.id && n.node.type !== 'start' && n.node.type !== 'command')
+                                        .map(({node, sheetName}) => {
                                           const nodeName = 
                                             node.type === 'message' ? 'Сообщение' :
                                             node.type === 'photo' ? 'Фото' :
@@ -3661,6 +3670,7 @@ export function PropertiesPanel({
                                               <div className="flex items-center gap-2">
                                                 <i className={`${iconClass} text-xs`}></i>
                                                 <span>{nodeName}</span>
+                                                <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                               </div>
                                             </SelectItem>
                                           );
