@@ -963,21 +963,29 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {safeGroups.map((group) => (
-                <Card key={group.id} className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
+                <Card key={group.id} className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-4">
                       <GroupAvatar 
                         avatarUrl={group.avatarUrl}
                         groupName={group.name}
-                        size={40}
+                        size={56}
                       />
-                      <div>
-                        <h3 className="font-medium">{group.name}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {group.isAdmin ? 'Администратор' : 'Участник'}
-                        </p>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-lg leading-tight mb-1">{group.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={group.isAdmin ? "default" : "secondary"} className="text-xs">
+                            {group.isAdmin ? 'Администратор' : 'Участник'}
+                          </Badge>
+                          {group.chatType && (
+                            <Badge variant="outline" className="text-xs">
+                              {group.chatType === 'supergroup' ? 'Супергруппа' : 
+                               group.chatType === 'channel' ? 'Канал' : 'Группа'}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <Button 
@@ -995,39 +1003,59 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     </Button>
                   </div>
                   
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Ссылка:</span>
-                      <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                        {group.url.length > 20 ? group.url.substring(0, 20) + '...' : group.url}
-                      </span>
-                    </div>
-                    {group.memberCount && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Участники:</span>
-                        <span>{group.memberCount}</span>
-                      </div>
-                    )}
+                  <div className="space-y-3 mb-4">
+                    {/* Описание группы */}
                     {group.description && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Описание:</span>
-                        <span className="text-xs" title={group.description}>
-                          {group.description.length > 30 ? group.description.substring(0, 30) + '...' : group.description}
-                        </span>
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {group.description.length > 140 ? group.description.substring(0, 140) + '...' : group.description}
+                        </p>
                       </div>
                     )}
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Добавлено:</span>
-                      <span>{group.createdAt ? new Date(group.createdAt).toLocaleDateString() : '-'}</span>
+                    
+                    {/* Основная информация */}
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-medium">
+                            {group.memberCount || 'N/A'} участников
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            {group.createdAt ? new Date(group.createdAt).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Globe className="w-4 h-4 text-muted-foreground mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <a 
+                              href={group.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-600 dark:text-blue-400 hover:underline text-xs break-all font-mono"
+                              title={group.url}
+                            >
+                              {group.url.length > 35 ? group.url.substring(0, 35) + '...' : group.url}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="space-y-2 mt-4">
-                    <div className="flex gap-2">
+                  <div className="border-t pt-4 space-y-3">
+                    {/* Основные действия */}
+                    <div className="grid grid-cols-2 gap-3">
                       <Button 
-                        variant="outline" 
+                        variant="default" 
                         size="sm" 
-                        className="flex-1"
+                        className="h-10"
                         onClick={() => {
                           setSelectedGroup(group);
                           setGroupName(group.name);
@@ -1054,28 +1082,29 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           setShowGroupSettings(true);
                         }}
                       >
-                        <Settings className="w-3 h-3 mr-1" />
+                        <Settings className="w-4 h-4 mr-2" />
                         Настройки
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1"
+                        className="h-10"
                         onClick={() => {
                           setSelectedGroupForMessage(group);
                           setShowSendMessage(true);
                         }}
                       >
-                        <Send className="w-3 h-3 mr-1" />
+                        <Send className="w-4 h-4 mr-2" />
                         Сообщение
                       </Button>
                     </div>
                     
-                    <div className="flex gap-2">
+                    {/* Информационные действия */}
+                    <div className="grid grid-cols-3 gap-2">
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm" 
-                        className="flex-1"
+                        className="h-9 text-xs"
                         onClick={() => getGroupInfoMutation.mutate(group.groupId)}
                         disabled={getGroupInfoMutation.isPending}
                       >
@@ -1083,9 +1112,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         Инфо
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm" 
-                        className="flex-1"
+                        className="h-9 text-xs"
                         onClick={() => getMembersCountMutation.mutate(group.groupId)}
                         disabled={getMembersCountMutation.isPending}
                       >
@@ -1093,9 +1122,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         Участники
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm" 
-                        className="flex-1"
+                        className="h-9 text-xs"
                         onClick={() => getAdminStatusMutation.mutate(group.groupId)}
                         disabled={getAdminStatusMutation.isPending}
                       >
@@ -1104,10 +1133,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </Button>
                     </div>
                     
+                    {/* Опасное действие */}
                     <Button 
-                      variant="outline" 
+                      variant="ghost" 
                       size="sm" 
-                      className="w-full text-red-600 hover:text-red-700"
+                      className="w-full h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 text-xs"
                       onClick={() => deleteGroupMutation.mutate(group.id)}
                       disabled={deleteGroupMutation.isPending}
                     >
