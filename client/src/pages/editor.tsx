@@ -790,7 +790,15 @@ export default function Editor() {
 
     const canvasContent = (
       <div className="h-full">
-        {currentTab === 'editor' ? (
+        {currentTab === 'groups' ? (
+          <div style={{ backgroundColor: 'yellow', minHeight: '100vh', padding: '20px' }}>
+            <h1 style={{ color: 'black', fontSize: '24px' }}>🎉 ГРУППЫ ОТОБРАЖАЮТСЯ!</h1>
+            <GroupsPanel
+              projectId={currentProject.id}
+              projectName={currentProject.name}
+            />
+          </div>
+        ) : currentTab === 'editor' ? (
           <Canvas
             // Новая система листов
             botData={botDataWithSheets || undefined}
