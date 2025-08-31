@@ -1989,13 +1989,29 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 <Button 
                   onClick={() => {
                     if (selectedMember && selectedGroup) {
-                      const userId = selectedMember.id?.toString() || selectedMember.user?.id?.toString() || selectedMember.userId?.toString();
+                      // Расширенная логика извлечения userId для разных форматов API
+                      const userId = 
+                        selectedMember.id?.toString() || 
+                        selectedMember.user?.id?.toString() || 
+                        selectedMember.userId?.toString() ||
+                        selectedMember.from?.id?.toString() ||
+                        selectedMember.from_user?.id?.toString() ||
+                        (selectedMember as any).user_id?.toString();
+                      
                       const groupId = selectedGroup.groupId;
+                      
+                      // Добавляем отладочную информацию
+                      console.log('Debugging permission update:', {
+                        selectedMember,
+                        extractedUserId: userId,
+                        groupId,
+                        availableKeys: Object.keys(selectedMember)
+                      });
                       
                       if (!userId || !groupId) {
                         toast({
                           title: 'Ошибка',
-                          description: 'Не удалось получить ID пользователя или группы',
+                          description: `Не удалось получить ID пользователя (${userId}) или группы (${groupId}). Проверьте консоль для отладки.`,
                           variant: 'destructive'
                         });
                         return;

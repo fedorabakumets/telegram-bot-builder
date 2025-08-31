@@ -390,9 +390,21 @@ class TelegramClientManager {
 
       if ('participants' in result) {
         return result.participants.map((participant: any) => {
-          const user = result.users.find((u: any) => u.id?.toString() === participant.userId?.toString());
+          // Отладочная информация для понимания структуры данных
+          console.log('Participant structure:', {
+            participant: participant,
+            userId: participant.userId,
+            user_id: participant.user_id,
+            peer: participant.peer,
+            availableKeys: Object.keys(participant)
+          });
+          
+          // Попробуем разные способы извлечения user ID
+          const userId = participant.userId || participant.user_id || participant.peer?.user_id || participant.peer?.userId;
+          const user = result.users.find((u: any) => u.id?.toString() === userId?.toString());
+          
           return {
-            id: participant.userId?.toString(),
+            id: userId?.toString(),
             username: (user as any)?.username || null,
             firstName: (user as any)?.firstName || null,
             lastName: (user as any)?.lastName || null,
