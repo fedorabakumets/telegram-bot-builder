@@ -1,13 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+// Убираем DropdownMenu, заменяем на отдельные кнопки
 import {
   Dialog,
   DialogContent,
@@ -18,12 +12,10 @@ import {
 import { 
   Plus, 
   X, 
-  Edit2, 
   Copy, 
   Trash2, 
   ChevronLeft, 
   ChevronRight,
-  MoreVertical,
   FileText
 } from 'lucide-react';
 import { CanvasSheet } from '@shared/schema';
@@ -140,7 +132,7 @@ export function CanvasSheets({
   };
 
   return (
-    <div className="flex items-center bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-2 py-1">
+    <div className="flex items-center bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-600 px-2 py-0 shadow-lg">
       {/* Кнопка прокрутки влево */}
       {canScrollLeft && (
         <Button
@@ -165,10 +157,10 @@ export function CanvasSheets({
               key={sheet.id}
               data-sheet-id={sheet.id}
               className={cn(
-                "group flex items-center min-w-[150px] max-w-[200px] h-8 px-3 rounded-b-md transition-colors cursor-pointer border-t-2",
+                "group flex items-center min-w-[150px] max-w-[200px] h-8 px-3 cursor-pointer border border-gray-300 dark:border-gray-600 transition-all duration-200",
                 activeSheetId === sheet.id
-                  ? "bg-white dark:bg-gray-900 border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "bg-gray-100 dark:bg-gray-700 border-transparent hover:bg-gray-200 dark:hover:bg-gray-600"
+                  ? "bg-white dark:bg-gray-900 border-blue-500 text-blue-600 dark:text-blue-400 border-t-2 border-b-0 rounded-t-md -mb-px z-10 shadow-sm"
+                  : "bg-gray-50 dark:bg-gray-800 border-b-gray-300 dark:border-b-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-md"
               )}
               onClick={() => onSheetSelect(sheet.id)}
             >
@@ -184,43 +176,45 @@ export function CanvasSheets({
                   className="h-6 text-xs px-1 py-0 bg-transparent border-none focus:ring-1 focus:ring-blue-500"
                 />
               ) : (
-                <span className="flex-1 text-xs font-medium truncate">
+                <span 
+                  className="flex-1 text-xs font-medium truncate cursor-text"
+                  onDoubleClick={() => handleRename(sheet.id)}
+                  title="Двойной клик для переименования"
+                >
                   {sheet.name}
                 </span>
               )}
 
-              {/* Контекстное меню */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              {/* Отдельные кнопки действий */}
+              <div className="flex items-center ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-4 w-4 p-0 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSheetDuplicate(sheet.id);
+                  }}
+                  title="Дублировать лист"
+                >
+                  <Copy className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                </Button>
+                
+                {sheets.length > 1 && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-4 w-4 p-0 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => e.stopPropagation()}
+                    className="h-4 w-4 p-0 ml-1 hover:bg-red-100 dark:hover:bg-red-900/30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSheetDelete(sheet.id);
+                    }}
+                    title="Удалить лист"
                   >
-                    <MoreVertical className="h-3 w-3" />
+                    <X className="h-3 w-3 text-red-600 dark:text-red-400" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => handleRename(sheet.id)}>
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Переименовать
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onSheetDuplicate(sheet.id)}>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Дублировать
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => onSheetDelete(sheet.id)}
-                    className="text-red-600 dark:text-red-400"
-                    disabled={sheets.length <= 1}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Удалить
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                )}
+              </div>
             </div>
           ))}
         </div>
