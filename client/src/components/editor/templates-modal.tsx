@@ -332,7 +332,9 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
   };
 
   const handlePreview = (template: BotTemplate) => {
-    console.log('🎯 handlePreview called with template:', template.name, template.data);
+    console.log('🎯 PREVIEW BUTTON CLICKED FOR TEMPLATE:', template.name);
+    console.log('🎯 TEMPLATE DATA STRUCTURE:', Object.keys(template.data || {}));
+    console.log('🎯 FULL TEMPLATE DATA:', template.data);
     setSelectedTemplate(template);
     setShowPreview(true);
   };
