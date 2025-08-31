@@ -134,12 +134,17 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   // Get group info mutation
   const getGroupInfoMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
-      return apiRequest('GET', `/api/projects/${projectId}/bot/group-info/${groupId}`);
+      // Get both group info and member count
+      const [groupInfo, memberCount] = await Promise.all([
+        apiRequest('GET', `/api/projects/${projectId}/bot/group-info/${groupId}`),
+        apiRequest('GET', `/api/projects/${projectId}/bot/group-members-count/${groupId}`)
+      ]);
+      return { ...groupInfo, memberCount: memberCount.count };
     },
     onSuccess: (data) => {
       toast({ 
         title: `Информация о группе получена`, 
-        description: `Название: ${data.title}, Участников: ${data.member_count || 'неизвестно'}`
+        description: `Название: ${data.title}, Участников: ${data.memberCount}, Тип: ${data.type === 'supergroup' ? 'Супергруппа' : data.type === 'group' ? 'Группа' : 'Канал'}`
       });
     },
     onError: (error: any) => {
