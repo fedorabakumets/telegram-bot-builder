@@ -1028,14 +1028,22 @@ export default function Editor() {
                   />
                 </div>
               ) : currentTab === 'groups' ? (
-                <div className="h-full" style={{ backgroundColor: 'green', minHeight: '100vh' }}>
-                  <h1 style={{ color: 'white', padding: '20px' }}>Группы тест - {currentTab}</h1>
+                <div className="h-full overflow-auto p-4" style={{ backgroundColor: 'lime', minHeight: '600px' }}>
+                  <h1 style={{ color: 'black', fontSize: '24px', marginBottom: '20px' }}>
+                    ГРУППЫ РАБОТАЮТ! currentTab = {currentTab}
+                  </h1>
                   <GroupsPanel
                     projectId={currentProject.id}
                     projectName={currentProject.name}
                   />
                 </div>
-              ) : null}
+              ) : (
+                <div className="h-full p-4" style={{ backgroundColor: 'orange' }}>
+                  <h1 style={{ color: 'black' }}>
+                    Неизвестная вкладка: {currentTab}
+                  </h1>
+                </div>
+              )}
             </div>
           }
           properties={
