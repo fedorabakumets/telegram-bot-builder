@@ -1206,15 +1206,78 @@ async function seedDefaultTemplates(force = false) {
                   id: "with_both_show",
                   condition: "user_data_exists",
                   variableNames: ["telegram_channel", "extra_info"],
-                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
+                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\n✏️ Выберите действие:",
                   formatMode: "text",
                   keyboardType: "inline",
                   buttons: [
                     {
                       id: "btn-get-link",
-                      text: "🔗 Получить ссылку",
+                      text: "🔗 Получить ссылку на чат",
                       action: "goto",
                       target: "chat_link",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-gender",
+                      text: "👨👩 Изменить пол",
+                      action: "goto",
+                      target: "gender_selection",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-name",
+                      text: "✏️ Изменить имя",
+                      action: "goto",
+                      target: "name_input",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-age",
+                      text: "🎂 Изменить возраст",
+                      action: "goto",
+                      target: "age_input",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-metro",
+                      text: "🚇 Изменить метро",
+                      action: "goto",
+                      target: "metro_selection",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-interests",
+                      text: "🎯 Изменить интересы",
+                      action: "goto",
+                      target: "interests_categories",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-marital",
+                      text: "💍 Изменить семейное положение",
+                      action: "goto",
+                      target: "marital_status",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-orientation",
+                      text: "🌈 Изменить ориентацию",
+                      action: "goto",
+                      target: "sexual_orientation",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-channel",
+                      text: "📢 Изменить ТГК",
+                      action: "goto",
+                      target: "channel_choice",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-extra",
+                      text: "📝 Изменить о себе",
+                      action: "goto",
+                      target: "extra_info",
                       buttonType: "option"
                     },
                     {
@@ -1231,15 +1294,78 @@ async function seedDefaultTemplates(force = false) {
                   id: "with_telegram_show",
                   condition: "user_data_exists",
                   variableNames: ["telegram_channel"],
-                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\n\nГотов получить ссылку на чат?",
+                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\n\n✏️ Выберите действие:",
                   formatMode: "text",
                   keyboardType: "inline",
                   buttons: [
                     {
                       id: "btn-get-link",
-                      text: "🔗 Получить ссылку",
+                      text: "🔗 Получить ссылку на чат",
                       action: "goto",
                       target: "chat_link",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-gender",
+                      text: "👨👩 Изменить пол",
+                      action: "goto",
+                      target: "gender_selection",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-name",
+                      text: "✏️ Изменить имя",
+                      action: "goto",
+                      target: "name_input",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-age",
+                      text: "🎂 Изменить возраст",
+                      action: "goto",
+                      target: "age_input",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-metro",
+                      text: "🚇 Изменить метро",
+                      action: "goto",
+                      target: "metro_selection",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-interests",
+                      text: "🎯 Изменить интересы",
+                      action: "goto",
+                      target: "interests_categories",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-marital",
+                      text: "💍 Изменить семейное положение",
+                      action: "goto",
+                      target: "marital_status",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-orientation",
+                      text: "🌈 Изменить ориентацию",
+                      action: "goto",
+                      target: "sexual_orientation",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-channel",
+                      text: "📢 Изменить ТГК",
+                      action: "goto",
+                      target: "channel_choice",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-extra",
+                      text: "📝 Добавить о себе",
+                      action: "goto",
+                      target: "extra_info",
                       buttonType: "option"
                     },
                     {
@@ -1256,15 +1382,78 @@ async function seedDefaultTemplates(force = false) {
                   id: "with_extra_show",
                   condition: "user_data_exists",
                   variableNames: ["extra_info"],
-                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
+                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nО себе: {extra_info} 📝\n\n✏️ Выберите действие:",
                   formatMode: "text",
                   keyboardType: "inline",
                   buttons: [
                     {
                       id: "btn-get-link",
-                      text: "🔗 Получить ссылку",
+                      text: "🔗 Получить ссылку на чат",
                       action: "goto",
                       target: "chat_link",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-gender",
+                      text: "👨👩 Изменить пол",
+                      action: "goto",
+                      target: "gender_selection",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-name",
+                      text: "✏️ Изменить имя",
+                      action: "goto",
+                      target: "name_input",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-age",
+                      text: "🎂 Изменить возраст",
+                      action: "goto",
+                      target: "age_input",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-metro",
+                      text: "🚇 Изменить метро",
+                      action: "goto",
+                      target: "metro_selection",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-interests",
+                      text: "🎯 Изменить интересы",
+                      action: "goto",
+                      target: "interests_categories",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-marital",
+                      text: "💍 Изменить семейное положение",
+                      action: "goto",
+                      target: "marital_status",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-orientation",
+                      text: "🌈 Изменить ориентацию",
+                      action: "goto",
+                      target: "sexual_orientation",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-channel",
+                      text: "📢 Указать ТГК",
+                      action: "goto",
+                      target: "channel_choice",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-edit-extra",
+                      text: "📝 Изменить о себе",
+                      action: "goto",
+                      target: "extra_info",
                       buttonType: "option"
                     },
                     {
@@ -1281,9 +1470,72 @@ async function seedDefaultTemplates(force = false) {
               buttons: [
                 {
                   id: "btn-get-link",
-                  text: "🔗 Получить ссылку",
+                  text: "🔗 Получить ссылку на чат",
                   action: "goto",
                   target: "chat_link",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-edit-gender",
+                  text: "👨👩 Изменить пол",
+                  action: "goto",
+                  target: "gender_selection",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-edit-name",
+                  text: "✏️ Изменить имя",
+                  action: "goto",
+                  target: "name_input",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-edit-age",
+                  text: "🎂 Изменить возраст",
+                  action: "goto",
+                  target: "age_input",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-edit-metro",
+                  text: "🚇 Изменить метро",
+                  action: "goto",
+                  target: "metro_selection",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-edit-interests",
+                  text: "🎯 Изменить интересы",
+                  action: "goto",
+                  target: "interests_categories",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-edit-marital",
+                  text: "💍 Изменить семейное положение",
+                  action: "goto",
+                  target: "marital_status",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-edit-orientation",
+                  text: "🌈 Изменить ориентацию",
+                  action: "goto",
+                  target: "sexual_orientation",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-edit-channel",
+                  text: "📢 Указать ТГК",
+                  action: "goto",
+                  target: "channel_choice",
+                  buttonType: "option"
+                },
+                {
+                  id: "btn-edit-extra",
+                  text: "📝 Добавить о себе",
+                  action: "goto",
+                  target: "extra_info",
                   buttonType: "option"
                 },
                 {
@@ -1734,6 +1986,70 @@ async function seedDefaultTemplates(force = false) {
             sourceNodeId: "show_profile",
             targetNodeId: "chat_link",
             sourceHandle: "btn-get-link",
+            targetHandle: "target"
+          },
+          // Connections for profile editing buttons
+          {
+            id: "conn-edit-1",
+            sourceNodeId: "show_profile",
+            targetNodeId: "gender_selection",
+            sourceHandle: "btn-edit-gender",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-edit-2",
+            sourceNodeId: "show_profile",
+            targetNodeId: "name_input",
+            sourceHandle: "btn-edit-name",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-edit-3",
+            sourceNodeId: "show_profile",
+            targetNodeId: "age_input",
+            sourceHandle: "btn-edit-age",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-edit-4",
+            sourceNodeId: "show_profile",
+            targetNodeId: "metro_selection",
+            sourceHandle: "btn-edit-metro",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-edit-5",
+            sourceNodeId: "show_profile",
+            targetNodeId: "interests_categories",
+            sourceHandle: "btn-edit-interests",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-edit-6",
+            sourceNodeId: "show_profile",
+            targetNodeId: "marital_status",
+            sourceHandle: "btn-edit-marital",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-edit-7",
+            sourceNodeId: "show_profile",
+            targetNodeId: "sexual_orientation",
+            sourceHandle: "btn-edit-orientation",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-edit-8",
+            sourceNodeId: "show_profile",
+            targetNodeId: "channel_choice",
+            sourceHandle: "btn-edit-channel",
+            targetHandle: "target"
+          },
+          {
+            id: "conn-edit-9",
+            sourceNodeId: "show_profile",
+            targetNodeId: "extra_info",
+            sourceHandle: "btn-edit-extra",
             targetHandle: "target"
           }
         ]
