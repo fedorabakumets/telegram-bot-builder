@@ -206,13 +206,33 @@ export function TemplatesPage({ onSelectTemplate }: TemplatesPageProps) {
     { value: 'custom', label: 'Пользовательские' },
   ];
 
-  const getTemplateStats = (data: BotData) => {
-    const nodes = data.nodes?.length || 0;
-    const connections = data.connections?.length || 0;
-    const commands = data.nodes?.filter(node => node.type === 'command').length || 0;
-    const buttons = data.nodes?.reduce((total, node) => {
+  const getTemplateStats = (data: BotData | any) => {
+    let allNodes: any[] = [];
+    let allConnections: any[] = [];
+    
+    // Проверяем, это многолистовой шаблон или обычный
+    if (data.sheets && Array.isArray(data.sheets)) {
+      // Многолистовой шаблон - собираем все узлы и связи из всех листов
+      data.sheets.forEach((sheet: any) => {
+        if (sheet.nodes) allNodes.push(...sheet.nodes);
+        if (sheet.connections) allConnections.push(...sheet.connections);
+      });
+      // Добавляем межлистовые связи
+      if (data.interSheetConnections) {
+        allConnections.push(...data.interSheetConnections);
+      }
+    } else {
+      // Обычный шаблон
+      allNodes = data.nodes || [];
+      allConnections = data.connections || [];
+    }
+    
+    const nodes = allNodes.length;
+    const connections = allConnections.length;
+    const commands = allNodes.filter(node => node.type === 'command').length;
+    const buttons = allNodes.reduce((total, node) => {
       return total + (node.data?.buttons?.length || 0);
-    }, 0) || 0;
+    }, 0);
 
     return { nodes, connections, commands, buttons };
   };
