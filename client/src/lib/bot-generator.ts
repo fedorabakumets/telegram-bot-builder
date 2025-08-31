@@ -1540,11 +1540,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 const inputTargetNodeId = targetNode.data.inputTargetNodeId;
                 
-                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки, НЕ настраиваем ожидание ввода
-                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки И НЕТ текстового ввода, НЕ настраиваем ожидание ввода
+                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0 && !targetNode.data.enableTextInput) {
                   code += '    \n';
-                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет кнопки - НЕ настраиваем ожидание ввода")\n`;
-                  code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки, они уже отображены выше\n`;
+                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет кнопки БЕЗ текстового ввода - НЕ настраиваем ожидание ввода")\n`;
+                  code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового ввода\n`;
                 } else {
                   code += '    \n';
                   code += `    logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
@@ -7703,8 +7703,11 @@ function generateKeyboard(node: Node): string {
   // Определяем есть ли обычные кнопки у узла
   const hasRegularButtons = node.data.keyboardType !== "none" && node.data.buttons && node.data.buttons.length > 0;
   
-  // Определяем включен ли сбор пользовательского ввода  
-  const hasInputCollection = node.data.collectUserInput === true;
+  // Определяем включен ли сбор пользовательского ввода ИЛИ текстовый ввод
+  const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true;
+  
+  // Добавляем логирование для отладки
+  code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={hasRegularButtons}, hasInputCollection={hasInputCollection}, collectUserInput={node.data.collectUserInput}, enableTextInput={node.data.enableTextInput}")\n`;
   
   // CASE 1: Есть обычные кнопки + сбор ввода = обычные кнопки работают + дополнительно сохраняются как ответы
   if (hasRegularButtons && hasInputCollection) {
@@ -7754,20 +7757,25 @@ function generateKeyboard(node: Node): string {
       code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
     }
     
-    // Дополнительно настраиваем сбор ответов
+    // Дополнительно настраиваем сбор ответов с полной структурой ожидания ввода
     code += '    \n';
-    code += '    # Дополнительно: настраиваем сбор пользовательских ответов\n';
+    code += '    # Дополнительно: настраиваем полную структуру ожидания ввода для узла с кнопками\n';
     code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
-    code += `    user_data[message.from_user.id]["input_collection_enabled"] = True\n`;
-    code += `    user_data[message.from_user.id]["input_node_id"] = "${node.id}"\n`;
-    if (node.data.inputVariable) {
-      code += `    user_data[message.from_user.id]["input_variable"] = "${node.data.inputVariable}"\n`;
-    }
-    
-    // Для узлов с кнопками и сбором ввода сохраняем информацию о целевом узле
-    if (node.data.inputTargetNodeId) {
-      code += `    user_data[message.from_user.id]["input_target_node_id"] = "${node.data.inputTargetNodeId}"\n`;
-    }
+    const inputType = node.data.inputType || 'text';
+    const inputVariable = node.data.inputVariable || `response_${node.id}`;
+    const inputTargetNodeId = node.data.inputTargetNodeId || '';
+    code += `    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
+    code += `        "type": "${inputType}",\n`;
+    code += `        "variable": "${inputVariable}",\n`;
+    code += '        "save_to_database": True,\n';
+    code += `        "node_id": "${node.id}",\n`;
+    code += `        "next_node_id": "${inputTargetNodeId}",\n`;
+    code += `        "min_length": ${node.data.minLength || 0},\n`;
+    code += `        "max_length": ${node.data.maxLength || 0},\n`;
+    code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+    code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
+    code += '    }\n';
+    code += `    logging.info(f"✅ Состояние ожидания настроено для узла с кнопками: ${inputType} ввод для переменной ${inputVariable} (узел ${node.id})")\n`;
     
     return code;
   }
@@ -7815,16 +7823,23 @@ function generateKeyboard(node: Node): string {
     
     // Устанавливаем состояние ожидания ввода
     code += '    \n';
-    code += '    # Устанавливаем состояние ожидания ввода\n';
+    code += '    # Устанавливаем состояние ожидания ввода с полной структурой\n';
     code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
-    code += `    user_data[message.from_user.id]["waiting_for_input"] = "${node.id}"\n`;
-    if (node.data.inputType) {
-      code += `    user_data[message.from_user.id]["input_type"] = "${node.data.inputType}"\n`;
-    }
-    // Также сохраняем информацию о целевом узле для навигации
-    if (node.data.inputTargetNodeId) {
-      code += `    user_data[message.from_user.id]["waiting_input_target_node_id"] = "${node.data.inputTargetNodeId}"\n`;
-    }
+    const inputType = node.data.inputType || 'text';
+    const inputVariable = node.data.inputVariable || `response_${node.id}`;
+    const inputTargetNodeId = node.data.inputTargetNodeId || '';
+    code += `    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
+    code += `        "type": "${inputType}",\n`;
+    code += `        "variable": "${inputVariable}",\n`;
+    code += '        "save_to_database": True,\n';
+    code += `        "node_id": "${node.id}",\n`;
+    code += `        "next_node_id": "${inputTargetNodeId}",\n`;
+    code += `        "min_length": ${node.data.minLength || 0},\n`;
+    code += `        "max_length": ${node.data.maxLength || 0},\n`;
+    code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+    code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
+    code += '    }\n';
+    code += `    logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable} (узел ${node.id})")\n`;
     
     return code;
   }
