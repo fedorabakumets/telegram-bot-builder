@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag } from 'lucide-react';
+import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -47,6 +47,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     can_promote_members: false,
     can_manage_video_chats: false
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'admin' | 'member'>('all');
+  const [showSendMessage, setShowSendMessage] = useState(false);
+  const [messageToSend, setMessageToSend] = useState('');
+  const [selectedGroupForMessage, setSelectedGroupForMessage] = useState<BotGroup | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -100,6 +105,86 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     },
     onError: () => {
       toast({ title: 'Ошибка при обновлении настроек', variant: 'destructive' });
+    }
+  });
+
+  // Send message to group mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ groupId, message }: { groupId: string | null; message: string }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/send-group-message`, {
+        groupId,
+        message
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Сообщение отправлено в группу' });
+      setShowSendMessage(false);
+      setMessageToSend('');
+      setSelectedGroupForMessage(null);
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при отправке сообщения', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Get group info mutation
+  const getGroupInfoMutation = useMutation({
+    mutationFn: async (groupId: string | null) => {
+      return apiRequest('GET', `/api/projects/${projectId}/bot/group-info/${groupId}`);
+    },
+    onSuccess: (data) => {
+      toast({ 
+        title: `Информация о группе получена`, 
+        description: `Название: ${data.title}, Участников: ${data.member_count || 'неизвестно'}`
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при получении информации', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Get group members count mutation
+  const getMembersCountMutation = useMutation({
+    mutationFn: async (groupId: string | null) => {
+      return apiRequest('GET', `/api/projects/${projectId}/bot/group-members-count/${groupId}`);
+    },
+    onSuccess: (data) => {
+      toast({ title: `Участников в группе: ${data.count}` });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при получении количества участников', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Get admin status mutation
+  const getAdminStatusMutation = useMutation({
+    mutationFn: async (groupId: string | null) => {
+      return apiRequest('GET', `/api/projects/${projectId}/bot/admin-status/${groupId}`);
+    },
+    onSuccess: (data) => {
+      toast({ 
+        title: `Статус бота в группе: ${data.isAdmin ? 'Администратор' : 'Участник'}`, 
+        description: `Права: ${data.status}`
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при проверке статуса', 
+        description: error.error || 'Бот не найден в группе',
+        variant: 'destructive' 
+      });
     }
   });
 
@@ -217,46 +302,97 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 mt-4">
+                  <div className="space-y-2 mt-4">
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedGroup(group);
+                          setGroupName(group.name);
+                          setGroupUrl(group.url);
+                          setGroupDescription(group.description || '');
+                          setGroupAvatarUrl(group.avatarUrl || '');
+                          setGroupLanguage(group.language || 'ru');
+                          setGroupTimezone(group.timezone || '');
+                          setGroupTags(group.tags || []);
+                          setGroupNotes(group.notes || '');
+                          setMakeAdmin(group.isAdmin === 1);
+                          setIsPublicGroup(Boolean(group.isPublic));
+                          setChatType((group.chatType as 'group' | 'supergroup' | 'channel') || 'group');
+                          setAdminRights((group.adminRights as any) || {
+                            can_manage_chat: false,
+                            can_change_info: false,
+                            can_delete_messages: false,
+                            can_invite_users: false,
+                            can_restrict_members: false,
+                            can_pin_messages: false,
+                            can_promote_members: false,
+                            can_manage_video_chats: false
+                          });
+                          setShowGroupSettings(true);
+                        }}
+                      >
+                        <Settings className="w-3 h-3 mr-1" />
+                        Настройки
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedGroupForMessage(group);
+                          setShowSendMessage(true);
+                        }}
+                      >
+                        <Send className="w-3 h-3 mr-1" />
+                        Сообщение
+                      </Button>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => getGroupInfoMutation.mutate(group.groupId)}
+                        disabled={getGroupInfoMutation.isPending}
+                      >
+                        <BarChart3 className="w-3 h-3 mr-1" />
+                        Инфо
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => getMembersCountMutation.mutate(group.groupId)}
+                        disabled={getMembersCountMutation.isPending}
+                      >
+                        <Users className="w-3 h-3 mr-1" />
+                        Участники
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => getAdminStatusMutation.mutate(group.groupId)}
+                        disabled={getAdminStatusMutation.isPending}
+                      >
+                        <Shield className="w-3 h-3 mr-1" />
+                        Статус
+                      </Button>
+                    </div>
+                    
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex-1"
-                      onClick={() => {
-                        setSelectedGroup(group);
-                        setGroupName(group.name);
-                        setGroupUrl(group.url);
-                        setGroupDescription(group.description || '');
-                        setGroupAvatarUrl(group.avatarUrl || '');
-                        setGroupLanguage(group.language || 'ru');
-                        setGroupTimezone(group.timezone || '');
-                        setGroupTags(group.tags || []);
-                        setGroupNotes(group.notes || '');
-                        setMakeAdmin(group.isAdmin === 1);
-                        setIsPublicGroup(Boolean(group.isPublic));
-                        setChatType((group.chatType as 'group' | 'supergroup' | 'channel') || 'group');
-                        setAdminRights((group.adminRights as any) || {
-                          can_manage_chat: false,
-                          can_change_info: false,
-                          can_delete_messages: false,
-                          can_invite_users: false,
-                          can_restrict_members: false,
-                          can_pin_messages: false,
-                          can_promote_members: false,
-                          can_manage_video_chats: false
-                        });
-                        setShowGroupSettings(true);
-                      }}
-                    >
-                      Настройки
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                      className="w-full text-red-600 hover:text-red-700"
                       onClick={() => deleteGroupMutation.mutate(group.id)}
                       disabled={deleteGroupMutation.isPending}
                     >
-                      Удалить
+                      <X className="w-3 h-3 mr-1" />
+                      Удалить группу
                     </Button>
                   </div>
                 </Card>
@@ -658,6 +794,59 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 className="flex-1"
               >
                 Сохранить
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Модальное окно отправки сообщения в группу */}
+        <Dialog open={showSendMessage} onOpenChange={setShowSendMessage}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Отправить сообщение в группу</DialogTitle>
+              <DialogDescription>
+                Отправка сообщения в группу "{selectedGroupForMessage?.name}" через Telegram Bot API
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="message-text">Текст сообщения</Label>
+                <Textarea
+                  id="message-text"
+                  placeholder="Введите текст сообщения..."
+                  value={messageToSend}
+                  onChange={(e) => setMessageToSend(e.target.value)}
+                  rows={4}
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowSendMessage(false);
+                  setMessageToSend('');
+                  setSelectedGroupForMessage(null);
+                }} 
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (selectedGroupForMessage && messageToSend.trim()) {
+                    sendMessageMutation.mutate({
+                      groupId: selectedGroupForMessage.groupId,
+                      message: messageToSend.trim()
+                    });
+                  }
+                }}
+                disabled={sendMessageMutation.isPending || !messageToSend.trim()}
+                className="flex-1"
+              >
+                {sendMessageMutation.isPending ? 'Отправляется...' : 'Отправить'}
               </Button>
             </div>
           </DialogContent>

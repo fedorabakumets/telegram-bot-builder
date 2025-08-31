@@ -3125,6 +3125,193 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Telegram Bot API integration for groups
+  // Send message to group
+  app.post("/api/projects/:projectId/bot/send-group-message", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, message } = req.body;
+      
+      if (!groupId || !message) {
+        return res.status(400).json({ message: "Group ID and message are required" });
+      }
+
+      // Get bot token for this project
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found. Please add a token first." });
+      }
+
+      // Send message via Telegram Bot API
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/sendMessage`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          text: message,
+          parse_mode: 'HTML'
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to send message", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ 
+        message: "Message sent successfully", 
+        messageId: result.result.message_id 
+      });
+    } catch (error) {
+      console.error("Failed to send group message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Get group chat information
+  app.get("/api/projects/:projectId/bot/group-info/:groupId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId } = req.params;
+      
+      // Get bot token for this project
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found. Please add a token first." });
+      }
+
+      // Get chat information via Telegram Bot API
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getChat`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to get group info", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json(result.result);
+    } catch (error) {
+      console.error("Failed to get group info:", error);
+      res.status(500).json({ message: "Failed to get group info" });
+    }
+  });
+
+  // Get group members count
+  app.get("/api/projects/:projectId/bot/group-members-count/:groupId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId } = req.params;
+      
+      // Get bot token for this project
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found. Please add a token first." });
+      }
+
+      // Get members count via Telegram Bot API
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatMemberCount`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to get members count", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ count: result.result });
+    } catch (error) {
+      console.error("Failed to get members count:", error);
+      res.status(500).json({ message: "Failed to get members count" });
+    }
+  });
+
+  // Get bot admin status in group
+  app.get("/api/projects/:projectId/bot/admin-status/:groupId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId } = req.params;
+      
+      // Get bot token for this project
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found. Please add a token first." });
+      }
+
+      // Get bot information first
+      const botInfoResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getMe`);
+      const botInfo = await botInfoResponse.json();
+      
+      if (!botInfoResponse.ok) {
+        return res.status(400).json({ message: "Failed to get bot info" });
+      }
+
+      const botId = botInfo.result.id;
+
+      // Check bot admin status
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatMember`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          user_id: botId
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to get admin status", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      const isAdmin = ['administrator', 'creator'].includes(result.result.status);
+      
+      res.json({ 
+        isAdmin,
+        status: result.result.status,
+        permissions: result.result
+      });
+    } catch (error) {
+      console.error("Failed to get admin status:", error);
+      res.status(500).json({ message: "Failed to get admin status" });
+    }
+  });
+
   // Force update templates - Admin endpoint to refresh all system templates
   app.post("/api/templates/refresh", async (req, res) => {
     try {
