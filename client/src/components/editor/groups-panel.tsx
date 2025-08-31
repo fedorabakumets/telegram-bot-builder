@@ -733,9 +733,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
 
     createGroupMutation.mutate({
-      groupId: groupId.trim() || (groupUrl.includes('joinchat') ? null : groupUrl.replace('@', '')),
+      groupId: identifier,
       name: finalGroupName,
-      url: finalGroupUrl,
+      url: finalGroupUrl || '',
       isAdmin: makeAdmin ? 1 : 0,
       memberCount: null,
       isActive: 1,

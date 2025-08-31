@@ -367,7 +367,7 @@ export const insertBotGroupSchema = createInsertSchema(botGroups).pick({
   notes: true,
 }).extend({
   name: z.string().min(1, "Название группы обязательно"),
-  url: z.string().min(1, "Ссылка на группу обязательна"),
+  url: z.string().optional().default(""), // Ссылка может быть пустой для числовых ID групп
   isAdmin: z.number().min(0).max(1).default(0),
   isActive: z.number().min(0).max(1).default(1),
   isPublic: z.number().min(0).max(1).default(0),
