@@ -1119,13 +1119,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   }
 
   // Generate callback handlers for inline buttons AND input target nodes
-  const inlineNodes = nodes.filter(node => 
-    node.data.keyboardType === 'inline' && node.data.buttons.length > 0
+  const inlineNodes = (nodes || []).filter(node => 
+    node.data.keyboardType === 'inline' && node.data.buttons && node.data.buttons.length > 0
   );
 
   // Also collect all target nodes from user input collections
   const inputTargetNodeIds = new Set<string>();
-  nodes.forEach(node => {
+  (nodes || []).forEach(node => {
     if (node.data.inputTargetNodeId) {
       inputTargetNodeIds.add(node.data.inputTargetNodeId);
     }
@@ -1150,7 +1150,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   });
   
   // Collect buttons from conditional messages
-  nodes.forEach(node => {
+  (nodes || []).forEach(node => {
     if (node.data.conditionalMessages) {
       node.data.conditionalMessages.forEach((condition: any) => {
         if (condition.buttons) {
@@ -3927,8 +3927,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   }
   
   // Generate handlers for reply keyboard buttons
-  const replyNodes = nodes.filter(node => 
-    node.data.keyboardType === 'reply' && node.data.buttons.length > 0
+  const replyNodes = (nodes || []).filter(node => 
+    node.data.keyboardType === 'reply' && node.data.buttons && node.data.buttons.length > 0
   );
   
   if (replyNodes.length > 0) {
@@ -4121,7 +4121,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   }
 
   // Добавляем обработчики кнопочных ответов для user-input узлов
-  const userInputNodes = nodes.filter(node => 
+  const userInputNodes = (nodes || []).filter(node => 
     node.type === 'user-input' && 
     node.data.responseType === 'buttons' && 
     Array.isArray(node.data.responseOptions) && 
@@ -4306,7 +4306,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
         code += '            \n';
         
         // Добавляем обработку различных команд для button responses
-        const commandNodes = nodes.filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
+        const commandNodes = (nodes || []).filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
         commandNodes.forEach((cmdNode, cmdIndex) => {
           const condition = cmdIndex === 0 ? 'if' : 'elif';
           code += `            ${condition} command == "${cmdNode.data.command}":\n`;
@@ -4624,7 +4624,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '                \n';
   
   // Добавляем обработку различных команд для reply клавиатур
-  const commandNodes = nodes.filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
+  const commandNodes = (nodes || []).filter(n => (n.type === 'start' || n.type === 'command') && n.data.command);
   commandNodes.forEach((cmdNode, cmdIndex) => {
     const condition = cmdIndex === 0 ? 'if' : 'elif';
     code += `                ${condition} command == "${cmdNode.data.command}":\n`;
@@ -4997,7 +4997,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        # Находим узел для получения настроек\n';
   
   // Генерируем проверку для каждого узла с универсальным сбором ввода (старый формат)
-  const inputNodes = nodes.filter(node => node.data.collectUserInput);
+  const inputNodes = (nodes || []).filter(node => node.data.collectUserInput);
   code += `        logging.info(f"DEBUG old format: checking inputNodes: ${inputNodes.map(n => n.id).join(', ')}")\n`;
   inputNodes.forEach((node, index) => {
     const condition = index === 0 ? 'if' : 'elif';
@@ -5891,7 +5891,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '\n# Обработчики для множественного выбора\n';
   
   // Найдем узлы с множественным выбором для использования в обработчиках
-  const multiSelectNodes = nodes.filter(node => 
+  const multiSelectNodes = (nodes || []).filter(node => 
     node.data.allowMultipleSelection
   );
   console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
@@ -8049,7 +8049,7 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
   const { nodes, connections } = botData;
 
   // Check if there's a start node
-  const startNodes = nodes.filter(node => node.type === 'start');
+  const startNodes = (nodes || []).filter(node => node.type === 'start');
   if (startNodes.length === 0) {
     errors.push("Бот должен содержать хотя бы одну стартовую команду");
   }
@@ -8151,7 +8151,7 @@ export function generateRequirementsTxt(): string {
 }
 
 export function generateReadme(botData: BotData, botName: string): string {
-  const commandNodes = botData.nodes.filter(node => 
+  const commandNodes = (botData.nodes || []).filter(node => 
     (node.type === 'start' || node.type === 'command') && node.data.command
   );
   
@@ -8224,8 +8224,8 @@ export function generateReadme(botData: BotData, botName: string): string {
   readme += '### Статистика\n\n';
   readme += '- **Всего узлов**: ' + botData.nodes.length + '\n';
   readme += '- **Команд**: ' + commandNodes.length + '\n';
-  readme += '- **Сообщений**: ' + botData.nodes.filter(n => n.type === 'message').length + '\n';
-  readme += '- **Фото**: ' + botData.nodes.filter(n => n.type === 'photo').length + '\n';
+  readme += '- **Сообщений**: ' + (botData.nodes || []).filter(n => n.type === 'message').length + '\n';
+  readme += '- **Фото**: ' + (botData.nodes || []).filter(n => n.type === 'photo').length + '\n';
   readme += '- **Кнопок**: ' + botData.nodes.reduce((sum, node) => sum + node.data.buttons.length, 0) + '\n\n';
   
   readme += '### Безопасность\n\n';

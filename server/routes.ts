@@ -442,9 +442,45 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
       return { success: false, error: "Проект не найден" };
     }
 
+    // Преобразуем многолистовую структуру в простую для генератора
+    function convertSheetsToSimpleBotData(data: any) {
+      // Если уже простая структура - возвращаем как есть
+      if (data.nodes && data.connections) {
+        return data;
+      }
+      
+      // Если многолистовая структура - собираем все узлы и связи
+      if (data.sheets && Array.isArray(data.sheets)) {
+        let allNodes: any[] = [];
+        let allConnections: any[] = [];
+        
+        data.sheets.forEach((sheet: any) => {
+          if (sheet.nodes) allNodes.push(...sheet.nodes);
+          if (sheet.connections) allConnections.push(...sheet.connections);
+        });
+        
+        // Добавляем межлистовые связи
+        if (data.interSheetConnections) {
+          allConnections.push(...data.interSheetConnections);
+        }
+        
+        return {
+          nodes: allNodes,
+          connections: allConnections
+        };
+      }
+      
+      // Если нет узлов вообще - возвращаем пустую структуру
+      return {
+        nodes: [],
+        connections: []
+      };
+    }
+
     // Генерируем код бота через клиентский генератор
     const { generatePythonCode } = await import("../client/src/lib/bot-generator.js");
-    const botCode = generatePythonCode(project.data as any, project.name).replace('YOUR_BOT_TOKEN_HERE', token);
+    const simpleBotData = convertSheetsToSimpleBotData(project.data);
+    const botCode = generatePythonCode(simpleBotData as any, project.name).replace('YOUR_BOT_TOKEN_HERE', token);
     
     // Создаем файл бота
     const filePath = createBotFile(botCode, projectId);
@@ -1073,8 +1109,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
 
+      // Преобразуем многолистовую структуру в простую для генератора
+      function convertSheetsToSimpleBotData(data: any) {
+        // Если уже простая структура - возвращаем как есть
+        if (data.nodes && data.connections) {
+          return data;
+        }
+        
+        // Если многолистовая структура - собираем все узлы и связи
+        if (data.sheets && Array.isArray(data.sheets)) {
+          let allNodes: any[] = [];
+          let allConnections: any[] = [];
+          
+          data.sheets.forEach((sheet: any) => {
+            if (sheet.nodes) allNodes.push(...sheet.nodes);
+            if (sheet.connections) allConnections.push(...sheet.connections);
+          });
+          
+          // Добавляем межлистовые связи
+          if (data.interSheetConnections) {
+            allConnections.push(...data.interSheetConnections);
+          }
+          
+          return {
+            nodes: allNodes,
+            connections: allConnections
+          };
+        }
+        
+        // Если нет узлов вообще - возвращаем пустую структуру
+        return {
+          nodes: [],
+          connections: []
+        };
+      }
+
       // Generate Python code using the imported function
-      const pythonCode = generatePythonCode(project.data as any, project.name);
+      const simpleBotData = convertSheetsToSimpleBotData(project.data);
+      const pythonCode = generatePythonCode(simpleBotData as any, project.name);
       res.json({ code: pythonCode });
     } catch (error) {
       console.error("❌ Ошибка генерации кода:", error);
