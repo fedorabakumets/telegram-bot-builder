@@ -357,6 +357,56 @@ class TelegramClientManager {
     }
     return null;
   }
+
+  async setChatPhoto(userId: string, chatId: string | number, photoPath: string): Promise<any> {
+    const client = await this.getClient(userId);
+    if (!client) {
+      throw new Error('Telegram client not found. Please authenticate first.');
+    }
+
+    const authStatus = await this.getAuthStatus(userId);
+    if (!authStatus.isAuthenticated) {
+      throw new Error('User not authenticated. Please complete phone verification first.');
+    }
+
+    try {
+      // Читаем файл
+      const fs = await import('fs');
+      const photoBuffer = fs.readFileSync(photoPath);
+
+      // Загружаем файл в Telegram
+      const file = await client.uploadFile({
+        file: photoBuffer,
+        workers: 1,
+      });
+
+      // Получаем сущность чата
+      let chatEntity: any;
+      try {
+        chatEntity = await client.getEntity(chatId);
+      } catch (entityError) {
+        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
+          const channelId = BigInt(chatId.slice(4));
+          chatEntity = new Api.PeerChannel({ channelId });
+        } else {
+          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
+        }
+      }
+
+      // Устанавливаем фото чата
+      const result = await client.invoke(
+        new Api.channels.EditPhoto({
+          channel: chatEntity,
+          photo: file,
+        })
+      );
+
+      return result;
+    } catch (error: any) {
+      console.error('Failed to set chat photo:', error);
+      throw new Error(`Failed to set chat photo: ${error.message || 'Unknown error'}`);
+    }
+  }
 }
 
 export const telegramClientManager = new TelegramClientManager();

@@ -3645,14 +3645,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Set group photo
+  // Set group photo using Bot API
   app.post("/api/projects/:projectId/bot/set-group-photo", async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
-      const { groupId, photoUrl } = req.body;
+      const { groupId, photoPath } = req.body;
       
-      if (!groupId || !photoUrl) {
-        return res.status(400).json({ message: "Group ID and photo URL are required" });
+      if (!groupId || !photoPath) {
+        return res.status(400).json({ message: "Group ID and photo path are required" });
       }
 
       const defaultToken = await storage.getDefaultBotToken(projectId);
@@ -3660,16 +3660,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Bot token not found for this project" });
       }
 
+      // Читаем файл и отправляем через multipart/form-data
+      const fs = await import('fs');
+      const FormData = (await import('form-data')).default;
+      
+      const formData = new FormData();
+      formData.append('chat_id', groupId);
+      formData.append('photo', fs.createReadStream(photoPath));
+
       const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setChatPhoto`;
       const response = await fetch(telegramApiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: groupId,
-          photo: photoUrl
-        })
+        body: formData as any,
       });
 
       const result = await response.json();
@@ -3682,9 +3684,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ success: true, message: "Group photo updated successfully" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to set group photo:", error);
-      res.status(500).json({ message: "Failed to set group photo" });
+      res.status(500).json({ 
+        message: "Failed to set group photo", 
+        error: error.message || "Unknown error"
+      });
     }
   });
 
