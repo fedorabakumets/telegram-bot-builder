@@ -243,8 +243,27 @@ export default function Editor() {
     mutationFn: async (data: any) => {
       if (!currentProject) return;
       
-      // Используем новый формат с листами если он доступен, иначе старый формат
-      const projectData = botDataWithSheets || getBotData();
+      // Всегда используем текущие данные с холста для сохранения
+      let projectData;
+      
+      if (botDataWithSheets) {
+        // Обновляем активный лист текущими данными холста
+        const currentCanvasData = getBotData();
+        const activeSheetId = botDataWithSheets.activeSheetId;
+        const updatedSheets = botDataWithSheets.sheets.map(sheet => 
+          sheet.id === activeSheetId 
+            ? { ...sheet, nodes: currentCanvasData.nodes, connections: currentCanvasData.connections, updatedAt: new Date() }
+            : sheet
+        );
+        
+        projectData = {
+          ...botDataWithSheets,
+          sheets: updatedSheets
+        };
+      } else {
+        // Если нет формата с листами, используем текущие данные холста
+        projectData = getBotData();
+      }
       
       return apiRequest('PUT', `/api/projects/${currentProject.id}`, {
         data: projectData
