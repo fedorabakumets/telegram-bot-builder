@@ -77,7 +77,7 @@ class TelegramClientManager {
     }
   }
 
-  async verifyCode(userId: string, phoneNumber: string, phoneCode: string, phoneCodeHash: string): Promise<{ success: boolean; error?: string }> {
+  async verifyCode(userId: string, phoneNumber: string, phoneCode: string, phoneCodeHash: string): Promise<{ success: boolean; error?: string; needsPassword?: boolean }> {
     try {
       const client = this.clients.get(userId);
       if (!client) {
@@ -111,9 +111,81 @@ class TelegramClientManager {
 
     } catch (error: any) {
       console.error('Ошибка проверки кода:', error);
+
+      // Проверяем, нужен ли пароль для 2FA
+      if (error.message && error.message.includes('SESSION_PASSWORD_NEEDED')) {
+        // Обновляем статус - требуется пароль
+        this.authStatus.set(userId, {
+          isAuthenticated: false,
+          phoneNumber: phoneNumber,
+          userId: userId,
+          needsCode: false,
+          needsPassword: true
+        });
+
+        console.log(`🔐 Требуется пароль 2FA для ${phoneNumber}`);
+        
+        return {
+          success: false,
+          needsPassword: true,
+          error: 'Требуется пароль двухфакторной аутентификации'
+        };
+      }
+
       return {
         success: false,
         error: error.message || 'Неверный код подтверждения'
+      };
+    }
+  }
+
+  async verifyPassword(userId: string, password: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const client = this.clients.get(userId);
+      if (!client) {
+        throw new Error('Клиент не найден. Сначала отправьте код.');
+      }
+
+      const authStatus = this.authStatus.get(userId);
+      if (!authStatus || !authStatus.needsPassword) {
+        throw new Error('Проверка пароля не требуется.');
+      }
+
+      // Получаем информацию о пароле 2FA
+      const passwordSrpResult = await client.invoke(new Api.account.GetPassword());
+      
+      // Вычисляем SRP данные для пароля
+      const srpPassword = await client._computeSrpPassword(passwordSrpResult, password);
+
+      // Проверяем пароль
+      const result = await client.invoke(
+        new Api.auth.CheckPassword({
+          password: srpPassword,
+        })
+      );
+
+      // Сохраняем сессию
+      const sessionString = client.session.save() as string;
+      this.sessions.set(userId, sessionString);
+
+      // Обновляем статус авторизации
+      this.authStatus.set(userId, {
+        isAuthenticated: true,
+        phoneNumber: authStatus.phoneNumber,
+        userId: userId,
+        needsCode: false,
+        needsPassword: false
+      });
+
+      console.log(`✅ Пользователь ${authStatus.phoneNumber} успешно авторизован с 2FA`);
+
+      return { success: true };
+
+    } catch (error: any) {
+      console.error('Ошибка проверки пароля:', error);
+      return {
+        success: false,
+        error: error.message || 'Неверный пароль'
       };
     }
   }

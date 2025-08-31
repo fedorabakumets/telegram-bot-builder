@@ -4115,7 +4115,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(400).json({
           success: false,
-          error: result.error
+          error: result.error,
+          needsPassword: result.needsPassword
         });
       }
     } catch (error: any) {
@@ -4123,6 +4124,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         error: "Ошибка проверки кода" 
+      });
+    }
+  });
+
+  // Verify 2FA password
+  app.post("/api/telegram-auth/verify-password", async (req, res) => {
+    try {
+      const { password } = req.body;
+      
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          error: "Пароль обязателен"
+        });
+      }
+
+      const result = await telegramClientManager.verifyPassword('default', password);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          message: "Авторизация с 2FA успешна"
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to verify password:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Ошибка проверки пароля" 
       });
     }
   });
