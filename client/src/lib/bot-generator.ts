@@ -909,6 +909,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   code += '        logging.error(f"Ошибка получения пользователя из БД: {e}")\n';
   code += '        return None\n\n';
 
+  // Добавляем функцию handle_command_start как алиас для start_handler
+  code += '# Алиас функция для callback обработчиков\n';
+  code += 'async def handle_command_start(message):\n';
+  code += '    """Алиас для start_handler, используется в callback обработчиках"""\n';
+  code += '    await start_handler(message)\n\n';
+
   code += 'async def update_user_data_in_db(user_id: int, data_key: str, data_value):\n';
   code += '    """Обновляет пользовательские данные в базе данных"""\n';
   code += '    if not db_pool:\n';
@@ -2421,6 +2427,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
+                // Добавляем настройку колонок для консистентности
+                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+                code += `        builder.adjust(${columns})\n`;
                 code += '        keyboard = builder.as_markup()\n';
               }
               
@@ -2468,6 +2477,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                     code += `    builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                   }
                 });
+                // Добавляем настройку колонок для консистентности
+                const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+                code += `    builder.adjust(${columns})\n`;
                 code += '    keyboard = builder.as_markup()\n';
                 code += '    # Отправляем сообщение command узла с клавиатурой\n';
                 code += '    try:\n';
@@ -2603,6 +2615,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                       code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
                     }
                   });
+                  // Добавляем настройку колонок для консистентности
+                  const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+                  code += `        builder.adjust(${columns})\n`;
                   code += '        keyboard = builder.as_markup()\n';
                   // Определяем режим форматирования для целевого узла
                   let parseModeTarget = '';
@@ -4045,6 +4060,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                   code += `        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
                 }
               });
+              // Добавляем настройку колонок для консистентности
+              const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data);
+              code += `        builder.adjust(${columns})\n`;
               code += '        keyboard = builder.as_markup()\n';
               code += `        await message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
             
