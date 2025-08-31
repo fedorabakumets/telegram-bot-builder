@@ -449,6 +449,18 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
           const stats = getTemplateStats(template.data as BotData);
           console.log('🎫 Stats for', template.name, ':', stats);
           
+          // Временный отладочный алерт для многолистового шаблона
+          if (template.name.includes('Многолистовой')) {
+            console.log('🚨 DEBUGGING MULTI-SHEET TEMPLATE');
+            console.log('🚨 Template data:', template.data);
+            console.log('🚨 Has sheets:', !!(template.data as any)?.sheets);
+            console.log('🚨 Stats calculated:', stats);
+            // Временный алерт для проверки
+            if (stats.nodes === 0) {
+              alert(`Многолистовой шаблон: nodes=${stats.nodes}, но в данных есть ${(template.data as any)?.sheets?.length || 0} листов`);
+            }
+          }
+          
           return (
             <Card key={template.id} className="hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 dark:bg-card/50 dark:hover:bg-card/80">
               <CardHeader className="pb-3">
