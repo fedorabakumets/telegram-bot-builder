@@ -2630,7 +2630,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
                 // Обычное отображение сообщения без сбора ввода
                 
                 // Handle keyboard for target node
-                code += `    # DEBUG: Узел ${targetNode.id} - hasRegularButtons=${targetNode.data.buttons && targetNode.data.buttons.length > 0}, hasInputCollection=false\n`;
+                code += `    # DEBUG: Узел ${targetNode.id} - hasRegularButtons=${toPythonBoolean(targetNode.data.buttons && targetNode.data.buttons.length > 0)}, hasInputCollection=False\n`;
                 code += `    logging.info(f"DEBUG: Узел ${targetNode.id} обработка кнопок - keyboardType=${targetNode.data.keyboardType}, buttons=${targetNode.data.buttons ? targetNode.data.buttons.length : 0}")\n`;
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons.length > 0) {
                   code += `    logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${targetNode.id} с ${targetNode.data.buttons.length} кнопками")\n`;
@@ -7706,8 +7706,10 @@ function generateKeyboard(node: Node): string {
   // Определяем включен ли сбор пользовательского ввода ИЛИ текстовый ввод
   const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true;
   
-  // Добавляем логирование для отладки
-  code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={hasRegularButtons}, hasInputCollection={hasInputCollection}, collectUserInput={node.data.collectUserInput}, enableTextInput={node.data.enableTextInput}")\n`;
+  // Добавляем логирование для отладки (используем Python переменные)
+  code += `    has_regular_buttons = ${toPythonBoolean(hasRegularButtons)}\n`;
+  code += `    has_input_collection = ${toPythonBoolean(hasInputCollection)}\n`;
+  code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=${node.data.collectUserInput}, enableTextInput=${node.data.enableTextInput}")\n`;
   
   // CASE 1: Есть обычные кнопки + сбор ввода = обычные кнопки работают + дополнительно сохраняются как ответы
   if (hasRegularButtons && hasInputCollection) {
@@ -7846,7 +7848,7 @@ function generateKeyboard(node: Node): string {
   
   // CASE 3: Только обычные кнопки БЕЗ сбора ввода = работает как раньше
   else {
-    code += `    # DEBUG: Узел ${node.id} - hasRegularButtons=${hasRegularButtons}, hasInputCollection=${hasInputCollection}\n`;
+    code += `    # DEBUG: Узел ${node.id} - hasRegularButtons=${toPythonBoolean(hasRegularButtons)}, hasInputCollection=${toPythonBoolean(hasInputCollection)}\n`;
     code += `    logging.info(f"DEBUG: Узел ${node.id} обработка кнопок - keyboardType=${node.data.keyboardType}, buttons=${node.data.buttons ? node.data.buttons.length : 0}")\n`;
     // Проверяем, есть ли условная клавиатура
     code += '    \n';
