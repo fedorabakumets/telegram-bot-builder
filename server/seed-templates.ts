@@ -4029,7 +4029,8 @@ async function seedDefaultTemplates(force = false) {
                       text: "Пропустить ⏭️",
                       action: "goto",
                       target: "extra_info",
-                      buttonType: "normal"
+                      buttonType: "normal",
+                      skipDataCollection: true
                     }
                   ],
                   markdown: false,
@@ -4055,7 +4056,8 @@ async function seedDefaultTemplates(force = false) {
                       text: "Пропустить ⏭️",
                       action: "goto",
                       target: "profile_complete",
-                      buttonType: "normal"
+                      buttonType: "normal",
+                      skipDataCollection: true
                     }
                   ],
                   markdown: false,
@@ -4076,9 +4078,88 @@ async function seedDefaultTemplates(force = false) {
                 type: "message",
                 position: { x: 400, y: 300 },
                 data: {
-                  messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм-канал: {telegram_channel}\nО себе: {extra_info}\n\n💬 Источник: {user_source}",
+                  messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\n\n💬 Источник: {user_source}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
                   synonyms: [],
                   keyboardType: "inline",
+                  removeKeyboard: false,
+                  enableConditionalMessages: true,
+                  conditionalMessages: [
+                    {
+                      id: "with_both",
+                      condition: "user_data_exists",
+                      variableNames: ["telegram_channel", "extra_info"],
+                      messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\n💬 Источник: {user_source}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+                      formatMode: "text",
+                      keyboardType: "inline",
+                      buttons: [
+                        {
+                          id: "btn-chat-link",
+                          text: "Ссылка на чат 🔗",
+                          action: "command",
+                          target: "/link",
+                          buttonType: "normal"
+                        },
+                        {
+                          id: "btn-show-profile-edit",
+                          text: "Редактировать профиль ✏️",
+                          action: "command",
+                          target: "/profile",
+                          buttonType: "normal"
+                        }
+                      ],
+                      priority: 1
+                    },
+                    {
+                      id: "with_telegram_only",
+                      condition: "user_data_exists",
+                      variableNames: ["telegram_channel"],
+                      messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм: {telegram_channel} 📢\n\n💬 Источник: {user_source}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+                      formatMode: "text",
+                      keyboardType: "inline",
+                      buttons: [
+                        {
+                          id: "btn-chat-link",
+                          text: "Ссылка на чат 🔗",
+                          action: "command",
+                          target: "/link",
+                          buttonType: "normal"
+                        },
+                        {
+                          id: "btn-show-profile-edit",
+                          text: "Редактировать профиль ✏️",
+                          action: "command",
+                          target: "/profile",
+                          buttonType: "normal"
+                        }
+                      ],
+                      priority: 2
+                    },
+                    {
+                      id: "with_extra_only",
+                      condition: "user_data_exists",
+                      variableNames: ["extra_info"],
+                      messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nО себе: {extra_info} 📝\n\n💬 Источник: {user_source}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+                      formatMode: "text",
+                      keyboardType: "inline",
+                      buttons: [
+                        {
+                          id: "btn-chat-link",
+                          text: "Ссылка на чат 🔗",
+                          action: "command",
+                          target: "/link",
+                          buttonType: "normal"
+                        },
+                        {
+                          id: "btn-show-profile-edit",
+                          text: "Редактировать профиль ✏️",
+                          action: "command",
+                          target: "/profile",
+                          buttonType: "normal"
+                        }
+                      ],
+                      priority: 3
+                    }
+                  ],
                   buttons: [
                     {
                       id: "btn-chat-link",
@@ -4109,8 +4190,38 @@ async function seedDefaultTemplates(force = false) {
                   commandName: "/profile",
                   description: "Показать и редактировать профиль пользователя",
                   synonyms: ["профиль", "анкета", "мои данные", "редактировать"],
-                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм-канал: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\n💬 Источник: {user_source}\n\nЧто хочешь изменить?",
+                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\n\n💬 Источник: {user_source}\n\n✏️ Выберите действие:",
                   keyboardType: "inline",
+                  enableConditionalMessages: true,
+                  conditionalMessages: [
+                    {
+                      id: "with_both_show",
+                      condition: "user_data_exists",
+                      variableNames: ["telegram_channel", "extra_info"],
+                      messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\n💬 Источник: {user_source}\n\n✏️ Выберите действие:",
+                      formatMode: "text",
+                      keyboardType: "inline",
+                      priority: 1
+                    },
+                    {
+                      id: "with_telegram_only_show",
+                      condition: "user_data_exists",
+                      variableNames: ["telegram_channel"],
+                      messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\n\n💬 Источник: {user_source}\n\n✏️ Выберите действие:",
+                      formatMode: "text",
+                      keyboardType: "inline",
+                      priority: 2
+                    },
+                    {
+                      id: "with_extra_only_show",
+                      condition: "user_data_exists",
+                      variableNames: ["extra_info"],
+                      messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nО себе: {extra_info} 📝\n\n💬 Источник: {user_source}\n\n✏️ Выберите действие:",
+                      formatMode: "text",
+                      keyboardType: "inline",
+                      priority: 3
+                    }
+                  ],
                   buttons: [
                     {
                       id: "btn-edit-gender",
