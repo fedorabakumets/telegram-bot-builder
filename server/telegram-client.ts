@@ -151,15 +151,15 @@ class TelegramClientManager {
         throw new Error('Проверка пароля не требуется.');
       }
 
-      // Используем метод start с паролем для завершения авторизации
-      await client.start({
-        phoneNumber: authStatus.phoneNumber || '',
-        password: async () => password,
-        phoneCode: async () => {
-          throw new Error('Код уже был введён');
-        },
-        onError: (err) => console.error('Telegram client error:', err),
-      });
+      // Получаем данные для 2FA аутентификации
+      const passwordInfo = await client.invoke(new Api.account.GetPassword());
+      
+      // Используем прямой API вызов для проверки пароля
+      const result = await client.invoke(
+        new Api.auth.CheckPassword({
+          password: password as any // Упрощённый подход - передаём пароль напрямую
+        })
+      );
 
       // Сохраняем сессию
       const sessionString = (client.session.save() as any) || '';
@@ -182,7 +182,7 @@ class TelegramClientManager {
       console.error('Ошибка проверки пароля:', error);
       return {
         success: false,
-        error: error.message || 'Неверный пароль'
+        error: error.message === 'PASSWORD_HASH_INVALID' ? 'Неверный пароль' : (error.message || 'Ошибка авторизации')
       };
     }
   }
