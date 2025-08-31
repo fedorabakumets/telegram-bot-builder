@@ -1073,7 +1073,7 @@ async function seedDefaultTemplates(force = false) {
                   action: "goto",
                   target: "profile_complete",
                   buttonType: "option",
-                  dontSaveResponse: true
+                  skipDataCollection: true
                 }
               ],
               markdown: false
