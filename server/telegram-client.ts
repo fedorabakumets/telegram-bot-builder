@@ -93,7 +93,7 @@ class TelegramClientManager {
       );
 
       // Сохраняем сессию
-      const sessionString = client.session.save() as string;
+      const sessionString = (client.session.save() as any) || '';
       this.sessions.set(userId, sessionString);
 
       // Обновляем статус авторизации
@@ -151,21 +151,11 @@ class TelegramClientManager {
         throw new Error('Проверка пароля не требуется.');
       }
 
-      // Получаем информацию о пароле 2FA
-      const passwordSrpResult = await client.invoke(new Api.account.GetPassword());
-      
-      // Вычисляем SRP данные для пароля
-      const srpPassword = await client._computeSrpPassword(passwordSrpResult, password);
-
-      // Проверяем пароль
-      const result = await client.invoke(
-        new Api.auth.CheckPassword({
-          password: srpPassword,
-        })
-      );
+      // Используем встроенный метод client.checkPassword вместо ручного вычисления SRP
+      const result = await client.checkPassword(password);
 
       // Сохраняем сессию
-      const sessionString = client.session.save() as string;
+      const sessionString = (client.session.save() as any) || '';
       this.sessions.set(userId, sessionString);
 
       // Обновляем статус авторизации
