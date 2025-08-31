@@ -3307,7 +3307,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "Да 😎",
                       value: "yes",
                       action: "goto",
-                      target: "basic_info_start",
+                      target: "gender_selection",
                       buttonType: "option"
                     },
                     {
