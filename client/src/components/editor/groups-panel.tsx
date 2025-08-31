@@ -702,14 +702,18 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   });
 
   const handleAddGroup = () => {
-    if (!groupUrl.trim() || !groupName.trim()) {
-      toast({ title: 'Пожалуйста, заполните все поля', variant: 'destructive' });
+    const identifier = groupId.trim() || groupUrl.trim();
+    if (!identifier) {
+      toast({ title: 'Пожалуйста, укажите ссылку или ID группы', variant: 'destructive' });
       return;
     }
+    
+    // Используем автоматически полученное название или ID по умолчанию
+    const finalGroupName = groupName.trim() || identifier.replace('@', '') || 'New Group';
 
     createGroupMutation.mutate({
       groupId: groupId.trim() || (groupUrl.includes('joinchat') ? null : groupUrl.replace('@', '')),
-      name: groupName,
+      name: finalGroupName,
       url: groupUrl,
       isAdmin: makeAdmin ? 1 : 0,
       memberCount: null,
@@ -945,16 +949,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="group-name">Название для отображения {isParsingGroup && '(загружается...)'}</Label>
-                <Input
-                  id="group-name"
-                  placeholder={isParsingGroup ? "Получаем название группы..." : "Введите название группы"}
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="group-id">ID группы (необязательно)</Label>
                 <div className="relative">
                   <Input
@@ -970,17 +964,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     </div>
                   )}
                 </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="admin-rights"
-                  checked={makeAdmin}
-                  onCheckedChange={setMakeAdmin}
-                />
-                <Label htmlFor="admin-rights">
-                  Бот будет добавлен как администратор
-                </Label>
               </div>
             </div>
             
