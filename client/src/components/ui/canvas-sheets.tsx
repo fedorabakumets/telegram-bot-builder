@@ -1,14 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-// Убираем DropdownMenu, заменяем на отдельные кнопки
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+// Убираем DropdownMenu и Dialog - теперь всё просто
 import { 
   Plus, 
   X, 
@@ -45,8 +38,7 @@ export function CanvasSheets({
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isRenaming, setIsRenaming] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newSheetName, setNewSheetName] = useState('');
+  // Убираем состояние диалога - теперь создаём листы сразу
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -123,12 +115,20 @@ export function CanvasSheets({
     }
   };
 
+  // Создание листа одним кликом с автоматическим именем
   const addNewSheet = () => {
-    if (newSheetName.trim()) {
-      onSheetAdd(newSheetName.trim());
-      setNewSheetName('');
-      setShowAddDialog(false);
-    }
+    // Генерируем имя нового листа
+    const existingNumbers = sheets
+      .map(sheet => {
+        const match = sheet.name.match(/^Лист (\d+)$/);
+        return match ? parseInt(match[1]) : 0;
+      })
+      .filter(num => num > 0);
+    
+    const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : sheets.length + 1;
+    const newSheetName = `Лист ${nextNumber}`;
+    
+    onSheetAdd(newSheetName);
   };
 
   return (
@@ -236,41 +236,14 @@ export function CanvasSheets({
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => setShowAddDialog(true)}
+        onClick={addNewSheet}
         className="h-8 w-8 p-0 ml-2"
         title="Добавить новый лист"
       >
         <Plus className="h-4 w-4" />
       </Button>
 
-      {/* Диалог создания нового листа */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Создать новый лист</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="Название листа"
-              value={newSheetName}
-              onChange={(e) => setNewSheetName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') addNewSheet();
-                if (e.key === 'Escape') setShowAddDialog(false);
-              }}
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-              Отмена
-            </Button>
-            <Button onClick={addNewSheet} disabled={!newSheetName.trim()}>
-              Создать
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Диалог убран - создание листа теперь происходит одним кликом */}
     </div>
   );
 }
