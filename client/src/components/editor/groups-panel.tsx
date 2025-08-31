@@ -233,6 +233,13 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
+  // Автоматически загружаем администраторов при выборе группы
+  React.useEffect(() => {
+    if (selectedGroup && showGroupSettings) {
+      getAdminsMutation.mutate(selectedGroup.groupId);
+    }
+  }, [selectedGroup, showGroupSettings]);
+
   // Ban member mutation
   const [userIdToBan, setUserIdToBan] = React.useState('');
   const [userIdToUnban, setUserIdToUnban] = React.useState('');
@@ -786,19 +793,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <h5 className="font-medium text-sm">Администраторы</h5>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => getAdminsMutation.mutate(selectedGroup.groupId)}
-                            disabled={getAdminsMutation.isPending}
-                          >
-                            {getAdminsMutation.isPending ? (
-                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                            ) : (
-                              <Shield className="h-4 w-4 mr-2" />
-                            )}
-                            Обновить список
-                          </Button>
+                          {getAdminsMutation.isPending && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                              Загрузка...
+                            </div>
+                          )}
                         </div>
                         
                         {administrators.length > 0 ? (
@@ -824,11 +824,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               </div>
                             ))}
                           </div>
-                        ) : (
+                        ) : !getAdminsMutation.isPending ? (
                           <p className="text-sm text-muted-foreground text-center py-4">
-                            Нажмите "Обновить список" для загрузки администраторов
+                            Администраторы не найдены
                           </p>
-                        )}
+                        ) : null}
                       </div>
 
                       <div className="border-t my-4" />
