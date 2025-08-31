@@ -65,7 +65,7 @@ class TelegramClientManager {
 
       return {
         success: true,
-        phoneCodeHash: result.phoneCodeHash
+        phoneCodeHash: (result as any).phoneCodeHash
       };
 
     } catch (error: any) {

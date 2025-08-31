@@ -4112,11 +4112,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           success: true,
           message: "Авторизация успешна"
         });
+      } else if (result.needsPassword) {
+        // Когда требуется пароль 2FA - это не ошибка, а нормальная часть процесса
+        res.json({
+          success: false,
+          error: result.error,
+          needsPassword: true
+        });
       } else {
         res.status(400).json({
           success: false,
-          error: result.error,
-          needsPassword: result.needsPassword
+          error: result.error
         });
       }
     } catch (error: any) {
