@@ -129,12 +129,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   ];
 
-  const { data: groups = mockGroups, isLoading, refetch } = useQuery<GroupData[]>({
-    queryKey: [`/api/projects/${projectId}/groups`],
-    staleTime: 30000,
-    refetchInterval: 60000,
-    initialData: mockGroups,
-  });
+  // Временно используем mock данные, пока не подключен API
+  const groups = mockGroups;
+  const isLoading = false;
+  const refetch = () => {
+    console.log('Обновление групп (mock данные)');
+  };
 
   const filteredGroups = useMemo(() => {
     if (!searchQuery) return groups;
