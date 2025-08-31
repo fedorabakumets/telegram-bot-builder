@@ -193,11 +193,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       if (data.title && !groupName) {
         setGroupName(data.title);
       }
+      // Генерируем ссылку автоматически
+      if (data.username) {
+        setGroupUrl(`https://t.me/${data.username}`);
+      } else if (data.invite_link) {
+        setGroupUrl(data.invite_link);
+      } else {
+        // Если нет username или invite_link, создаем ссылку по ID
+        setGroupUrl(`tg://openmessage?chat_id=${data.id}`);
+      }
       // Устанавливаем статус администратора
       setMakeAdmin(data.isAdmin || false);
       toast({ 
-        title: 'Информация получена', 
-        description: `${data.title} • ${data.isAdmin ? 'Бот - администратор' : 'Бот - участник'}`
+        title: 'Обновлено', 
+        description: `${data.title} • ${data.username ? '@' + data.username : 'ID: ' + data.id} • ${data.isAdmin ? 'Админ' : 'Участник'}`
       });
     },
     onError: (error: any) => {
@@ -206,10 +215,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Auto-parse when groupUrl or groupId changes
+  // Auto-parse when groupId changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      const identifier = groupId.trim() || groupUrl.trim();
+      const identifier = groupId.trim();
       if (identifier && (identifier.startsWith('-') || identifier.startsWith('@') || identifier.includes('t.me'))) {
         let groupIdentifier = identifier;
         
@@ -226,7 +235,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }, 1500); // Задержка 1.5 секунды после ввода
 
     return () => clearTimeout(timeoutId);
-  }, [groupUrl, groupId, projectId]);
+  }, [groupId, projectId]);
 
   // Get group members count mutation
   const getMembersCountMutation = useMutation({
@@ -702,19 +711,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   });
 
   const handleAddGroup = () => {
-    const identifier = groupId.trim() || groupUrl.trim();
+    const identifier = groupId.trim();
     if (!identifier) {
-      toast({ title: 'Пожалуйста, укажите ссылку или ID группы', variant: 'destructive' });
+      toast({ title: 'Пожалуйста, укажите ID группы или @username', variant: 'destructive' });
       return;
     }
     
     // Используем автоматически полученное название или ID по умолчанию
-    const finalGroupName = groupName.trim() || identifier.replace('@', '') || 'New Group';
+    const finalGroupName = groupName.trim() || identifier.replace('@', '').replace('https://t.me/', '') || 'New Group';
+    const finalGroupUrl = groupUrl.trim() || `https://t.me/${identifier.replace('@', '')}`;
 
     createGroupMutation.mutate({
       groupId: groupId.trim() || (groupUrl.includes('joinchat') ? null : groupUrl.replace('@', '')),
       name: finalGroupName,
-      url: groupUrl,
+      url: finalGroupUrl,
       isAdmin: makeAdmin ? 1 : 0,
       memberCount: null,
       isActive: 1,
@@ -931,29 +941,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="group-url">Ссылка на группу или @username</Label>
-                <div className="relative">
-                  <Input
-                    id="group-url"
-                    placeholder="https://t.me/group или @groupname"
-                    value={groupUrl}
-                    onChange={(e) => setGroupUrl(e.target.value)}
-                    disabled={isParsingGroup}
-                  />
-                  {isParsingGroup && (
-                    <div className="absolute right-2 top-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="group-id">ID группы (необязательно)</Label>
+                <Label htmlFor="group-id">ID группы или @username</Label>
                 <div className="relative">
                   <Input
                     id="group-id"
-                    placeholder="-1002726444678"
+                    placeholder="-1002726444678 или @groupname или https://t.me/group"
                     value={groupId}
                     onChange={(e) => setGroupId(e.target.value)}
                     disabled={isParsingGroup}
@@ -964,6 +956,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     </div>
                   )}
                 </div>
+                <p className="text-sm text-gray-500">
+                  Информация о группе и ссылка получатся автоматически
+                </p>
               </div>
             </div>
             
