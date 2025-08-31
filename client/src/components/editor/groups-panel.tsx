@@ -1023,6 +1023,38 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               )}
                               Все участники
                             </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch(`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup.groupId}`);
+                                  const data = await response.json();
+                                  
+                                  if (response.ok) {
+                                    toast({
+                                      title: "✅ " + data.message,
+                                      description: data.explanation + " " + data.note,
+                                    });
+                                  } else {
+                                    toast({
+                                      title: "❌ " + data.message,
+                                      description: data.explanation,
+                                      variant: "destructive"
+                                    });
+                                  }
+                                } catch (error) {
+                                  toast({
+                                    title: "Ошибка подключения",
+                                    description: "Не удалось подключиться к Client API",
+                                    variant: "destructive"
+                                  });
+                                }
+                              }}
+                            >
+                              <Shield className="h-4 w-4 mr-2" />
+                              Client API
+                            </Button>
                           </div>
                         </div>
                         

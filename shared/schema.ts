@@ -195,6 +195,19 @@ export const groupMembers = pgTable("group_members", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Таблица пользовательских настроек для Telegram Client API
+export const userTelegramSettings = pgTable("user_telegram_settings", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().unique(), // Уникальный ID пользователя (например, email или внутренний ID)
+  apiId: text("api_id"), // Telegram API ID
+  apiHash: text("api_hash"), // Telegram API Hash
+  phoneNumber: text("phone_number"), // Номер телефона для авторизации
+  sessionString: text("session_string"), // Сохраненная сессия
+  isActive: integer("is_active").default(1), // 0 = неактивен, 1 = активен
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
   name: true,
   description: true,
@@ -403,6 +416,22 @@ export const insertGroupMemberSchema = createInsertSchema(groupMembers).pick({
   messageCount: z.number().min(0).default(0),
 });
 
+// Схема для пользовательских настроек Telegram API
+export const insertUserTelegramSettingsSchema = createInsertSchema(userTelegramSettings).pick({
+  userId: true,
+  apiId: true,
+  apiHash: true,
+  phoneNumber: true,
+  sessionString: true,
+  isActive: true,
+}).extend({
+  userId: z.string().min(1, "ID пользователя обязателен"),
+  apiId: z.string().min(1, "API ID обязателен"),
+  apiHash: z.string().min(1, "API Hash обязателен"),
+  phoneNumber: z.string().optional(),
+  isActive: z.number().min(0).max(1).default(1),
+});
+
 // Схема для оценки шаблона
 export const rateTemplateSchema = z.object({
   templateId: z.number(),
@@ -427,6 +456,8 @@ export type InsertBotGroup = z.infer<typeof insertBotGroupSchema>;
 export type BotGroup = typeof botGroups.$inferSelect;
 export type InsertGroupMember = z.infer<typeof insertGroupMemberSchema>;
 export type GroupMember = typeof groupMembers.$inferSelect;
+export type InsertUserTelegramSettings = z.infer<typeof insertUserTelegramSettingsSchema>;
+export type UserTelegramSettings = typeof userTelegramSettings.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({
