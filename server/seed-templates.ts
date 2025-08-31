@@ -1072,7 +1072,8 @@ async function seedDefaultTemplates(force = false) {
                   text: "Пропустить ⏭️",
                   action: "goto",
                   target: "profile_complete",
-                  buttonType: "option"
+                  buttonType: "option",
+                  dontSaveResponse: true
                 }
               ],
               markdown: false
