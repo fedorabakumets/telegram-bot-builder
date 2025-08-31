@@ -332,12 +332,16 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
   };
 
   const handlePreview = (template: BotTemplate) => {
+    console.log('🎯 handlePreview called with template:', template.name, template.data);
     setSelectedTemplate(template);
     setShowPreview(true);
   };
 
   const TemplatePreview = ({ template }: { template: BotTemplate }) => {
+    console.log('👁️ TemplatePreview rendering for:', template.name);
+    console.log('📦 Template data received:', template.data);
     const stats = getTemplateStats(template.data as BotData);
+    console.log('📈 Stats calculated:', stats);
     
     return (
       <div className="space-y-4">
