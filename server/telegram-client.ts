@@ -245,19 +245,27 @@ class TelegramClientManager {
     }
 
     try {
-      // Convert string chat ID to proper format
-      let chat: any;
-      if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-        // Supergroup ID format: remove -100 prefix and convert to number
-        const channelId = parseInt(chatId.slice(4));
-        chat = channelId;
-      } else {
-        chat = chatId;
+      // Сначала попробуем получить сущность чата
+      let chatEntity: any;
+      
+      try {
+        // Попробуем получить чат по его ID или username
+        chatEntity = await client.getEntity(chatId);
+      } catch (entityError) {
+        console.log('Не удалось получить сущность чата напрямую, пробуем другие методы');
+        
+        // Если ID начинается с -100, это супергруппа
+        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
+          const channelId = BigInt(chatId.slice(4));
+          chatEntity = new Api.PeerChannel({ channelId });
+        } else {
+          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
+        }
       }
 
       const result = await client.invoke(
         new Api.channels.GetParticipants({
-          channel: chat,
+          channel: chatEntity,
           filter: new Api.ChannelParticipantsRecent(),
           offset: 0,
           limit: 200,
