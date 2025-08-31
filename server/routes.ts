@@ -3336,6 +3336,225 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get group administrators
+  app.get("/api/projects/:projectId/bot/group-admins/:groupId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId } = req.params;
+      
+      if (!groupId || groupId === "null") {
+        return res.status(400).json({ message: "Group ID is required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatAdministrators`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to get administrators", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ administrators: result.result });
+    } catch (error) {
+      console.error("Failed to get administrators:", error);
+      res.status(500).json({ message: "Failed to get administrators" });
+    }
+  });
+
+  // Ban group member
+  app.post("/api/projects/:projectId/bot/ban-member", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, userId, untilDate } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ message: "Group ID and User ID are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/banChatMember`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          user_id: userId,
+          until_date: untilDate || undefined
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to ban member", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Member banned successfully" });
+    } catch (error) {
+      console.error("Failed to ban member:", error);
+      res.status(500).json({ message: "Failed to ban member" });
+    }
+  });
+
+  // Unban group member
+  app.post("/api/projects/:projectId/bot/unban-member", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, userId } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ message: "Group ID and User ID are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/unbanChatMember`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          user_id: userId,
+          only_if_banned: true
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to unban member", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Member unbanned successfully" });
+    } catch (error) {
+      console.error("Failed to unban member:", error);
+      res.status(500).json({ message: "Failed to unban member" });
+    }
+  });
+
+  // Promote group member to admin
+  app.post("/api/projects/:projectId/bot/promote-member", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, userId, permissions } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ message: "Group ID and User ID are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/promoteChatMember`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          user_id: userId,
+          ...permissions
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to promote member", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Member promoted successfully" });
+    } catch (error) {
+      console.error("Failed to promote member:", error);
+      res.status(500).json({ message: "Failed to promote member" });
+    }
+  });
+
+  // Restrict group member
+  app.post("/api/projects/:projectId/bot/restrict-member", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, userId, permissions, untilDate } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ message: "Group ID and User ID are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/restrictChatMember`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          user_id: userId,
+          permissions: permissions,
+          until_date: untilDate || undefined
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to restrict member", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Member restricted successfully" });
+    } catch (error) {
+      console.error("Failed to restrict member:", error);
+      res.status(500).json({ message: "Failed to restrict member" });
+    }
+  });
+
   // Force update templates - Admin endpoint to refresh all system templates
   app.post("/api/templates/refresh", async (req, res) => {
     try {

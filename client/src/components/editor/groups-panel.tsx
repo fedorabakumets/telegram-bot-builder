@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -188,6 +189,70 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       toast({ 
         title: 'Ошибка при проверке статуса', 
         description: error.error || 'Бот не найден в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Get group administrators mutation
+  const [administrators, setAdministrators] = React.useState<any[]>([]);
+  const getAdminsMutation = useMutation({
+    mutationFn: async (groupId: string | null) => {
+      return apiRequest('GET', `/api/projects/${projectId}/bot/group-admins/${groupId}`);
+    },
+    onSuccess: (data) => {
+      setAdministrators(data.administrators || []);
+      toast({ title: `Получено администраторов: ${data.administrators?.length || 0}` });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при получении администраторов', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Ban member mutation
+  const [userIdToBan, setUserIdToBan] = React.useState('');
+  const [userIdToUnban, setUserIdToUnban] = React.useState('');
+  const banMemberMutation = useMutation({
+    mutationFn: async ({ groupId, userId, untilDate }: { groupId: string | null; userId: string; untilDate?: number }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/ban-member`, {
+        groupId,
+        userId,
+        untilDate
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Пользователь заблокирован' });
+      setUserIdToBan('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при блокировке', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Unban member mutation
+  const unbanMemberMutation = useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string | null; userId: string }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/unban-member`, {
+        groupId,
+        userId
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Пользователь разблокирован' });
+      setUserIdToUnban('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при разблокировке', 
+        description: error.error || 'Проверьте права бота в группе',
         variant: 'destructive' 
       });
     }
@@ -693,28 +758,123 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   <TabsContent value="members" className="space-y-4 mt-0">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium">Участники группы</h4>
+                        <h4 className="font-medium">Управление участниками</h4>
                         <Badge variant="secondary">{selectedGroup.memberCount || 0} участников</Badge>
                       </div>
                       
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          Управление участниками будет доступно после подключения Telegram Bot API
-                        </p>
-                        <div className="grid grid-cols-3 gap-2">
-                          <Button variant="outline" size="sm" disabled>
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Пригласить
-                          </Button>
-                          <Button variant="outline" size="sm" disabled>
-                            <Shield className="h-4 w-4 mr-2" />
-                            Права
-                          </Button>
-                          <Button variant="outline" size="sm" disabled>
-                            <X className="h-4 w-4 mr-2" />
-                            Исключить
+                      {/* Список администраторов */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h5 className="font-medium text-sm">Администраторы</h5>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => getAdminsMutation.mutate(selectedGroup.groupId)}
+                            disabled={getAdminsMutation.isPending}
+                          >
+                            {getAdminsMutation.isPending ? (
+                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                            ) : (
+                              <Shield className="h-4 w-4 mr-2" />
+                            )}
+                            Обновить список
                           </Button>
                         </div>
+                        
+                        {administrators.length > 0 ? (
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {administrators.map((admin, index) => (
+                              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                    <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">
+                                      {admin.user.first_name} {admin.user.last_name || ''}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      @{admin.user.username || 'Без username'} • ID: {admin.user.id}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge variant={admin.status === 'creator' ? 'default' : 'secondary'}>
+                                  {admin.status === 'creator' ? 'Создатель' : 'Админ'}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            Нажмите "Обновить список" для загрузки администраторов
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="border-t my-4" />
+
+                      {/* Блокировка пользователей */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-sm">Блокировка пользователей</h5>
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="User ID для блокировки (например: 123456789)"
+                            value={userIdToBan}
+                            onChange={(e) => setUserIdToBan(e.target.value)}
+                          />
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => banMemberMutation.mutate({ 
+                              groupId: selectedGroup.groupId, 
+                              userId: userIdToBan 
+                            })}
+                            disabled={!userIdToBan || banMemberMutation.isPending}
+                            className="w-full"
+                          >
+                            {banMemberMutation.isPending ? (
+                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                            ) : (
+                              <X className="h-4 w-4 mr-2" />
+                            )}
+                            Заблокировать пользователя
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Разблокировка пользователей */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-sm">Разблокировка пользователей</h5>
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="User ID для разблокировки (например: 123456789)"
+                            value={userIdToUnban}
+                            onChange={(e) => setUserIdToUnban(e.target.value)}
+                          />
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => unbanMemberMutation.mutate({ 
+                              groupId: selectedGroup.groupId, 
+                              userId: userIdToUnban 
+                            })}
+                            disabled={!userIdToUnban || unbanMemberMutation.isPending}
+                            className="w-full"
+                          >
+                            {unbanMemberMutation.isPending ? (
+                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                            ) : (
+                              <UserPlus className="h-4 w-4 mr-2" />
+                            )}
+                            Разблокировать пользователя
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground">
+                          💡 <strong>Как получить User ID:</strong> Попросите пользователя написать /start боту @userinfobot или найти ID в настройках Telegram.
+                        </p>
                       </div>
                     </div>
                   </TabsContent>
