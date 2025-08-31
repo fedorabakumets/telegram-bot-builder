@@ -3414,7 +3414,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // For large groups, we can only provide administrators
-      if (chatInfo.result.type === 'supergroup' || (chatInfo.result.members_count && chatInfo.result.members_count > 200)) {
+      // Check only member count, not group type - small supergroups should work
+      if (chatInfo.result.members_count && chatInfo.result.members_count > 200) {
         return res.status(400).json({ 
           message: "Cannot get member list for large groups", 
           error: "Telegram API allows getting full member list only for small groups (<200 members). For large groups, only administrators are available.",
@@ -3422,8 +3423,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // For most groups, we can only get administrators
-      // Telegram API doesn't provide getChatMembers - only getChatAdministrators
+      // Telegram Bot API has limitations for getting chat members
+      // For privacy reasons, even small groups only allow getting administrators
       try {
         const adminsResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChatAdministrators`, {
           method: 'POST',
@@ -3439,17 +3440,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (!adminsResponse.ok) {
           return res.status(400).json({ 
-            message: "Failed to get members", 
-            error: adminsResult.description || "Unknown error"
+            message: "Ошибка при получении участников", 
+            error: adminsResult.description || "Неизвестная ошибка"
           });
         }
 
+        // Include information about group size
+        const memberCount = chatInfo.result.members_count || 'Неизвестно';
+        
         return res.json({ 
           members: adminsResult.result,
           isPartialList: true,
-          totalCount: adminsResult.result.length,
-          message: "Показаны только администраторы. Telegram API не предоставляет полный список участников для групп.",
-          explanation: "Полный список участников недоступен из-за ограничений Telegram API по приватности"
+          totalCount: memberCount,
+          message: `Группа содержит ${memberCount} участников. Показаны только администраторы (${adminsResult.result.length}).`,
+          explanation: "Telegram API ограничивает доступ к списку участников по соображениям приватности. Доступны только администраторы."
         });
 
       } catch (error) {
