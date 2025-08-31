@@ -27,7 +27,8 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { BotProject, Connection, ComponentDefinition, BotData } from '@shared/schema';
+import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets } from '@shared/schema';
+import { SheetsManager } from '@/utils/sheets-manager';
 
 export default function Editor() {
   const [, setLocation] = useLocation();
@@ -45,6 +46,9 @@ export default function Editor() {
   const [showLayoutManager, setShowLayoutManager] = useState(false);
   const [showLayoutCustomizer, setShowLayoutCustomizer] = useState(false);
   const [useFlexibleLayout, setUseFlexibleLayout] = useState(true);
+  
+  // Новая система листов
+  const [botDataWithSheets, setBotDataWithSheets] = useState<BotDataWithSheets | null>(null);
   
   // Функции для управления видимостью панелей
   const handleToggleHeader = useCallback(() => {
@@ -171,10 +175,37 @@ export default function Editor() {
     hasClipboardData
   } = useBotEditor(currentProject?.data as BotData);
 
+  // Обработчик обновления данных листов
+  const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
+    setBotDataWithSheets(updatedData);
+    
+    // Синхронизируем активный лист с системой редактора
+    const activeSheet = SheetsManager.getActiveSheet(updatedData);
+    if (activeSheet) {
+      setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections });
+    }
+  }, [setBotData]);
+
   // Обновляем данные бота при смене проекта
   useEffect(() => {
     if (currentProject?.data) {
-      setBotData(currentProject.data as BotData);
+      const projectData = currentProject.data as any;
+      
+      // Проверяем, новый ли это формат с листами
+      if (SheetsManager.isNewFormat(projectData)) {
+        setBotDataWithSheets(projectData);
+        // Устанавливаем активный лист для совместимости со старой системой
+        const activeSheet = SheetsManager.getActiveSheet(projectData);
+        if (activeSheet) {
+          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections });
+        }
+      } else {
+        // Мигрируем старые данные к новому формату
+        const migratedData = SheetsManager.migrateLegacyData(projectData as BotData);
+        setBotDataWithSheets(migratedData);
+        setBotData(projectData as BotData);
+      }
+      
       // Сохраняем ID текущего проекта для возврата со страницы шаблонов
       localStorage.setItem('lastProjectId', currentProject.id.toString());
     }
@@ -183,8 +214,12 @@ export default function Editor() {
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
       if (!currentProject) return;
+      
+      // Используем новый формат с листами если он доступен, иначе старый формат
+      const projectData = botDataWithSheets || getBotData();
+      
       return apiRequest('PUT', `/api/projects/${currentProject.id}`, {
-        data: getBotData()
+        data: projectData
       });
     },
     onSuccess: () => {
@@ -594,6 +629,8 @@ export default function Editor() {
             <div className="h-full">
               {currentTab === 'editor' ? (
                 <Canvas
+                  botData={botDataWithSheets || undefined}
+                  onBotDataUpdate={handleBotDataUpdate}
                   nodes={nodes}
                   connections={connections}
                   selectedNodeId={selectedNodeId}
@@ -752,6 +789,8 @@ export default function Editor() {
             <div className="h-full">
               {currentTab === 'editor' ? (
                 <Canvas
+                  botData={botDataWithSheets || undefined}
+                  onBotDataUpdate={handleBotDataUpdate}
                   nodes={nodes}
                   connections={connections}
                   selectedNodeId={selectedNodeId}

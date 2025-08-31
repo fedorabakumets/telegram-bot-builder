@@ -444,6 +444,35 @@ export const connectionSchema = z.object({
   targetHandle: z.string().optional(),
 });
 
+// Схема для состояния вида листа (позиция и масштаб)
+export const sheetViewStateSchema = z.object({
+  pan: z.object({
+    x: z.number().default(0),
+    y: z.number().default(0),
+  }).default({ x: 0, y: 0 }),
+  zoom: z.number().default(100),
+});
+
+// Схема для отдельного листа холста
+export const canvasSheetSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  nodes: z.array(nodeSchema).default([]),
+  connections: z.array(connectionSchema).default([]),
+  viewState: sheetViewStateSchema.default({ pan: { x: 0, y: 0 }, zoom: 100 }),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+// Обновленная схема данных бота с поддержкой листов
+export const botDataWithSheetsSchema = z.object({
+  sheets: z.array(canvasSheetSchema).default([]),
+  activeSheetId: z.string().optional(),
+  // Версия структуры данных для миграции
+  version: z.number().default(2),
+});
+
+// Старая схема для обратной совместимости
 export const botDataSchema = z.object({
   nodes: z.array(nodeSchema),
   connections: z.array(connectionSchema),
@@ -452,6 +481,9 @@ export const botDataSchema = z.object({
 export type Button = z.infer<typeof buttonSchema>;
 export type Node = z.infer<typeof nodeSchema>;
 export type Connection = z.infer<typeof connectionSchema>;
+export type SheetViewState = z.infer<typeof sheetViewStateSchema>;
+export type CanvasSheet = z.infer<typeof canvasSheetSchema>;
+export type BotDataWithSheets = z.infer<typeof botDataWithSheetsSchema>;
 export type BotData = z.infer<typeof botDataSchema>;
 
 // Component definition for drag and drop

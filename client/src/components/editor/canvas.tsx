@@ -4,16 +4,24 @@ import { ConnectionsLayer } from '@/components/ui/connections-layer';
 import { TemporaryConnection } from '@/components/ui/temporary-connection';
 import { ConnectionSuggestions } from '@/components/ui/connection-suggestions';
 import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
+import { CanvasSheets } from '@/components/ui/canvas-sheets';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
 
 import { Node, ComponentDefinition, Connection } from '@/types/bot';
+import { BotDataWithSheets, CanvasSheet } from '@shared/schema';
 import { generateAutoConnections } from '@/utils/auto-connection';
 import { ConnectionManager } from '@/utils/connection-manager';
+import { SheetsManager } from '@/utils/sheets-manager';
 import { nanoid } from 'nanoid';
 
 interface CanvasProps {
+  // Новая система листов (опциональные для совместимости)
+  botData?: BotDataWithSheets;
+  onBotDataUpdate?: (data: BotDataWithSheets) => void;
+  
+  // Существующие пропсы для совместимости
   nodes: Node[];
   connections: Connection[];
   selectedNodeId: string | null;
@@ -50,6 +58,8 @@ interface CanvasProps {
 }
 
 export function Canvas({ 
+  botData,
+  onBotDataUpdate,
   nodes, 
   connections,
   selectedNodeId,
@@ -97,6 +107,48 @@ export function Canvas({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
+
+  // Получение активного листа (с fallback'ом для совместимости)
+  const activeSheet = botData ? SheetsManager.getActiveSheet(botData) : null;
+
+  // Обработчики для работы с листами
+  const handleSheetSelect = useCallback((sheetId: string) => {
+    if (!botData || !onBotDataUpdate) return;
+    const updatedData = SheetsManager.setActiveSheet(botData, sheetId);
+    onBotDataUpdate(updatedData);
+  }, [botData, onBotDataUpdate]);
+
+  const handleSheetAdd = useCallback((name: string) => {
+    if (!botData || !onBotDataUpdate) return;
+    const updatedData = SheetsManager.addSheet(botData, name);
+    onBotDataUpdate(updatedData);
+  }, [botData, onBotDataUpdate]);
+
+  const handleSheetDelete = useCallback((sheetId: string) => {
+    if (!botData || !onBotDataUpdate) return;
+    try {
+      const updatedData = SheetsManager.deleteSheet(botData, sheetId);
+      onBotDataUpdate(updatedData);
+    } catch (error) {
+      console.error('Ошибка удаления листа:', error);
+    }
+  }, [botData, onBotDataUpdate]);
+
+  const handleSheetRename = useCallback((sheetId: string, newName: string) => {
+    if (!botData || !onBotDataUpdate) return;
+    const updatedData = SheetsManager.renameSheet(botData, sheetId, newName);
+    onBotDataUpdate(updatedData);
+  }, [botData, onBotDataUpdate]);
+
+  const handleSheetDuplicate = useCallback((sheetId: string) => {
+    if (!botData || !onBotDataUpdate) return;
+    try {
+      const updatedData = SheetsManager.duplicateSheetInProject(botData, sheetId);
+      onBotDataUpdate(updatedData);
+    } catch (error) {
+      console.error('Ошибка дублирования листа:', error);
+    }
+  }, [botData, onBotDataUpdate]);
 
   // Zoom utility functions
   const zoomIn = useCallback(() => {
@@ -957,6 +1009,19 @@ export function Canvas({
           )}
         </div>
       </div>
+      
+      {/* Компонент листов холста внизу (только если включена новая система) */}
+      {botData && onBotDataUpdate && (
+        <CanvasSheets
+          sheets={botData.sheets}
+          activeSheetId={botData.activeSheetId || null}
+          onSheetSelect={handleSheetSelect}
+          onSheetAdd={handleSheetAdd}
+          onSheetDelete={handleSheetDelete}
+          onSheetRename={handleSheetRename}
+          onSheetDuplicate={handleSheetDuplicate}
+        />
+      )}
     </main>
   );
 }
