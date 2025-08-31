@@ -194,17 +194,29 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     mutationFn: async (groupIdentifier: string) => {
       setIsParsingGroup(true);
       try {
-        // Get both group info and admin status
-        const [groupInfo, adminStatus] = await Promise.all([
+        // Get group info, admin status, and member count
+        const [groupInfo, adminStatus, memberCountData] = await Promise.all([
           apiRequest('GET', `/api/projects/${projectId}/bot/group-info/${groupIdentifier}`),
-          apiRequest('GET', `/api/projects/${projectId}/bot/admin-status/${groupIdentifier}`)
+          apiRequest('GET', `/api/projects/${projectId}/bot/admin-status/${groupIdentifier}`),
+          apiRequest('GET', `/api/projects/${projectId}/bot/group-members-count/${groupIdentifier}`).catch(() => ({ count: null }))
         ]);
-        return { ...groupInfo, isAdmin: adminStatus.isAdmin };
+        return { 
+          ...groupInfo, 
+          isAdmin: adminStatus.isAdmin,
+          memberCount: memberCountData?.count || null
+        };
       } finally {
         setIsParsingGroup(false);
       }
     },
     onSuccess: (data) => {
+      // Отладочная информация - что пришло от Telegram API
+      console.log('TELEGRAM API RESPONSE:', JSON.stringify(data, null, 2));
+      console.log('Available fields:', Object.keys(data));
+      console.log('Description field:', data.description);
+      console.log('Bio field:', data.bio);
+      console.log('About field:', data.about);
+      
       // Автоматически заполняем название группы
       if (data.title && !groupName) {
         setGroupName(data.title);
@@ -229,20 +241,57 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       // Обновляем уже существующую группу в базе данных
       const existingGroup = safeGroups.find(g => g.groupId === data.id?.toString());
       if (existingGroup && data.title) {
+        // Подготавливаем данные для обновления
+        const updateData: any = {
+          name: data.title,
+          url: generatedUrl,
+          isAdmin: data.isAdmin ? 1 : 0,
+          chatType: data.type || 'group'
+        };
+        
+        // Добавляем описание если есть
+        if (data.description) {
+          updateData.description = data.description;
+        }
+        
+        // Добавляем количество участников если есть
+        if (data.memberCount !== null && data.memberCount !== undefined) {
+          updateData.memberCount = data.memberCount;
+        }
+        
+        // Добавляем аватар если есть (большая версия фото)
+        if (data.photo?.big_file_id) {
+          // Генерируем ссылку на аватар через Telegram File API
+          updateData.avatarUrl = `https://api.telegram.org/file/bot<TOKEN>/${data.photo.big_file_id}`;
+        }
+        
         updateGroupMutation.mutate({
           groupId: existingGroup.id,
-          data: { 
-            name: data.title,
-            url: generatedUrl,
-            isAdmin: data.isAdmin ? 1 : 0,
-            chatType: data.type || 'group'
-          }
+          data: updateData
         });
       }
       
+      // Создаем информативное уведомление
+      const infoLines = [
+        `${data.title || data.id}`,
+        `${data.username ? '@' + data.username : 'ID: ' + data.id}`,
+        `${data.isAdmin ? 'Админ' : 'Участник'}`,
+      ];
+      
+      if (data.memberCount) {
+        infoLines.push(`${data.memberCount} участников`);
+      }
+      
+      if (data.description && data.description.length > 0) {
+        const shortDescription = data.description.length > 50 
+          ? data.description.substring(0, 50) + '...' 
+          : data.description;
+        infoLines.push(`Описание: ${shortDescription}`);
+      }
+      
       toast({ 
-        title: 'Обновлено', 
-        description: `${data.title || data.id} • ${data.username ? '@' + data.username : 'ID: ' + data.id} • ${data.isAdmin ? 'Админ' : 'Участник'}`
+        title: 'Информация о группе обновлена', 
+        description: infoLines.join(' • ')
       });
     },
     onError: (error: any) => {
