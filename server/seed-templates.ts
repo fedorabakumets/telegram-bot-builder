@@ -4076,7 +4076,7 @@ async function seedDefaultTemplates(force = false) {
                 type: "message",
                 position: { x: 400, y: 300 },
                 data: {
-                  messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {music_interests}, {hobby_interests}, {social_interests}, {creativity_interests}, {active_interests}, {food_interests}, {sport_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм-канал: {telegram_channel}\nО себе: {extra_info}\n\n💬 Источник: {user_source}",
+                  messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм-канал: {telegram_channel}\nО себе: {extra_info}\n\n💬 Источник: {user_source}",
                   synonyms: [],
                   keyboardType: "inline",
                   buttons: [
@@ -4109,7 +4109,7 @@ async function seedDefaultTemplates(force = false) {
                   commandName: "/profile",
                   description: "Показать и редактировать профиль пользователя",
                   synonyms: ["профиль", "анкета", "мои данные", "редактировать"],
-                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {music_interests}, {hobby_interests}, {social_interests}, {creativity_interests}, {active_interests}, {food_interests}, {sport_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм-канал: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\n💬 Источник: {user_source}\n\nЧто хочешь изменить?",
+                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм-канал: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\n💬 Источник: {user_source}\n\nЧто хочешь изменить?",
                   keyboardType: "inline",
                   buttons: [
                     {
