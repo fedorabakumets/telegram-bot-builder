@@ -52,6 +52,38 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Функция для вычисления статистики с поддержкой многолистовых шаблонов
+  const getStats = (data: BotData | any) => {
+    let nodes: any[] = [];
+    let connections: any[] = [];
+    
+    // Проверяем, это многолистовой шаблон или обычный
+    if (data.sheets && Array.isArray(data.sheets)) {
+      // Многолистовой шаблон - собираем все узлы и связи из всех листов
+      data.sheets.forEach((sheet: any) => {
+        if (sheet.nodes) nodes.push(...sheet.nodes);
+        if (sheet.connections) connections.push(...sheet.connections);
+      });
+      // Добавляем межлистовые связи
+      if (data.interSheetConnections) {
+        connections.push(...data.interSheetConnections);
+      }
+    } else {
+      // Обычный шаблон
+      nodes = data.nodes || [];
+      connections = data.connections || [];
+    }
+    
+    return {
+      nodes: nodes.length,
+      connections: connections.length,
+      commands: nodes.filter(node => node.type === 'command' || node.type === 'start').length,
+      buttons: nodes.reduce((acc, node) => acc + (node.data?.buttons?.length || 0), 0),
+    };
+  };
+
+  const stats = getStats(botData);
+
   const saveTemplateMutation = useMutation({
     mutationFn: async (data: TemplateFormData) => {
       return await apiRequest('POST', '/api/templates', {
@@ -369,23 +401,19 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Узлов:</span>
-                <span className="ml-2 font-medium">{botData.nodes.length}</span>
+                <span className="ml-2 font-medium">{stats.nodes}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Связей:</span>
-                <span className="ml-2 font-medium">{botData.connections.length}</span>
+                <span className="ml-2 font-medium">{stats.connections}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Команд:</span>
-                <span className="ml-2 font-medium">
-                  {botData.nodes.filter(node => node.type === 'command' || node.type === 'start').length}
-                </span>
+                <span className="ml-2 font-medium">{stats.commands}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Кнопок:</span>
-                <span className="ml-2 font-medium">
-                  {botData.nodes.reduce((acc, node) => acc + (node.data.buttons?.length || 0), 0)}
-                </span>
+                <span className="ml-2 font-medium">{stats.buttons}</span>
               </div>
             </div>
           </div>

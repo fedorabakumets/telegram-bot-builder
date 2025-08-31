@@ -288,15 +288,32 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     }
   };
 
-  const getTemplateStats = (botData: BotData) => {
-    const nodes = botData.nodes || [];
-    const connections = botData.connections || [];
+  const getTemplateStats = (botData: BotData | any) => {
+    let nodes: any[] = [];
+    let connections: any[] = [];
+    
+    // Проверяем, это многолистовой шаблон или обычный
+    if (botData.sheets && Array.isArray(botData.sheets)) {
+      // Многолистовой шаблон - собираем все узлы и связи из всех листов
+      botData.sheets.forEach((sheet: any) => {
+        if (sheet.nodes) nodes.push(...sheet.nodes);
+        if (sheet.connections) connections.push(...sheet.connections);
+      });
+      // Добавляем межлистовые связи
+      if (botData.interSheetConnections) {
+        connections.push(...botData.interSheetConnections);
+      }
+    } else {
+      // Обычный шаблон
+      nodes = botData.nodes || [];
+      connections = botData.connections || [];
+    }
     
     return {
       nodes: nodes.length,
       connections: connections.length,
       commands: nodes.filter(node => node.type === 'command' || node.type === 'start').length,
-      buttons: nodes.reduce((acc, node) => acc + (node.data.buttons?.length || 0), 0),
+      buttons: nodes.reduce((acc, node) => acc + (node.data?.buttons?.length || 0), 0),
     };
   };
 
