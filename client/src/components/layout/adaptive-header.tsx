@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users } from 'lucide-react';
 import { LayoutConfig } from './layout-manager';
 
 interface AdaptiveHeaderProps {
   config: LayoutConfig;
   projectName: string;
-  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users';
-  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users') => void;
+  currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups';
+  onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => void;
   onExport: () => void;
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
@@ -78,7 +78,8 @@ export function AdaptiveHeader({
         { key: 'preview', label: 'Превью' },
         { key: 'export', label: 'Экспорт' },
         { key: 'bot', label: 'Бот' },
-        { key: 'users', label: 'Пользователи' }
+        { key: 'users', label: 'Пользователи' },
+        { key: 'groups', label: 'Группы' }
       ].map((tab) => (
         <button 
           key={tab.key}

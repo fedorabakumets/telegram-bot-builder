@@ -17,6 +17,7 @@ import { EnhancedConnectionControls } from '@/components/editor/enhanced-connect
 import { ConnectionVisualization } from '@/components/editor/connection-visualization';
 import { SmartConnectionCreator } from '@/components/editor/smart-connection-creator';
 import { UserDatabasePanel } from '@/components/editor/user-database-panel';
+import { GroupsPanel } from '@/components/editor/groups-panel';
 import { AdaptiveLayout } from '@/components/layout/adaptive-layout';
 import { AdaptiveHeader } from '@/components/layout/adaptive-header';
 import { LayoutManager, useLayoutManager } from '@/components/layout/layout-manager';
@@ -35,7 +36,7 @@ export default function Editor() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/editor/:id');
   const projectId = params?.id ? parseInt(params.id) : null;
-  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users'>('editor');
+  const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
@@ -290,7 +291,7 @@ export default function Editor() {
     updateProjectMutation.mutate({});
   }, [updateProjectMutation]);
 
-  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users') => {
+  const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
@@ -1022,6 +1023,13 @@ export default function Editor() {
               ) : currentTab === 'users' ? (
                 <div className="h-full">
                   <UserDatabasePanel
+                    projectId={currentProject.id}
+                    projectName={currentProject.name}
+                  />
+                </div>
+              ) : currentTab === 'groups' ? (
+                <div className="h-full">
+                  <GroupsPanel
                     projectId={currentProject.id}
                     projectName={currentProject.name}
                   />
