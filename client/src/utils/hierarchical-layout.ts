@@ -164,8 +164,10 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     levelNodes.forEach((node, nodeIndex) => {
       const x = startX + nodeIndex * (options.nodeWidth + options.horizontalSpacing);
       
+      // Убираем циклические свойства перед добавлением в результат
+      const { children, visited, level, ...cleanNode } = node;
       result.push({
-        ...node,
+        ...cleanNode,
         position: { x, y }
       });
     });
@@ -178,13 +180,17 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
  * Линейное расположение узлов (fallback)
  */
 function arrangeNodesLinear(nodes: LayoutNode[], options: HierarchicalLayoutOptions): Node[] {
-  return nodes.map((node, index) => ({
-    ...node,
-    position: {
-      x: options.startX + (index % 3) * (options.nodeWidth + options.horizontalSpacing),
-      y: options.startY + Math.floor(index / 3) * options.verticalSpacing
-    }
-  }));
+  return nodes.map((node, index) => {
+    // Убираем циклические свойства перед возвратом
+    const { children, visited, level, ...cleanNode } = node;
+    return {
+      ...cleanNode,
+      position: {
+        x: options.startX + (index % 3) * (options.nodeWidth + options.horizontalSpacing),
+        y: options.startY + Math.floor(index / 3) * options.verticalSpacing
+      }
+    };
+  });
 }
 
 /**
