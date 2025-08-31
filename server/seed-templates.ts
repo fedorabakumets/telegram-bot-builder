@@ -113,6 +113,7 @@ async function seedDefaultTemplates(force = false) {
               keyboardType: "inline",
               collectUserInput: true,
               inputVariable: "gender",
+              synonyms: ["пол", "гендер", "мужчина", "женщина"],
               buttons: [
                 {
                   id: "btn-male",
@@ -147,6 +148,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_name",
+              synonyms: ["имя", "зовут", "называют", "как зовут"],
               inputTargetNodeId: "age_input",
               buttons: [],
               markdown: false
@@ -163,6 +165,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "user_age",
+              synonyms: ["возраст", "лет", "годы", "сколько лет"],
               inputTargetNodeId: "metro_selection",
               buttons: [],
               markdown: false
@@ -178,6 +181,7 @@ async function seedDefaultTemplates(force = false) {
               keyboardType: "inline",
               collectUserInput: true,
               inputVariable: "metro_stations",
+              synonyms: ["метро", "станция", "где живу", "район"],
               buttons: [
                 {
                   id: "btn-red",
@@ -412,6 +416,7 @@ async function seedDefaultTemplates(force = false) {
             data: {
               messageText: "Выбери категории интересов 🎯:",
               keyboardType: "inline",
+              synonyms: ["интересы", "хобби", "увлечения", "нравится"],
               buttons: [
                 {
                   id: "btn-hobby",
@@ -914,6 +919,7 @@ async function seedDefaultTemplates(force = false) {
               keyboardType: "inline",
               collectUserInput: true,
               inputVariable: "marital_status",
+              synonyms: ["семейное положение", "статус", "отношения", "семья"],
               buttons: [
                 {
                   id: "btn-single",
@@ -963,6 +969,7 @@ async function seedDefaultTemplates(force = false) {
               keyboardType: "inline",
               collectUserInput: true,
               inputVariable: "sexual_orientation",
+              synonyms: ["ориентация", "предпочтения", "кого ищу"],
               buttons: [
                 {
                   id: "btn-hetero",
@@ -1020,6 +1027,7 @@ async function seedDefaultTemplates(force = false) {
               keyboardType: "inline",
               collectUserInput: true,
               inputVariable: "telegram_channel_choice",
+              synonyms: ["тгк", "телеграм", "канал", "тг канал"],
               buttons: [
                 {
                   id: "btn-yes-channel",
@@ -1054,6 +1062,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "telegram_channel",
+              synonyms: ["тгк", "телеграм", "канал", "тг канал"],
               inputTargetNodeId: "extra_info",
               buttons: [],
               markdown: false
@@ -1070,6 +1079,7 @@ async function seedDefaultTemplates(force = false) {
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "extra_info",
+              synonyms: ["о себе", "описание", "расскажи", "инфо"],
               inputTargetNodeId: "profile_complete",
               buttons: [
                 {
