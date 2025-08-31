@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { TelegramAuth } from '@/components/telegram-auth';
 import type { BotGroup, InsertBotGroup } from '@shared/schema';
 
 interface GroupsPanelProps {
@@ -219,6 +220,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [allMembers, setAllMembers] = React.useState<any[]>([]);
   const [showAllMembers, setShowAllMembers] = React.useState(false);
+  const [showTelegramAuth, setShowTelegramAuth] = useState(false);
   
   const getAdminsMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
@@ -1027,37 +1029,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={async () => {
-                                setIsLoadingMembers(true);
-                                try {
-                                  const response = await fetch(`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup.groupId}`);
-                                  const data = await response.json();
-                                  
-                                  if (response.ok && data.success) {
-                                    // Update administrators with the full list from Client API
-                                    setAdministrators(data.members || []);
-                                    
-                                    toast({
-                                      title: data.message,
-                                      description: `Получено ${data.memberCount} участников включая всех пользователей группы`,
-                                    });
-                                  } else {
-                                    toast({
-                                      title: data.message || "Ошибка",
-                                      description: data.explanation || "Не удалось получить данные",
-                                      variant: "destructive"
-                                    });
-                                  }
-                                } catch (error) {
-                                  toast({
-                                    title: "Ошибка подключения",
-                                    description: "Не удалось подключиться к Client API",
-                                    variant: "destructive"
-                                  });
-                                } finally {
-                                  setIsLoadingMembers(false);
-                                }
-                              }}
+                              onClick={() => setShowTelegramAuth(true)}
                             >
                               <Shield className="h-4 w-4 mr-2" />
                               Client API
@@ -1563,6 +1535,44 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Telegram Auth Dialog */}
+        <TelegramAuth
+          open={showTelegramAuth}
+          onOpenChange={setShowTelegramAuth}
+          onSuccess={async () => {
+            // После успешной авторизации попробуем получить участников
+            if (selectedGroup) {
+              setIsLoadingMembers(true);
+              try {
+                const response = await fetch(`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup.groupId}`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                  setAdministrators(data.members || []);
+                  toast({
+                    title: data.message,
+                    description: `Получено ${data.memberCount} участников включая всех пользователей группы`,
+                  });
+                } else {
+                  toast({
+                    title: data.message || "Ошибка",
+                    description: data.explanation || "Не удалось получить данные",
+                    variant: "destructive"
+                  });
+                }
+              } catch (error) {
+                toast({
+                  title: "Ошибка подключения",
+                  description: "Не удалось подключиться к Client API",
+                  variant: "destructive"
+                });
+              } finally {
+                setIsLoadingMembers(false);
+              }
+            }
+          }}
+        />
       </div>
     </div>
   );

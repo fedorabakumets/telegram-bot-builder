@@ -4058,6 +4058,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Send verification code to phone number
+  app.post("/api/telegram-auth/send-code", async (req, res) => {
+    try {
+      const { phoneNumber } = req.body;
+      
+      if (!phoneNumber) {
+        return res.status(400).json({
+          success: false,
+          error: "Номер телефона обязателен"
+        });
+      }
+
+      const result = await telegramClientManager.sendCode('default', phoneNumber);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          message: "Код отправлен на ваш номер",
+          phoneCodeHash: result.phoneCodeHash
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to send verification code:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Ошибка отправки кода" 
+      });
+    }
+  });
+
+  // Verify phone code
+  app.post("/api/telegram-auth/verify-code", async (req, res) => {
+    try {
+      const { phoneNumber, phoneCode, phoneCodeHash } = req.body;
+      
+      if (!phoneNumber || !phoneCode || !phoneCodeHash) {
+        return res.status(400).json({
+          success: false,
+          error: "Все поля обязательны"
+        });
+      }
+
+      const result = await telegramClientManager.verifyCode('default', phoneNumber, phoneCode, phoneCodeHash);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          message: "Авторизация успешна"
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to verify code:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Ошибка проверки кода" 
+      });
+    }
+  });
+
+  // Get authentication status
+  app.get("/api/telegram-auth/status", async (req, res) => {
+    try {
+      const status = await telegramClientManager.getAuthStatus('default');
+      res.json(status);
+    } catch (error: any) {
+      console.error("Failed to get auth status:", error);
+      res.status(500).json({ 
+        isAuthenticated: false,
+        error: "Ошибка получения статуса авторизации" 
+      });
+    }
+  });
+
   // Force update templates - Admin endpoint to refresh all system templates
   app.post("/api/templates/refresh", async (req, res) => {
     try {
