@@ -46,6 +46,7 @@ async function seedDefaultTemplates(force = false) {
               command: "/start",
               description: "Приветствие и источник",
               messageText: "🌟 Привет от ᴠᴨᴩᴏᴦʏᴧᴋᴇ Bot!\n\nЭтот бот поможет тебе найти интересных людей в Санкт-Петербурге!\n\nОткуда ты узнал о нашем чате? 😎",
+              synonyms: ["старт", "начать", "привет", "начало", "начинаем"],
               keyboardType: "none",
               buttons: [],
               collectUserInput: true,
@@ -64,6 +65,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 100, y: 250 },
             data: {
               messageText: "Хочешь присоединиться к нашему чату? 🚀",
+              synonyms: ["чат", "присоединиться", "вступить", "группа", "сообщество"],
               keyboardType: "inline",
               collectUserInput: true,
               inputVariable: "join_request_response",
@@ -97,6 +99,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 100, y: 450 },
             data: {
               messageText: "Понятно! Если передумаешь, напиши /start! 😊",
+              synonyms: ["понятно", "хорошо", "ладно", "ок", "передумаю"],
               keyboardType: "none",
               removeKeyboard: true,
               buttons: [],
@@ -253,6 +256,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 1500, y: 450 },
             data: {
               messageText: "🟥 Кировско-Выборгская линия\n\nВыбери свою станцию:",
+              synonyms: ["красная линия", "кировско-выборгская", "красная ветка"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "metro_stations",
@@ -290,6 +294,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 1900, y: 450 },
             data: {
               messageText: "🟦 Московско-Петроградская линия\n\nВыбери свою станцию:",
+              synonyms: ["синяя линия", "московско-петроградская", "синяя ветка"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "metro_stations",
@@ -326,6 +331,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 2300, y: 450 },
             data: {
               messageText: "🟩 Невско-Василеостровская линия\n\nВыбери свою станцию:",
+              synonyms: ["зеленая линия", "невско-василеостровская", "зеленая ветка"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "metro_stations",
@@ -356,6 +362,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 2700, y: 450 },
             data: {
               messageText: "🟧 Правобережная линия\n\nВыбери свою станцию:",
+              synonyms: ["оранжевая линия", "правобережная", "оранжевая ветка"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "metro_stations",
@@ -383,6 +390,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 3100, y: 450 },
             data: {
               messageText: "🟪 Фрунзенско-Приморская линия\n\nВыбери свою станцию:",
+              synonyms: ["фиолетовая линия", "фрунзенско-приморская", "фиолетовая ветка"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "metro_stations",
@@ -471,6 +479,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 900, y: 450 },
             data: {
               messageText: "Выбери интересы в категории 🎮 Хобби:",
+              synonyms: ["хобби", "увлечения", "занятия", "игры"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "user_interests",
@@ -563,6 +572,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 1300, y: 450 },
             data: {
               messageText: "Выбери интересы в категории 👥 Социальная жизнь:",
+              synonyms: ["общение", "социальное", "люди", "тусовки"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "user_interests",
@@ -628,6 +638,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 100, y: 650 },
             data: {
               messageText: "Выбери интересы в категории 🎨 Творчество:",
+              synonyms: ["творчество", "искусство", "рисование", "музыка"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "user_interests",
@@ -700,6 +711,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 500, y: 650 },
             data: {
               messageText: "Выбери интересы в категории 🏃 Активный образ жизни:",
+              synonyms: ["активность", "активный", "движение", "здоровье"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "user_interests",
@@ -772,6 +784,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 900, y: 650 },
             data: {
               messageText: "Выбери интересы в категории 🍕 Еда и напитки:",
+              synonyms: ["еда", "напитки", "кухня", "рестораны"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "user_interests",
@@ -844,6 +857,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 1300, y: 650 },
             data: {
               messageText: "Выбери интересы в категории ⚽ Спорт:",
+              synonyms: ["спорт", "фитнес", "тренировки", "футбол"],
               keyboardType: "inline",
               allowMultipleSelection: true,
               multiSelectVariable: "user_interests",
@@ -1076,6 +1090,7 @@ async function seedDefaultTemplates(force = false) {
             position: { x: 100, y: 850 },
             data: {
               messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+              synonyms: ["готово", "завершено", "профиль готов", "анкета готова"],
               keyboardType: "inline",
               removeKeyboard: false,
               enableConditionalMessages: true,
@@ -1514,9 +1529,13 @@ async function seedDefaultTemplates(force = false) {
 
           {
             id: "chat_link",
-            type: "message",
+            type: "command",
             position: { x: 900, y: 850 },
             data: {
+              command: "/link",
+              commandName: "/link",
+              description: "Получить ссылку на чат сообщества",
+              synonyms: ["ссылка", "чат", "сообщество", "впрогулке", "линк"],
               messageText: "🔗 Актуальная ссылка на чат:\n\nhttps://t.me/+agkIVgCzHtY2ZTA6\n\nДобро пожаловать в сообщество ᴠᴨᴩᴏᴦʏᴧᴋᴇ! 🎉",
               keyboardType: "inline",
               buttons: [
