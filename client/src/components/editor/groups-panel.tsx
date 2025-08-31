@@ -9,8 +9,11 @@ interface GroupsPanelProps {
 }
 
 export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
+  console.log('GroupsPanel rendering with:', { projectId, projectName });
+  
   return (
-    <div className="h-full w-full p-6 bg-white dark:bg-gray-900">
+    <div className="h-full w-full p-6 bg-red-500"
+         style={{ minHeight: '100vh', backgroundColor: 'red' }}>
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Управление группами</h1>
