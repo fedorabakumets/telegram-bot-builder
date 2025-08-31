@@ -460,6 +460,10 @@ export default function Editor() {
       <div className="h-full">
         {currentTab === 'editor' ? (
           <Canvas
+            // Новая система листов
+            botData={botDataWithSheets || undefined}
+            onBotDataUpdate={handleBotDataUpdate}
+            // Существующие пропсы для совместимости
             nodes={nodes}
             connections={connections}
             selectedNodeId={selectedNodeId}
@@ -482,7 +486,7 @@ export default function Editor() {
             onFullscreen={handleEnterFullscreen}
             onCopyToClipboard={copyToClipboard}
             onPasteFromClipboard={pasteFromClipboard}
-            hasClipboardData={hasClipboardData}
+            hasClipboardData={hasClipboardData()}
             onToggleHeader={handleToggleHeader}
             onToggleSidebar={handleToggleSidebar}
             onToggleProperties={handleToggleProperties}
@@ -653,7 +657,7 @@ export default function Editor() {
                   onFullscreen={handleEnterFullscreen}
                   onCopyToClipboard={copyToClipboard}
                   onPasteFromClipboard={pasteFromClipboard}
-                  hasClipboardData={hasClipboardData}
+                  hasClipboardData={hasClipboardData()}
                   onToggleHeader={handleToggleHeader}
                   onToggleSidebar={handleToggleSidebar}
                   onToggleProperties={handleToggleProperties}
@@ -742,6 +746,10 @@ export default function Editor() {
                 <div className="h-full">
                   {currentTab === 'editor' ? (
                     <Canvas
+                      // Новая система листов
+                      botData={botDataWithSheets || undefined}
+                      onBotDataUpdate={handleBotDataUpdate}
+                      // Существующие пропсы для совместимости
                       nodes={nodes}
                       connections={connections}
                       selectedNodeId={selectedNodeId}
@@ -762,6 +770,9 @@ export default function Editor() {
                       onSave={() => updateProjectMutation.mutate({})}
                       isSaving={updateProjectMutation.isPending}
                       onFullscreen={handleEnterFullscreen}
+                      onCopyToClipboard={copyToClipboard}
+                      onPasteFromClipboard={pasteFromClipboard}
+                      hasClipboardData={hasClipboardData()}
                       onToggleHeader={handleToggleHeader}
                       onToggleSidebar={handleToggleSidebar}
                       onToggleProperties={handleToggleProperties}
