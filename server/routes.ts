@@ -3662,16 +3662,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Читаем файл и отправляем через multipart/form-data
       const fs = await import('fs');
-      const FormData = (await import('form-data')).default;
+      const path = await import('path');
       
-      const formData = new FormData();
-      formData.append('chat_id', groupId);
-      formData.append('photo', fs.createReadStream(photoPath));
+      const photoBuffer = fs.readFileSync(photoPath);
+      const fileName = path.basename(photoPath);
+      
+      // Создаем multipart form data вручную
+      const boundary = '----formdata-replit-' + Math.random().toString(36);
+      const CRLF = '\r\n';
+      
+      let body = '';
+      body += `--${boundary}${CRLF}`;
+      body += `Content-Disposition: form-data; name="chat_id"${CRLF}${CRLF}`;
+      body += `${groupId}${CRLF}`;
+      body += `--${boundary}${CRLF}`;
+      body += `Content-Disposition: form-data; name="photo"; filename="${fileName}"${CRLF}`;
+      body += `Content-Type: image/png${CRLF}${CRLF}`;
+      
+      const bodyBuffer = Buffer.concat([
+        Buffer.from(body, 'utf8'),
+        photoBuffer,
+        Buffer.from(`${CRLF}--${boundary}--${CRLF}`, 'utf8')
+      ]);
 
       const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setChatPhoto`;
       const response = await fetch(telegramApiUrl, {
         method: 'POST',
-        body: formData as any,
+        headers: {
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
+          'Content-Length': bodyBuffer.length.toString(),
+        },
+        body: bodyBuffer,
       });
 
       const result = await response.json();
