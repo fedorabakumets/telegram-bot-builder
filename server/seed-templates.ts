@@ -1198,6 +1198,8 @@ async function seedDefaultTemplates(force = false) {
             data: {
               command: "/profile",
               commandName: "/profile",
+              description: "Показать и редактировать профиль пользователя",
+              synonyms: ["профиль", "анкета", "мой профиль", "посмотреть профиль", "редактировать профиль"],
               messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\n\n✏️ Выберите действие:",
               keyboardType: "inline",
               enableConditionalMessages: true,
