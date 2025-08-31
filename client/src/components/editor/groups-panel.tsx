@@ -25,6 +25,74 @@ interface GroupsPanelProps {
 
 // Using BotGroup type from schema instead of local interface
 
+// Компонент аватарки группы с fallback
+function GroupAvatar({ 
+  avatarUrl, 
+  groupName, 
+  size = 40, 
+  className = "" 
+}: { 
+  avatarUrl?: string | null; 
+  groupName: string; 
+  size?: number; 
+  className?: string; 
+}) {
+  const [imageError, setImageError] = useState(false);
+  
+  // Получаем первые буквы названия группы для fallback
+  const initials = groupName
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  
+  const handleImageError = () => {
+    setImageError(true);
+  };
+  
+  // Если есть аватарка и она не содержит <TOKEN>, показываем её
+  const showImage = avatarUrl && !imageError && !avatarUrl.includes('<TOKEN>');
+  
+  if (showImage) {
+    return (
+      <div 
+        className={`relative rounded-lg overflow-hidden flex-shrink-0 ${className}`}
+        style={{ width: size, height: size }}
+      >
+        <img 
+          src={avatarUrl}
+          alt={`${groupName} avatar`}
+          className="w-full h-full object-cover"
+          onError={handleImageError}
+        />
+      </div>
+    );
+  }
+  
+  // Fallback: показываем инициалы или иконку
+  return (
+    <div 
+      className={`bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
+      style={{ width: size, height: size }}
+    >
+      {initials ? (
+        <span 
+          className="text-white font-semibold"
+          style={{ fontSize: size * 0.4 }}
+        >
+          {initials}
+        </span>
+      ) : (
+        <Users 
+          className="text-white" 
+          size={size * 0.5} 
+        />
+      )}
+    </div>
+  );
+}
+
 export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [showAddGroup, setShowAddGroup] = useState(false);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
@@ -254,15 +322,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           updateData.description = data.description;
         }
         
+        // Добавляем аватарку если есть
+        if (data.avatarUrl) {
+          updateData.avatarUrl = data.avatarUrl;
+        }
+        
         // Добавляем количество участников если есть
         if (data.memberCount !== null && data.memberCount !== undefined) {
           updateData.memberCount = data.memberCount;
-        }
-        
-        // Добавляем аватар если есть (большая версия фото)
-        if (data.photo?.big_file_id) {
-          // Генерируем ссылку на аватар через Telegram File API
-          updateData.avatarUrl = `https://api.telegram.org/file/bot<TOKEN>/${data.photo.big_file_id}`;
         }
         
         updateGroupMutation.mutate({
@@ -901,9 +968,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 <Card key={group.id} className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                        <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
+                      <GroupAvatar 
+                        avatarUrl={group.avatarUrl}
+                        groupName={group.name}
+                        size={40}
+                      />
                       <div>
                         <h3 className="font-medium">{group.name}</h3>
                         <p className="text-xs text-muted-foreground">
@@ -1104,9 +1173,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
         <Dialog open={showGroupSettings} onOpenChange={setShowGroupSettings}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-3">
                 <Settings className="h-5 w-5" />
-                Настройки группы: {selectedGroup?.name}
+                <div className="flex items-center gap-2">
+                  <GroupAvatar 
+                    avatarUrl={selectedGroup?.avatarUrl}
+                    groupName={selectedGroup?.name || 'Группа'}
+                    size={32}
+                  />
+                  <span>Настройки группы: {selectedGroup?.name}</span>
+                </div>
               </DialogTitle>
               <DialogDescription>
                 Комплексное управление группой и её участниками

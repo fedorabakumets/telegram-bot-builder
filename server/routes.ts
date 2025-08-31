@@ -3225,7 +3225,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      res.json(result.result);
+      const chatInfo = result.result;
+      
+      // If chat has photo, get the file URL
+      let avatarUrl = null;
+      if (chatInfo.photo && chatInfo.photo.big_file_id) {
+        try {
+          // Get file info
+          const fileResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getFile`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              file_id: chatInfo.photo.big_file_id
+            })
+          });
+          
+          const fileResult = await fileResponse.json();
+          
+          if (fileResponse.ok && fileResult.result && fileResult.result.file_path) {
+            // Construct full photo URL
+            avatarUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${fileResult.result.file_path}`;
+          }
+        } catch (photoError) {
+          console.warn("Failed to get group photo URL:", photoError);
+          // Continue without photo - not a critical error
+        }
+      }
+
+      // Add avatar URL to response
+      const responseData = {
+        ...chatInfo,
+        avatarUrl: avatarUrl
+      };
+
+      res.json(responseData);
     } catch (error) {
       console.error("Failed to get group info:", error);
       res.status(500).json({ message: "Failed to get group info" });
