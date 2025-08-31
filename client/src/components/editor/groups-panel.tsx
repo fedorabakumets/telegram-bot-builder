@@ -20,6 +20,8 @@ interface GroupsPanelProps {
 
 export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [showAddGroup, setShowAddGroup] = useState(false);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<BotGroup | null>(null);
   const [groupUrl, setGroupUrl] = useState('');
   const [groupName, setGroupName] = useState('');
   const [makeAdmin, setMakeAdmin] = useState(false);
@@ -60,6 +62,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     },
     onError: () => {
       toast({ title: 'Ошибка при удалении группы', variant: 'destructive' });
+    }
+  });
+
+  // Update group mutation
+  const updateGroupMutation = useMutation({
+    mutationFn: async ({ groupId, data }: { groupId: number, data: Partial<InsertBotGroup> }) => {
+      return apiRequest('PUT', `/api/projects/${projectId}/groups/${groupId}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'groups'] });
+      toast({ title: 'Настройки группы обновлены' });
+      setShowGroupSettings(false);
+      setSelectedGroup(null);
+    },
+    onError: () => {
+      toast({ title: 'Ошибка при обновлении настроек', variant: 'destructive' });
     }
   });
 
@@ -162,7 +180,18 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   </div>
                   
                   <div className="flex gap-2 mt-4">
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedGroup(group);
+                        setGroupName(group.name);
+                        setGroupUrl(group.url);
+                        setMakeAdmin(group.isAdmin === 1);
+                        setShowGroupSettings(true);
+                      }}
+                    >
                       Настройки
                     </Button>
                     <Button 
@@ -233,6 +262,94 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               </Button>
               <Button onClick={handleAddGroup} className="flex-1">
                 Подключить группу
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Модальное окно настроек группы */}
+        <Dialog open={showGroupSettings} onOpenChange={setShowGroupSettings}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Настройки группы</DialogTitle>
+              <DialogDescription>
+                Изменить параметры подключенной группы
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedGroup && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-group-name">Название группы</Label>
+                  <Input
+                    id="edit-group-name"
+                    placeholder="Введите название группы"
+                    defaultValue={selectedGroup.name}
+                    onChange={(e) => setGroupName(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-group-url">Ссылка на группу</Label>
+                  <Input
+                    id="edit-group-url"
+                    placeholder="https://t.me/group"
+                    defaultValue={selectedGroup.url}
+                    onChange={(e) => setGroupUrl(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="edit-admin-rights"
+                    checked={selectedGroup.isAdmin === 1}
+                    onCheckedChange={setMakeAdmin}
+                  />
+                  <Label htmlFor="edit-admin-rights">
+                    Бот является администратором группы
+                  </Label>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-group-desc">Описание</Label>
+                  <Input
+                    id="edit-group-desc"
+                    placeholder="Описание группы"
+                    defaultValue={selectedGroup.description || ''}
+                  />
+                </div>
+              </div>
+            )}
+            
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowGroupSettings(false);
+                  setSelectedGroup(null);
+                }} 
+                className="flex-1"
+              >
+                Отмена
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (selectedGroup) {
+                    updateGroupMutation.mutate({
+                      groupId: selectedGroup.id,
+                      data: {
+                        name: groupName || selectedGroup.name,
+                        url: groupUrl || selectedGroup.url,
+                        isAdmin: makeAdmin ? 1 : 0,
+                        description: (document.getElementById('edit-group-desc') as HTMLInputElement)?.value || selectedGroup.description
+                      }
+                    });
+                  }
+                }}
+                disabled={updateGroupMutation.isPending}
+                className="flex-1"
+              >
+                Сохранить
               </Button>
             </div>
           </DialogContent>
