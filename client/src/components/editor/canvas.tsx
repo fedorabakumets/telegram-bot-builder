@@ -1008,20 +1008,22 @@ export function Canvas({
             </div>
           )}
         </div>
+
+        {/* Компонент листов холста внизу холста (только если включена новая система) */}
+        {botData && onBotDataUpdate && (
+          <div className="absolute bottom-4 left-6 right-6 z-10">
+            <CanvasSheets
+              sheets={botData.sheets}
+              activeSheetId={botData.activeSheetId || null}
+              onSheetSelect={handleSheetSelect}
+              onSheetAdd={handleSheetAdd}
+              onSheetDelete={handleSheetDelete}
+              onSheetRename={handleSheetRename}
+              onSheetDuplicate={handleSheetDuplicate}
+            />
+          </div>
+        )}
       </div>
-      
-      {/* Компонент листов холста внизу (только если включена новая система) */}
-      {botData && onBotDataUpdate && (
-        <CanvasSheets
-          sheets={botData.sheets}
-          activeSheetId={botData.activeSheetId || null}
-          onSheetSelect={handleSheetSelect}
-          onSheetAdd={handleSheetAdd}
-          onSheetDelete={handleSheetDelete}
-          onSheetRename={handleSheetRename}
-          onSheetDuplicate={handleSheetDuplicate}
-        />
-      )}
     </main>
   );
 }
