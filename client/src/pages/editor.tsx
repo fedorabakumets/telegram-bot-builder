@@ -306,6 +306,154 @@ export default function Editor() {
     }
   }, [updateProjectMutation]);
 
+  // Функции управления листами
+  const handleSheetAdd = useCallback((name: string) => {
+    if (!botDataWithSheets) return;
+    
+    try {
+      const updatedData = SheetsManager.addSheet(botDataWithSheets, name);
+      setBotDataWithSheets(updatedData);
+      
+      // Переключаемся на новый лист
+      const newSheet = SheetsManager.getActiveSheet(updatedData);
+      if (newSheet) {
+        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections });
+      }
+      
+      // Сохраняем изменения
+      updateProjectMutation.mutate({});
+      
+      toast({
+        title: "Лист создан",
+        description: `Лист "${name}" успешно создан`,
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка создания",
+        description: "Не удалось создать лист",
+        variant: "destructive",
+      });
+    }
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast]);
+
+  const handleSheetDelete = useCallback((sheetId: string) => {
+    if (!botDataWithSheets) return;
+    
+    try {
+      const updatedData = SheetsManager.deleteSheet(botDataWithSheets, sheetId);
+      setBotDataWithSheets(updatedData);
+      
+      // Переключаемся на активный лист
+      const activeSheet = SheetsManager.getActiveSheet(updatedData);
+      if (activeSheet) {
+        setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections });
+      }
+      
+      // Сохраняем изменения
+      updateProjectMutation.mutate({});
+      
+      toast({
+        title: "Лист удален",
+        description: "Лист успешно удален",
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка удаления",
+        description: "Не удалось удалить лист",
+        variant: "destructive",
+      });
+    }
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast]);
+
+  const handleSheetRename = useCallback((sheetId: string, newName: string) => {
+    if (!botDataWithSheets) return;
+    
+    try {
+      const updatedData = SheetsManager.renameSheet(botDataWithSheets, sheetId, newName);
+      setBotDataWithSheets(updatedData);
+      
+      // Сохраняем изменения
+      updateProjectMutation.mutate({});
+      
+      toast({
+        title: "Лист переименован",
+        description: `Лист переименован в "${newName}"`,
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка переименования",
+        description: "Не удалось переименовать лист",
+        variant: "destructive",
+      });
+    }
+  }, [botDataWithSheets, updateProjectMutation, toast]);
+
+  const handleSheetDuplicate = useCallback((sheetId: string) => {
+    if (!botDataWithSheets) return;
+    
+    try {
+      const updatedData = SheetsManager.duplicateSheetInProject(botDataWithSheets, sheetId);
+      setBotDataWithSheets(updatedData);
+      
+      // Переключаемся на дублированный лист
+      const newSheet = SheetsManager.getActiveSheet(updatedData);
+      if (newSheet) {
+        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections });
+      }
+      
+      // Сохраняем изменения
+      updateProjectMutation.mutate({});
+      
+      toast({
+        title: "Лист дублирован",
+        description: "Лист успешно дублирован",
+      });
+    } catch (error) {
+      toast({
+        title: "Ошибка дублирования",
+        description: "Не удалось дублировать лист",
+        variant: "destructive",
+      });
+    }
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast]);
+
+  const handleSheetSelect = useCallback((sheetId: string) => {
+    if (!botDataWithSheets) return;
+    
+    try {
+      // Сначала сохраняем текущие данные холста в активном листе
+      const currentCanvasData = getBotData();
+      const activeSheetId = botDataWithSheets.activeSheetId;
+      const updatedSheets = botDataWithSheets.sheets.map(sheet => 
+        sheet.id === activeSheetId 
+          ? { ...sheet, nodes: currentCanvasData.nodes, connections: currentCanvasData.connections, updatedAt: new Date() }
+          : sheet
+      );
+      
+      // Затем переключаемся на новый лист
+      const updatedData = SheetsManager.setActiveSheet(
+        { ...botDataWithSheets, sheets: updatedSheets }, 
+        sheetId
+      );
+      setBotDataWithSheets(updatedData);
+      
+      // Загружаем данные нового активного листа на холст
+      const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
+      if (newActiveSheet) {
+        setBotData({ nodes: newActiveSheet.nodes, connections: newActiveSheet.connections });
+      }
+      
+      // Сохраняем изменения
+      updateProjectMutation.mutate({});
+    } catch (error) {
+      toast({
+        title: "Ошибка переключения",
+        description: "Не удалось переключиться на лист",
+        variant: "destructive",
+      });
+    }
+  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast]);
+
   // Проверяем, есть ли выбранный шаблон при загрузке страницы
   useEffect(() => {
     const selectedTemplateData = localStorage.getItem('selectedTemplate');
@@ -603,6 +751,11 @@ export default function Editor() {
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
         propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
         showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+        onSheetAdd={handleSheetAdd}
+        onSheetDelete={handleSheetDelete}
+        onSheetRename={handleSheetRename}
+        onSheetDuplicate={handleSheetDuplicate}
+        onSheetSelect={handleSheetSelect}
       />
     );
 
@@ -676,6 +829,11 @@ export default function Editor() {
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
               propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
               showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+              onSheetAdd={handleSheetAdd}
+              onSheetDelete={handleSheetDelete}
+              onSheetRename={handleSheetRename}
+              onSheetDuplicate={handleSheetDuplicate}
+              onSheetSelect={handleSheetSelect}
             />
           }
           canvas={
@@ -847,6 +1005,11 @@ export default function Editor() {
                   onButtonDelete={deleteButton}
                 />
               }
+              onSheetAdd={handleSheetAdd}
+              onSheetDelete={handleSheetDelete}
+              onSheetRename={handleSheetRename}
+              onSheetDuplicate={handleSheetDuplicate}
+              onSheetSelect={handleSheetSelect}
             />
           }
           canvasContent={
