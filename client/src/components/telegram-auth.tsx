@@ -69,10 +69,7 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
     setIsLoading(true);
     try {
-      const response = await apiRequest('/api/telegram-auth/send-code', {
-        method: 'POST',
-        body: { phoneNumber: phoneNumber.trim() }
-      });
+      const response = await apiRequest('POST', '/api/telegram-auth/send-code', { phoneNumber: phoneNumber.trim() });
 
       if (response.success) {
         setPhoneCodeHash(response.phoneCodeHash);
@@ -111,13 +108,10 @@ export function TelegramAuth({ open, onOpenChange, onSuccess }: TelegramAuthProp
 
     setIsLoading(true);
     try {
-      const response = await apiRequest('/api/telegram-auth/verify-code', {
-        method: 'POST',
-        body: {
-          phoneNumber: phoneNumber.trim(),
-          phoneCode: phoneCode.trim(),
-          phoneCodeHash
-        }
+      const response = await apiRequest('POST', '/api/telegram-auth/verify-code', {
+        phoneNumber: phoneNumber.trim(),
+        phoneCode: phoneCode.trim(),
+        phoneCodeHash
       });
 
       if (response.success) {
