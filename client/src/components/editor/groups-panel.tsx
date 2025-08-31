@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Users, Plus, UserPlus, X } from 'lucide-react';
+import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -24,7 +28,25 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [selectedGroup, setSelectedGroup] = useState<BotGroup | null>(null);
   const [groupUrl, setGroupUrl] = useState('');
   const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  const [groupAvatarUrl, setGroupAvatarUrl] = useState('');
+  const [groupLanguage, setGroupLanguage] = useState('ru');
+  const [groupTimezone, setGroupTimezone] = useState('');
+  const [groupTags, setGroupTags] = useState<string[]>([]);
+  const [groupNotes, setGroupNotes] = useState('');
   const [makeAdmin, setMakeAdmin] = useState(false);
+  const [isPublicGroup, setIsPublicGroup] = useState(false);
+  const [chatType, setChatType] = useState<'group' | 'supergroup' | 'channel'>('group');
+  const [adminRights, setAdminRights] = useState({
+    can_manage_chat: false,
+    can_change_info: false,
+    can_delete_messages: false,
+    can_invite_users: false,
+    can_restrict_members: false,
+    can_pin_messages: false,
+    can_promote_members: false,
+    can_manage_video_chats: false
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -188,7 +210,25 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         setSelectedGroup(group);
                         setGroupName(group.name);
                         setGroupUrl(group.url);
+                        setGroupDescription(group.description || '');
+                        setGroupAvatarUrl(group.avatarUrl || '');
+                        setGroupLanguage(group.language || 'ru');
+                        setGroupTimezone(group.timezone || '');
+                        setGroupTags(group.tags || []);
+                        setGroupNotes(group.notes || '');
                         setMakeAdmin(group.isAdmin === 1);
+                        setIsPublicGroup(Boolean(group.isPublic));
+                        setChatType((group.chatType as 'group' | 'supergroup' | 'channel') || 'group');
+                        setAdminRights(group.adminRights || {
+                          can_manage_chat: false,
+                          can_change_info: false,
+                          can_delete_messages: false,
+                          can_invite_users: false,
+                          can_restrict_members: false,
+                          can_pin_messages: false,
+                          can_promote_members: false,
+                          can_manage_video_chats: false
+                        });
                         setShowGroupSettings(true);
                       }}
                     >
@@ -269,56 +309,300 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
         {/* Модальное окно настроек группы */}
         <Dialog open={showGroupSettings} onOpenChange={setShowGroupSettings}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
-              <DialogTitle>Настройки группы</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Настройки группы: {selectedGroup?.name}
+              </DialogTitle>
               <DialogDescription>
-                Изменить параметры подключенной группы
+                Комплексное управление группой и её участниками
               </DialogDescription>
             </DialogHeader>
             
             {selectedGroup && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-group-name">Название группы</Label>
-                  <Input
-                    id="edit-group-name"
-                    placeholder="Введите название группы"
-                    defaultValue={selectedGroup.name}
-                    onChange={(e) => setGroupName(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="edit-group-url">Ссылка на группу</Label>
-                  <Input
-                    id="edit-group-url"
-                    placeholder="https://t.me/group"
-                    defaultValue={selectedGroup.url}
-                    onChange={(e) => setGroupUrl(e.target.value)}
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    id="edit-admin-rights"
-                    checked={selectedGroup.isAdmin === 1}
-                    onCheckedChange={setMakeAdmin}
-                  />
-                  <Label htmlFor="edit-admin-rights">
-                    Бот является администратором группы
-                  </Label>
-                </div>
+              <Tabs defaultValue="general" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="general" className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Общие
+                  </TabsTrigger>
+                  <TabsTrigger value="admin" className="flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Права
+                  </TabsTrigger>
+                  <TabsTrigger value="members" className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    Участники
+                  </TabsTrigger>
+                  <TabsTrigger value="analytics" className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Аналитика
+                  </TabsTrigger>
+                </TabsList>
 
-                <div className="space-y-2">
-                  <Label htmlFor="edit-group-desc">Описание</Label>
-                  <Input
-                    id="edit-group-desc"
-                    placeholder="Описание группы"
-                    defaultValue={selectedGroup.description || ''}
-                  />
+                <div className="mt-4 max-h-[60vh] overflow-y-auto">
+                  <TabsContent value="general" className="space-y-4 mt-0">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-group-name">Название группы</Label>
+                        <Input
+                          id="edit-group-name"
+                          placeholder="Введите название группы"
+                          value={groupName}
+                          onChange={(e) => setGroupName(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-group-url">Ссылка на группу</Label>
+                        <Input
+                          id="edit-group-url"
+                          placeholder="https://t.me/group"
+                          value={groupUrl}
+                          onChange={(e) => setGroupUrl(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-group-desc">Описание группы</Label>
+                      <Textarea
+                        id="edit-group-desc"
+                        placeholder="Краткое описание группы..."
+                        value={groupDescription}
+                        onChange={(e) => setGroupDescription(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="chat-type">Тип чата</Label>
+                        <Select value={chatType} onValueChange={(value: 'group' | 'supergroup' | 'channel') => setChatType(value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Выберите тип" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="group">Группа</SelectItem>
+                            <SelectItem value="supergroup">Супергруппа</SelectItem>
+                            <SelectItem value="channel">Канал</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="group-language">Язык группы</Label>
+                        <Select value={groupLanguage} onValueChange={setGroupLanguage}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Выберите язык" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ru">Русский</SelectItem>
+                            <SelectItem value="en">English</SelectItem>
+                            <SelectItem value="es">Español</SelectItem>
+                            <SelectItem value="fr">Français</SelectItem>
+                            <SelectItem value="de">Deutsch</SelectItem>
+                            <SelectItem value="it">Italiano</SelectItem>
+                            <SelectItem value="pt">Português</SelectItem>
+                            <SelectItem value="zh">中文</SelectItem>
+                            <SelectItem value="ja">日本語</SelectItem>
+                            <SelectItem value="ko">한국어</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="group-avatar">URL аватарки</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="group-avatar"
+                            placeholder="https://example.com/avatar.jpg"
+                            value={groupAvatarUrl}
+                            onChange={(e) => setGroupAvatarUrl(e.target.value)}
+                          />
+                          <Button variant="outline" size="icon">
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="group-timezone">Часовой пояс</Label>
+                        <Input
+                          id="group-timezone"
+                          placeholder="Europe/Moscow"
+                          value={groupTimezone}
+                          onChange={(e) => setGroupTimezone(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="public-group"
+                        checked={isPublicGroup}
+                        onCheckedChange={setIsPublicGroup}
+                      />
+                      <Label htmlFor="public-group">
+                        Публичная группа
+                      </Label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="group-notes">Заметки администратора</Label>
+                      <Textarea
+                        id="group-notes"
+                        placeholder="Внутренние заметки о группе..."
+                        value={groupNotes}
+                        onChange={(e) => setGroupNotes(e.target.value)}
+                        rows={2}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="admin" className="space-y-4 mt-0">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">Статус администратора</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Является ли бот администратором группы
+                          </p>
+                        </div>
+                        <Switch 
+                          checked={makeAdmin}
+                          onCheckedChange={setMakeAdmin}
+                        />
+                      </div>
+                      
+                      {makeAdmin && (
+                        <div className="space-y-3">
+                          <h5 className="font-medium text-sm">Права администратора</h5>
+                          <div className="grid grid-cols-2 gap-3">
+                            {Object.entries(adminRights).map(([key, value]) => (
+                              <div key={key} className="flex items-center space-x-2">
+                                <Switch
+                                  checked={value}
+                                  onCheckedChange={(checked) => 
+                                    setAdminRights(prev => ({ ...prev, [key]: checked }))
+                                  }
+                                />
+                                <Label className="text-xs">
+                                  {key === 'can_manage_chat' && 'Управление чатом'}
+                                  {key === 'can_change_info' && 'Изменение информации'}
+                                  {key === 'can_delete_messages' && 'Удаление сообщений'}
+                                  {key === 'can_invite_users' && 'Приглашение пользователей'}
+                                  {key === 'can_restrict_members' && 'Ограничение участников'}
+                                  {key === 'can_pin_messages' && 'Закрепление сообщений'}
+                                  {key === 'can_promote_members' && 'Назначение администраторов'}
+                                  {key === 'can_manage_video_chats' && 'Управление видеочатами'}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="members" className="space-y-4 mt-0">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Участники группы</h4>
+                        <Badge variant="secondary">{selectedGroup.memberCount || 0} участников</Badge>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Управление участниками будет доступно после подключения Telegram Bot API
+                        </p>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Button variant="outline" size="sm" disabled>
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Пригласить
+                          </Button>
+                          <Button variant="outline" size="sm" disabled>
+                            <Shield className="h-4 w-4 mr-2" />
+                            Права
+                          </Button>
+                          <Button variant="outline" size="sm" disabled>
+                            <X className="h-4 w-4 mr-2" />
+                            Исключить
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="analytics" className="space-y-4 mt-0">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Card className="p-4">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-5 w-5 text-blue-500" />
+                          <div>
+                            <p className="text-sm font-medium">Сообщений</p>
+                            <p className="text-2xl font-bold">{selectedGroup.messagesCount || 0}</p>
+                          </div>
+                        </div>
+                      </Card>
+                      
+                      <Card className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-5 w-5 text-green-500" />
+                          <div>
+                            <p className="text-sm font-medium">Активные пользователи</p>
+                            <p className="text-2xl font-bold">{selectedGroup.activeUsers || 0}</p>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Последняя активность</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedGroup.lastActivity 
+                          ? new Date(selectedGroup.lastActivity).toLocaleString('ru-RU')
+                          : 'Нет данных'
+                        }
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Теги группы</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {groupTags.map((tag, index) => (
+                          <Badge key={index} variant="outline" className="flex items-center gap-1">
+                            <Tag className="h-3 w-3" />
+                            {tag}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-4 w-4 p-0 ml-1"
+                              onClick={() => setGroupTags(prev => prev.filter((_, i) => i !== index))}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newTag = prompt('Введите новый тег:');
+                            if (newTag) setGroupTags(prev => [...prev, newTag]);
+                          }}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Добавить тег
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
                 </div>
-              </div>
+              </Tabs>
             )}
             
             <div className="flex gap-2 pt-4">
@@ -340,8 +624,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       data: {
                         name: groupName || selectedGroup.name,
                         url: groupUrl || selectedGroup.url,
+                        description: groupDescription,
+                        avatarUrl: groupAvatarUrl,
+                        language: groupLanguage,
+                        timezone: groupTimezone,
+                        tags: groupTags,
+                        notes: groupNotes,
                         isAdmin: makeAdmin ? 1 : 0,
-                        description: (document.getElementById('edit-group-desc') as HTMLInputElement)?.value || selectedGroup.description
+                        isPublic: isPublicGroup ? 1 : 0,
+                        chatType,
+                        adminRights
                       }
                     });
                   }

@@ -6,6 +6,7 @@ import {
   mediaFiles,
   userBotData,
   botGroups,
+  groupMembers,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
@@ -19,7 +20,9 @@ import {
   type UserBotData,
   type InsertUserBotData,
   type BotGroup,
-  type InsertBotGroup
+  type InsertBotGroup,
+  type GroupMember,
+  type InsertGroupMember
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
@@ -104,6 +107,12 @@ export interface IStorage {
   createBotGroup(group: InsertBotGroup): Promise<BotGroup>;
   updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined>;
   deleteBotGroup(id: number): Promise<boolean>;
+  
+  // Group members
+  getGroupMembers(groupId: number): Promise<GroupMember[]>;
+  createGroupMember(member: InsertGroupMember): Promise<GroupMember>;
+  updateGroupMember(id: number, member: Partial<InsertGroupMember>): Promise<GroupMember | undefined>;
+  deleteGroupMember(id: number): Promise<boolean>;
 }
 
 // Legacy Memory Storage - kept for reference
@@ -638,6 +647,23 @@ class MemStorage implements IStorage {
   async deleteBotGroup(id: number): Promise<boolean> {
     return false;
   }
+
+  // Group members stubs
+  async getGroupMembers(groupId: number): Promise<GroupMember[]> {
+    return [];
+  }
+
+  async createGroupMember(member: InsertGroupMember): Promise<GroupMember> {
+    throw new Error("MemStorage does not support group members");
+  }
+
+  async updateGroupMember(id: number, member: Partial<InsertGroupMember>): Promise<GroupMember | undefined> {
+    return undefined;
+  }
+
+  async deleteGroupMember(id: number): Promise<boolean> {
+    return false;
+  }
 }
 
 // Database Storage Implementation
@@ -1153,6 +1179,35 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBotGroup(id: number): Promise<boolean> {
     const result = await this.db.delete(botGroups).where(eq(botGroups.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Group members
+  async getGroupMembers(groupId: number): Promise<GroupMember[]> {
+    return await this.db.select().from(groupMembers)
+      .where(eq(groupMembers.groupId, groupId))
+      .orderBy(desc(groupMembers.joinedAt));
+  }
+
+  async createGroupMember(insertMember: InsertGroupMember): Promise<GroupMember> {
+    const [member] = await this.db
+      .insert(groupMembers)
+      .values(insertMember)
+      .returning();
+    return member;
+  }
+
+  async updateGroupMember(id: number, updateData: Partial<InsertGroupMember>): Promise<GroupMember | undefined> {
+    const [member] = await this.db
+      .update(groupMembers)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(groupMembers.id, id))
+      .returning();
+    return member || undefined;
+  }
+
+  async deleteGroupMember(id: number): Promise<boolean> {
+    const result = await this.db.delete(groupMembers).where(eq(groupMembers.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }

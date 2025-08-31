@@ -141,6 +141,56 @@ export const botGroups = pgTable("bot_groups", {
   isActive: integer("is_active").default(1), // 0 = неактивная, 1 = активная
   description: text("description"), // Описание группы
   settings: jsonb("settings").default({}), // Настройки группы
+  // Расширенные поля для управления группами
+  avatarUrl: text("avatar_url"), // URL аватарки группы
+  chatType: text("chat_type").default("group"), // "group", "supergroup", "channel"
+  inviteLink: text("invite_link"), // Пригласительная ссылка
+  // Права администратора бота в группе
+  adminRights: jsonb("admin_rights").default({
+    can_manage_chat: false,
+    can_change_info: false,
+    can_delete_messages: false,
+    can_invite_users: false,
+    can_restrict_members: false,
+    can_pin_messages: false,
+    can_promote_members: false,
+    can_manage_video_chats: false
+  }),
+  // Статистика группы
+  messagesCount: integer("messages_count").default(0),
+  activeUsers: integer("active_users").default(0),
+  lastActivity: timestamp("last_activity"),
+  // Дополнительные настройки
+  isPublic: integer("is_public").default(0), // 0 = частная, 1 = публичная
+  language: text("language").default("ru"), // Основной язык группы
+  timezone: text("timezone"), // Часовой пояс группы
+  tags: text("tags").array().default([]), // Теги для категоризации
+  notes: text("notes"), // Заметки администратора
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Таблица участников групп
+export const groupMembers = pgTable("group_members", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").references(() => botGroups.id, { onDelete: "cascade" }).notNull(),
+  userId: bigint("user_id", { mode: "number" }).notNull(), // Telegram user ID
+  username: text("username"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  status: text("status").default("member"), // "creator", "administrator", "member", "restricted", "left", "kicked"
+  isBot: integer("is_bot").default(0),
+  // Права администратора (если пользователь админ)
+  adminRights: jsonb("admin_rights").default({}),
+  customTitle: text("custom_title"), // Кастомный титул администратора
+  // Ограничения (если пользователь ограничен)
+  restrictions: jsonb("restrictions").default({}),
+  restrictedUntil: timestamp("restricted_until"),
+  // Метаданные
+  joinedAt: timestamp("joined_at").defaultNow(),
+  lastSeen: timestamp("last_seen"),
+  messageCount: integer("message_count").default(0),
+  isActive: integer("is_active").default(1),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -290,12 +340,67 @@ export const insertBotGroupSchema = createInsertSchema(botGroups).pick({
   isActive: true,
   description: true,
   settings: true,
+  avatarUrl: true,
+  chatType: true,
+  inviteLink: true,
+  adminRights: true,
+  messagesCount: true,
+  activeUsers: true,
+  lastActivity: true,
+  isPublic: true,
+  language: true,
+  timezone: true,
+  tags: true,
+  notes: true,
 }).extend({
   name: z.string().min(1, "Название группы обязательно"),
   url: z.string().min(1, "Ссылка на группу обязательна"),
   isAdmin: z.number().min(0).max(1).default(0),
   isActive: z.number().min(0).max(1).default(1),
+  isPublic: z.number().min(0).max(1).default(0),
   settings: z.record(z.any()).default({}),
+  adminRights: z.record(z.any()).default({
+    can_manage_chat: false,
+    can_change_info: false,
+    can_delete_messages: false,
+    can_invite_users: false,
+    can_restrict_members: false,
+    can_pin_messages: false,
+    can_promote_members: false,
+    can_manage_video_chats: false
+  }),
+  language: z.enum(["ru", "en", "es", "fr", "de", "it", "pt", "zh", "ja", "ko"]).default("ru"),
+  chatType: z.enum(["group", "supergroup", "channel"]).default("group"),
+  tags: z.array(z.string()).default([]),
+  messagesCount: z.number().min(0).default(0),
+  activeUsers: z.number().min(0).default(0),
+});
+
+// Схема для участников групп
+export const insertGroupMemberSchema = createInsertSchema(groupMembers).pick({
+  groupId: true,
+  userId: true,
+  username: true,
+  firstName: true,
+  lastName: true,
+  status: true,
+  isBot: true,
+  adminRights: true,
+  customTitle: true,
+  restrictions: true,
+  restrictedUntil: true,
+  joinedAt: true,
+  lastSeen: true,
+  messageCount: true,
+  isActive: true,
+}).extend({
+  userId: z.number().positive("ID пользователя должен быть положительным числом"),
+  status: z.enum(["creator", "administrator", "member", "restricted", "left", "kicked"]).default("member"),
+  isBot: z.number().min(0).max(1).default(0),
+  isActive: z.number().min(0).max(1).default(1),
+  adminRights: z.record(z.any()).default({}),
+  restrictions: z.record(z.any()).default({}),
+  messageCount: z.number().min(0).default(0),
 });
 
 // Схема для оценки шаблона
@@ -320,6 +425,8 @@ export type InsertBotUser = z.infer<typeof insertBotUserSchema>;
 export type BotUser = typeof botUsers.$inferSelect;
 export type InsertBotGroup = z.infer<typeof insertBotGroupSchema>;
 export type BotGroup = typeof botGroups.$inferSelect;
+export type InsertGroupMember = z.infer<typeof insertGroupMemberSchema>;
+export type GroupMember = typeof groupMembers.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({
