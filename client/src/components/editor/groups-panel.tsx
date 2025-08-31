@@ -357,11 +357,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   // Update member permissions mutation
   const updatePermissionsMutation = useMutation({
     mutationFn: async ({ groupId, userId, permissions }: { groupId: string | null; userId: string; permissions: any }) => {
-      return apiRequest('POST', `/api/projects/${projectId}/bot/restrict-member`, {
-        groupId,
-        userId,
-        permissions
-      });
+      try {
+        // Сначала пробуем Bot API
+        return await apiRequest('POST', `/api/projects/${projectId}/bot/restrict-member`, {
+          groupId,
+          userId,
+          permissions
+        });
+      } catch (botApiError: any) {
+        console.log('Bot API failed, trying Client API:', botApiError);
+        // Если Bot API не работает, пробуем Client API
+        return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/restrict-member`, {
+          groupId,
+          userId,
+          untilDate: Math.floor(Date.now() / 1000) + 3600 // 1 час по умолчанию
+        });
+      }
     },
     onSuccess: () => {
       toast({ title: 'Разрешения участника обновлены' });

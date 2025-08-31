@@ -3632,9 +3632,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await response.json();
       
       if (!response.ok) {
+        console.error("Bot API restrict member failed:", result);
         return res.status(400).json({ 
           message: "Failed to restrict member", 
-          error: result.description || "Unknown error"
+          error: result.description || "Unknown error",
+          details: result
         });
       }
 
