@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot } from 'lucide-react';
+import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -220,6 +221,18 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [clientApiMembers, setClientApiMembers] = React.useState<any[]>([]);
   const [showTelegramAuth, setShowTelegramAuth] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
+  const [memberPermissions, setMemberPermissions] = useState({
+    can_send_messages: true,
+    can_send_media_messages: true,
+    can_send_polls: true,
+    can_send_other_messages: true,
+    can_add_web_page_previews: true,
+    can_change_info: false,
+    can_invite_users: false,
+    can_pin_messages: false
+  });
   
   const getAdminsMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
@@ -259,6 +272,111 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
+  // Mute member mutation
+  const muteMemberMutation = useMutation({
+    mutationFn: async ({ groupId, userId, untilDate }: { groupId: string | null; userId: string; untilDate?: number }) => {
+      try {
+        // Сначала пробуем Bot API
+        return await apiRequest('POST', `/api/projects/${projectId}/bot/restrict-member`, {
+          groupId,
+          userId,
+          permissions: {
+            can_send_messages: false,
+            can_send_media_messages: false,
+            can_send_polls: false,
+            can_send_other_messages: false,
+            can_add_web_page_previews: false
+          },
+          untilDate
+        });
+      } catch (botApiError: any) {
+        console.log('Bot API failed, trying Client API:', botApiError);
+        // Если Bot API не работает, пробуем Client API
+        return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/restrict-member`, {
+          groupId,
+          userId,
+          untilDate: untilDate || Math.floor(Date.now() / 1000) + 3600
+        });
+      }
+    },
+    onSuccess: (data: any) => {
+      toast({ 
+        title: 'Пользователь замучен',
+        description: data.message || 'Операция выполнена успешно'
+      });
+      setUserIdToBan('');
+      // Обновляем список участников
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup?.groupId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при муте', 
+        description: error.error || 'Не удалось замутить участника',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Kick member mutation - пробуем сначала Bot API, потом Client API
+  const kickMemberMutation = useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string | null; userId: string }) => {
+      try {
+        // Сначала пробуем Bot API
+        return await apiRequest('POST', `/api/projects/${projectId}/bot/kick-member`, {
+          groupId,
+          userId
+        });
+      } catch (botApiError: any) {
+        console.log('Bot API failed, trying Client API:', botApiError);
+        // Если Bot API не работает, пробуем Client API
+        return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/kick-member`, {
+          groupId,
+          userId
+        });
+      }
+    },
+    onSuccess: (data: any) => {
+      toast({ 
+        title: 'Пользователь исключен из группы',
+        description: data.message || 'Операция выполнена успешно'
+      });
+      // Обновляем список участников
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup?.groupId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при исключении', 
+        description: error.error || 'Не удалось исключить участника',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Update member permissions mutation
+  const updatePermissionsMutation = useMutation({
+    mutationFn: async ({ groupId, userId, permissions }: { groupId: string | null; userId: string; permissions: any }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/restrict-member`, {
+        groupId,
+        userId,
+        permissions
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Разрешения участника обновлены' });
+      setShowPermissionsDialog(false);
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при обновлении разрешений', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
   // Автоматически загружаем администраторов при выборе группы
   React.useEffect(() => {
     if (selectedGroup && showGroupSettings) {
@@ -273,20 +391,37 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [userIdToUnban, setUserIdToUnban] = React.useState('');
   const banMemberMutation = useMutation({
     mutationFn: async ({ groupId, userId, untilDate }: { groupId: string | null; userId: string; untilDate?: number }) => {
-      return apiRequest('POST', `/api/projects/${projectId}/bot/ban-member`, {
-        groupId,
-        userId,
-        untilDate
-      });
+      try {
+        // Сначала пробуем Bot API
+        return await apiRequest('POST', `/api/projects/${projectId}/bot/ban-member`, {
+          groupId,
+          userId,
+          untilDate
+        });
+      } catch (botApiError: any) {
+        console.log('Bot API failed, trying Client API:', botApiError);
+        // Если Bot API не работает, пробуем Client API
+        return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/ban-member`, {
+          groupId,
+          userId,
+          untilDate
+        });
+      }
     },
-    onSuccess: () => {
-      toast({ title: 'Пользователь заблокирован' });
+    onSuccess: (data: any) => {
+      toast({ 
+        title: 'Пользователь заблокирован',
+        description: data.message || 'Операция выполнена успешно'
+      });
       setUserIdToBan('');
+      // Обновляем список участников
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup?.groupId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
     },
     onError: (error: any) => {
       toast({ 
         title: 'Ошибка при блокировке', 
-        description: error.error || 'Проверьте права бота в группе',
+        description: error.error || 'Не удалось заблокировать участника',
         variant: 'destructive' 
       });
     }
@@ -1060,25 +1195,97 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                         )}
                                       </div>
                                       <div>
-                                        <p className="font-medium text-sm">
-                                          {member?.firstName || 'Неизвестно'} {member?.lastName || ''}
-                                          {member?.isBot && <Badge variant="outline" className="ml-2 text-xs">Бот</Badge>}
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                          <p className="font-medium text-sm">
+                                            {member?.firstName || 'Неизвестно'} {member?.lastName || ''}
+                                          </p>
+                                          {member?.isBot && <Badge variant="outline" className="text-xs">Бот</Badge>}
+                                        </div>
                                         <p className="text-xs text-muted-foreground">
                                           @{member?.username || 'Без username'} • ID: {member?.id || 'Неизвестно'}
                                         </p>
                                       </div>
                                     </div>
-                                    <Badge variant={
-                                      member.status === 'creator' ? 'default' : 
-                                      member.status === 'administrator' ? 'secondary' : 
-                                      'outline'
-                                    }>
-                                      {member.status === 'creator' ? 'Создатель' : 
-                                       member.status === 'administrator' ? 'Админ' : 
-                                       member.isBot ? 'Бот' :
-                                       'Участник'}
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant={
+                                        member.status === 'creator' ? 'default' : 
+                                        member.status === 'administrator' ? 'secondary' : 
+                                        'outline'
+                                      }>
+                                        {member.status === 'creator' ? 'Создатель' : 
+                                         member.status === 'administrator' ? 'Админ' : 
+                                         member.isBot ? 'Бот' :
+                                         'Участник'}
+                                      </Badge>
+                                      
+                                      {/* Кнопки управления участником - показываем для всех кроме создателя */}
+                                      {member.status !== 'creator' && (
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                            {/* Показываем разрешения только для обычных пользователей */}
+                                            {!member.isBot && (
+                                              <>
+                                                <DropdownMenuItem 
+                                                  onClick={() => {
+                                                    setSelectedMember(member);
+                                                    setMemberPermissions({
+                                                      can_send_messages: true,
+                                                      can_send_media_messages: true,
+                                                      can_send_polls: true,
+                                                      can_send_other_messages: true,
+                                                      can_add_web_page_previews: true,
+                                                      can_change_info: false,
+                                                      can_invite_users: false,
+                                                      can_pin_messages: false
+                                                    });
+                                                    setShowPermissionsDialog(true);
+                                                  }}
+                                                >
+                                                  <Settings className="h-4 w-4 mr-2" />
+                                                  Разрешения
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                              </>
+                                            )}
+                                            
+                                            {/* Основные действия - для всех кроме создателя */}
+                                            <DropdownMenuItem 
+                                              onClick={() => muteMemberMutation.mutate({ 
+                                                groupId: selectedGroup.groupId, 
+                                                userId: member.id?.toString() || member.user?.id?.toString() 
+                                              })}
+                                            >
+                                              <VolumeX className="h-4 w-4 mr-2" />
+                                              {member.isBot ? 'Отключить бота' : 'Замутить'}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem 
+                                              onClick={() => kickMemberMutation.mutate({ 
+                                                groupId: selectedGroup.groupId, 
+                                                userId: member.id?.toString() || member.user?.id?.toString() 
+                                              })}
+                                            >
+                                              <UserMinus className="h-4 w-4 mr-2" />
+                                              {member.isBot ? 'Удалить бота' : 'Исключить'}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem 
+                                              onClick={() => banMemberMutation.mutate({ 
+                                                groupId: selectedGroup.groupId, 
+                                                userId: member.id?.toString() || member.user?.id?.toString() 
+                                              })}
+                                              className="text-destructive"
+                                            >
+                                              <Ban className="h-4 w-4 mr-2" />
+                                              {member.isBot ? 'Заблокировать бота' : 'Заблокировать'}
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      )}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -1104,9 +1311,79 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                         </p>
                                       </div>
                                     </div>
-                                    <Badge variant={admin.status === 'creator' ? 'default' : 'secondary'}>
-                                      {admin.status === 'creator' ? 'Создатель' : 'Админ'}
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant={admin.status === 'creator' ? 'default' : 'secondary'}>
+                                        {admin.status === 'creator' ? 'Создатель' : 'Админ'}
+                                      </Badge>
+                                      
+                                      {/* Кнопки управления участником - показываем для всех кроме создателя */}
+                                      {admin.status !== 'creator' && (
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                            {/* Показываем разрешения только для обычных пользователей */}
+                                            {!admin.user?.is_bot && !admin.is_bot && (
+                                              <>
+                                                <DropdownMenuItem 
+                                                  onClick={() => {
+                                                    setSelectedMember(admin);
+                                                    setMemberPermissions({
+                                                      can_send_messages: true,
+                                                      can_send_media_messages: true,
+                                                      can_send_polls: true,
+                                                      can_send_other_messages: true,
+                                                      can_add_web_page_previews: true,
+                                                      can_change_info: false,
+                                                      can_invite_users: false,
+                                                      can_pin_messages: false
+                                                    });
+                                                    setShowPermissionsDialog(true);
+                                                  }}
+                                                >
+                                                  <Settings className="h-4 w-4 mr-2" />
+                                                  Разрешения
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                              </>
+                                            )}
+                                            
+                                            {/* Основные действия - для всех кроме создателя */}
+                                            <DropdownMenuItem 
+                                              onClick={() => muteMemberMutation.mutate({ 
+                                                groupId: selectedGroup.groupId, 
+                                                userId: admin?.user?.id?.toString() || admin?.id?.toString() 
+                                              })}
+                                            >
+                                              <VolumeX className="h-4 w-4 mr-2" />
+                                              {admin.user?.is_bot || admin.is_bot ? 'Отключить бота' : 'Замутить'}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem 
+                                              onClick={() => kickMemberMutation.mutate({ 
+                                                groupId: selectedGroup.groupId, 
+                                                userId: admin?.user?.id?.toString() || admin?.id?.toString() 
+                                              })}
+                                            >
+                                              <UserMinus className="h-4 w-4 mr-2" />
+                                              {admin.user?.is_bot || admin.is_bot ? 'Удалить бота' : 'Исключить'}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem 
+                                              onClick={() => banMemberMutation.mutate({ 
+                                                groupId: selectedGroup.groupId, 
+                                                userId: admin?.user?.id?.toString() || admin?.id?.toString() 
+                                              })}
+                                              className="text-destructive"
+                                            >
+                                              <Ban className="h-4 w-4 mr-2" />
+                                              {admin.user?.is_bot || admin.is_bot ? 'Заблокировать бота' : 'Заблокировать'}
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      )}
+                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -1591,6 +1868,89 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             }
           }}
         />
+
+        {/* Диалог управления разрешениями участника */}
+        <Dialog open={showPermissionsDialog} onOpenChange={setShowPermissionsDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Управление разрешениями участника</DialogTitle>
+              <DialogDescription>
+                {selectedMember && (
+                  <span>
+                    Настройте разрешения для {selectedMember.firstName || selectedMember.user?.first_name || 'пользователя'} 
+                    (@{selectedMember.username || selectedMember.user?.username || 'без username'})
+                  </span>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Основные разрешения */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">Основные разрешения</h4>
+                  {Object.entries({
+                    can_send_messages: 'Отправка сообщений',
+                    can_send_media_messages: 'Отправка медиа',
+                    can_send_polls: 'Создание опросов',
+                    can_send_other_messages: 'Стикеры и GIF',
+                    can_add_web_page_previews: 'Предварительный просмотр ссылок'
+                  }).map(([key, label]) => (
+                    <div key={key} className="flex items-center space-x-2">
+                      <Switch
+                        checked={memberPermissions[key as keyof typeof memberPermissions]}
+                        onCheckedChange={(checked) => 
+                          setMemberPermissions(prev => ({ ...prev, [key]: checked }))
+                        }
+                      />
+                      <Label className="text-sm">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Административные разрешения */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-sm">Административные разрешения</h4>
+                  {Object.entries({
+                    can_change_info: 'Изменение информации группы',
+                    can_invite_users: 'Приглашение пользователей',
+                    can_pin_messages: 'Закрепление сообщений'
+                  }).map(([key, label]) => (
+                    <div key={key} className="flex items-center space-x-2">
+                      <Switch
+                        checked={memberPermissions[key as keyof typeof memberPermissions]}
+                        onCheckedChange={(checked) => 
+                          setMemberPermissions(prev => ({ ...prev, [key]: checked }))
+                        }
+                      />
+                      <Label className="text-sm">{label}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowPermissionsDialog(false)}>
+                  Отмена
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (selectedMember) {
+                      updatePermissionsMutation.mutate({
+                        groupId: selectedGroup.groupId,
+                        userId: selectedMember.id?.toString() || selectedMember.user?.id?.toString(),
+                        permissions: memberPermissions
+                      });
+                    }
+                  }}
+                  disabled={updatePermissionsMutation.isPending}
+                >
+                  {updatePermissionsMutation.isPending ? 'Сохранение...' : 'Сохранить разрешения'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

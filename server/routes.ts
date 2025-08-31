@@ -4208,6 +4208,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Client API роуты для управления участниками
+  
+  // Исключить участника через Client API
+  app.post("/api/projects/:projectId/telegram-client/kick-member", async (req, res) => {
+    try {
+      const { groupId, userId } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Group ID и User ID обязательны" 
+        });
+      }
+
+      const result = await telegramClientManager.kickMember('default', groupId, userId);
+      
+      res.json({
+        success: true,
+        message: "Участник успешно исключен через Client API"
+      });
+    } catch (error: any) {
+      console.error("Failed to kick member via Client API:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Ошибка при исключении участника",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+
+  // Заблокировать участника через Client API
+  app.post("/api/projects/:projectId/telegram-client/ban-member", async (req, res) => {
+    try {
+      const { groupId, userId, untilDate } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Group ID и User ID обязательны" 
+        });
+      }
+
+      const result = await telegramClientManager.banMember('default', groupId, userId, untilDate);
+      
+      res.json({
+        success: true,
+        message: "Участник успешно заблокирован через Client API"
+      });
+    } catch (error: any) {
+      console.error("Failed to ban member via Client API:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Ошибка при блокировке участника",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+
+  // Замутить участника через Client API
+  app.post("/api/projects/:projectId/telegram-client/restrict-member", async (req, res) => {
+    try {
+      const { groupId, userId, untilDate } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Group ID и User ID обязательны" 
+        });
+      }
+
+      const result = await telegramClientManager.restrictMember('default', groupId, userId, untilDate);
+      
+      res.json({
+        success: true,
+        message: "Участник успешно замучен через Client API"
+      });
+    } catch (error: any) {
+      console.error("Failed to restrict member via Client API:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Ошибка при заглушении участника",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+
   // Force update templates - Admin endpoint to refresh all system templates
   app.post("/api/templates/refresh", async (req, res) => {
     try {

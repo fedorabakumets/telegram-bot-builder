@@ -256,8 +256,8 @@ class TelegramClientManager {
         
         // Если ID начинается с -100, это супергруппа
         if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = BigInt(chatId.slice(4));
-          chatEntity = new Api.PeerChannel({ channelId });
+          const channelId = chatId.slice(4);
+          chatEntity = new Api.PeerChannel({ channelId: BigInt(channelId) });
         } else {
           throw new Error(`Не удалось найти чат с ID: ${chatId}`);
         }
@@ -405,6 +405,171 @@ class TelegramClientManager {
     } catch (error: any) {
       console.error('Failed to set chat photo:', error);
       throw new Error(`Failed to set chat photo: ${error.message || 'Unknown error'}`);
+    }
+  }
+
+  // Исключить участника из группы через Client API
+  async kickMember(userId: string, chatId: string | number, memberId: string): Promise<any> {
+    const client = await this.getClient(userId);
+    if (!client) {
+      throw new Error('Telegram client not found. Please authenticate first.');
+    }
+
+    try {
+      // Получаем сущность чата
+      let chatEntity: any;
+      try {
+        chatEntity = await client.getEntity(chatId);
+      } catch (entityError) {
+        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
+          const channelId = BigInt(chatId.slice(4));
+          chatEntity = new Api.PeerChannel({ channelId });
+        } else {
+          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
+        }
+      }
+
+      // Получаем сущность пользователя
+      const userEntity = await client.getEntity(parseInt(memberId));
+
+      // Исключаем участника
+      const result = await client.invoke(
+        new Api.channels.EditBanned({
+          channel: chatEntity,
+          participant: userEntity,
+          bannedRights: new Api.ChatBannedRights({
+            untilDate: Math.floor(Date.now() / 1000) + 60, // Бан на 60 секунд (фактически исключение)
+            viewMessages: true,
+            sendMessages: true,
+            sendMedia: true,
+            sendStickers: true,
+            sendGifs: true,
+            sendGames: true,
+            sendInline: true,
+            embedLinks: true,
+            sendPolls: true,
+            changeInfo: true,
+            inviteUsers: true,
+            pinMessages: true,
+            manageTopics: true,
+          }),
+        })
+      );
+
+      return result;
+    } catch (error: any) {
+      console.error('Failed to kick member:', error);
+      throw new Error(`Failed to kick member: ${error.message || 'Unknown error'}`);
+    }
+  }
+
+  // Заблокировать участника через Client API
+  async banMember(userId: string, chatId: string | number, memberId: string, untilDate?: number): Promise<any> {
+    const client = await this.getClient(userId);
+    if (!client) {
+      throw new Error('Telegram client not found. Please authenticate first.');
+    }
+
+    try {
+      // Получаем сущность чата
+      let chatEntity: any;
+      try {
+        chatEntity = await client.getEntity(chatId);
+      } catch (entityError) {
+        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
+          const channelId = BigInt(chatId.slice(4));
+          chatEntity = new Api.PeerChannel({ channelId });
+        } else {
+          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
+        }
+      }
+
+      // Получаем сущность пользователя
+      const userEntity = await client.getEntity(parseInt(memberId));
+
+      // Блокируем участника
+      const result = await client.invoke(
+        new Api.channels.EditBanned({
+          channel: chatEntity,
+          participant: userEntity,
+          bannedRights: new Api.ChatBannedRights({
+            untilDate: untilDate || 0, // 0 = навсегда
+            viewMessages: true,
+            sendMessages: true,
+            sendMedia: true,
+            sendStickers: true,
+            sendGifs: true,
+            sendGames: true,
+            sendInline: true,
+            embedLinks: true,
+            sendPolls: true,
+            changeInfo: true,
+            inviteUsers: true,
+            pinMessages: true,
+            manageTopics: true,
+          }),
+        })
+      );
+
+      return result;
+    } catch (error: any) {
+      console.error('Failed to ban member:', error);
+      throw new Error(`Failed to ban member: ${error.message || 'Unknown error'}`);
+    }
+  }
+
+  // Ограничить участника (мут) через Client API
+  async restrictMember(userId: string, chatId: string | number, memberId: string, untilDate?: number): Promise<any> {
+    const client = await this.getClient(userId);
+    if (!client) {
+      throw new Error('Telegram client not found. Please authenticate first.');
+    }
+
+    try {
+      // Получаем сущность чата
+      let chatEntity: any;
+      try {
+        chatEntity = await client.getEntity(chatId);
+      } catch (entityError) {
+        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
+          const channelId = BigInt(chatId.slice(4));
+          chatEntity = new Api.PeerChannel({ channelId });
+        } else {
+          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
+        }
+      }
+
+      // Получаем сущность пользователя
+      const userEntity = await client.getEntity(parseInt(memberId));
+
+      // Ограничиваем участника
+      const result = await client.invoke(
+        new Api.channels.EditBanned({
+          channel: chatEntity,
+          participant: userEntity,
+          bannedRights: new Api.ChatBannedRights({
+            untilDate: untilDate || Math.floor(Date.now() / 1000) + 3600, // По умолчанию на 1 час
+            viewMessages: false, // Может видеть сообщения
+            sendMessages: true,  // Не может писать
+            sendMedia: true,
+            sendStickers: true,
+            sendGifs: true,
+            sendGames: true,
+            sendInline: true,
+            embedLinks: true,
+            sendPolls: true,
+            changeInfo: true,
+            inviteUsers: true,
+            pinMessages: true,
+            manageTopics: true,
+          }),
+        })
+      );
+
+      return result;
+    } catch (error: any) {
+      console.error('Failed to restrict member:', error);
+      throw new Error(`Failed to restrict member: ${error.message || 'Unknown error'}`);
     }
   }
 }
