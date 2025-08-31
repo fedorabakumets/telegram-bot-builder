@@ -1228,7 +1228,7 @@ export default function Editor() {
       <SaveTemplateModal
         isOpen={showSaveTemplate}
         onClose={() => setShowSaveTemplate(false)}
-        botData={getBotData()}
+        botData={botDataWithSheets || getBotData()}
         projectName={currentProject.name}
       />
 
