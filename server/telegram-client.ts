@@ -154,10 +154,16 @@ class TelegramClientManager {
       // Получаем данные для 2FA аутентификации
       const passwordInfo = await client.invoke(new Api.account.GetPassword());
       
+      // Импортируем необходимые модули для работы с SRP
+      const { computeCheck } = await import('telegram/Password');
+      
+      // Вычисляем правильный хеш пароля
+      const passwordCheck = await computeCheck(passwordInfo, password);
+      
       // Используем прямой API вызов для проверки пароля
       const result = await client.invoke(
         new Api.auth.CheckPassword({
-          password: password as any // Упрощённый подход - передаём пароль напрямую
+          password: passwordCheck
         })
       );
 
