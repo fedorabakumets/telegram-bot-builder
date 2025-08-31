@@ -196,6 +196,18 @@ export class SheetsManager {
     };
   }
 
+  // Обновление узлов и соединений в листе одновременно
+  static updateSheetData(data: BotDataWithSheets, sheetId: string, nodes: Node[], connections: Connection[]): BotDataWithSheets {
+    return {
+      ...data,
+      sheets: data.sheets.map(sheet => 
+        sheet.id === sheetId 
+          ? { ...sheet, nodes, connections, updatedAt: new Date() }
+          : sheet
+      )
+    };
+  }
+
   // Обновление состояния вида листа (зум, панорамирование)
   static updateSheetViewState(data: BotDataWithSheets, sheetId: string, viewState: { pan: { x: number; y: number }; zoom: number }): BotDataWithSheets {
     return {

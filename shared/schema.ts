@@ -442,6 +442,10 @@ export const connectionSchema = z.object({
   target: z.string(),
   sourceHandle: z.string().optional(),
   targetHandle: z.string().optional(),
+  // Поддержка межлистовых соединений
+  sourceSheetId: z.string().optional(), // ID листа источника (если не указан, то текущий лист)
+  targetSheetId: z.string().optional(), // ID листа назначения (если не указан, то текущий лист)
+  isInterSheet: z.boolean().default(false), // Флаг межлистового соединения
 });
 
 // Схема для состояния вида листа (позиция и масштаб)

@@ -22,6 +22,9 @@ export interface ConnectionManagerState {
   nodes: Node[];
   pendingConnections: ConnectionSuggestion[];
   autoButtonCreation: boolean;
+  // Добавляем поддержку листов
+  sheets?: any[]; // Массив всех листов для межлистовых соединений
+  currentSheetId?: string; // ID текущего активного листа
 }
 
 export class ConnectionManager {
@@ -42,24 +45,43 @@ export class ConnectionManager {
     this.state = { ...this.state, ...newState };
   }
 
-  // Основной метод для создания связи
+  // Основной метод для создания связи (поддерживает межлистовые соединения)
   createConnection(sourceId: string, targetId: string, options: {
     autoCreateButton?: boolean;
     buttonText?: string;
     buttonAction?: 'goto' | 'command' | 'url';
+    targetSheetId?: string; // ID целевого листа для межлистового соединения
   } = {}): { connection: Connection; updatedNodes: Node[] } {
     const sourceNode = this.state.nodes.find(n => n.id === sourceId);
-    const targetNode = this.state.nodes.find(n => n.id === targetId);
-
-    if (!sourceNode || !targetNode) {
-      throw new Error('Исходный или целевой узел не найден');
+    let targetNode = this.state.nodes.find(n => n.id === targetId);
+    
+    // Если узел не найден в текущем листе, ищем в других листах
+    if (!targetNode && options.targetSheetId && this.state.sheets) {
+      const targetSheet = this.state.sheets.find((sheet: any) => sheet.id === options.targetSheetId);
+      if (targetSheet) {
+        targetNode = targetSheet.nodes?.find((n: any) => n.id === targetId);
+      }
     }
+
+    if (!sourceNode) {
+      throw new Error('Исходный узел не найден');
+    }
+    
+    if (!targetNode) {
+      throw new Error('Целевой узел не найден');
+    }
+
+    // Определяем, является ли соединение межлистовым
+    const isInterSheet = options.targetSheetId && options.targetSheetId !== this.state.currentSheetId;
 
     // Создаем соединение
     const connection: Connection = {
       id: nanoid(),
       source: sourceId,
-      target: targetId
+      target: targetId,
+      sourceSheetId: this.state.currentSheetId,
+      targetSheetId: options.targetSheetId || this.state.currentSheetId,
+      isInterSheet: isInterSheet || false
     };
 
     // Если включено автоматическое создание кнопок
@@ -74,17 +96,47 @@ export class ConnectionManager {
     return { connection, updatedNodes };
   }
 
-  // Создание кнопки для соединения
+  // Получение всех узлов из всех листов для межлистовых соединений
+  getAllNodesFromAllSheets(): { node: Node; sheetId: string; sheetName: string }[] {
+    const allNodes: { node: Node; sheetId: string; sheetName: string }[] = [];
+    
+    if (this.state.sheets) {
+      this.state.sheets.forEach((sheet: any) => {
+        if (sheet.nodes) {
+          sheet.nodes.forEach((node: Node) => {
+            allNodes.push({
+              node,
+              sheetId: sheet.id,
+              sheetName: sheet.name
+            });
+          });
+        }
+      });
+    }
+    
+    return allNodes;
+  }
+
+  // Создание кнопки для соединения (поддерживает межлистовые соединения)
   private createButtonForConnection(
     sourceNode: Node,
     targetNode: Node,
     options: {
       buttonText?: string;
       buttonAction?: 'goto' | 'command' | 'url';
+      targetSheetId?: string;
     } = {}
   ): Button {
     const action = options.buttonAction || this.determineButtonAction(targetNode);
-    const text = options.buttonText || this.generateButtonText(targetNode, action);
+    let text = options.buttonText || this.generateButtonText(targetNode, action);
+    
+    // Если это межлистовое соединение, добавляем индикатор листа
+    if (options.targetSheetId && options.targetSheetId !== this.state.currentSheetId) {
+      const targetSheet = this.state.sheets?.find((sheet: any) => sheet.id === options.targetSheetId);
+      if (targetSheet) {
+        text += ` 📋 (${targetSheet.name})`;
+      }
+    }
 
     return {
       id: nanoid(),

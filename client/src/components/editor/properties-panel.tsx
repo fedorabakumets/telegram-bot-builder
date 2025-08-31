@@ -88,6 +88,9 @@ interface PropertiesPanelProps {
   onButtonAdd: (nodeId: string, button: Button) => void;
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
   onButtonDelete: (nodeId: string, buttonId: string) => void;
+  // Поддержка межлистовых соединений
+  allSheets?: any[];
+  currentSheetId?: string;
 }
 
 export function PropertiesPanel({ 
@@ -97,12 +100,44 @@ export function PropertiesPanel({
   onNodeUpdate, 
   onButtonAdd, 
   onButtonUpdate, 
-  onButtonDelete 
+  onButtonDelete,
+  allSheets = [],
+  currentSheetId
 }: PropertiesPanelProps) {
   const { toast } = useToast();
   const [commandInput, setCommandInput] = useState('');
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
   const [urlValidation, setUrlValidation] = useState<{[key: string]: { isValid: boolean; message?: string }}>({});
+
+  // Функция для получения всех узлов из всех листов для межлистовых соединений
+  const getAllNodesFromAllSheets = useMemo(() => {
+    const allNodesFromSheets: { node: Node; sheetId: string; sheetName: string }[] = [];
+    
+    if (allSheets && allSheets.length > 0) {
+      allSheets.forEach((sheet: any) => {
+        if (sheet.nodes) {
+          sheet.nodes.forEach((node: Node) => {
+            allNodesFromSheets.push({
+              node,
+              sheetId: sheet.id,
+              sheetName: sheet.name
+            });
+          });
+        }
+      });
+    } else {
+      // Если листы не переданы, используем только узлы текущего листа
+      allNodes.forEach((node: Node) => {
+        allNodesFromSheets.push({
+          node,
+          sheetId: currentSheetId || 'current',
+          sheetName: 'Текущий лист'
+        });
+      });
+    }
+    
+    return allNodesFromSheets;
+  }, [allSheets, allNodes, currentSheetId]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   // URL validation function
@@ -3276,22 +3311,27 @@ export function PropertiesPanel({
                       <SelectValue placeholder="Выберите следующий шаг" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* Команды */}
-                      {allNodes
-                        .filter(node => node.id !== selectedNode.id && (node.type === 'start' || node.type === 'command'))
-                        .map((node) => (
-                          <SelectItem key={node.id} value={node.id}>
+                      {/* Команды из всех листов */}
+                      {getAllNodesFromAllSheets
+                        .filter(({ node }) => node.id !== selectedNode.id && (node.type === 'start' || node.type === 'command'))
+                        .map(({ node, sheetId, sheetName }) => (
+                          <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
                             <div className="flex items-center gap-2">
                               <i className="fas fa-terminal text-xs text-purple-500"></i>
-                              <span>{node.data.command} ({node.id})</span>
+                              <span>{node.data.command}</span>
+                              {sheetId !== currentSheetId && (
+                                <span className="text-xs text-muted-foreground bg-purple-100 dark:bg-purple-900/30 px-1 rounded">
+                                  📋 {sheetName}
+                                </span>
+                              )}
                             </div>
                           </SelectItem>
                         ))}
                       
-                      {/* Другие узлы */}
-                      {allNodes
-                        .filter(node => node.id !== selectedNode.id && node.type !== 'start' && node.type !== 'command')
-                        .map((node) => {
+                      {/* Другие узлы из всех листов */}
+                      {getAllNodesFromAllSheets
+                        .filter(({ node }) => node.id !== selectedNode.id && node.type !== 'start' && node.type !== 'command')
+                        .map(({ node, sheetId, sheetName }) => {
                           const nodeName = 
                             node.type === 'message' ? 'Сообщение' :
                             node.type === 'photo' ? 'Фото' :
@@ -3325,16 +3365,21 @@ export function PropertiesPanel({
                             node.type === 'animation' ? 'fas fa-play-circle text-purple-500' : 'fas fa-cube text-purple-500';
                           
                           return (
-                            <SelectItem key={node.id} value={node.id}>
+                            <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
                               <div className="flex items-center gap-2">
                                 <i className={`${iconClass} text-xs`}></i>
-                                <span>{nodeName} ({node.id})</span>
+                                <span>{nodeName}</span>
+                                {sheetId !== currentSheetId && (
+                                  <span className="text-xs text-muted-foreground bg-purple-100 dark:bg-purple-900/30 px-1 rounded">
+                                    📋 {sheetName}
+                                  </span>
+                                )}
                               </div>
                             </SelectItem>
                           );
                         })}
                       
-                      {(!allNodes || allNodes.filter(node => node.id !== selectedNode.id).length === 0) && (
+                      {(!getAllNodesFromAllSheets || getAllNodesFromAllSheets.filter(({ node }) => node.id !== selectedNode.id).length === 0) && (
                         <SelectItem value="no-nodes" disabled>
                           Создайте другие части бота для выбора
                         </SelectItem>

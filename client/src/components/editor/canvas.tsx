@@ -114,15 +114,40 @@ export function Canvas({
   // Обработчики для работы с листами
   const handleSheetSelect = useCallback((sheetId: string) => {
     if (!botData || !onBotDataUpdate) return;
-    const updatedData = SheetsManager.setActiveSheet(botData, sheetId);
+    
+    // ВАЖНО: Сначала сохраняем текущее состояние редактора в активный лист
+    let dataWithCurrentSheetSaved = botData;
+    if (botData.activeSheetId) {
+      dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
+        botData, 
+        botData.activeSheetId, 
+        nodes, 
+        connections
+      );
+    }
+    
+    // Затем переключаемся на новый лист
+    const updatedData = SheetsManager.setActiveSheet(dataWithCurrentSheetSaved, sheetId);
     onBotDataUpdate(updatedData);
-  }, [botData, onBotDataUpdate]);
+  }, [botData, onBotDataUpdate, nodes, connections]);
 
   const handleSheetAdd = useCallback((name: string) => {
     if (!botData || !onBotDataUpdate) return;
-    const updatedData = SheetsManager.addSheet(botData, name);
+    
+    // Сохраняем текущее состояние перед добавлением нового листа
+    let dataWithCurrentSheetSaved = botData;
+    if (botData.activeSheetId) {
+      dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
+        botData, 
+        botData.activeSheetId, 
+        nodes, 
+        connections
+      );
+    }
+    
+    const updatedData = SheetsManager.addSheet(dataWithCurrentSheetSaved, name);
     onBotDataUpdate(updatedData);
-  }, [botData, onBotDataUpdate]);
+  }, [botData, onBotDataUpdate, nodes, connections]);
 
   const handleSheetDelete = useCallback((sheetId: string) => {
     if (!botData || !onBotDataUpdate) return;
@@ -143,12 +168,23 @@ export function Canvas({
   const handleSheetDuplicate = useCallback((sheetId: string) => {
     if (!botData || !onBotDataUpdate) return;
     try {
-      const updatedData = SheetsManager.duplicateSheetInProject(botData, sheetId);
+      // Сохраняем текущее состояние перед дублированием
+      let dataWithCurrentSheetSaved = botData;
+      if (botData.activeSheetId) {
+        dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
+          botData, 
+          botData.activeSheetId, 
+          nodes, 
+          connections
+        );
+      }
+      
+      const updatedData = SheetsManager.duplicateSheetInProject(dataWithCurrentSheetSaved, sheetId);
       onBotDataUpdate(updatedData);
     } catch (error) {
       console.error('Ошибка дублирования листа:', error);
     }
-  }, [botData, onBotDataUpdate]);
+  }, [botData, onBotDataUpdate, nodes, connections]);
 
   // Zoom utility functions
   const zoomIn = useCallback(() => {
