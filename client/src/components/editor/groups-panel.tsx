@@ -291,17 +291,29 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
         setGroupName(data.title);
       }
       
-      // Генерируем ссылку автоматически
+      // Генерируем ссылку автоматически и определяем публичность
       let generatedUrl = '';
+      let isGroupPublic = false;
+      
       if (data.username) {
+        // Группа публичная, есть username
         generatedUrl = `https://t.me/${data.username}`;
+        isGroupPublic = true;
         setGroupUrl(generatedUrl);
+        setIsPublicGroup(true);
+        setPublicUsername(`@${data.username}`);
       } else if (data.invite_link) {
+        // Группа приватная, есть только invite link
         generatedUrl = data.invite_link;
+        isGroupPublic = false;
         setGroupUrl(generatedUrl);
+        setIsPublicGroup(false);
+        setPublicUsername('');
       } else {
         // Для числовых ID не создаем публичную ссылку
         setGroupUrl('');
+        setIsPublicGroup(false);
+        setPublicUsername('');
       }
       
       // Устанавливаем статус администратора
@@ -315,6 +327,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           name: data.title,
           url: generatedUrl,
           isAdmin: data.isAdmin ? 1 : 0,
+          isPublic: isGroupPublic ? 1 : 0,
           chatType: data.type || 'group'
         };
         
@@ -726,6 +739,35 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
         description: error.error || 'Проверьте права бота в группе',
         variant: 'destructive' 
       });
+    }
+  });
+
+  const setGroupUsernameMutation = useMutation({
+    mutationFn: async ({ groupId, username }: { groupId: string | null; username: string }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/set-group-username`, {
+        groupId,
+        username
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Username группы изменен в Telegram' });
+      // Обновляем данные группы
+      refetch();
+    },
+    onError: (error: any) => {
+      if (error.requiresClientApi) {
+        toast({ 
+          title: 'Требуется авторизация Telegram', 
+          description: 'Для изменения username нужен доступ через Telegram Client API',
+          variant: 'destructive' 
+        });
+      } else {
+        toast({ 
+          title: 'Ошибка при изменении username', 
+          description: error.error || 'Проверьте права в группе',
+          variant: 'destructive' 
+        });
+      }
     }
   });
 
@@ -2182,6 +2224,25 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     } else if (!isPublicGroup && selectedGroup.inviteLink) {
                       // Для приватных групп используем приватную ссылку-приглашение
                       finalUrl = selectedGroup.inviteLink;
+                    }
+                    
+                    // Если изменяется публичность группы, сначала изменяем в Telegram
+                    const wasPublic = Boolean(selectedGroup.isPublic);
+                    const willBePublic = isPublicGroup;
+                    
+                    if (wasPublic !== willBePublic) {
+                      // Изменяем username в Telegram перед сохранением в базе
+                      let usernameToSet = '';
+                      if (willBePublic && publicUsername.trim()) {
+                        const cleanUsername = publicUsername.trim().replace('@', '').replace('t.me/', '').replace('https://', '').replace('http://', '');
+                        usernameToSet = cleanUsername;
+                      }
+                      
+                      // Вызываем API для изменения username в Telegram
+                      setGroupUsernameMutation.mutate({
+                        groupId: selectedGroup.groupId,
+                        username: usernameToSet
+                      });
                     }
                     
                     updateGroupMutation.mutate({

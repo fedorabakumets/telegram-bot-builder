@@ -485,6 +485,46 @@ class TelegramClientManager {
     return null;
   }
 
+  async setChatUsername(userId: string, chatId: string | number, username: string): Promise<any> {
+    const client = await this.getClient(userId);
+    if (!client) {
+      throw new Error('Telegram client not found. Please authenticate first.');
+    }
+
+    const authStatus = await this.getAuthStatus(userId);
+    if (!authStatus.isAuthenticated) {
+      throw new Error('User not authenticated. Please complete phone verification first.');
+    }
+
+    try {
+      // Получаем сущность чата
+      let chatEntity: any;
+      try {
+        chatEntity = await client.getEntity(chatId);
+      } catch (entityError) {
+        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
+          const channelId = BigInt(chatId.slice(4));
+          chatEntity = new Api.PeerChannel({ channelId });
+        } else {
+          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
+        }
+      }
+
+      // Устанавливаем username чата (делаем публичным или приватным)
+      const result = await client.invoke(
+        new Api.channels.UpdateUsername({
+          channel: chatEntity,
+          username: username || '', // Пустая строка делает группу приватной
+        })
+      );
+
+      return result;
+    } catch (error: any) {
+      console.error('Failed to set chat username:', error);
+      throw new Error(`Failed to set chat username: ${error.message || 'Unknown error'}`);
+    }
+  }
+
   async setChatPhoto(userId: string, chatId: string | number, photoPath: string): Promise<any> {
     const client = await this.getClient(userId);
     if (!client) {

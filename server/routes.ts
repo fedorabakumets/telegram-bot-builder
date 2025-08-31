@@ -3873,6 +3873,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Set group username (make public/private)
+  app.post("/api/projects/:projectId/bot/set-group-username", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, username } = req.body;
+      
+      if (!groupId) {
+        return res.status(400).json({ message: "Group ID is required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      // Для установки username нужны права создателя или админа, используем Client API если доступен
+      try {
+        // Проверяем есть ли Telegram Client API доступ
+        const clientManager = telegramClientManager;
+        if (clientManager) {
+          // Пытаемся использовать Client API для установки username
+          const result = await clientManager.setChatUsername('default', groupId, username);
+          
+          res.json({ 
+            success: true, 
+            message: username ? "Group username set successfully" : "Group made private successfully",
+            result 
+          });
+          return;
+        }
+      } catch (clientError) {
+        console.log("Client API не доступен, используем Bot API:", clientError);
+      }
+
+      // Fallback: используем Bot API (ограниченная функциональность)
+      // Bot API не может изменять username, только создатель через Client API
+      return res.status(400).json({ 
+        message: "Setting group username requires creator/admin privileges. Please use Telegram Client API authorization.",
+        requiresClientApi: true
+      });
+
+    } catch (error) {
+      console.error("Failed to set group username:", error);
+      res.status(500).json({ message: "Failed to set group username" });
+    }
+  });
+
   // Pin message in group
   app.post("/api/projects/:projectId/bot/pin-message", async (req, res) => {
     try {
