@@ -3346,28 +3346,6 @@ async function seedDefaultTemplates(force = false) {
             name: "👤 Основная информация",
             nodes: [
               {
-                id: "basic_info_start",
-                type: "message",
-                position: { x: 400, y: 100 },
-                data: {
-                  messageText: "👤 Расскажи о себе!\n\nДавай познакомимся ближе. Начнем с базовой информации.",
-                  synonyms: [],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-continue-basic",
-                      text: "Продолжить ➡️",
-                      action: "goto",
-                      target: "gender_selection",
-                      buttonType: "normal"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              },
-              {
                 id: "gender_selection",
                 type: "message",
                 position: { x: 400, y: 300 },
@@ -3427,33 +3405,11 @@ async function seedDefaultTemplates(force = false) {
                   enableTextInput: true,
                   inputVariable: "user_age",
                   synonyms: ["возраст", "лет", "годы", "сколько лет"],
-                  inputTargetNodeId: "basic_info_complete",
+                  inputTargetNodeId: "metro_selection",
                   buttons: [],
                   markdown: false
                 }
               },
-              {
-                id: "basic_info_complete",
-                type: "message",
-                position: { x: 400, y: 900 },
-                data: {
-                  messageText: "✅ Отлично! Основная информация собрана.\n\nТеперь давай узнаем, где ты обычно бываешь в городе.",
-                  synonyms: [],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-to-metro",
-                      text: "Указать метро 🚇",
-                      action: "goto",
-                      target: "metro_start",
-                      buttonType: "normal"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              }
             ]
           },
 
@@ -3462,28 +3418,6 @@ async function seedDefaultTemplates(force = false) {
             id: "metro_sheet",
             name: "🚇 Метро и местоположение",
             nodes: [
-              {
-                id: "metro_start",
-                type: "message",
-                position: { x: 400, y: 100 },
-                data: {
-                  messageText: "🚇 Расскажи о своем местоположении!\n\nЭто поможет найти людей поблизости.",
-                  synonyms: [],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-continue-metro",
-                      text: "Продолжить ➡️",
-                      action: "goto",
-                      target: "metro_selection",
-                      buttonType: "normal"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              },
               {
                 id: "metro_selection",
                 type: "message",
@@ -3540,7 +3474,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "Я из ЛО 🏡",
                       value: "ЛО",
                       action: "goto",
-                      target: "metro_complete",
+                      target: "interests_categories",
                       buttonType: "option"
                     },
                     {
@@ -3548,7 +3482,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "Я не в Питере 🌍",
                       value: "Не в СПб",
                       action: "goto",
-                      target: "metro_complete",
+                      target: "interests_categories",
                       buttonType: "option"
                     }
                   ],
@@ -3567,7 +3501,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "metro_stations",
-                  continueButtonTarget: "metro_complete",
+                  continueButtonTarget: "interests_categories",
                   buttons: [
                     { id: "red-devyatkino", text: "🟥 Девяткино", action: "selection", target: "devyatkino", buttonType: "option" },
                     { id: "red-grazhdansky", text: "🟥 Гражданский проспект", action: "selection", target: "grazhdansky", buttonType: "option" },
@@ -3603,7 +3537,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "metro_stations",
-                  continueButtonTarget: "metro_complete",
+                  continueButtonTarget: "interests_categories",
                   buttons: [
                     { id: "blue-parnas", text: "🟦 Парнас", action: "selection", target: "parnas", buttonType: "option" },
                     { id: "blue-prosp-prosvesh", text: "🟦 Проспект Просвещения", action: "selection", target: "prosp_prosvesh", buttonType: "option" },
@@ -3638,7 +3572,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "metro_stations",
-                  continueButtonTarget: "metro_complete",
+                  continueButtonTarget: "interests_categories",
                   buttons: [
                     { id: "green-primorskaya", text: "🟩 Приморская", action: "selection", target: "primorskaya", buttonType: "option" },
                     { id: "green-vasileostr", text: "🟩 Василеостровская", action: "selection", target: "vasileostr", buttonType: "option" },
@@ -3667,7 +3601,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "metro_stations",
-                  continueButtonTarget: "metro_complete",
+                  continueButtonTarget: "interests_categories",
                   buttons: [
                     { id: "orange-spasskaya", text: "🟧 Спасская", action: "selection", target: "spasskaya", buttonType: "option" },
                     { id: "orange-dostoevskaya", text: "🟧 Достоевская", action: "selection", target: "dostoevskaya", buttonType: "option" },
@@ -3693,7 +3627,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "metro_stations",
-                  continueButtonTarget: "metro_complete",
+                  continueButtonTarget: "interests_categories",
                   buttons: [
                     { id: "purple-komendantsky", text: "🟪 Комендантский проспект", action: "selection", target: "komendantsky", buttonType: "option" },
                     { id: "purple-staraya", text: "🟪 Старая Деревня", action: "selection", target: "staraya", buttonType: "option" },
@@ -3712,28 +3646,6 @@ async function seedDefaultTemplates(force = false) {
                   markdown: false
                 }
               },
-              {
-                id: "metro_complete",
-                type: "message",
-                position: { x: 400, y: 900 },
-                data: {
-                  messageText: "✅ Отлично! Местоположение указано.\n\nТеперь расскажи о своих интересах!",
-                  synonyms: [],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-to-interests",
-                      text: "К интересам 🎯",
-                      action: "goto",
-                      target: "interests_start",
-                      buttonType: "normal"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              }
             ]
           },
 
@@ -3742,28 +3654,6 @@ async function seedDefaultTemplates(force = false) {
             id: "interests_sheet",
             name: "🎯 Интересы",
             nodes: [
-              {
-                id: "interests_start",
-                type: "message",
-                position: { x: 400, y: 100 },
-                data: {
-                  messageText: "🎯 Расскажи о своих интересах!\n\nВыбери категории, которые тебе близки. Можно выбрать несколько!",
-                  synonyms: [],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-continue-interests",
-                      text: "Продолжить ➡️",
-                      action: "goto",
-                      target: "interests_categories",
-                      buttonType: "normal"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              },
               {
                 id: "interests_categories",
                 type: "message",
@@ -3774,7 +3664,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "interests_categories",
-                  continueButtonTarget: "interests_complete",
+                  continueButtonTarget: "marital_status",
                   buttons: [
                     {
                       id: "btn-music",
@@ -4007,28 +3897,6 @@ async function seedDefaultTemplates(force = false) {
                   markdown: false
                 }
               },
-              {
-                id: "interests_complete",
-                type: "message",
-                position: { x: 400, y: 900 },
-                data: {
-                  messageText: "✅ Интересы указаны!\n\nТеперь немного личной информации.",
-                  synonyms: [],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-to-personal",
-                      text: "К личной информации 💝",
-                      action: "goto",
-                      target: "personal_start",
-                      buttonType: "normal"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              }
             ]
           },
 
@@ -4037,28 +3905,6 @@ async function seedDefaultTemplates(force = false) {
             id: "personal_sheet",
             name: "💝 Личная информация",
             nodes: [
-              {
-                id: "personal_start",
-                type: "message",
-                position: { x: 400, y: 100 },
-                data: {
-                  messageText: "💝 Личная информация\n\nРасскажи немного о себе для лучшего подбора собеседников.",
-                  synonyms: [],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-continue-personal",
-                      text: "Продолжить ➡️",
-                      action: "goto",
-                      target: "marital_status",
-                      buttonType: "normal"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              },
               {
                 id: "marital_status",
                 type: "message",
@@ -4202,63 +4048,11 @@ async function seedDefaultTemplates(force = false) {
                   enableTextInput: true,
                   inputVariable: "extra_info",
                   synonyms: ["о себе", "дополнительно", "больше", "еще"],
-                  inputTargetNodeId: "personal_complete",
+                  inputTargetNodeId: "profile_complete",
                   buttons: [
                     {
                       id: "btn-skip-extra",
                       text: "Пропустить ⏭️",
-                      action: "goto",
-                      target: "personal_complete",
-                      buttonType: "normal"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              },
-              {
-                id: "personal_complete",
-                type: "message",
-                position: { x: 400, y: 1100 },
-                data: {
-                  messageText: "✅ Личная информация собрана!\n\nТеперь посмотрим на твой профиль.",
-                  synonyms: [],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-to-profile",
-                      text: "Смотреть профиль 👤",
-                      action: "goto",
-                      target: "profile_start",
-                      buttonType: "normal"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              }
-            ]
-          },
-
-          // Лист 6: Профиль и команды
-          {
-            id: "profile_sheet",
-            name: "👤 Профиль",
-            nodes: [
-              {
-                id: "profile_start",
-                type: "message",
-                position: { x: 400, y: 100 },
-                data: {
-                  messageText: "👤 Твой профиль готов!\n\nТеперь ты можешь просматривать и редактировать свою анкету.",
-                  synonyms: [],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-show-profile",
-                      text: "Показать профиль 📋",
                       action: "goto",
                       target: "profile_complete",
                       buttonType: "normal"
@@ -4269,6 +4063,14 @@ async function seedDefaultTemplates(force = false) {
                   resizeKeyboard: true
                 }
               },
+            ]
+          },
+
+          // Лист 6: Профиль и команды
+          {
+            id: "profile_sheet",
+            name: "👤 Профиль",
+            nodes: [
               {
                 id: "profile_complete",
                 type: "message",
@@ -4426,7 +4228,7 @@ async function seedDefaultTemplates(force = false) {
             sourceSheetId: "welcome_sheet",
             targetSheetId: "basic_info_sheet",
             sourceNodeId: "join_request",
-            targetNodeId: "basic_info_start",
+            targetNodeId: "gender_selection",
             sourceHandle: "btn-yes",
             targetHandle: "target"
           },
@@ -4435,9 +4237,9 @@ async function seedDefaultTemplates(force = false) {
             id: "inter-basic-metro",
             sourceSheetId: "basic_info_sheet",
             targetSheetId: "metro_sheet",
-            sourceNodeId: "basic_info_complete",
-            targetNodeId: "metro_start",
-            sourceHandle: "btn-to-metro",
+            sourceNodeId: "age_input",
+            targetNodeId: "metro_selection",
+            sourceHandle: "source",
             targetHandle: "target"
           },
           // Из метро к интересам
@@ -4445,9 +4247,9 @@ async function seedDefaultTemplates(force = false) {
             id: "inter-metro-interests",
             sourceSheetId: "metro_sheet",
             targetSheetId: "interests_sheet",
-            sourceNodeId: "metro_complete",
-            targetNodeId: "interests_start",
-            sourceHandle: "btn-to-interests",
+            sourceNodeId: "metro_selection",
+            targetNodeId: "interests_categories",
+            sourceHandle: "source",
             targetHandle: "target"
           },
           // Из интересов к личной информации
@@ -4455,9 +4257,9 @@ async function seedDefaultTemplates(force = false) {
             id: "inter-interests-personal",
             sourceSheetId: "interests_sheet",
             targetSheetId: "personal_sheet",
-            sourceNodeId: "interests_complete",
-            targetNodeId: "personal_start",
-            sourceHandle: "btn-to-personal",
+            sourceNodeId: "interests_categories",
+            targetNodeId: "marital_status",
+            sourceHandle: "source",
             targetHandle: "target"
           },
           // Из личной информации к профилю
@@ -4465,9 +4267,9 @@ async function seedDefaultTemplates(force = false) {
             id: "inter-personal-profile",
             sourceSheetId: "personal_sheet",
             targetSheetId: "profile_sheet",
-            sourceNodeId: "personal_complete",
-            targetNodeId: "profile_start",
-            sourceHandle: "btn-to-profile",
+            sourceNodeId: "extra_info",
+            targetNodeId: "profile_complete",
+            sourceHandle: "source",
             targetHandle: "target"
           },
           // Редактирование профиля - возврат к соответствующим листам
