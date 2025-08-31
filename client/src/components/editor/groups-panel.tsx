@@ -216,6 +216,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
   // Get group administrators mutation
   const [administrators, setAdministrators] = React.useState<any[]>([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [allMembers, setAllMembers] = React.useState<any[]>([]);
   const [showAllMembers, setShowAllMembers] = React.useState(false);
   
@@ -1027,7 +1028,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               variant="outline" 
                               size="sm"
                               onClick={async () => {
-                                setIsLoading(true);
+                                setIsLoadingMembers(true);
                                 try {
                                   const response = await fetch(`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup.groupId}`);
                                   const data = await response.json();
@@ -1054,7 +1055,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                     variant: "destructive"
                                   });
                                 } finally {
-                                  setIsLoading(false);
+                                  setIsLoadingMembers(false);
                                 }
                               }}
                             >
