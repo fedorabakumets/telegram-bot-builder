@@ -193,20 +193,40 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       if (data.title && !groupName) {
         setGroupName(data.title);
       }
+      
       // Генерируем ссылку автоматически
+      let generatedUrl = '';
       if (data.username) {
-        setGroupUrl(`https://t.me/${data.username}`);
+        generatedUrl = `https://t.me/${data.username}`;
+        setGroupUrl(generatedUrl);
       } else if (data.invite_link) {
-        setGroupUrl(data.invite_link);
+        generatedUrl = data.invite_link;
+        setGroupUrl(generatedUrl);
       } else {
         // Для числовых ID не создаем публичную ссылку
         setGroupUrl('');
       }
+      
       // Устанавливаем статус администратора
       setMakeAdmin(data.isAdmin || false);
+      
+      // Обновляем уже существующую группу в базе данных
+      const existingGroup = safeGroups.find(g => g.groupId === data.id?.toString());
+      if (existingGroup && data.title) {
+        updateGroupMutation.mutate({
+          groupId: existingGroup.id,
+          data: { 
+            name: data.title,
+            url: generatedUrl,
+            isAdmin: data.isAdmin ? 1 : 0,
+            chatType: data.type || 'group'
+          }
+        });
+      }
+      
       toast({ 
         title: 'Обновлено', 
-        description: `${data.title} • ${data.username ? '@' + data.username : 'ID: ' + data.id} • ${data.isAdmin ? 'Админ' : 'Участник'}`
+        description: `${data.title || data.id} • ${data.username ? '@' + data.username : 'ID: ' + data.id} • ${data.isAdmin ? 'Админ' : 'Участник'}`
       });
     },
     onError: (error: any) => {
