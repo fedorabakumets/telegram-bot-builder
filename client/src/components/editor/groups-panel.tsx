@@ -143,6 +143,18 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       return { ...groupInfo, memberCount: memberCount.count };
     },
     onSuccess: (data) => {
+      // Обновляем информацию о группе в базе данных
+      const groupToUpdate = safeGroups.find(g => g.groupId === data.id?.toString());
+      if (groupToUpdate) {
+        updateGroupMutation.mutate({
+          groupId: groupToUpdate.id,
+          data: { 
+            memberCount: data.memberCount,
+            chatType: data.type,
+            name: data.title || groupToUpdate.name
+          }
+        });
+      }
       toast({ 
         title: `Информация о группе получена`, 
         description: `Название: ${data.title}, Участников: ${data.memberCount}, Тип: ${data.type === 'supergroup' ? 'Супергруппа' : data.type === 'group' ? 'Группа' : 'Канал'}`
@@ -163,6 +175,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       return apiRequest('GET', `/api/projects/${projectId}/bot/group-members-count/${groupId}`);
     },
     onSuccess: (data) => {
+      // Обновляем количество участников в базе данных
+      const groupToUpdate = safeGroups.find(g => g.groupId === data.groupId);
+      if (groupToUpdate) {
+        updateGroupMutation.mutate({
+          groupId: groupToUpdate.id,
+          data: { memberCount: data.count }
+        });
+      }
       toast({ title: `Участников в группе: ${data.count}` });
     },
     onError: (error: any) => {
