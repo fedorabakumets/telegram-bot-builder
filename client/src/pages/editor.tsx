@@ -791,13 +791,10 @@ export default function Editor() {
     const canvasContent = (
       <div className="h-full">
         {currentTab === 'groups' ? (
-          <div style={{ backgroundColor: 'yellow', minHeight: '100vh', padding: '20px' }}>
-            <h1 style={{ color: 'black', fontSize: '24px' }}>🎉 ГРУППЫ ОТОБРАЖАЮТСЯ!</h1>
-            <GroupsPanel
-              projectId={currentProject.id}
-              projectName={currentProject.name}
-            />
-          </div>
+          <GroupsPanel
+            projectId={currentProject.id}
+            projectName={currentProject.name}
+          />
         ) : currentTab === 'editor' ? (
           <Canvas
             // Новая система листов
@@ -1036,22 +1033,13 @@ export default function Editor() {
                   />
                 </div>
               ) : currentTab === 'groups' ? (
-                <div className="h-full overflow-auto p-4" style={{ backgroundColor: 'lime', minHeight: '600px' }}>
-                  <h1 style={{ color: 'black', fontSize: '24px', marginBottom: '20px' }}>
-                    ГРУППЫ РАБОТАЮТ! currentTab = {currentTab}
-                  </h1>
+                <div className="h-full">
                   <GroupsPanel
                     projectId={currentProject.id}
                     projectName={currentProject.name}
                   />
                 </div>
-              ) : (
-                <div className="h-full p-4" style={{ backgroundColor: 'orange' }}>
-                  <h1 style={{ color: 'black' }}>
-                    Неизвестная вкладка: {currentTab}
-                  </h1>
-                </div>
-              )}
+              ) : null}
             </div>
           }
           properties={
