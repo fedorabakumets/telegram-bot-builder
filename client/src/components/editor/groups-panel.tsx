@@ -1075,10 +1075,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   </div>
                                   <div>
                                     <p className="font-medium text-sm">
-                                      {admin.user.first_name} {admin.user.last_name || ''}
+                                      {admin?.user?.first_name || admin?.first_name || admin?.firstName || 'Неизвестно'} {admin?.user?.last_name || admin?.last_name || admin?.lastName || ''}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                      @{admin.user.username || 'Без username'} • ID: {admin.user.id}
+                                      @{admin?.user?.username || admin?.username || 'Без username'} • ID: {admin?.user?.id || admin?.id || 'Неизвестно'}
                                     </p>
                                   </div>
                                 </div>
@@ -1112,10 +1112,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   </div>
                                   <div>
                                     <p className="font-medium text-sm">
-                                      {member.user.first_name} {member.user.last_name || ''}
+                                      {member?.user?.first_name || member?.first_name || member?.firstName || 'Неизвестно'} {member?.user?.last_name || member?.last_name || member?.lastName || ''}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                      @{member.user.username || 'Без username'} • ID: {member.user.id}
+                                      @{member?.user?.username || member?.username || 'Без username'} • ID: {member?.user?.id || member?.id || 'Неизвестно'}
                                     </p>
                                   </div>
                                 </div>
