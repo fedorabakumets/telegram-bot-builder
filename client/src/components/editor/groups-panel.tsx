@@ -68,6 +68,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
   // Ensure groups is always an array
   const safeGroups = Array.isArray(groups) ? groups : [];
+  
+  // Auto-update existing groups with missing info
+  useEffect(() => {
+    if (safeGroups.length > 0) {
+      safeGroups.forEach(group => {
+        // Обновляем группы где название = ID (значит не спарсилось)
+        if (group.name === group.groupId && group.groupId) {
+          console.log('Auto-updating group info for:', group.groupId);
+          // Задержка для избежания слишком частых запросов
+          setTimeout(() => {
+            parseGroupInfoMutation.mutate(group.groupId!);
+          }, Math.random() * 2000 + 1000); // Случайная задержка 1-3 секунды
+        }
+      });
+    }
+  }, [safeGroups.length]); // Запускаем при изменении количества групп
 
   // Create group mutation
   const createGroupMutation = useMutation({
