@@ -292,29 +292,43 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     let nodes: any[] = [];
     let connections: any[] = [];
     
+    console.log('🔍 Calculating stats for template data:', botData);
+    
     // Проверяем, это многолистовой шаблон или обычный
     if (botData.sheets && Array.isArray(botData.sheets)) {
+      console.log('📋 Multi-sheet template detected, sheets count:', botData.sheets.length);
       // Многолистовой шаблон - собираем все узлы и связи из всех листов
-      botData.sheets.forEach((sheet: any) => {
-        if (sheet.nodes) nodes.push(...sheet.nodes);
-        if (sheet.connections) connections.push(...sheet.connections);
+      botData.sheets.forEach((sheet: any, index: number) => {
+        if (sheet.nodes) {
+          console.log(`📄 Sheet ${index + 1} (${sheet.name}): ${sheet.nodes.length} nodes`);
+          nodes.push(...sheet.nodes);
+        }
+        if (sheet.connections) {
+          console.log(`🔗 Sheet ${index + 1} (${sheet.name}): ${sheet.connections.length} connections`);
+          connections.push(...sheet.connections);
+        }
       });
       // Добавляем межлистовые связи
       if (botData.interSheetConnections) {
+        console.log('🔄 Inter-sheet connections:', botData.interSheetConnections.length);
         connections.push(...botData.interSheetConnections);
       }
     } else {
+      console.log('📝 Regular template detected');
       // Обычный шаблон
       nodes = botData.nodes || [];
       connections = botData.connections || [];
     }
     
-    return {
+    const stats = {
       nodes: nodes.length,
       connections: connections.length,
       commands: nodes.filter(node => node.type === 'command' || node.type === 'start').length,
       buttons: nodes.reduce((acc, node) => acc + (node.data?.buttons?.length || 0), 0),
     };
+    
+    console.log('📊 Final stats:', stats);
+    return stats;
   };
 
   const handlePreview = (template: BotTemplate) => {
