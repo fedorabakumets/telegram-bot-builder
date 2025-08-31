@@ -1028,7 +1028,8 @@ export default function Editor() {
                   />
                 </div>
               ) : currentTab === 'groups' ? (
-                <div className="h-full">
+                <div className="h-full" style={{ backgroundColor: 'green', minHeight: '100vh' }}>
+                  <h1 style={{ color: 'white', padding: '20px' }}>Группы тест - {currentTab}</h1>
                   <GroupsPanel
                     projectId={currentProject.id}
                     projectName={currentProject.name}
