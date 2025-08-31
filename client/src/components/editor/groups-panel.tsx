@@ -219,6 +219,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [administrators, setAdministrators] = React.useState<any[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [allMembers, setAllMembers] = React.useState<any[]>([]);
+  const [clientApiMembers, setClientApiMembers] = React.useState<any[]>([]);
   const [showAllMembers, setShowAllMembers] = React.useState(false);
   const [showTelegramAuth, setShowTelegramAuth] = useState(false);
   
@@ -1067,6 +1068,46 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         ) : null}
                       </div>
 
+                      {/* Список участников Client API */}
+                      {clientApiMembers.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-medium text-sm">Участники (Client API)</h5>
+                            <Badge variant="outline">{clientApiMembers.length} человек</Badge>
+                          </div>
+                          
+                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {clientApiMembers.map((member, index) => (
+                              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                                    <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">
+                                      {member?.firstName || 'Неизвестно'} {member?.lastName || ''}
+                                      {member?.isBot && <Badge variant="outline" className="ml-2 text-xs">Бот</Badge>}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      @{member?.username || 'Без username'} • ID: {member?.id || 'Неизвестно'}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge variant={
+                                  member.status === 'creator' ? 'default' : 
+                                  member.status === 'administrator' ? 'secondary' : 
+                                  'outline'
+                                }>
+                                  {member.status === 'creator' ? 'Создатель' : 
+                                   member.status === 'administrator' ? 'Админ' : 
+                                   'Участник'}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Список всех участников */}
                       {showAllMembers && allMembers.length > 0 && (
                         <div className="space-y-3">
@@ -1549,10 +1590,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                  setAdministrators(data.members || []);
+                  setClientApiMembers(data.members || []);
                   toast({
                     title: data.message,
-                    description: `Получено ${data.memberCount} участников включая всех пользователей группы`,
+                    description: `Получено ${data.memberCount} участников через Client API`,
                   });
                 } else {
                   toast({
