@@ -518,6 +518,31 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     </div>
                     
                     <div className="space-y-2">
+                      <Label htmlFor="edit-group-chat-id">
+                        Chat ID группы
+                        <span className="text-xs text-muted-foreground ml-2">
+                          (для приватных групп обязательно)
+                        </span>
+                      </Label>
+                      <Input
+                        id="edit-group-chat-id"
+                        placeholder="-1001234567890"
+                        value={selectedGroup?.groupId || ''}
+                        onChange={(e) => {
+                          if (selectedGroup) {
+                            setSelectedGroup({
+                              ...selectedGroup,
+                              groupId: e.target.value
+                            });
+                          }
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Для получения chat_id: отправьте любое сообщение в группу, затем переслайте его в @userinfobot
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
                       <Label htmlFor="edit-group-desc">Описание группы</Label>
                       <Textarea
                         id="edit-group-desc"
@@ -776,6 +801,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       data: {
                         name: groupName || selectedGroup.name,
                         url: groupUrl || selectedGroup.url,
+                        groupId: selectedGroup.groupId, // Include the updated chat_id
                         description: groupDescription,
                         avatarUrl: groupAvatarUrl,
                         language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',

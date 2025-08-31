@@ -3181,6 +3181,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.projectId);
       const { groupId } = req.params;
       
+      // Check if groupId is null, undefined, or "null" string
+      if (!groupId || groupId === 'null' || groupId === 'undefined') {
+        return res.status(400).json({ 
+          message: "Не указан ID группы", 
+          error: "Для приватных групп нужно указать chat_id. Отправьте любое сообщение в группу, затем переслайте его в @userinfobot чтобы получить chat_id группы."
+        });
+      }
+      
       // Get bot token for this project
       const defaultToken = await storage.getDefaultBotToken(projectId);
       if (!defaultToken) {
@@ -3221,6 +3229,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.projectId);
       const { groupId } = req.params;
       
+      // Check if groupId is null, undefined, or "null" string
+      if (!groupId || groupId === 'null' || groupId === 'undefined') {
+        return res.status(400).json({ 
+          message: "Не указан ID группы", 
+          error: "Для приватных групп нужно указать chat_id. Отправьте любое сообщение в группу, затем переслайте его в @userinfobot чтобы получить chat_id группы."
+        });
+      }
+      
       // Get bot token for this project
       const defaultToken = await storage.getDefaultBotToken(projectId);
       if (!defaultToken) {
@@ -3260,6 +3276,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.projectId);
       const { groupId } = req.params;
+      
+      // Check if groupId is null, undefined, or "null" string
+      if (!groupId || groupId === 'null' || groupId === 'undefined') {
+        return res.status(400).json({ 
+          message: "Не указан ID группы", 
+          error: "Для приватных групп нужно указать chat_id. Отправьте любое сообщение в группу, затем переслайте его в @userinfobot чтобы получить chat_id группы."
+        });
+      }
       
       // Get bot token for this project
       const defaultToken = await storage.getDefaultBotToken(projectId);
