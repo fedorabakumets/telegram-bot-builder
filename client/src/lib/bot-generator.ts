@@ -1,4 +1,4 @@
-import { BotData, Node } from '@shared/schema';
+import { BotData, Node, BotGroup } from '@shared/schema';
 import { generateBotFatherCommands } from './commands';
 
 // Функция для правильного экранирования строк в Python коде
@@ -715,7 +715,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   return code;
 }
 
-export function generatePythonCode(botData: BotData, botName: string = "MyBot"): string {
+export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = []): string {
   const { nodes, connections } = botData;
   
   // Собираем все ID узлов для генерации уникальных коротких ID
@@ -821,6 +821,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   
   code += '# Список администраторов (добавьте свой Telegram ID)\n';
   code += 'ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов\n\n';
+  
+  // Добавляем конфигурацию групп
+  if (groups && groups.length > 0) {
+    code += '# Подключенные группы\n';
+    code += 'CONNECTED_GROUPS = {\n';
+    groups.forEach((group, index) => {
+      const groupId = group.groupId || 'None';
+      const isLast = index === groups.length - 1;
+      code += `    "${group.name}": {\n`;
+      code += `        "id": ${groupId === 'None' ? 'None' : `"${groupId}"`},\n`;
+      code += `        "url": "${group.url}",\n`;
+      code += `        "is_admin": ${group.isAdmin ? 'True' : 'False'},\n`;
+      code += `        "chat_type": "${group.chatType || 'group'}",\n`;
+      if (group.adminRights) {
+        code += `        "admin_rights": ${JSON.stringify(group.adminRights, null, 12).replace(/"/g, "'")},\n`;
+      }
+      code += `        "description": "${group.description || ''}"\n`;
+      code += `    }${isLast ? '' : ','}\n`;
+    });
+    code += '}\n\n';
+  }
   
   code += '# Настройки базы данных\n';
   code += 'DATABASE_URL = os.getenv("DATABASE_URL")\n\n';
@@ -5879,6 +5900,84 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
   // УДАЛЕН универсальный profile_handler - он конфликтует с основным обработчиком команды из узла
   code += '\n';
 
+  // Добавляем обработчики для групп
+  if (groups && groups.length > 0) {
+    code += '\n# Обработчики для работы с группами\n';
+    code += '@dp.message(F.chat.type.in_(["group", "supergroup"]))\n';
+    code += 'async def handle_group_message(message: types.Message):\n';
+    code += '    """\n';
+    code += '    Обработчик сообщений в группах\n';
+    code += '    """\n';
+    code += '    chat_id = message.chat.id\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    username = message.from_user.username or "Неизвестный"\n';
+    code += '    \n';
+    code += '    # Проверяем, является ли группа подключенной\n';
+    code += '    group_name = None\n';
+    code += '    for name, config in CONNECTED_GROUPS.items():\n';
+    code += '        if config.get("id") and str(config["id"]) == str(chat_id):\n';
+    code += '            group_name = name\n';
+    code += '            break\n';
+    code += '    \n';
+    code += '    if group_name:\n';
+    code += '        logging.info(f"📢 Сообщение в подключенной группе {group_name}: {message.text[:50]}... от @{username}")\n';
+    code += '        \n';
+    code += '        # Здесь можно добавить логику обработки групповых сообщений\n';
+    code += '        # Например, модерация, автоответы, статистика и т.д.\n';
+    code += '        \n';
+    code += '        # Сохраняем статистику сообщений\n';
+    code += '        try:\n';
+    code += '            await save_group_message_stats(chat_id, user_id, message.text)\n';
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка сохранения статистики группы: {e}")\n';
+    code += '    \n';
+    code += '# Функция для сохранения статистики групповых сообщений\n';
+    code += 'async def save_group_message_stats(chat_id: int, user_id: int, message_text: str):\n';
+    code += '    """\n';
+    code += '    Сохраняет статистику сообщений в группе\n';
+    code += '    """\n';
+    code += '    if db_pool:\n';
+    code += '        try:\n';
+    code += '            async with db_pool.acquire() as conn:\n';
+    code += '                # Здесь можно добавить логику сохранения статистики в БД\n';
+    code += '                await conn.execute(\n';
+    code += '                    """\n';
+    code += '                    INSERT INTO group_activity (chat_id, user_id, message_length, created_at) \n';
+    code += '                    VALUES ($1, $2, $3, $4)\n';
+    code += '                    ON CONFLICT DO NOTHING\n';
+    code += '                    """,\n';
+    code += '                    chat_id, user_id, len(message_text or ""), get_moscow_time()\n';
+    code += '                )\n';
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка при сохранении статистики группы: {e}")\n';
+    code += '    \n';
+    
+    // Добавляем обработчик новых участников
+    code += '# Обработчик новых участников в группе\n';
+    code += '@dp.message(F.new_chat_members)\n';
+    code += 'async def handle_new_member(message: types.Message):\n';
+    code += '    """\n';
+    code += '    Обработчик новых участников в группе\n';
+    code += '    """\n';
+    code += '    chat_id = message.chat.id\n';
+    code += '    \n';
+    code += '    # Проверяем, является ли группа подключенной\n';
+    code += '    group_name = None\n';
+    code += '    for name, config in CONNECTED_GROUPS.items():\n';
+    code += '        if config.get("id") and str(config["id"]) == str(chat_id):\n';
+    code += '            group_name = name\n';
+    code += '            break\n';
+    code += '    \n';
+    code += '    if group_name:\n';
+    code += '        for new_member in message.new_chat_members:\n';
+    code += '            username = new_member.username or new_member.first_name or "Новый участник"\n';
+    code += '            logging.info(f"👋 Новый участник в группе {group_name}: @{username}")\n';
+    code += '            \n';
+    code += '            # Приветственное сообщение (опционально)\n';
+    code += '            # await message.answer(f"Добро пожаловать в группу, @{username}!")\n';
+    code += '    \n';
+  }
+  
   code += '\n\n# Запуск бота\n';
   code += 'async def main():\n';
   code += '    global db_pool\n';

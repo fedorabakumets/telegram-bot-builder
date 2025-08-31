@@ -10,8 +10,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { generatePythonCode, validateBotStructure, generateRequirementsTxt, generateReadme, generateDockerfile, generateConfigYaml } from '@/lib/bot-generator';
 import { generateBotFatherCommands } from '@/lib/commands';
-import { BotData } from '@shared/schema';
+import { BotData, BotGroup } from '@shared/schema';
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -38,6 +39,12 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
+  // Загрузка групп
+  const { data: groups = [] } = useQuery<BotGroup[]>({
+    queryKey: ['/api/groups'],
+    enabled: isOpen
+  });
+
   // Статистика бота
   const botStats = {
     totalNodes: botData?.nodes?.length || 0,
@@ -63,8 +70,8 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
       setValidationResult(validation || { isValid: false, errors: [] });
       
       if (validation?.isValid) {
-        // Generate all export formats
-        const pythonCode = generatePythonCode(botData, projectName);
+        // Generate all export formats with groups data
+        const pythonCode = generatePythonCode(botData, projectName, groups);
         const jsonData = JSON.stringify(botData, null, 2);
         const requirements = generateRequirementsTxt();
         const readme = generateReadme(botData, projectName);
@@ -86,7 +93,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
       const botFatherCmds = generateBotFatherCommands(botData?.nodes || []);
       setBotFatherCommands(botFatherCmds);
     }
-  }, [isOpen, botData, projectName]);
+  }, [isOpen, botData, projectName, groups]);
 
   const getFileExtension = (format: ExportFormat): string => {
     const extensions = {
