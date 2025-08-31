@@ -1197,12 +1197,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                       <div>
                                         <div className="flex items-center gap-2">
                                           <p className="font-medium text-sm">
-                                            {member?.firstName || 'Неизвестно'} {member?.lastName || ''}
+                                            {member?.firstName || member?.user?.first_name || member?.first_name || 'Неизвестно'} {member?.lastName || member?.user?.last_name || member?.last_name || ''}
                                           </p>
                                           {member?.isBot && <Badge variant="outline" className="text-xs">Бот</Badge>}
                                         </div>
                                         <p className="text-xs text-muted-foreground">
-                                          @{member?.username || 'Без username'} • ID: {member?.id || 'Неизвестно'}
+                                          @{member?.username || member?.user?.username || 'Без username'} • ID: {member?.id || member?.user?.id || 'Неизвестно'}
                                         </p>
                                       </div>
                                     </div>
@@ -1256,7 +1256,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                             {/* Основные действия - для всех кроме создателя */}
                                             <DropdownMenuItem 
                                               onClick={() => {
-                                                const userId = member.id?.toString() || member.user?.id?.toString();
+                                                const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
                                                 if (!userId) {
                                                   toast({
                                                     title: 'Ошибка',
@@ -1276,7 +1276,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                             </DropdownMenuItem>
                                             <DropdownMenuItem 
                                               onClick={() => {
-                                                const userId = member.id?.toString() || member.user?.id?.toString();
+                                                const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
                                                 if (!userId) {
                                                   toast({
                                                     title: 'Ошибка',
@@ -1978,7 +1978,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 <Button 
                   onClick={() => {
                     if (selectedMember && selectedGroup) {
-                      const userId = selectedMember.id?.toString() || selectedMember.user?.id?.toString();
+                      const userId = selectedMember.id?.toString() || selectedMember.user?.id?.toString() || selectedMember.userId?.toString();
                       const groupId = selectedGroup.groupId;
                       
                       if (!userId || !groupId) {
