@@ -3378,6 +3378,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all group members (works only for small groups <200 members)
+  app.get("/api/projects/:projectId/bot/group-members/:groupId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId } = req.params;
+      
+      if (!groupId || groupId === "null") {
+        return res.status(400).json({ message: "Group ID is required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      // First check if this is a small group by getting chat info
+      const chatInfoResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId
+        })
+      });
+
+      const chatInfo = await chatInfoResponse.json();
+      
+      if (!chatInfoResponse.ok) {
+        return res.status(400).json({ 
+          message: "Failed to get chat info", 
+          error: chatInfo.description || "Unknown error"
+        });
+      }
+
+      // For large groups, we can only provide administrators
+      if (chatInfo.result.type === 'supergroup' || (chatInfo.result.members_count && chatInfo.result.members_count > 200)) {
+        return res.status(400).json({ 
+          message: "Cannot get member list for large groups", 
+          error: "Telegram API allows getting full member list only for small groups (<200 members). For large groups, only administrators are available.",
+          membersCount: chatInfo.result.members_count
+        });
+      }
+
+      // Try to get all members for small groups
+      const allMembers = [];
+      let offset = 0;
+      const limit = 200;
+
+      try {
+        // Get members in batches
+        while (true) {
+          const membersResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChatMembers`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              chat_id: groupId,
+              offset: offset,
+              limit: limit
+            })
+          });
+
+          const membersResult = await membersResponse.json();
+          
+          if (!membersResponse.ok) {
+            // If getChatMembers is not available, fall back to just administrators
+            const adminsResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChatAdministrators`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                chat_id: groupId
+              })
+            });
+
+            const adminsResult = await adminsResponse.json();
+            
+            if (!adminsResponse.ok) {
+              return res.status(400).json({ 
+                message: "Failed to get members", 
+                error: adminsResult.description || "Unknown error"
+              });
+            }
+
+            return res.json({ 
+              members: adminsResult.result,
+              isPartialList: true,
+              message: "Only administrators are available for this group type"
+            });
+          }
+
+          const members = membersResult.result;
+          allMembers.push(...members);
+
+          // If we got less than the limit, we've reached the end
+          if (members.length < limit) {
+            break;
+          }
+
+          offset += limit;
+        }
+
+        res.json({ 
+          members: allMembers,
+          isPartialList: false,
+          totalCount: allMembers.length
+        });
+
+      } catch (error) {
+        console.error("Error getting members:", error);
+        res.status(500).json({ message: "Failed to get group members" });
+      }
+
+    } catch (error) {
+      console.error("Failed to get group members:", error);
+      res.status(500).json({ message: "Failed to get group members" });
+    }
+  });
+
   // Ban group member
   app.post("/api/projects/:projectId/bot/ban-member", async (req, res) => {
     try {

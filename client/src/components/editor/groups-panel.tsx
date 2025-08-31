@@ -216,6 +216,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
   // Get group administrators mutation
   const [administrators, setAdministrators] = React.useState<any[]>([]);
+  const [allMembers, setAllMembers] = React.useState<any[]>([]);
+  const [showAllMembers, setShowAllMembers] = React.useState(false);
+  
   const getAdminsMutation = useMutation({
     mutationFn: async (groupId: string | null) => {
       return apiRequest('GET', `/api/projects/${projectId}/bot/group-admins/${groupId}`);
@@ -228,6 +231,28 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       toast({ 
         title: 'Ошибка при получении администраторов', 
         description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Get all group members mutation
+  const getAllMembersMutation = useMutation({
+    mutationFn: async (groupId: string | null) => {
+      return apiRequest('GET', `/api/projects/${projectId}/bot/group-members/${groupId}`);
+    },
+    onSuccess: (data) => {
+      setAllMembers(data.members || []);
+      setShowAllMembers(true);
+      toast({ 
+        title: `Получено участников: ${data.totalCount || data.members?.length || 0}`,
+        description: data.isPartialList ? "Показаны только администраторы для больших групп" : "Полный список участников"
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при получении участников', 
+        description: error.error || 'Список участников доступен только для небольших групп',
         variant: 'destructive' 
       });
     }
@@ -793,12 +818,27 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <h5 className="font-medium text-sm">Администраторы</h5>
-                          {getAdminsMutation.isPending && (
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                              Загрузка...
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {getAdminsMutation.isPending && (
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                                Загрузка...
+                              </div>
+                            )}
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => getAllMembersMutation.mutate(selectedGroup.groupId)}
+                              disabled={getAllMembersMutation.isPending}
+                            >
+                              {getAllMembersMutation.isPending ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                              ) : (
+                                <Users className="h-4 w-4 mr-2" />
+                              )}
+                              Все участники
+                            </Button>
+                          </div>
                         </div>
                         
                         {administrators.length > 0 ? (
@@ -830,6 +870,45 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           </p>
                         ) : null}
                       </div>
+
+                      {/* Список всех участников */}
+                      {showAllMembers && allMembers.length > 0 && (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-medium text-sm">Все участники</h5>
+                            <Badge variant="outline">{allMembers.length} человек</Badge>
+                          </div>
+                          
+                          <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {allMembers.map((member, index) => (
+                              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                                    <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">
+                                      {member.user.first_name} {member.user.last_name || ''}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      @{member.user.username || 'Без username'} • ID: {member.user.id}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Badge variant={
+                                  member.status === 'creator' ? 'default' : 
+                                  member.status === 'administrator' ? 'secondary' : 
+                                  'outline'
+                                }>
+                                  {member.status === 'creator' ? 'Создатель' : 
+                                   member.status === 'administrator' ? 'Админ' : 
+                                   'Участник'}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="border-t my-4" />
 
