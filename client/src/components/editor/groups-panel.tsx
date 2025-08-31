@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot, Ban, Volume2, VolumeX, UserMinus, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -32,6 +32,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [groupUrl, setGroupUrl] = useState('');
   const [groupName, setGroupName] = useState('');
   const [groupId, setGroupId] = useState('');
+  const [isParsingGroup, setIsParsingGroup] = useState(false);
   const [groupDescription, setGroupDescription] = useState('');
   const [groupAvatarUrl, setGroupAvatarUrl] = useState('');
   const [groupLanguage, setGroupLanguage] = useState('ru');
@@ -171,6 +172,61 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       });
     }
   });
+
+  // Auto-parse group info mutation
+  const parseGroupInfoMutation = useMutation({
+    mutationFn: async (groupIdentifier: string) => {
+      setIsParsingGroup(true);
+      try {
+        // Get both group info and admin status
+        const [groupInfo, adminStatus] = await Promise.all([
+          apiRequest('GET', `/api/projects/${projectId}/bot/group-info/${groupIdentifier}`),
+          apiRequest('GET', `/api/projects/${projectId}/bot/admin-status/${groupIdentifier}`)
+        ]);
+        return { ...groupInfo, isAdmin: adminStatus.isAdmin };
+      } finally {
+        setIsParsingGroup(false);
+      }
+    },
+    onSuccess: (data) => {
+      // Автоматически заполняем название группы
+      if (data.title && !groupName) {
+        setGroupName(data.title);
+      }
+      // Устанавливаем статус администратора
+      setMakeAdmin(data.isAdmin || false);
+      toast({ 
+        title: 'Информация получена', 
+        description: `${data.title} • ${data.isAdmin ? 'Бот - администратор' : 'Бот - участник'}`
+      });
+    },
+    onError: (error: any) => {
+      setIsParsingGroup(false);
+      // Не показываем ошибку, так как это автоматический парсинг
+    }
+  });
+
+  // Auto-parse when groupUrl or groupId changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const identifier = groupId.trim() || groupUrl.trim();
+      if (identifier && (identifier.startsWith('-') || identifier.startsWith('@') || identifier.includes('t.me'))) {
+        let groupIdentifier = identifier;
+        
+        // Извлекаем ID из разных форматов ссылок
+        if (identifier.includes('t.me/')) {
+          const match = identifier.match(/t.me\/([^?\/]+)/);
+          if (match) {
+            groupIdentifier = match[1].startsWith('+') ? match[1] : '@' + match[1];
+          }
+        }
+        
+        parseGroupInfoMutation.mutate(groupIdentifier);
+      }
+    }, 1500); // Задержка 1.5 секунды после ввода
+
+    return () => clearTimeout(timeoutId);
+  }, [groupUrl, groupId, projectId]);
 
   // Get group members count mutation
   const getMembersCountMutation = useMutation({
@@ -872,19 +928,27 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="group-url">Ссылка на группу или @username</Label>
-                <Input
-                  id="group-url"
-                  placeholder="https://t.me/group или @groupname"
-                  value={groupUrl}
-                  onChange={(e) => setGroupUrl(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="group-url"
+                    placeholder="https://t.me/group или @groupname"
+                    value={groupUrl}
+                    onChange={(e) => setGroupUrl(e.target.value)}
+                    disabled={isParsingGroup}
+                  />
+                  {isParsingGroup && (
+                    <div className="absolute right-2 top-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="group-name">Название для отображения</Label>
+                <Label htmlFor="group-name">Название для отображения {isParsingGroup && '(загружается...)'}</Label>
                 <Input
                   id="group-name"
-                  placeholder="Введите название группы"
+                  placeholder={isParsingGroup ? "Получаем название группы..." : "Введите название группы"}
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                 />
@@ -892,12 +956,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               
               <div className="space-y-2">
                 <Label htmlFor="group-id">ID группы (необязательно)</Label>
-                <Input
-                  id="group-id"
-                  placeholder="-1002726444678"
-                  value={groupId}
-                  onChange={(e) => setGroupId(e.target.value)}
-                />
+                <div className="relative">
+                  <Input
+                    id="group-id"
+                    placeholder="-1002726444678"
+                    value={groupId}
+                    onChange={(e) => setGroupId(e.target.value)}
+                    disabled={isParsingGroup}
+                  />
+                  {isParsingGroup && (
+                    <div className="absolute right-2 top-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <div className="flex items-center space-x-2">
