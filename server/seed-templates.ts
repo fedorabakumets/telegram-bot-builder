@@ -1198,7 +1198,7 @@ async function seedDefaultTemplates(force = false) {
             data: {
               command: "/profile",
               commandName: "/profile",
-              messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\n\nГотов получить ссылку на чат?",
+              messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\n\n✏️ Выберите действие:",
               keyboardType: "inline",
               enableConditionalMessages: true,
               conditionalMessages: [
@@ -1210,13 +1210,7 @@ async function seedDefaultTemplates(force = false) {
                   formatMode: "text",
                   keyboardType: "inline",
                   buttons: [
-                    {
-                      id: "btn-get-link",
-                      text: "🔗 Получить ссылку на чат",
-                      action: "goto",
-                      target: "chat_link",
-                      buttonType: "option"
-                    },
+
                     {
                       id: "btn-edit-gender",
                       text: "👨👩 Изменить пол",
@@ -1298,13 +1292,7 @@ async function seedDefaultTemplates(force = false) {
                   formatMode: "text",
                   keyboardType: "inline",
                   buttons: [
-                    {
-                      id: "btn-get-link",
-                      text: "🔗 Получить ссылку на чат",
-                      action: "goto",
-                      target: "chat_link",
-                      buttonType: "option"
-                    },
+
                     {
                       id: "btn-edit-gender",
                       text: "👨👩 Изменить пол",
@@ -1386,13 +1374,7 @@ async function seedDefaultTemplates(force = false) {
                   formatMode: "text",
                   keyboardType: "inline",
                   buttons: [
-                    {
-                      id: "btn-get-link",
-                      text: "🔗 Получить ссылку на чат",
-                      action: "goto",
-                      target: "chat_link",
-                      buttonType: "option"
-                    },
+
                     {
                       id: "btn-edit-gender",
                       text: "👨👩 Изменить пол",
@@ -1468,13 +1450,6 @@ async function seedDefaultTemplates(force = false) {
                 }
               ],
               buttons: [
-                {
-                  id: "btn-get-link",
-                  text: "🔗 Получить ссылку на чат",
-                  action: "goto",
-                  target: "chat_link",
-                  buttonType: "option"
-                },
                 {
                   id: "btn-edit-gender",
                   text: "👨👩 Изменить пол",
@@ -1979,13 +1954,6 @@ async function seedDefaultTemplates(force = false) {
             sourceNodeId: "profile_complete",
             targetNodeId: "chat_link",
             sourceHandle: "btn-chat-link",
-            targetHandle: "target"
-          },
-          {
-            id: "conn-28",
-            sourceNodeId: "show_profile",
-            targetNodeId: "chat_link",
-            sourceHandle: "btn-get-link",
             targetHandle: "target"
           },
           // Connections for profile editing buttons
