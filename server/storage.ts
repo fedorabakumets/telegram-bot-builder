@@ -1121,6 +1121,40 @@ export class DatabaseStorage implements IStorage {
       avgInteractionsPerUser
     };
   }
+
+  // Bot Groups
+  async getBotGroup(id: number): Promise<BotGroup | undefined> {
+    const [group] = await this.db.select().from(botGroups).where(eq(botGroups.id, id));
+    return group || undefined;
+  }
+
+  async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
+    return await this.db.select().from(botGroups)
+      .where(eq(botGroups.projectId, projectId))
+      .orderBy(desc(botGroups.createdAt));
+  }
+
+  async createBotGroup(insertGroup: InsertBotGroup): Promise<BotGroup> {
+    const [group] = await this.db
+      .insert(botGroups)
+      .values(insertGroup)
+      .returning();
+    return group;
+  }
+
+  async updateBotGroup(id: number, updateData: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
+    const [group] = await this.db
+      .update(botGroups)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(botGroups.id, id))
+      .returning();
+    return group || undefined;
+  }
+
+  async deleteBotGroup(id: number): Promise<boolean> {
+    const result = await this.db.delete(botGroups).where(eq(botGroups.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
 }
 
 // Оптимизированная версия с кэшированием
@@ -1739,25 +1773,38 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return await dbManager.performHealthCheck();
   }
 
-  // Bot groups methods - delegate to parent class
+  // Bot groups methods - use parent implementation directly
   async getBotGroup(id: number): Promise<BotGroup | undefined> {
-    return await super.getBotGroup(id);
+    const [group] = await this.db.select().from(botGroups).where(eq(botGroups.id, id));
+    return group || undefined;
   }
 
   async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
-    return await super.getBotGroupsByProject(projectId);
+    return await this.db.select().from(botGroups)
+      .where(eq(botGroups.projectId, projectId))
+      .orderBy(desc(botGroups.createdAt));
   }
 
   async createBotGroup(group: InsertBotGroup): Promise<BotGroup> {
-    return await super.createBotGroup(group);
+    const [newGroup] = await this.db
+      .insert(botGroups)
+      .values(group)
+      .returning();
+    return newGroup;
   }
 
   async updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
-    return await super.updateBotGroup(id, group);
+    const [updatedGroup] = await this.db
+      .update(botGroups)
+      .set({ ...group, updatedAt: new Date() })
+      .where(eq(botGroups.id, id))
+      .returning();
+    return updatedGroup || undefined;
   }
 
   async deleteBotGroup(id: number): Promise<boolean> {
-    return await super.deleteBotGroup(id);
+    const result = await this.db.delete(botGroups).where(eq(botGroups.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 }
 
