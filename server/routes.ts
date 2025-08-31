@@ -16,6 +16,7 @@ import dbRoutes from "./db-routes";
 import { Pool } from "pg";
 import { generatePythonCode } from "../client/src/lib/bot-generator";
 import { initializeDatabaseTables } from "./init-db";
+import { telegramClientManager } from "./telegram-client";
 
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
@@ -4000,78 +4001,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`🔍 CLIENT API: Получение участников группы ${groupId} через Client API`);
 
-      // Simulate getting full member list through Client API
-      // In a real implementation, this would use the telegram Client API to get all members
-      const simulatedFullMemberList = [
-        {
-          id: "123456789",
-          username: "user1",
-          firstName: "Иван",
-          lastName: "Петров",
-          isBot: false,
-          status: "member",
-          joinedAt: new Date("2024-01-15"),
-          source: "client_api"
-        },
-        {
-          id: "987654321", 
-          username: "user2",
-          firstName: "Мария",
-          lastName: "Сидорова",
-          isBot: false,
-          status: "member",
-          joinedAt: new Date("2024-02-20"),
-          source: "client_api"
-        },
-        {
-          id: "555666777",
-          username: "admin_user",
-          firstName: "Админ",
-          lastName: "Главный",
-          isBot: false,
-          status: "administrator",
-          joinedAt: new Date("2023-12-01"),
-          source: "client_api"
-        },
-        {
-          id: "111222333",
-          username: "bot_helper",
-          firstName: "Helper",
-          lastName: "Bot",
-          isBot: true,
-          status: "member",
-          joinedAt: new Date("2024-03-10"),
-          source: "client_api"
-        },
-        {
-          id: "777888999",
-          username: "creator_user",
-          firstName: "Создатель",
-          lastName: "Группы",
-          isBot: false,
-          status: "creator",
-          joinedAt: new Date("2023-11-15"),
-          source: "client_api"
+      try {
+        // Try to use real Telegram Client API to get group members
+        const members = await telegramClientManager.getGroupMembers('default', groupId);
+        
+        if (members && members.length > 0) {
+          console.log(`✅ CLIENT API: Найдено ${members.length} реальных участников группы`);
+          
+          res.json({
+            success: true,
+            message: `✅ Получен полный список участников через Client API`,
+            explanation: "Client API позволяет получить всех участников группы, а не только администраторов",
+            groupId,
+            memberCount: members.length,
+            members: members.map((member: any) => ({
+              id: member.id,
+              username: member.username,
+              firstName: member.firstName,
+              lastName: member.lastName,
+              isBot: member.isBot,
+              status: member.status,
+              joinedAt: member.joinedAt,
+              source: "client_api"
+            })),
+            advantages: [
+              `Показывает всех участников группы (${members.length} реальных участников)`,
+              "Включает обычных пользователей, не только админов", 
+              "Предоставляет полную информацию о пользователях",
+              "Обходит ограничения Bot API"
+            ]
+          });
+        } else {
+          throw new Error('No members found or Client API not connected');
         }
-      ];
-
-      console.log(`✅ CLIENT API: Найдено ${simulatedFullMemberList.length} участников (включая всех участников группы)`);
-
-      res.json({
-        success: true,
-        message: "✅ Получен полный список участников через Client API",
-        explanation: "Client API позволяет получить всех участников группы, а не только администраторов",
-        groupId,
-        memberCount: simulatedFullMemberList.length,
-        members: simulatedFullMemberList,
-        advantages: [
-          "Показывает всех участников группы (5 из 5)",
-          "Включает обычных пользователей, не только админов",
-          "Предоставляет полную информацию о пользователях",
-          "Обходит ограничения Bot API"
-        ],
-        note: "Это демонстрация возможностей Client API - в реальной группе будут показаны ваши настоящие участники"
-      });
+      } catch (error: any) {
+        console.log(`⚠️ CLIENT API: Ошибка получения реальных данных: ${error?.message || 'Unknown error'}`);
+        console.log('📝 CLIENT API: Требуется настройка Telegram клиента');
+        
+        res.status(400).json({
+          success: false,
+          message: "❌ Client API требует настройки",
+          explanation: "Для получения полного списка участников необходимо настроить Telegram Client API с номером телефона",
+          groupId,
+          error: error?.message || 'Unknown error',
+          requirements: [
+            "Подключение к Telegram Client API с номером телефона",
+            "Авторизация через код подтверждения",
+            "Права доступа к данным группы"
+          ],
+          note: "Bot API показывает только администраторов, Client API может показать всех участников"
+        });
+      }
     } catch (error) {
       console.error("Failed to get group members via Client API:", error);
       res.status(500).json({ message: "Failed to get group members via Client API" });
