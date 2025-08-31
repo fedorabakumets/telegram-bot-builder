@@ -1755,19 +1755,21 @@ export function PropertiesPanel({
           </div>
         </div>
 
-        {/* Synonyms */}
-        <div>
-          <h3 className="text-sm font-medium text-foreground mb-3">Синонимы</h3>
-          <div className="space-y-4">
-            <SynonymEditor
-              synonyms={selectedNode.data.synonyms || []}
-              onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
-              title="Альтернативные фразы"
-              description="Добавьте слова или фразы, при написании которых будет срабатывать этот узел"
-              placeholder="имя, профиль, анкета..."
-            />
+        {/* Synonyms - только для узлов кроме команд */}
+        {selectedNode.type !== 'start' && selectedNode.type !== 'command' && (
+          <div>
+            <h3 className="text-sm font-medium text-foreground mb-3">Синонимы</h3>
+            <div className="space-y-4">
+              <SynonymEditor
+                synonyms={selectedNode.data.synonyms || []}
+                onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+                title="Альтернативные фразы"
+                description="Добавьте слова или фразы, при написании которых будет срабатывать этот узел"
+                placeholder="имя, профиль, анкета..."
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Keyboard Settings */}
         <div>
