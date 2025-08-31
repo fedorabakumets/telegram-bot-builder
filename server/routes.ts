@@ -3073,10 +3073,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid project ID" });
       }
       
+      console.log("=== CREATE GROUP DEBUG ===");
+      console.log("Request body:", JSON.stringify(req.body, null, 2));
+      console.log("Project ID:", projectId);
+      console.log("Data to validate:", JSON.stringify({ ...req.body, projectId }, null, 2));
+      
       const result = insertBotGroupSchema.safeParse({ ...req.body, projectId });
       if (!result.success) {
+        console.log("Validation errors:", JSON.stringify(result.error.errors, null, 2));
         return res.status(400).json({ message: "Invalid group data", errors: result.error.errors });
       }
+      
+      console.log("Validation successful, data:", JSON.stringify(result.data, null, 2));
       
       const group = await storage.createBotGroup(result.data);
       res.json(group);
