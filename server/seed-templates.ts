@@ -184,35 +184,40 @@ async function seedDefaultTemplates(force = false) {
                   text: "Красная ветка 🟥",
                   action: "goto",
                   target: "red_line_stations",
-                  buttonType: "option"
+                  buttonType: "option",
+                  skipDataCollection: true
                 },
                 {
                   id: "btn-blue",
                   text: "Синяя ветка 🟦",
                   action: "goto", 
                   target: "blue_line_stations",
-                  buttonType: "option"
+                  buttonType: "option",
+                  skipDataCollection: true
                 },
                 {
                   id: "btn-green",
                   text: "Зелёная ветка 🟩",
                   action: "goto",
                   target: "green_line_stations",
-                  buttonType: "option"
+                  buttonType: "option",
+                  skipDataCollection: true
                 },
                 {
                   id: "btn-orange",
                   text: "Оранжевая ветка 🟧",
                   action: "goto",
                   target: "orange_line_stations",
-                  buttonType: "option"
+                  buttonType: "option",
+                  skipDataCollection: true
                 },
                 {
                   id: "btn-purple",
                   text: "Фиолетовая ветка 🟪",
                   action: "goto",
                   target: "purple_line_stations",
-                  buttonType: "option"
+                  buttonType: "option",
+                  skipDataCollection: true
                 },
                 {
                   id: "btn-lo",
@@ -1085,16 +1090,16 @@ async function seedDefaultTemplates(force = false) {
             type: "message",
             position: { x: 100, y: 850 },
             data: {
-              messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nО себе: {extra_info}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+              messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
               keyboardType: "inline",
               removeKeyboard: false,
               enableConditionalMessages: true,
               conditionalMessages: [
                 {
-                  id: "with_telegram",
+                  id: "with_both",
                   condition: "user_data_exists",
-                  variableNames: ["telegram_channel"],
-                  messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info}\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+                  variableNames: ["telegram_channel", "extra_info"],
+                  messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
                   formatMode: "text",
                   keyboardType: "inline",
                   buttons: [
@@ -1102,7 +1107,7 @@ async function seedDefaultTemplates(force = false) {
                       id: "btn-profile",
                       text: "📋 Показать анкету",
                       action: "command",
-                      target: "/профиль",
+                      target: "/profile",
                       buttonType: "option"
                     },
                     {
@@ -1114,6 +1119,56 @@ async function seedDefaultTemplates(force = false) {
                     }
                   ],
                   priority: 1
+                },
+                {
+                  id: "with_telegram_only",
+                  condition: "user_data_exists",
+                  variableNames: ["telegram_channel"],
+                  messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nТелеграм: {telegram_channel} 📢\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+                  formatMode: "text",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-profile",
+                      text: "📋 Показать анкету",
+                      action: "command",
+                      target: "/profile",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-chat-link",
+                      text: "🔗 Получить ссылку на чат",
+                      action: "goto",
+                      target: "chat_link",
+                      buttonType: "option"
+                    }
+                  ],
+                  priority: 2
+                },
+                {
+                  id: "with_extra_only",
+                  condition: "user_data_exists",
+                  variableNames: ["extra_info"],
+                  messageText: "🎉 Отлично! Твой профиль заполнен!\n\n👤 Твоя анкета:\nПол: {gender}\nИмя: {user_name}\nВозраст: {user_age}\nМетро: {metro_stations}\nИнтересы: {user_interests}\nСемейное положение: {marital_status}\nОриентация: {sexual_orientation}\nО себе: {extra_info} 📝\n\nМожешь посмотреть полную анкету или сразу получить ссылку на чат!",
+                  formatMode: "text",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-profile",
+                      text: "📋 Показать анкету",
+                      action: "command",
+                      target: "/profile",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-chat-link",
+                      text: "🔗 Получить ссылку на чат",
+                      action: "goto",
+                      target: "chat_link",
+                      buttonType: "option"
+                    }
+                  ],
+                  priority: 3
                 }
               ],
               buttons: [
@@ -1121,7 +1176,7 @@ async function seedDefaultTemplates(force = false) {
                   id: "btn-profile",
                   text: "📋 Показать анкету",
                   action: "command",
-                  target: "/профиль",
+                  target: "/profile",
                   buttonType: "option"
                 },
                 {
@@ -1143,14 +1198,14 @@ async function seedDefaultTemplates(force = false) {
             data: {
               command: "/profile",
               commandName: "/profile",
-              messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
+              messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\n\nГотов получить ссылку на чат?",
               keyboardType: "inline",
               enableConditionalMessages: true,
               conditionalMessages: [
                 {
-                  id: "with_telegram",
+                  id: "with_both_show",
                   condition: "user_data_exists",
-                  variableNames: ["telegram_channel"],
+                  variableNames: ["telegram_channel", "extra_info"],
                   messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
                   formatMode: "text",
                   keyboardType: "inline",
@@ -1171,6 +1226,56 @@ async function seedDefaultTemplates(force = false) {
                     }
                   ],
                   priority: 1
+                },
+                {
+                  id: "with_telegram_show",
+                  condition: "user_data_exists",
+                  variableNames: ["telegram_channel"],
+                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nТелеграм: {telegram_channel} 📢\n\nГотов получить ссылку на чат?",
+                  formatMode: "text",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-get-link",
+                      text: "🔗 Получить ссылку",
+                      action: "goto",
+                      target: "chat_link",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-restart-from-profile",
+                      text: "🔄 Начать заново",
+                      action: "command",
+                      target: "/start",
+                      buttonType: "navigation"
+                    }
+                  ],
+                  priority: 2
+                },
+                {
+                  id: "with_extra_show",
+                  condition: "user_data_exists",
+                  variableNames: ["extra_info"],
+                  messageText: "👤 Твой профиль:\n\nПол: {gender} 👤\nИмя: {user_name} ✏️\nВозраст: {user_age} 🎂\nМетро: {metro_stations} 🚇\nИнтересы: {user_interests} 🎯\nСемейное положение: {marital_status} 💍\nОриентация: {sexual_orientation} 🌈\nО себе: {extra_info} 📝\n\nГотов получить ссылку на чат?",
+                  formatMode: "text",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-get-link",
+                      text: "🔗 Получить ссылку",
+                      action: "goto",
+                      target: "chat_link",
+                      buttonType: "option"
+                    },
+                    {
+                      id: "btn-restart-from-profile",
+                      text: "🔄 Начать заново",
+                      action: "command",
+                      target: "/start",
+                      buttonType: "navigation"
+                    }
+                  ],
+                  priority: 3
                 }
               ],
               buttons: [
@@ -1205,7 +1310,7 @@ async function seedDefaultTemplates(force = false) {
                   id: "btn-back-profile",
                   text: "⬅️ Назад к анкете",
                   action: "command",
-                  target: "/профиль",
+                  target: "/profile",
                   buttonType: "navigation"
                 },
                 {
