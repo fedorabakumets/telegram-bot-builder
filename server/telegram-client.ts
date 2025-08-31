@@ -151,8 +151,15 @@ class TelegramClientManager {
         throw new Error('Проверка пароля не требуется.');
       }
 
-      // Используем встроенный метод client.checkPassword вместо ручного вычисления SRP
-      const result = await client.checkPassword(password);
+      // Используем метод start с паролем для завершения авторизации
+      await client.start({
+        phoneNumber: authStatus.phoneNumber || '',
+        password: async () => password,
+        phoneCode: async () => {
+          throw new Error('Код уже был введён');
+        },
+        onError: (err) => console.error('Telegram client error:', err),
+      });
 
       // Сохраняем сессию
       const sessionString = (client.session.save() as any) || '';
