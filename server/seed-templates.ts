@@ -3671,7 +3671,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "🎵 Музыка",
                       action: "goto",
                       target: "music_interests",
-                      buttonType: "option",
+                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -3679,7 +3679,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "🎨 Хобби",
                       action: "goto",
                       target: "hobby_interests",
-                      buttonType: "option",
+                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -3687,7 +3687,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "👥 Общение",
                       action: "goto",
                       target: "social_interests",
-                      buttonType: "option",
+                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -3695,7 +3695,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "🎭 Творчество",
                       action: "goto",
                       target: "creativity_interests",
-                      buttonType: "option",
+                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -3703,7 +3703,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "⚽ Активности",
                       action: "goto",
                       target: "active_interests",
-                      buttonType: "option",
+                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -3711,7 +3711,7 @@ async function seedDefaultTemplates(force = false) {
                       text: "🍔 Еда",
                       action: "goto",
                       target: "food_interests",
-                      buttonType: "option",
+                      buttonType: "normal",
                       skipDataCollection: true
                     },
                     {
@@ -3719,15 +3719,8 @@ async function seedDefaultTemplates(force = false) {
                       text: "🏋️ Спорт",
                       action: "goto",
                       target: "sport_interests",
-                      buttonType: "option",
+                      buttonType: "normal",
                       skipDataCollection: true
-                    },
-                    {
-                      id: "btn-continue-to-marital",
-                      text: "Готово ✅",
-                      action: "goto",
-                      target: "marital_status",
-                      buttonType: "normal"
                     }
                   ],
                   markdown: false,
@@ -3744,7 +3737,7 @@ async function seedDefaultTemplates(force = false) {
                   synonyms: ["музыка", "песни", "треки", "жанры"],
                   keyboardType: "inline",
                   allowMultipleSelection: true,
-                  multiSelectVariable: "music_interests",
+                  multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "music-pop", text: "🎤 Поп", action: "selection", target: "pop", buttonType: "option" },
@@ -3769,7 +3762,7 @@ async function seedDefaultTemplates(force = false) {
                   synonyms: ["хобби", "увлечения", "занятия", "досуг"],
                   keyboardType: "inline",
                   allowMultipleSelection: true,
-                  multiSelectVariable: "hobby_interests",
+                  multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "hobby-reading", text: "📚 Чтение", action: "selection", target: "reading", buttonType: "option" },
@@ -3794,7 +3787,7 @@ async function seedDefaultTemplates(force = false) {
                   synonyms: ["общение", "социальное", "люди", "тусовки"],
                   keyboardType: "inline",
                   allowMultipleSelection: true,
-                  multiSelectVariable: "social_interests",
+                  multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "social-parties", text: "🎉 Вечеринки", action: "selection", target: "parties", buttonType: "option" },
@@ -3817,7 +3810,7 @@ async function seedDefaultTemplates(force = false) {
                   synonyms: ["творчество", "искусство", "рисование", "музыка"],
                   keyboardType: "inline",
                   allowMultipleSelection: true,
-                  multiSelectVariable: "creativity_interests",
+                  multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "creativity-art", text: "🎨 Рисование", action: "selection", target: "art", buttonType: "option" },
@@ -3841,7 +3834,7 @@ async function seedDefaultTemplates(force = false) {
                   synonyms: ["активность", "активный", "движение", "здоровье"],
                   keyboardType: "inline",
                   allowMultipleSelection: true,
-                  multiSelectVariable: "active_interests",
+                  multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "active-running", text: "🏃 Бег", action: "selection", target: "running", buttonType: "option" },
@@ -3865,7 +3858,7 @@ async function seedDefaultTemplates(force = false) {
                   synonyms: ["еда", "напитки", "кухня", "рестораны"],
                   keyboardType: "inline",
                   allowMultipleSelection: true,
-                  multiSelectVariable: "food_interests",
+                  multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "food-cooking", text: "👨‍🍳 Готовка", action: "selection", target: "cooking", buttonType: "option" },
@@ -3889,7 +3882,7 @@ async function seedDefaultTemplates(force = false) {
                   synonyms: ["спорт", "фитнес", "тренировки", "футбол"],
                   keyboardType: "inline",
                   allowMultipleSelection: true,
-                  multiSelectVariable: "sport_interests",
+                  multiSelectVariable: "user_interests",
                   continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "sport-football", text: "⚽ Футбол", action: "selection", target: "football", buttonType: "option" },
