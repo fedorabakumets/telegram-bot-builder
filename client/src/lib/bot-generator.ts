@@ -7625,15 +7625,20 @@ function generateMessageSynonymHandler(node: Node, synonym: string): string {
   code += `    user_id = message.from_user.id\n`;
   code += `    logging.info(f"Пользователь {user_id} написал синоним '${synonym}' для узла ${node.id}")\n`;
   code += `    \n`;
-  code += `    # Вызываем callback handler для узла ${node.id}\n`;
-  code += `    callback_query = types.CallbackQuery(\n`;
-  code += `        id="synonym_${node.id}_" + str(user_id),\n`;
-  code += `        from_user=message.from_user,\n`;
-  code += `        message=message,\n`;
-  code += `        data="${node.id}",\n`;
-  code += `        chat_instance=str(user_id)\n`;
-  code += `    )\n`;
-  code += `    await handle_callback_${sanitizedNodeId}(callback_query)\n`;
+  code += `    # Обрабатываем синоним как переход к узлу ${node.id}\n`;
+  code += `    # Создаем Mock callback для эмуляции кнопки\n`;
+  code += `    class MockCallback:\n`;
+  code += `        def __init__(self, data, user, msg):\n`;
+  code += `            self.data = data\n`;
+  code += `            self.from_user = user\n`;
+  code += `            self.message = msg\n`;
+  code += `        async def answer(self):\n`;
+  code += `            pass  # Mock метод, ничего не делаем\n`;
+  code += `        async def edit_text(self, text, **kwargs):\n`;
+  code += `            return await self.message.answer(text, **kwargs)\n`;
+  code += `    \n`;
+  code += `    mock_callback = MockCallback("${node.id}", message.from_user, message)\n`;
+  code += `    await handle_callback_${sanitizedNodeId}(mock_callback)\n`;
   
   return code;
 }
