@@ -468,18 +468,42 @@ export default function Editor() {
           console.log('Применяем многолистовой шаблон с листами:', template.data.sheets.length);
           
           // Создаем новые ID для листов шаблона
-          const updatedSheets = template.data.sheets.map((sheet: any) => ({
-            ...sheet,
-            id: nanoid(), // Новый уникальный ID для листа
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            // Создаем новые ID для узлов внутри листа
-            nodes: sheet.nodes?.map((node: any) => ({
-              ...node,
-              id: node.id // Оставляем оригинальные ID узлов для межлистовых связей
-            })) || [],
-            connections: sheet.connections || []
-          }));
+          const updatedSheets = template.data.sheets.map((sheet: any) => {
+            // Очищаем узлы от потенциальных циклических ссылок
+            const cleanNodes = sheet.nodes?.map((node: any) => {
+              const cleanNode = {
+                id: node.id,
+                type: node.type,
+                position: node.position || { x: 0, y: 0 },
+                data: {
+                  ...node.data,
+                  // Убираем любые потенциальные циклические ссылки
+                  parent: undefined,
+                  children: undefined
+                }
+              };
+              return cleanNode;
+            }) || [];
+
+            // Очищаем соединения
+            const cleanConnections = sheet.connections?.map((conn: any) => ({
+              id: conn.id,
+              source: conn.source,
+              target: conn.target,
+              sourceHandle: conn.sourceHandle,
+              targetHandle: conn.targetHandle
+            })) || [];
+
+            return {
+              id: nanoid(), // Новый уникальный ID для листа
+              name: sheet.name,
+              nodes: cleanNodes,
+              connections: cleanConnections,
+              viewState: sheet.viewState || { position: { x: 0, y: 0 }, zoom: 1 },
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+          });
           
           const templateDataWithSheets = {
             sheets: updatedSheets,
@@ -567,30 +591,97 @@ export default function Editor() {
     try {
       console.log('Обработка выбора шаблона:', template.name);
       console.log('Данные шаблона:', template.data);
-      console.log('Текущие узлы до применения:', nodes.length);
-      console.log('Текущие связи до применения:', connections.length);
       
-      // Получаем данные шаблона
-      const templateData = template.data;
-      
-      if (!templateData || !templateData.nodes) {
-        throw new Error('Некорректные данные шаблона');
+      // Проверяем, есть ли в шаблоне многолистовая структура
+      if (template.data.sheets && Array.isArray(template.data.sheets)) {
+        console.log('Применяем многолистовой шаблон с листами:', template.data.sheets.length);
+        
+        // Создаем новые ID для листов шаблона
+        const updatedSheets = template.data.sheets.map((sheet: any) => {
+          // Очищаем узлы от потенциальных циклических ссылок
+          const cleanNodes = sheet.nodes?.map((node: any) => {
+            const cleanNode = {
+              id: node.id,
+              type: node.type,
+              position: node.position || { x: 0, y: 0 },
+              data: {
+                ...node.data,
+                // Убираем любые потенциальные циклические ссылки
+                parent: undefined,
+                children: undefined
+              }
+            };
+            return cleanNode;
+          }) || [];
+
+          // Очищаем соединения
+          const cleanConnections = sheet.connections?.map((conn: any) => ({
+            id: conn.id,
+            source: conn.source,
+            target: conn.target,
+            sourceHandle: conn.sourceHandle,
+            targetHandle: conn.targetHandle
+          })) || [];
+
+          return {
+            id: nanoid(), // Новый уникальный ID для листа
+            name: sheet.name,
+            nodes: cleanNodes,
+            connections: cleanConnections,
+            viewState: sheet.viewState || { position: { x: 0, y: 0 }, zoom: 1 },
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+        });
+        
+        const templateDataWithSheets = {
+          sheets: updatedSheets,
+          activeSheetId: updatedSheets[0]?.id,
+          version: 2,
+          interSheetConnections: template.data.interSheetConnections || []
+        };
+        
+        // Устанавливаем многолистовые данные
+        setBotDataWithSheets(templateDataWithSheets);
+        
+        // Устанавливаем первый лист как активный на холсте
+        const firstSheet = updatedSheets[0];
+        if (firstSheet) {
+          setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections });
+          console.log('Применили первый лист, узлов:', firstSheet.nodes.length);
+          console.log('Применили первый лист, связей:', firstSheet.connections.length);
+        }
+        
+        // Сохраняем в проект
+        updateProjectMutation.mutate({
+          data: templateDataWithSheets
+        });
+      } else {
+        // Обычный шаблон без листов
+        console.log('Применяем обычный шаблон');
+        const templateData = template.data;
+        
+        if (!templateData || !templateData.nodes) {
+          throw new Error('Некорректные данные шаблона');
+        }
+        
+        // Мигрируем к формату с листами
+        const migratedData = SheetsManager.migrateLegacyData(templateData);
+        setBotDataWithSheets(migratedData);
+        setBotData(templateData);
+        
+        console.log('Применили данные шаблона, узлов:', templateData.nodes.length);
+        console.log('Применили данные шаблона, связей:', templateData.connections?.length || 0);
+        
+        // Сохраняем изменения в базе данных
+        updateProjectMutation.mutate({
+          data: migratedData
+        });
       }
-      
-      // Немедленно обновляем локальное состояние редактора с именем шаблона
-      setBotData(templateData, template.name);
-      
-      console.log('Применили данные шаблона, узлов:', templateData.nodes.length);
-      console.log('Применили данные шаблона, связей:', templateData.connections?.length || 0);
-      
-      // Сохраняем изменения в базе данных
-      updateProjectMutation.mutate({
-        data: templateData
-      });
       
       toast({
         title: 'Шаблон применен',
-        description: `Шаблон "${template.name}" успешно загружен на холст`,
+        description: `Шаблон "${template.name}" успешно загружен`,
       });
     } catch (error) {
       console.error('Ошибка применения шаблона:', error);
@@ -600,7 +691,7 @@ export default function Editor() {
         variant: 'destructive',
       });
     }
-  }, [setBotData, updateProjectMutation, toast, nodes.length, connections.length]);
+  }, [setBotData, setBotDataWithSheets, updateProjectMutation, toast]);
 
   // Обработчики для управления связями
   const handleConnectionsChange = useCallback((newConnections: Connection[]) => {
