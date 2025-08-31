@@ -871,21 +871,94 @@ export function ComponentsSidebar({
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {currentTab === 'projects' && (
           <div className="space-y-4">
-            {/* Заголовок и кнопка создания */}
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-foreground">
-                Проекты ({projects.length})
-              </h3>
-              <Button 
-                size="default" 
-                variant="outline" 
-                className="h-8 px-3 flex items-center gap-1"
-                onClick={handleCreateProject}
-                disabled={createProjectMutation.isPending}
-              >
-                <Plus className="h-4 w-4" />
-                <span className="text-sm">Новый</span>
-              </Button>
+            {/* Заголовок и кнопки управления */}
+            <div className="space-y-3 mb-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Проекты ({projects.length})
+                </h3>
+                <Button 
+                  size="default" 
+                  variant="outline" 
+                  className="h-8 px-3 flex items-center gap-1"
+                  onClick={handleCreateProject}
+                  disabled={createProjectMutation.isPending}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="text-sm">Новый</span>
+                </Button>
+              </div>
+              
+              {/* Кнопки управления листами */}
+              {currentProjectId && (
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-7 px-2 flex items-center gap-1.5 text-xs"
+                    onClick={() => {
+                      const currentProject = projects.find(p => p.id === currentProjectId);
+                      if (currentProject) {
+                        setSelectedProject(currentProject);
+                        setSheetName('');
+                        setIsSheetDialogOpen(true);
+                      }
+                    }}
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span>Лист</span>
+                  </Button>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-7 px-2 flex items-center gap-1.5 text-xs"
+                    onClick={() => {
+                      const currentProject = projects.find(p => p.id === currentProjectId);
+                      if (currentProject && onSheetDuplicate) {
+                        const projectData = currentProject.data as any;
+                        if (SheetsManager.isNewFormat(projectData)) {
+                          const activeSheetId = projectData.activeSheetId;
+                          if (activeSheetId) {
+                            onSheetDuplicate(activeSheetId);
+                          }
+                        }
+                      }
+                    }}
+                  >
+                    <Copy className="h-3 w-3" />
+                    <span>Копия</span>
+                  </Button>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-7 px-2 flex items-center gap-1.5 text-xs text-destructive hover:text-destructive"
+                    onClick={() => {
+                      const currentProject = projects.find(p => p.id === currentProjectId);
+                      if (currentProject && onSheetDelete) {
+                        const projectData = currentProject.data as any;
+                        if (SheetsManager.isNewFormat(projectData)) {
+                          const activeSheetId = projectData.activeSheetId;
+                          const sheetsInfo = getSheetsInfo(currentProject);
+                          if (activeSheetId && sheetsInfo.count > 1) {
+                            onSheetDelete(activeSheetId);
+                          }
+                        }
+                      }
+                    }}
+                    disabled={(() => {
+                      const currentProject = projects.find(p => p.id === currentProjectId);
+                      if (!currentProject) return true;
+                      const sheetsInfo = getSheetsInfo(currentProject);
+                      return sheetsInfo.count <= 1;
+                    })()}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    <span>Удалить</span>
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Список проектов */}
@@ -1006,7 +1079,9 @@ export function ComponentsSidebar({
                                           const projectData = project.data as any;
                                           if (SheetsManager.isNewFormat(projectData)) {
                                             const activeSheetId = projectData.activeSheetId;
-                                            onSheetDelete(activeSheetId);
+                                            if (activeSheetId) {
+                                              onSheetDelete(activeSheetId);
+                                            }
                                           }
                                         }
                                       }}
