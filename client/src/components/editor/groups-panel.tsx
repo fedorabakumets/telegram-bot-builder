@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp } from 'lucide-react';
+import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -304,6 +304,191 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     onError: (error: any) => {
       toast({ 
         title: 'Ошибка при разблокировке', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Group settings mutations
+  const [newGroupTitle, setNewGroupTitle] = React.useState('');
+  const [newGroupDescription, setNewGroupDescription] = React.useState('');
+  const [messageIdToPin, setMessageIdToPin] = React.useState('');
+  const [messageIdToUnpin, setMessageIdToUnpin] = React.useState('');
+  const [messageIdToDelete, setMessageIdToDelete] = React.useState('');
+  const [inviteLinkName, setInviteLinkName] = React.useState('');
+  const [inviteLinkLimit, setInviteLinkLimit] = React.useState('');
+
+  const setGroupTitleMutation = useMutation({
+    mutationFn: async ({ groupId, title }: { groupId: string | null; title: string }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/set-group-title`, {
+        groupId,
+        title
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Название группы изменено' });
+      setNewGroupTitle('');
+      // Refresh group data
+      refetch();
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при изменении названия', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  const setGroupDescriptionMutation = useMutation({
+    mutationFn: async ({ groupId, description }: { groupId: string | null; description: string }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/set-group-description`, {
+        groupId,
+        description
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Описание группы изменено' });
+      setNewGroupDescription('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при изменении описания', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  const pinMessageMutation = useMutation({
+    mutationFn: async ({ groupId, messageId }: { groupId: string | null; messageId: string }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/pin-message`, {
+        groupId,
+        messageId,
+        disableNotification: false
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Сообщение закреплено' });
+      setMessageIdToPin('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при закреплении сообщения', 
+        description: error.error || 'Проверьте права бота и ID сообщения',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  const unpinMessageMutation = useMutation({
+    mutationFn: async ({ groupId, messageId }: { groupId: string | null; messageId?: string }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/unpin-message`, {
+        groupId,
+        messageId
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast({ title: variables.messageId ? 'Сообщение откреплено' : 'Все сообщения откреплены' });
+      setMessageIdToUnpin('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при откреплении сообщения', 
+        description: error.error || 'Проверьте права бота',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: async ({ groupId, messageId }: { groupId: string | null; messageId: string }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/delete-message`, {
+        groupId,
+        messageId
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Сообщение удалено' });
+      setMessageIdToDelete('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при удалении сообщения', 
+        description: error.error || 'Проверьте права бота и ID сообщения',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  const createInviteLinkMutation = useMutation({
+    mutationFn: async ({ groupId, name, memberLimit, createsJoinRequest }: { 
+      groupId: string | null; 
+      name?: string; 
+      memberLimit?: number; 
+      createsJoinRequest: boolean 
+    }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/create-invite-link`, {
+        groupId,
+        name,
+        memberLimit,
+        createsJoinRequest
+      });
+    },
+    onSuccess: (data) => {
+      toast({ 
+        title: 'Ссылка-приглашение создана',
+        description: `Новая ссылка: ${data.inviteLink.invite_link}`
+      });
+      setInviteLinkName('');
+      setInviteLinkLimit('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при создании ссылки', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Restrict member mutation (mute)
+  const [userIdToMute, setUserIdToMute] = React.useState('');
+  const [muteMinutes, setMuteMinutes] = React.useState('');
+  
+  const restrictMemberMutation = useMutation({
+    mutationFn: async ({ groupId, userId, untilDate }: { groupId: string | null; userId: string; untilDate?: number }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/restrict-member`, {
+        groupId,
+        userId,
+        permissions: {
+          can_send_messages: false,
+          can_send_audios: false,
+          can_send_documents: false,
+          can_send_photos: false,
+          can_send_videos: false,
+          can_send_video_notes: false,
+          can_send_voice_notes: false,
+          can_send_polls: false,
+          can_send_other_messages: false,
+          can_add_web_page_previews: false,
+          can_change_info: false,
+          can_invite_users: false,
+          can_pin_messages: false,
+          can_manage_topics: false
+        },
+        untilDate
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Пользователь заглушен' });
+      setUserIdToMute('');
+      setMuteMinutes('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при заглушении пользователя', 
         description: error.error || 'Проверьте права бота в группе',
         variant: 'destructive' 
       });
@@ -909,6 +1094,204 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           </div>
                         </div>
                       )}
+
+                      <div className="border-t my-4" />
+
+                      {/* Настройки группы */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-sm">Настройки группы</h5>
+                        
+                        {/* Изменение названия */}
+                        <div className="space-y-2">
+                          <Label htmlFor="new-title" className="text-xs">Новое название группы</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="new-title"
+                              value={newGroupTitle}
+                              onChange={(e) => setNewGroupTitle(e.target.value)}
+                              placeholder="Введите новое название..."
+                              className="flex-1"
+                            />
+                            <Button 
+                              onClick={() => setGroupTitleMutation.mutate({ 
+                                groupId: selectedGroup.groupId, 
+                                title: newGroupTitle 
+                              })}
+                              disabled={!newGroupTitle.trim() || setGroupTitleMutation.isPending}
+                              size="sm"
+                            >
+                              {setGroupTitleMutation.isPending ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                              ) : (
+                                <Edit className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Изменение описания */}
+                        <div className="space-y-2">
+                          <Label htmlFor="new-description" className="text-xs">Новое описание группы</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="new-description"
+                              value={newGroupDescription}
+                              onChange={(e) => setNewGroupDescription(e.target.value)}
+                              placeholder="Введите новое описание..."
+                              className="flex-1"
+                            />
+                            <Button 
+                              onClick={() => setGroupDescriptionMutation.mutate({ 
+                                groupId: selectedGroup.groupId, 
+                                description: newGroupDescription 
+                              })}
+                              disabled={!newGroupDescription.trim() || setGroupDescriptionMutation.isPending}
+                              size="sm"
+                            >
+                              {setGroupDescriptionMutation.isPending ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                              ) : (
+                                <Edit className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border-t my-4" />
+
+                      {/* Управление сообщениями */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-sm">Управление сообщениями</h5>
+                        
+                        {/* Закрепление сообщения */}
+                        <div className="space-y-2">
+                          <Label htmlFor="pin-message" className="text-xs">Закрепить сообщение (ID)</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="pin-message"
+                              value={messageIdToPin}
+                              onChange={(e) => setMessageIdToPin(e.target.value)}
+                              placeholder="ID сообщения для закрепления..."
+                              className="flex-1"
+                            />
+                            <Button 
+                              onClick={() => pinMessageMutation.mutate({ 
+                                groupId: selectedGroup.groupId, 
+                                messageId: messageIdToPin 
+                              })}
+                              disabled={!messageIdToPin.trim() || pinMessageMutation.isPending}
+                              size="sm"
+                            >
+                              {pinMessageMutation.isPending ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                              ) : (
+                                <Pin className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Открепление сообщения */}
+                        <div className="space-y-2">
+                          <Label htmlFor="unpin-message" className="text-xs">Открепить сообщение (ID)</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="unpin-message"
+                              value={messageIdToUnpin}
+                              onChange={(e) => setMessageIdToUnpin(e.target.value)}
+                              placeholder="ID сообщения или оставьте пустым для всех..."
+                              className="flex-1"
+                            />
+                            <Button 
+                              onClick={() => unpinMessageMutation.mutate({ 
+                                groupId: selectedGroup.groupId, 
+                                messageId: messageIdToUnpin || undefined 
+                              })}
+                              disabled={unpinMessageMutation.isPending}
+                              size="sm"
+                            >
+                              {unpinMessageMutation.isPending ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                              ) : (
+                                <PinOff className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Удаление сообщения */}
+                        <div className="space-y-2">
+                          <Label htmlFor="delete-message" className="text-xs">Удалить сообщение (ID)</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="delete-message"
+                              value={messageIdToDelete}
+                              onChange={(e) => setMessageIdToDelete(e.target.value)}
+                              placeholder="ID сообщения для удаления..."
+                              className="flex-1"
+                            />
+                            <Button 
+                              onClick={() => deleteMessageMutation.mutate({ 
+                                groupId: selectedGroup.groupId, 
+                                messageId: messageIdToDelete 
+                              })}
+                              disabled={!messageIdToDelete.trim() || deleteMessageMutation.isPending}
+                              size="sm"
+                              variant="destructive"
+                            >
+                              {deleteMessageMutation.isPending ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                              ) : (
+                                <Trash className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border-t my-4" />
+
+                      {/* Создание ссылок-приглашений */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-sm">Ссылки-приглашения</h5>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-xs">Создать новую ссылку-приглашение</Label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              placeholder="Название ссылки (опционально)"
+                              value={inviteLinkName}
+                              onChange={(e) => setInviteLinkName(e.target.value)}
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Лимит участников"
+                              value={inviteLinkLimit}
+                              onChange={(e) => setInviteLinkLimit(e.target.value)}
+                            />
+                          </div>
+                          
+                          <Button 
+                            onClick={() => createInviteLinkMutation.mutate({ 
+                              groupId: selectedGroup.groupId,
+                              name: inviteLinkName || undefined,
+                              memberLimit: inviteLinkLimit ? parseInt(inviteLinkLimit) : undefined,
+                              createsJoinRequest: false
+                            })}
+                            disabled={createInviteLinkMutation.isPending}
+                            size="sm"
+                            className="w-full"
+                          >
+                            {createInviteLinkMutation.isPending ? (
+                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                            ) : (
+                              <UserPlus className="h-4 w-4 mr-2" />
+                            )}
+                            Создать ссылку-приглашение
+                          </Button>
+                        </div>
+                      </div>
 
                       <div className="border-t my-4" />
 

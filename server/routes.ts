@@ -3640,6 +3640,318 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Set group photo
+  app.post("/api/projects/:projectId/bot/set-group-photo", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, photoUrl } = req.body;
+      
+      if (!groupId || !photoUrl) {
+        return res.status(400).json({ message: "Group ID and photo URL are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setChatPhoto`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          photo: photoUrl
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to set group photo", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Group photo updated successfully" });
+    } catch (error) {
+      console.error("Failed to set group photo:", error);
+      res.status(500).json({ message: "Failed to set group photo" });
+    }
+  });
+
+  // Set group title
+  app.post("/api/projects/:projectId/bot/set-group-title", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, title } = req.body;
+      
+      if (!groupId || !title) {
+        return res.status(400).json({ message: "Group ID and title are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setChatTitle`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          title: title
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to set group title", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Group title updated successfully" });
+    } catch (error) {
+      console.error("Failed to set group title:", error);
+      res.status(500).json({ message: "Failed to set group title" });
+    }
+  });
+
+  // Set group description
+  app.post("/api/projects/:projectId/bot/set-group-description", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, description } = req.body;
+      
+      if (!groupId || !description) {
+        return res.status(400).json({ message: "Group ID and description are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setChatDescription`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          description: description
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to set group description", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Group description updated successfully" });
+    } catch (error) {
+      console.error("Failed to set group description:", error);
+      res.status(500).json({ message: "Failed to set group description" });
+    }
+  });
+
+  // Pin message in group
+  app.post("/api/projects/:projectId/bot/pin-message", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, messageId, disableNotification } = req.body;
+      
+      if (!groupId || !messageId) {
+        return res.status(400).json({ message: "Group ID and message ID are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/pinChatMessage`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          message_id: messageId,
+          disable_notification: disableNotification || false
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to pin message", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Message pinned successfully" });
+    } catch (error) {
+      console.error("Failed to pin message:", error);
+      res.status(500).json({ message: "Failed to pin message" });
+    }
+  });
+
+  // Unpin message in group
+  app.post("/api/projects/:projectId/bot/unpin-message", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, messageId } = req.body;
+      
+      if (!groupId) {
+        return res.status(400).json({ message: "Group ID is required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = messageId 
+        ? `https://api.telegram.org/bot${defaultToken.token}/unpinChatMessage`
+        : `https://api.telegram.org/bot${defaultToken.token}/unpinAllChatMessages`;
+        
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          ...(messageId && { message_id: messageId })
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to unpin message", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: messageId ? "Message unpinned successfully" : "All messages unpinned successfully" });
+    } catch (error) {
+      console.error("Failed to unpin message:", error);
+      res.status(500).json({ message: "Failed to unpin message" });
+    }
+  });
+
+  // Create new invite link for group
+  app.post("/api/projects/:projectId/bot/create-invite-link", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, name, expireDate, memberLimit, createsJoinRequest } = req.body;
+      
+      if (!groupId) {
+        return res.status(400).json({ message: "Group ID is required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/createChatInviteLink`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          name: name || undefined,
+          expire_date: expireDate || undefined,
+          member_limit: memberLimit || undefined,
+          creates_join_request: createsJoinRequest || false
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to create invite link", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        inviteLink: result.result,
+        message: "Invite link created successfully" 
+      });
+    } catch (error) {
+      console.error("Failed to create invite link:", error);
+      res.status(500).json({ message: "Failed to create invite link" });
+    }
+  });
+
+  // Delete message in group
+  app.post("/api/projects/:projectId/bot/delete-message", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, messageId } = req.body;
+      
+      if (!groupId || !messageId) {
+        return res.status(400).json({ message: "Group ID and message ID are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/deleteMessage`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          message_id: messageId
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to delete message", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Message deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+      res.status(500).json({ message: "Failed to delete message" });
+    }
+  });
+
   // Force update templates - Admin endpoint to refresh all system templates
   app.post("/api/templates/refresh", async (req, res) => {
     try {
