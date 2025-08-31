@@ -897,7 +897,7 @@ export function ComponentsSidebar({
                       </div>
                       <span className="flex items-center">
                         <Calendar className="h-3 w-3 mr-1" />
-                        {formatDate(project.updatedAt).split(' ')[0]}
+                        {formatDate(project.updatedAt)}
                       </span>
                     </div>
                   </div>
