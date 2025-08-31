@@ -1,6 +1,9 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { Api } from 'telegram/tl';
+import { getDb } from './db';
+import { userTelegramSettings } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
 interface TelegramClientConfig {
   apiId: string;
@@ -21,6 +24,116 @@ class TelegramClientManager {
   private clients: Map<string, TelegramClient> = new Map();
   private sessions: Map<string, string> = new Map();
   private authStatus: Map<string, AuthStatus> = new Map();
+
+  // Инициализация с восстановлением всех сессий
+  async initialize(): Promise<void> {
+    try {
+      const db = getDb();
+      const allSessions = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.isActive, 1));
+      
+      console.log(`🔄 Восстанавливаем ${allSessions.length} сессий из базы данных...`);
+      
+      for (const sessionData of allSessions) {
+        if (sessionData.sessionString && sessionData.userId) {
+          await this.restoreSession(sessionData.userId);
+        }
+      }
+      
+      console.log('✅ Все сессии восстановлены');
+    } catch (error) {
+      console.error('Ошибка при восстановлении сессий:', error);
+    }
+  }
+
+  // Сохранить сессию в базу данных
+  private async saveSessionToDatabase(userId: string, sessionString: string, phoneNumber: string): Promise<void> {
+    try {
+      const db = getDb();
+      const existing = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
+      
+      if (existing.length > 0) {
+        await db.update(userTelegramSettings)
+          .set({ 
+            sessionString, 
+            phoneNumber,
+            updatedAt: new Date()
+          })
+          .where(eq(userTelegramSettings.userId, userId));
+      } else {
+        await db.insert(userTelegramSettings).values({
+          userId,
+          sessionString,
+          phoneNumber,
+          apiId: process.env.TELEGRAM_API_ID || '',
+          apiHash: process.env.TELEGRAM_API_HASH || ''
+        });
+      }
+      console.log(`💾 Сессия сохранена в БД для пользователя ${phoneNumber}`);
+    } catch (error) {
+      console.error('Ошибка сохранения сессии в БД:', error);
+    }
+  }
+
+  // Загрузить сессию из базы данных
+  private async loadSessionFromDatabase(userId: string): Promise<string | null> {
+    try {
+      const db = getDb();
+      const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
+      
+      if (result.length > 0 && result[0].sessionString) {
+        console.log(`🔄 Сессия загружена из БД для пользователя ${userId}`);
+        return result[0].sessionString;
+      }
+      return null;
+    } catch (error) {
+      console.error('Ошибка загрузки сессии из БД:', error);
+      return null;
+    }
+  }
+
+  // Восстановить клиент из сохраненной сессии
+  async restoreSession(userId: string): Promise<boolean> {
+    try {
+      const sessionString = await this.loadSessionFromDatabase(userId);
+      if (!sessionString) {
+        return false;
+      }
+
+      const apiId = process.env.TELEGRAM_API_ID;
+      const apiHash = process.env.TELEGRAM_API_HASH;
+      
+      if (!apiId || !apiHash) {
+        return false;
+      }
+
+      const stringSession = new StringSession(sessionString);
+      const client = new TelegramClient(stringSession, parseInt(apiId), apiHash, {
+        connectionRetries: 5,
+      });
+
+      await client.connect();
+      
+      // Проверяем, что сессия действительна
+      const me = await client.getMe();
+      if (me) {
+        this.clients.set(userId, client);
+        this.sessions.set(userId, sessionString);
+        this.authStatus.set(userId, {
+          isAuthenticated: true,
+          phoneNumber: (me as any).phone,
+          userId: userId,
+          needsCode: false,
+          needsPassword: false
+        });
+        console.log(`✅ Сессия восстановлена для пользователя ${userId}`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`Ошибка восстановления сессии для ${userId}:`, error);
+      return false;
+    }
+  }
 
   async sendCode(userId: string, phoneNumber: string): Promise<{ success: boolean; phoneCodeHash?: string; error?: string }> {
     try {
@@ -95,6 +208,7 @@ class TelegramClientManager {
       // Сохраняем сессию
       const sessionString = (client.session.save() as any) || '';
       this.sessions.set(userId, sessionString);
+      await this.saveSessionToDatabase(userId, sessionString, phoneNumber);
 
       // Обновляем статус авторизации
       this.authStatus.set(userId, {
@@ -170,6 +284,7 @@ class TelegramClientManager {
       // Сохраняем сессию
       const sessionString = (client.session.save() as any) || '';
       this.sessions.set(userId, sessionString);
+      await this.saveSessionToDatabase(userId, sessionString, authStatus.phoneNumber || '');
 
       // Обновляем статус авторизации
       this.authStatus.set(userId, {
@@ -575,3 +690,6 @@ class TelegramClientManager {
 }
 
 export const telegramClientManager = new TelegramClientManager();
+
+// Автоматически инициализируем при запуске
+telegramClientManager.initialize().catch(console.error);
