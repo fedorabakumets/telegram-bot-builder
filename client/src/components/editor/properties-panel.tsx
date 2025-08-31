@@ -18,6 +18,68 @@ import { useState, useMemo } from 'react';
 import { InlineRichEditor } from './inline-rich-editor';
 import { EmojiPicker } from './emoji-picker';
 
+// Переиспользуемый компонент для редактирования синонимов
+interface SynonymEditorProps {
+  synonyms: string[];
+  onUpdate: (synonyms: string[]) => void;
+  placeholder?: string;
+  title?: string;
+  description?: string;
+}
+
+const SynonymEditor = ({ synonyms, onUpdate, placeholder = "Например: старт, привет, начать", title = "Синонимы", description }: SynonymEditorProps) => {
+  return (
+    <div>
+      <Label className="text-xs font-medium text-muted-foreground">{title}</Label>
+      {description && (
+        <div className="text-xs text-muted-foreground mt-1 mb-2">
+          {description}
+        </div>
+      )}
+      <div className="mt-2 space-y-2">
+        {synonyms.map((synonym, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <Input
+              value={synonym}
+              onChange={(e) => {
+                const newSynonyms = [...synonyms];
+                newSynonyms[index] = e.target.value;
+                onUpdate(newSynonyms);
+              }}
+              placeholder={placeholder}
+              className="flex-1 text-xs"
+            />
+            <UIButton
+              onClick={() => {
+                const newSynonyms = [...synonyms];
+                newSynonyms.splice(index, 1);
+                onUpdate(newSynonyms);
+              }}
+              variant="outline"
+              size="sm"
+              className="px-2 py-1 h-8"
+            >
+              <i className="fas fa-trash text-xs"></i>
+            </UIButton>
+          </div>
+        ))}
+        <UIButton
+          onClick={() => {
+            const newSynonyms = [...synonyms, ''];
+            onUpdate(newSynonyms);
+          }}
+          variant="outline"
+          size="sm"
+          className="w-full text-xs"
+        >
+          <i className="fas fa-plus mr-2"></i>
+          Добавить синоним
+        </UIButton>
+      </div>
+    </div>
+  );
+};
+
 interface PropertiesPanelProps {
   projectId: number;
   selectedNode: Node | null;
@@ -532,52 +594,13 @@ export function PropertiesPanel({
                 </div>
                 
                 {/* Синонимы команд */}
-                <div>
-                  <Label className="text-xs font-medium text-muted-foreground">Синонимы команды</Label>
-                  <div className="mt-2 space-y-2">
-                    {(selectedNode.data.synonyms || []).map((synonym, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Input
-                          value={synonym}
-                          onChange={(e) => {
-                            const newSynonyms = [...(selectedNode.data.synonyms || [])];
-                            newSynonyms[index] = e.target.value;
-                            onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
-                          }}
-                          placeholder="Например: старт, привет, начать"
-                          className="flex-1"
-                        />
-                        <UIButton
-                          onClick={() => {
-                            const newSynonyms = [...(selectedNode.data.synonyms || [])];
-                            newSynonyms.splice(index, 1);
-                            onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
-                          }}
-                          variant="outline"
-                          size="sm"
-                          className="px-2 py-1"
-                        >
-                          <i className="fas fa-trash text-xs"></i>
-                        </UIButton>
-                      </div>
-                    ))}
-                    <UIButton
-                      onClick={() => {
-                        const newSynonyms = [...(selectedNode.data.synonyms || []), ''];
-                        onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
-                      }}
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                    >
-                      <i className="fas fa-plus mr-2 text-xs"></i>
-                      Добавить синоним
-                    </UIButton>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Текстовые сообщения, которые будут вызывать эту команду. Например: "старт" вместо "/start"
-                  </div>
-                </div>
+                <SynonymEditor
+                  synonyms={selectedNode.data.synonyms || []}
+                  onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+                  title="Синонимы команды"
+                  description="Текстовые сообщения, которые будут вызывать эту команду. Например: старт вместо /start"
+                  placeholder="Например: старт, привет, начать"
+                />
               </>
             )}
 
@@ -1736,52 +1759,13 @@ export function PropertiesPanel({
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Синонимы</h3>
           <div className="space-y-4">
-            <div>
-              <Label className="text-xs font-medium text-muted-foreground">Альтернативные фразы</Label>
-              <div className="text-xs text-muted-foreground mt-1 mb-2">
-                Добавьте слова или фразы, при написании которых будет срабатывать этот узел
-              </div>
-              <div className="space-y-2">
-                {(selectedNode.data.synonyms || []).map((synonym: string, index: number) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Input
-                      value={synonym}
-                      onChange={(e) => {
-                        const newSynonyms = [...(selectedNode.data.synonyms || [])];
-                        newSynonyms[index] = e.target.value;
-                        onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
-                      }}
-                      placeholder="имя, профиль, анкета..."
-                      className="text-xs flex-1"
-                    />
-                    <UIButton
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        const newSynonyms = [...(selectedNode.data.synonyms || [])];
-                        newSynonyms.splice(index, 1);
-                        onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
-                      }}
-                      className="px-2 h-8"
-                    >
-                      <i className="fas fa-trash text-xs"></i>
-                    </UIButton>
-                  </div>
-                ))}
-                <UIButton
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    const newSynonyms = [...(selectedNode.data.synonyms || []), ''];
-                    onNodeUpdate(selectedNode.id, { synonyms: newSynonyms });
-                  }}
-                  className="w-full text-xs"
-                >
-                  <i className="fas fa-plus mr-2"></i>
-                  Добавить синоним
-                </UIButton>
-              </div>
-            </div>
+            <SynonymEditor
+              synonyms={selectedNode.data.synonyms || []}
+              onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+              title="Альтернативные фразы"
+              description="Добавьте слова или фразы, при написании которых будет срабатывать этот узел"
+              placeholder="имя, профиль, анкета..."
+            />
           </div>
         </div>
 
