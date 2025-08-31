@@ -109,6 +109,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [groupNotes, setGroupNotes] = useState('');
   const [makeAdmin, setMakeAdmin] = useState(false);
   const [isPublicGroup, setIsPublicGroup] = useState(false);
+  const [publicUsername, setPublicUsername] = useState('');
   const [chatType, setChatType] = useState<'group' | 'supergroup' | 'channel'>('group');
   const [adminRights, setAdminRights] = useState({
     can_manage_chat: false,
@@ -1070,6 +1071,21 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           setIsPublicGroup(Boolean(group.isPublic));
                           setChatType((group.chatType as 'group' | 'supergroup' | 'channel') || 'group');
                           
+                          // Инициализируем публичный username если группа публичная
+                          if (group.isPublic && group.url && !group.url.includes('+')) {
+                            // Извлекаем username из публичной ссылки
+                            if (group.url.includes('t.me/')) {
+                              const username = group.url.replace('https://t.me/', '').replace('http://t.me/', '');
+                              setPublicUsername(username.startsWith('@') ? username : `@${username}`);
+                            } else if (group.url.startsWith('@')) {
+                              setPublicUsername(group.url);
+                            } else {
+                              setPublicUsername('');
+                            }
+                          } else {
+                            setPublicUsername('');
+                          }
+                          
                           // Получаем актуальные права администратора из Telegram API
                           if (group.isAdmin === 1 && group.groupId) {
                             fetch(`/api/projects/${projectId}/bot/group-admins/${group.groupId}`)
@@ -1370,15 +1386,47 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Switch 
-                        id="public-group"
-                        checked={isPublicGroup}
-                        onCheckedChange={setIsPublicGroup}
-                      />
-                      <Label htmlFor="public-group">
-                        Публичная группа
-                      </Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="public-group"
+                          checked={isPublicGroup}
+                          onCheckedChange={(checked) => {
+                            setIsPublicGroup(checked);
+                            // Если переключаем на приватную, очищаем публичный username
+                            if (!checked) {
+                              setPublicUsername('');
+                            }
+                          }}
+                        />
+                        <Label htmlFor="public-group">
+                          Публичная группа
+                        </Label>
+                      </div>
+                      
+                      {isPublicGroup && (
+                        <div className="space-y-2 pl-6 border-l-2 border-primary/20">
+                          <Label htmlFor="public-username" className="text-sm font-medium">
+                            Публичная ссылка
+                            <span className="text-xs text-muted-foreground ml-2">
+                              (обязательно для публичных групп)
+                            </span>
+                          </Label>
+                          <div className="space-y-2">
+                            <Input
+                              id="public-username"
+                              placeholder="@username или t.me/username"
+                              value={publicUsername}
+                              onChange={(e) => setPublicUsername(e.target.value)}
+                              className="text-sm"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Введите @username группы или полную ссылку t.me/username. 
+                              Это заменит приватную ссылку-приглашение на публичную.
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -2099,12 +2147,49 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               <Button 
                 onClick={() => {
                   if (selectedGroup) {
+                    // Валидация для публичных групп
+                    if (isPublicGroup) {
+                      if (!publicUsername.trim()) {
+                        toast({
+                          title: "Ошибка валидации",
+                          description: "Для публичной группы необходимо указать публичную ссылку (@username)",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                      
+                      // Проверяем формат username
+                      const cleanUsername = publicUsername.trim();
+                      if (!cleanUsername.startsWith('@') && !cleanUsername.includes('t.me/')) {
+                        toast({
+                          title: "Неверный формат",
+                          description: "Публичная ссылка должна быть в формате @username или t.me/username",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
+                    }
+                    
+                    // Определяем итоговую ссылку на основе типа группы
+                    let finalUrl = groupUrl || selectedGroup.url;
+                    if (isPublicGroup && publicUsername.trim()) {
+                      const cleanUsername = publicUsername.trim();
+                      if (cleanUsername.startsWith('@')) {
+                        finalUrl = `https://t.me/${cleanUsername.substring(1)}`;
+                      } else if (cleanUsername.includes('t.me/')) {
+                        finalUrl = cleanUsername.startsWith('http') ? cleanUsername : `https://${cleanUsername}`;
+                      }
+                    } else if (!isPublicGroup && selectedGroup.inviteLink) {
+                      // Для приватных групп используем приватную ссылку-приглашение
+                      finalUrl = selectedGroup.inviteLink;
+                    }
+                    
                     updateGroupMutation.mutate({
                       groupId: selectedGroup.id,
                       data: {
                         name: groupName || selectedGroup.name,
-                        url: groupUrl || selectedGroup.url,
-                        groupId: selectedGroup.groupId, // Include the updated chat_id
+                        url: finalUrl,
+                        groupId: selectedGroup.groupId,
                         description: groupDescription,
                         avatarUrl: groupAvatarUrl,
                         language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
