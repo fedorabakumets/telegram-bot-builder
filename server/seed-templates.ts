@@ -177,7 +177,7 @@ async function seedDefaultTemplates(force = false) {
               messageText: "На какой станции метро ты обычно бываешь? 🚇\n\nВыбери свою ветку:",
               keyboardType: "inline",
               collectUserInput: true,
-              inputVariable: "metro_choice",
+              inputVariable: "metro_stations",
               buttons: [
                 {
                   id: "btn-red",
