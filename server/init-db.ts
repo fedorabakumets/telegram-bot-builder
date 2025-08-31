@@ -159,6 +159,24 @@ export async function initializeDatabaseTables() {
     `, "Создание таблицы user_bot_data");
 
     await executeWithRetry(db, sql`
+      CREATE TABLE IF NOT EXISTS bot_groups (
+        id SERIAL PRIMARY KEY,
+        project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
+        group_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL,
+        is_admin INTEGER DEFAULT 0,
+        member_count INTEGER,
+        is_active INTEGER DEFAULT 1,
+        description TEXT,
+        settings JSONB DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        UNIQUE(project_id, group_id)
+      );
+    `, "Создание таблицы bot_groups");
+
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_users (
         user_id BIGINT PRIMARY KEY,
         username TEXT,

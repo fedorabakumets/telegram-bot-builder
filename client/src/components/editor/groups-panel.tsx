@@ -6,45 +6,81 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import type { BotGroup, InsertBotGroup } from '@shared/schema';
 
 interface GroupsPanelProps {
   projectId: number;
   projectName: string;
 }
 
-interface GroupData {
-  id: string;
-  name: string;
-  url: string;
-  isAdmin: boolean;
-  memberCount?: number;
-  addedAt: Date;
-}
+// Using BotGroup type from schema instead of local interface
 
 export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
-  const [groups, setGroups] = useState<GroupData[]>([]);
   const [showAddGroup, setShowAddGroup] = useState(false);
   const [groupUrl, setGroupUrl] = useState('');
   const [groupName, setGroupName] = useState('');
   const [makeAdmin, setMakeAdmin] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Load groups from database
+  const { data: groups = [], isLoading, error } = useQuery({
+    queryKey: ['/api/projects', projectId, 'groups'],
+    queryFn: () => fetch(`/api/projects/${projectId}/groups`).then(res => res.json()) as Promise<BotGroup[]>
+  });
+
+  // Ensure groups is always an array
+  const safeGroups = Array.isArray(groups) ? groups : [];
+
+  // Create group mutation
+  const createGroupMutation = useMutation({
+    mutationFn: async (groupData: Omit<InsertBotGroup, 'projectId'>) => {
+      return apiRequest('POST', `/api/projects/${projectId}/groups`, groupData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'groups'] });
+      toast({ title: 'Группа успешно добавлена' });
+    },
+    onError: () => {
+      toast({ title: 'Ошибка при добавлении группы', variant: 'destructive' });
+    }
+  });
+
+  // Delete group mutation
+  const deleteGroupMutation = useMutation({
+    mutationFn: async (groupId: number) => {
+      return apiRequest('DELETE', `/api/projects/${projectId}/groups/${groupId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'groups'] });
+      toast({ title: 'Группа удалена' });
+    },
+    onError: () => {
+      toast({ title: 'Ошибка при удалении группы', variant: 'destructive' });
+    }
+  });
 
   const handleAddGroup = () => {
     if (!groupUrl.trim() || !groupName.trim()) {
-      alert('Пожалуйста, заполните все поля');
+      toast({ title: 'Пожалуйста, заполните все поля', variant: 'destructive' });
       return;
     }
 
-    const newGroup: GroupData = {
-      id: Date.now().toString(),
+    createGroupMutation.mutate({
+      groupId: groupUrl.includes('joinchat') ? null : groupUrl.replace('@', ''),
       name: groupName,
       url: groupUrl,
-      isAdmin: makeAdmin,
-      addedAt: new Date()
-    };
-
-    setGroups(prev => [...prev, newGroup]);
+      isAdmin: makeAdmin ? 1 : 0,
+      memberCount: null,
+      isActive: 1,
+      description: null,
+      settings: {}
+    });
     
-    // Закрываем модалку и очищаем форму
+    // Закрываем модалка и очищаем форму
     setShowAddGroup(false);
     setGroupUrl('');
     setGroupName('');
@@ -61,7 +97,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           </p>
         </div>
         
-        {groups.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Загружаем группы...</p>
+          </div>
+        ) : safeGroups.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
               <Users className="w-8 h-8 text-muted-foreground" />
@@ -81,7 +122,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           <div>
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-lg font-semibold">Подключенные группы ({groups.length})</h2>
+                <h2 className="text-lg font-semibold">Подключенные группы ({safeGroups.length})</h2>
                 <p className="text-sm text-muted-foreground">Управление вашими Telegram группами</p>
               </div>
               <Button onClick={() => setShowAddGroup(true)}>
@@ -91,7 +132,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {groups.map((group) => (
+              {safeGroups.map((group) => (
                 <Card key={group.id} className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -116,7 +157,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Добавлено:</span>
-                      <span>{group.addedAt.toLocaleDateString()}</span>
+                      <span>{group.createdAt ? new Date(group.createdAt).toLocaleDateString() : '-'}</span>
                     </div>
                   </div>
                   
@@ -127,7 +168,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => setGroups(prev => prev.filter(g => g.id !== group.id))}
+                      onClick={() => deleteGroupMutation.mutate(group.id)}
+                      disabled={deleteGroupMutation.isPending}
                     >
                       Удалить
                     </Button>

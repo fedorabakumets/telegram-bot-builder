@@ -5,6 +5,7 @@ import {
   botTokens,
   mediaFiles,
   userBotData,
+  botGroups,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
@@ -16,7 +17,9 @@ import {
   type MediaFile,
   type InsertMediaFile,
   type UserBotData,
-  type InsertUserBotData
+  type InsertUserBotData,
+  type BotGroup,
+  type InsertBotGroup
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
@@ -94,6 +97,13 @@ export interface IStorage {
     totalInteractions: number;
     avgInteractionsPerUser: number;
   }>;
+  
+  // Bot groups
+  getBotGroup(id: number): Promise<BotGroup | undefined>;
+  getBotGroupsByProject(projectId: number): Promise<BotGroup[]>;
+  createBotGroup(group: InsertBotGroup): Promise<BotGroup>;
+  updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined>;
+  deleteBotGroup(id: number): Promise<boolean>;
 }
 
 // Legacy Memory Storage - kept for reference
@@ -606,6 +616,27 @@ class MemStorage implements IStorage {
       totalInteractions: 0,
       avgInteractionsPerUser: 0
     };
+  }
+  
+  // Bot Groups stubs
+  async getBotGroup(id: number): Promise<BotGroup | undefined> {
+    return undefined;
+  }
+
+  async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
+    return [];
+  }
+
+  async createBotGroup(group: InsertBotGroup): Promise<BotGroup> {
+    throw new Error("MemStorage does not support groups");
+  }
+
+  async updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
+    return undefined;
+  }
+
+  async deleteBotGroup(id: number): Promise<boolean> {
+    return false;
   }
 }
 
@@ -1548,6 +1579,40 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
       avgInteractionsPerUser
     };
   }
+  
+  // Bot Groups
+  async getBotGroup(id: number): Promise<BotGroup | undefined> {
+    const [group] = await this.db.select().from(botGroups).where(eq(botGroups.id, id));
+    return group || undefined;
+  }
+
+  async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
+    return await this.db.select().from(botGroups)
+      .where(eq(botGroups.projectId, projectId))
+      .orderBy(desc(botGroups.createdAt));
+  }
+
+  async createBotGroup(insertGroup: InsertBotGroup): Promise<BotGroup> {
+    const [group] = await this.db
+      .insert(botGroups)
+      .values(insertGroup)
+      .returning();
+    return group;
+  }
+
+  async updateBotGroup(id: number, updateData: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
+    const [group] = await this.db
+      .update(botGroups)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(botGroups.id, id))
+      .returning();
+    return group || undefined;
+  }
+
+  async deleteBotGroup(id: number): Promise<boolean> {
+    const result = await this.db.delete(botGroups).where(eq(botGroups.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
 }
 
 // Enhanced Database Storage with caching and monitoring
@@ -1673,6 +1738,27 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
   async healthCheck(): Promise<boolean> {
     return await dbManager.performHealthCheck();
   }
+
+  // Bot groups methods - delegate to parent class
+  async getBotGroup(id: number): Promise<BotGroup | undefined> {
+    return await super.getBotGroup(id);
+  }
+
+  async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
+    return await super.getBotGroupsByProject(projectId);
+  }
+
+  async createBotGroup(group: InsertBotGroup): Promise<BotGroup> {
+    return await super.createBotGroup(group);
+  }
+
+  async updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined> {
+    return await super.updateBotGroup(id, group);
+  }
+
+  async deleteBotGroup(id: number): Promise<boolean> {
+    return await super.deleteBotGroup(id);
+  }
 }
 
 // Используем EnhancedDatabaseStorage для продвинутого управления базой данных
@@ -1685,10 +1771,5 @@ function initStorage(): EnhancedDatabaseStorage {
   return storageInstance;
 }
 
-// Use a Proxy to lazily initialize storage
-export const storage = new Proxy({} as EnhancedDatabaseStorage, {
-  get(target, prop) {
-    const instance = initStorage();
-    return (instance as any)[prop];
-  }
-});
+// Export storage instance directly
+export const storage = new EnhancedDatabaseStorage();

@@ -130,6 +130,21 @@ export const botUsers = pgTable("bot_users", {
   isActive: integer("is_active").default(1),
 });
 
+export const botGroups = pgTable("bot_groups", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  groupId: text("group_id"), // Telegram group ID
+  name: text("name").notNull(), // Отображаемое название группы
+  url: text("url").notNull(), // Ссылка на группу
+  isAdmin: integer("is_admin").default(0), // 0 = участник, 1 = администратор
+  memberCount: integer("member_count"), // Количество участников
+  isActive: integer("is_active").default(1), // 0 = неактивная, 1 = активная
+  description: text("description"), // Описание группы
+  settings: jsonb("settings").default({}), // Настройки группы
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
   name: true,
   description: true,
@@ -265,6 +280,24 @@ export const insertBotUserSchema = createInsertSchema(botUsers).pick({
   interactionCount: z.number().min(0).default(0),
 });
 
+export const insertBotGroupSchema = createInsertSchema(botGroups).pick({
+  projectId: true,
+  groupId: true,
+  name: true,
+  url: true,
+  isAdmin: true,
+  memberCount: true,
+  isActive: true,
+  description: true,
+  settings: true,
+}).extend({
+  name: z.string().min(1, "Название группы обязательно"),
+  url: z.string().min(1, "Ссылка на группу обязательна"),
+  isAdmin: z.number().min(0).max(1).default(0),
+  isActive: z.number().min(0).max(1).default(1),
+  settings: z.record(z.any()).default({}),
+});
+
 // Схема для оценки шаблона
 export const rateTemplateSchema = z.object({
   templateId: z.number(),
@@ -285,6 +318,8 @@ export type InsertUserBotData = z.infer<typeof insertUserBotDataSchema>;
 export type UserBotData = typeof userBotData.$inferSelect;
 export type InsertBotUser = z.infer<typeof insertBotUserSchema>;
 export type BotUser = typeof botUsers.$inferSelect;
+export type InsertBotGroup = z.infer<typeof insertBotGroupSchema>;
+export type BotGroup = typeof botGroups.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({

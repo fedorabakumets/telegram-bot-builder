@@ -5,7 +5,7 @@ import { writeFileSync, existsSync, mkdirSync, unlinkSync, createWriteStream } f
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, nodeSchema, connectionSchema, botDataSchema } from "@shared/schema";
+import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, nodeSchema, connectionSchema, botDataSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 import https from "https";
@@ -3038,6 +3038,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "User state updated successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to update user state" });
+    }
+  });
+
+  // Bot Groups API
+  // Get groups for a project
+  app.get("/api/projects/:id/groups", async (req, res) => {
+    console.log("=== GROUPS API CALLED ===");
+    try {
+      const projectId = parseInt(req.params.id);
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      console.log("Getting groups for project", projectId);
+      console.log("Storage methods available:", Object.getOwnPropertyNames(storage).includes('getBotGroupsByProject'));
+      console.log("Storage prototype methods:", Object.getOwnPropertyNames(Object.getPrototypeOf(storage)));
+      
+      const groups = await storage.getBotGroupsByProject(projectId);
+      console.log("Groups found:", groups);
+      res.json(groups);
+    } catch (error) {
+      console.error("Failed to get groups:", error);
+      res.status(500).json({ message: "Failed to get groups" });
+    }
+  });
+
+  // Create a new group
+  app.post("/api/projects/:id/groups", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      const result = insertBotGroupSchema.safeParse({ ...req.body, projectId });
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid group data", errors: result.error.errors });
+      }
+      
+      const group = await storage.createBotGroup(result.data);
+      res.json(group);
+    } catch (error) {
+      console.error("Failed to create group:", error);
+      res.status(500).json({ message: "Failed to create group" });
+    }
+  });
+
+  // Update a group
+  app.put("/api/projects/:projectId/groups/:groupId", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.groupId);
+      if (isNaN(groupId)) {
+        return res.status(400).json({ message: "Invalid group ID" });
+      }
+      
+      const group = await storage.updateBotGroup(groupId, req.body);
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      
+      res.json(group);
+    } catch (error) {
+      console.error("Failed to update group:", error);
+      res.status(500).json({ message: "Failed to update group" });
+    }
+  });
+
+  // Delete a group
+  app.delete("/api/projects/:projectId/groups/:groupId", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.groupId);
+      if (isNaN(groupId)) {
+        return res.status(400).json({ message: "Invalid group ID" });
+      }
+      
+      const success = await storage.deleteBotGroup(groupId);
+      if (!success) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      
+      res.json({ message: "Group deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete group:", error);
+      res.status(500).json({ message: "Failed to delete group" });
     }
   });
 
