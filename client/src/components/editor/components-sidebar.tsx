@@ -2,6 +2,7 @@ import { ComponentDefinition, BotProject } from '@shared/schema';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { SheetsManager } from '@/utils/sheets-manager';
 
 import QuickLayoutSwitcher from '@/components/layout/quick-layout-switcher';
 import DragLayoutManager from '@/components/layout/drag-layout-manager';
@@ -11,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical } from 'lucide-react';
+import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
@@ -752,8 +753,34 @@ export function ComponentsSidebar({
 
   const getNodeCount = (project: BotProject) => {
     if (!project.data || typeof project.data !== 'object') return 0;
-    const data = project.data as { nodes?: any[] };
-    return data.nodes?.length || 0;
+    
+    // Проверяем, новый формат с листами или старый
+    if (SheetsManager.isNewFormat(project.data)) {
+      const sheets = (project.data as any).sheets || [];
+      return sheets.reduce((total: number, sheet: any) => total + (sheet.nodes?.length || 0), 0);
+    } else {
+      const data = project.data as { nodes?: any[] };
+      return data.nodes?.length || 0;
+    }
+  };
+
+  const getSheetsInfo = (project: BotProject) => {
+    if (!project.data || typeof project.data !== 'object') return { count: 0, names: [] };
+    
+    // Проверяем, новый формат с листами или старый
+    if (SheetsManager.isNewFormat(project.data)) {
+      const sheets = (project.data as any).sheets || [];
+      return {
+        count: sheets.length,
+        names: sheets.map((sheet: any) => sheet.name || 'Лист')
+      };
+    } else {
+      // Старый формат - один лист
+      return {
+        count: 1,
+        names: ['Главный лист']
+      };
+    }
   };
 
   return (
@@ -888,17 +915,42 @@ export function ComponentsSidebar({
                       </Button>
                     </div>
                     
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div className="flex items-center">
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between">
                         <span className="flex items-center">
                           <User className="h-3 w-3 mr-1" />
                           {getNodeCount(project)} узлов
                         </span>
+                        <span className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {formatDate(project.updatedAt)}
+                        </span>
                       </div>
-                      <span className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {formatDate(project.updatedAt)}
-                      </span>
+                      
+                      {/* Информация о листах */}
+                      {(() => {
+                        const sheetsInfo = getSheetsInfo(project);
+                        return (
+                          <div className="flex items-center space-x-2">
+                            <div className="flex items-center">
+                              <FileText className="h-3 w-3 mr-1" />
+                              {sheetsInfo.count} {sheetsInfo.count === 1 ? 'лист' : sheetsInfo.count < 5 ? 'листа' : 'листов'}:
+                            </div>
+                            <div className="flex flex-wrap gap-1 flex-1">
+                              {sheetsInfo.names.slice(0, 2).map((name, index) => (
+                                <Badge key={index} variant="secondary" className="text-xs px-1 py-0 h-4">
+                                  {name.length > 8 ? name.substring(0, 8) + '...' : name}
+                                </Badge>
+                              ))}
+                              {sheetsInfo.names.length > 2 && (
+                                <Badge variant="secondary" className="text-xs px-1 py-0 h-4">
+                                  +{sheetsInfo.names.length - 2}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
