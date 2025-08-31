@@ -889,76 +889,6 @@ export function ComponentsSidebar({
                 </Button>
               </div>
               
-              {/* Кнопки управления листами */}
-              {currentProjectId && (
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="h-7 px-2 flex items-center gap-1.5 text-xs"
-                    onClick={() => {
-                      const currentProject = projects.find(p => p.id === currentProjectId);
-                      if (currentProject) {
-                        setSelectedProject(currentProject);
-                        setSheetName('');
-                        setIsSheetDialogOpen(true);
-                      }
-                    }}
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span>Лист</span>
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="h-7 px-2 flex items-center gap-1.5 text-xs"
-                    onClick={() => {
-                      const currentProject = projects.find(p => p.id === currentProjectId);
-                      if (currentProject && onSheetDuplicate) {
-                        const projectData = currentProject.data as any;
-                        if (SheetsManager.isNewFormat(projectData)) {
-                          const activeSheetId = projectData.activeSheetId;
-                          if (activeSheetId) {
-                            onSheetDuplicate(activeSheetId);
-                          }
-                        }
-                      }
-                    }}
-                  >
-                    <Copy className="h-3 w-3" />
-                    <span>Копия</span>
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="h-7 px-2 flex items-center gap-1.5 text-xs text-destructive hover:text-destructive"
-                    onClick={() => {
-                      const currentProject = projects.find(p => p.id === currentProjectId);
-                      if (currentProject && onSheetDelete) {
-                        const projectData = currentProject.data as any;
-                        if (SheetsManager.isNewFormat(projectData)) {
-                          const activeSheetId = projectData.activeSheetId;
-                          const sheetsInfo = getSheetsInfo(currentProject);
-                          if (activeSheetId && sheetsInfo.count > 1) {
-                            onSheetDelete(activeSheetId);
-                          }
-                        }
-                      }
-                    }}
-                    disabled={(() => {
-                      const currentProject = projects.find(p => p.id === currentProjectId);
-                      if (!currentProject) return true;
-                      const sheetsInfo = getSheetsInfo(currentProject);
-                      return sheetsInfo.count <= 1;
-                    })()}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    <span>Удалить</span>
-                  </Button>
-                </div>
-              )}
             </div>
 
             {/* Список проектов */}
@@ -1056,45 +986,22 @@ export function ComponentsSidebar({
                                 <span className="font-medium">{sheetsInfo.count}</span>
                                 <span className="ml-1">{sheetsInfo.count === 1 ? 'лист' : sheetsInfo.count < 5 ? 'листа' : 'листов'}</span>
                               </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => {
-                                    setSelectedProject(project);
-                                    setSheetName('');
-                                    setIsSheetDialogOpen(true);
-                                  }}>
-                                    <Plus className="h-3 w-3 mr-2" />
-                                    Добавить лист
-                                  </DropdownMenuItem>
-                                  {sheetsInfo.count > 1 && (
-                                    <DropdownMenuItem 
-                                      onClick={() => {
-                                        if (currentProjectId === project.id && onSheetDelete) {
-                                          // Получаем ID активного листа для удаления
-                                          const projectData = project.data as any;
-                                          if (SheetsManager.isNewFormat(projectData)) {
-                                            const activeSheetId = projectData.activeSheetId;
-                                            if (activeSheetId) {
-                                              onSheetDelete(activeSheetId);
-                                            }
-                                          }
-                                        }
-                                      }}
-                                      className="text-destructive"
-                                    >
-                                      <Trash2 className="h-3 w-3 mr-2" />
-                                      Удалить активный лист
-                                    </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedProject(project);
+                                  setSheetName('');
+                                  setIsSheetDialogOpen(true);
+                                }}
+                                title="Добавить лист"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
                             </div>
-                            <div className="flex flex-wrap gap-1">
+                            <div className="space-y-1">
                               {sheetsInfo.names.slice(0, 3).map((name: string, index: number) => {
                                 const projectData = project.data as any;
                                 const isActive = SheetsManager.isNewFormat(projectData) && 
@@ -1102,10 +1009,10 @@ export function ComponentsSidebar({
                                   projectData.sheets[index]?.id === projectData.activeSheetId;
                                 
                                 return (
-                                  <div key={index} className="relative group/sheet">
+                                  <div key={index} className="flex items-center gap-2 group/sheet">
                                     <Badge 
                                       variant={isActive ? "default" : "secondary"} 
-                                      className={`text-xs px-3 py-1.5 h-7 cursor-pointer hover:opacity-80 transition-all max-w-[150px] min-w-[70px] font-medium ${
+                                      className={`text-xs px-3 py-1.5 h-7 cursor-pointer hover:opacity-80 transition-all flex-1 font-medium ${
                                         isActive ? 'bg-primary text-primary-foreground shadow-sm' : ''
                                       }`}
                                       onClick={() => {
@@ -1129,78 +1036,78 @@ export function ComponentsSidebar({
                                       }}
                                       title={name}
                                     >
-                                      <span className="block text-center w-full">{name}</span>
+                                      <span className="block text-center w-full truncate">{name}</span>
                                     </Badge>
                                     
-                                    {/* Кнопки управления листом - показываются при ховере */}
-                                    {currentProjectId === project.id && isActive && (
-                                      <div className="absolute top-0 right-0 opacity-0 group-hover/sheet:opacity-100 transition-opacity bg-background/80 rounded backdrop-blur-sm">
-                                        <div className="flex gap-1">
+                                    {/* Кнопки управления листом */}
+                                    {currentProjectId === project.id && (
+                                      <div className="flex gap-1 opacity-0 group-hover/sheet:opacity-100 transition-opacity">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 hover:bg-muted"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (SheetsManager.isNewFormat(projectData)) {
+                                              const sheetId = projectData.sheets[index]?.id;
+                                              if (sheetId && onSheetDuplicate) {
+                                                onSheetDuplicate(sheetId);
+                                              }
+                                            }
+                                          }}
+                                          title="Дублировать лист"
+                                        >
+                                          <Copy className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 hover:bg-muted"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (SheetsManager.isNewFormat(projectData)) {
+                                              const sheetId = projectData.sheets[index]?.id;
+                                              if (sheetId) {
+                                                setSelectedSheetId(sheetId);
+                                                setSheetName(name);
+                                                setIsRenameDialogOpen(true);
+                                              }
+                                            }
+                                          }}
+                                          title="Переименовать лист"
+                                        >
+                                          <Edit className="h-3 w-3" />
+                                        </Button>
+                                        {sheetsInfo.count > 1 && (
                                           <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-5 w-5 p-0 hover:bg-background/80"
+                                            className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-muted"
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               if (SheetsManager.isNewFormat(projectData)) {
                                                 const sheetId = projectData.sheets[index]?.id;
-                                                if (sheetId && onSheetDuplicate) {
-                                                  onSheetDuplicate(sheetId);
+                                                if (sheetId && onSheetDelete) {
+                                                  onSheetDelete(sheetId);
                                                 }
                                               }
                                             }}
-                                            title="Дублировать лист"
+                                            title="Удалить лист"
                                           >
-                                            <Copy className="h-3 w-3" />
+                                            <Trash2 className="h-3 w-3" />
                                           </Button>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 w-5 p-0 hover:bg-background/80"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              if (SheetsManager.isNewFormat(projectData)) {
-                                                const sheetId = projectData.sheets[index]?.id;
-                                                if (sheetId) {
-                                                  setSelectedSheetId(sheetId);
-                                                  setSheetName(name);
-                                                  setIsRenameDialogOpen(true);
-                                                }
-                                              }
-                                            }}
-                                            title="Переименовать лист"
-                                          >
-                                            <Edit className="h-3 w-3" />
-                                          </Button>
-                                          {sheetsInfo.count > 1 && (
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-5 w-5 p-0 text-destructive hover:text-destructive hover:bg-background/80"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (SheetsManager.isNewFormat(projectData)) {
-                                                  const sheetId = projectData.sheets[index]?.id;
-                                                  if (sheetId && onSheetDelete) {
-                                                    onSheetDelete(sheetId);
-                                                  }
-                                                }
-                                              }}
-                                              title="Удалить лист"
-                                            >
-                                              <Trash2 className="h-3 w-3" />
-                                            </Button>
-                                          )}
-                                        </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
                                 );
                               })}
                               {sheetsInfo.names.length > 3 && (
-                                <Badge variant="secondary" className="text-xs px-1 py-0 h-4">
-                                  +{sheetsInfo.names.length - 3}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="secondary" className="text-xs px-2 py-1 h-6">
+                                    +{sheetsInfo.names.length - 3}
+                                  </Badge>
+                                </div>
                               )}
                             </div>
                           </div>
