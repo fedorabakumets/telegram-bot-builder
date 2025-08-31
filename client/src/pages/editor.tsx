@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
+import { nanoid } from 'nanoid';
 
 export default function Editor() {
   const [, setLocation] = useLocation();
@@ -462,11 +463,55 @@ export default function Editor() {
         const template = JSON.parse(selectedTemplateData);
         console.log('Применяем сохраненный шаблон:', template.name);
         
-        // Применяем шаблон
-        setBotData(template.data);
-        updateProjectMutation.mutate({
-          data: template.data
-        });
+        // Проверяем, есть ли в шаблоне многолистовая структура
+        if (template.data.sheets && Array.isArray(template.data.sheets)) {
+          console.log('Применяем многолистовой шаблон с листами:', template.data.sheets.length);
+          
+          // Создаем новые ID для листов шаблона
+          const updatedSheets = template.data.sheets.map((sheet: any) => ({
+            ...sheet,
+            id: nanoid(), // Новый уникальный ID для листа
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            // Создаем новые ID для узлов внутри листа
+            nodes: sheet.nodes?.map((node: any) => ({
+              ...node,
+              id: node.id // Оставляем оригинальные ID узлов для межлистовых связей
+            })) || [],
+            connections: sheet.connections || []
+          }));
+          
+          const templateDataWithSheets = {
+            sheets: updatedSheets,
+            activeSheetId: updatedSheets[0]?.id,
+            version: 2,
+            interSheetConnections: template.data.interSheetConnections || []
+          };
+          
+          // Устанавливаем многолистовые данные
+          setBotDataWithSheets(templateDataWithSheets);
+          
+          // Устанавливаем первый лист как активный на холсте
+          const firstSheet = updatedSheets[0];
+          if (firstSheet) {
+            setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections });
+          }
+          
+          // Сохраняем в проект
+          updateProjectMutation.mutate({
+            data: templateDataWithSheets
+          });
+        } else {
+          // Обычный шаблон без листов - мигрируем к формату с листами
+          console.log('Применяем обычный шаблон и мигрируем к формату с листами');
+          const migratedData = SheetsManager.migrateLegacyData(template.data);
+          setBotDataWithSheets(migratedData);
+          setBotData(template.data);
+          
+          updateProjectMutation.mutate({
+            data: migratedData
+          });
+        }
         
         toast({
           title: 'Шаблон применен',
@@ -480,7 +525,7 @@ export default function Editor() {
         localStorage.removeItem('selectedTemplate');
       }
     }
-  }, [currentProject?.id, setBotData, updateProjectMutation, toast]);
+  }, [currentProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast]);
 
   // Enhanced onNodeUpdate that auto-saves changes
   const handleNodeUpdate = useCallback((nodeId: string, updates: any) => {
