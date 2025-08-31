@@ -1023,48 +1023,23 @@ async function seedDefaultTemplates(force = false) {
             type: "message",
             position: { x: 500, y: 650 },
             data: {
-              messageText: "Хочешь указать свой телеграм-канал? 📢",
+              messageText: "Хочешь указать свой телеграм-канал? 📢\n\nВведи ссылку, ник с @ или просто имя канала, либо нажми 'Пропустить':",
               keyboardType: "inline",
-              collectUserInput: true,
-              inputVariable: "telegram_channel_choice",
-              synonyms: ["тгк", "телеграм", "канал", "тг канал"],
-              buttons: [
-                {
-                  id: "btn-yes-channel",
-                  text: "Да 📢",
-                  value: "yes",
-                  action: "goto",
-                  target: "channel_input",
-                  buttonType: "option"
-                },
-                {
-                  id: "btn-no-channel",
-                  text: "Нет ❌",
-                  value: "no",
-                  action: "goto",
-                  target: "extra_info",
-                  buttonType: "option"
-                }
-              ],
-              markdown: false,
-              oneTimeKeyboard: true,
-              resizeKeyboard: true
-            }
-          },
-
-          {
-            id: "channel_input",
-            type: "message",
-            position: { x: 900, y: 650 },
-            data: {
-              messageText: "Введи свой телеграм-канал 📢\n\n(можно ссылку, ник с @ или просто имя):",
-              keyboardType: "none",
               collectUserInput: true,
               enableTextInput: true,
               inputVariable: "telegram_channel",
               synonyms: ["тгк", "телеграм", "канал", "тг канал"],
               inputTargetNodeId: "extra_info",
-              buttons: [],
+              buttons: [
+                {
+                  id: "btn-skip-channel",
+                  text: "Пропустить ⏭️",
+                  action: "goto",
+                  target: "extra_info",
+                  buttonType: "option",
+                  skipDataCollection: true
+                }
+              ],
               markdown: false
             }
           },
@@ -1929,20 +1904,13 @@ async function seedDefaultTemplates(force = false) {
           {
             id: "conn-21",
             sourceNodeId: "channel_choice",
-            targetNodeId: "channel_input",
-            sourceHandle: "btn-yes-channel",
+            targetNodeId: "extra_info",
+            sourceHandle: "btn-skip-channel",
             targetHandle: "target"
           },
           {
             id: "conn-22",
             sourceNodeId: "channel_choice",
-            targetNodeId: "extra_info",
-            sourceHandle: "btn-no-channel",
-            targetHandle: "target"
-          },
-          {
-            id: "conn-23",
-            sourceNodeId: "channel_input",
             targetNodeId: "extra_info",
             sourceHandle: "source",
             targetHandle: "target"
