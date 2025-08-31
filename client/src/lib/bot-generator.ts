@@ -5995,9 +5995,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot"):
             code += `            await handle_command_${safeCommandName}(callback_query.message)\n`;
             hasContent = true;
           } else if (targetNode.type === 'start') {
-            console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем handle_callback_start`);
-            code += `            # НЕ ВЫЗЫВАЕМ START АВТОМАТИЧЕСКИ!\n`;
-            code += `            await callback_query.message.answer("Возврат к началу")\n`;
+            console.log(`🔧 ГЕНЕРАТОР: Вызываем полный обработчик start для правильной клавиатуры`);
+            code += `            # Вызываем полный обработчик start для правильного отображения главного меню\n`;
+            code += `            await handle_command_start(callback_query.message)\n`;
             code += `            return\n`;
             hasContent = true;
           } else {
