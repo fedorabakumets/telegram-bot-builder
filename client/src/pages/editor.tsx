@@ -189,7 +189,7 @@ export default function Editor() {
   }, [setBotData]);
 
   // Обертка для обновления узлов, которая синхронизирует изменения с системой листов
-  const handleNodeUpdateWithSheets = useCallback((nodeId: string, updates: Partial<Node['data']>) => {
+  const handleNodeUpdateWithSheets = useCallback((nodeId: string, updates: any) => {
     // Обновляем в старой системе
     updateNodeData(nodeId, updates);
     

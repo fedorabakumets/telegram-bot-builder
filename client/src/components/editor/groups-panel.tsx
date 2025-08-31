@@ -197,7 +197,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={refetch} variant="outline" size="sm">
+              <Button onClick={() => refetch()} variant="outline" size="sm">
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Обновить
               </Button>
