@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["postgresql", "jq"]
+packages = ["cargo", "jq", "libiconv", "openssl", "postgresql", "rustc"]
 
 [deployment]
 deploymentTarget = "autoscale"

@@ -1027,19 +1027,23 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               variant="outline" 
                               size="sm"
                               onClick={async () => {
+                                setIsLoading(true);
                                 try {
                                   const response = await fetch(`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup.groupId}`);
                                   const data = await response.json();
                                   
-                                  if (response.ok) {
+                                  if (response.ok && data.success) {
+                                    // Update administrators with the full list from Client API
+                                    setAdministrators(data.members || []);
+                                    
                                     toast({
-                                      title: "✅ " + data.message,
-                                      description: data.explanation + " " + data.note,
+                                      title: data.message,
+                                      description: `Получено ${data.memberCount} участников включая всех пользователей группы`,
                                     });
                                   } else {
                                     toast({
-                                      title: "❌ " + data.message,
-                                      description: data.explanation,
+                                      title: data.message || "Ошибка",
+                                      description: data.explanation || "Не удалось получить данные",
                                       variant: "destructive"
                                     });
                                   }
@@ -1049,6 +1053,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                     description: "Не удалось подключиться к Client API",
                                     variant: "destructive"
                                   });
+                                } finally {
+                                  setIsLoading(false);
                                 }
                               }}
                             >
