@@ -3721,6 +3721,13 @@ async function seedDefaultTemplates(force = false) {
                       target: "sport_interests",
                       buttonType: "option",
                       skipDataCollection: true
+                    },
+                    {
+                      id: "btn-continue-to-marital",
+                      text: "Готово ✅",
+                      action: "goto",
+                      target: "marital_status",
+                      buttonType: "normal"
                     }
                   ],
                   markdown: false,
@@ -3738,7 +3745,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "music_interests",
-                  continueButtonTarget: "interests_categories",
+                  continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "music-pop", text: "🎤 Поп", action: "selection", target: "pop", buttonType: "option" },
                     { id: "music-rock", text: "🎸 Рок", action: "selection", target: "rock", buttonType: "option" },
@@ -3763,7 +3770,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "hobby_interests",
-                  continueButtonTarget: "interests_categories",
+                  continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "hobby-reading", text: "📚 Чтение", action: "selection", target: "reading", buttonType: "option" },
                     { id: "hobby-gaming", text: "🎮 Игры", action: "selection", target: "gaming", buttonType: "option" },
@@ -3788,7 +3795,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "social_interests",
-                  continueButtonTarget: "interests_categories",
+                  continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "social-parties", text: "🎉 Вечеринки", action: "selection", target: "parties", buttonType: "option" },
                     { id: "social-networking", text: "🤝 Нетворкинг", action: "selection", target: "networking", buttonType: "option" },
@@ -3811,7 +3818,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "creativity_interests",
-                  continueButtonTarget: "interests_categories",
+                  continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "creativity-art", text: "🎨 Рисование", action: "selection", target: "art", buttonType: "option" },
                     { id: "creativity-music", text: "🎵 Музыка", action: "selection", target: "music", buttonType: "option" },
@@ -3835,7 +3842,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "active_interests",
-                  continueButtonTarget: "interests_categories",
+                  continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "active-running", text: "🏃 Бег", action: "selection", target: "running", buttonType: "option" },
                     { id: "active-gym", text: "💪 Тренажёрный зал", action: "selection", target: "gym", buttonType: "option" },
@@ -3859,7 +3866,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "food_interests",
-                  continueButtonTarget: "interests_categories",
+                  continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "food-cooking", text: "👨‍🍳 Готовка", action: "selection", target: "cooking", buttonType: "option" },
                     { id: "food-restaurants", text: "🍽️ Рестораны", action: "selection", target: "restaurants", buttonType: "option" },
@@ -3883,7 +3890,7 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   allowMultipleSelection: true,
                   multiSelectVariable: "sport_interests",
-                  continueButtonTarget: "interests_categories",
+                  continueButtonTarget: "marital_status",
                   buttons: [
                     { id: "sport-football", text: "⚽ Футбол", action: "selection", target: "football", buttonType: "option" },
                     { id: "sport-basketball", text: "🏀 Баскетбол", action: "selection", target: "basketball", buttonType: "option" },
