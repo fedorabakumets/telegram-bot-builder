@@ -199,8 +199,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       } else if (data.invite_link) {
         setGroupUrl(data.invite_link);
       } else {
-        // Если нет username или invite_link, создаем ссылку по ID
-        setGroupUrl(`tg://openmessage?chat_id=${data.id}`);
+        // Для числовых ID не создаем публичную ссылку
+        setGroupUrl('');
       }
       // Устанавливаем статус администратора
       setMakeAdmin(data.isAdmin || false);
@@ -719,7 +719,18 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     
     // Используем автоматически полученное название или ID по умолчанию
     const finalGroupName = groupName.trim() || identifier.replace('@', '').replace('https://t.me/', '') || 'New Group';
-    const finalGroupUrl = groupUrl.trim() || `https://t.me/${identifier.replace('@', '')}`;
+    
+    // Генерируем ссылку только для username или используем автоматически полученную
+    let finalGroupUrl = groupUrl.trim();
+    if (!finalGroupUrl) {
+      if (identifier.startsWith('@') || (!identifier.startsWith('-') && !identifier.includes('t.me'))) {
+        // Для username создаем ссылку
+        finalGroupUrl = `https://t.me/${identifier.replace('@', '')}`;
+      } else {
+        // Для числовых ID оставляем пустым - ссылка будет получена из API
+        finalGroupUrl = '';
+      }
+    }
 
     createGroupMutation.mutate({
       groupId: groupId.trim() || (groupUrl.includes('joinchat') ? null : groupUrl.replace('@', '')),
