@@ -323,7 +323,7 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     const stats = {
       nodes: nodes.length,
       connections: connections.length,
-      commands: nodes.filter(node => node.type === 'command' || node.type === 'start').length,
+      commands: nodes.filter(node => node.data?.command).length,
       buttons: nodes.reduce((acc, node) => acc + (node.data?.buttons?.length || 0), 0),
     };
     
@@ -444,7 +444,10 @@ export function TemplatesModal({ isOpen, onClose, onSelectTemplate }: TemplatesM
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 py-4">
         {templates.map((template: BotTemplate) => {
+          console.log('🎫 Rendering template card for:', template.name);
+          console.log('🎫 Template data keys:', Object.keys(template.data || {}));
           const stats = getTemplateStats(template.data as BotData);
+          console.log('🎫 Stats for', template.name, ':', stats);
           
           return (
             <Card key={template.id} className="hover:shadow-lg transition-all duration-200 border-border/50 hover:border-primary/20 dark:bg-card/50 dark:hover:bg-card/80">

@@ -77,7 +77,7 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     return {
       nodes: nodes.length,
       connections: connections.length,
-      commands: nodes.filter(node => node.type === 'command' || node.type === 'start').length,
+      commands: nodes.filter(node => node.data?.command).length,
       buttons: nodes.reduce((acc, node) => acc + (node.data?.buttons?.length || 0), 0),
     };
   };
