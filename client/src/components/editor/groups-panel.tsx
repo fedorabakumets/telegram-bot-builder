@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash } from 'lucide-react';
+import { Users, Plus, UserPlus, X, Settings, Upload, Shield, UserCheck, MessageSquare, Globe, Clock, Tag, Search, Filter, Send, BarChart3, TrendingUp, Edit, Pin, PinOff, Trash, Crown, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -58,7 +58,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const queryClient = useQueryClient();
 
   // Load groups from database
-  const { data: groups = [], isLoading, error } = useQuery({
+  const { data: groups = [], isLoading, error, refetch } = useQuery({
     queryKey: ['/api/projects', projectId, 'groups'],
     queryFn: () => fetch(`/api/projects/${projectId}/groups`).then(res => res.json()) as Promise<BotGroup[]>
   });
@@ -218,9 +218,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   // Get group administrators mutation
   const [administrators, setAdministrators] = React.useState<any[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
-  const [allMembers, setAllMembers] = React.useState<any[]>([]);
   const [clientApiMembers, setClientApiMembers] = React.useState<any[]>([]);
-  const [showAllMembers, setShowAllMembers] = React.useState(false);
   const [showTelegramAuth, setShowTelegramAuth] = useState(false);
   
   const getAdminsMutation = useMutation({
@@ -246,8 +244,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       return apiRequest('GET', `/api/projects/${projectId}/bot/group-members/${groupId}`);
     },
     onSuccess: (data) => {
-      setAllMembers(data.members || []);
-      setShowAllMembers(true);
+      setClientApiMembers(data.members || []);
       toast({ 
         title: data.isPartialList ? `Показаны администраторы: ${data.totalCount || 0}` : `Все участники: ${data.totalCount || 0}`,
         description: data.message || data.explanation || (data.isPartialList ? "Telegram API не предоставляет полный список" : "Полный список участников")
@@ -265,6 +262,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   // Автоматически загружаем администраторов при выборе группы
   React.useEffect(() => {
     if (selectedGroup && showGroupSettings) {
+      setAdministrators([]); // Сбрасываем старые данные
+      setClientApiMembers([]); // Сбрасываем старые данные
       getAdminsMutation.mutate(selectedGroup.groupId);
     }
   }, [selectedGroup, showGroupSettings]);
@@ -1006,146 +1005,128 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       {/* Список администраторов */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <h5 className="font-medium text-sm">Администраторы</h5>
+                          <h5 className="font-medium text-sm">Участники группы</h5>
                           <div className="flex items-center gap-2">
-                            {getAdminsMutation.isPending && (
+                            {isLoadingMembers && (
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
                                 Загрузка...
                               </div>
                             )}
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => getAllMembersMutation.mutate(selectedGroup.groupId)}
-                              disabled={getAllMembersMutation.isPending}
-                            >
-                              {getAllMembersMutation.isPending ? (
-                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                              ) : (
-                                <Users className="h-4 w-4 mr-2" />
-                              )}
-                              Все участники
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setShowTelegramAuth(true)}
-                            >
-                              <Shield className="h-4 w-4 mr-2" />
-                              Client API
-                            </Button>
+                            <Badge variant="outline">
+                              {(() => {
+                                if (clientApiMembers.length > 0) {
+                                  return `${clientApiMembers.length} участников`;
+                                } else if (administrators.length > 0) {
+                                  return `${administrators.length} админов`;
+                                } else if (selectedGroup.memberCount) {
+                                  return `${selectedGroup.memberCount} участников`;
+                                } else {
+                                  return 'Загрузка...';
+                                }
+                              })()}
+                            </Badge>
+                            {clientApiMembers.length === 0 && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setShowTelegramAuth(true)}
+                              >
+                                <Shield className="h-4 w-4 mr-2" />
+                                Загрузить всех участников
+                              </Button>
+                            )}
                           </div>
                         </div>
                         
-                        {administrators.length > 0 ? (
-                          <div className="space-y-2 max-h-40 overflow-y-auto">
-                            {administrators.map((admin, index) => (
-                              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                                    <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        {(() => {
+                          // Показываем Client API данные если они есть (приоритет)
+                          if (clientApiMembers.length > 0) {
+                            return (
+                              <div className="space-y-2 max-h-60 overflow-y-auto">
+                                {clientApiMembers.map((member, index) => (
+                                  <div key={`client-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div className="flex items-center space-x-3">
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                        member.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900' :
+                                        member.status === 'administrator' ? 'bg-blue-100 dark:bg-blue-900' :
+                                        member.isBot ? 'bg-gray-100 dark:bg-gray-900' :
+                                        'bg-green-100 dark:bg-green-900'
+                                      }`}>
+                                        {member.status === 'creator' ? (
+                                          <Crown className={`h-4 w-4 text-yellow-600 dark:text-yellow-400`} />
+                                        ) : member.status === 'administrator' ? (
+                                          <Shield className={`h-4 w-4 text-blue-600 dark:text-blue-400`} />
+                                        ) : member.isBot ? (
+                                          <Bot className={`h-4 w-4 text-gray-600 dark:text-gray-400`} />
+                                        ) : (
+                                          <Users className={`h-4 w-4 text-green-600 dark:text-green-400`} />
+                                        )}
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-sm">
+                                          {member?.firstName || 'Неизвестно'} {member?.lastName || ''}
+                                          {member?.isBot && <Badge variant="outline" className="ml-2 text-xs">Бот</Badge>}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          @{member?.username || 'Без username'} • ID: {member?.id || 'Неизвестно'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Badge variant={
+                                      member.status === 'creator' ? 'default' : 
+                                      member.status === 'administrator' ? 'secondary' : 
+                                      'outline'
+                                    }>
+                                      {member.status === 'creator' ? 'Создатель' : 
+                                       member.status === 'administrator' ? 'Админ' : 
+                                       member.isBot ? 'Бот' :
+                                       'Участник'}
+                                    </Badge>
                                   </div>
-                                  <div>
-                                    <p className="font-medium text-sm">
-                                      {admin?.user?.first_name || admin?.first_name || admin?.firstName || 'Неизвестно'} {admin?.user?.last_name || admin?.last_name || admin?.lastName || ''}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      @{admin?.user?.username || admin?.username || 'Без username'} • ID: {admin?.user?.id || admin?.id || 'Неизвестно'}
-                                    </p>
-                                  </div>
-                                </div>
-                                <Badge variant={admin.status === 'creator' ? 'default' : 'secondary'}>
-                                  {admin.status === 'creator' ? 'Создатель' : 'Админ'}
-                                </Badge>
+                                ))}
                               </div>
-                            ))}
-                          </div>
-                        ) : !getAdminsMutation.isPending ? (
-                          <p className="text-sm text-muted-foreground text-center py-4">
-                            Администраторы не найдены
-                          </p>
-                        ) : null}
+                            );
+                          }
+                          
+                          // Если нет Client API данных, показываем администраторов от Bot API
+                          if (administrators.length > 0) {
+                            return (
+                              <div className="space-y-2 max-h-60 overflow-y-auto">
+                                {administrators.map((admin, index) => (
+                                  <div key={`bot-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
+                                    <div className="flex items-center space-x-3">
+                                      <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                        <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                      </div>
+                                      <div>
+                                        <p className="font-medium text-sm">
+                                          {admin?.user?.first_name || admin?.first_name || admin?.firstName || 'Неизвестно'} {admin?.user?.last_name || admin?.last_name || admin?.lastName || ''}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          @{admin?.user?.username || admin?.username || 'Без username'} • ID: {admin?.user?.id || admin?.id || 'Неизвестно'}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <Badge variant={admin.status === 'creator' ? 'default' : 'secondary'}>
+                                      {admin.status === 'creator' ? 'Создатель' : 'Админ'}
+                                    </Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+                          
+                          // Если ничего нет, показываем подсказку
+                          return (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                              Нажмите "Загрузить всех участников" для просмотра полного списка
+                            </p>
+                          );
+                        })()}
                       </div>
 
-                      {/* Список участников Client API */}
-                      {clientApiMembers.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-medium text-sm">Участники (Client API)</h5>
-                            <Badge variant="outline">{clientApiMembers.length} человек</Badge>
-                          </div>
-                          
-                          <div className="space-y-2 max-h-60 overflow-y-auto">
-                            {clientApiMembers.map((member, index) => (
-                              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
-                                    <Shield className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                                  </div>
-                                  <div>
-                                    <p className="font-medium text-sm">
-                                      {member?.firstName || 'Неизвестно'} {member?.lastName || ''}
-                                      {member?.isBot && <Badge variant="outline" className="ml-2 text-xs">Бот</Badge>}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      @{member?.username || 'Без username'} • ID: {member?.id || 'Неизвестно'}
-                                    </p>
-                                  </div>
-                                </div>
-                                <Badge variant={
-                                  member.status === 'creator' ? 'default' : 
-                                  member.status === 'administrator' ? 'secondary' : 
-                                  'outline'
-                                }>
-                                  {member.status === 'creator' ? 'Создатель' : 
-                                   member.status === 'administrator' ? 'Админ' : 
-                                   'Участник'}
-                                </Badge>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
 
-                      {/* Список всех участников */}
-                      {showAllMembers && allMembers.length > 0 && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h5 className="font-medium text-sm">Все участники</h5>
-                            <Badge variant="outline">{allMembers.length} человек</Badge>
-                          </div>
-                          
-                          <div className="space-y-2 max-h-60 overflow-y-auto">
-                            {allMembers.map((member, index) => (
-                              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                                    <Users className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                  </div>
-                                  <div>
-                                    <p className="font-medium text-sm">
-                                      {member?.user?.first_name || member?.first_name || member?.firstName || 'Неизвестно'} {member?.user?.last_name || member?.last_name || member?.lastName || ''}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      @{member?.user?.username || member?.username || 'Без username'} • ID: {member?.user?.id || member?.id || 'Неизвестно'}
-                                    </p>
-                                  </div>
-                                </div>
-                                <Badge variant={
-                                  member.status === 'creator' ? 'default' : 
-                                  member.status === 'administrator' ? 'secondary' : 
-                                  'outline'
-                                }>
-                                  {member.status === 'creator' ? 'Создатель' : 
-                                   member.status === 'administrator' ? 'Админ' : 
-                                   'Участник'}
-                                </Badge>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
 
                       <div className="border-t my-4" />
 
