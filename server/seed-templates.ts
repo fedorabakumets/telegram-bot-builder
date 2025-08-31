@@ -2062,6 +2062,1193 @@ async function seedDefaultTemplates(force = false) {
     });
 
     console.log('✅ Шаблон VProgulke Bot создан');
+
+    // Создаем шаблон с многолистовой структурой и навигацией
+    await storage.createBotTemplate({
+      name: "🏢 Многолистовой бизнес-бот",
+      description: "Демонстрация многолистовой структуры с разными разделами: услуги, прайс, портфолио и контакты",
+      category: "business",
+      tags: ["многолистовой", "навигация", "бизнес", "меню", "структура", "разделы"],
+      isPublic: 1,
+      difficulty: "medium",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 6,
+      estimatedTime: 25,
+      data: {
+        sheets: [
+          {
+            id: "main_sheet",
+            name: "Главное меню",
+            nodes: [
+              {
+                id: "start",
+                type: "start",
+                position: { x: 400, y: 100 },
+                data: {
+                  command: "/start",
+                  description: "Приветствие и главное меню",
+                  messageText: "🏢 Добро пожаловать в нашу компанию!\n\nМы предоставляем профессиональные услуги в области IT-разработки.\n\nВыберите интересующий вас раздел:",
+                  synonyms: ["старт", "начать", "меню", "главная"],
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-services",
+                      text: "💼 Наши услуги",
+                      action: "goto",
+                      target: "services_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-portfolio",
+                      text: "📁 Портфолио",
+                      action: "goto", 
+                      target: "portfolio_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-pricing",
+                      text: "💰 Прайс-лист",
+                      action: "goto",
+                      target: "pricing_main", 
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-contacts",
+                      text: "📞 Контакты",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-about",
+                      text: "ℹ️ О компании",
+                      action: "goto",
+                      target: "about_company",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false,
+                  oneTimeKeyboard: false,
+                  resizeKeyboard: true
+                }
+              },
+              {
+                id: "about_company",
+                type: "message",
+                position: { x: 400, y: 300 },
+                data: {
+                  messageText: "ℹ️ О нашей компании:\n\n🔹 Работаем на рынке с 2018 года\n🔹 Команда из 15+ опытных разработчиков\n🔹 Более 200 успешно реализованных проектов\n🔹 Полный цикл разработки от идеи до запуска\n🔹 Поддержка проектов 24/7\n\nНаша миссия - создавать качественные IT-решения, которые помогают бизнесу расти и развиваться.",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-main",
+                      text: "⬅️ Главное меню",
+                      action: "goto",
+                      target: "start",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false
+                }
+              }
+            ],
+            connections: [
+              {
+                id: "conn-start-services",
+                source: "start",
+                target: "services_main",
+                sourceHandle: "btn-services",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-start-portfolio", 
+                source: "start",
+                target: "portfolio_main",
+                sourceHandle: "btn-portfolio",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-start-pricing",
+                source: "start", 
+                target: "pricing_main",
+                sourceHandle: "btn-pricing",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-start-contacts",
+                source: "start",
+                target: "contacts_main", 
+                sourceHandle: "btn-contacts",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-start-about",
+                source: "start",
+                target: "about_company",
+                sourceHandle: "btn-about", 
+                targetHandle: "target"
+              },
+              {
+                id: "conn-about-main",
+                source: "about_company",
+                target: "start",
+                sourceHandle: "btn-back-main",
+                targetHandle: "target"
+              }
+            ],
+            viewState: {
+              position: { x: 0, y: 0 },
+              zoom: 1
+            }
+          },
+          {
+            id: "services_sheet",
+            name: "Услуги",
+            nodes: [
+              {
+                id: "services_main",
+                type: "message",
+                position: { x: 400, y: 100 },
+                data: {
+                  messageText: "💼 Наши услуги:\n\nМы предлагаем полный спектр IT-услуг для вашего бизнеса.\n\nВыберите интересующую категорию:",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-web-dev",
+                      text: "🌐 Веб-разработка",
+                      action: "goto",
+                      target: "web_development",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-mobile-dev",
+                      text: "📱 Мобильная разработка",
+                      action: "goto", 
+                      target: "mobile_development",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-design",
+                      text: "🎨 Дизайн",
+                      action: "goto",
+                      target: "design_services",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-consulting",
+                      text: "🧠 IT-консалтинг",
+                      action: "goto",
+                      target: "consulting",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-back-services",
+                      text: "⬅️ Главное меню",
+                      action: "goto",
+                      target: "start",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false
+                }
+              },
+              {
+                id: "web_development",
+                type: "message",
+                position: { x: 100, y: 300 },
+                data: {
+                  messageText: "🌐 Веб-разработка:\n\n✅ Корпоративные сайты\n✅ Интернет-магазины\n✅ Веб-приложения\n✅ CRM и ERP системы\n✅ API разработка\n✅ Поддержка и развитие\n\nТехнологии: React, Vue.js, Node.js, Python, PHP",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-services-web",
+                      text: "⬅️ Назад к услугам",
+                      action: "goto",
+                      target: "services_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-consultation-web",
+                      text: "📞 Получить консультацию",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false
+                }
+              },
+              {
+                id: "mobile_development",
+                type: "message",
+                position: { x: 400, y: 300 },
+                data: {
+                  messageText: "📱 Мобильная разработка:\n\n✅ Нативные iOS приложения\n✅ Нативные Android приложения\n✅ Кроссплатформенные решения\n✅ Игры для мобильных устройств\n✅ Интеграция с внешними сервисами\n✅ Публикация в App Store и Google Play\n\nТехнологии: Swift, Kotlin, React Native, Flutter",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-services-mobile",
+                      text: "⬅️ Назад к услугам",
+                      action: "goto",
+                      target: "services_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-consultation-mobile",
+                      text: "📞 Получить консультацию",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false
+                }
+              },
+              {
+                id: "design_services",
+                type: "message",
+                position: { x: 700, y: 300 },
+                data: {
+                  messageText: "🎨 Дизайн услуги:\n\n✅ UI/UX дизайн веб-сайтов\n✅ Дизайн мобильных приложений\n✅ Брендинг и фирменный стиль\n✅ Логотипы и графика\n✅ Анимация и видео\n✅ Прототипирование\n\nИнструменты: Figma, Adobe Creative Suite, Sketch",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-services-design",
+                      text: "⬅️ Назад к услугам",
+                      action: "goto",
+                      target: "services_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-portfolio-design",
+                      text: "📁 Смотреть портфолио",
+                      action: "goto",
+                      target: "portfolio_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false
+                }
+              },
+              {
+                id: "consulting",
+                type: "message",
+                position: { x: 1000, y: 300 },
+                data: {
+                  messageText: "🧠 IT-консалтинг:\n\n✅ Аудит текущих IT-решений\n✅ Планирование цифровой трансформации\n✅ Выбор технологий\n✅ Архитектурное планирование\n✅ Оптимизация бизнес-процессов\n✅ Обучение команды\n\nПоможем выбрать наилучшие решения для вашего бизнеса!",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-services-consulting",
+                      text: "⬅️ Назад к услугам",
+                      action: "goto",
+                      target: "services_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-consultation-consulting",
+                      text: "📞 Получить консультацию",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false
+                }
+              }
+            ],
+            connections: [
+              {
+                id: "conn-services-web",
+                source: "services_main",
+                target: "web_development",
+                sourceHandle: "btn-web-dev",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-services-mobile",
+                source: "services_main",
+                target: "mobile_development",
+                sourceHandle: "btn-mobile-dev",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-services-design",
+                source: "services_main",
+                target: "design_services",
+                sourceHandle: "btn-design",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-services-consulting",
+                source: "services_main",
+                target: "consulting",
+                sourceHandle: "btn-consulting",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-web-back",
+                source: "web_development",
+                target: "services_main",
+                sourceHandle: "btn-back-services-web",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-mobile-back",
+                source: "mobile_development",
+                target: "services_main",
+                sourceHandle: "btn-back-services-mobile",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-design-back",
+                source: "design_services",
+                target: "services_main",
+                sourceHandle: "btn-back-services-design",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-consulting-back",
+                source: "consulting",
+                target: "services_main",
+                sourceHandle: "btn-back-services-consulting",
+                targetHandle: "target"
+              }
+            ],
+            viewState: {
+              position: { x: 0, y: 0 },
+              zoom: 1
+            }
+          },
+          {
+            id: "portfolio_sheet", 
+            name: "Портфолио",
+            nodes: [
+              {
+                id: "portfolio_main",
+                type: "message",
+                position: { x: 400, y: 100 },
+                data: {
+                  messageText: "📁 Наше портфолио:\n\nМы гордимся нашими работами и рады показать примеры успешных проектов.\n\nВыберите категорию проектов:",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-web-portfolio",
+                      text: "🌐 Веб-проекты",
+                      action: "goto",
+                      target: "web_portfolio",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-mobile-portfolio",
+                      text: "📱 Мобильные приложения",
+                      action: "goto",
+                      target: "mobile_portfolio",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-design-portfolio",
+                      text: "🎨 Дизайн-проекты",
+                      action: "goto",
+                      target: "design_portfolio",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-back-portfolio",
+                      text: "⬅️ Главное меню",
+                      action: "goto",
+                      target: "start",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false
+                }
+              },
+              {
+                id: "web_portfolio",
+                type: "message",
+                position: { x: 100, y: 300 },
+                data: {
+                  messageText: "🌐 Веб-проекты:\n\n🔹 **ТехноМарт** - Интернет-магазин электроники\n   • React + Node.js\n   • 10,000+ товаров\n   • Интеграция с 1С\n\n🔹 **МедКлиника Плюс** - Система записи к врачам\n   • Vue.js + Python\n   • Онлайн-консультации\n   • Система уведомлений\n\n🔹 **LogiTrans** - CRM для логистической компании\n   • Angular + .NET\n   • Трекинг грузов\n   • Автоматизация процессов",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-portfolio-web",
+                      text: "⬅️ Назад к портфолио",
+                      action: "goto",
+                      target: "portfolio_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-consultation-portfolio",
+                      text: "📞 Обсудить проект",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              },
+              {
+                id: "mobile_portfolio",
+                type: "message",
+                position: { x: 400, y: 300 },
+                data: {
+                  messageText: "📱 Мобильные приложения:\n\n🔹 **FitTracker** - Фитнес-трекер (iOS/Android)\n   • React Native\n   • 50,000+ скачиваний\n   • Интеграция с умными часами\n\n🔹 **BankSecure** - Банковское приложение\n   • Native iOS/Android\n   • Биометрическая аутентификация\n   • Push-уведомления\n\n🔹 **DeliveryFast** - Доставка еды\n   • Flutter\n   • Геолокация\n   • Онлайн-платежи",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-portfolio-mobile",
+                      text: "⬅️ Назад к портфолио",
+                      action: "goto",
+                      target: "portfolio_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-consultation-mobile-portfolio",
+                      text: "📞 Обсудить проект",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              },
+              {
+                id: "design_portfolio",
+                type: "message",
+                position: { x: 700, y: 300 },
+                data: {
+                  messageText: "🎨 Дизайн-проекты:\n\n🔹 **EcoStyle** - Брендинг эко-магазина\n   • Логотип и фирменный стиль\n   • Дизайн упаковки\n   • Веб-дизайн\n\n🔹 **StartupHub** - UI/UX для стартап-платформы\n   • Пользовательский интерфейс\n   • Мобильная версия\n   • Система иконок\n\n🔹 **RestaurantChain** - Дизайн сети ресторанов\n   • Меню и интерьер\n   • Мобильное приложение\n   • Маркетинговые материалы",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-portfolio-design",
+                      text: "⬅️ Назад к портфолио",
+                      action: "goto",
+                      target: "portfolio_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-consultation-design-portfolio",
+                      text: "📞 Обсудить проект",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              }
+            ],
+            connections: [
+              {
+                id: "conn-portfolio-web",
+                source: "portfolio_main",
+                target: "web_portfolio",
+                sourceHandle: "btn-web-portfolio",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-portfolio-mobile",
+                source: "portfolio_main",
+                target: "mobile_portfolio",
+                sourceHandle: "btn-mobile-portfolio",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-portfolio-design",
+                source: "portfolio_main",
+                target: "design_portfolio",
+                sourceHandle: "btn-design-portfolio",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-web-portfolio-back",
+                source: "web_portfolio",
+                target: "portfolio_main",
+                sourceHandle: "btn-back-portfolio-web",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-mobile-portfolio-back",
+                source: "mobile_portfolio",
+                target: "portfolio_main",
+                sourceHandle: "btn-back-portfolio-mobile",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-design-portfolio-back",
+                source: "design_portfolio",
+                target: "portfolio_main",
+                sourceHandle: "btn-back-portfolio-design",
+                targetHandle: "target"
+              }
+            ],
+            viewState: {
+              position: { x: 0, y: 0 },
+              zoom: 1
+            }
+          },
+          {
+            id: "pricing_sheet",
+            name: "Прайс-лист",
+            nodes: [
+              {
+                id: "pricing_main",
+                type: "message",
+                position: { x: 400, y: 100 },
+                data: {
+                  messageText: "💰 Прайс-лист:\n\nПрозрачные цены на наши услуги. Стоимость может варьироваться в зависимости от сложности проекта.\n\nВыберите интересующую категорию:",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-web-pricing",
+                      text: "🌐 Веб-разработка",
+                      action: "goto",
+                      target: "web_pricing",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-mobile-pricing",
+                      text: "📱 Мобильные приложения",
+                      action: "goto",
+                      target: "mobile_pricing",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-design-pricing",
+                      text: "🎨 Дизайн",
+                      action: "goto",
+                      target: "design_pricing",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-packages",
+                      text: "📦 Готовые пакеты",
+                      action: "goto",
+                      target: "pricing_packages",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-back-pricing",
+                      text: "⬅️ Главное меню",
+                      action: "goto",
+                      target: "start",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false
+                }
+              },
+              {
+                id: "web_pricing",
+                type: "message",
+                position: { x: 100, y: 300 },
+                data: {
+                  messageText: "🌐 Веб-разработка - цены:\n\n💼 **Корпоративный сайт**\n   • Лендинг: от 50,000₽\n   • Многостраничный: от 120,000₽\n   • С админкой: от 180,000₽\n\n🛒 **Интернет-магазин**\n   • Простой: от 200,000₽\n   • Средней сложности: от 400,000₽\n   • Крупный маркетплейс: от 800,000₽\n\n🔧 **Веб-приложение**\n   • CRM/ERP: от 500,000₽\n   • SaaS платформа: от 1,000,000₽",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-pricing-web",
+                      text: "⬅️ Назад к прайсу",
+                      action: "goto",
+                      target: "pricing_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-calculate-web",
+                      text: "🧮 Рассчитать стоимость",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              },
+              {
+                id: "mobile_pricing",
+                type: "message",
+                position: { x: 400, y: 300 },
+                data: {
+                  messageText: "📱 Мобильные приложения - цены:\n\n📲 **iOS / Android (нативные)**\n   • Простое приложение: от 300,000₽\n   • Среднее по сложности: от 600,000₽\n   • Сложное приложение: от 1,200,000₽\n\n🔄 **Кроссплатформенные**\n   • React Native: от 250,000₽\n   • Flutter: от 280,000₽\n\n🎮 **Игры**\n   • Простая игра: от 400,000₽\n   • Игра средней сложности: от 800,000₽",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-pricing-mobile",
+                      text: "⬅️ Назад к прайсу",
+                      action: "goto",
+                      target: "pricing_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-calculate-mobile",
+                      text: "🧮 Рассчитать стоимость",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              },
+              {
+                id: "design_pricing",
+                type: "message",
+                position: { x: 700, y: 300 },
+                data: {
+                  messageText: "🎨 Дизайн - цены:\n\n🎯 **UI/UX дизайн**\n   • Лендинг: от 30,000₽\n   • Сайт (5-10 страниц): от 60,000₽\n   • Приложение: от 80,000₽\n\n🏷️ **Брендинг**\n   • Логотип: от 20,000₽\n   • Фирменный стиль: от 50,000₽\n   • Полный ребрендинг: от 150,000₽\n\n📱 **Мобильный дизайн**\n   • Прототип: от 40,000₽\n   • Полный дизайн: от 100,000₽",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-pricing-design",
+                      text: "⬅️ Назад к прайсу",
+                      action: "goto",
+                      target: "pricing_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-calculate-design",
+                      text: "🧮 Рассчитать стоимость",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              },
+              {
+                id: "pricing_packages",
+                type: "message",
+                position: { x: 1000, y: 300 },
+                data: {
+                  messageText: "📦 Готовые пакеты:\n\n🚀 **СТАРТАП** - 150,000₽\n   • Лендинг + дизайн\n   • Мобильная версия\n   • Базовая SEO\n   • 3 месяца поддержки\n\n💼 **БИЗНЕС** - 400,000₽\n   • Корпоративный сайт\n   • Админ-панель\n   • Интеграции\n   • 6 месяцев поддержки\n\n🏢 **ENTERPRISE** - 1,000,000₽\n   • Полнофункциональная платформа\n   • Мобильные приложения\n   • Интеграция с системами\n   • Год поддержки + развитие",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-pricing-packages",
+                      text: "⬅️ Назад к прайсу",
+                      action: "goto",
+                      target: "pricing_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-choose-package",
+                      text: "✅ Выбрать пакет",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              }
+            ],
+            connections: [
+              {
+                id: "conn-pricing-web",
+                source: "pricing_main",
+                target: "web_pricing",
+                sourceHandle: "btn-web-pricing",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-pricing-mobile",
+                source: "pricing_main",
+                target: "mobile_pricing",
+                sourceHandle: "btn-mobile-pricing",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-pricing-design",
+                source: "pricing_main",
+                target: "design_pricing",
+                sourceHandle: "btn-design-pricing",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-pricing-packages",
+                source: "pricing_main",
+                target: "pricing_packages",
+                sourceHandle: "btn-packages",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-web-pricing-back",
+                source: "web_pricing",
+                target: "pricing_main",
+                sourceHandle: "btn-back-pricing-web",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-mobile-pricing-back",
+                source: "mobile_pricing",
+                target: "pricing_main",
+                sourceHandle: "btn-back-pricing-mobile",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-design-pricing-back",
+                source: "design_pricing",
+                target: "pricing_main",
+                sourceHandle: "btn-back-pricing-design",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-packages-pricing-back",
+                source: "pricing_packages",
+                target: "pricing_main",
+                sourceHandle: "btn-back-pricing-packages",
+                targetHandle: "target"
+              }
+            ],
+            viewState: {
+              position: { x: 0, y: 0 },
+              zoom: 1
+            }
+          },
+          {
+            id: "contacts_sheet",
+            name: "Контакты",
+            nodes: [
+              {
+                id: "contacts_main",
+                type: "message",
+                position: { x: 400, y: 100 },
+                data: {
+                  messageText: "📞 Наши контакты:\n\n🏢 **Адрес офиса:**\nг. Москва, ул. Тверская, д. 15, офис 401\n\n📧 **Email:**\ninfo@itcompany.ru\n\n📱 **Телефон:**\n+7 (495) 123-45-67\n\n🕒 **Время работы:**\nПн-Пт: 9:00 - 18:00\nСб-Вс: выходные\n\nВыберите удобный способ связи:",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-call-request",
+                      text: "📞 Заказать звонок",
+                      action: "goto",
+                      target: "call_request",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-consultation",
+                      text: "💬 Бесплатная консультация",
+                      action: "goto",
+                      target: "consultation_form",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-social-links",
+                      text: "🌐 Мы в соцсетях",
+                      action: "goto",
+                      target: "social_links",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-back-contacts",
+                      text: "⬅️ Главное меню",
+                      action: "goto",
+                      target: "start",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              },
+              {
+                id: "call_request",
+                type: "message",
+                position: { x: 100, y: 300 },
+                data: {
+                  messageText: "📞 Заказать обратный звонок:\n\nОставьте ваш номер телефона, и мы перезвоним в течение 30 минут в рабочее время.\n\nУкажите ваш номер телефона:",
+                  keyboardType: "none",
+                  collectUserInput: true,
+                  enableTextInput: true,
+                  inputVariable: "phone_number",
+                  inputTargetNodeId: "call_confirmation",
+                  inputType: "phone",
+                  inputValidation: "^\\+?[1-9]\\d{1,14}$",
+                  inputRetryMessage: "Пожалуйста, введите корректный номер телефона",
+                  markdown: false
+                }
+              },
+              {
+                id: "call_confirmation",
+                type: "message",
+                position: { x: 100, y: 500 },
+                data: {
+                  messageText: "✅ Спасибо! Ваша заявка принята.\n\nНомер телефона: {phone_number}\n\nМы перезвоним вам в ближайшее время!",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-contacts-call",
+                      text: "⬅️ К контактам",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-main-menu-call",
+                      text: "🏠 Главное меню",
+                      action: "goto",
+                      target: "start",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: false
+                }
+              },
+              {
+                id: "consultation_form",
+                type: "message",
+                position: { x: 400, y: 300 },
+                data: {
+                  messageText: "💬 Бесплатная консультация:\n\nОпишите ваш проект или задачу, и мы предложим оптимальное решение.\n\nРасскажите о вашем проекте:",
+                  keyboardType: "none",
+                  collectUserInput: true,
+                  enableTextInput: true,
+                  inputVariable: "project_description",
+                  inputTargetNodeId: "consultation_contact",
+                  inputType: "text",
+                  minLength: 10,
+                  maxLength: 2000,
+                  inputRetryMessage: "Пожалуйста, опишите ваш проект подробнее (минимум 10 символов)",
+                  markdown: false
+                }
+              },
+              {
+                id: "consultation_contact",
+                type: "message",
+                position: { x: 400, y: 500 },
+                data: {
+                  messageText: "Отлично! Теперь укажите ваш контактный телефон для связи:",
+                  keyboardType: "none",
+                  collectUserInput: true,
+                  enableTextInput: true,
+                  inputVariable: "consultation_phone",
+                  inputTargetNodeId: "consultation_confirmation",
+                  inputType: "phone",
+                  inputValidation: "^\\+?[1-9]\\d{1,14}$",
+                  inputRetryMessage: "Пожалуйста, введите корректный номер телефона",
+                  markdown: false
+                }
+              },
+              {
+                id: "consultation_confirmation",
+                type: "message",
+                position: { x: 400, y: 700 },
+                data: {
+                  messageText: "🎉 Заявка на консультацию отправлена!\n\n📝 **Описание проекта:**\n{project_description}\n\n📞 **Контактный телефон:**\n{consultation_phone}\n\nНаш специалист свяжется с вами в течение 2 часов для обсуждения деталей.",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-contacts-consultation",
+                      text: "⬅️ К контактам",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    },
+                    {
+                      id: "btn-main-menu-consultation",
+                      text: "🏠 Главное меню",
+                      action: "goto",
+                      target: "start",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              },
+              {
+                id: "social_links",
+                type: "message",
+                position: { x: 700, y: 300 },
+                data: {
+                  messageText: "🌐 Мы в социальных сетях:\n\n📘 **ВКонтакте:** vk.com/itcompany\n📸 **Instagram:** @itcompany_official\n💼 **LinkedIn:** IT Company\n📹 **YouTube:** IT Company Channel\n💬 **Telegram:** @itcompany_chat\n\nПодписывайтесь на наши каналы и следите за новостями и полезными материалами!",
+                  keyboardType: "inline",
+                  buttons: [
+                    {
+                      id: "btn-back-contacts-social",
+                      text: "⬅️ К контактам",
+                      action: "goto",
+                      target: "contacts_main",
+                      buttonType: "normal"
+                    }
+                  ],
+                  markdown: true
+                }
+              }
+            ],
+            connections: [
+              {
+                id: "conn-contacts-call",
+                source: "contacts_main",
+                target: "call_request",
+                sourceHandle: "btn-call-request",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-contacts-consultation",
+                source: "contacts_main",
+                target: "consultation_form",
+                sourceHandle: "btn-consultation",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-contacts-social",
+                source: "contacts_main",
+                target: "social_links",
+                sourceHandle: "btn-social-links",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-call-confirmation",
+                source: "call_request",
+                target: "call_confirmation",
+                sourceHandle: "input-phone",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-consultation-contact",
+                source: "consultation_form",
+                target: "consultation_contact",
+                sourceHandle: "input-description",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-consultation-confirmation",
+                source: "consultation_contact",
+                target: "consultation_confirmation",
+                sourceHandle: "input-phone",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-call-back-contacts",
+                source: "call_confirmation",
+                target: "contacts_main",
+                sourceHandle: "btn-back-contacts-call",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-consultation-back-contacts",
+                source: "consultation_confirmation",
+                target: "contacts_main",
+                sourceHandle: "btn-back-contacts-consultation",
+                targetHandle: "target"
+              },
+              {
+                id: "conn-social-back-contacts",
+                source: "social_links",
+                target: "contacts_main",
+                sourceHandle: "btn-back-contacts-social",
+                targetHandle: "target"
+              }
+            ],
+            viewState: {
+              position: { x: 0, y: 0 },
+              zoom: 1
+            }
+          }
+        ],
+        // Межлистовые соединения
+        interSheetConnections: [
+          {
+            id: "inter-main-services",
+            sourceSheetId: "main_sheet",
+            targetSheetId: "services_sheet", 
+            sourceNodeId: "start",
+            targetNodeId: "services_main",
+            sourceHandle: "btn-services",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-main-portfolio",
+            sourceSheetId: "main_sheet",
+            targetSheetId: "portfolio_sheet",
+            sourceNodeId: "start", 
+            targetNodeId: "portfolio_main",
+            sourceHandle: "btn-portfolio",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-main-pricing",
+            sourceSheetId: "main_sheet",
+            targetSheetId: "pricing_sheet",
+            sourceNodeId: "start",
+            targetNodeId: "pricing_main",
+            sourceHandle: "btn-pricing",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-main-contacts",
+            sourceSheetId: "main_sheet", 
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "start",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-contacts",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-services-main",
+            sourceSheetId: "services_sheet",
+            targetSheetId: "main_sheet",
+            sourceNodeId: "services_main",
+            targetNodeId: "start",
+            sourceHandle: "btn-back-services",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-portfolio-main",
+            sourceSheetId: "portfolio_sheet",
+            targetSheetId: "main_sheet",
+            sourceNodeId: "portfolio_main",
+            targetNodeId: "start",
+            sourceHandle: "btn-back-portfolio",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-pricing-main",
+            sourceSheetId: "pricing_sheet",
+            targetSheetId: "main_sheet",
+            sourceNodeId: "pricing_main",
+            targetNodeId: "start",
+            sourceHandle: "btn-back-pricing",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-contacts-main",
+            sourceSheetId: "contacts_sheet",
+            targetSheetId: "main_sheet",
+            sourceNodeId: "contacts_main",
+            targetNodeId: "start",
+            sourceHandle: "btn-back-contacts",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-services-contacts",
+            sourceSheetId: "services_sheet",
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "web_development",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-consultation-web",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-services-contacts-mobile",
+            sourceSheetId: "services_sheet",
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "mobile_development",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-consultation-mobile",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-services-portfolio",
+            sourceSheetId: "services_sheet",
+            targetSheetId: "portfolio_sheet",
+            sourceNodeId: "design_services",
+            targetNodeId: "portfolio_main",
+            sourceHandle: "btn-portfolio-design",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-services-contacts-consulting",
+            sourceSheetId: "services_sheet",
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "consulting",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-consultation-consulting",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-portfolio-contacts",
+            sourceSheetId: "portfolio_sheet",
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "web_portfolio",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-consultation-portfolio",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-portfolio-contacts-mobile",
+            sourceSheetId: "portfolio_sheet",
+            targetSheetId: "contacts_sheet", 
+            sourceNodeId: "mobile_portfolio",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-consultation-mobile-portfolio",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-portfolio-contacts-design",
+            sourceSheetId: "portfolio_sheet",
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "design_portfolio",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-consultation-design-portfolio",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-pricing-contacts-web",
+            sourceSheetId: "pricing_sheet",
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "web_pricing",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-calculate-web",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-pricing-contacts-mobile",
+            sourceSheetId: "pricing_sheet",
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "mobile_pricing",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-calculate-mobile",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-pricing-contacts-design",
+            sourceSheetId: "pricing_sheet",
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "design_pricing",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-calculate-design",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-pricing-contacts-packages",
+            sourceSheetId: "pricing_sheet",
+            targetSheetId: "contacts_sheet",
+            sourceNodeId: "pricing_packages",
+            targetNodeId: "contacts_main",
+            sourceHandle: "btn-choose-package",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-contacts-main-call",
+            sourceSheetId: "contacts_sheet",
+            targetSheetId: "main_sheet",
+            sourceNodeId: "call_confirmation",
+            targetNodeId: "start",
+            sourceHandle: "btn-main-menu-call",
+            targetHandle: "target"
+          },
+          {
+            id: "inter-contacts-main-consultation",
+            sourceSheetId: "contacts_sheet",
+            targetSheetId: "main_sheet",
+            sourceNodeId: "consultation_confirmation",
+            targetNodeId: "start",
+            sourceHandle: "btn-main-menu-consultation",
+            targetHandle: "target"
+          }
+        ]
+      }
+    });
+
+    console.log('✅ Шаблон многолистовой структуры создан');
     console.log('✅ Системные шаблоны созданы');
 
   } catch (error) {
