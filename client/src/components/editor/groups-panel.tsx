@@ -1255,19 +1255,41 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                             
                                             {/* Основные действия - для всех кроме создателя */}
                                             <DropdownMenuItem 
-                                              onClick={() => muteMemberMutation.mutate({ 
-                                                groupId: selectedGroup.groupId, 
-                                                userId: member.id?.toString() || member.user?.id?.toString() 
-                                              })}
+                                              onClick={() => {
+                                                const userId = member.id?.toString() || member.user?.id?.toString();
+                                                if (!userId) {
+                                                  toast({
+                                                    title: 'Ошибка',
+                                                    description: 'Не удалось получить ID пользователя',
+                                                    variant: 'destructive'
+                                                  });
+                                                  return;
+                                                }
+                                                muteMemberMutation.mutate({ 
+                                                  groupId: selectedGroup.groupId, 
+                                                  userId 
+                                                });
+                                              }}
                                             >
                                               <VolumeX className="h-4 w-4 mr-2" />
                                               {member.isBot ? 'Отключить бота' : 'Замутить'}
                                             </DropdownMenuItem>
                                             <DropdownMenuItem 
-                                              onClick={() => kickMemberMutation.mutate({ 
-                                                groupId: selectedGroup.groupId, 
-                                                userId: member.id?.toString() || member.user?.id?.toString() 
-                                              })}
+                                              onClick={() => {
+                                                const userId = member.id?.toString() || member.user?.id?.toString();
+                                                if (!userId) {
+                                                  toast({
+                                                    title: 'Ошибка',
+                                                    description: 'Не удалось получить ID пользователя',
+                                                    variant: 'destructive'
+                                                  });
+                                                  return;
+                                                }
+                                                kickMemberMutation.mutate({ 
+                                                  groupId: selectedGroup.groupId, 
+                                                  userId 
+                                                });
+                                              }}
                                             >
                                               <UserMinus className="h-4 w-4 mr-2" />
                                               {member.isBot ? 'Удалить бота' : 'Исключить'}
@@ -1613,10 +1635,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           <Button 
                             variant="destructive" 
                             size="sm"
-                            onClick={() => banMemberMutation.mutate({ 
-                              groupId: selectedGroup.groupId, 
-                              userId: userIdToBan 
-                            })}
+                            onClick={() => {
+                              if (!userIdToBan || !selectedGroup?.groupId) {
+                                toast({
+                                  title: 'Ошибка',
+                                  description: 'Укажите ID пользователя',
+                                  variant: 'destructive'
+                                });
+                                return;
+                              }
+                              banMemberMutation.mutate({ 
+                                groupId: selectedGroup.groupId, 
+                                userId: userIdToBan 
+                              });
+                            }}
                             disabled={!userIdToBan || banMemberMutation.isPending}
                             className="w-full"
                           >
@@ -1642,10 +1674,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => unbanMemberMutation.mutate({ 
-                              groupId: selectedGroup.groupId, 
-                              userId: userIdToUnban 
-                            })}
+                            onClick={() => {
+                              if (!userIdToUnban || !selectedGroup?.groupId) {
+                                toast({
+                                  title: 'Ошибка',
+                                  description: 'Укажите ID пользователя',
+                                  variant: 'destructive'
+                                });
+                                return;
+                              }
+                              unbanMemberMutation.mutate({ 
+                                groupId: selectedGroup.groupId, 
+                                userId: userIdToUnban 
+                              });
+                            }}
                             disabled={!userIdToUnban || unbanMemberMutation.isPending}
                             className="w-full"
                           >
@@ -1935,10 +1977,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 </Button>
                 <Button 
                   onClick={() => {
-                    if (selectedMember) {
+                    if (selectedMember && selectedGroup) {
+                      const userId = selectedMember.id?.toString() || selectedMember.user?.id?.toString();
+                      const groupId = selectedGroup.groupId;
+                      
+                      if (!userId || !groupId) {
+                        toast({
+                          title: 'Ошибка',
+                          description: 'Не удалось получить ID пользователя или группы',
+                          variant: 'destructive'
+                        });
+                        return;
+                      }
+                      
                       updatePermissionsMutation.mutate({
-                        groupId: selectedGroup.groupId,
-                        userId: selectedMember.id?.toString() || selectedMember.user?.id?.toString(),
+                        groupId,
+                        userId,
                         permissions: memberPermissions
                       });
                     }
