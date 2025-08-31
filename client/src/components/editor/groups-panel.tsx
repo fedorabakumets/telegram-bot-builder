@@ -31,6 +31,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [selectedGroup, setSelectedGroup] = useState<BotGroup | null>(null);
   const [groupUrl, setGroupUrl] = useState('');
   const [groupName, setGroupName] = useState('');
+  const [groupId, setGroupId] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
   const [groupAvatarUrl, setGroupAvatarUrl] = useState('');
   const [groupLanguage, setGroupLanguage] = useState('ru');
@@ -651,7 +652,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
 
     createGroupMutation.mutate({
-      groupId: groupUrl.includes('joinchat') ? null : groupUrl.replace('@', ''),
+      groupId: groupId.trim() || (groupUrl.includes('joinchat') ? null : groupUrl.replace('@', '')),
       name: groupName,
       url: groupUrl,
       isAdmin: makeAdmin ? 1 : 0,
@@ -681,6 +682,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     setShowAddGroup(false);
     setGroupUrl('');
     setGroupName('');
+    setGroupId('');
     setMakeAdmin(false);
   };
 
@@ -885,6 +887,16 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   placeholder="Введите название группы"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="group-id">ID группы (необязательно)</Label>
+                <Input
+                  id="group-id"
+                  placeholder="-1002726444678"
+                  value={groupId}
+                  onChange={(e) => setGroupId(e.target.value)}
                 />
               </div>
               
