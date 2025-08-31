@@ -911,6 +911,19 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         </p>
                       </div>
                     </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('🔄 Принудительное обновление информации о группе:', group.groupId);
+                        parseGroupInfoMutation.mutate(group.groupId!);
+                      }}
+                      disabled={parseGroupInfoMutation.isPending}
+                      title="Обновить информацию о группе"
+                    >
+                      {parseGroupInfoMutation.isPending ? '⏳' : '🔄'}
+                    </Button>
                   </div>
                   
                   <div className="space-y-2 text-sm">
@@ -920,6 +933,20 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         {group.url.length > 20 ? group.url.substring(0, 20) + '...' : group.url}
                       </span>
                     </div>
+                    {group.memberCount && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Участники:</span>
+                        <span>{group.memberCount}</span>
+                      </div>
+                    )}
+                    {group.description && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Описание:</span>
+                        <span className="text-xs" title={group.description}>
+                          {group.description.length > 30 ? group.description.substring(0, 30) + '...' : group.description}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Добавлено:</span>
                       <span>{group.createdAt ? new Date(group.createdAt).toLocaleDateString() : '-'}</span>
