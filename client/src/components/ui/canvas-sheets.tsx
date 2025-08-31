@@ -132,7 +132,9 @@ export function CanvasSheets({
   };
 
   return (
-    <div className="flex items-center bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-600 px-2 py-0 shadow-lg">
+    <div className="flex items-center bg-white dark:bg-gray-900 border-t border-gray-300 dark:border-gray-600 px-2 py-1 shadow-lg relative">
+      {/* Нижняя линия панели */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-300 dark:bg-gray-600"></div>
       {/* Кнопка прокрутки влево */}
       {canScrollLeft && (
         <Button
@@ -157,10 +159,10 @@ export function CanvasSheets({
               key={sheet.id}
               data-sheet-id={sheet.id}
               className={cn(
-                "group flex items-center min-w-[150px] max-w-[200px] h-8 px-3 cursor-pointer border border-gray-300 dark:border-gray-600 transition-all duration-200",
+                "group flex items-center min-w-[150px] max-w-[200px] h-8 px-3 cursor-pointer transition-all duration-200 relative",
                 activeSheetId === sheet.id
-                  ? "bg-white dark:bg-gray-900 border-blue-500 text-blue-600 dark:text-blue-400 border-t-2 border-b-0 rounded-t-md -mb-px z-10 shadow-sm"
-                  : "bg-gray-50 dark:bg-gray-800 border-b-gray-300 dark:border-b-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-md"
+                  ? "bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 border-l border-r border-t-2 border-blue-500 rounded-t-lg z-10 shadow-md -mb-px"
+                  : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-l border-r border-t border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-t-lg border-b border-b-gray-300 dark:border-b-gray-600"
               )}
               onClick={() => onSheetSelect(sheet.id)}
             >

@@ -32,10 +32,34 @@ export class SheetsManager {
 
   // Создание нового листа
   static createSheet(name: string, nodes: Node[] = [], connections: Connection[] = []): CanvasSheet {
+    // Если узлы не переданы, создаем стартовый узел по умолчанию
+    const defaultNodes = nodes.length === 0 ? [{
+      id: 'start',
+      type: 'start' as const,
+      position: { x: 100, y: 100 },
+      data: {
+        messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
+        keyboardType: 'none' as const,
+        buttons: [],
+        resizeKeyboard: true,
+        oneTimeKeyboard: false,
+        markdown: false,
+        formatMode: 'none' as const,
+        synonyms: [],
+        isPrivateOnly: false,
+        adminOnly: false,
+        requiresAuth: false,
+        showInMenu: true,
+        enableStatistics: true,
+        customParameters: [],
+        options: []
+      }
+    }] : nodes;
+
     return {
       id: nanoid(),
       name,
-      nodes,
+      nodes: defaultNodes,
       connections,
       viewState: {
         pan: { x: 0, y: 0 },
