@@ -7630,7 +7630,8 @@ function generateMessageSynonymHandler(node: Node, synonym: string): string {
   code += `        id="synonym_${node.id}_" + str(user_id),\n`;
   code += `        from_user=message.from_user,\n`;
   code += `        message=message,\n`;
-  code += `        data="${node.id}"\n`;
+  code += `        data="${node.id}",\n`;
+  code += `        chat_instance=str(user_id)\n`;
   code += `    )\n`;
   code += `    await callback_${sanitizedNodeId}_handler(callback_query)\n`;
   
