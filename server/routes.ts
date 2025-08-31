@@ -3415,7 +3415,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      res.json({ administrators: result.result });
+      // Найти бота среди администраторов и извлечь его права
+      let botAdminRights = null;
+      const botUser = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getMe`);
+      const botInfo = await botUser.json();
+      
+      if (botUser.ok && result.result) {
+        const botAdmin = result.result.find((admin: any) => 
+          admin.user && admin.user.id === botInfo.result.id
+        );
+        
+        if (botAdmin && botAdmin.status === 'administrator') {
+          // Извлекаем права администратора бота
+          botAdminRights = {
+            can_manage_chat: botAdmin.can_manage_chat || false,
+            can_change_info: botAdmin.can_change_info || false,
+            can_delete_messages: botAdmin.can_delete_messages || false,
+            can_invite_users: botAdmin.can_invite_users || false,
+            can_restrict_members: botAdmin.can_restrict_members || false,
+            can_pin_messages: botAdmin.can_pin_messages || false,
+            can_promote_members: botAdmin.can_promote_members || false,
+            can_manage_video_chats: botAdmin.can_manage_video_chats || false
+          };
+        }
+      }
+
+      res.json({ 
+        administrators: result.result,
+        botAdminRights: botAdminRights
+      });
     } catch (error) {
       console.error("Failed to get administrators:", error);
       res.status(500).json({ message: "Failed to get administrators" });

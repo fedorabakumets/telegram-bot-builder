@@ -1069,16 +1069,55 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           setMakeAdmin(group.isAdmin === 1);
                           setIsPublicGroup(Boolean(group.isPublic));
                           setChatType((group.chatType as 'group' | 'supergroup' | 'channel') || 'group');
-                          setAdminRights((group.adminRights as any) || {
-                            can_manage_chat: false,
-                            can_change_info: false,
-                            can_delete_messages: false,
-                            can_invite_users: false,
-                            can_restrict_members: false,
-                            can_pin_messages: false,
-                            can_promote_members: false,
-                            can_manage_video_chats: false
-                          });
+                          
+                          // Получаем актуальные права администратора из Telegram API
+                          if (group.isAdmin === 1 && group.groupId) {
+                            fetch(`/api/projects/${projectId}/bot/group-admins/${group.groupId}`)
+                              .then(res => res.json())
+                              .then(data => {
+                                if (data.botAdminRights) {
+                                  setAdminRights(data.botAdminRights);
+                                } else {
+                                  // Fallback к базовым правам если не найдены
+                                  setAdminRights((group.adminRights as any) || {
+                                    can_manage_chat: false,
+                                    can_change_info: false,
+                                    can_delete_messages: false,
+                                    can_invite_users: false,
+                                    can_restrict_members: false,
+                                    can_pin_messages: false,
+                                    can_promote_members: false,
+                                    can_manage_video_chats: false
+                                  });
+                                }
+                              })
+                              .catch(() => {
+                                // Fallback при ошибке
+                                setAdminRights((group.adminRights as any) || {
+                                  can_manage_chat: false,
+                                  can_change_info: false,
+                                  can_delete_messages: false,
+                                  can_invite_users: false,
+                                  can_restrict_members: false,
+                                  can_pin_messages: false,
+                                  can_promote_members: false,
+                                  can_manage_video_chats: false
+                                });
+                              });
+                          } else {
+                            // Если не админ, используем базовые права
+                            setAdminRights({
+                              can_manage_chat: false,
+                              can_change_info: false,
+                              can_delete_messages: false,
+                              can_invite_users: false,
+                              can_restrict_members: false,
+                              can_pin_messages: false,
+                              can_promote_members: false,
+                              can_manage_video_chats: false
+                            });
+                          }
+                          
                           setShowGroupSettings(true);
                         }}
                       >
