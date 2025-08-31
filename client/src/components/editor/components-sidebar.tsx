@@ -443,11 +443,10 @@ export function ComponentsSidebar({
   const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
   const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
   const [dragOverProject, setDragOverProject] = useState<number | null>(null);
-  const [isSheetDialogOpen, setIsSheetDialogOpen] = useState(false);
-  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
-  const [sheetName, setSheetName] = useState('');
-  const [selectedProject, setSelectedProject] = useState<BotProject | null>(null);
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null);
+  // Состояние для inline редактирования листов
+  const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
+  const [editingSheetName, setEditingSheetName] = useState('');
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -713,6 +712,25 @@ export function ComponentsSidebar({
     if (project && confirm(`Вы уверены, что хотите удалить проект "${project.name}"? Это действие нельзя отменить.`)) {
       deleteProjectMutation.mutate(project.id);
     }
+  };
+
+  // Обработчики inline редактирования листов
+  const handleStartEditingSheet = (sheetId: string, currentName: string) => {
+    setEditingSheetId(sheetId);
+    setEditingSheetName(currentName);
+  };
+
+  const handleSaveSheetName = () => {
+    if (editingSheetId && editingSheetName.trim() && onSheetRename) {
+      onSheetRename(editingSheetId, editingSheetName.trim());
+    }
+    setEditingSheetId(null);
+    setEditingSheetName('');
+  };
+
+  const handleCancelEditingSheet = () => {
+    setEditingSheetId(null);
+    setEditingSheetName('');
   };
 
   // Обработчики drag-and-drop для проектов
@@ -992,9 +1010,11 @@ export function ComponentsSidebar({
                                 className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setSelectedProject(project);
-                                  setSheetName('');
-                                  setIsSheetDialogOpen(true);
+                                  if (currentProjectId === project.id && onSheetAdd) {
+                                    const sheetsInfo = getSheetsInfo(project);
+                                    const newSheetName = `Лист ${sheetsInfo.count + 1}`;
+                                    onSheetAdd(newSheetName);
+                                  }
                                 }}
                                 title="Добавить лист"
                               >
@@ -1008,36 +1028,54 @@ export function ComponentsSidebar({
                                   projectData.sheets && 
                                   projectData.sheets[index]?.id === projectData.activeSheetId;
                                 
+                                const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
+                                const isEditing = editingSheetId === sheetId;
+                                
                                 return (
                                   <div key={index} className="flex items-center gap-2 group/sheet">
-                                    <Badge 
-                                      variant={isActive ? "default" : "secondary"} 
-                                      className={`text-xs px-3 py-1.5 h-7 cursor-pointer hover:opacity-80 transition-all flex-1 font-medium ${
-                                        isActive ? 'bg-primary text-primary-foreground shadow-sm' : ''
-                                      }`}
-                                      onClick={() => {
-                                        if (currentProjectId === project.id && onSheetSelect && SheetsManager.isNewFormat(projectData)) {
-                                          const sheetId = projectData.sheets[index]?.id;
-                                          if (sheetId) {
-                                            onSheetSelect(sheetId);
+                                    {isEditing ? (
+                                      <Input
+                                        value={editingSheetName}
+                                        onChange={(e) => setEditingSheetName(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            handleSaveSheetName();
+                                          } else if (e.key === 'Escape') {
+                                            handleCancelEditingSheet();
                                           }
-                                        }
-                                      }}
-                                      onDoubleClick={() => {
-                                        // Открываем диалог переименования
-                                        if (currentProjectId === project.id && SheetsManager.isNewFormat(projectData)) {
-                                          const sheetId = projectData.sheets[index]?.id;
-                                          if (sheetId) {
-                                            setSelectedSheetId(sheetId);
-                                            setSheetName(name);
-                                            setIsRenameDialogOpen(true);
+                                        }}
+                                        onBlur={handleSaveSheetName}
+                                        autoFocus
+                                        className="text-xs px-3 py-1.5 h-7 flex-1 font-medium"
+                                      />
+                                    ) : (
+                                      <Badge 
+                                        variant={isActive ? "default" : "secondary"} 
+                                        className={`text-xs px-3 py-1.5 h-7 cursor-pointer hover:opacity-80 transition-all flex-1 font-medium ${
+                                          isActive ? 'bg-primary text-primary-foreground shadow-sm' : ''
+                                        }`}
+                                        onClick={() => {
+                                          if (currentProjectId === project.id && onSheetSelect && SheetsManager.isNewFormat(projectData)) {
+                                            const sheetId = projectData.sheets[index]?.id;
+                                            if (sheetId) {
+                                              onSheetSelect(sheetId);
+                                            }
                                           }
-                                        }
-                                      }}
-                                      title={name}
-                                    >
-                                      <span className="block text-center w-full truncate">{name}</span>
-                                    </Badge>
+                                        }}
+                                        onDoubleClick={() => {
+                                          // Включаем inline редактирование
+                                          if (currentProjectId === project.id && SheetsManager.isNewFormat(projectData)) {
+                                            const sheetId = projectData.sheets[index]?.id;
+                                            if (sheetId) {
+                                              handleStartEditingSheet(sheetId, name);
+                                            }
+                                          }
+                                        }}
+                                        title={name}
+                                      >
+                                        <span className="block text-center w-full truncate">{name}</span>
+                                      </Badge>
+                                    )}
                                     
                                     {/* Кнопки управления листом */}
                                     {currentProjectId === project.id && (
@@ -1058,25 +1096,6 @@ export function ComponentsSidebar({
                                           title="Дублировать лист"
                                         >
                                           <Copy className="h-3 w-3" />
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 w-6 p-0 hover:bg-muted"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (SheetsManager.isNewFormat(projectData)) {
-                                              const sheetId = projectData.sheets[index]?.id;
-                                              if (sheetId) {
-                                                setSelectedSheetId(sheetId);
-                                                setSheetName(name);
-                                                setIsRenameDialogOpen(true);
-                                              }
-                                            }
-                                          }}
-                                          title="Переименовать лист"
-                                        >
-                                          <Edit className="h-3 w-3" />
                                         </Button>
                                         {sheetsInfo.count > 1 && (
                                           <Button
@@ -1155,95 +1174,7 @@ export function ComponentsSidebar({
 
       </div>
 
-      {/* Диалог создания листа */}
-      <Dialog open={isSheetDialogOpen} onOpenChange={setIsSheetDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Добавить новый лист</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Название листа"
-              value={sheetName}
-              onChange={(e) => setSheetName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && sheetName.trim()) {
-                  if (onSheetAdd) {
-                    onSheetAdd(sheetName.trim());
-                  }
-                  setSheetName('');
-                  setIsSheetDialogOpen(false);
-                }
-              }}
-            />
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setIsSheetDialogOpen(false)}>
-                Отмена
-              </Button>
-              <Button 
-                onClick={() => {
-                  if (sheetName.trim() && onSheetAdd) {
-                    onSheetAdd(sheetName.trim());
-                  }
-                  setSheetName('');
-                  setIsSheetDialogOpen(false);
-                }}
-                disabled={!sheetName.trim()}
-              >
-                Создать
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* Диалог переименования листа */}
-      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Переименовать лист</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder="Новое название листа"
-              value={sheetName}
-              onChange={(e) => setSheetName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && sheetName.trim() && selectedSheetId) {
-                  if (onSheetRename) {
-                    onSheetRename(selectedSheetId, sheetName.trim());
-                  }
-                  setSheetName('');
-                  setSelectedSheetId(null);
-                  setIsRenameDialogOpen(false);
-                }
-              }}
-            />
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => {
-                setIsRenameDialogOpen(false);
-                setSheetName('');
-                setSelectedSheetId(null);
-              }}>
-                Отмена
-              </Button>
-              <Button 
-                onClick={() => {
-                  if (sheetName.trim() && selectedSheetId && onSheetRename) {
-                    onSheetRename(selectedSheetId, sheetName.trim());
-                  }
-                  setSheetName('');
-                  setSelectedSheetId(null);
-                  setIsRenameDialogOpen(false);
-                }}
-                disabled={!sheetName.trim()}
-              >
-                Переименовать
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </aside>
   );
 }
