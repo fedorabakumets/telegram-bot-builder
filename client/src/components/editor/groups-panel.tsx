@@ -1316,29 +1316,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="group-language">Язык группы</Label>
-                        <Select value={groupLanguage} onValueChange={setGroupLanguage}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Выберите язык" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="ru">Русский</SelectItem>
-                            <SelectItem value="en">English</SelectItem>
-                            <SelectItem value="es">Español</SelectItem>
-                            <SelectItem value="fr">Français</SelectItem>
-                            <SelectItem value="de">Deutsch</SelectItem>
-                            <SelectItem value="it">Italiano</SelectItem>
-                            <SelectItem value="pt">Português</SelectItem>
-                            <SelectItem value="zh">中文</SelectItem>
-                            <SelectItem value="ja">日本語</SelectItem>
-                            <SelectItem value="ko">한국어</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
                         <Label htmlFor="group-avatar">URL аватарки</Label>
                         <div className="flex gap-2">
                           <Input
@@ -1351,16 +1328,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             <Upload className="h-4 w-4" />
                           </Button>
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="group-timezone">Часовой пояс</Label>
-                        <Input
-                          id="group-timezone"
-                          placeholder="Europe/Moscow"
-                          value={groupTimezone}
-                          onChange={(e) => setGroupTimezone(e.target.value)}
-                        />
                       </div>
                     </div>
 
