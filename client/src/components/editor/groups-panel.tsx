@@ -997,22 +997,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
                   <TabsContent value="members" className="space-y-4 mt-0">
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">Управление участниками</h4>
-                        <Badge variant="secondary">
-                          {(() => {
-                            if (clientApiMembers.length > 0) {
-                              return `${clientApiMembers.length} участников`;
-                            } else if (administrators.length > 0) {
-                              return `${administrators.length} админов`;
-                            } else if (selectedGroup.memberCount && selectedGroup.memberCount > 0) {
-                              return `${selectedGroup.memberCount} участников`;
-                            } else {
-                              return 'Загрузка...';
-                            }
-                          })()}
-                        </Badge>
-                      </div>
                       
                       {/* Список администраторов */}
                       <div className="space-y-3">
