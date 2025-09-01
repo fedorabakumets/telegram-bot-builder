@@ -7759,17 +7759,32 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
   const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
   
-  let code = `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}" and message.reply_to_message)\n`;
+  let code = `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
   code += `async def ${node.type}_${sanitizedNodeId}_synonym_${sanitizedSynonym}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик синонима '${synonym}' для ${node.type}\n`;
-  code += `    Работает только при ответе на сообщение\n`;
+  code += `    Работает в группах с ответом на сообщение или с указанием ID\n`;
   code += `    """\n`;
   code += `    user_id = message.from_user.id\n`;
-  code += `    target_message_id = message.reply_to_message.message_id\n`;
   code += `    chat_id = message.chat.id\n`;
   code += `    \n`;
-  code += `    logging.info(f"Пользователь {user_id} использовал команду '${synonym}' для сообщения {target_message_id}")\n`;
+  code += `    # Определяем целевое сообщение\n`;
+  code += `    target_message_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        # Если есть ответ на сообщение - используем его\n`;
+  code += `        target_message_id = message.reply_to_message.message_id\n`;
+  code += `        logging.info(f"Пользователь {user_id} использовал команду '${synonym}' для сообщения {target_message_id} (через ответ)")\n`;
+  code += `    else:\n`;
+  code += `        # Если нет ответа, проверяем текст на наличие ID сообщения\n`;
+  code += `        text_parts = message.text.split()\n`;
+  code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+  code += `            target_message_id = int(text_parts[1])\n`;
+  code += `            logging.info(f"Пользователь {user_id} использовал команду '${synonym}' для сообщения {target_message_id} (через ID)")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите '${synonym} ID_сообщения'")\n`;
+  code += `            return\n`;
+  code += `    \n`;
   code += `    \n`;
   code += `    try:\n`;
   
