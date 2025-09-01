@@ -109,6 +109,30 @@ export function PropertiesPanel({
   const [showCommandSuggestions, setShowCommandSuggestions] = useState(false);
   const [urlValidation, setUrlValidation] = useState<{[key: string]: { isValid: boolean; message?: string }}>({});
 
+  // Функция для получения данных по умолчанию для каждого типа узла
+  const getDefaultDataForType = (type: Node['type']) => {
+    const defaults: Record<Node['type'], any> = {
+      message: {},
+      photo: { imageUrl: '', mediaCaption: '' },
+      video: { videoUrl: '', mediaCaption: '', duration: 0 },
+      audio: { audioUrl: '', mediaCaption: '', duration: 0 },
+      document: { documentUrl: '', documentName: 'document.pdf', mediaCaption: '' },
+      sticker: { stickerUrl: '', stickerFileId: '' },
+      voice: { voiceUrl: '', duration: 0 },
+      animation: { animationUrl: '', duration: 0, width: 0, height: 0, mediaCaption: '' },
+      location: { latitude: 55.7558, longitude: 37.6176, title: 'Москва', address: 'Москва, Россия', foursquareId: '', foursquareType: '' },
+      contact: { phoneNumber: '+7 (999) 123-45-67', firstName: 'Имя', lastName: 'Фамилия', userId: 0, vcard: '' },
+      keyboard: { keyboardType: 'reply' },
+      start: { command: '/start', description: 'Запустить бота', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
+      command: { command: '/custom', description: 'Новая команда', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
+      condition: { conditions: [], operator: 'and', trueTarget: '', falseTarget: '' },
+      poll: { pollQuestion: 'Ваш вопрос?', pollOptions: ['Вариант 1', 'Вариант 2'], allowMultipleAnswers: false, anonymous: true },
+      dice: { diceType: 'dice', customEmoji: '' }
+    };
+    
+    return defaults[type] || {};
+  };
+
   // Функция для получения всех узлов из всех листов для межлистовых соединений
   const getAllNodesFromAllSheets = useMemo(() => {
     const allNodesFromSheets: { node: Node; sheetId: string; sheetName: string }[] = [];
@@ -561,6 +585,56 @@ export function PropertiesPanel({
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Основные настройки</h3>
           <div className="space-y-4">
+            {/* Node Type Selector */}
+            <div>
+              <Label className="text-xs font-medium text-muted-foreground">Тип элемента</Label>
+              <Select
+                value={selectedNode.type}
+                onValueChange={(value) => {
+                  // Создаем новые данные для узла в зависимости от типа
+                  const newData = getDefaultDataForType(value as Node['type']);
+                  // Сохраняем некоторые общие поля
+                  const preservedData = {
+                    messageText: selectedNode.data.messageText,
+                    keyboardType: selectedNode.data.keyboardType,
+                    buttons: selectedNode.data.buttons,
+                    markdown: selectedNode.data.markdown,
+                    oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
+                    resizeKeyboard: selectedNode.data.resizeKeyboard
+                  };
+                  
+                  // Объединяем данные и обновляем узел
+                  onNodeUpdate(selectedNode.id, { 
+                    ...newData,
+                    ...preservedData,
+                    type: value as Node['type']
+                  });
+                }}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="message">📝 Текстовое сообщение</SelectItem>
+                  <SelectItem value="photo">🖼️ Фото с текстом</SelectItem>
+                  <SelectItem value="video">🎬 Видео сообщение</SelectItem>
+                  <SelectItem value="audio">🎵 Аудио сообщение</SelectItem>
+                  <SelectItem value="document">📄 Документ</SelectItem>
+                  <SelectItem value="sticker">😀 Стикер</SelectItem>
+                  <SelectItem value="voice">🎤 Голосовое сообщение</SelectItem>
+                  <SelectItem value="animation">🎞️ GIF анимация</SelectItem>
+                  <SelectItem value="location">📍 Геолокация</SelectItem>
+                  <SelectItem value="contact">📞 Контакт</SelectItem>
+                  <SelectItem value="keyboard">⌨️ Клавиатура</SelectItem>
+                  <SelectItem value="start">▶️ /start команда</SelectItem>
+                  <SelectItem value="command">🔧 Пользовательская команда</SelectItem>
+                  <SelectItem value="condition">🔀 Условие</SelectItem>
+                  <SelectItem value="poll">📊 Опрос</SelectItem>
+                  <SelectItem value="dice">🎲 Кубик</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
             {(selectedNode.type === 'start' || selectedNode.type === 'command') && (
               <>
                 <div className="relative">
