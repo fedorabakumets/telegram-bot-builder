@@ -757,6 +757,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       refetch();
     },
     onError: (error: any) => {
+      // Отладочная информация для мутации
+      console.log('setGroupUsernameMutation error:', error);
+      console.log('setGroupUsernameMutation error properties:', Object.keys(error));
+      console.log('setGroupUsernameMutation requiresClientApi:', error.requiresClientApi);
+      
       if (error.requiresClientApi) {
         toast({ 
           title: 'Требуется авторизация Telegram', 
@@ -766,7 +771,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       } else {
         toast({ 
           title: 'Ошибка при изменении username', 
-          description: error.error || 'Проверьте права в группе',
+          description: error.error || error.message || 'Проверьте права в группе',
           variant: 'destructive' 
         });
       }
@@ -2284,12 +2289,17 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           });
                         },
                         onError: (error: any) => {
+                          // Отладочная информация
+                          console.log('Error object:', error);
+                          console.log('Error properties:', Object.keys(error));
+                          console.log('requiresClientApi:', error.requiresClientApi);
+                          
                           // Показываем ошибку и НЕ сохраняем в базе
                           toast({
                             title: "Не удалось изменить публичность группы",
                             description: error.requiresClientApi 
                               ? "Требуется авторизация через Telegram Client API для изменения публичных настроек группы"
-                              : error.error || "Проверьте права бота в группе",
+                              : error.error || error.message || "Проверьте права бота в группе",
                             variant: "destructive"
                           });
                         }
