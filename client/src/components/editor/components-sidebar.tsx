@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText, Copy, MoreHorizontal } from 'lucide-react';
+import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText, Copy, MoreHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
@@ -447,8 +447,23 @@ export function ComponentsSidebar({
   // Состояние для inline редактирования листов
   const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
   const [editingSheetName, setEditingSheetName] = useState('');
+  // Состояние для сворачивания/раскрытия категорий
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  // Функция для переключения видимости категории
+  const toggleCategory = (categoryTitle: string) => {
+    setCollapsedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryTitle)) {
+        newSet.delete(categoryTitle);
+      } else {
+        newSet.add(categoryTitle);
+      }
+      return newSet;
+    });
+  };
   
   const handleDragStart = (e: React.DragEvent, component: ComponentDefinition) => {
     e.dataTransfer.setData('application/json', JSON.stringify(component));
@@ -1140,36 +1155,56 @@ export function ComponentsSidebar({
           </div>
         )}
         
-        {currentTab === 'elements' && componentCategories.map((category) => (
-          <div key={category.title}>
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              {category.title}
-            </h3>
-            <div className="space-y-2">
-              {category.components.map((component) => (
-                <div
-                  key={component.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, component)}
-                  onTouchStart={(e) => handleTouchStart(e, component)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  className={`component-item flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors touch-action-none no-select ${
-                    touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
-                  }`}
-                >
-                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mr-3", component.color)}>
-                    <i className={`${component.icon} text-sm`}></i>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{component.name}</p>
-                    <p className="text-xs text-muted-foreground">{component.description}</p>
-                  </div>
+        {currentTab === 'elements' && componentCategories.map((category) => {
+          const isCollapsed = collapsedCategories.has(category.title);
+          
+          return (
+            <div key={category.title}>
+              <button
+                onClick={() => toggleCategory(category.title)}
+                className="w-full flex items-center justify-between text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 hover:text-foreground transition-colors group"
+              >
+                <span>{category.title}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs normal-case bg-muted/50 px-2 py-0.5 rounded-full">
+                    {category.components.length}
+                  </span>
+                  {isCollapsed ? (
+                    <ChevronRight className="h-3 w-3 group-hover:text-foreground transition-colors" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3 group-hover:text-foreground transition-colors" />
+                  )}
                 </div>
-              ))}
+              </button>
+              
+              {!isCollapsed && (
+                <div className="space-y-2 transition-all duration-200 ease-in-out">
+                  {category.components.map((component) => (
+                    <div
+                      key={component.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, component)}
+                      onTouchStart={(e) => handleTouchStart(e, component)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      className={`component-item flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors touch-action-none no-select ${
+                        touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
+                      }`}
+                    >
+                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mr-3", component.color)}>
+                        <i className={`${component.icon} text-sm`}></i>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{component.name}</p>
+                        <p className="text-xs text-muted-foreground">{component.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
         
 
       </div>
