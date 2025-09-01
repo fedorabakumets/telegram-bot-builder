@@ -3653,6 +3653,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Bot token not found for this project" });
       }
 
+      // Сначала проверяем, является ли пользователь участником группы
+      const memberCheckUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatMember`;
+      const memberCheckResponse = await fetch(memberCheckUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          user_id: parseInt(userId)
+        })
+      });
+
+      const memberCheckResult = await memberCheckResponse.json();
+      
+      if (!memberCheckResponse.ok) {
+        if (memberCheckResult.error_code === 400 && memberCheckResult.description?.includes('user not found')) {
+          return res.status(400).json({
+            message: "User is not a member of this group",
+            error: "Пользователь не является участником группы. Сначала пригласите пользователя в группу, а затем назначьте администратором."
+          });
+        }
+        return res.status(400).json({
+          message: "Failed to check user membership",
+          error: memberCheckResult.description || "Unknown error"
+        });
+      }
+
+      const memberStatus = memberCheckResult.result?.status;
+      if (memberStatus === 'left' || memberStatus === 'kicked') {
+        return res.status(400).json({
+          message: "User is not a member of this group",
+          error: "Пользователь покинул группу или был исключен. Сначала пригласите пользователя в группу."
+        });
+      }
+
+      console.log('User membership status:', memberStatus);
       console.log('Promoting user with rights:', {
         groupId,
         userId,
