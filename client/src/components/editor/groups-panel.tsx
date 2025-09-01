@@ -662,14 +662,24 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       // Проверяем, есть ли административные права
       const hasAdminRights = permissions.can_delete_messages || permissions.can_restrict_members || 
                             permissions.can_promote_members || permissions.can_manage_video_chats ||
-                            permissions.can_be_anonymous;
+                            permissions.can_be_anonymous || permissions.can_change_info || 
+                            permissions.can_pin_messages || permissions.can_invite_users;
+      
+      console.log('💾 Сохраняем разрешения:', {
+        selectedMember: selectedMember,
+        userId: userId,
+        groupId: groupId,
+        currentPermissions: memberPermissions,
+        newPermissions: permissions,
+        hasAdminRights: hasAdminRights
+      });
       
       if (hasAdminRights) {
         // Если есть административные права, используем promote-member
-        return await apiRequest('POST', `/api/projects/${projectId}/bot/promote-member`, {
-          groupId,
-          userId,
-          adminRights: {
+        try {
+          return await apiRequest('POST', `/api/projects/${projectId}/bot/promote-member`, {
+            groupId,
+            userId,
             can_change_info: permissions.can_change_info,
             can_delete_messages: permissions.can_delete_messages,
             can_invite_users: permissions.can_invite_users,
@@ -679,8 +689,41 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
             can_manage_video_chats: permissions.can_manage_video_chats,
             can_be_anonymous: permissions.can_be_anonymous,
             can_manage_topics: false
-          }
-        });
+          });
+        } catch (botApiError: any) {
+          console.log('Bot API failed for promotion, trying Client API:', botApiError);
+          // Если Bot API не работает, пробуем Client API
+          return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/promote-member`, {
+            groupId,
+            userId,
+            adminRights: {
+              can_change_info: permissions.can_change_info,
+              can_delete_messages: permissions.can_delete_messages,
+              can_invite_users: permissions.can_invite_users,
+              can_restrict_members: permissions.can_restrict_members,
+              can_pin_messages: permissions.can_pin_messages,
+              can_promote_members: permissions.can_promote_members,
+              can_manage_video_chats: permissions.can_manage_video_chats,
+              can_be_anonymous: permissions.can_be_anonymous,
+              can_manage_topics: false
+            }
+          });
+        }
+      } else if (selectedMember?.status === 'administrator' || selectedMember?.friendlyStatus === 'Администратор') {
+        // Если пользователь является администратором, но у него нет административных прав, демотируем его
+        try {
+          return await apiRequest('POST', `/api/projects/${projectId}/bot/demote-member`, {
+            groupId,
+            userId
+          });
+        } catch (botApiError: any) {
+          console.log('Bot API failed for demotion, trying Client API:', botApiError);
+          // Если Bot API не работает, пробуем Client API
+          return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/demote-member`, {
+            groupId,
+            userId
+          });
+        }
       } else {
         // Если только обычные права, используем restrict-member
         try {
