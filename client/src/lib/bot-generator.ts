@@ -774,6 +774,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'import locale\n';
   code += 'from aiogram import Bot, Dispatcher, types, F\n';
   code += 'from aiogram.filters import CommandStart, Command\n';
+  code += 'from aiogram.exceptions import TelegramBadRequest\n';
   code += 'from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, BotCommand, ReplyKeyboardRemove, URLInputFile, FSInputFile\n';
   code += 'from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder\n';
   code += 'from aiogram.enums import ParseMode\n';
@@ -1120,6 +1121,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += generateLocationHandler(node);
     } else if (node.type === "contact") {
       code += generateContactHandler(node);
+    } else if (node.type === "pin_message") {
+      code += generatePinMessageHandler(node);
+    } else if (node.type === "unpin_message") {
+      code += generateUnpinMessageHandler(node);
+    } else if (node.type === "delete_message") {
+      code += generateDeleteMessageHandler(node);
     }
     // Note: user-input and message nodes are handled via callback handlers, not as separate command handlers
   });
@@ -1137,6 +1144,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         node.data.synonyms.forEach((synonym: string) => {
           if (node.type === 'start' || node.type === 'command') {
             code += generateSynonymHandler(node, synonym);
+          } else if (node.type === 'pin_message' || node.type === 'unpin_message' || node.type === 'delete_message') {
+            code += generateContentManagementSynonymHandler(node, synonym);
           } else {
             code += generateMessageSynonymHandler(node, synonym);
           }
@@ -7710,6 +7719,101 @@ function generateContactHandler(node: Node): string {
     code += '        logging.error(f"Ошибка отправки контакта: {e}")\n';
     code += '        await message.answer("❌ Не удалось отправить контакт")\n';
   }
+  
+  return code;
+}
+
+// Функции-генераторы для управления контентом
+function generatePinMessageHandler(node: Node): string {
+  let code = `\n# Pin Message Handler\n`;
+  const synonyms = node.data.synonyms || ['закрепить'];
+  const disableNotification = node.data.disableNotification || false;
+  
+  code += `# Обработчик для закрепления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
+  code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+  
+  return code;
+}
+
+function generateUnpinMessageHandler(node: Node): string {
+  let code = `\n# Unpin Message Handler\n`;
+  const synonyms = node.data.synonyms || ['открепить'];
+  
+  code += `# Обработчик для открепления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
+  code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+  
+  return code;
+}
+
+function generateDeleteMessageHandler(node: Node): string {
+  let code = `\n# Delete Message Handler\n`;
+  const synonyms = node.data.synonyms || ['удалить'];
+  
+  code += `# Обработчик для удаления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
+  code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+  
+  return code;
+}
+
+function generateContentManagementSynonymHandler(node: Node, synonym: string): string {
+  const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+  const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  
+  let code = `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}" and message.reply_to_message)\n`;
+  code += `async def ${node.type}_${sanitizedNodeId}_synonym_${sanitizedSynonym}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик синонима '${synonym}' для ${node.type}\n`;
+  code += `    Работает только при ответе на сообщение\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    target_message_id = message.reply_to_message.message_id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    logging.info(f"Пользователь {user_id} использовал команду '${synonym}' для сообщения {target_message_id}")\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  
+  if (node.type === 'pin_message') {
+    const disableNotification = node.data.disableNotification || false;
+    code += `        # Закрепляем сообщение\n`;
+    code += `        await bot.pin_chat_message(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            message_id=target_message_id,\n`;
+    code += `            disable_notification=${disableNotification ? 'True' : 'False'}\n`;
+    code += `        )\n`;
+    code += `        await message.answer("✅ Сообщение закреплено")\n`;
+    code += `        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id}")\n`;
+  } else if (node.type === 'unpin_message') {
+    code += `        # Открепляем сообщение\n`;
+    code += `        await bot.unpin_chat_message(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            message_id=target_message_id\n`;
+    code += `        )\n`;
+    code += `        await message.answer("✅ Сообщение откреплено")\n`;
+    code += `        logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id}")\n`;
+  } else if (node.type === 'delete_message') {
+    code += `        # Удаляем сообщение\n`;
+    code += `        await bot.delete_message(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            message_id=target_message_id\n`;
+    code += `        )\n`;
+    code += `        await message.answer("✅ Сообщение удалено")\n`;
+    code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id}")\n`;
+  }
+  
+  code += `    \n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "message to pin not found" in str(e) or "message not found" in str(e):\n`;
+  code += `            await message.answer("❌ Сообщение не найдено")\n`;
+  code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для выполнения операции")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка ${node.type}: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка в {node.type}: {e}")\n`;
+  code += `\n`;
   
   return code;
 }
