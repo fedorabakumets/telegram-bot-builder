@@ -3571,11 +3571,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Telegram API response for check member:", {
         ok: response.ok,
         status: response.status,
-        result: result
+        result: result,
+        groupId: groupId,
+        userId: userId
       });
       
       if (!response.ok) {
         console.error("Failed to check member status via Telegram API:", result);
+        // Если это ошибка из-за неправильного username, пробуем объяснить
+        if (result.description && result.description.includes("user not found")) {
+          return res.status(400).json({ 
+            message: "User not found", 
+            error: "Пользователь не найден. Убедитесь, что вы указали правильный @username или числовой ID."
+          });
+        }
         return res.status(400).json({ 
           message: "Failed to check member status", 
           error: result.description || "Unknown error"

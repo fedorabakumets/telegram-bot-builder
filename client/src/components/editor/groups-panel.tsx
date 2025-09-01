@@ -132,6 +132,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [selectedGroupForPromotion, setSelectedGroupForPromotion] = useState<BotGroup | null>(null);
+  const [userToFind, setUserToFind] = useState(''); // Для универсального поиска участников
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1048,6 +1049,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           }
           return prevAdmins;
         });
+
+        // Очищаем поле поиска после успешного нахождения
+        setUserToFind('');
       } else {
         toast({ 
           title: '❌ Участник не найден', 
@@ -2238,25 +2242,44 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               </div>
                               
                               <div className="space-y-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="w-full"
-                                  onClick={() => {
-                                    if (selectedGroup?.groupId) {
-                                      checkMemberMutation.mutate({
-                                        groupId: selectedGroup.groupId,
-                                        userId: '6591857297' // Sonofbog2 ID
-                                      });
-                                    }
-                                  }}
-                                  disabled={checkMemberMutation.isPending}
-                                >
-                                  {checkMemberMutation.isPending ? '⏳' : '🔍'} Проверить статус Sonofbog2
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Input
+                                    placeholder="@username или ID пользователя"
+                                    value={userToFind}
+                                    onChange={(e) => setUserToFind(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && userToFind.trim() && selectedGroup?.groupId) {
+                                        // Извлекаем ID из строки (может быть @username или просто ID)
+                                        let userId = userToFind.trim().replace('@', '');
+                                        checkMemberMutation.mutate({
+                                          groupId: selectedGroup.groupId,
+                                          userId: userId
+                                        });
+                                      }
+                                    }}
+                                    className="flex-1"
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (userToFind.trim() && selectedGroup?.groupId) {
+                                        // Извлекаем ID из строки (может быть @username или просто ID)
+                                        let userId = userToFind.trim().replace('@', '');
+                                        checkMemberMutation.mutate({
+                                          groupId: selectedGroup.groupId,
+                                          userId: userId
+                                        });
+                                      }
+                                    }}
+                                    disabled={checkMemberMutation.isPending || !userToFind.trim()}
+                                  >
+                                    {checkMemberMutation.isPending ? '⏳' : '🔍'}
+                                  </Button>
+                                </div>
                                 
                                 <p className="text-xs text-muted-foreground text-center">
-                                  Нажмите "Загрузить всех участников" выше для полного списка
+                                  Введите @username или ID для поиска • Загрузите всех участников кнопкой выше
                                 </p>
                               </div>
                             </div>
