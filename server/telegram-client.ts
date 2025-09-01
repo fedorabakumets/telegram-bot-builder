@@ -63,9 +63,7 @@ class TelegramClientManager {
         await db.insert(userTelegramSettings).values({
           userId,
           sessionString,
-          phoneNumber,
-          apiId: process.env.TELEGRAM_API_ID || '',
-          apiHash: process.env.TELEGRAM_API_HASH || ''
+          phoneNumber
         });
       }
       console.log(`💾 Сессия сохранена в БД для пользователя ${phoneNumber}`);
@@ -99,12 +97,17 @@ class TelegramClientManager {
         return false;
       }
 
-      const apiId = process.env.TELEGRAM_API_ID;
-      const apiHash = process.env.TELEGRAM_API_HASH;
+      // Получаем credentials из базы данных
+      const db = getDb();
+      const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
       
-      if (!apiId || !apiHash) {
+      if (result.length === 0 || !result[0].apiId || !result[0].apiHash) {
+        console.log(`❌ API credentials не найдены для пользователя ${userId}`);
         return false;
       }
+      
+      const apiId = result[0].apiId;
+      const apiHash = result[0].apiHash;
 
       const stringSession = new StringSession(sessionString);
       const client = new TelegramClient(stringSession, parseInt(apiId), apiHash, {
@@ -137,12 +140,16 @@ class TelegramClientManager {
 
   async sendCode(userId: string, phoneNumber: string): Promise<{ success: boolean; phoneCodeHash?: string; error?: string }> {
     try {
-      const apiId = process.env.TELEGRAM_API_ID;
-      const apiHash = process.env.TELEGRAM_API_HASH;
+      // Получаем credentials из базы данных
+      const db = getDb();
+      const credentialsResult = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
       
-      if (!apiId || !apiHash) {
+      if (credentialsResult.length === 0 || !credentialsResult[0].apiId || !credentialsResult[0].apiHash) {
         throw new Error('Telegram API credentials not configured');
       }
+      
+      const apiId = credentialsResult[0].apiId;
+      const apiHash = credentialsResult[0].apiHash;
 
       const stringSession = new StringSession('');
       const client = new TelegramClient(stringSession, parseInt(apiId), apiHash, {
@@ -308,12 +315,56 @@ class TelegramClientManager {
     }
   }
 
-  async getAuthStatus(userId: string): Promise<AuthStatus> {
-    return this.authStatus.get(userId) || {
+  async getAuthStatus(userId: string): Promise<AuthStatus & { hasCredentials?: boolean }> {
+    const status = this.authStatus.get(userId) || {
       isAuthenticated: false,
       needsCode: false,
       needsPassword: false
     };
+
+    // Проверяем наличие credentials в базе данных
+    try {
+      const db = getDb();
+      const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
+      const hasCredentials = result.length > 0 && result[0].apiId && result[0].apiHash;
+      
+      return { ...status, hasCredentials };
+    } catch (error) {
+      console.error('Ошибка проверки credentials:', error);
+      return { ...status, hasCredentials: false };
+    }
+  }
+
+  async setCredentials(userId: string, apiId: string, apiHash: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const db = getDb();
+      const existing = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
+      
+      if (existing.length > 0) {
+        await db.update(userTelegramSettings)
+          .set({ 
+            apiId, 
+            apiHash,
+            updatedAt: new Date()
+          })
+          .where(eq(userTelegramSettings.userId, userId));
+      } else {
+        await db.insert(userTelegramSettings).values({
+          userId,
+          apiId,
+          apiHash
+        });
+      }
+      
+      console.log(`💾 API credentials сохранены для пользователя ${userId}`);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Ошибка сохранения credentials:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Ошибка сохранения credentials' 
+      };
+    }
   }
 
   async createClient(userId: string, config: TelegramClientConfig): Promise<TelegramClient> {

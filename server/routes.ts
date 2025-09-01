@@ -4314,6 +4314,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Save API credentials
+  app.post("/api/telegram-auth/save-credentials", async (req, res) => {
+    try {
+      const { apiId, apiHash } = req.body;
+      
+      if (!apiId || !apiHash) {
+        return res.status(400).json({
+          success: false,
+          error: "API ID и API Hash обязательны"
+        });
+      }
+
+      const result = await telegramClientManager.setCredentials('default', apiId, apiHash);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          message: "API credentials сохранены"
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Failed to save credentials:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Ошибка сохранения credentials" 
+      });
+    }
+  });
+
   // Get authentication status
   app.get("/api/telegram-auth/status", async (req, res) => {
     try {
