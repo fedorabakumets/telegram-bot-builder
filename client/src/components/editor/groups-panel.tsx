@@ -1818,6 +1818,26 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                               <Ban className="h-4 w-4 mr-2" />
                                               {member.isBot ? 'Заблокировать бота' : 'Заблокировать'}
                                             </DropdownMenuItem>
+                                            <DropdownMenuItem 
+                                              onClick={() => {
+                                                const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
+                                                if (!userId) {
+                                                  toast({
+                                                    title: 'Ошибка',
+                                                    description: 'Не удалось получить ID пользователя',
+                                                    variant: 'destructive'
+                                                  });
+                                                  return;
+                                                }
+                                                unbanMemberMutation.mutate({ 
+                                                  groupId: selectedGroup.groupId, 
+                                                  userId 
+                                                });
+                                              }}
+                                            >
+                                              <UserPlus className="h-4 w-4 mr-2" />
+                                              {member.isBot ? 'Разблокировать бота' : 'Разблокировать'}
+                                            </DropdownMenuItem>
                                           </DropdownMenuContent>
                                         </DropdownMenu>
                                       )}
@@ -1915,6 +1935,26 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                             >
                                               <Ban className="h-4 w-4 mr-2" />
                                               {admin.user?.is_bot || admin.is_bot ? 'Заблокировать бота' : 'Заблокировать'}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem 
+                                              onClick={() => {
+                                                const userId = admin?.user?.id?.toString() || admin?.id?.toString();
+                                                if (!userId) {
+                                                  toast({
+                                                    title: 'Ошибка',
+                                                    description: 'Не удалось получить ID пользователя',
+                                                    variant: 'destructive'
+                                                  });
+                                                  return;
+                                                }
+                                                unbanMemberMutation.mutate({ 
+                                                  groupId: selectedGroup.groupId, 
+                                                  userId 
+                                                });
+                                              }}
+                                            >
+                                              <UserPlus className="h-4 w-4 mr-2" />
+                                              {admin.user?.is_bot || admin.is_bot ? 'Разблокировать бота' : 'Разблокировать'}
                                             </DropdownMenuItem>
                                           </DropdownMenuContent>
                                         </DropdownMenu>
@@ -2073,85 +2113,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         </div>
                       </div>
 
-                      <div className="border-t my-4" />
-
-                      {/* Блокировка пользователей */}
-                      <div className="space-y-3">
-                        <h5 className="font-medium text-sm">Блокировка пользователей</h5>
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="User ID для блокировки (например: 123456789)"
-                            value={userIdToBan}
-                            onChange={(e) => setUserIdToBan(e.target.value)}
-                          />
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={() => {
-                              if (!userIdToBan || !selectedGroup?.groupId) {
-                                toast({
-                                  title: 'Ошибка',
-                                  description: 'Укажите ID пользователя',
-                                  variant: 'destructive'
-                                });
-                                return;
-                              }
-                              banMemberMutation.mutate({ 
-                                groupId: selectedGroup.groupId, 
-                                userId: userIdToBan 
-                              });
-                            }}
-                            disabled={!userIdToBan || banMemberMutation.isPending}
-                            className="w-full"
-                          >
-                            {banMemberMutation.isPending ? (
-                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                            ) : (
-                              <X className="h-4 w-4 mr-2" />
-                            )}
-                            Заблокировать пользователя
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Разблокировка пользователей */}
-                      <div className="space-y-3">
-                        <h5 className="font-medium text-sm">Разблокировка пользователей</h5>
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="User ID для разблокировки (например: 123456789)"
-                            value={userIdToUnban}
-                            onChange={(e) => setUserIdToUnban(e.target.value)}
-                          />
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              if (!userIdToUnban || !selectedGroup?.groupId) {
-                                toast({
-                                  title: 'Ошибка',
-                                  description: 'Укажите ID пользователя',
-                                  variant: 'destructive'
-                                });
-                                return;
-                              }
-                              unbanMemberMutation.mutate({ 
-                                groupId: selectedGroup.groupId, 
-                                userId: userIdToUnban 
-                              });
-                            }}
-                            disabled={!userIdToUnban || unbanMemberMutation.isPending}
-                            className="w-full"
-                          >
-                            {unbanMemberMutation.isPending ? (
-                              <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                            ) : (
-                              <UserPlus className="h-4 w-4 mr-2" />
-                            )}
-                            Разблокировать пользователя
-                          </Button>
-                        </div>
-                      </div>
 
                       <div className="mt-4 p-3 bg-muted/50 rounded-lg">
                         <p className="text-xs text-muted-foreground">
