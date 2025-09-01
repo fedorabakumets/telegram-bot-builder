@@ -1136,28 +1136,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             fetch(`/api/projects/${projectId}/bot/group-admins/${group.groupId}`)
                               .then(res => res.json())
                               .then(data => {
-                                if (data.botAdminRights) {
-                                  setAdminRights(data.botAdminRights);
-                                } else {
-                                  // Fallback к базовым правам если не найдены
-                                  setAdminRights({
-                                    can_manage_chat: false,
-                                    can_change_info: false,
-                                    can_delete_messages: false,
-                                    can_invite_users: false,
-                                    can_restrict_members: false,
-                                    can_pin_messages: false,
-                                    can_promote_members: false,
-                                    can_manage_video_chats: false,
-                                    can_be_anonymous: false,
-                                    can_manage_stories: false,
-                                    ...((group.adminRights as any) || {})
-                                  });
-                                }
-                              })
-                              .catch(() => {
-                                // Fallback при ошибке
-                                setAdminRights({
+                                // Создаем базовую структуру с полным набором прав
+                                const baseRights = {
                                   can_manage_chat: false,
                                   can_change_info: false,
                                   can_delete_messages: false,
@@ -1167,9 +1147,39 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   can_promote_members: false,
                                   can_manage_video_chats: false,
                                   can_be_anonymous: false,
-                                  can_manage_stories: false,
+                                  can_manage_stories: false
+                                };
+                                
+                                // Объединяем с данными из API и базы данных
+                                const finalRights = {
+                                  ...baseRights,
+                                  ...((group.adminRights as any) || {}),
+                                  ...(data.botAdminRights || {})
+                                };
+                                
+                                setAdminRights(finalRights);
+                              })
+                              .catch(() => {
+                                // Fallback при ошибке - также используем базовую структуру
+                                const baseRights = {
+                                  can_manage_chat: false,
+                                  can_change_info: false,
+                                  can_delete_messages: false,
+                                  can_invite_users: false,
+                                  can_restrict_members: false,
+                                  can_pin_messages: false,
+                                  can_promote_members: false,
+                                  can_manage_video_chats: false,
+                                  can_be_anonymous: false,
+                                  can_manage_stories: false
+                                };
+                                
+                                const finalRights = {
+                                  ...baseRights,
                                   ...((group.adminRights as any) || {})
-                                });
+                                };
+                                
+                                setAdminRights(finalRights);
                               });
                           } else {
                             // Если не админ, используем базовые права
