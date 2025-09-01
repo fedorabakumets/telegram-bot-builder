@@ -8039,12 +8039,30 @@ function generateBanUserHandler(node: Node): string {
   const targetUserId = node.data.targetUserId || '';
   const reason = node.data.reason || 'Нарушение правил группы';
   const untilDate = node.data.untilDate || 0;
+  const targetGroupId = node.data.targetGroupId || '';
+  const synonyms = node.data.synonyms || 'забанить, бан, заблокировать';
   
-  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/ban") and message.chat.type in ['group', 'supergroup'])\n`;
+  // Создаем список синонимов для проверки
+  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
+  
+  // Генерируем условие с учётом целевой группы и синонимов
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
+  if (targetGroupId) {
+    condition += ` and str(message.chat.id) == "${targetGroupId}"`;
+  } else {
+    condition += ` and message.chat.type in ['group', 'supergroup']`;
+  }
+  
+  code += `@dp.message(${condition})\n`;
   code += `async def ban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик для блокировки пользователя\n`;
-  code += `    Использование: /ban или ответ на сообщение пользователя\n`;
+  code += `    Синонимы: ${synonyms}\n`;
+  if (targetGroupId) {
+    code += `    Группа: ${targetGroupId}\n`;
+  }
+  code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
   code += `    """\n`;
   code += `    user_id = message.from_user.id\n`;
   code += `    chat_id = message.chat.id\n`;
@@ -8110,12 +8128,30 @@ function generateBanUserHandler(node: Node): string {
 function generateUnbanUserHandler(node: Node): string {
   let code = `\n# Unban User Handler\n`;
   const targetUserId = node.data.targetUserId || '';
+  const targetGroupId = node.data.targetGroupId || '';
+  const synonyms = node.data.synonyms || 'разбанить, разблокировать, unbang';
   
-  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/unban") and message.chat.type in ['group', 'supergroup'])\n`;
+  // Создаем список синонимов для проверки
+  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
+  
+  // Генерируем условие с учётом целевой группы и синонимов
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
+  if (targetGroupId) {
+    condition += ` and str(message.chat.id) == "${targetGroupId}"`;
+  } else {
+    condition += ` and message.chat.type in ['group', 'supergroup']`;
+  }
+  
+  code += `@dp.message(${condition})\n`;
   code += `async def unban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик для разблокировки пользователя\n`;
-  code += `    Использование: /unban USER_ID\n`;
+  code += `    Синонимы: ${synonyms}\n`;
+  if (targetGroupId) {
+    code += `    Группа: ${targetGroupId}\n`;
+  }
+  code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
   code += `    """\n`;
   code += `    user_id = message.from_user.id\n`;
   code += `    chat_id = message.chat.id\n`;
@@ -8167,6 +8203,8 @@ function generateMuteUserHandler(node: Node): string {
   const targetUserId = node.data.targetUserId || '';
   const duration = node.data.duration || 3600;
   const reason = node.data.reason || 'Нарушение правил группы';
+  const targetGroupId = node.data.targetGroupId || '';
+  const synonyms = node.data.synonyms || 'замутить, мут, заткнуть';
   
   // Permissions для мута
   const canSendMessages = node.data.canSendMessages || false;
@@ -8178,11 +8216,27 @@ function generateMuteUserHandler(node: Node): string {
   const canInviteUsers2 = node.data.canInviteUsers2 || false;
   const canPinMessages2 = node.data.canPinMessages2 || false;
   
-  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/mute") and message.chat.type in ['group', 'supergroup'])\n`;
+  // Создаем список синонимов для проверки
+  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
+  
+  // Генерируем условие с учётом целевой группы и синонимов
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
+  if (targetGroupId) {
+    condition += ` and str(message.chat.id) == "${targetGroupId}"`;
+  } else {
+    condition += ` and message.chat.type in ['group', 'supergroup']`;
+  }
+  
+  code += `@dp.message(${condition})\n`;
   code += `async def mute_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик для ограничения пользователя\n`;
-  code += `    Использование: /mute или ответ на сообщение пользователя\n`;
+  code += `    Синонимы: ${synonyms}\n`;
+  if (targetGroupId) {
+    code += `    Группа: ${targetGroupId}\n`;
+  }
+  code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
   code += `    """\n`;
   code += `    user_id = message.from_user.id\n`;
   code += `    chat_id = message.chat.id\n`;
@@ -8258,12 +8312,30 @@ function generateMuteUserHandler(node: Node): string {
 function generateUnmuteUserHandler(node: Node): string {
   let code = `\n# Unmute User Handler\n`;
   const targetUserId = node.data.targetUserId || '';
+  const targetGroupId = node.data.targetGroupId || '';
+  const synonyms = node.data.synonyms || 'размутить, размут, освободить';
   
-  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/unmute") and message.chat.type in ['group', 'supergroup'])\n`;
+  // Создаем список синонимов для проверки
+  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
+  
+  // Генерируем условие с учётом целевой группы и синонимов
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
+  if (targetGroupId) {
+    condition += ` and str(message.chat.id) == "${targetGroupId}"`;
+  } else {
+    condition += ` and message.chat.type in ['group', 'supergroup']`;
+  }
+  
+  code += `@dp.message(${condition})\n`;
   code += `async def unmute_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик для снятия ограничений с пользователя\n`;
-  code += `    Использование: /unmute или ответ на сообщение пользователя\n`;
+  code += `    Синонимы: ${synonyms}\n`;
+  if (targetGroupId) {
+    code += `    Группа: ${targetGroupId}\n`;
+  }
+  code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
   code += `    """\n`;
   code += `    user_id = message.from_user.id\n`;
   code += `    chat_id = message.chat.id\n`;
@@ -8330,12 +8402,30 @@ function generateKickUserHandler(node: Node): string {
   let code = `\n# Kick User Handler\n`;
   const targetUserId = node.data.targetUserId || '';
   const reason = node.data.reason || 'Нарушение правил группы';
+  const targetGroupId = node.data.targetGroupId || '';
+  const synonyms = node.data.synonyms || 'кикнуть, кик, исключить';
   
-  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/kick") and message.chat.type in ['group', 'supergroup'])\n`;
+  // Создаем список синонимов для проверки
+  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
+  
+  // Генерируем условие с учётом целевой группы и синонимов
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
+  if (targetGroupId) {
+    condition += ` and str(message.chat.id) == "${targetGroupId}"`;
+  } else {
+    condition += ` and message.chat.type in ['group', 'supergroup']`;
+  }
+  
+  code += `@dp.message(${condition})\n`;
   code += `async def kick_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик для исключения пользователя из группы\n`;
-  code += `    Использование: /kick или ответ на сообщение пользователя\n`;
+  code += `    Синонимы: ${synonyms}\n`;
+  if (targetGroupId) {
+    code += `    Группа: ${targetGroupId}\n`;
+  }
+  code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
   code += `    """\n`;
   code += `    user_id = message.from_user.id\n`;
   code += `    chat_id = message.chat.id\n`;
@@ -8391,6 +8481,8 @@ function generateKickUserHandler(node: Node): string {
 function generatePromoteUserHandler(node: Node): string {
   let code = `\n# Promote User Handler\n`;
   const targetUserId = node.data.targetUserId || '';
+  const targetGroupId = node.data.targetGroupId || '';
+  const synonyms = node.data.synonyms || 'повысить, админ, назначить';
   
   // Admin rights
   const canChangeInfo = node.data.canChangeInfo || false;
@@ -8405,11 +8497,27 @@ function generatePromoteUserHandler(node: Node): string {
   const canManageTopics = node.data.canManageTopics || false;
   const isAnonymous = node.data.isAnonymous || false;
   
-  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/promote") and message.chat.type in ['group', 'supergroup'])\n`;
+  // Создаем список синонимов для проверки
+  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
+  
+  // Генерируем условие с учётом целевой группы и синонимов
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
+  if (targetGroupId) {
+    condition += ` and str(message.chat.id) == "${targetGroupId}"`;
+  } else {
+    condition += ` and message.chat.type in ['group', 'supergroup']`;
+  }
+  
+  code += `@dp.message(${condition})\n`;
   code += `async def promote_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик для назначения пользователя администратором\n`;
-  code += `    Использование: /promote или ответ на сообщение пользователя\n`;
+  code += `    Синонимы: ${synonyms}\n`;
+  if (targetGroupId) {
+    code += `    Группа: ${targetGroupId}\n`;
+  }
+  code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
   code += `    """\n`;
   code += `    user_id = message.from_user.id\n`;
   code += `    chat_id = message.chat.id\n`;
@@ -8491,12 +8599,30 @@ function generatePromoteUserHandler(node: Node): string {
 function generateDemoteUserHandler(node: Node): string {
   let code = `\n# Demote User Handler\n`;
   const targetUserId = node.data.targetUserId || '';
+  const targetGroupId = node.data.targetGroupId || '';
+  const synonyms = node.data.synonyms || 'понизить, снять с админки, демоут';
   
-  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/demote") and message.chat.type in ['group', 'supergroup'])\n`;
+  // Создаем список синонимов для проверки
+  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
+  
+  // Генерируем условие с учётом целевой группы и синонимов
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
+  if (targetGroupId) {
+    condition += ` and str(message.chat.id) == "${targetGroupId}"`;
+  } else {
+    condition += ` and message.chat.type in ['group', 'supergroup']`;
+  }
+  
+  code += `@dp.message(${condition})\n`;
   code += `async def demote_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик для снятия прав администратора с пользователя\n`;
-  code += `    Использование: /demote или ответ на сообщение пользователя\n`;
+  code += `    Синонимы: ${synonyms}\n`;
+  if (targetGroupId) {
+    code += `    Группа: ${targetGroupId}\n`;
+  }
+  code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
   code += `    """\n`;
   code += `    user_id = message.from_user.id\n`;
   code += `    chat_id = message.chat.id\n`;
