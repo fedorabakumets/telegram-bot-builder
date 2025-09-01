@@ -125,9 +125,7 @@ export function PropertiesPanel({
       keyboard: { keyboardType: 'reply' },
       start: { command: '/start', description: 'Запустить бота', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
       command: { command: '/custom', description: 'Новая команда', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
-      condition: { conditions: [], operator: 'and', trueTarget: '', falseTarget: '' },
-      poll: { pollQuestion: 'Ваш вопрос?', pollOptions: ['Вариант 1', 'Вариант 2'], allowMultipleAnswers: false, anonymous: true },
-      dice: { diceType: 'dice', customEmoji: '' }
+      condition: { conditions: [], operator: 'and', trueTarget: '', falseTarget: '' }
     };
     
     return defaults[type] || {};
@@ -628,9 +626,6 @@ export function PropertiesPanel({
                   <SelectItem value="keyboard">⌨️ Клавиатура</SelectItem>
                   <SelectItem value="start">▶️ /start команда</SelectItem>
                   <SelectItem value="command">🔧 Пользовательская команда</SelectItem>
-                  <SelectItem value="condition">🔀 Условие</SelectItem>
-                  <SelectItem value="poll">📊 Опрос</SelectItem>
-                  <SelectItem value="dice">🎲 Кубик</SelectItem>
                 </SelectContent>
               </Select>
             </div>
