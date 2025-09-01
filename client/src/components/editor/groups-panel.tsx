@@ -2168,31 +2168,29 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                             </Button>
                                           </DropdownMenuTrigger>
                                           <DropdownMenuContent align="end">
-                                            {/* Показываем разрешения только для обычных пользователей */}
-                                            {!admin.user?.is_bot && !admin.is_bot && (
-                                              <>
-                                                <DropdownMenuItem 
-                                                  onClick={() => {
-                                                    setSelectedMember(admin);
-                                                    setMemberPermissions({
-                                                      can_send_messages: true,
-                                                      can_send_media_messages: true,
-                                                      can_send_polls: true,
-                                                      can_send_other_messages: true,
-                                                      can_add_web_page_previews: true,
-                                                      can_change_info: false,
-                                                      can_invite_users: false,
-                                                      can_pin_messages: false
-                                                    });
-                                                    setShowPermissionsDialog(true);
-                                                  }}
-                                                >
-                                                  <Settings className="h-4 w-4 mr-2" />
-                                                  Разрешения
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                              </>
-                                            )}
+                                            {/* Показываем разрешения для всех участников */}
+                                            <>
+                                              <DropdownMenuItem 
+                                                onClick={() => {
+                                                  setSelectedMember(admin);
+                                                  setMemberPermissions({
+                                                    can_send_messages: true,
+                                                    can_send_media_messages: true,
+                                                    can_send_polls: true,
+                                                    can_send_other_messages: true,
+                                                    can_add_web_page_previews: true,
+                                                    can_change_info: false,
+                                                    can_invite_users: false,
+                                                    can_pin_messages: false
+                                                  });
+                                                  setShowPermissionsDialog(true);
+                                                }}
+                                              >
+                                                <Settings className="h-4 w-4 mr-2" />
+                                                Разрешения
+                                              </DropdownMenuItem>
+                                              <DropdownMenuSeparator />
+                                            </>
                                             
                                             {/* Основные действия - для всех кроме создателя */}
                                             <DropdownMenuItem 
