@@ -3738,11 +3738,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Сначала попробуем найти пользователя в локальной базе данных
-      const localUsers = await storage.searchUserBotData(projectId, query);
+      const localUserBotData = await storage.searchUserBotData(projectId, query);
+      const localBotUsers = await storage.searchBotUsers(query);
       
-      if (localUsers && localUsers.length > 0) {
-        // Найден пользователь в локальной базе
-        const user = localUsers[0];
+      // Проверяем user_bot_data (специфично для проекта)
+      if (localUserBotData && localUserBotData.length > 0) {
+        const user = localUserBotData[0];
         return res.json({
           success: true,
           user: {
@@ -3753,7 +3754,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: 'private'
           },
           userId: user.userId,
-          source: 'local'
+          source: 'local_project'
+        });
+      }
+      
+      // Проверяем bot_users (глобальная таблица пользователей)
+      if (localBotUsers && localBotUsers.length > 0) {
+        const user = localBotUsers[0];
+        return res.json({
+          success: true,
+          user: {
+            id: user.userId,
+            first_name: user.firstName,
+            last_name: user.lastName,
+            username: user.username,
+            type: 'private'
+          },
+          userId: user.userId.toString(),
+          source: 'local_global'
         });
       }
 

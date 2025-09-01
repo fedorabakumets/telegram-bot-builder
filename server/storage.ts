@@ -7,6 +7,7 @@ import {
   userBotData,
   botGroups,
   groupMembers,
+  botUsers,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
@@ -22,10 +23,11 @@ import {
   type BotGroup,
   type InsertBotGroup,
   type GroupMember,
-  type InsertGroupMember
+  type InsertGroupMember,
+  type BotUser
 } from "@shared/schema";
 import { getDb } from "./db";
-import { eq, desc, asc, and, like, or, ilike } from "drizzle-orm";
+import { eq, desc, asc, and, like, or, ilike, sql } from "drizzle-orm";
 import { dbManager } from "./db-utils";
 import { cachedOps } from "./db-cache";
 
@@ -1119,6 +1121,22 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(desc(userBotData.lastInteraction));
+  }
+
+  async searchBotUsers(query: string): Promise<BotUser[]> {
+    const searchTerm = `%${query.toLowerCase()}%`;
+    const numericQuery = parseInt(query);
+    
+    return await this.db.select().from(botUsers)
+      .where(
+        or(
+          ilike(botUsers.username, searchTerm),
+          ilike(botUsers.firstName, searchTerm),
+          ilike(botUsers.lastName, searchTerm),
+          isNaN(numericQuery) ? sql`false` : eq(botUsers.userId, numericQuery)
+        )
+      )
+      .orderBy(desc(botUsers.lastInteraction));
   }
 
   async getUserBotDataStats(projectId: number): Promise<{
