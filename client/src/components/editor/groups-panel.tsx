@@ -2217,61 +2217,79 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         finalChatType = 'supergroup';
                       }
 
-                      // Проверяем, изменилось ли описание группы
+                      // Проверяем, изменились ли название и описание группы
+                      const nameChanged = (groupName || selectedGroup.name) !== selectedGroup.name;
                       const descriptionChanged = groupDescription !== selectedGroup.description;
                       
-                      if (descriptionChanged && groupDescription.trim()) {
-                        // Сначала обновляем описание в Telegram, потом в базе данных
-                        setGroupDescriptionMutation.mutate({
-                          groupId: selectedGroup.groupId,
-                          description: groupDescription
-                        }, {
-                          onSuccess: () => {
-                            // После успешного обновления в Telegram обновляем базу данных
-                            updateGroupMutation.mutate({
-                              groupId: selectedGroup.id,
-                              data: {
-                                name: groupName || selectedGroup.name,
-                                url: finalUrl,
-                                groupId: selectedGroup.groupId,
-                                description: groupDescription,
-                                avatarUrl: groupAvatarUrl,
-                                language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
-                                timezone: groupTimezone,
-                                tags: groupTags,
-                                notes: groupNotes,
-                                isAdmin: makeAdmin ? 1 : 0,
-                                isPublic: isPublicGroup ? 1 : 0,
-                                chatType: finalChatType,
-                                adminRights
-                              },
-                              showSuccessMessage: showSuccess
-                            });
-                          },
-                          onError: () => {
-                            // При ошибке обновления в Telegram все равно сохраняем в базе данных
-                            // (локальные изменения должны сохраниться)
-                            updateGroupMutation.mutate({
-                              groupId: selectedGroup.id,
-                              data: {
-                                name: groupName || selectedGroup.name,
-                                url: finalUrl,
-                                groupId: selectedGroup.groupId,
-                                description: groupDescription,
-                                avatarUrl: groupAvatarUrl,
-                                language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
-                                timezone: groupTimezone,
-                                tags: groupTags,
-                                notes: groupNotes,
-                                isAdmin: makeAdmin ? 1 : 0,
-                                isPublic: isPublicGroup ? 1 : 0,
-                                chatType: finalChatType,
-                                adminRights
-                              },
-                              showSuccessMessage: showSuccess
-                            });
-                          }
-                        });
+                      if ((nameChanged || descriptionChanged) && (groupName?.trim() || groupDescription.trim())) {
+                        // Функция для сохранения в базу данных после успешных обновлений в Telegram
+                        const saveToDBAfterTelegram = () => {
+                          updateGroupMutation.mutate({
+                            groupId: selectedGroup.id,
+                            data: {
+                              name: groupName || selectedGroup.name,
+                              url: finalUrl,
+                              groupId: selectedGroup.groupId,
+                              description: groupDescription,
+                              avatarUrl: groupAvatarUrl,
+                              language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
+                              timezone: groupTimezone,
+                              tags: groupTags,
+                              notes: groupNotes,
+                              isAdmin: makeAdmin ? 1 : 0,
+                              isPublic: isPublicGroup ? 1 : 0,
+                              chatType: finalChatType,
+                              adminRights
+                            },
+                            showSuccessMessage: showSuccess
+                          });
+                        };
+
+                        // Сначала обновляем название, если оно изменилось
+                        if (nameChanged && groupName?.trim()) {
+                          setGroupTitleMutation.mutate({
+                            groupId: selectedGroup.groupId,
+                            title: groupName
+                          }, {
+                            onSuccess: () => {
+                              // После успешного обновления названия обновляем описание (если нужно)
+                              if (descriptionChanged && groupDescription.trim()) {
+                                setGroupDescriptionMutation.mutate({
+                                  groupId: selectedGroup.groupId,
+                                  description: groupDescription
+                                }, {
+                                  onSuccess: saveToDBAfterTelegram,
+                                  onError: saveToDBAfterTelegram // Сохраняем даже при ошибке описания
+                                });
+                              } else {
+                                saveToDBAfterTelegram();
+                              }
+                            },
+                            onError: () => {
+                              // При ошибке названия все равно пытаемся обновить описание
+                              if (descriptionChanged && groupDescription.trim()) {
+                                setGroupDescriptionMutation.mutate({
+                                  groupId: selectedGroup.groupId,
+                                  description: groupDescription
+                                }, {
+                                  onSuccess: saveToDBAfterTelegram,
+                                  onError: saveToDBAfterTelegram
+                                });
+                              } else {
+                                saveToDBAfterTelegram();
+                              }
+                            }
+                          });
+                        } else if (descriptionChanged && groupDescription.trim()) {
+                          // Если название не изменилось, но описание изменилось
+                          setGroupDescriptionMutation.mutate({
+                            groupId: selectedGroup.groupId,
+                            description: groupDescription
+                          }, {
+                            onSuccess: saveToDBAfterTelegram,
+                            onError: saveToDBAfterTelegram
+                          });
+                        }
                       } else {
                         // Если описание не изменилось, просто сохраняем в базе данных
                         updateGroupMutation.mutate({
