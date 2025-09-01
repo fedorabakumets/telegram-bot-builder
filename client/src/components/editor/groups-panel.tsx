@@ -631,12 +631,27 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
+  // Отслеживаем смену группы для сброса данных
+  const [lastSelectedGroupId, setLastSelectedGroupId] = React.useState<string | null>(null);
+  
+  React.useEffect(() => {
+    if (selectedGroup) {
+      // Если сменилась группа, сбрасываем все данные
+      if (lastSelectedGroupId !== selectedGroup.groupId) {
+        setAdministrators([]);
+        setClientApiMembers([]);
+        setLastSelectedGroupId(selectedGroup.groupId);
+      }
+    }
+  }, [selectedGroup]);
+
   // Автоматически загружаем администраторов при выборе группы
   React.useEffect(() => {
     if (selectedGroup && showGroupSettings) {
-      setAdministrators([]); // Сбрасываем старые данные
-      setClientApiMembers([]); // Сбрасываем старые данные
-      getAdminsMutation.mutate(selectedGroup.groupId);
+      // Загружаем данные только если список пуст
+      if (administrators.length === 0) {
+        getAdminsMutation.mutate(selectedGroup.groupId);
+      }
     }
   }, [selectedGroup, showGroupSettings]);
 
