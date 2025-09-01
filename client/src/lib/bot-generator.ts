@@ -7726,31 +7726,214 @@ function generateContactHandler(node: Node): string {
 // Функции-генераторы для управления контентом
 function generatePinMessageHandler(node: Node): string {
   let code = `\n# Pin Message Handler\n`;
-  const synonyms = node.data.synonyms || ['закрепить'];
+  const synonyms = node.data.synonyms || ['закрепить', 'прикрепить', 'зафиксировать'];
   const disableNotification = node.data.disableNotification || false;
+  const targetGroupId = node.data.targetGroupId;
   
-  code += `# Обработчик для закрепления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
-  code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+  // Если указан конкретный ID группы, генерируем обработчик для этой группы
+  if (targetGroupId) {
+    const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    synonyms.forEach((synonym, index) => {
+      const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+      code += `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
+      code += `async def pin_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
+      code += `    """\n`;
+      code += `    Обработчик для закрепления сообщения по команде '${synonym}'\n`;
+      code += `    Работает в группе ${targetGroupId}\n`;
+      code += `    """\n`;
+      code += `    user_id = message.from_user.id\n`;
+      code += `    chat_id = ${targetGroupId}\n`;
+      code += `    \n`;
+      code += `    # Определяем целевое сообщение\n`;
+      code += `    target_message_id = None\n`;
+      code += `    \n`;
+      code += `    if message.reply_to_message:\n`;
+      code += `        # Если есть ответ на сообщение - используем его\n`;
+      code += `        target_message_id = message.reply_to_message.message_id\n`;
+      code += `        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id}, состояние ожидания: True")\n`;
+      code += `    else:\n`;
+      code += `        # Если нет ответа, проверяем текст на наличие ID сообщения\n`;
+      code += `        text_parts = message.text.split()\n`;
+      code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+      code += `            target_message_id = int(text_parts[1])\n`;
+      code += `            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста, состояние ожидания: True")\n`;
+      code += `        else:\n`;
+      code += `            logging.info(f"DEBUG: Получен текст ${synonym}, состояние ожидания: False")\n`;
+      code += `            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите '${synonym} ID_сообщения'")\n`;
+      code += `            return\n`;
+      code += `    \n`;
+      code += `    try:\n`;
+      code += `        # Закрепляем сообщение в указанной группе\n`;
+      code += `        await bot.pin_chat_message(\n`;
+      code += `            chat_id=chat_id,\n`;
+      code += `            message_id=target_message_id,\n`;
+      code += `            disable_notification=${disableNotification ? 'True' : 'False'}\n`;
+      code += `        )\n`;
+      code += `        await message.answer("✅ Сообщение закреплено")\n`;
+      code += `        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id} в группе {chat_id}")\n`;
+      code += `    except TelegramBadRequest as e:\n`;
+      code += `        if "message to pin not found" in str(e) or "message not found" in str(e):\n`;
+      code += `            await message.answer("❌ Сообщение не найдено")\n`;
+      code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+      code += `            await message.answer("❌ Недостаточно прав для закрепления сообщения")\n`;
+      code += `        else:\n`;
+      code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+      code += `        logging.error(f"Ошибка закрепления сообщения: {e}")\n`;
+      code += `    except Exception as e:\n`;
+      code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+      code += `        logging.error(f"Неожиданная ошибка при закреплении: {e}")\n`;
+      code += `\n`;
+    });
+  } else {
+    // Если группа не указана, создаем общий обработчик для всех групп
+    code += `# Обработчик для закрепления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
+    code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+    code += `# Работает в любых группах где бот имеет права администратора\n`;
+  }
   
   return code;
 }
 
 function generateUnpinMessageHandler(node: Node): string {
   let code = `\n# Unpin Message Handler\n`;
-  const synonyms = node.data.synonyms || ['открепить'];
+  const synonyms = node.data.synonyms || ['открепить', 'отцепить', 'убрать закрепление'];
+  const targetGroupId = node.data.targetGroupId;
   
-  code += `# Обработчик для открепления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
-  code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+  // Если указан конкретный ID группы, генерируем обработчик для этой группы
+  if (targetGroupId) {
+    const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    synonyms.forEach((synonym, index) => {
+      const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+      code += `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
+      code += `async def unpin_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
+      code += `    """\n`;
+      code += `    Обработчик для открепления сообщения по команде '${synonym}'\n`;
+      code += `    Работает в группе ${targetGroupId}\n`;
+      code += `    """\n`;
+      code += `    user_id = message.from_user.id\n`;
+      code += `    chat_id = ${targetGroupId}\n`;
+      code += `    \n`;
+      code += `    # Определяем целевое сообщение\n`;
+      code += `    target_message_id = None\n`;
+      code += `    \n`;
+      code += `    if message.reply_to_message:\n`;
+      code += `        # Если есть ответ на сообщение - используем его\n`;
+      code += `        target_message_id = message.reply_to_message.message_id\n`;
+      code += `        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для открепления")\n`;
+      code += `    else:\n`;
+      code += `        # Если нет ответа, проверяем текст на наличие ID сообщения\n`;
+      code += `        text_parts = message.text.split()\n`;
+      code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+      code += `            target_message_id = int(text_parts[1])\n`;
+      code += `            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для открепления")\n`;
+      code += `        else:\n`;
+      code += `            logging.info(f"DEBUG: Получен текст ${synonym} без ID сообщения - открепим все")\n`;
+      code += `            # Если нет конкретного сообщения, открепляем все\n`;
+      code += `            target_message_id = None\n`;
+      code += `    \n`;
+      code += `    try:\n`;
+      code += `        # Открепляем сообщение в указанной группе\n`;
+      code += `        if target_message_id:\n`;
+      code += `            await bot.unpin_chat_message(\n`;
+      code += `                chat_id=chat_id,\n`;
+      code += `                message_id=target_message_id\n`;
+      code += `            )\n`;
+      code += `            await message.answer("✅ Сообщение откреплено")\n`;
+      code += `            logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id} в группе {chat_id}")\n`;
+      code += `        else:\n`;
+      code += `            await bot.unpin_all_chat_messages(chat_id=chat_id)\n`;
+      code += `            await message.answer("✅ Все сообщения откреплены")\n`;
+      code += `            logging.info(f"Все сообщения откреплены пользователем {user_id} в группе {chat_id}")\n`;
+      code += `    except TelegramBadRequest as e:\n`;
+      code += `        if "message to unpin not found" in str(e) or "message not found" in str(e):\n`;
+      code += `            await message.answer("❌ Сообщение не найдено")\n`;
+      code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+      code += `            await message.answer("❌ Недостаточно прав для открепления сообщения")\n`;
+      code += `        else:\n`;
+      code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+      code += `        logging.error(f"Ошибка открепления сообщения: {e}")\n`;
+      code += `    except Exception as e:\n`;
+      code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+      code += `        logging.error(f"Неожиданная ошибка при откреплении: {e}")\n`;
+      code += `\n`;
+    });
+  } else {
+    // Если группа не указана, создаем общий обработчик для всех групп
+    code += `# Обработчик для открепления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
+    code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+    code += `# Работает в любых группах где бот имеет права администратора\n`;
+  }
   
   return code;
 }
 
 function generateDeleteMessageHandler(node: Node): string {
   let code = `\n# Delete Message Handler\n`;
-  const synonyms = node.data.synonyms || ['удалить'];
+  const synonyms = node.data.synonyms || ['удалить', 'стереть', 'убрать сообщение'];
+  const targetGroupId = node.data.targetGroupId;
   
-  code += `# Обработчик для удаления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
-  code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+  // Если указан конкретный ID группы, генерируем обработчик для этой группы
+  if (targetGroupId) {
+    const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    synonyms.forEach((synonym, index) => {
+      const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+      code += `\n@dp.message(lambda message: message.text and message.text.lower() == "${synonym.toLowerCase()}")\n`;
+      code += `async def delete_message_${sanitizedNodeId}_${sanitizedSynonym}_handler(message: types.Message):\n`;
+      code += `    """\n`;
+      code += `    Обработчик для удаления сообщения по команде '${synonym}'\n`;
+      code += `    Работает в группе ${targetGroupId}\n`;
+      code += `    """\n`;
+      code += `    user_id = message.from_user.id\n`;
+      code += `    chat_id = ${targetGroupId}\n`;
+      code += `    \n`;
+      code += `    # Определяем целевое сообщение\n`;
+      code += `    target_message_id = None\n`;
+      code += `    \n`;
+      code += `    if message.reply_to_message:\n`;
+      code += `        # Если есть ответ на сообщение - используем его\n`;
+      code += `        target_message_id = message.reply_to_message.message_id\n`;
+      code += `        logging.info(f"DEBUG: Получен ответ на сообщение {target_message_id} для удаления")\n`;
+      code += `    else:\n`;
+      code += `        # Если нет ответа, проверяем текст на наличие ID сообщения\n`;
+      code += `        text_parts = message.text.split()\n`;
+      code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+      code += `            target_message_id = int(text_parts[1])\n`;
+      code += `            logging.info(f"DEBUG: Получен ID сообщения {target_message_id} из текста для удаления")\n`;
+      code += `        else:\n`;
+      code += `            logging.info(f"DEBUG: Получен текст ${synonym} без ID сообщения")\n`;
+      code += `            await message.answer("❌ Укажите сообщение: ответьте на сообщение или напишите '${synonym} ID_сообщения'")\n`;
+      code += `            return\n`;
+      code += `    \n`;
+      code += `    try:\n`;
+      code += `        # Удаляем сообщение в указанной группе\n`;
+      code += `        await bot.delete_message(\n`;
+      code += `            chat_id=chat_id,\n`;
+      code += `            message_id=target_message_id\n`;
+      code += `        )\n`;
+      code += `        await message.answer("✅ Сообщение удалено")\n`;
+      code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")\n`;
+      code += `    except TelegramBadRequest as e:\n`;
+      code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
+      code += `            await message.answer("❌ Сообщение не найдено")\n`;
+      code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+      code += `            await message.answer("❌ Недостаточно прав для удаления сообщения")\n`;
+      code += `        else:\n`;
+      code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+      code += `        logging.error(f"Ошибка удаления сообщения: {e}")\n`;
+      code += `    except Exception as e:\n`;
+      code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+      code += `        logging.error(f"Неожиданная ошибка при удалении: {e}")\n`;
+      code += `\n`;
+    });
+  } else {
+    // Если группа не указана, создаем общий обработчик для всех групп
+    code += `# Обработчик для удаления сообщения используя синонимы: ${synonyms.join(', ')}\n`;
+    code += `# Поддерживает ответ на сообщение для автоматического определения target message ID\n`;
+    code += `# Работает в любых группах где бот имеет права администратора\n`;
+  }
   
   return code;
 }
