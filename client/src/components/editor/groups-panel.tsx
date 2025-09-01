@@ -629,8 +629,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           can_invite_users: member.can_invite_users || false,
           can_pin_messages: member.can_pin_messages || false,
           can_manage_video_chats: member.can_manage_video_chats || false,
-          can_be_anonymous: member.is_anonymous || false,
+          can_be_anonymous: member.is_anonymous || member.can_be_anonymous || false,
           can_promote_members: member.can_promote_members || false
+        });
+        
+        console.log('Loaded member permissions from API:', {
+          member,
+          mappedPermissions: {
+            can_change_info: member.can_change_info,
+            can_delete_messages: member.can_delete_messages,
+            can_restrict_members: member.can_restrict_members,
+            can_invite_users: member.can_invite_users,
+            can_pin_messages: member.can_pin_messages,
+            can_manage_video_chats: member.can_manage_video_chats,
+            can_be_anonymous: member.is_anonymous || member.can_be_anonymous,
+            can_promote_members: member.can_promote_members
+          }
         });
       }
     },
@@ -3016,6 +3030,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   <span>
                     Настройте разрешения для {selectedMember.firstName || selectedMember.user?.first_name || 'пользователя'} 
                     (@{selectedMember.username || selectedMember.user?.username || 'без username'})
+                    {loadMemberPermissionsMutation.isPending && (
+                      <span className="text-blue-600 ml-2">• Загружаем текущие права...</span>
+                    )}
                   </span>
                 )}
               </DialogDescription>
