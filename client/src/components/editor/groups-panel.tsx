@@ -753,6 +753,25 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
+  const setGroupPhotoMutation = useMutation({
+    mutationFn: async ({ groupId, photoPath }: { groupId: string | null; photoPath: string }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/set-group-photo`, {
+        groupId,
+        photoPath
+      });
+    },
+    onSuccess: () => {
+      toast({ title: 'Аватарка группы обновлена' });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при обновлении аватарки', 
+        description: error.error || 'Проверьте права бота в группе',
+        variant: 'destructive' 
+      });
+    }
+  });
+
   const pinMessageMutation = useMutation({
     mutationFn: async ({ groupId, messageId }: { groupId: string | null; messageId: string }) => {
       return apiRequest('POST', `/api/projects/${projectId}/bot/pin-message`, {
@@ -1395,7 +1414,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="group-avatar">URL аватарки</Label>
+                        <Label htmlFor="group-avatar">Аватарка группы</Label>
                         <div className="flex gap-2">
                           <Input
                             id="group-avatar"
@@ -1403,10 +1422,75 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             value={groupAvatarUrl}
                             onChange={(e) => setGroupAvatarUrl(e.target.value)}
                           />
-                          <Button variant="outline" size="icon">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            id="avatar-upload"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                try {
+                                  // Загружаем файл на сервер
+                                  const formData = new FormData();
+                                  formData.append('file', file);
+                                  
+                                  const response = await fetch(`/api/media/upload/${projectId}`, {
+                                    method: 'POST',
+                                    body: formData
+                                  });
+                                  
+                                  if (response.ok) {
+                                    const result = await response.json();
+                                    // Устанавливаем путь к загруженному файлу
+                                    const serverUrl = result.url || `/uploads/${result.filename}`;
+                                    setGroupAvatarUrl(serverUrl);
+                                    toast({
+                                      title: "Изображение загружено",
+                                      description: "Аватарка готова к установке"
+                                    });
+                                  } else {
+                                    throw new Error('Ошибка загрузки файла');
+                                  }
+                                } catch (error) {
+                                  console.error('Upload error:', error);
+                                  toast({
+                                    title: "Ошибка загрузки",
+                                    description: "Не удалось загрузить изображение",
+                                    variant: "destructive"
+                                  });
+                                }
+                              }
+                            }}
+                          />
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => {
+                              document.getElementById('avatar-upload')?.click();
+                            }}
+                          >
                             <Upload className="h-4 w-4" />
                           </Button>
                         </div>
+                        {groupAvatarUrl && (
+                          <div className="mt-2">
+                            <div className="w-16 h-16 border rounded-lg overflow-hidden">
+                              <img 
+                                src={groupAvatarUrl} 
+                                alt="Предпросмотр аватарки" 
+                                className="w-full h-full object-cover"
+                                onError={() => {
+                                  toast({
+                                    title: "Ошибка загрузки изображения",
+                                    description: "Проверьте правильность URL",
+                                    variant: "destructive"
+                                  });
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -2217,11 +2301,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         finalChatType = 'supergroup';
                       }
 
-                      // Проверяем, изменились ли название и описание группы
+                      // Проверяем, изменились ли название, описание и аватарка группы
                       const nameChanged = (groupName || selectedGroup.name) !== selectedGroup.name;
                       const descriptionChanged = groupDescription !== selectedGroup.description;
+                      const avatarChanged = groupAvatarUrl !== selectedGroup.avatarUrl;
                       
-                      if ((nameChanged || descriptionChanged) && (groupName?.trim() || groupDescription.trim())) {
+                      if ((nameChanged || descriptionChanged || avatarChanged) && (groupName?.trim() || groupDescription.trim() || groupAvatarUrl?.trim())) {
                         // Функция для сохранения в базу данных после успешных обновлений в Telegram
                         const saveToDBAfterTelegram = () => {
                           updateGroupMutation.mutate({
@@ -2245,53 +2330,58 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           });
                         };
 
-                        // Сначала обновляем название, если оно изменилось
-                        if (nameChanged && groupName?.trim()) {
-                          setGroupTitleMutation.mutate({
-                            groupId: selectedGroup.groupId,
-                            title: groupName
-                          }, {
-                            onSuccess: () => {
-                              // После успешного обновления названия обновляем описание (если нужно)
-                              if (descriptionChanged && groupDescription.trim()) {
-                                setGroupDescriptionMutation.mutate({
-                                  groupId: selectedGroup.groupId,
-                                  description: groupDescription
-                                }, {
-                                  onSuccess: saveToDBAfterTelegram,
-                                  onError: saveToDBAfterTelegram // Сохраняем даже при ошибке описания
-                                });
-                              } else {
-                                saveToDBAfterTelegram();
-                              }
-                            },
-                            onError: () => {
-                              // При ошибке названия все равно пытаемся обновить описание
-                              if (descriptionChanged && groupDescription.trim()) {
-                                setGroupDescriptionMutation.mutate({
-                                  groupId: selectedGroup.groupId,
-                                  description: groupDescription
-                                }, {
-                                  onSuccess: saveToDBAfterTelegram,
-                                  onError: saveToDBAfterTelegram
-                                });
-                              } else {
-                                saveToDBAfterTelegram();
-                              }
-                            }
-                          });
-                        } else if (descriptionChanged && groupDescription.trim()) {
-                          // Если название не изменилось, но описание изменилось
-                          setGroupDescriptionMutation.mutate({
-                            groupId: selectedGroup.groupId,
-                            description: groupDescription
-                          }, {
-                            onSuccess: saveToDBAfterTelegram,
-                            onError: saveToDBAfterTelegram
-                          });
-                        }
+                        // Функция для последовательного обновления в Telegram
+                        const updateTelegramSequentially = () => {
+                          // Сначала обновляем название
+                          if (nameChanged && groupName?.trim()) {
+                            setGroupTitleMutation.mutate({
+                              groupId: selectedGroup.groupId,
+                              title: groupName
+                            }, {
+                              onSuccess: () => updateDescriptionOrAvatar(),
+                              onError: updateDescriptionOrAvatar
+                            });
+                          } else {
+                            updateDescriptionOrAvatar();
+                          }
+                        };
+
+                        // Функция для обновления описания или аватарки
+                        const updateDescriptionOrAvatar = () => {
+                          if (descriptionChanged && groupDescription.trim()) {
+                            setGroupDescriptionMutation.mutate({
+                              groupId: selectedGroup.groupId,
+                              description: groupDescription
+                            }, {
+                              onSuccess: () => updateAvatarIfNeeded(),
+                              onError: updateAvatarIfNeeded
+                            });
+                          } else {
+                            updateAvatarIfNeeded();
+                          }
+                        };
+
+                        // Функция для обновления аватарки если нужно
+                        const updateAvatarIfNeeded = () => {
+                          if (avatarChanged && groupAvatarUrl?.trim() && groupAvatarUrl.startsWith('/uploads/')) {
+                            // Преобразуем относительный путь в абсолютный путь файла
+                            const photoPath = groupAvatarUrl.replace('/uploads/', 'uploads/');
+                            setGroupPhotoMutation.mutate({
+                              groupId: selectedGroup.groupId,
+                              photoPath: photoPath
+                            }, {
+                              onSuccess: saveToDBAfterTelegram,
+                              onError: saveToDBAfterTelegram
+                            });
+                          } else {
+                            saveToDBAfterTelegram();
+                          }
+                        };
+
+                        // Запускаем последовательное обновление
+                        updateTelegramSequentially();
                       } else {
-                        // Если описание не изменилось, просто сохраняем в базе данных
+                        // Если ничего не изменилось, просто сохраняем в базе данных
                         updateGroupMutation.mutate({
                           groupId: selectedGroup.id,
                           data: {
