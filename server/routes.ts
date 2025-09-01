@@ -3737,7 +3737,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Bot token not found for this project" });
       }
 
-      // Если query содержит только цифры, ищем по ID
+      // Сначала попробуем найти пользователя в локальной базе данных
+      const localUsers = await storage.searchUserBotData(projectId, query);
+      
+      if (localUsers && localUsers.length > 0) {
+        // Найден пользователь в локальной базе
+        const user = localUsers[0];
+        return res.json({
+          success: true,
+          user: {
+            id: parseInt(user.userId),
+            first_name: user.firstName,
+            last_name: user.lastName,
+            username: user.userName,
+            type: 'private'
+          },
+          userId: user.userId,
+          source: 'local'
+        });
+      }
+
+      // Если не найден в локальной базе, пробуем через Telegram API
       const isNumeric = /^\d+$/.test(query);
       let userId = null;
       
@@ -3773,7 +3793,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId) {
         return res.status(404).json({ 
           message: "User not found", 
-          error: "Could not find user by this username or ID" 
+          error: "Пользователь не найден ни в локальной базе данных, ни через Telegram API. Убедитесь, что пользователь взаимодействовал с ботом или имеет публичный username." 
         });
       }
 
@@ -3800,7 +3820,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         user: userResult.result,
-        userId: userId
+        userId: userId,
+        source: 'telegram'
       });
     } catch (error) {
       console.error("Failed to search user:", error);
