@@ -1550,7 +1550,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
         {/* Модальное окно настроек группы */}
         <Dialog open={showGroupSettings} onOpenChange={setShowGroupSettings}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-3">
                 <Settings className="h-5 w-5" />
