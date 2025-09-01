@@ -4139,9 +4139,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const apiHash = process.env.TELEGRAM_API_HASH;
       
       if (!apiId || !apiHash) {
-        return res.status(400).json({
-          message: "Telegram API credentials not configured",
-          explanation: "Please configure TELEGRAM_API_ID and TELEGRAM_API_HASH environment variables"
+        console.log('⚠️ CLIENT API: Telegram API credentials not configured, returning demo data');
+        
+        // Return demo data when credentials are not configured
+        return res.json({
+          success: true,
+          message: "🎭 Демо-режим: показаны примерные участники",
+          explanation: "Для получения реальных данных настройте TELEGRAM_API_ID и TELEGRAM_API_HASH",
+          groupId,
+          memberCount: 3,
+          members: [
+            {
+              id: 123456789,
+              username: "demo_user1",
+              firstName: "Демо",
+              lastName: "Пользователь 1",
+              isBot: false,
+              status: "active",
+              joinedAt: new Date().toISOString(),
+              source: "demo_data"
+            },
+            {
+              id: 987654321,
+              username: "demo_user2", 
+              firstName: "Демо",
+              lastName: "Пользователь 2",
+              isBot: false,
+              status: "active",
+              joinedAt: new Date().toISOString(),
+              source: "demo_data"
+            },
+            {
+              id: 555666777,
+              username: "demo_bot",
+              firstName: "Демо",
+              lastName: "Бот",
+              isBot: true,
+              status: "active",
+              joinedAt: new Date().toISOString(),
+              source: "demo_data"
+            }
+          ],
+          isDemoMode: true,
+          note: "Это демонстрационные данные. Для получения реальных участников настройте API credentials."
         });
       }
 
