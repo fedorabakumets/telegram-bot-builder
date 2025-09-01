@@ -8159,19 +8159,26 @@ function generateUnbanUserHandler(node: Node): string {
   code += `    # Определяем целевого пользователя\n`;
   code += `    target_user_id = None\n`;
   code += `    \n`;
-  code += `    text_parts = message.text.split()\n`;
   if (targetUserId) {
     code += `    target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
   } else {
-    code += `    if len(text_parts) > 1:\n`;
-    code += `        try:\n`;
-    code += `            target_user_id = int(text_parts[1])\n`;
-    code += `        except ValueError:\n`;
-    code += `            await message.answer("❌ Неверный ID пользователя")\n`;
-    code += `            return\n`;
+    code += `    # Проверяем, есть ли ответ на сообщение\n`;
+    code += `    if message.reply_to_message:\n`;
+    code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+    code += `        logging.info(f"Определен пользователь для разбана из reply: {target_user_id}")\n`;
     code += `    else:\n`;
-    code += `        await message.answer("❌ Укажите ID пользователя: /unban USER_ID")\n`;
-    code += `        return\n`;
+    code += `        # Пытаемся извлечь ID из текста команды\n`;
+    code += `        text_parts = message.text.split()\n`;
+    code += `        if len(text_parts) > 1:\n`;
+    code += `            try:\n`;
+    code += `                target_user_id = int(text_parts[1])\n`;
+    code += `                logging.info(f"Определен пользователь для разбана из текста: {target_user_id}")\n`;
+    code += `            except ValueError:\n`;
+    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
+    code += `                return\n`;
+    code += `        else:\n`;
+    code += `            await message.answer("❌ Ответьте на сообщение пользователя или укажите ID: разбанить USER_ID")\n`;
+    code += `            return\n`;
   }
   
   code += `    \n`;
