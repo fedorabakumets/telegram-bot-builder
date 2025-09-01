@@ -3568,7 +3568,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const result = await response.json();
       
+      console.log("Telegram API response for check member:", {
+        ok: response.ok,
+        status: response.status,
+        result: result
+      });
+      
       if (!response.ok) {
+        console.error("Failed to check member status via Telegram API:", result);
         return res.status(400).json({ 
           message: "Failed to check member status", 
           error: result.description || "Unknown error"
@@ -3586,12 +3593,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'kicked': 'Исключен'
       };
 
-      res.json({ 
+      const responseData = { 
         member: {
           ...member,
           friendlyStatus: friendlyStatus[member.status as keyof typeof friendlyStatus] || member.status
         }
-      });
+      };
+      
+      console.log("Sending response:", responseData);
+      res.json(responseData);
     } catch (error) {
       console.error("Failed to check member status:", error);
       res.status(500).json({ message: "Failed to check member status" });
