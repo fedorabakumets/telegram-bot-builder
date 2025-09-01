@@ -133,6 +133,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [selectedGroupForPromotion, setSelectedGroupForPromotion] = useState<BotGroup | null>(null);
   const [userToFind, setUserToFind] = useState(''); // Для универсального поиска участников
+  const [showAdminSearch, setShowAdminSearch] = useState(false); // Для поиска с назначением админом
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1072,7 +1073,32 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Search user mutation
+  // Simple search user mutation - только для поиска и добавления в список  
+  const simpleSearchUserMutation = useMutation({
+    mutationFn: async (query: string) => {
+      return await apiRequest('GET', `/api/projects/${projectId}/bot/search-user/${encodeURIComponent(query)}`);
+    },
+    onSuccess: (data: any) => {
+      if (data.user && selectedGroup && selectedGroup.groupId) {
+        // Используем checkMemberMutation для добавления найденного пользователя в список
+        checkMemberMutation.mutate({
+          groupId: selectedGroup.groupId,
+          userId: data.userId
+        });
+      }
+      setShowUserSearch(false);
+      setUserSearchQuery('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Пользователь не найден', 
+        description: error.error || 'Не удалось найти пользователя по указанному username или ID',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Search user mutation (старая версия для назначения админом)
   const searchUserMutation = useMutation({
     mutationFn: async (query: string) => {
       return await apiRequest('GET', `/api/projects/${projectId}/bot/search-user/${encodeURIComponent(query)}`);
@@ -1832,12 +1858,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               variant="outline" 
                               size="sm"
                               onClick={() => {
-                                setSelectedGroupForPromotion(selectedGroup);
                                 setShowUserSearch(true);
                               }}
                             >
                               <Search className="h-4 w-4 mr-2" />
                               Найти пользователя
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedGroupForPromotion(selectedGroup);
+                                setShowAdminSearch(true);
+                              }}
+                            >
+                              <Crown className="h-4 w-4 mr-2" />
+                              Назначить админом
                             </Button>
                             {isLoadingMembers && (
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -2935,13 +2971,13 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
           </DialogContent>
         </Dialog>
 
-        {/* Диалог поиска пользователя для назначения администратором */}
+        {/* Диалог поиска пользователя для добавления в список */}
         <Dialog open={showUserSearch} onOpenChange={setShowUserSearch}>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Найти пользователя</DialogTitle>
               <DialogDescription>
-                Введите username (без @) или ID пользователя для назначения администратором
+                Введите username (без @) или ID пользователя для добавления в список участников
               </DialogDescription>
             </DialogHeader>
             
@@ -2950,6 +2986,60 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 <Label htmlFor="user-search">Username или ID</Label>
                 <Input
                   id="user-search"
+                  placeholder="Sonofbog2 или 123456789"
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && userSearchQuery.trim()) {
+                      simpleSearchUserMutation.mutate(userSearchQuery.trim());
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Например: <code>Sonofbog2</code> или <code>@Sonofbog2</code> или <code>123456789</code>
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowUserSearch(false);
+                    setUserSearchQuery('');
+                  }}
+                >
+                  Отмена
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (userSearchQuery.trim()) {
+                      simpleSearchUserMutation.mutate(userSearchQuery.trim());
+                    }
+                  }}
+                  disabled={simpleSearchUserMutation.isPending || !userSearchQuery.trim()}
+                >
+                  {simpleSearchUserMutation.isPending ? 'Поиск...' : 'Найти и добавить'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Диалог для назначения администратором */}
+        <Dialog open={showAdminSearch} onOpenChange={setShowAdminSearch}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Назначить администратором</DialogTitle>
+              <DialogDescription>
+                Введите username (без @) или ID пользователя для назначения администратором
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-search">Username или ID</Label>
+                <Input
+                  id="admin-search"
                   placeholder="Sonofbog2 или 123456789"
                   value={userSearchQuery}
                   onChange={(e) => setUserSearchQuery(e.target.value)}
@@ -2968,7 +3058,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 <Button 
                   variant="outline" 
                   onClick={() => {
-                    setShowUserSearch(false);
+                    setShowAdminSearch(false);
                     setUserSearchQuery('');
                   }}
                 >
