@@ -773,6 +773,35 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
+  const updateBotAdminRightsMutation = useMutation({
+    mutationFn: async ({ groupId, adminRights }: { groupId: string | null; adminRights: any }) => {
+      // Сначала пробуем Bot API, но он не сработает для изменения собственных прав
+      try {
+        return await apiRequest('POST', `/api/projects/${projectId}/bot/update-admin-rights`, {
+          groupId,
+          adminRights
+        });
+      } catch (botApiError: any) {
+        console.log('Bot API не может изменить собственные права, используем Client API:', botApiError);
+        // Используем Client API который работает от имени пользователя
+        return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/update-bot-admin-rights`, {
+          groupId,
+          adminRights
+        });
+      }
+    },
+    onSuccess: () => {
+      toast({ title: 'Права администратора обновлены в Telegram' });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при обновлении прав в Telegram', 
+        description: error.error || 'Для изменения прав бота нужны права владельца группы или администратора с правом назначения администраторов',
+        variant: 'destructive' 
+      });
+    }
+  });
+
   const pinMessageMutation = useMutation({
     mutationFn: async ({ groupId, messageId }: { groupId: string | null; messageId: string }) => {
       return apiRequest('POST', `/api/projects/${projectId}/bot/pin-message`, {
@@ -2387,8 +2416,29 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               groupId: selectedGroup.groupId,
                               photoPath: photoPath
                             }, {
+                              onSuccess: () => updateAdminRightsIfNeeded(),
+                              onError: () => updateAdminRightsIfNeeded()
+                            });
+                          } else {
+                            updateAdminRightsIfNeeded();
+                          }
+                        };
+
+                        // Функция для обновления прав администратора в Telegram если они изменились
+                        const updateAdminRightsIfNeeded = () => {
+                          // Проверяем, изменились ли права администратора
+                          const currentRights = selectedGroup.adminRights || {};
+                          const rightsChanged = Object.keys(adminRights).some(key => 
+                            adminRights[key as keyof typeof adminRights] !== currentRights[key as keyof typeof currentRights]
+                          );
+                          
+                          if (rightsChanged && selectedGroup.isAdmin === 1) {
+                            updateBotAdminRightsMutation.mutate({
+                              groupId: selectedGroup.groupId,
+                              adminRights: adminRights
+                            }, {
                               onSuccess: saveToDBAfterTelegram,
-                              onError: saveToDBAfterTelegram
+                              onError: saveToDBAfterTelegram // Сохраняем в БД даже если обновление в Telegram не удалось
                             });
                           } else {
                             saveToDBAfterTelegram();
