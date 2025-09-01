@@ -1124,8 +1124,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchBotUsers(query: string): Promise<BotUser[]> {
-    const searchTerm = `%${query.toLowerCase()}%`;
-    const numericQuery = parseInt(query);
+    // Убираем @ символ если есть
+    const cleanQuery = query.startsWith('@') ? query.slice(1) : query;
+    const searchTerm = `%${cleanQuery.toLowerCase()}%`;
+    const numericQuery = parseInt(cleanQuery);
     
     return await this.db.select().from(botUsers)
       .where(
