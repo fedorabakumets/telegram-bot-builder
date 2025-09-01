@@ -942,25 +942,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
-  // Promote member mutation - сначала Bot API, потом Client API
+  // Promote member mutation - используем только Bot API
   const promoteMemberMutation = useMutation({
     mutationFn: async ({ groupId, userId, adminRights }: { groupId: string | null; userId: string; adminRights: any }) => {
-      try {
-        // Сначала пробуем Bot API
-        return await apiRequest('POST', `/api/projects/${projectId}/bot/promote-member`, {
-          groupId,
-          userId,
-          permissions: adminRights
-        });
-      } catch (botApiError: any) {
-        console.log('Bot API failed, trying Client API:', botApiError);
-        // Если Bot API не работает, пробуем Client API
-        return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/promote-member`, {
-          groupId,
-          userId,
-          adminRights
-        });
-      }
+      return await apiRequest('POST', `/api/projects/${projectId}/bot/promote-member`, {
+        groupId,
+        userId,
+        ...adminRights  // Передаем права напрямую, без вложенности в permissions
+      });
     },
     onSuccess: (data: any) => {
       toast({ 

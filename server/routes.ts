@@ -3631,7 +3631,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:projectId/bot/promote-member", async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
-      const { groupId, userId, permissions } = req.body;
+      const { 
+        groupId, 
+        userId, 
+        can_manage_chat,
+        can_change_info,
+        can_delete_messages,
+        can_invite_users,
+        can_restrict_members,
+        can_pin_messages,
+        can_promote_members,
+        can_manage_video_chats
+      } = req.body;
       
       if (!groupId || !userId) {
         return res.status(400).json({ message: "Group ID and User ID are required" });
@@ -3642,6 +3653,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Bot token not found for this project" });
       }
 
+      console.log('Promoting user with rights:', {
+        groupId,
+        userId,
+        can_manage_chat,
+        can_change_info,
+        can_delete_messages,
+        can_invite_users,
+        can_restrict_members,
+        can_pin_messages,
+        can_promote_members,
+        can_manage_video_chats
+      });
+
       const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/promoteChatMember`;
       const response = await fetch(telegramApiUrl, {
         method: 'POST',
@@ -3650,14 +3674,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         body: JSON.stringify({
           chat_id: groupId,
-          user_id: userId,
-          ...permissions
+          user_id: parseInt(userId),
+          can_manage_chat: can_manage_chat || false,
+          can_change_info: can_change_info || false,
+          can_delete_messages: can_delete_messages || false,
+          can_invite_users: can_invite_users || false,
+          can_restrict_members: can_restrict_members || false,
+          can_pin_messages: can_pin_messages || false,
+          can_promote_members: can_promote_members || false,
+          can_manage_video_chats: can_manage_video_chats || false
         })
       });
 
       const result = await response.json();
       
       if (!response.ok) {
+        console.error('Telegram API error:', result);
         return res.status(400).json({ 
           message: "Failed to promote member", 
           error: result.description || "Unknown error"
