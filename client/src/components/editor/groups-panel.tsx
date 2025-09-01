@@ -2189,6 +2189,42 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                 <Settings className="h-4 w-4 mr-2" />
                                                 Разрешения
                                               </DropdownMenuItem>
+                                              
+                                              {/* Кнопка назначения администратором для найденных через поиск участников */}
+                                              {admin.foundViaSearch && admin.status !== 'administrator' && (
+                                                <DropdownMenuItem 
+                                                  onClick={() => {
+                                                    const userId = admin?.user?.id?.toString() || admin?.id?.toString();
+                                                    if (!userId) {
+                                                      toast({
+                                                        title: 'Ошибка',
+                                                        description: 'Не удалось получить ID пользователя',
+                                                        variant: 'destructive'
+                                                      });
+                                                      return;
+                                                    }
+                                                    // Назначаем с базовыми правами администратора
+                                                    promoteMemberMutation.mutate({ 
+                                                      groupId: selectedGroup.groupId, 
+                                                      userId,
+                                                      adminRights: {
+                                                        can_change_info: false,
+                                                        can_delete_messages: true,
+                                                        can_invite_users: true,
+                                                        can_restrict_members: true,
+                                                        can_pin_messages: true,
+                                                        can_promote_members: false,
+                                                        can_manage_video_chats: false,
+                                                        can_be_anonymous: false,
+                                                        can_manage_topics: false
+                                                      }
+                                                    });
+                                                  }}
+                                                >
+                                                  <Crown className="h-4 w-4 mr-2" />
+                                                  Назначить администратором
+                                                </DropdownMenuItem>
+                                              )}
                                               <DropdownMenuSeparator />
                                             </>
                                             
