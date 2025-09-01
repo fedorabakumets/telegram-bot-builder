@@ -2280,24 +2280,32 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                               <DropdownMenuItem 
                                                 onClick={() => {
                                                   setSelectedMember(admin);
-                                                  setMemberPermissions({
-                                                    // Основные разрешения участника
-                                                    can_send_messages: true,
-                                                    can_send_media_messages: true,
-                                                    can_send_polls: true,
-                                                    can_send_other_messages: true,
-                                                    can_add_web_page_previews: true,
-                                                    
-                                                    // Административные разрешения
-                                                    can_change_info: false,
-                                                    can_delete_messages: false,
-                                                    can_restrict_members: false,
-                                                    can_invite_users: false,
-                                                    can_pin_messages: false,
-                                                    can_manage_video_chats: false,
-                                                    can_be_anonymous: false,
-                                                    can_promote_members: false
-                                                  });
+                                                  const userId = admin?.user?.id?.toString() || admin?.id?.toString();
+                                                  if (userId && selectedGroup?.groupId) {
+                                                    // Загружаем актуальные разрешения через API
+                                                    console.log('🔍 Загружаем права через API для:', { userId, groupId: selectedGroup.groupId });
+                                                    loadMemberPermissionsMutation.mutate({ 
+                                                      groupId: selectedGroup.groupId, 
+                                                      userId 
+                                                    });
+                                                  } else {
+                                                    // Fallback - используем данные по умолчанию
+                                                    setMemberPermissions({
+                                                      can_send_messages: true,
+                                                      can_send_media_messages: true,
+                                                      can_send_polls: true,
+                                                      can_send_other_messages: true,
+                                                      can_add_web_page_previews: true,
+                                                      can_change_info: false,
+                                                      can_delete_messages: false,
+                                                      can_restrict_members: false,
+                                                      can_invite_users: false,
+                                                      can_pin_messages: false,
+                                                      can_manage_video_chats: false,
+                                                      can_be_anonymous: false,
+                                                      can_promote_members: false
+                                                    });
+                                                  }
                                                   setShowPermissionsDialog(true);
                                                 }}
                                               >
@@ -3109,10 +3117,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       const groupId = selectedGroup.groupId;
                       
                       // Добавляем отладочную информацию
-                      console.log('Debugging permission update:', {
+                      console.log('💾 Сохраняем разрешения:', {
                         selectedMember,
                         extractedUserId: userId,
                         groupId,
+                        currentPermissions: memberPermissions,
                         availableKeys: Object.keys(selectedMember)
                       });
                       
