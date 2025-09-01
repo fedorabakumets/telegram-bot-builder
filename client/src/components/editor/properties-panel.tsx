@@ -129,16 +129,13 @@ export function PropertiesPanel({
       command: { command: '/custom', description: 'Новая команда', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
       pin_message: { 
         synonyms: ['закрепить', 'прикрепить', 'зафиксировать'],
-        messageIdSource: 'manual',
         disableNotification: false
       },
       unpin_message: { 
-        synonyms: ['открепить', 'отцепить', 'убрать закрепление'],
-        messageIdSource: 'manual'
+        synonyms: ['открепить', 'отцепить', 'убрать закрепление']
       },
       delete_message: { 
-        synonyms: ['удалить', 'стереть', 'убрать сообщение'],
-        messageIdSource: 'manual'
+        synonyms: ['удалить', 'стереть', 'убрать сообщение']
       }
     };
     
@@ -1878,81 +1875,34 @@ export function PropertiesPanel({
                   </div>
                 </div>
 
-                {/* Message Selection Section */}
-                <div className="bg-gradient-to-br from-orange-50/50 to-red-50/30 dark:from-orange-950/20 dark:to-red-950/10 border border-orange-200/30 dark:border-orange-800/30 rounded-lg p-4">
+                {/* Automatic Message Handling Info */}
+                <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
-                      <i className="fas fa-message text-orange-600 dark:text-orange-400 text-xs"></i>
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                      <i className="fas fa-reply text-blue-600 dark:text-blue-400 text-xs"></i>
                     </div>
-                    <Label className="text-sm font-semibold text-orange-900 dark:text-orange-100">Выбор сообщения</Label>
+                    <Label className="text-sm font-semibold text-blue-900 dark:text-blue-100">Автоматическое управление</Label>
                   </div>
                   
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
-                        Источник ID сообщения
-                      </Label>
-                      <Select
-                        value={selectedNode.data.messageIdSource || 'manual'}
-                        onValueChange={(value: 'manual' | 'variable' | 'last_message') => 
-                          onNodeUpdate(selectedNode.id, { messageIdSource: value })
-                        }
-                      >
-                        <SelectTrigger className="mt-1 border-orange-200 dark:border-orange-700">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="manual">🖊️ Ввести вручную</SelectItem>
-                          <SelectItem value="variable">🔗 Из переменной</SelectItem>
-                          <SelectItem value="last_message">📝 Последнее отправленное сообщение</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <div className="bg-blue-50/50 dark:bg-blue-950/20 rounded-lg p-3 border border-blue-200/30 dark:border-blue-800/30">
+                    <div className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                      <i className="fas fa-info-circle mr-1"></i>
+                      Команда будет применена к сообщению, на которое отвечает пользователь. 
+                      {selectedNode.type === 'pin_message' && ' Пользователь отвечает на сообщение со словом "закрепить" - сообщение закрепляется.'}
+                      {selectedNode.type === 'unpin_message' && ' Пользователь отвечает на сообщение со словом "открепить" - сообщение открепляется.'}
+                      {selectedNode.type === 'delete_message' && ' Пользователь отвечает на сообщение со словом "удалить" - сообщение удаляется.'}
                     </div>
+                  </div>
 
-                    {selectedNode.data.messageIdSource === 'manual' && (
-                      <div>
-                        <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
-                          <i className="fas fa-hashtag mr-1"></i>
-                          ID сообщения
-                        </Label>
-                        <Input
-                          value={selectedNode.data.targetMessageId || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { targetMessageId: e.target.value })}
-                          className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
-                          placeholder="123456"
-                        />
-                        <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                          ID сообщения для операции (можно получить перенаправив сообщение в @userinfobot)
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedNode.data.messageIdSource === 'variable' && (
-                      <div>
-                        <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
-                          <i className="fas fa-variable mr-1"></i>
-                          Имя переменной
-                        </Label>
-                        <Input
-                          value={selectedNode.data.variableName || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { variableName: e.target.value })}
-                          className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
-                          placeholder="message_id"
-                        />
-                        <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                          Имя переменной, содержащей ID сообщения
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedNode.type === 'pin_message' && (
-                      <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-orange-200/30 dark:border-orange-800/30 hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-200">
+                  {selectedNode.type === 'pin_message' && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-blue-200/30 dark:border-blue-800/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200">
                         <div className="flex-1">
-                          <Label className="text-xs font-medium text-orange-700 dark:text-orange-300">
+                          <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
                             <i className="fas fa-bell-slash mr-1"></i>
                             Тихое закрепление
                           </Label>
-                          <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                             Закрепить без уведомления участников
                           </div>
                         </div>
@@ -1963,8 +1913,8 @@ export function PropertiesPanel({
                           />
                         </div>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Synonyms Section for Content Management */}
