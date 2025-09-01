@@ -184,12 +184,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
   // Update group mutation
   const updateGroupMutation = useMutation({
-    mutationFn: async ({ groupId, data }: { groupId: number, data: Partial<InsertBotGroup> }) => {
+    mutationFn: async ({ groupId, data, showSuccessMessage = true }: { groupId: number, data: Partial<InsertBotGroup>, showSuccessMessage?: boolean }) => {
       return apiRequest('PUT', `/api/projects/${projectId}/groups/${groupId}`, data);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'groups'] });
-      toast({ title: 'Настройки группы обновлены' });
+      if (variables.showSuccessMessage) {
+        toast({ title: 'Настройки группы обновлены' });
+      }
       setShowGroupSettings(false);
       setSelectedGroup(null);
     },
@@ -2227,7 +2229,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     }
                     
                     // Функция для сохранения настроек в базе данных
-                    const saveToDatabase = () => {
+                    const saveToDatabase = (showSuccess = true) => {
                       // Автоматически определяем тип группы на основе публичности
                       let finalChatType = chatType;
                       if (isPublicGroup && (chatType === 'group' || !chatType)) {
@@ -2251,7 +2253,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           isPublic: isPublicGroup ? 1 : 0,
                           chatType: finalChatType,
                           adminRights
-                        }
+                        },
+                        showSuccessMessage: showSuccess
                       });
                     };
 
@@ -2273,8 +2276,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         username: usernameToSet
                       }, {
                         onSuccess: () => {
-                          // Только если изменение в Telegram удалось - сохраняем в базе
-                          saveToDatabase();
+                          // Только если изменение в Telegram удалось - сохраняем в базе с успешным сообщением
+                          saveToDatabase(true);
+                          toast({
+                            title: "Настройки группы обновлены",
+                            description: "Публичность группы успешно изменена",
+                          });
                         },
                         onError: (error: any) => {
                           // Показываем ошибку и НЕ сохраняем в базе
@@ -2288,8 +2295,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         }
                       });
                     } else {
-                      // Если публичность не изменяется - сразу сохраняем
-                      saveToDatabase();
+                      // Если публичность не изменяется - сразу сохраняем с обычным сообщением
+                      saveToDatabase(true);
                     }
                   }
                 }}
