@@ -143,7 +143,6 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
                        text.includes('<s>') || text.includes('<code>') || text.includes('<strong>') || 
                        text.includes('<em>') || text.includes('<a href');
     shouldUseHTML = hasHTMLTags;
-    console.log('formatMode=none detection:', { hasHTMLTags, shouldUseHTML, containsB: text.includes('<b>'), containsStrong: text.includes('<strong>') });
   } else if (markdown === true) {
     // Legacy support for 'markdown' property
     shouldUseHTML = false;
@@ -155,7 +154,6 @@ function parseFormattedText(text: string, formatMode?: string, markdown?: boolea
     shouldUseHTML = hasHTMLTags;
   }
   
-  console.log('Final decision:', { formatMode, shouldUseHTML, parser: shouldUseHTML ? 'HTML' : 'Markdown' });
   
   const parsedParts = shouldUseHTML ? parseHTML(text) : parseMarkdown(text);
   
@@ -218,16 +216,16 @@ const nodeColors = {
   animation: 'bg-gradient-to-br from-yellow-50 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800',
   location: 'bg-gradient-to-br from-green-50 to-lime-100 dark:from-green-900/30 dark:to-lime-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800',
   contact: 'bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800',
-  pin_message: 'bg-gradient-to-br from-cyan-50 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800',
-  unpin_message: 'bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/30 dark:to-gray-900/30 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800',
-  delete_message: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
-  ban_user: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
-  unban_user: 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800',
-  mute_user: 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800',
-  unmute_user: 'bg-gradient-to-br from-green-50 to-lime-100 dark:from-green-900/30 dark:to-lime-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800',
-  kick_user: 'bg-gradient-to-br from-red-50 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
-  promote_user: 'bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800',
-  demote_user: 'bg-gradient-to-br from-gray-50 to-slate-100 dark:from-gray-900/30 dark:to-slate-900/30 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800'
+  pin_message: 'bg-gradient-to-br from-cyan-100 to-blue-200 dark:from-cyan-900/40 dark:to-blue-800/40 text-cyan-700 dark:text-cyan-300 border-2 border-cyan-300 dark:border-cyan-700/50 shadow-lg shadow-cyan-500/20',
+  unpin_message: 'bg-gradient-to-br from-slate-100 to-gray-200 dark:from-slate-900/40 dark:to-gray-800/40 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700/50 shadow-lg shadow-slate-500/20',
+  delete_message: 'bg-gradient-to-br from-red-100 to-rose-200 dark:from-red-900/40 dark:to-rose-800/40 text-red-700 dark:text-red-300 border-2 border-red-300 dark:border-red-700/50 shadow-lg shadow-red-500/20',
+  ban_user: 'bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/40 dark:to-red-800/40 text-red-700 dark:text-red-300 border-2 border-red-300 dark:border-red-700/50 shadow-lg shadow-red-500/20',
+  unban_user: 'bg-gradient-to-br from-emerald-100 to-green-200 dark:from-emerald-900/40 dark:to-green-800/40 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700/50 shadow-lg shadow-emerald-500/20',
+  mute_user: 'bg-gradient-to-br from-orange-100 to-amber-200 dark:from-orange-900/40 dark:to-amber-800/40 text-orange-700 dark:text-orange-300 border-2 border-orange-300 dark:border-orange-700/50 shadow-lg shadow-orange-500/20',
+  unmute_user: 'bg-gradient-to-br from-sky-100 to-blue-200 dark:from-sky-900/40 dark:to-blue-800/40 text-sky-700 dark:text-sky-300 border-2 border-sky-300 dark:border-sky-700/50 shadow-lg shadow-sky-500/20',
+  kick_user: 'bg-gradient-to-br from-rose-100 to-pink-200 dark:from-rose-900/40 dark:to-pink-800/40 text-rose-700 dark:text-rose-300 border-2 border-rose-300 dark:border-rose-700/50 shadow-lg shadow-rose-500/20',
+  promote_user: 'bg-gradient-to-br from-yellow-100 to-amber-200 dark:from-yellow-900/40 dark:to-amber-800/40 text-yellow-700 dark:text-yellow-300 border-2 border-yellow-300 dark:border-yellow-700/50 shadow-lg shadow-yellow-500/20',
+  demote_user: 'bg-gradient-to-br from-slate-100 to-gray-200 dark:from-slate-900/40 dark:to-gray-800/40 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700/50 shadow-lg shadow-slate-500/20'
 };
 
 export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 } }: CanvasNodeProps) {
@@ -335,7 +333,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
     <div
       ref={nodeRef}
       className={cn(
-        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 transition-all duration-300 relative select-none",
+        "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 transition-all duration-300 relative select-none group",
         isSelected ? "border-blue-500 ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10" : "border-gray-200 dark:border-slate-700",
         isDragging ? "shadow-3xl scale-105 cursor-grabbing z-50 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "hover:shadow-2xl hover:border-gray-300 dark:hover:border-slate-600",
         onMove ? "cursor-grab hover:cursor-grab" : "cursor-pointer"
@@ -359,10 +357,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
             e.stopPropagation();
             onDuplicate();
           }}
-          className="absolute -top-3 -left-3 w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl border-2 border-white dark:border-slate-900"
+          className="absolute -top-2 -left-2 w-7 h-7 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/40 dark:hover:to-indigo-900/40 hover:text-blue-700 dark:hover:text-blue-300 focus:bg-gradient-to-br focus:from-blue-100 focus:to-indigo-100 dark:focus:from-blue-800/50 dark:focus:to-indigo-800/50 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl focus:shadow-2xl border border-blue-200/50 dark:border-blue-700/50 hover:border-blue-300 dark:hover:border-blue-600 focus:border-blue-400 dark:focus:border-blue-500 hover:scale-110 focus:scale-105 group opacity-0 group-hover:opacity-100 focus:opacity-100"
           title="Копировать элемент"
         >
-          <i className="fas fa-copy text-sm"></i>
+          <i className="fas fa-copy text-xs transition-transform duration-200 group-hover:scale-110"></i>
         </button>
       )}
       
@@ -373,10 +371,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
             e.stopPropagation();
             onDelete();
           }}
-          className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full flex items-center justify-center hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl border-2 border-white dark:border-slate-900"
+          className="absolute -top-2 -right-2 w-7 h-7 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center hover:bg-gradient-to-br hover:from-red-50 hover:to-rose-50 dark:hover:from-red-900/40 dark:hover:to-rose-900/40 hover:text-red-700 dark:hover:text-red-300 focus:bg-gradient-to-br focus:from-red-100 focus:to-rose-100 dark:focus:from-red-800/50 dark:focus:to-rose-800/50 active:scale-95 transition-all duration-300 shadow-lg hover:shadow-xl focus:shadow-2xl border border-red-200/50 dark:border-red-700/50 hover:border-red-300 dark:hover:border-red-600 focus:border-red-400 dark:focus:border-red-500 hover:scale-110 focus:scale-105 group opacity-0 group-hover:opacity-100 focus:opacity-100"
           title="Удалить элемент"
         >
-          <i className="fas fa-times text-sm"></i>
+          <i className="fas fa-times text-xs transition-transform duration-200 group-hover:scale-110"></i>
         </button>
       )}
       
@@ -454,9 +452,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               {node.type === 'animation' && 'GIF анимация'}
               {node.type === 'location' && 'Геолокация'}
               {node.type === 'contact' && 'Контакт'}
-              {node.type === 'pin_message' && 'Закрепить сообщение'}
-              {node.type === 'unpin_message' && 'Открепить сообщение'}
-              {node.type === 'delete_message' && 'Удалить сообщение'}
+              {(node.type === 'pin_message' || node.type === 'unpin_message' || node.type === 'delete_message') && 'Управление контентом'}
+              {(node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || 
+                node.type === 'unmute_user' || node.type === 'kick_user' || node.type === 'promote_user' || 
+                node.type === 'demote_user') && 'Действие с пользователем'}
             </h3>
             {onMove && (
               <div className="ml-2 opacity-40 hover:opacity-70 transition-all duration-200 cursor-grab">
@@ -464,9 +463,11 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               </div>
             )}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-            {node.data.description ? parseFormattedText(node.data.description, node.data.formatMode, node.data.markdown) : 'Элемент бота'}
-          </p>
+          {node.data.description && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+              {parseFormattedText(node.data.description, node.data.formatMode, node.data.markdown)}
+            </p>
+          )}
         </div>
       </div>
       {/* Message preview */}
@@ -1009,6 +1010,203 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         </div>
       )}
       
+      {/* Content Management Action Preview */}
+      {(node.type === 'pin_message' || node.type === 'unpin_message' || node.type === 'delete_message') && (
+        <div className="bg-gradient-to-br from-blue-50/80 to-cyan-50/80 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl p-4 mb-4 border border-blue-200 dark:border-blue-700/50 shadow-sm">
+          <div className="flex items-start space-x-3">
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-sm", nodeColors[node.type])}>
+              <i className={cn(nodeIcons[node.type], "text-lg")}></i>
+            </div>
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  {node.type === 'pin_message' && 'Закрепить сообщение'}
+                  {node.type === 'unpin_message' && 'Открепить сообщение'}
+                  {node.type === 'delete_message' && 'Удалить сообщение'}
+                </span>
+                <div className="h-1.5 w-1.5 rounded-full bg-current opacity-30"></div>
+                <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Контент
+                </span>
+              </div>
+              
+              {/* Target Info */}
+              <div className="space-y-2">
+                {node.data.targetGroupId && (
+                  <div className="flex items-center space-x-2 text-xs">
+                    <i className="fas fa-users text-blue-500 dark:text-blue-400"></i>
+                    <span className="text-gray-600 dark:text-gray-400">Группа:</span>
+                    <code className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded font-mono">
+                      {node.data.targetGroupId}
+                    </code>
+                  </div>
+                )}
+                {node.data.targetMessageId && (
+                  <div className="flex items-center space-x-2 text-xs">
+                    <i className="fas fa-comment text-purple-500 dark:text-purple-400"></i>
+                    <span className="text-gray-600 dark:text-gray-400">Сообщение:</span>
+                    <code className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded font-mono">
+                      {node.data.targetMessageId}
+                    </code>
+                  </div>
+                )}
+                {node.data.messageIdSource && node.data.messageIdSource !== 'manual' && (
+                  <div className="flex items-center space-x-2 text-xs">
+                    <i className="fas fa-magic text-orange-500 dark:text-orange-400"></i>
+                    <span className="text-gray-600 dark:text-gray-400">Источник ID:</span>
+                    <span className="bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded text-xs">
+                      {node.data.messageIdSource === 'variable' ? 'Переменная' : 
+                       node.data.messageIdSource === 'last_message' ? 'Последнее сообщение' : node.data.messageIdSource}
+                    </span>
+                  </div>
+                )}
+                {node.data.variableName && node.data.messageIdSource === 'variable' && (
+                  <div className="flex items-center space-x-2 text-xs">
+                    <i className="fas fa-tag text-green-500 dark:text-green-400"></i>
+                    <span className="text-gray-600 dark:text-gray-400">Переменная:</span>
+                    <code className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded font-mono">
+                      {node.data.variableName}
+                    </code>
+                  </div>
+                )}
+              </div>
+              
+              {/* Action Status */}
+              <div className="flex items-center space-x-2 pt-2 border-t border-blue-200/50 dark:border-blue-700/50">
+                {(() => {
+                  const hasTargetGroup = node.data.targetGroupId && node.data.targetGroupId.trim() !== '';
+                  const needsMessageId = node.type !== 'unpin_message'; // unpin не требует ID сообщения
+                  const hasMessageId = node.data.targetMessageId && node.data.targetMessageId.trim() !== '';
+                  const hasVariableSource = node.data.messageIdSource === 'variable' && node.data.variableName;
+                  const hasLastMessageSource = node.data.messageIdSource === 'last_message';
+                  const messageIdOk = !needsMessageId || hasMessageId || hasVariableSource || hasLastMessageSource;
+                  const isReady = hasTargetGroup && messageIdOk;
+                  
+                  return (
+                    <>
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        isReady ? "bg-green-500" : "bg-orange-500"
+                      )}></div>
+                      <span className="text-xs font-medium">
+                        {isReady ? (
+                          <span className="text-green-600 dark:text-green-400">Готово к выполнению</span>
+                        ) : (
+                          <span className="text-orange-600 dark:text-orange-400">
+                            {!hasTargetGroup ? 'Укажите ID группы' :
+                             needsMessageId && !messageIdOk ? 'Укажите ID сообщения или источник' :
+                             'Требуется настройка'}
+                          </span>
+                        )}
+                      </span>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Management Action Preview */}
+      {(node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'kick_user' || node.type === 'mute_user' || node.type === 'unmute_user' || node.type === 'promote_user' || node.type === 'demote_user') && (
+        <div className="bg-gradient-to-br from-gray-50/80 to-slate-50/80 dark:from-gray-900/30 dark:to-slate-900/30 rounded-xl p-4 mb-4 border border-gray-200 dark:border-gray-700/50 shadow-sm">
+          <div className="flex items-start space-x-3">
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-sm", nodeColors[node.type])}>
+              <i className={cn(nodeIcons[node.type], "text-lg")}></i>
+            </div>
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                  {node.type === 'ban_user' && 'Заблокировать пользователя'}
+                  {node.type === 'unban_user' && 'Разблокировать пользователя'}
+                  {node.type === 'kick_user' && 'Исключить пользователя'}
+                  {node.type === 'mute_user' && 'Заглушить пользователя'}
+                  {node.type === 'unmute_user' && 'Разрешить говорить'}
+                  {node.type === 'promote_user' && 'Назначить администратором'}
+                  {node.type === 'demote_user' && 'Снять с администратора'}
+                </span>
+                <div className="h-1.5 w-1.5 rounded-full bg-current opacity-30"></div>
+                <span className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">
+                  Действие
+                </span>
+              </div>
+              
+              {/* Target Info */}
+              <div className="space-y-2">
+                {node.data.targetGroupId && (
+                  <div className="flex items-center space-x-2 text-xs">
+                    <i className="fas fa-users text-blue-500 dark:text-blue-400"></i>
+                    <span className="text-gray-600 dark:text-gray-400">Группа:</span>
+                    <code className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded font-mono">
+                      {node.data.targetGroupId}
+                    </code>
+                  </div>
+                )}
+                {node.data.targetUserId && (
+                  <div className="flex items-center space-x-2 text-xs">
+                    <i className="fas fa-user text-purple-500 dark:text-purple-400"></i>
+                    <span className="text-gray-600 dark:text-gray-400">Пользователь:</span>
+                    <code className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded font-mono">
+                      {node.data.targetUserId}
+                    </code>
+                  </div>
+                )}
+                {node.data.reason && (
+                  <div className="flex items-start space-x-2 text-xs">
+                    <i className="fas fa-comment-dots text-orange-500 dark:text-orange-400 mt-0.5"></i>
+                    <div className="flex-1">
+                      <span className="text-gray-600 dark:text-gray-400">Причина:</span>
+                      <div className="bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded mt-1 text-xs leading-relaxed">
+                        {node.data.reason}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {(node.type === 'ban_user' || node.type === 'mute_user') && node.data.untilDate && (
+                  <div className="flex items-center space-x-2 text-xs">
+                    <i className="fas fa-clock text-red-500 dark:text-red-400"></i>
+                    <span className="text-gray-600 dark:text-gray-400">До:</span>
+                    <span className="bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-1 rounded">
+                      {new Date(node.data.untilDate * 1000).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Action Status */}
+              <div className="flex items-center space-x-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
+                {(() => {
+                  const hasTargetGroup = node.data.targetGroupId && node.data.targetGroupId.trim() !== '';
+                  const hasTargetUser = node.data.targetUserId && node.data.targetUserId.trim() !== '';
+                  const isReady = hasTargetGroup && hasTargetUser;
+                  
+                  return (
+                    <>
+                      <div className={cn(
+                        "w-2 h-2 rounded-full",
+                        isReady ? "bg-green-500" : "bg-orange-500"
+                      )}></div>
+                      <span className="text-xs font-medium">
+                        {isReady ? (
+                          <span className="text-green-600 dark:text-green-400">Готово к выполнению</span>
+                        ) : (
+                          <span className="text-orange-600 dark:text-orange-400">
+                            {!hasTargetGroup && !hasTargetUser ? 'Укажите группу и пользователя' :
+                             !hasTargetGroup ? 'Укажите ID группы' :
+                             'Укажите ID пользователя'}
+                          </span>
+                        )}
+                      </span>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Text Input Indicator for keyboard type 'none' */}
       {node.type === 'keyboard' && node.data.keyboardType === 'none' && (node.data as any).enableTextInput && (
         <div className="bg-gradient-to-br from-cyan-50/70 to-blue-50/70 dark:from-cyan-900/30 dark:to-blue-900/30 rounded-xl p-4 mb-4 border border-cyan-200 dark:border-cyan-800/30">
@@ -1170,12 +1368,12 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       {/* Connection points */}
       <button
         className={cn(
-          "absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-md hover:scale-125 transition-all duration-300 group",
+          "absolute -left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 rounded-full border-2 border-white dark:border-slate-900 shadow-lg hover:scale-125 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10",
           connectionStart?.nodeId === node.id && connectionStart?.handle === 'target'
-            ? "bg-green-500 hover:bg-green-600 animate-pulse shadow-lg shadow-green-500/50"
+            ? "bg-gradient-to-br from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 animate-pulse shadow-2xl shadow-emerald-500/50 opacity-100"
             : connectionStart && connectionStart.nodeId !== node.id && connectionStart.handle === 'source'
-            ? "bg-green-400 hover:bg-green-500 animate-bounce shadow-lg shadow-green-400/50"
-            : "bg-muted-foreground hover:bg-muted-foreground/80"
+            ? "bg-gradient-to-br from-emerald-300 to-green-400 hover:from-emerald-400 hover:to-green-500 animate-bounce shadow-xl shadow-emerald-400/40 opacity-100"
+            : "bg-gradient-to-br from-gray-400 to-gray-500 hover:from-blue-400 hover:to-blue-500 hover:shadow-blue-500/30"
         )}
         onClick={(e) => {
           e.stopPropagation();
@@ -1183,16 +1381,17 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         }}
         title="Входящее соединение"
       >
-        <div className="absolute inset-0 rounded-full bg-current opacity-0 group-hover:opacity-20 transition-opacity duration-300 animate-ping" />
+        <div className="absolute inset-1 rounded-full bg-white/30 dark:bg-slate-800/30 opacity-0 hover:opacity-100 transition-opacity duration-200" />
+        <div className="absolute inset-0 rounded-full bg-current opacity-0 hover:opacity-10 transition-opacity duration-300 animate-ping" />
       </button>
       <button
         className={cn(
-          "absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 border-background shadow-md hover:scale-125 transition-all duration-300 group",
+          "absolute -right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 rounded-full border-2 border-white dark:border-slate-900 shadow-lg hover:scale-125 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10",
           connectionStart?.nodeId === node.id && connectionStart?.handle === 'source'
-            ? "bg-green-500 hover:bg-green-600 animate-pulse shadow-lg shadow-green-500/50"
+            ? "bg-gradient-to-br from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 animate-pulse shadow-2xl shadow-emerald-500/50 opacity-100"
             : connectionStart && connectionStart.nodeId !== node.id && connectionStart.handle === 'target'
-            ? "bg-green-400 hover:bg-green-500 animate-bounce shadow-lg shadow-green-400/50"
-            : "bg-primary hover:bg-primary/80"
+            ? "bg-gradient-to-br from-emerald-300 to-green-400 hover:from-emerald-400 hover:to-green-500 animate-bounce shadow-xl shadow-emerald-400/40 opacity-100"
+            : "bg-gradient-to-br from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 hover:shadow-blue-500/30"
         )}
         onClick={(e) => {
           e.stopPropagation();
@@ -1200,7 +1399,8 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         }}
         title="Исходящее соединение"
       >
-        <div className="absolute inset-0 rounded-full bg-current opacity-0 group-hover:opacity-20 transition-opacity duration-300 animate-ping" />
+        <div className="absolute inset-1 rounded-full bg-white/30 dark:bg-slate-800/30 opacity-0 hover:opacity-100 transition-opacity duration-200" />
+        <div className="absolute inset-0 rounded-full bg-current opacity-0 hover:opacity-10 transition-opacity duration-300 animate-ping" />
       </button>
     </div>
   );
