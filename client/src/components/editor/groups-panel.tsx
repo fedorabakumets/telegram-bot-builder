@@ -127,6 +127,12 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [showSendMessage, setShowSendMessage] = useState(false);
   const [messageToSend, setMessageToSend] = useState('');
   const [selectedGroupForMessage, setSelectedGroupForMessage] = useState<BotGroup | null>(null);
+  
+  // Состояние для поиска пользователя
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [selectedGroupForPromotion, setSelectedGroupForPromotion] = useState<BotGroup | null>(null);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -936,6 +942,120 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
+  // Promote member mutation - сначала Bot API, потом Client API
+  const promoteMemberMutation = useMutation({
+    mutationFn: async ({ groupId, userId, adminRights }: { groupId: string | null; userId: string; adminRights: any }) => {
+      try {
+        // Сначала пробуем Bot API
+        return await apiRequest('POST', `/api/projects/${projectId}/bot/promote-member`, {
+          groupId,
+          userId,
+          permissions: adminRights
+        });
+      } catch (botApiError: any) {
+        console.log('Bot API failed, trying Client API:', botApiError);
+        // Если Bot API не работает, пробуем Client API
+        return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/promote-member`, {
+          groupId,
+          userId,
+          adminRights
+        });
+      }
+    },
+    onSuccess: (data: any) => {
+      toast({ 
+        title: 'Участник назначен администратором',
+        description: data.message || 'Операция выполнена успешно'
+      });
+      // Обновляем список участников
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup?.groupId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при назначении администратора', 
+        description: error.error || 'Не удалось назначить администратора',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Demote member mutation - сначала Bot API, потом Client API
+  const demoteMemberMutation = useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string | null; userId: string }) => {
+      try {
+        // Сначала пробуем Bot API
+        return await apiRequest('POST', `/api/projects/${projectId}/bot/demote-member`, {
+          groupId,
+          userId
+        });
+      } catch (botApiError: any) {
+        console.log('Bot API failed, trying Client API:', botApiError);
+        // Если Bot API не работает, пробуем Client API
+        return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/demote-member`, {
+          groupId,
+          userId
+        });
+      }
+    },
+    onSuccess: (data: any) => {
+      toast({ 
+        title: 'Администраторские права сняты',
+        description: data.message || 'Операция выполнена успешно'
+      });
+      // Обновляем список участников
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/telegram-client/group-members/${selectedGroup?.groupId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/group-admins/${selectedGroup?.groupId}`] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка при снятии прав администратора', 
+        description: error.error || 'Не удалось снять права администратора',
+        variant: 'destructive' 
+      });
+    }
+  });
+
+  // Search user mutation
+  const searchUserMutation = useMutation({
+    mutationFn: async (query: string) => {
+      return await apiRequest('GET', `/api/projects/${projectId}/bot/search-user/${encodeURIComponent(query)}`);
+    },
+    onSuccess: (data: any) => {
+      if (data.user && selectedGroupForPromotion) {
+        // Показываем диалог с подтверждением назначения
+        const user = data.user;
+        const confirmMessage = `Назначить ${user.first_name || user.username || 'пользователя'} (@${user.username || 'без username'}) администратором группы "${selectedGroupForPromotion.name}"?`;
+        
+        if (confirm(confirmMessage)) {
+          promoteMemberMutation.mutate({
+            groupId: selectedGroupForPromotion.groupId,
+            userId: data.userId,
+            adminRights: {
+              can_manage_chat: true,
+              can_change_info: true,
+              can_delete_messages: true,
+              can_invite_users: true,
+              can_restrict_members: true,
+              can_pin_messages: true,
+              can_promote_members: false,
+              can_manage_video_chats: true
+            }
+          });
+        }
+      }
+      setShowUserSearch(false);
+      setUserSearchQuery('');
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Пользователь не найден', 
+        description: error.error || 'Не удалось найти пользователя по указанному username или ID',
+        variant: 'destructive' 
+      });
+    }
+  });
+
   const handleAddGroup = () => {
     const identifier = groupId.trim();
     if (!identifier) {
@@ -1652,6 +1772,17 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         <div className="flex items-center justify-between">
                           <h5 className="font-medium text-sm">Участники группы</h5>
                           <div className="flex items-center gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedGroupForPromotion(selectedGroup);
+                                setShowUserSearch(true);
+                              }}
+                            >
+                              <Search className="h-4 w-4 mr-2" />
+                              Найти пользователя
+                            </Button>
                             {isLoadingMembers && (
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
@@ -1762,6 +1893,38 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                 >
                                                   <Settings className="h-4 w-4 mr-2" />
                                                   Разрешения
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                  onClick={() => {
+                                                    const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
+                                                    if (!userId) {
+                                                      toast({
+                                                        title: 'Ошибка',
+                                                        description: 'Не удалось получить ID пользователя',
+                                                        variant: 'destructive'
+                                                      });
+                                                      return;
+                                                    }
+                                                    // Назначаем с базовыми правами администратора
+                                                    promoteMemberMutation.mutate({ 
+                                                      groupId: selectedGroup.groupId, 
+                                                      userId,
+                                                      adminRights: {
+                                                        can_change_info: false,
+                                                        can_delete_messages: true,
+                                                        can_invite_users: true,
+                                                        can_restrict_members: true,
+                                                        can_pin_messages: true,
+                                                        can_promote_members: false,
+                                                        can_manage_video_chats: false,
+                                                        can_be_anonymous: false,
+                                                        can_manage_topics: false
+                                                      }
+                                                    });
+                                                  }}
+                                                >
+                                                  <Crown className="h-4 w-4 mr-2" />
+                                                  Назначить администратором
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                               </>
@@ -1908,6 +2071,28 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                             )}
                                             
                                             {/* Основные действия - для всех кроме создателя */}
+                                            <DropdownMenuItem 
+                                              onClick={() => {
+                                                const userId = admin?.user?.id?.toString() || admin?.id?.toString();
+                                                if (!userId) {
+                                                  toast({
+                                                    title: 'Ошибка',
+                                                    description: 'Не удалось получить ID пользователя',
+                                                    variant: 'destructive'
+                                                  });
+                                                  return;
+                                                }
+                                                demoteMemberMutation.mutate({ 
+                                                  groupId: selectedGroup.groupId, 
+                                                  userId 
+                                                });
+                                              }}
+                                              className="text-orange-600"
+                                            >
+                                              <Crown className="h-4 w-4 mr-2" />
+                                              Снять права администратора
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
                                             <DropdownMenuItem 
                                               onClick={() => muteMemberMutation.mutate({ 
                                                 groupId: selectedGroup.groupId, 
@@ -2617,6 +2802,60 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                   disabled={updatePermissionsMutation.isPending}
                 >
                   {updatePermissionsMutation.isPending ? 'Сохранение...' : 'Сохранить разрешения'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Диалог поиска пользователя для назначения администратором */}
+        <Dialog open={showUserSearch} onOpenChange={setShowUserSearch}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Найти пользователя</DialogTitle>
+              <DialogDescription>
+                Введите username (без @) или ID пользователя для назначения администратором
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="user-search">Username или ID</Label>
+                <Input
+                  id="user-search"
+                  placeholder="Sonofbog2 или 123456789"
+                  value={userSearchQuery}
+                  onChange={(e) => setUserSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && userSearchQuery.trim()) {
+                      searchUserMutation.mutate(userSearchQuery.trim());
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Например: <code>Sonofbog2</code> или <code>@Sonofbog2</code> или <code>123456789</code>
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowUserSearch(false);
+                    setUserSearchQuery('');
+                  }}
+                >
+                  Отмена
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (userSearchQuery.trim()) {
+                      searchUserMutation.mutate(userSearchQuery.trim());
+                    }
+                  }}
+                  disabled={searchUserMutation.isPending || !userSearchQuery.trim()}
+                >
+                  {searchUserMutation.isPending ? 'Поиск...' : 'Найти и назначить админом'}
                 </Button>
               </div>
             </div>

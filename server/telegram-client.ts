@@ -790,6 +790,118 @@ class TelegramClientManager {
       throw new Error(`Failed to restrict member: ${error.message || 'Unknown error'}`);
     }
   }
+
+  // Назначить участника администратором через Client API  
+  async promoteMember(userId: string, chatId: string | number, memberId: string, adminRights: any): Promise<any> {
+    const client = await this.getClient(userId);
+    if (!client) {
+      throw new Error('Telegram client not found. Please authenticate first.');
+    }
+
+    try {
+      // Получаем сущность чата
+      let chatEntity: any;
+      try {
+        chatEntity = await client.getEntity(chatId);
+      } catch (entityError) {
+        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
+          const channelId = BigInt(chatId.slice(4));
+          chatEntity = new Api.PeerChannel({ channelId });
+        } else {
+          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
+        }
+      }
+
+      // Получаем сущность пользователя
+      const userEntity = await client.getEntity(parseInt(memberId));
+
+      // Назначаем администратором
+      const result = await client.invoke(
+        new Api.channels.EditAdmin({
+          channel: chatEntity,
+          userId: userEntity,
+          adminRights: new Api.ChatAdminRights({
+            changeInfo: adminRights.can_change_info || false,
+            postMessages: adminRights.can_post_messages || false,
+            editMessages: adminRights.can_edit_messages || false,
+            deleteMessages: adminRights.can_delete_messages || false,
+            banUsers: adminRights.can_restrict_members || false,
+            inviteUsers: adminRights.can_invite_users || false,
+            pinMessages: adminRights.can_pin_messages || false,
+            addAdmins: adminRights.can_promote_members || false,
+            manageCall: adminRights.can_manage_video_chats || false,
+            anonymous: adminRights.can_be_anonymous || false,
+            manageTopics: adminRights.can_manage_topics || false,
+            postStories: adminRights.can_post_stories || false,
+            editStories: adminRights.can_edit_stories || false,
+            deleteStories: adminRights.can_delete_stories || false,
+          }),
+          rank: adminRights.custom_title || ''
+        })
+      );
+
+      return result;
+    } catch (error: any) {
+      console.error('Failed to promote member:', error);
+      throw new Error(`Failed to promote member: ${error.message || 'Unknown error'}`);
+    }
+  }
+
+  // Снять администраторские права через Client API
+  async demoteMember(userId: string, chatId: string | number, memberId: string): Promise<any> {
+    const client = await this.getClient(userId);
+    if (!client) {
+      throw new Error('Telegram client not found. Please authenticate first.');
+    }
+
+    try {
+      // Получаем сущность чата
+      let chatEntity: any;
+      try {
+        chatEntity = await client.getEntity(chatId);
+      } catch (entityError) {
+        if (typeof chatId === 'string' && chatId.startsWith('-100')) {
+          const channelId = BigInt(chatId.slice(4));
+          chatEntity = new Api.PeerChannel({ channelId });
+        } else {
+          throw new Error(`Не удалось найти чат с ID: ${chatId}`);
+        }
+      }
+
+      // Получаем сущность пользователя
+      const userEntity = await client.getEntity(parseInt(memberId));
+
+      // Снимаем администраторские права (устанавливаем пустые права)
+      const result = await client.invoke(
+        new Api.channels.EditAdmin({
+          channel: chatEntity,
+          userId: userEntity,
+          adminRights: new Api.ChatAdminRights({
+            changeInfo: false,
+            postMessages: false,
+            editMessages: false,
+            deleteMessages: false,
+            banUsers: false,
+            inviteUsers: false,
+            pinMessages: false,
+            addAdmins: false,
+            manageCall: false,
+            anonymous: false,
+            manageTopics: false,
+            postStories: false,
+            editStories: false,
+            deleteStories: false,
+          }),
+          rank: ''
+        })
+      );
+
+      return result;
+    } catch (error: any) {
+      console.error('Failed to demote member:', error);
+      throw new Error(`Failed to demote member: ${error.message || 'Unknown error'}`);
+    }
+  }
 }
 
 export const telegramClientManager = new TelegramClientManager();

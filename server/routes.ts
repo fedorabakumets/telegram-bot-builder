@@ -3671,6 +3671,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Demote admin to regular member
+  app.post("/api/projects/:projectId/bot/demote-member", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, userId } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ message: "Group ID and User ID are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/promoteChatMember`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          user_id: userId,
+          can_manage_chat: false,
+          can_change_info: false,
+          can_delete_messages: false,
+          can_invite_users: false,
+          can_restrict_members: false,
+          can_pin_messages: false,
+          can_promote_members: false,
+          can_manage_video_chats: false
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to demote member", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ success: true, message: "Member demoted successfully" });
+    } catch (error) {
+      console.error("Failed to demote member:", error);
+      res.status(500).json({ message: "Failed to demote member" });
+    }
+  });
+
+  // Search user by username or ID for promotion
+  app.get("/api/projects/:projectId/bot/search-user/:query", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const query = req.params.query;
+      
+      if (!query) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      // Если query содержит только цифры, ищем по ID
+      const isNumeric = /^\d+$/.test(query);
+      let userId = null;
+      
+      if (isNumeric) {
+        userId = query;
+      } else {
+        // Если это username, убираем @ если есть
+        const username = query.startsWith('@') ? query.slice(1) : query;
+        
+        // Для поиска по username нужно использовать getChatMember или getChat
+        // Но Bot API не предоставляет прямого поиска по username
+        // Поэтому попробуем сначала получить информацию через @username
+        try {
+          const chatResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChat`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              chat_id: `@${username}`
+            })
+          });
+          
+          const chatResult = await chatResponse.json();
+          if (chatResponse.ok && chatResult.result && chatResult.result.id) {
+            userId = chatResult.result.id.toString();
+          }
+        } catch (error) {
+          console.log('Username search failed, user might not have public username');
+        }
+      }
+      
+      if (!userId) {
+        return res.status(404).json({ 
+          message: "User not found", 
+          error: "Could not find user by this username or ID" 
+        });
+      }
+
+      // Получаем информацию о пользователе
+      const userResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getChat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: userId
+        })
+      });
+
+      const userResult = await userResponse.json();
+      
+      if (!userResponse.ok) {
+        return res.status(400).json({ 
+          message: "Failed to get user info", 
+          error: userResult.description || "Unknown error"
+        });
+      }
+
+      res.json({ 
+        success: true, 
+        user: userResult.result,
+        userId: userId
+      });
+    } catch (error) {
+      console.error("Failed to search user:", error);
+      res.status(500).json({ message: "Failed to search user" });
+    }
+  });
+
   // Restrict group member
   app.post("/api/projects/:projectId/bot/restrict-member", async (req, res) => {
     try {
@@ -4483,6 +4620,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         message: "Ошибка при заглушении участника",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+
+  // Назначить администратора через Client API
+  app.post("/api/projects/:projectId/telegram-client/promote-member", async (req, res) => {
+    try {
+      const { groupId, userId, adminRights } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Group ID и User ID обязательны" 
+        });
+      }
+
+      const result = await telegramClientManager.promoteMember('default', groupId, userId, adminRights);
+      
+      res.json({
+        success: true,
+        message: "Участник успешно назначен администратором через Client API"
+      });
+    } catch (error: any) {
+      console.error("Failed to promote member via Client API:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Ошибка при назначении администратора",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+
+  // Снять администраторские права через Client API
+  app.post("/api/projects/:projectId/telegram-client/demote-member", async (req, res) => {
+    try {
+      const { groupId, userId } = req.body;
+      
+      if (!groupId || !userId) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Group ID и User ID обязательны" 
+        });
+      }
+
+      const result = await telegramClientManager.demoteMember('default', groupId, userId);
+      
+      res.json({
+        success: true,
+        message: "Администраторские права успешно сняты через Client API"
+      });
+    } catch (error: any) {
+      console.error("Failed to demote member via Client API:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Ошибка при снятии администраторских прав",
         error: error.message || "Unknown error"
       });
     }
