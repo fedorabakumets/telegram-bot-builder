@@ -543,7 +543,7 @@ export const nodeSchema = z.object({
     allowsMultipleAnswers: z.boolean().default(false),
     anonymousVoting: z.boolean().default(true),
     emoji: z.string().optional(),
-    duration: z.number().optional(),
+    mediaDuration: z.number().optional(), // Длительность медиа-файла в секундах
     width: z.number().optional(),
     height: z.number().optional(),
     performer: z.string().optional(),
@@ -617,7 +617,7 @@ export const nodeSchema = z.object({
     targetUserId: z.string().optional(), // ID пользователя для действий
     userIdSource: z.enum(['manual', 'variable', 'reply_user']).default('manual'), // Источник ID пользователя
     userVariableName: z.string().optional(), // Имя переменной с ID пользователя
-    duration: z.number().optional(), // Длительность действия (для mute) в секундах
+    muteDuration: z.number().optional(), // Длительность действия (для mute) в секундах
     reason: z.string().optional(), // Причина действия (бан, мут и т.д.)
     // Права для promote/demote
     canChangeInfo: z.boolean().default(false), // Может изменять информацию о группе

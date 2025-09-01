@@ -57,6 +57,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const [filterActive, setFilterActive] = useState<boolean | null>(null);
   const [filterPremium, setFilterPremium] = useState<boolean | null>(null);
   const [filterBlocked, setFilterBlocked] = useState<boolean | null>(null);
+  const [filterDateRange, setFilterDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -65,14 +68,22 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery<UserBotData[]>({
     queryKey: [`/api/projects/${projectId}/users`],
     staleTime: 0,
-    cacheTime: 0,
+    gcTime: 0,
   });
 
-  // Fetch user stats
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
+  // Fetch user stats  
+  const { data: stats = {}, isLoading: statsLoading, refetch: refetchStats } = useQuery<{
+    totalUsers?: number;
+    activeUsers?: number;
+    blockedUsers?: number;
+    premiumUsers?: number;
+    totalInteractions?: number;
+    avgInteractionsPerUser?: number;
+    usersWithResponses?: number;
+  }>({
     queryKey: [`/api/projects/${projectId}/users/stats`],
     staleTime: 0,
-    cacheTime: 0,
+    gcTime: 0,
   });
 
   // Search users
@@ -241,10 +252,10 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     refetchStats();
   };
 
-  const handleUserStatusToggle = (user: any, field: 'isActive' | 'isBlocked' | 'isPremium') => {
-    const currentValue = user[field] || user[`is_${field.slice(2).toLowerCase()}`];
-    const newValue = !currentValue;
-    const userId = user.id || user.user_id;
+  const handleUserStatusToggle = (user: UserBotData, field: 'isActive' | 'isBlocked' | 'isPremium') => {
+    const currentValue = user[field];
+    const newValue = currentValue === 1 ? 0 : 1;
+    const userId = user.id;
     
     if (!userId) {
       console.error('User ID not found');
@@ -278,12 +289,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     });
   };
 
-  const formatUserName = (user: any) => {
-    // Поддерживаем как camelCase так и snake_case форматы
-    const firstName = user.firstName || user.first_name;
-    const lastName = user.lastName || user.last_name;
-    const userName = user.userName || user.username;
-    const userId = user.userId || user.user_id;
+  const formatUserName = (user: UserBotData) => {
+    const firstName = user.firstName;
+    const lastName = user.lastName;
+    const userName = user.userName;
+    const userId = user.userId;
     
     const parts = [firstName, lastName].filter(Boolean);
     if (parts.length > 0) return parts.join(' ');
