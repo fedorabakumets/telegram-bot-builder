@@ -1140,7 +1140,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   setAdminRights(data.botAdminRights);
                                 } else {
                                   // Fallback к базовым правам если не найдены
-                                  setAdminRights((group.adminRights as any) || {
+                                  setAdminRights({
                                     can_manage_chat: false,
                                     can_change_info: false,
                                     can_delete_messages: false,
@@ -1150,13 +1150,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                     can_promote_members: false,
                                     can_manage_video_chats: false,
                                     can_be_anonymous: false,
-                                    can_manage_stories: false
+                                    can_manage_stories: false,
+                                    ...((group.adminRights as any) || {})
                                   });
                                 }
                               })
                               .catch(() => {
                                 // Fallback при ошибке
-                                setAdminRights((group.adminRights as any) || {
+                                setAdminRights({
                                   can_manage_chat: false,
                                   can_change_info: false,
                                   can_delete_messages: false,
@@ -1166,7 +1167,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   can_promote_members: false,
                                   can_manage_video_chats: false,
                                   can_be_anonymous: false,
-                                  can_manage_stories: false
+                                  can_manage_stories: false,
+                                  ...((group.adminRights as any) || {})
                                 });
                               });
                           } else {
