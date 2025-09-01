@@ -908,8 +908,8 @@ export function PropertiesPanel({
                       </Label>
                       <Input
                         type="number"
-                        value={selectedNode.data.duration || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { duration: parseInt(e.target.value) || 0 })}
+                        value={selectedNode.data.muteDuration || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { muteDuration: parseInt(e.target.value) || 0 })}
                         className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
                         placeholder="120"
                         min="0"
@@ -999,8 +999,8 @@ export function PropertiesPanel({
                         </Label>
                         <Input
                           type="number"
-                          value={selectedNode.data.duration || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { duration: parseInt(e.target.value) || 0 })}
+                          value={selectedNode.data.muteDuration || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { muteDuration: parseInt(e.target.value) || 0 })}
                           className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
                           placeholder="180"
                           min="0"
@@ -1337,8 +1337,8 @@ export function PropertiesPanel({
                       </Label>
                       <Input
                         type="number"
-                        value={selectedNode.data.duration || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { duration: parseInt(e.target.value) || 0 })}
+                        value={selectedNode.data.muteDuration || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { muteDuration: parseInt(e.target.value) || 0 })}
                         className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
                         placeholder="5"
                         min="0"
@@ -2032,6 +2032,34 @@ export function PropertiesPanel({
               selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' || 
               selectedNode.type === 'demote_user') && (
               <div className="space-y-6">
+                {/* Group Selection Section */}
+                <div className="bg-gradient-to-br from-cyan-50/50 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/30 dark:border-cyan-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">
+                      <i className="fas fa-users text-cyan-600 dark:text-cyan-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">Настройки группы</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
+                        <i className="fas fa-hashtag mr-1"></i>
+                        ID группы
+                      </Label>
+                      <Input
+                        value={selectedNode.data.targetGroupId || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { targetGroupId: e.target.value })}
+                        className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
+                        placeholder="-1001234567890"
+                      />
+                      <div className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">
+                        Chat ID группы (можно получить через @userinfobot)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* User ID Section */}
                 <div className="bg-gradient-to-br from-red-50/50 to-orange-50/30 dark:from-red-950/20 dark:to-orange-950/10 border border-red-200/30 dark:border-red-800/30 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-3">
@@ -2172,8 +2200,8 @@ export function PropertiesPanel({
                         </Label>
                         <Input
                           type="number"
-                          value={selectedNode.data.duration || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { duration: parseInt(e.target.value) || 3600 })}
+                          value={selectedNode.data.muteDuration || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { muteDuration: parseInt(e.target.value) || 3600 })}
                           className="border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200"
                           placeholder="3600"
                         />
@@ -2209,8 +2237,8 @@ export function PropertiesPanel({
                               <Label className="text-xs text-slate-700 dark:text-slate-300">{label}</Label>
                             </div>
                             <Switch
-                              checked={selectedNode.data[key] ?? false}
-                              onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked })}
+                              checked={(selectedNode.data as any)[key] ?? false}
+                              onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked } as any)}
                             />
                           </div>
                         ))}
@@ -2249,8 +2277,8 @@ export function PropertiesPanel({
                             <Label className="text-xs text-yellow-700 dark:text-yellow-300">{label}</Label>
                           </div>
                           <Switch
-                            checked={selectedNode.data[key] ?? (key === 'canDeleteMessages' || key === 'canInviteUsers' || key === 'canPinMessages' ? true : false)}
-                            onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked })}
+                            checked={(selectedNode.data as any)[key] ?? (key === 'canDeleteMessages' || key === 'canInviteUsers' || key === 'canPinMessages' ? true : false)}
+                            onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked } as any)}
                           />
                         </div>
                       ))}
@@ -2328,9 +2356,12 @@ export function PropertiesPanel({
           </div>
         </div>
 
-        {/* Synonyms - только для узлов кроме команд и управления контентом */}
+        {/* Synonyms - только для узлов кроме команд, управления контентом и управления пользователями */}
         {selectedNode.type !== 'start' && selectedNode.type !== 'command' && 
-         selectedNode.type !== 'pin_message' && selectedNode.type !== 'unpin_message' && selectedNode.type !== 'delete_message' && (
+         selectedNode.type !== 'pin_message' && selectedNode.type !== 'unpin_message' && selectedNode.type !== 'delete_message' &&
+         selectedNode.type !== 'ban_user' && selectedNode.type !== 'unban_user' && selectedNode.type !== 'mute_user' && 
+         selectedNode.type !== 'unmute_user' && selectedNode.type !== 'kick_user' && selectedNode.type !== 'promote_user' && 
+         selectedNode.type !== 'demote_user' && (
           <div>
             <h3 className="text-sm font-medium text-foreground mb-3">Синонимы</h3>
             <div className="space-y-4">
