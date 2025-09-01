@@ -110,7 +110,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [makeAdmin, setMakeAdmin] = useState(false);
   const [isPublicGroup, setIsPublicGroup] = useState(false);
   const [publicUsername, setPublicUsername] = useState('');
-  const [chatType, setChatType] = useState<'group' | 'supergroup' | 'channel'>('group');
   const [adminRights, setAdminRights] = useState({
     can_manage_chat: false,
     can_change_info: false,
@@ -1112,7 +1111,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           setGroupNotes(group.notes || '');
                           setMakeAdmin(group.isAdmin === 1);
                           setIsPublicGroup(Boolean(group.isPublic));
-                          setChatType((group.chatType as 'group' | 'supergroup' | 'channel') || 'group');
                           
                           // Инициализируем публичный username если группа публичная
                           if (group.isPublic && group.url && !group.url.includes('+')) {
@@ -1401,16 +1399,15 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="chat-type">Тип чата</Label>
-                        <Select value={chatType} onValueChange={(value: 'group' | 'supergroup' | 'channel') => setChatType(value)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Выберите тип" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="group">Группа</SelectItem>
-                            <SelectItem value="supergroup">Супергруппа</SelectItem>
-                            <SelectItem value="channel">Канал</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          id="chat-type"
+                          value={selectedGroup?.chatType === 'group' ? 'Группа' : selectedGroup?.chatType === 'supergroup' ? 'Супергруппа' : selectedGroup?.chatType === 'channel' ? 'Канал' : 'Неизвестно'}
+                          readOnly
+                          className="bg-muted cursor-not-allowed"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Тип чата определяется Telegram автоматически и не может быть изменен
+                        </p>
                       </div>
 
                       <div className="space-y-2">
@@ -2294,12 +2291,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                     
                     // Функция для сохранения настроек в базе данных
                     const saveToDatabase = (showSuccess = true) => {
-                      // Автоматически определяем тип группы на основе публичности
-                      let finalChatType = chatType;
-                      if (isPublicGroup && (chatType === 'group' || !chatType)) {
-                        // Когда группа становится публичной, она автоматически становится супергруппой
-                        finalChatType = 'supergroup';
-                      }
+                      // Используем текущий тип чата из группы (не изменяем его)
+                      const finalChatType = selectedGroup.chatType || 'group';
 
                       // Проверяем, изменились ли название, описание и аватарка группы
                       const nameChanged = (groupName || selectedGroup.name) !== selectedGroup.name;
