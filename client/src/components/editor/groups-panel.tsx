@@ -1027,7 +1027,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
               can_invite_users: true,
               can_restrict_members: true,
               can_pin_messages: true,
-              can_promote_members: false,
+              can_promote_members: true,
               can_manage_video_chats: true
             }
           });

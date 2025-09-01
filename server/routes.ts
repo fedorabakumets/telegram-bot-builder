@@ -3712,14 +3712,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         body: JSON.stringify({
           chat_id: groupId,
           user_id: parseInt(userId),
-          can_manage_chat: can_manage_chat || false,
-          can_change_info: can_change_info || false,
-          can_delete_messages: can_delete_messages || false,
-          can_invite_users: can_invite_users || false,
-          can_restrict_members: can_restrict_members || false,
-          can_pin_messages: can_pin_messages || false,
-          can_promote_members: can_promote_members || false,
-          can_manage_video_chats: can_manage_video_chats || false
+          can_manage_chat: can_manage_chat !== undefined ? can_manage_chat : true,
+          can_change_info: can_change_info !== undefined ? can_change_info : true,
+          can_delete_messages: can_delete_messages !== undefined ? can_delete_messages : true,
+          can_invite_users: can_invite_users !== undefined ? can_invite_users : true,
+          can_restrict_members: can_restrict_members !== undefined ? can_restrict_members : true,
+          can_pin_messages: can_pin_messages !== undefined ? can_pin_messages : true,
+          can_promote_members: can_promote_members !== undefined ? can_promote_members : true,
+          can_manage_video_chats: can_manage_video_chats !== undefined ? can_manage_video_chats : true,
+          is_anonymous: false
         })
       });
 
