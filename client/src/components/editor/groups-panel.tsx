@@ -118,7 +118,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     can_restrict_members: false,
     can_pin_messages: false,
     can_promote_members: false,
-    can_manage_video_chats: false
+    can_manage_video_chats: false,
+    can_be_anonymous: false,
+    can_manage_stories: false
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'admin' | 'member'>('all');
@@ -945,7 +947,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
         can_restrict_members: false,
         can_pin_messages: false,
         can_promote_members: false,
-        can_manage_video_chats: false
+        can_manage_video_chats: false,
+        can_be_anonymous: false,
+        can_manage_stories: false
       },
       messagesCount: 0,
       activeUsers: 0,
@@ -1144,7 +1148,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                     can_restrict_members: false,
                                     can_pin_messages: false,
                                     can_promote_members: false,
-                                    can_manage_video_chats: false
+                                    can_manage_video_chats: false,
+                                    can_be_anonymous: false,
+                                    can_manage_stories: false
                                   });
                                 }
                               })
@@ -1158,7 +1164,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   can_restrict_members: false,
                                   can_pin_messages: false,
                                   can_promote_members: false,
-                                  can_manage_video_chats: false
+                                  can_manage_video_chats: false,
+                                  can_be_anonymous: false,
+                                  can_manage_stories: false
                                 });
                               });
                           } else {
@@ -1171,7 +1179,9 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               can_restrict_members: false,
                               can_pin_messages: false,
                               can_promote_members: false,
-                              can_manage_video_chats: false
+                              can_manage_video_chats: false,
+                              can_be_anonymous: false,
+                              can_manage_stories: false
                             });
                           }
                           
@@ -1582,6 +1592,8 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   {key === 'can_pin_messages' && 'Закрепление сообщений'}
                                   {key === 'can_promote_members' && 'Назначение администраторов'}
                                   {key === 'can_manage_video_chats' && 'Управление видеочатами'}
+                                  {key === 'can_be_anonymous' && 'Анонимность администратора'}
+                                  {key === 'can_manage_stories' && 'Управление историями'}
                                 </Label>
                               </div>
                             ))}
@@ -2316,7 +2328,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                               notes: groupNotes,
                               isAdmin: makeAdmin ? 1 : 0,
                               isPublic: isPublicGroup ? 1 : 0,
-                              chatType: finalChatType,
+                              chatType: finalChatType as 'group' | 'supergroup' | 'channel',
                               adminRights
                             },
                             showSuccessMessage: showSuccess
@@ -2389,7 +2401,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             notes: groupNotes,
                             isAdmin: makeAdmin ? 1 : 0,
                             isPublic: isPublicGroup ? 1 : 0,
-                            chatType: finalChatType,
+                            chatType: finalChatType as 'group' | 'supergroup' | 'channel',
                             adminRights
                           },
                           showSuccessMessage: showSuccess
