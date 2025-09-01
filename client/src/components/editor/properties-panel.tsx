@@ -490,11 +490,7 @@ export function PropertiesPanel({
     animation: 'GIF анимация',
     location: 'Местоположение',
     contact: 'Контакт',
-    keyboard: 'Клавиатура',
-    condition: 'Условие',
-    input: 'Ввод данных',
-    poll: 'Опрос',
-    dice: 'Кубик'
+    keyboard: 'Клавиатура'
   };
 
   const nodeIcons = {
@@ -510,11 +506,7 @@ export function PropertiesPanel({
     animation: 'fas fa-film',
     location: 'fas fa-map-marker-alt',
     contact: 'fas fa-address-book',
-    keyboard: 'fas fa-keyboard',
-    condition: 'fas fa-code-branch',
-    input: 'fas fa-edit',
-    poll: 'fas fa-poll',
-    dice: 'fas fa-dice'
+    keyboard: 'fas fa-keyboard'
   };
 
   const nodeColors = {
@@ -530,11 +522,7 @@ export function PropertiesPanel({
     animation: 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
     location: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
     contact: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
-    keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-    condition: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-    input: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
-    poll: 'bg-lime-100 text-lime-600 dark:bg-lime-900/30 dark:text-lime-400',
-    dice: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400'
+    keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
   };
 
   const handleAddButton = () => {

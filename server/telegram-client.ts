@@ -1,7 +1,7 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { Api } from 'telegram/tl';
-import { getDb } from './db';
+import { db } from './db';
 import { userTelegramSettings } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
@@ -28,7 +28,7 @@ class TelegramClientManager {
   // Инициализация с восстановлением всех сессий
   async initialize(): Promise<void> {
     try {
-      const db = getDb();
+
       const allSessions = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.isActive, 1));
       
       console.log(`🔄 Восстанавливаем ${allSessions.length} сессий из базы данных...`);
@@ -48,7 +48,7 @@ class TelegramClientManager {
   // Сохранить сессию в базу данных
   private async saveSessionToDatabase(userId: string, sessionString: string, phoneNumber: string): Promise<void> {
     try {
-      const db = getDb();
+
       const existing = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
       
       if (existing.length > 0) {
@@ -75,7 +75,7 @@ class TelegramClientManager {
   // Загрузить сессию из базы данных
   private async loadSessionFromDatabase(userId: string): Promise<string | null> {
     try {
-      const db = getDb();
+
       const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
       
       if (result.length > 0 && result[0].sessionString) {
@@ -98,7 +98,7 @@ class TelegramClientManager {
       }
 
       // Получаем credentials из базы данных
-      const db = getDb();
+
       const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
       
       if (result.length === 0 || !result[0].apiId || !result[0].apiHash) {
@@ -141,7 +141,7 @@ class TelegramClientManager {
   async sendCode(userId: string, phoneNumber: string): Promise<{ success: boolean; phoneCodeHash?: string; error?: string }> {
     try {
       // Получаем credentials из базы данных
-      const db = getDb();
+
       const credentialsResult = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
       
       if (credentialsResult.length === 0 || !credentialsResult[0].apiId || !credentialsResult[0].apiHash) {
@@ -324,7 +324,7 @@ class TelegramClientManager {
 
     // Проверяем наличие credentials в базе данных
     try {
-      const db = getDb();
+
       const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
       const hasCredentials = result.length > 0 && result[0].apiId && result[0].apiHash;
       
@@ -337,7 +337,7 @@ class TelegramClientManager {
 
   async setCredentials(userId: string, apiId: string, apiHash: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const db = getDb();
+
       const existing = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
       
       if (existing.length > 0) {

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { getDb } from './db';
+import { db } from './db';
 
 async function executeWithRetry(db: any, query: any, description: string, maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -22,7 +22,7 @@ export async function initializeDatabaseTables() {
   console.log('🔧 Initializing database tables...');
   
   try {
-    const db = getDb();
+    // Use imported db directly
     
     // First, test the connection with timeout
     console.log('Testing database connection...');

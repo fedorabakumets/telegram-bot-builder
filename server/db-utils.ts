@@ -1,4 +1,4 @@
-import { getDb, getPool } from './db';
+import { db, pool } from './db';
 import { sql } from 'drizzle-orm';
 
 // Database connection monitoring and optimization utilities
@@ -52,8 +52,8 @@ export class DatabaseManager {
   // Perform health check
   async performHealthCheck(): Promise<boolean> {
     try {
-      const db = getDb();
-      const pool = getPool();
+      const db = db;
+      const pool = pool;
       // Test connection with a simple query
       const result = await db.execute(sql`SELECT 1 as health`);
       
@@ -73,7 +73,7 @@ export class DatabaseManager {
 
   // Get connection statistics
   getConnectionStats() {
-    const pool = getPool();
+    const pool = pool;
     return {
       ...this.connectionStats,
       poolInfo: {
@@ -89,8 +89,8 @@ export class DatabaseManager {
   // Optimize database connections
   async optimizeConnections(): Promise<void> {
     try {
-      const db = getDb();
-      const pool = getPool();
+      const db = db;
+      const pool = pool;
       // Close idle connections if there are too many
       if (this.connectionStats.idleConnections > 5) {
         console.log('Optimizing database connections...');
@@ -146,7 +146,7 @@ export class DatabaseManager {
   async transaction<T>(
     operation: (db: ReturnType<typeof getDb>) => Promise<T>
   ): Promise<T> {
-    const db = getDb();
+    const db = db;
     return await db.transaction(async (tx) => {
       try {
         const result = await operation(db);
@@ -164,7 +164,7 @@ export class DatabaseManager {
     const backupName = `backup_${timestamp}`;
     
     try {
-      const db = getDb();
+      const db = db;
       // This is a simplified backup - in production you'd use pg_dump
       await db.execute(sql`
         SELECT pg_terminate_backend(pid)
@@ -186,7 +186,7 @@ export class DatabaseManager {
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
     try {
-      const db = getDb();
+      const db = db;
       // Clean up old bot instances
       const cleanupResult = await db.execute(sql`
         DELETE FROM bot_instances 
@@ -210,7 +210,7 @@ export class DatabaseManager {
   // Get database metrics
   async getDatabaseMetrics() {
     try {
-      const db = getDb();
+      const db = db;
       const metrics = await db.execute(sql`
         SELECT 
           schemaname,
@@ -241,10 +241,10 @@ dbManager.startHealthMonitoring();
 // Graceful shutdown
 process.on('SIGTERM', () => {
   dbManager.stopHealthMonitoring();
-  getPool().end();
+  pool.end();
 });
 
 process.on('SIGINT', () => {
   dbManager.stopHealthMonitoring();
-  getPool().end();
+  pool.end();
 });
