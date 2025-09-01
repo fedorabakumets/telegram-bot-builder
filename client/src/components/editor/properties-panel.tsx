@@ -85,6 +85,7 @@ interface PropertiesPanelProps {
   selectedNode: Node | null;
   allNodes?: Node[];
   onNodeUpdate: (nodeId: string, updates: Partial<Node['data']>) => void;
+  onNodeTypeChange?: (nodeId: string, newType: Node['type'], newData: Partial<Node['data']>) => void;
   onButtonAdd: (nodeId: string, button: Button) => void;
   onButtonUpdate: (nodeId: string, buttonId: string, updates: Partial<Button>) => void;
   onButtonDelete: (nodeId: string, buttonId: string) => void;
@@ -98,6 +99,7 @@ export function PropertiesPanel({
   selectedNode,
   allNodes = [],
   onNodeUpdate, 
+  onNodeTypeChange,
   onButtonAdd, 
   onButtonUpdate, 
   onButtonDelete,
@@ -589,24 +591,25 @@ export function PropertiesPanel({
               <Select
                 value={selectedNode.type}
                 onValueChange={(value) => {
-                  // Создаем новые данные для узла в зависимости от типа
-                  const newData = getDefaultDataForType(value as Node['type']);
-                  // Сохраняем некоторые общие поля
-                  const preservedData = {
-                    messageText: selectedNode.data.messageText,
-                    keyboardType: selectedNode.data.keyboardType,
-                    buttons: selectedNode.data.buttons,
-                    markdown: selectedNode.data.markdown,
-                    oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
-                    resizeKeyboard: selectedNode.data.resizeKeyboard
-                  };
-                  
-                  // Объединяем данные и обновляем узел
-                  onNodeUpdate(selectedNode.id, { 
-                    ...newData,
-                    ...preservedData,
-                    type: value as Node['type']
-                  });
+                  if (onNodeTypeChange) {
+                    // Создаем новые данные для узла в зависимости от типа
+                    const newData = getDefaultDataForType(value as Node['type']);
+                    // Сохраняем некоторые общие поля
+                    const preservedData = {
+                      messageText: selectedNode.data.messageText,
+                      keyboardType: selectedNode.data.keyboardType,
+                      buttons: selectedNode.data.buttons,
+                      markdown: selectedNode.data.markdown,
+                      oneTimeKeyboard: selectedNode.data.oneTimeKeyboard,
+                      resizeKeyboard: selectedNode.data.resizeKeyboard
+                    };
+                    
+                    // Объединяем данные
+                    const finalData = { ...newData, ...preservedData };
+                    
+                    // Вызываем функцию обновления типа
+                    onNodeTypeChange(selectedNode.id, value as Node['type'], finalData);
+                  }
                 }}
               >
                 <SelectTrigger className="mt-2">

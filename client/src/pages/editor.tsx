@@ -216,6 +216,34 @@ export default function Editor() {
     }
   }, [updateNodeData, botDataWithSheets]);
 
+  // Обработчик смены типа узла
+  const handleNodeTypeChange = useCallback((nodeId: string, newType: any, newData: any) => {
+    // Обновляем в старой системе
+    updateNode(nodeId, { type: newType, data: newData });
+    
+    // Также обновляем в новой системе листов
+    if (botDataWithSheets && botDataWithSheets.activeSheetId) {
+      const updatedSheets = botDataWithSheets.sheets.map(sheet => {
+        if (sheet.id === botDataWithSheets.activeSheetId) {
+          return {
+            ...sheet,
+            nodes: sheet.nodes.map(node => 
+              node.id === nodeId 
+                ? { ...node, type: newType, data: newData }
+                : node
+            )
+          };
+        }
+        return sheet;
+      });
+      
+      setBotDataWithSheets({
+        ...botDataWithSheets,
+        sheets: updatedSheets
+      });
+    }
+  }, [updateNode, botDataWithSheets]);
+
   // Обновляем данные бота при смене проекта
   useEffect(() => {
     if (currentProject?.data) {
@@ -861,6 +889,7 @@ export default function Editor() {
         allSheets={botDataWithSheets?.sheets || []}
         currentSheetId={botDataWithSheets?.activeSheetId || undefined}
         onNodeUpdate={handleNodeUpdateWithSheets}
+        onNodeTypeChange={handleNodeTypeChange}
         onButtonAdd={addButton}
         onButtonUpdate={updateButton}
         onButtonDelete={deleteButton}
