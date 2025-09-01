@@ -191,7 +191,10 @@ const nodeIcons = {
   voice: 'fas fa-microphone',
   animation: 'fas fa-film',
   location: 'fas fa-map-marker-alt',
-  contact: 'fas fa-address-book'
+  contact: 'fas fa-address-book',
+  pin_message: 'fas fa-thumbtack',
+  unpin_message: 'fas fa-times',
+  delete_message: 'fas fa-trash'
 };
 
 const nodeColors = {
@@ -207,7 +210,10 @@ const nodeColors = {
   voice: 'bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800',
   animation: 'bg-gradient-to-br from-yellow-50 to-orange-100 dark:from-yellow-900/30 dark:to-orange-900/30 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800',
   location: 'bg-gradient-to-br from-green-50 to-lime-100 dark:from-green-900/30 dark:to-lime-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800',
-  contact: 'bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800'
+  contact: 'bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800',
+  pin_message: 'bg-gradient-to-br from-cyan-50 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800',
+  unpin_message: 'bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/30 dark:to-gray-900/30 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800',
+  delete_message: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
 };
 
 export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 } }: CanvasNodeProps) {
@@ -429,15 +435,14 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               {node.type === 'audio' && 'Аудио сообщение'}
               {node.type === 'document' && 'Документ'}
               {node.type === 'keyboard' && 'Клавиатура'}
-              {node.type === 'condition' && 'Условие'}
-              {node.type === 'input' && 'Ввод данных'}
               {node.type === 'sticker' && 'Стикер'}
               {node.type === 'voice' && 'Голосовое сообщение'}
               {node.type === 'animation' && 'GIF анимация'}
               {node.type === 'location' && 'Геолокация'}
               {node.type === 'contact' && 'Контакт'}
-              {node.type === 'poll' && 'Опрос'}
-              {node.type === 'dice' && 'Кубик'}
+              {node.type === 'pin_message' && 'Закрепить сообщение'}
+              {node.type === 'unpin_message' && 'Открепить сообщение'}
+              {node.type === 'delete_message' && 'Удалить сообщение'}
             </h3>
             {onMove && (
               <div className="ml-2 opacity-40 hover:opacity-70 transition-all duration-200 cursor-grab">

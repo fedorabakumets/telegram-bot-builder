@@ -396,6 +396,49 @@ const components: ComponentDefinition[] = [
       requiresAuth: false,
       adminOnly: false
     }
+  },
+  {
+    id: 'pin-message',
+    name: 'Закрепить сообщение',
+    description: 'Закрепление сообщения в группе',
+    icon: 'fas fa-thumbtack',
+    color: 'bg-cyan-100 text-cyan-600',
+    type: 'pin_message',
+    defaultData: {
+      targetGroupId: '',
+      targetMessageId: '',
+      messageIdSource: 'manual',
+      variableName: '',
+      disableNotification: false
+    }
+  },
+  {
+    id: 'unpin-message',
+    name: 'Открепить сообщение',
+    description: 'Снятие закрепления сообщения',
+    icon: 'fas fa-times',
+    color: 'bg-slate-100 text-slate-600',
+    type: 'unpin_message',
+    defaultData: {
+      targetGroupId: '',
+      targetMessageId: '',
+      messageIdSource: 'manual',
+      variableName: ''
+    }
+  },
+  {
+    id: 'delete-message',
+    name: 'Удалить сообщение',
+    description: 'Удаление сообщения в группе',
+    icon: 'fas fa-trash',
+    color: 'bg-red-100 text-red-600',
+    type: 'delete_message',
+    defaultData: {
+      targetGroupId: '',
+      targetMessageId: '',
+      messageIdSource: 'manual',
+      variableName: ''
+    }
   }
 ];
 
@@ -411,6 +454,10 @@ const componentCategories = [
   {
     title: 'Команды',
     components: components.filter(c => ['start', 'command'].includes(c.type))
+  },
+  {
+    title: 'Управление контентом',
+    components: components.filter(c => ['pin_message', 'unpin_message', 'delete_message'].includes(c.type))
   }
 ];
 

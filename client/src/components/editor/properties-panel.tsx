@@ -617,6 +617,9 @@ export function PropertiesPanel({
                   <SelectItem value="keyboard">⌨️ Клавиатура</SelectItem>
                   <SelectItem value="start">▶️ /start команда</SelectItem>
                   <SelectItem value="command">🔧 Пользовательская команда</SelectItem>
+                  <SelectItem value="pin_message">📌 Закрепить сообщение</SelectItem>
+                  <SelectItem value="unpin_message">📌❌ Открепить сообщение</SelectItem>
+                  <SelectItem value="delete_message">🗑️ Удалить сообщение</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1821,6 +1824,128 @@ export function PropertiesPanel({
                         Дополнительная контактная информация в формате vCard (опционально)
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Content Management Configuration */}
+            {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message') && (
+              <div className="space-y-6">
+                {/* Group Selection Section */}
+                <div className="bg-gradient-to-br from-cyan-50/50 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/30 dark:border-cyan-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">
+                      <i className="fas fa-users text-cyan-600 dark:text-cyan-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">Настройки группы</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
+                        <i className="fas fa-hashtag mr-1"></i>
+                        ID группы
+                      </Label>
+                      <Input
+                        value={selectedNode.data.targetGroupId || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { targetGroupId: e.target.value })}
+                        className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
+                        placeholder="-1001234567890"
+                      />
+                      <div className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">
+                        Chat ID группы (можно получить через @userinfobot)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Message Selection Section */}
+                <div className="bg-gradient-to-br from-orange-50/50 to-red-50/30 dark:from-orange-950/20 dark:to-red-950/10 border border-orange-200/30 dark:border-orange-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                      <i className="fas fa-message text-orange-600 dark:text-orange-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-orange-900 dark:text-orange-100">Выбор сообщения</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                        Источник ID сообщения
+                      </Label>
+                      <Select
+                        value={selectedNode.data.messageIdSource || 'manual'}
+                        onValueChange={(value: 'manual' | 'variable' | 'last_message') => 
+                          onNodeUpdate(selectedNode.id, { messageIdSource: value })
+                        }
+                      >
+                        <SelectTrigger className="mt-1 border-orange-200 dark:border-orange-700">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="manual">🖊️ Ввести вручную</SelectItem>
+                          <SelectItem value="variable">🔗 Из переменной</SelectItem>
+                          <SelectItem value="last_message">📝 Последнее отправленное сообщение</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedNode.data.messageIdSource === 'manual' && (
+                      <div>
+                        <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                          <i className="fas fa-hashtag mr-1"></i>
+                          ID сообщения
+                        </Label>
+                        <Input
+                          value={selectedNode.data.targetMessageId || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { targetMessageId: e.target.value })}
+                          className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                          placeholder="123456"
+                        />
+                        <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          ID сообщения для операции (можно получить перенаправив сообщение в @userinfobot)
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedNode.data.messageIdSource === 'variable' && (
+                      <div>
+                        <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                          <i className="fas fa-variable mr-1"></i>
+                          Имя переменной
+                        </Label>
+                        <Input
+                          value={selectedNode.data.variableName || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { variableName: e.target.value })}
+                          className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                          placeholder="message_id"
+                        />
+                        <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                          Имя переменной, содержащей ID сообщения
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedNode.type === 'pin_message' && (
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-orange-200/30 dark:border-orange-800/30 hover:border-orange-300 dark:hover:border-orange-700 transition-all duration-200">
+                        <div className="flex-1">
+                          <Label className="text-xs font-medium text-orange-700 dark:text-orange-300">
+                            <i className="fas fa-bell-slash mr-1"></i>
+                            Тихое закрепление
+                          </Label>
+                          <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                            Закрепить без уведомления участников
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <Switch
+                            checked={selectedNode.data.disableNotification ?? false}
+                            onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { disableNotification: checked })}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
