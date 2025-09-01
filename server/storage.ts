@@ -26,7 +26,7 @@ import {
   type InsertGroupMember,
   type BotUser
 } from "@shared/schema";
-import { getDb } from "./db";
+import { db } from "./db";
 import { eq, desc, asc, and, like, or, ilike, sql } from "drizzle-orm";
 import { dbManager } from "./db-utils";
 import { cachedOps } from "./db-cache";
@@ -675,7 +675,7 @@ class MemStorage implements IStorage {
 
 // Database Storage Implementation
 export class DatabaseStorage implements IStorage {
-  protected db = getDb();
+  protected db = db;
   
   // Bot Projects
   async getBotProject(id: number): Promise<BotProject | undefined> {

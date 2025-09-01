@@ -1,66 +1,15 @@
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
 import * as schema from "@shared/schema";
 
-// Initialize database connection lazily
-let pool: Pool | null = null;
-let db: ReturnType<typeof drizzle> | null = null;
+neonConfig.webSocketConstructor = ws;
 
-function initializeDatabase() {
-  if (pool && db) {
-    return { pool, db };
-  }
-
-  // Get DATABASE_URL from environment variables (try multiple possible vars)
-  const databaseUrl = process.env.DATABASE_URL || process.env.REPLIT_DB_URL;
-
-  if (!databaseUrl) {
-    console.error('Available environment variables:', Object.keys(process.env).filter(key => key.includes('DB') || key.includes('DATABASE')));
-    throw new Error(
-      "DATABASE_URL must be set. Did you forget to provision a database?",
-    );
-  }
-
-  console.log('Initializing database connection...');
-
-  // Use simpler configuration optimized for cloud databases
-  pool = new Pool({ 
-    connectionString: databaseUrl,
-    ssl: { rejectUnauthorized: false },
-    max: 10,
-    min: 2,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 60000,
-    keepAlive: true,
-    keepAliveInitialDelayMillis: 0,
-  });
-
-  // Add error handling for the pool
-  pool.on('error', (err) => {
-    console.error('Unexpected error on idle client:', err);
-  });
-
-  pool.on('connect', (client) => {
-    client.on('error', (err) => {
-      console.error('Database client error:', err);
-    });
-  });
-
-  db = drizzle(pool, { schema });
-
-  return { pool, db };
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
 }
 
-// Export functions that initialize on first use
-export function getPool(): Pool {
-  const { pool } = initializeDatabase();
-  return pool;
-}
-
-export function getDb() {
-  const { db } = initializeDatabase();
-  return db;
-}
-
-// For backward compatibility
-export { getPool as pool, getDb as db };
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle({ client: pool, schema });
