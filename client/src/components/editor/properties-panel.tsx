@@ -2027,6 +2027,283 @@ export function PropertiesPanel({
               </div>
             )}
 
+            {/* User Management Configuration */}
+            {(selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' || 
+              selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' || 
+              selectedNode.type === 'demote_user') && (
+              <div className="space-y-6">
+                {/* User ID Section */}
+                <div className="bg-gradient-to-br from-red-50/50 to-orange-50/30 dark:from-red-950/20 dark:to-orange-950/10 border border-red-200/30 dark:border-red-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                      <i className="fas fa-user text-red-600 dark:text-red-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-red-900 dark:text-red-100">Пользователь</Label>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs font-medium text-red-700 dark:text-red-300 mb-2 block">
+                        <i className="fas fa-hashtag mr-1"></i>
+                        Источник User ID
+                      </Label>
+                      <Select
+                        value={selectedNode.data.userIdSource || 'manual'}
+                        onValueChange={(value: 'manual' | 'variable') => 
+                          onNodeUpdate(selectedNode.id, { userIdSource: value })
+                        }
+                      >
+                        <SelectTrigger className="text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="manual">Ввести вручную</SelectItem>
+                          <SelectItem value="variable">Из переменной</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedNode.data.userIdSource === 'manual' ? (
+                      <div>
+                        <Label className="text-xs font-medium text-red-700 dark:text-red-300 mb-2 block">
+                          <i className="fas fa-id-badge mr-1"></i>
+                          User ID пользователя
+                        </Label>
+                        <Input
+                          value={selectedNode.data.targetUserId || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { targetUserId: e.target.value })}
+                          className="border-red-200 dark:border-red-700 focus:border-red-500 focus:ring-red-200"
+                          placeholder="123456789"
+                        />
+                        <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                          User ID из Telegram (можно получить через @userinfobot)
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <Label className="text-xs font-medium text-red-700 dark:text-red-300 mb-2 block">
+                          <i className="fas fa-variable mr-1"></i>
+                          Имя переменной с User ID
+                        </Label>
+                        <Input
+                          value={selectedNode.data.userVariableName || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { userVariableName: e.target.value })}
+                          className="border-red-200 dark:border-red-700 focus:border-red-500 focus:ring-red-200"
+                          placeholder="user_id_variable"
+                        />
+                        <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                          Переменная, содержащая User ID пользователя
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Reason Section (for ban, mute, kick) */}
+                {(selectedNode.type === 'ban_user' || selectedNode.type === 'mute_user' || selectedNode.type === 'kick_user') && (
+                  <div className="bg-gradient-to-br from-orange-50/50 to-yellow-50/30 dark:from-orange-950/20 dark:to-yellow-950/10 border border-orange-200/30 dark:border-orange-800/30 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                        <i className="fas fa-clipboard text-orange-600 dark:text-orange-400 text-xs"></i>
+                      </div>
+                      <Label className="text-sm font-semibold text-orange-900 dark:text-orange-100">Причина действия</Label>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-2 block">
+                        <i className="fas fa-comment mr-1"></i>
+                        Причина
+                      </Label>
+                      <Input
+                        value={selectedNode.data.reason || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { reason: e.target.value })}
+                        className="border-orange-200 dark:border-orange-700 focus:border-orange-500 focus:ring-orange-200"
+                        placeholder="Нарушение правил группы"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Ban Duration Section (for ban_user) */}
+                {selectedNode.type === 'ban_user' && (
+                  <div className="bg-gradient-to-br from-purple-50/50 to-indigo-50/30 dark:from-purple-950/20 dark:to-indigo-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                        <i className="fas fa-clock text-purple-600 dark:text-purple-400 text-xs"></i>
+                      </div>
+                      <Label className="text-sm font-semibold text-purple-900 dark:text-purple-100">Длительность бана</Label>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                        <i className="fas fa-calendar mr-1"></i>
+                        Дата окончания (Unix timestamp)
+                      </Label>
+                      <Input
+                        type="number"
+                        value={selectedNode.data.untilDate || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { untilDate: parseInt(e.target.value) || 0 })}
+                        className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                        placeholder="0 (навсегда)"
+                      />
+                      <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                        0 = постоянный бан, или Unix timestamp даты окончания
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mute Settings Section (for mute_user) */}
+                {selectedNode.type === 'mute_user' && (
+                  <div className="space-y-6">
+                    {/* Duration */}
+                    <div className="bg-gradient-to-br from-indigo-50/50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-200/30 dark:border-indigo-800/30 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+                          <i className="fas fa-hourglass text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                        </div>
+                        <Label className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">Длительность</Label>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-2 block">
+                          <i className="fas fa-timer mr-1"></i>
+                          Длительность (секунды)
+                        </Label>
+                        <Input
+                          type="number"
+                          value={selectedNode.data.duration || ''}
+                          onChange={(e) => onNodeUpdate(selectedNode.id, { duration: parseInt(e.target.value) || 3600 })}
+                          className="border-indigo-200 dark:border-indigo-700 focus:border-indigo-500 focus:ring-indigo-200"
+                          placeholder="3600"
+                        />
+                        <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">
+                          Количество секунд (3600 = 1 час)
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Permissions */}
+                    <div className="bg-gradient-to-br from-slate-50/50 to-gray-50/30 dark:from-slate-950/20 dark:to-gray-950/10 border border-slate-200/30 dark:border-slate-800/30 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-900/50 flex items-center justify-center">
+                          <i className="fas fa-ban text-slate-600 dark:text-slate-400 text-xs"></i>
+                        </div>
+                        <Label className="text-sm font-semibold text-slate-900 dark:text-slate-100">Ограничения</Label>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 gap-3">
+                        {[
+                          { key: 'canSendMessages', label: 'Отправлять сообщения', icon: 'fas fa-comment' },
+                          { key: 'canSendMediaMessages', label: 'Отправлять медиа', icon: 'fas fa-image' },
+                          { key: 'canSendPolls', label: 'Создавать опросы', icon: 'fas fa-poll' },
+                          { key: 'canSendOtherMessages', label: 'Отправлять стикеры/GIF', icon: 'fas fa-laugh' },
+                          { key: 'canAddWebPagePreviews', label: 'Добавлять превью ссылок', icon: 'fas fa-link' },
+                          { key: 'canChangeGroupInfo', label: 'Изменять информацию группы', icon: 'fas fa-edit' },
+                          { key: 'canInviteUsers2', label: 'Приглашать пользователей', icon: 'fas fa-user-plus' },
+                          { key: 'canPinMessages2', label: 'Закреплять сообщения', icon: 'fas fa-thumbtack' }
+                        ].map(({ key, label, icon }) => (
+                          <div key={key} className="flex items-center justify-between p-2 rounded-lg bg-card/50 border border-slate-200/30 dark:border-slate-800/30">
+                            <div className="flex items-center space-x-2">
+                              <i className={`${icon} text-slate-600 dark:text-slate-400 text-xs`}></i>
+                              <Label className="text-xs text-slate-700 dark:text-slate-300">{label}</Label>
+                            </div>
+                            <Switch
+                              checked={selectedNode.data[key] ?? false}
+                              onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked })}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Promote Settings Section (for promote_user) */}
+                {selectedNode.type === 'promote_user' && (
+                  <div className="bg-gradient-to-br from-yellow-50/50 to-amber-50/30 dark:from-yellow-950/20 dark:to-amber-950/10 border border-yellow-200/30 dark:border-yellow-800/30 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <div className="w-6 h-6 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
+                        <i className="fas fa-crown text-yellow-600 dark:text-yellow-400 text-xs"></i>
+                      </div>
+                      <Label className="text-sm font-semibold text-yellow-900 dark:text-yellow-100">Права администратора</Label>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-3">
+                      {[
+                        { key: 'canChangeInfo', label: 'Изменять информацию группы', icon: 'fas fa-edit' },
+                        { key: 'canDeleteMessages', label: 'Удалять сообщения', icon: 'fas fa-trash' },
+                        { key: 'canBanUsers', label: 'Блокировать пользователей', icon: 'fas fa-ban' },
+                        { key: 'canInviteUsers', label: 'Приглашать пользователей', icon: 'fas fa-user-plus' },
+                        { key: 'canPinMessages', label: 'Закреплять сообщения', icon: 'fas fa-thumbtack' },
+                        { key: 'canAddAdmins', label: 'Добавлять администраторов', icon: 'fas fa-user-shield' },
+                        { key: 'canRestrictMembers', label: 'Ограничивать участников', icon: 'fas fa-user-lock' },
+                        { key: 'canPromoteMembers', label: 'Повышать участников', icon: 'fas fa-arrow-up' },
+                        { key: 'canManageVideoChats', label: 'Управлять видеозвонками', icon: 'fas fa-video' },
+                        { key: 'canManageTopics', label: 'Управлять темами', icon: 'fas fa-tags' },
+                        { key: 'isAnonymous', label: 'Анонимный админ', icon: 'fas fa-user-secret' }
+                      ].map(({ key, label, icon }) => (
+                        <div key={key} className="flex items-center justify-between p-2 rounded-lg bg-card/50 border border-yellow-200/30 dark:border-yellow-800/30">
+                          <div className="flex items-center space-x-2">
+                            <i className={`${icon} text-yellow-600 dark:text-yellow-400 text-xs`}></i>
+                            <Label className="text-xs text-yellow-700 dark:text-yellow-300">{label}</Label>
+                          </div>
+                          <Switch
+                            checked={selectedNode.data[key] ?? (key === 'canDeleteMessages' || key === 'canInviteUsers' || key === 'canPinMessages' ? true : false)}
+                            onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked })}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Synonyms Section for User Management */}
+                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <i className="fas fa-tags text-green-600 dark:text-green-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Синонимы команды</Label>
+                  </div>
+                  
+                  <SynonymEditor
+                    synonyms={selectedNode.data.synonyms || (
+                      selectedNode.type === 'ban_user' ? ['забанить', 'заблокировать', 'бан'] :
+                      selectedNode.type === 'unban_user' ? ['разбанить', 'разблокировать', 'unbан'] :
+                      selectedNode.type === 'mute_user' ? ['замутить', 'заглушить', 'мут'] :
+                      selectedNode.type === 'unmute_user' ? ['размутить', 'разглушить', 'анмут'] :
+                      selectedNode.type === 'kick_user' ? ['кикнуть', 'исключить', 'выгнать'] :
+                      selectedNode.type === 'promote_user' ? ['повысить', 'назначить админом', 'промоут'] :
+                      selectedNode.type === 'demote_user' ? ['понизить', 'снять с админки', 'демоут'] : []
+                    )}
+                    onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+                    title="Альтернативные команды"
+                    description={
+                      selectedNode.type === 'ban_user' ? "Команды для блокировки пользователя" :
+                      selectedNode.type === 'unban_user' ? "Команды для разблокировки пользователя" :
+                      selectedNode.type === 'mute_user' ? "Команды для ограничения пользователя" :
+                      selectedNode.type === 'unmute_user' ? "Команды для снятия ограничений" :
+                      selectedNode.type === 'kick_user' ? "Команды для исключения пользователя" :
+                      selectedNode.type === 'promote_user' ? "Команды для назначения администратором" :
+                      selectedNode.type === 'demote_user' ? "Команды для снятия с должности администратора" : 
+                      "Альтернативные команды для этого действия"
+                    }
+                    placeholder={
+                      selectedNode.type === 'ban_user' ? "забанить, заблокировать, бан" :
+                      selectedNode.type === 'unban_user' ? "разбанить, разблокировать, unbан" :
+                      selectedNode.type === 'mute_user' ? "замутить, заглушить, мут" :
+                      selectedNode.type === 'unmute_user' ? "размутить, разглушить, анмут" :
+                      selectedNode.type === 'kick_user' ? "кикнуть, исключить, выгнать" :
+                      selectedNode.type === 'promote_user' ? "повысить, назначить админом, промоут" :
+                      selectedNode.type === 'demote_user' ? "понизить, снять с админки, демоут" : 
+                      "команда1, команда2, команда3"
+                    }
+                  />
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
 
