@@ -3720,7 +3720,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           can_pin_messages: can_pin_messages !== undefined ? can_pin_messages : true,
           can_promote_members: can_promote_members !== undefined ? can_promote_members : true,
           can_manage_video_chats: can_manage_video_chats !== undefined ? can_manage_video_chats : true,
-          is_anonymous: false
+          can_post_stories: true,
+          can_edit_stories: true,
+          can_delete_stories: true,
+          is_anonymous: true
         })
       });
 
