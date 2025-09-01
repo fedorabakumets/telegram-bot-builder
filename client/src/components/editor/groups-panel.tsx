@@ -1937,68 +1937,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
 
 
-                      <div className="border-t my-4" />
-
-                      {/* Настройки группы */}
-                      <div className="space-y-3">
-                        <h5 className="font-medium text-sm">Настройки группы</h5>
-                        
-                        {/* Изменение названия */}
-                        <div className="space-y-2">
-                          <Label htmlFor="new-title" className="text-xs">Новое название группы</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id="new-title"
-                              value={newGroupTitle}
-                              onChange={(e) => setNewGroupTitle(e.target.value)}
-                              placeholder="Введите новое название..."
-                              className="flex-1"
-                            />
-                            <Button 
-                              onClick={() => setGroupTitleMutation.mutate({ 
-                                groupId: selectedGroup.groupId, 
-                                title: newGroupTitle 
-                              })}
-                              disabled={!newGroupTitle.trim() || setGroupTitleMutation.isPending}
-                              size="sm"
-                            >
-                              {setGroupTitleMutation.isPending ? (
-                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                              ) : (
-                                <Edit className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Изменение описания */}
-                        <div className="space-y-2">
-                          <Label htmlFor="new-description" className="text-xs">Новое описание группы</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              id="new-description"
-                              value={newGroupDescription}
-                              onChange={(e) => setNewGroupDescription(e.target.value)}
-                              placeholder="Введите новое описание..."
-                              className="flex-1"
-                            />
-                            <Button 
-                              onClick={() => setGroupDescriptionMutation.mutate({ 
-                                groupId: selectedGroup.groupId, 
-                                description: newGroupDescription 
-                              })}
-                              disabled={!newGroupDescription.trim() || setGroupDescriptionMutation.isPending}
-                              size="sm"
-                            >
-                              {setGroupDescriptionMutation.isPending ? (
-                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                              ) : (
-                                <Edit className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
 
                       <div className="border-t my-4" />
 
