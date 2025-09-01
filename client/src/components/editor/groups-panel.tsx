@@ -750,31 +750,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
         groupId,
         username
       });
-    },
-    onSuccess: () => {
-      toast({ title: 'Username группы изменен в Telegram' });
-      // Обновляем данные группы
-      refetch();
-    },
-    onError: (error: any) => {
-      // Отладочная информация для мутации
-      console.log('setGroupUsernameMutation error:', error);
-      console.log('setGroupUsernameMutation error properties:', Object.keys(error));
-      console.log('setGroupUsernameMutation requiresClientApi:', error.requiresClientApi);
-      
-      if (error.requiresClientApi) {
-        toast({ 
-          title: 'Требуется авторизация Telegram', 
-          description: 'Для изменения username нужен доступ через Telegram Client API',
-          variant: 'destructive' 
-        });
-      } else {
-        toast({ 
-          title: 'Ошибка при изменении username', 
-          description: error.error || error.message || 'Проверьте права в группе',
-          variant: 'destructive' 
-        });
-      }
     }
   });
 
@@ -2289,11 +2264,6 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                           });
                         },
                         onError: (error: any) => {
-                          // Отладочная информация
-                          console.log('Error object:', error);
-                          console.log('Error properties:', Object.keys(error));
-                          console.log('requiresClientApi:', error.requiresClientApi);
-                          
                           // Показываем ошибку и НЕ сохраняем в базе
                           toast({
                             title: "Не удалось изменить публичность группы",
