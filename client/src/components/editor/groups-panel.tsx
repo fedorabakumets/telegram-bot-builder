@@ -2245,6 +2245,13 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       });
                     }
                     
+                    // Автоматически определяем тип группы на основе публичности
+                    let finalChatType = chatType;
+                    if (isPublicGroup && (chatType === 'group' || !chatType)) {
+                      // Когда группа становится публичной, она автоматически становится супергруппой
+                      finalChatType = 'supergroup';
+                    }
+
                     updateGroupMutation.mutate({
                       groupId: selectedGroup.id,
                       data: {
@@ -2259,7 +2266,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         notes: groupNotes,
                         isAdmin: makeAdmin ? 1 : 0,
                         isPublic: isPublicGroup ? 1 : 0,
-                        chatType,
+                        chatType: finalChatType,
                         adminRights
                       }
                     });
