@@ -2217,25 +2217,83 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         finalChatType = 'supergroup';
                       }
 
-                      updateGroupMutation.mutate({
-                        groupId: selectedGroup.id,
-                        data: {
-                          name: groupName || selectedGroup.name,
-                          url: finalUrl,
+                      // Проверяем, изменилось ли описание группы
+                      const descriptionChanged = groupDescription !== selectedGroup.description;
+                      
+                      if (descriptionChanged && groupDescription.trim()) {
+                        // Сначала обновляем описание в Telegram, потом в базе данных
+                        setGroupDescriptionMutation.mutate({
                           groupId: selectedGroup.groupId,
-                          description: groupDescription,
-                          avatarUrl: groupAvatarUrl,
-                          language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
-                          timezone: groupTimezone,
-                          tags: groupTags,
-                          notes: groupNotes,
-                          isAdmin: makeAdmin ? 1 : 0,
-                          isPublic: isPublicGroup ? 1 : 0,
-                          chatType: finalChatType,
-                          adminRights
-                        },
-                        showSuccessMessage: showSuccess
-                      });
+                          description: groupDescription
+                        }, {
+                          onSuccess: () => {
+                            // После успешного обновления в Telegram обновляем базу данных
+                            updateGroupMutation.mutate({
+                              groupId: selectedGroup.id,
+                              data: {
+                                name: groupName || selectedGroup.name,
+                                url: finalUrl,
+                                groupId: selectedGroup.groupId,
+                                description: groupDescription,
+                                avatarUrl: groupAvatarUrl,
+                                language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
+                                timezone: groupTimezone,
+                                tags: groupTags,
+                                notes: groupNotes,
+                                isAdmin: makeAdmin ? 1 : 0,
+                                isPublic: isPublicGroup ? 1 : 0,
+                                chatType: finalChatType,
+                                adminRights
+                              },
+                              showSuccessMessage: showSuccess
+                            });
+                          },
+                          onError: () => {
+                            // При ошибке обновления в Telegram все равно сохраняем в базе данных
+                            // (локальные изменения должны сохраниться)
+                            updateGroupMutation.mutate({
+                              groupId: selectedGroup.id,
+                              data: {
+                                name: groupName || selectedGroup.name,
+                                url: finalUrl,
+                                groupId: selectedGroup.groupId,
+                                description: groupDescription,
+                                avatarUrl: groupAvatarUrl,
+                                language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
+                                timezone: groupTimezone,
+                                tags: groupTags,
+                                notes: groupNotes,
+                                isAdmin: makeAdmin ? 1 : 0,
+                                isPublic: isPublicGroup ? 1 : 0,
+                                chatType: finalChatType,
+                                adminRights
+                              },
+                              showSuccessMessage: showSuccess
+                            });
+                          }
+                        });
+                      } else {
+                        // Если описание не изменилось, просто сохраняем в базе данных
+                        updateGroupMutation.mutate({
+                          groupId: selectedGroup.id,
+                          data: {
+                            name: groupName || selectedGroup.name,
+                            url: finalUrl,
+                            groupId: selectedGroup.groupId,
+                            description: groupDescription,
+                            avatarUrl: groupAvatarUrl,
+                            language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
+                            timezone: groupTimezone,
+                            tags: groupTags,
+                            notes: groupNotes,
+                            isAdmin: makeAdmin ? 1 : 0,
+                            isPublic: isPublicGroup ? 1 : 0,
+                            chatType: finalChatType,
+                            adminRights
+                          },
+                          showSuccessMessage: showSuccess
+                        });
+                      }
                     };
 
                     // Если изменяется публичность группы, сначала изменяем в Telegram
