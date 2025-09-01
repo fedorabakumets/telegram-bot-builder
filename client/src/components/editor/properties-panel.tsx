@@ -127,7 +127,19 @@ export function PropertiesPanel({
       keyboard: { keyboardType: 'reply' },
       start: { command: '/start', description: 'Запустить бота', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
       command: { command: '/custom', description: 'Новая команда', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
-      condition: { conditions: [], operator: 'and', trueTarget: '', falseTarget: '' }
+      pin_message: { 
+        synonyms: ['закрепить', 'прикрепить', 'зафиксировать'],
+        messageIdSource: 'manual',
+        disableNotification: false
+      },
+      unpin_message: { 
+        synonyms: ['открепить', 'отцепить', 'убрать закрепление'],
+        messageIdSource: 'manual'
+      },
+      delete_message: { 
+        synonyms: ['удалить', 'стереть', 'убрать сообщение'],
+        messageIdSource: 'manual'
+      }
     };
     
     return defaults[type] || {};
@@ -490,7 +502,10 @@ export function PropertiesPanel({
     animation: 'GIF анимация',
     location: 'Местоположение',
     contact: 'Контакт',
-    keyboard: 'Клавиатура'
+    keyboard: 'Клавиатура',
+    pin_message: 'Закрепить сообщение',
+    unpin_message: 'Открепить сообщение',
+    delete_message: 'Удалить сообщение'
   };
 
   const nodeIcons = {
@@ -506,7 +521,10 @@ export function PropertiesPanel({
     animation: 'fas fa-film',
     location: 'fas fa-map-marker-alt',
     contact: 'fas fa-address-book',
-    keyboard: 'fas fa-keyboard'
+    keyboard: 'fas fa-keyboard',
+    pin_message: 'fas fa-thumbtack',
+    unpin_message: 'fas fa-times',
+    delete_message: 'fas fa-trash'
   };
 
   const nodeColors = {
@@ -1948,6 +1966,38 @@ export function PropertiesPanel({
                     )}
                   </div>
                 </div>
+
+                {/* Synonyms Section for Content Management */}
+                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <i className="fas fa-tags text-green-600 dark:text-green-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Синонимы команды</Label>
+                  </div>
+                  
+                  <SynonymEditor
+                    synonyms={selectedNode.data.synonyms || (
+                      selectedNode.type === 'pin_message' ? ['закрепить', 'прикрепить', 'зафиксировать'] :
+                      selectedNode.type === 'unpin_message' ? ['открепить', 'отцепить', 'убрать закрепление'] :
+                      selectedNode.type === 'delete_message' ? ['удалить', 'стереть', 'убрать сообщение'] : []
+                    )}
+                    onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+                    title="Альтернативные команды"
+                    description={
+                      selectedNode.type === 'pin_message' ? "Команды для закрепления сообщения" :
+                      selectedNode.type === 'unpin_message' ? "Команды для открепления сообщения" :
+                      selectedNode.type === 'delete_message' ? "Команды для удаления сообщения" : 
+                      "Альтернативные команды для этого действия"
+                    }
+                    placeholder={
+                      selectedNode.type === 'pin_message' ? "закрепить, прикрепить, зафиксировать" :
+                      selectedNode.type === 'unpin_message' ? "открепить, отцепить, убрать" :
+                      selectedNode.type === 'delete_message' ? "удалить, стереть, убрать" : 
+                      "команда1, команда2, команда3"
+                    }
+                  />
+                </div>
               </div>
             )}
 
@@ -1975,8 +2025,9 @@ export function PropertiesPanel({
           </div>
         </div>
 
-        {/* Synonyms - только для узлов кроме команд */}
-        {selectedNode.type !== 'start' && selectedNode.type !== 'command' && (
+        {/* Synonyms - только для узлов кроме команд и управления контентом */}
+        {selectedNode.type !== 'start' && selectedNode.type !== 'command' && 
+         selectedNode.type !== 'pin_message' && selectedNode.type !== 'unpin_message' && selectedNode.type !== 'delete_message' && (
           <div>
             <h3 className="text-sm font-medium text-foreground mb-3">Синонимы</h3>
             <div className="space-y-4">
