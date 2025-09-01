@@ -608,9 +608,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   // Load member permissions when dialog opens
   const loadMemberPermissionsMutation = useMutation({
     mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
+      console.log('🔍 Loading member permissions for:', { groupId, userId });
       return await apiRequest('GET', `/api/projects/${projectId}/bot/check-member/${groupId}/${userId}`);
     },
     onSuccess: (data: any) => {
+      console.log('✅ loadMemberPermissionsMutation success:', data);
       const member = data?.member;
       if (member) {
         // Устанавливаем текущие разрешения участника
