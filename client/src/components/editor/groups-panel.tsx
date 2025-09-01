@@ -1964,63 +1964,61 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                             </Button>
                                           </DropdownMenuTrigger>
                                           <DropdownMenuContent align="end">
-                                            {/* Показываем разрешения только для обычных пользователей */}
-                                            {!member.isBot && (
-                                              <>
-                                                <DropdownMenuItem 
-                                                  onClick={() => {
-                                                    setSelectedMember(member);
-                                                    setMemberPermissions({
-                                                      can_send_messages: true,
-                                                      can_send_media_messages: true,
-                                                      can_send_polls: true,
-                                                      can_send_other_messages: true,
-                                                      can_add_web_page_previews: true,
+                                            {/* Показываем разрешения и назначение администратором для всех участников */}
+                                            <>
+                                              <DropdownMenuItem 
+                                                onClick={() => {
+                                                  setSelectedMember(member);
+                                                  setMemberPermissions({
+                                                    can_send_messages: true,
+                                                    can_send_media_messages: true,
+                                                    can_send_polls: true,
+                                                    can_send_other_messages: true,
+                                                    can_add_web_page_previews: true,
+                                                    can_change_info: false,
+                                                    can_invite_users: false,
+                                                    can_pin_messages: false
+                                                  });
+                                                  setShowPermissionsDialog(true);
+                                                }}
+                                              >
+                                                <Settings className="h-4 w-4 mr-2" />
+                                                Разрешения
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem 
+                                                onClick={() => {
+                                                  const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
+                                                  if (!userId) {
+                                                    toast({
+                                                      title: 'Ошибка',
+                                                      description: 'Не удалось получить ID пользователя',
+                                                      variant: 'destructive'
+                                                    });
+                                                    return;
+                                                  }
+                                                  // Назначаем с базовыми правами администратора
+                                                  promoteMemberMutation.mutate({ 
+                                                    groupId: selectedGroup.groupId, 
+                                                    userId,
+                                                    adminRights: {
                                                       can_change_info: false,
-                                                      can_invite_users: false,
-                                                      can_pin_messages: false
-                                                    });
-                                                    setShowPermissionsDialog(true);
-                                                  }}
-                                                >
-                                                  <Settings className="h-4 w-4 mr-2" />
-                                                  Разрешения
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem 
-                                                  onClick={() => {
-                                                    const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
-                                                    if (!userId) {
-                                                      toast({
-                                                        title: 'Ошибка',
-                                                        description: 'Не удалось получить ID пользователя',
-                                                        variant: 'destructive'
-                                                      });
-                                                      return;
+                                                      can_delete_messages: true,
+                                                      can_invite_users: true,
+                                                      can_restrict_members: true,
+                                                      can_pin_messages: true,
+                                                      can_promote_members: false,
+                                                      can_manage_video_chats: false,
+                                                      can_be_anonymous: false,
+                                                      can_manage_topics: false
                                                     }
-                                                    // Назначаем с базовыми правами администратора
-                                                    promoteMemberMutation.mutate({ 
-                                                      groupId: selectedGroup.groupId, 
-                                                      userId,
-                                                      adminRights: {
-                                                        can_change_info: false,
-                                                        can_delete_messages: true,
-                                                        can_invite_users: true,
-                                                        can_restrict_members: true,
-                                                        can_pin_messages: true,
-                                                        can_promote_members: false,
-                                                        can_manage_video_chats: false,
-                                                        can_be_anonymous: false,
-                                                        can_manage_topics: false
-                                                      }
-                                                    });
-                                                  }}
-                                                >
-                                                  <Crown className="h-4 w-4 mr-2" />
-                                                  Назначить администратором
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                              </>
-                                            )}
+                                                  });
+                                                }}
+                                              >
+                                                <Crown className="h-4 w-4 mr-2" />
+                                                Назначить администратором
+                                              </DropdownMenuItem>
+                                              <DropdownMenuSeparator />
+                                            </>
                                             
                                             {/* Основные действия - для всех кроме создателя */}
                                             <DropdownMenuItem 
