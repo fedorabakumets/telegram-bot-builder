@@ -439,6 +439,121 @@ const components: ComponentDefinition[] = [
       messageIdSource: 'manual',
       variableName: ''
     }
+  },
+  {
+    id: 'ban-user',
+    name: 'Заблокировать пользователя',
+    description: 'Забанить участника группы',
+    icon: 'fas fa-ban',
+    color: 'bg-red-100 text-red-600',
+    type: 'ban_user',
+    defaultData: {
+      targetUserId: '',
+      userIdSource: 'manual',
+      userVariableName: '',
+      reason: 'Нарушение правил группы',
+      untilDate: 0
+    }
+  },
+  {
+    id: 'unban-user',
+    name: 'Разблокировать пользователя',
+    description: 'Снять бан с участника группы',
+    icon: 'fas fa-user-check',
+    color: 'bg-green-100 text-green-600',
+    type: 'unban_user',
+    defaultData: {
+      targetUserId: '',
+      userIdSource: 'manual',
+      userVariableName: ''
+    }
+  },
+  {
+    id: 'mute-user',
+    name: 'Заглушить пользователя',
+    description: 'Ограничить права участника',
+    icon: 'fas fa-volume-mute',
+    color: 'bg-orange-100 text-orange-600',
+    type: 'mute_user',
+    defaultData: {
+      targetUserId: '',
+      userIdSource: 'manual',
+      userVariableName: '',
+      duration: 3600,
+      reason: 'Нарушение правил группы',
+      canSendMessages: false,
+      canSendMediaMessages: false,
+      canSendPolls: false,
+      canSendOtherMessages: false,
+      canAddWebPagePreviews: false,
+      canChangeGroupInfo: false,
+      canInviteUsers2: false,
+      canPinMessages2: false
+    }
+  },
+  {
+    id: 'unmute-user',
+    name: 'Снять ограничения',
+    description: 'Восстановить права участника',
+    icon: 'fas fa-volume-up',
+    color: 'bg-green-100 text-green-600',
+    type: 'unmute_user',
+    defaultData: {
+      targetUserId: '',
+      userIdSource: 'manual',
+      userVariableName: ''
+    }
+  },
+  {
+    id: 'kick-user',
+    name: 'Исключить пользователя',
+    description: 'Удалить участника из группы',
+    icon: 'fas fa-user-times',
+    color: 'bg-red-100 text-red-600',
+    type: 'kick_user',
+    defaultData: {
+      targetUserId: '',
+      userIdSource: 'manual',
+      userVariableName: '',
+      reason: 'Нарушение правил группы'
+    }
+  },
+  {
+    id: 'promote-user',
+    name: 'Назначить администратором',
+    description: 'Дать права администратора',
+    icon: 'fas fa-crown',
+    color: 'bg-yellow-100 text-yellow-600',
+    type: 'promote_user',
+    defaultData: {
+      targetUserId: '',
+      userIdSource: 'manual',
+      userVariableName: '',
+      canChangeInfo: false,
+      canDeleteMessages: true,
+      canBanUsers: false,
+      canInviteUsers: true,
+      canPinMessages: true,
+      canAddAdmins: false,
+      canRestrictMembers: false,
+      canPromoteMembers: false,
+      canManageVideoChats: false,
+      canManageTopics: false,
+      isAnonymous: false
+    }
+  },
+  {
+    id: 'demote-user',
+    name: 'Снять с администратора',
+    description: 'Убрать права администратора',
+    icon: 'fas fa-user-minus',
+    color: 'bg-gray-100 text-gray-600',
+    type: 'demote_user',
+    defaultData: {
+      targetUserId: '',
+      userIdSource: 'manual',
+      userVariableName: ''
+    }
   }
 ];
 
@@ -458,6 +573,10 @@ const componentCategories = [
   {
     title: 'Управление контентом',
     components: components.filter(c => ['pin_message', 'unpin_message', 'delete_message'].includes(c.type))
+  },
+  {
+    title: 'Управление пользователями',
+    components: components.filter(c => ['ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user'].includes(c.type))
   }
 ];
 

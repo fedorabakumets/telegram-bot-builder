@@ -1127,6 +1127,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += generateUnpinMessageHandler(node);
     } else if (node.type === "delete_message") {
       code += generateDeleteMessageHandler(node);
+    } else if (node.type === "ban_user") {
+      code += generateBanUserHandler(node);
+    } else if (node.type === "unban_user") {
+      code += generateUnbanUserHandler(node);
+    } else if (node.type === "mute_user") {
+      code += generateMuteUserHandler(node);
+    } else if (node.type === "unmute_user") {
+      code += generateUnmuteUserHandler(node);
+    } else if (node.type === "kick_user") {
+      code += generateKickUserHandler(node);
+    } else if (node.type === "promote_user") {
+      code += generatePromoteUserHandler(node);
+    } else if (node.type === "demote_user") {
+      code += generateDemoteUserHandler(node);
     }
     // Note: user-input and message nodes are handled via callback handlers, not as separate command handlers
   });
@@ -1144,8 +1158,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         node.data.synonyms.forEach((synonym: string) => {
           if (node.type === 'start' || node.type === 'command') {
             code += generateSynonymHandler(node, synonym);
-          } else if (node.type === 'pin_message' || node.type === 'unpin_message' || node.type === 'delete_message') {
-            code += generateContentManagementSynonymHandler(node, synonym);
+          } else if (node.type === 'pin_message' || node.type === 'unpin_message' || node.type === 'delete_message' || 
+                     node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || node.type === 'unmute_user' || 
+                     node.type === 'kick_user' || node.type === 'promote_user' || node.type === 'demote_user') {
+            code += generateUserManagementSynonymHandler(node, synonym);
           } else {
             code += generateMessageSynonymHandler(node, synonym);
           }
@@ -8004,6 +8020,661 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
   code += `        if "message to pin not found" in str(e) or "message not found" in str(e):\n`;
   code += `            await message.answer("❌ Сообщение не найдено")\n`;
   code += `        elif "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для выполнения операции")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка ${node.type}: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка в {node.type}: {e}")\n`;
+  code += `\n`;
+  
+  return code;
+}
+
+// Функции для управления пользователями
+
+function generateBanUserHandler(node: Node): string {
+  let code = `\n# Ban User Handler\n`;
+  const targetUserId = node.data.targetUserId || '';
+  const reason = node.data.reason || 'Нарушение правил группы';
+  const untilDate = node.data.untilDate || 0;
+  
+  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/ban") and message.chat.type in ['group', 'supergroup'])\n`;
+  code += `async def ban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик для блокировки пользователя\n`;
+  code += `    Использование: /ban или ответ на сообщение пользователя\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `        target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name\n`;
+  code += `    else:\n`;
+  code += `        text_parts = message.text.split()\n`;
+  if (targetUserId) {
+    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
+  } else {
+    code += `        if len(text_parts) > 1:\n`;
+    code += `            try:\n`;
+    code += `                target_user_id = int(text_parts[1])\n`;
+    code += `            except ValueError:\n`;
+    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
+    code += `                return\n`;
+    code += `        else:\n`;
+    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /ban USER_ID")\n`;
+    code += `            return\n`;
+  }
+  
+  code += `    \n`;
+  code += `    if not target_user_id:\n`;
+  code += `        await message.answer("❌ Не удалось определить пользователя для блокировки")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Баним пользователя\n`;
+  if (untilDate && untilDate > 0) {
+    code += `        await bot.ban_chat_member(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            user_id=target_user_id,\n`;
+    code += `            until_date=${untilDate}\n`;
+    code += `        )\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} заблокирован до {untilDate}\\nПричина: ${reason}")\n`;
+  } else {
+    code += `        await bot.ban_chat_member(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            user_id=target_user_id\n`;
+    code += `        )\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\\nПричина: ${reason}")\n`;
+  }
+  code += `        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id} в группе {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для блокировки пользователя")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка блокировки пользователя: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при блокировке: {e}")\n`;
+  code += `\n`;
+  
+  return code;
+}
+
+function generateUnbanUserHandler(node: Node): string {
+  let code = `\n# Unban User Handler\n`;
+  const targetUserId = node.data.targetUserId || '';
+  
+  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/unban") and message.chat.type in ['group', 'supergroup'])\n`;
+  code += `async def unban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик для разблокировки пользователя\n`;
+  code += `    Использование: /unban USER_ID\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    text_parts = message.text.split()\n`;
+  if (targetUserId) {
+    code += `    target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
+  } else {
+    code += `    if len(text_parts) > 1:\n`;
+    code += `        try:\n`;
+    code += `            target_user_id = int(text_parts[1])\n`;
+    code += `        except ValueError:\n`;
+    code += `            await message.answer("❌ Неверный ID пользователя")\n`;
+    code += `            return\n`;
+    code += `    else:\n`;
+    code += `        await message.answer("❌ Укажите ID пользователя: /unban USER_ID")\n`;
+    code += `        return\n`;
+  }
+  
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Разбаниваем пользователя\n`;
+  code += `        await bot.unban_chat_member(\n`;
+  code += `            chat_id=chat_id,\n`;
+  code += `            user_id=target_user_id,\n`;
+  code += `            only_if_banned=True\n`;
+  code += `        )\n`;
+  code += `        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")\n`;
+  code += `        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id} в группе {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для разблокировки пользователя")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка разблокировки пользователя: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при разблокировке: {e}")\n`;
+  code += `\n`;
+  
+  return code;
+}
+
+function generateMuteUserHandler(node: Node): string {
+  let code = `\n# Mute User Handler\n`;
+  const targetUserId = node.data.targetUserId || '';
+  const duration = node.data.duration || 3600;
+  const reason = node.data.reason || 'Нарушение правил группы';
+  
+  // Permissions для мута
+  const canSendMessages = node.data.canSendMessages || false;
+  const canSendMediaMessages = node.data.canSendMediaMessages || false;
+  const canSendPolls = node.data.canSendPolls || false;
+  const canSendOtherMessages = node.data.canSendOtherMessages || false;
+  const canAddWebPagePreviews = node.data.canAddWebPagePreviews || false;
+  const canChangeGroupInfo = node.data.canChangeGroupInfo || false;
+  const canInviteUsers2 = node.data.canInviteUsers2 || false;
+  const canPinMessages2 = node.data.canPinMessages2 || false;
+  
+  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/mute") and message.chat.type in ['group', 'supergroup'])\n`;
+  code += `async def mute_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик для ограничения пользователя\n`;
+  code += `    Использование: /mute или ответ на сообщение пользователя\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `    else:\n`;
+  code += `        text_parts = message.text.split()\n`;
+  if (targetUserId) {
+    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
+  } else {
+    code += `        if len(text_parts) > 1:\n`;
+    code += `            try:\n`;
+    code += `                target_user_id = int(text_parts[1])\n`;
+    code += `            except ValueError:\n`;
+    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
+    code += `                return\n`;
+    code += `        else:\n`;
+    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /mute USER_ID")\n`;
+    code += `            return\n`;
+  }
+  
+  code += `    \n`;
+  code += `    if not target_user_id:\n`;
+  code += `        await message.answer("❌ Не удалось определить пользователя для ограничения")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Вычисляем время окончания мута\n`;
+  code += `        from datetime import datetime, timedelta\n`;
+  code += `        until_date = datetime.now() + timedelta(seconds=${duration})\n`;
+  code += `        \n`;
+  code += `        # Ограничиваем пользователя\n`;
+  code += `        await bot.restrict_chat_member(\n`;
+  code += `            chat_id=chat_id,\n`;
+  code += `            user_id=target_user_id,\n`;
+  code += `            permissions=types.ChatPermissions(\n`;
+  code += `                can_send_messages=${canSendMessages ? 'True' : 'False'},\n`;
+  code += `                can_send_media_messages=${canSendMediaMessages ? 'True' : 'False'},\n`;
+  code += `                can_send_polls=${canSendPolls ? 'True' : 'False'},\n`;
+  code += `                can_send_other_messages=${canSendOtherMessages ? 'True' : 'False'},\n`;
+  code += `                can_add_web_page_previews=${canAddWebPagePreviews ? 'True' : 'False'},\n`;
+  code += `                can_change_info=${canChangeGroupInfo ? 'True' : 'False'},\n`;
+  code += `                can_invite_users=${canInviteUsers2 ? 'True' : 'False'},\n`;
+  code += `                can_pin_messages=${canPinMessages2 ? 'True' : 'False'}\n`;
+  code += `            ),\n`;
+  code += `            until_date=until_date\n`;
+  code += `        )\n`;
+  code += `        \n`;
+  code += `        hours = ${duration} // 3600\n`;
+  code += `        minutes = (${duration} % 3600) // 60\n`;
+  code += `        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"\n`;
+  code += `        \n`;
+  code += `        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\\nПричина: ${reason}")\n`;
+  code += `        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id} в группе {chat_id} на ${duration} секунд")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для ограничения пользователя")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка ограничения пользователя: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при ограничении: {e}")\n`;
+  code += `\n`;
+  
+  return code;
+}
+
+function generateUnmuteUserHandler(node: Node): string {
+  let code = `\n# Unmute User Handler\n`;
+  const targetUserId = node.data.targetUserId || '';
+  
+  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/unmute") and message.chat.type in ['group', 'supergroup'])\n`;
+  code += `async def unmute_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик для снятия ограничений с пользователя\n`;
+  code += `    Использование: /unmute или ответ на сообщение пользователя\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `    else:\n`;
+  code += `        text_parts = message.text.split()\n`;
+  if (targetUserId) {
+    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
+  } else {
+    code += `        if len(text_parts) > 1:\n`;
+    code += `            try:\n`;
+    code += `                target_user_id = int(text_parts[1])\n`;
+    code += `            except ValueError:\n`;
+    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
+    code += `                return\n`;
+    code += `        else:\n`;
+    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /unmute USER_ID")\n`;
+    code += `            return\n`;
+  }
+  
+  code += `    \n`;
+  code += `    if not target_user_id:\n`;
+  code += `        await message.answer("❌ Не удалось определить пользователя для снятия ограничений")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Снимаем ограничения с пользователя\n`;
+  code += `        await bot.restrict_chat_member(\n`;
+  code += `            chat_id=chat_id,\n`;
+  code += `            user_id=target_user_id,\n`;
+  code += `            permissions=types.ChatPermissions(\n`;
+  code += `                can_send_messages=True,\n`;
+  code += `                can_send_media_messages=True,\n`;
+  code += `                can_send_polls=True,\n`;
+  code += `                can_send_other_messages=True,\n`;
+  code += `                can_add_web_page_previews=True,\n`;
+  code += `                can_change_info=False,\n`;
+  code += `                can_invite_users=False,\n`;
+  code += `                can_pin_messages=False\n`;
+  code += `            )\n`;
+  code += `        )\n`;
+  code += `        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")\n`;
+  code += `        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id} в группе {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для снятия ограничений")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка снятия ограничений: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при снятии ограничений: {e}")\n`;
+  code += `\n`;
+  
+  return code;
+}
+
+function generateKickUserHandler(node: Node): string {
+  let code = `\n# Kick User Handler\n`;
+  const targetUserId = node.data.targetUserId || '';
+  const reason = node.data.reason || 'Нарушение правил группы';
+  
+  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/kick") and message.chat.type in ['group', 'supergroup'])\n`;
+  code += `async def kick_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик для исключения пользователя из группы\n`;
+  code += `    Использование: /kick или ответ на сообщение пользователя\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `    else:\n`;
+  code += `        text_parts = message.text.split()\n`;
+  if (targetUserId) {
+    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
+  } else {
+    code += `        if len(text_parts) > 1:\n`;
+    code += `            try:\n`;
+    code += `                target_user_id = int(text_parts[1])\n`;
+    code += `            except ValueError:\n`;
+    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
+    code += `                return\n`;
+    code += `        else:\n`;
+    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /kick USER_ID")\n`;
+    code += `            return\n`;
+  }
+  
+  code += `    \n`;
+  code += `    if not target_user_id:\n`;
+  code += `        await message.answer("❌ Не удалось определить пользователя для исключения")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Исключаем пользователя из группы\n`;
+  code += `        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)\n`;
+  code += `        # Сразу же разбаниваем, чтобы пользователь мог зайти обратно\n`;
+  code += `        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id)\n`;
+  code += `        \n`;
+  code += `        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\\nПричина: ${reason}")\n`;
+  code += `        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id} из группы {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для исключения пользователя")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка исключения пользователя: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при исключении: {e}")\n`;
+  code += `\n`;
+  
+  return code;
+}
+
+function generatePromoteUserHandler(node: Node): string {
+  let code = `\n# Promote User Handler\n`;
+  const targetUserId = node.data.targetUserId || '';
+  
+  // Admin rights
+  const canChangeInfo = node.data.canChangeInfo || false;
+  const canDeleteMessages = node.data.canDeleteMessages || true;
+  const canBanUsers = node.data.canBanUsers || false;
+  const canInviteUsers = node.data.canInviteUsers || true;
+  const canPinMessages = node.data.canPinMessages || true;
+  const canAddAdmins = node.data.canAddAdmins || false;
+  const canRestrictMembers = node.data.canRestrictMembers || false;
+  const canPromoteMembers = node.data.canPromoteMembers || false;
+  const canManageVideoChats = node.data.canManageVideoChats || false;
+  const canManageTopics = node.data.canManageTopics || false;
+  const isAnonymous = node.data.isAnonymous || false;
+  
+  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/promote") and message.chat.type in ['group', 'supergroup'])\n`;
+  code += `async def promote_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик для назначения пользователя администратором\n`;
+  code += `    Использование: /promote или ответ на сообщение пользователя\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `    else:\n`;
+  code += `        text_parts = message.text.split()\n`;
+  if (targetUserId) {
+    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
+  } else {
+    code += `        if len(text_parts) > 1:\n`;
+    code += `            try:\n`;
+    code += `                target_user_id = int(text_parts[1])\n`;
+    code += `            except ValueError:\n`;
+    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
+    code += `                return\n`;
+    code += `        else:\n`;
+    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /promote USER_ID")\n`;
+    code += `            return\n`;
+  }
+  
+  code += `    \n`;
+  code += `    if not target_user_id:\n`;
+  code += `        await message.answer("❌ Не удалось определить пользователя для назначения администратором")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Назначаем пользователя администратором\n`;
+  code += `        await bot.promote_chat_member(\n`;
+  code += `            chat_id=chat_id,\n`;
+  code += `            user_id=target_user_id,\n`;
+  code += `            can_change_info=${canChangeInfo ? 'True' : 'False'},\n`;
+  code += `            can_delete_messages=${canDeleteMessages ? 'True' : 'False'},\n`;
+  code += `            can_invite_users=${canInviteUsers ? 'True' : 'False'},\n`;
+  code += `            can_restrict_members=${canRestrictMembers ? 'True' : 'False'},\n`;
+  code += `            can_pin_messages=${canPinMessages ? 'True' : 'False'},\n`;
+  code += `            can_promote_members=${canPromoteMembers ? 'True' : 'False'},\n`;
+  code += `            can_manage_video_chats=${canManageVideoChats ? 'True' : 'False'},\n`;
+  if (canManageTopics) {
+    code += `            can_manage_topics=${canManageTopics ? 'True' : 'False'},\n`;
+  }
+  code += `            is_anonymous=${isAnonymous ? 'True' : 'False'}\n`;
+  code += `        )\n`;
+  code += `        \n`;
+  code += `        # Создаем список предоставленных прав\n`;
+  code += `        rights = []\n`;
+  if (canChangeInfo) code += `        rights.append("изменение информации")\n`;
+  if (canDeleteMessages) code += `        rights.append("удаление сообщений")\n`;
+  if (canBanUsers) code += `        rights.append("блокировка пользователей")\n`;
+  if (canInviteUsers) code += `        rights.append("приглашение пользователей")\n`;
+  if (canPinMessages) code += `        rights.append("закрепление сообщений")\n`;
+  if (canRestrictMembers) code += `        rights.append("ограничение участников")\n`;
+  if (canPromoteMembers) code += `        rights.append("назначение администраторов")\n`;
+  if (canManageVideoChats) code += `        rights.append("управление видеочатами")\n`;
+  if (canManageTopics) code += `        rights.append("управление темами")\n`;
+  
+  code += `        rights_text = ", ".join(rights) if rights else "базовые права администратора"\n`;
+  code += `        \n`;
+  code += `        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором\\nПрава: {rights_text}")\n`;
+  code += `        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id} в группе {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для назначения администратора")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка назначения администратора: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при назначении администратора: {e}")\n`;
+  code += `\n`;
+  
+  return code;
+}
+
+function generateDemoteUserHandler(node: Node): string {
+  let code = `\n# Demote User Handler\n`;
+  const targetUserId = node.data.targetUserId || '';
+  
+  code += `@dp.message(lambda message: message.text and message.text.lower().startswith("/demote") and message.chat.type in ['group', 'supergroup'])\n`;
+  code += `async def demote_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик для снятия прав администратора с пользователя\n`;
+  code += `    Использование: /demote или ответ на сообщение пользователя\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `    else:\n`;
+  code += `        text_parts = message.text.split()\n`;
+  if (targetUserId) {
+    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
+  } else {
+    code += `        if len(text_parts) > 1:\n`;
+    code += `            try:\n`;
+    code += `                target_user_id = int(text_parts[1])\n`;
+    code += `            except ValueError:\n`;
+    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
+    code += `                return\n`;
+    code += `        else:\n`;
+    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /demote USER_ID")\n`;
+    code += `            return\n`;
+  }
+  
+  code += `    \n`;
+  code += `    if not target_user_id:\n`;
+  code += `        await message.answer("❌ Не удалось определить пользователя для снятия прав администратора")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Снимаем права администратора\n`;
+  code += `        await bot.promote_chat_member(\n`;
+  code += `            chat_id=chat_id,\n`;
+  code += `            user_id=target_user_id,\n`;
+  code += `            can_change_info=False,\n`;
+  code += `            can_delete_messages=False,\n`;
+  code += `            can_invite_users=False,\n`;
+  code += `            can_restrict_members=False,\n`;
+  code += `            can_pin_messages=False,\n`;
+  code += `            can_promote_members=False,\n`;
+  code += `            can_manage_video_chats=False,\n`;
+  code += `            can_manage_topics=False,\n`;
+  code += `            is_anonymous=False\n`;
+  code += `        )\n`;
+  code += `        \n`;
+  code += `        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")\n`;
+  code += `        logging.info(f"Права администратора сняты с пользователя {target_user_id} пользователем {user_id} в группе {chat_id}")\n`;
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
+  code += `            await message.answer("❌ Недостаточно прав для снятия прав администратора")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
+  code += `        logging.error(f"Ошибка снятия прав администратора: {e}")\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
+  code += `        logging.error(f"Неожиданная ошибка при снятии прав администратора: {e}")\n`;
+  code += `\n`;
+  
+  return code;
+}
+
+function generateUserManagementSynonymHandler(node: Node, synonym: string): string {
+  const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
+  const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  
+  let code = `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
+  code += `async def ${node.type}_${sanitizedNodeId}_synonym_${sanitizedSynonym}_handler(message: types.Message):\n`;
+  code += `    """\n`;
+  code += `    Обработчик синонима '${synonym}' для ${node.type}\n`;
+  code += `    Работает в группах с ответом на сообщение или с указанием ID пользователя\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    \n`;
+  code += `    # Определяем целевого пользователя\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        # Если есть ответ на сообщение - используем его\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `        logging.info(f"Пользователь {user_id} использовал команду '${synonym}' для пользователя {target_user_id} (через ответ)")\n`;
+  code += `    else:\n`;
+  code += `        # Если нет ответа, проверяем текст на наличие ID пользователя\n`;
+  code += `        text_parts = message.text.split()\n`;
+  code += `        if len(text_parts) > 1 and text_parts[1].isdigit():\n`;
+  code += `            target_user_id = int(text_parts[1])\n`;
+  code += `            logging.info(f"Пользователь {user_id} использовал команду '${synonym}' для пользователя {target_user_id} (через ID)")\n`;
+  code += `        else:\n`;
+  code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите '${synonym} ID_пользователя'")\n`;
+  code += `            return\n`;
+  code += `    \n`;
+  code += `    if not target_user_id:\n`;
+  code += `        await message.answer("❌ Не удалось определить пользователя")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  
+  // Генерируем код в зависимости от типа узла
+  if (node.type === 'ban_user') {
+    const reason = node.data.reason || 'Нарушение правил группы';
+    const untilDate = node.data.untilDate || 0;
+    
+    if (untilDate && untilDate > 0) {
+      code += `        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id, until_date=${untilDate})\n`;
+      code += `        await message.answer(f"✅ Пользователь {target_user_id} заблокирован до ${untilDate}\\nПричина: ${reason}")\n`;
+    } else {
+      code += `        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)\n`;
+      code += `        await message.answer(f"✅ Пользователь {target_user_id} заблокирован навсегда\\nПричина: ${reason}")\n`;
+    }
+    code += `        logging.info(f"Пользователь {target_user_id} заблокирован администратором {user_id}")\n`;
+  } else if (node.type === 'unban_user') {
+    code += `        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id, only_if_banned=True)\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} разблокирован")\n`;
+    code += `        logging.info(f"Пользователь {target_user_id} разблокирован администратором {user_id}")\n`;
+  } else if (node.type === 'kick_user') {
+    const reason = node.data.reason || 'Нарушение правил группы';
+    code += `        await bot.ban_chat_member(chat_id=chat_id, user_id=target_user_id)\n`;
+    code += `        await bot.unban_chat_member(chat_id=chat_id, user_id=target_user_id)\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} исключен из группы\\nПричина: ${reason}")\n`;
+    code += `        logging.info(f"Пользователь {target_user_id} исключен администратором {user_id}")\n`;
+  } else if (node.type === 'mute_user') {
+    const duration = node.data.duration || 3600;
+    const reason = node.data.reason || 'Нарушение правил группы';
+    const canSendMessages = node.data.canSendMessages || false;
+    const canSendMediaMessages = node.data.canSendMediaMessages || false;
+    
+    code += `        from datetime import datetime, timedelta\n`;
+    code += `        until_date = datetime.now() + timedelta(seconds=${duration})\n`;
+    code += `        await bot.restrict_chat_member(\n`;
+    code += `            chat_id=chat_id, user_id=target_user_id,\n`;
+    code += `            permissions=types.ChatPermissions(\n`;
+    code += `                can_send_messages=${canSendMessages ? 'True' : 'False'},\n`;
+    code += `                can_send_media_messages=${canSendMediaMessages ? 'True' : 'False'}\n`;
+    code += `            ), until_date=until_date\n`;
+    code += `        )\n`;
+    code += `        hours = ${duration} // 3600\n`;
+    code += `        minutes = (${duration} % 3600) // 60\n`;
+    code += `        time_str = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} ограничен на {time_str}\\nПричина: ${reason}")\n`;
+    code += `        logging.info(f"Пользователь {target_user_id} ограничен администратором {user_id}")\n`;
+  } else if (node.type === 'unmute_user') {
+    code += `        await bot.restrict_chat_member(\n`;
+    code += `            chat_id=chat_id, user_id=target_user_id,\n`;
+    code += `            permissions=types.ChatPermissions(\n`;
+    code += `                can_send_messages=True, can_send_media_messages=True,\n`;
+    code += `                can_send_polls=True, can_send_other_messages=True,\n`;
+    code += `                can_add_web_page_previews=True\n`;
+    code += `            )\n`;
+    code += `        )\n`;
+    code += `        await message.answer(f"✅ Ограничения с пользователя {target_user_id} сняты")\n`;
+    code += `        logging.info(f"Ограничения с пользователя {target_user_id} сняты администратором {user_id}")\n`;
+  } else if (node.type === 'promote_user') {
+    const canDeleteMessages = node.data.canDeleteMessages !== false;
+    const canInviteUsers = node.data.canInviteUsers !== false;
+    const canPinMessages = node.data.canPinMessages !== false;
+    
+    code += `        await bot.promote_chat_member(\n`;
+    code += `            chat_id=chat_id, user_id=target_user_id,\n`;
+    code += `            can_delete_messages=${canDeleteMessages ? 'True' : 'False'},\n`;
+    code += `            can_invite_users=${canInviteUsers ? 'True' : 'False'},\n`;
+    code += `            can_pin_messages=${canPinMessages ? 'True' : 'False'}\n`;
+    code += `        )\n`;
+    code += `        await message.answer(f"✅ Пользователь {target_user_id} назначен администратором")\n`;
+    code += `        logging.info(f"Пользователь {target_user_id} назначен администратором пользователем {user_id}")\n`;
+  } else if (node.type === 'demote_user') {
+    code += `        await bot.promote_chat_member(\n`;
+    code += `            chat_id=chat_id, user_id=target_user_id,\n`;
+    code += `            can_change_info=False, can_delete_messages=False,\n`;
+    code += `            can_invite_users=False, can_restrict_members=False,\n`;
+    code += `            can_pin_messages=False, can_promote_members=False\n`;
+    code += `        )\n`;
+    code += `        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")\n`;
+    code += `        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")\n`;
+  }
+  
+  code += `    except TelegramBadRequest as e:\n`;
+  code += `        if "not enough rights" in str(e) or "CHAT_ADMIN_REQUIRED" in str(e):\n`;
   code += `            await message.answer("❌ Недостаточно прав для выполнения операции")\n`;
   code += `        else:\n`;
   code += `            await message.answer(f"❌ Ошибка: {e}")\n`;

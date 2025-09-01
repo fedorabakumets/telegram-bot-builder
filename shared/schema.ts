@@ -474,7 +474,7 @@ export const buttonSchema = z.object({
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message']),
+  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user']),
   position: z.object({
     x: z.number(),
     y: z.number(),
@@ -611,7 +611,36 @@ export const nodeSchema = z.object({
     name: z.string().optional(),
     label: z.string().optional(),
     checkmarkSymbol: z.string().optional(),
-    multiSelectCheckmark: z.string().optional()
+    multiSelectCheckmark: z.string().optional(),
+    
+    // Поля для управления пользователями
+    targetUserId: z.string().optional(), // ID пользователя для действий
+    userIdSource: z.enum(['manual', 'variable', 'reply_user']).default('manual'), // Источник ID пользователя
+    userVariableName: z.string().optional(), // Имя переменной с ID пользователя
+    duration: z.number().optional(), // Длительность действия (для mute) в секундах
+    reason: z.string().optional(), // Причина действия (бан, мут и т.д.)
+    // Права для promote/demote
+    canChangeInfo: z.boolean().default(false), // Может изменять информацию о группе
+    canDeleteMessages: z.boolean().default(false), // Может удалять сообщения
+    canBanUsers: z.boolean().default(false), // Может банить пользователей
+    canInviteUsers: z.boolean().default(false), // Может приглашать пользователей
+    canPinMessages: z.boolean().default(false), // Может закреплять сообщения
+    canAddAdmins: z.boolean().default(false), // Может добавлять администраторов
+    canRestrictMembers: z.boolean().default(false), // Может ограничивать участников
+    canPromoteMembers: z.boolean().default(false), // Может повышать участников
+    canManageVideoChats: z.boolean().default(false), // Может управлять видеочатами
+    canManageTopics: z.boolean().default(false), // Может управлять темами (для форумов)
+    isAnonymous: z.boolean().default(false), // Анонимные права администратора
+    // Ограничения для restrict пользователей
+    canSendMessages: z.boolean().default(true), // Может отправлять сообщения
+    canSendMediaMessages: z.boolean().default(true), // Может отправлять медиа
+    canSendPolls: z.boolean().default(true), // Может отправлять опросы
+    canSendOtherMessages: z.boolean().default(true), // Может отправлять другие сообщения
+    canAddWebPagePreviews: z.boolean().default(true), // Может добавлять превью веб-страниц
+    canChangeGroupInfo: z.boolean().default(true), // Может изменять информацию о группе
+    canInviteUsers2: z.boolean().default(true), // Может приглашать пользователей (дубликат для restrict)
+    canPinMessages2: z.boolean().default(true), // Может закреплять сообщения (дубликат для restrict)
+    untilDate: z.number().optional() // Дата окончания ограничения (Unix timestamp)
   }),
 });
 

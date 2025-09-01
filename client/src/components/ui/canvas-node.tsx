@@ -194,7 +194,14 @@ const nodeIcons = {
   contact: 'fas fa-address-book',
   pin_message: 'fas fa-thumbtack',
   unpin_message: 'fas fa-times',
-  delete_message: 'fas fa-trash'
+  delete_message: 'fas fa-trash',
+  ban_user: 'fas fa-ban',
+  unban_user: 'fas fa-user-check',
+  mute_user: 'fas fa-volume-mute',
+  unmute_user: 'fas fa-volume-up',
+  kick_user: 'fas fa-user-times',
+  promote_user: 'fas fa-crown',
+  demote_user: 'fas fa-user-minus'
 };
 
 const nodeColors = {
@@ -213,7 +220,14 @@ const nodeColors = {
   contact: 'bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-900/30 dark:to-blue-900/30 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800',
   pin_message: 'bg-gradient-to-br from-cyan-50 to-blue-100 dark:from-cyan-900/30 dark:to-blue-900/30 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800',
   unpin_message: 'bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-900/30 dark:to-gray-900/30 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800',
-  delete_message: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
+  delete_message: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
+  ban_user: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
+  unban_user: 'bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800',
+  mute_user: 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800',
+  unmute_user: 'bg-gradient-to-br from-green-50 to-lime-100 dark:from-green-900/30 dark:to-lime-900/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800',
+  kick_user: 'bg-gradient-to-br from-red-50 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
+  promote_user: 'bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800',
+  demote_user: 'bg-gradient-to-br from-gray-50 to-slate-100 dark:from-gray-900/30 dark:to-slate-900/30 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800'
 };
 
 export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 } }: CanvasNodeProps) {

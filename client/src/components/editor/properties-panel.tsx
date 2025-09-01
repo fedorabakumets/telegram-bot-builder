@@ -136,6 +136,58 @@ export function PropertiesPanel({
       },
       delete_message: { 
         synonyms: ['удалить', 'стереть', 'убрать сообщение']
+      },
+      ban_user: {
+        synonyms: ['забанить', 'заблокировать', 'бан'],
+        targetUserId: '',
+        reason: 'Нарушение правил группы',
+        untilDate: 0
+      },
+      unban_user: {
+        synonyms: ['разбанить', 'разблокировать', 'unbан'],
+        targetUserId: ''
+      },
+      mute_user: {
+        synonyms: ['замутить', 'заглушить', 'мут'],
+        targetUserId: '',
+        reason: 'Нарушение правил группы',
+        duration: 3600,
+        canSendMessages: false,
+        canSendMediaMessages: false,
+        canSendPolls: false,
+        canSendOtherMessages: false,
+        canAddWebPagePreviews: false,
+        canChangeGroupInfo: false,
+        canInviteUsers2: false,
+        canPinMessages2: false
+      },
+      unmute_user: {
+        synonyms: ['размутить', 'разглушить', 'анмут'],
+        targetUserId: ''
+      },
+      kick_user: {
+        synonyms: ['кикнуть', 'исключить', 'выгнать'],
+        targetUserId: '',
+        reason: 'Нарушение правил группы'
+      },
+      promote_user: {
+        synonyms: ['повысить', 'назначить админом', 'промоут'],
+        targetUserId: '',
+        canChangeInfo: false,
+        canDeleteMessages: true,
+        canBanUsers: false,
+        canInviteUsers: true,
+        canPinMessages: true,
+        canAddAdmins: false,
+        canRestrictMembers: false,
+        canPromoteMembers: false,
+        canManageVideoChats: false,
+        canManageTopics: false,
+        isAnonymous: false
+      },
+      demote_user: {
+        synonyms: ['понизить', 'снять с админки', 'демоут'],
+        targetUserId: ''
       }
     };
     
@@ -502,7 +554,14 @@ export function PropertiesPanel({
     keyboard: 'Клавиатура',
     pin_message: 'Закрепить сообщение',
     unpin_message: 'Открепить сообщение',
-    delete_message: 'Удалить сообщение'
+    delete_message: 'Удалить сообщение',
+    ban_user: 'Заблокировать пользователя',
+    unban_user: 'Разблокировать пользователя',
+    mute_user: 'Ограничить пользователя',
+    unmute_user: 'Снять ограничения',
+    kick_user: 'Исключить пользователя',
+    promote_user: 'Назначить администратором',
+    demote_user: 'Снять с администратора'
   };
 
   const nodeIcons = {
@@ -521,7 +580,14 @@ export function PropertiesPanel({
     keyboard: 'fas fa-keyboard',
     pin_message: 'fas fa-thumbtack',
     unpin_message: 'fas fa-times',
-    delete_message: 'fas fa-trash'
+    delete_message: 'fas fa-trash',
+    ban_user: 'fas fa-user-slash',
+    unban_user: 'fas fa-user-check',
+    mute_user: 'fas fa-volume-mute',
+    unmute_user: 'fas fa-volume-up',
+    kick_user: 'fas fa-door-open',
+    promote_user: 'fas fa-user-shield',
+    demote_user: 'fas fa-user-minus'
   };
 
   const nodeColors = {
@@ -537,7 +603,17 @@ export function PropertiesPanel({
     animation: 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
     location: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
     contact: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
-    keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
+    keyboard: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+    pin_message: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
+    unpin_message: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
+    delete_message: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+    ban_user: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+    unban_user: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+    mute_user: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
+    unmute_user: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+    kick_user: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
+    promote_user: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+    demote_user: 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400'
   };
 
   const handleAddButton = () => {
