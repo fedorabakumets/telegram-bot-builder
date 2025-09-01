@@ -444,7 +444,7 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
     }
 
     // Преобразуем многолистовую структуру в простую для генератора
-    function convertSheetsToSimpleBotData(data: any) {
+    const convertSheetsToSimpleBotData = (data: any) => {
       // Если уже простая структура - возвращаем как есть
       if (data.nodes && data.connections) {
         return data;
@@ -1111,7 +1111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Преобразуем многолистовую структуру в простую для генератора
-      function convertSheetsToSimpleBotData(data: any) {
+      const convertSheetsToSimpleBotData = (data: any) => {
         // Если уже простая структура - возвращаем как есть
         if (data.nodes && data.connections) {
           return data;
