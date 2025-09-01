@@ -1011,16 +1011,59 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
       return await apiRequest('GET', `/api/projects/${projectId}/bot/check-member/${groupId}/${userId}`);
     },
     onSuccess: (data: any) => {
-      toast({ 
-        title: 'Статус участника', 
-        description: `Статус: ${data.member.friendlyStatus}` 
-      });
+      console.log('checkMemberMutation success:', data);
+      const member = data?.member;
+      if (member) {
+        // Показываем уведомление
+        toast({ 
+          title: '✅ Статус участника найден', 
+          description: `${member.user?.first_name || 'Пользователь'} (@${member.user?.username || 'без username'}) - ${member.friendlyStatus}`,
+          duration: 5000
+        });
+
+        // Добавляем участника в список, если его там еще нет
+        setAdministrators(prevAdmins => {
+          const existingMember = prevAdmins.find(admin => admin.user?.id === member.user?.id);
+          if (!existingMember) {
+            // Добавляем найденного участника с пометкой
+            const newMember = {
+              ...member,
+              foundViaSearch: true, // Пометка что найден через поиск
+              can_be_edited: false,
+              can_manage_chat: false,
+              can_change_info: false,
+              can_delete_messages: false,
+              can_invite_users: false,
+              can_restrict_members: false,
+              can_pin_messages: false,
+              can_promote_members: false,
+              can_manage_video_chats: false,
+              can_manage_voice_chats: false,
+              can_post_stories: false,
+              can_edit_stories: false,
+              can_delete_stories: false,
+              is_anonymous: false
+            };
+            return [...prevAdmins, newMember];
+          }
+          return prevAdmins;
+        });
+      } else {
+        toast({ 
+          title: '❌ Участник не найден', 
+          description: 'Пользователь не является участником этой группы',
+          variant: 'destructive',
+          duration: 5000
+        });
+      }
     },
     onError: (error: any) => {
+      console.error('checkMemberMutation error:', error);
       toast({ 
         title: 'Ошибка проверки статуса', 
-        description: error.error || 'Не удалось проверить статус участника',
-        variant: 'destructive' 
+        description: error.message || 'Не удалось проверить статус участника',
+        variant: 'destructive',
+        duration: 5000
       });
     }
   });
@@ -2025,23 +2068,42 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             return (
                               <div className="space-y-2 max-h-60 overflow-y-auto">
                                 {administrators.map((admin, index) => (
-                                  <div key={`bot-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
+                                  <div key={`bot-${index}`} className={`flex items-center justify-between p-3 border rounded-lg ${admin.foundViaSearch ? 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950' : ''}`}>
                                     <div className="flex items-center space-x-3">
-                                      <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                                        <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                        admin.foundViaSearch ? 'bg-purple-100 dark:bg-purple-900' :
+                                        admin.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900' :
+                                        'bg-blue-100 dark:bg-blue-900'
+                                      }`}>
+                                        {admin.foundViaSearch ? (
+                                          <Search className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                        ) : admin.status === 'creator' ? (
+                                          <Crown className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                                        ) : (
+                                          <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                        )}
                                       </div>
                                       <div>
-                                        <p className="font-medium text-sm">
-                                          {admin?.user?.first_name || admin?.first_name || admin?.firstName || 'Неизвестно'} {admin?.user?.last_name || admin?.last_name || admin?.lastName || ''}
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                          <p className="font-medium text-sm">
+                                            {admin?.user?.first_name || admin?.first_name || admin?.firstName || 'Неизвестно'} {admin?.user?.last_name || admin?.last_name || admin?.lastName || ''}
+                                          </p>
+                                          {admin.foundViaSearch && <Badge variant="outline" className="text-xs text-purple-600 dark:text-purple-400">Найден поиском</Badge>}
+                                        </div>
                                         <p className="text-xs text-muted-foreground">
                                           @{admin?.user?.username || admin?.username || 'Без username'} • ID: {admin?.user?.id || admin?.id || 'Неизвестно'}
                                         </p>
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <Badge variant={admin.status === 'creator' ? 'default' : 'secondary'}>
-                                        {admin.status === 'creator' ? 'Создатель' : 'Админ'}
+                                      <Badge variant={
+                                        admin.status === 'creator' ? 'default' : 
+                                        admin.foundViaSearch ? 'outline' : 
+                                        'secondary'
+                                      }>
+                                        {admin.status === 'creator' ? 'Создатель' : 
+                                         admin.foundViaSearch ? admin.friendlyStatus || 'Участник' : 
+                                         'Админ'}
                                       </Badge>
                                       
                                       {/* Кнопки управления участником - показываем для всех кроме создателя */}
@@ -2168,7 +2230,10 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                   📝 Показаны только администраторы
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  Telegram API ограничивает доступ к полному списку участников
+                                  Обычные участники скрыты из-за ограничений Telegram Bot API
+                                </p>
+                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                  💡 Проверьте конкретного участника кнопкой ниже
                                 </p>
                               </div>
                               
