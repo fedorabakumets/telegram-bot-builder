@@ -2226,6 +2226,35 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                       finalUrl = selectedGroup.inviteLink;
                     }
                     
+                    // Функция для сохранения настроек в базе данных
+                    const saveToDatabase = () => {
+                      // Автоматически определяем тип группы на основе публичности
+                      let finalChatType = chatType;
+                      if (isPublicGroup && (chatType === 'group' || !chatType)) {
+                        // Когда группа становится публичной, она автоматически становится супергруппой
+                        finalChatType = 'supergroup';
+                      }
+
+                      updateGroupMutation.mutate({
+                        groupId: selectedGroup.id,
+                        data: {
+                          name: groupName || selectedGroup.name,
+                          url: finalUrl,
+                          groupId: selectedGroup.groupId,
+                          description: groupDescription,
+                          avatarUrl: groupAvatarUrl,
+                          language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
+                          timezone: groupTimezone,
+                          tags: groupTags,
+                          notes: groupNotes,
+                          isAdmin: makeAdmin ? 1 : 0,
+                          isPublic: isPublicGroup ? 1 : 0,
+                          chatType: finalChatType,
+                          adminRights
+                        }
+                      });
+                    };
+
                     // Если изменяется публичность группы, сначала изменяем в Telegram
                     const wasPublic = Boolean(selectedGroup.isPublic);
                     const willBePublic = isPublicGroup;
@@ -2238,38 +2267,30 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                         usernameToSet = cleanUsername;
                       }
                       
-                      // Вызываем API для изменения username в Telegram
+                      // Сначала пытаемся изменить в Telegram, потом сохраняем в базе
                       setGroupUsernameMutation.mutate({
                         groupId: selectedGroup.groupId,
                         username: usernameToSet
+                      }, {
+                        onSuccess: () => {
+                          // Только если изменение в Telegram удалось - сохраняем в базе
+                          saveToDatabase();
+                        },
+                        onError: (error: any) => {
+                          // Показываем ошибку и НЕ сохраняем в базе
+                          toast({
+                            title: "Не удалось изменить публичность группы",
+                            description: error.requiresClientApi 
+                              ? "Требуется авторизация через Telegram Client API для изменения публичных настроек группы"
+                              : error.error || "Проверьте права бота в группе",
+                            variant: "destructive"
+                          });
+                        }
                       });
+                    } else {
+                      // Если публичность не изменяется - сразу сохраняем
+                      saveToDatabase();
                     }
-                    
-                    // Автоматически определяем тип группы на основе публичности
-                    let finalChatType = chatType;
-                    if (isPublicGroup && (chatType === 'group' || !chatType)) {
-                      // Когда группа становится публичной, она автоматически становится супергруппой
-                      finalChatType = 'supergroup';
-                    }
-
-                    updateGroupMutation.mutate({
-                      groupId: selectedGroup.id,
-                      data: {
-                        name: groupName || selectedGroup.name,
-                        url: finalUrl,
-                        groupId: selectedGroup.groupId,
-                        description: groupDescription,
-                        avatarUrl: groupAvatarUrl,
-                        language: groupLanguage as 'ru' | 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'zh' | 'ja' | 'ko',
-                        timezone: groupTimezone,
-                        tags: groupTags,
-                        notes: groupNotes,
-                        isAdmin: makeAdmin ? 1 : 0,
-                        isPublic: isPublicGroup ? 1 : 0,
-                        chatType: finalChatType,
-                        adminRights
-                      }
-                    });
                   }
                 }}
                 disabled={updateGroupMutation.isPending}
