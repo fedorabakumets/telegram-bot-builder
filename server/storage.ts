@@ -106,6 +106,7 @@ export interface IStorage {
   // Bot groups
   getBotGroup(id: number): Promise<BotGroup | undefined>;
   getBotGroupsByProject(projectId: number): Promise<BotGroup[]>;
+  getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined>;
   createBotGroup(group: InsertBotGroup): Promise<BotGroup>;
   updateBotGroup(id: number, group: Partial<InsertBotGroup>): Promise<BotGroup | undefined>;
   deleteBotGroup(id: number): Promise<boolean>;
@@ -636,6 +637,10 @@ class MemStorage implements IStorage {
 
   async getBotGroupsByProject(projectId: number): Promise<BotGroup[]> {
     return [];
+  }
+
+  async getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined> {
+    return undefined;
   }
 
   async createBotGroup(group: InsertBotGroup): Promise<BotGroup> {
@@ -1180,6 +1185,12 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(botGroups.createdAt));
   }
 
+  async getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined> {
+    const [group] = await this.db.select().from(botGroups)
+      .where(and(eq(botGroups.projectId, projectId), eq(botGroups.groupId, groupId)));
+    return group || undefined;
+  }
+
   async createBotGroup(insertGroup: InsertBotGroup): Promise<BotGroup> {
     const [group] = await this.db
       .insert(botGroups)
@@ -1701,6 +1712,12 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
       .orderBy(desc(botGroups.createdAt));
   }
 
+  async getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined> {
+    const [group] = await this.db.select().from(botGroups)
+      .where(and(eq(botGroups.projectId, projectId), eq(botGroups.groupId, groupId)));
+    return group || undefined;
+  }
+
   async createBotGroup(insertGroup: InsertBotGroup): Promise<BotGroup> {
     const [group] = await this.db
       .insert(botGroups)
@@ -1858,6 +1875,12 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
     return await this.db.select().from(botGroups)
       .where(eq(botGroups.projectId, projectId))
       .orderBy(desc(botGroups.createdAt));
+  }
+
+  async getBotGroupByProjectAndGroupId(projectId: number, groupId: string): Promise<BotGroup | undefined> {
+    const [group] = await this.db.select().from(botGroups)
+      .where(and(eq(botGroups.projectId, projectId), eq(botGroups.groupId, groupId)));
+    return group || undefined;
   }
 
   async createBotGroup(group: InsertBotGroup): Promise<BotGroup> {

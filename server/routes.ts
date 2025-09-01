@@ -3602,6 +3602,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'kicked': 'Исключен'
       };
 
+      // Сохраняем участника в базе данных, если его там еще нет
+      try {
+        // Находим внутренний ID группы из botGroups таблицы
+        const group = await storage.getBotGroupByProjectAndGroupId(projectId, groupId);
+        if (group) {
+          // Проверяем, есть ли уже такой участник в базе
+          const existingMembers = await storage.getGroupMembers(group.id);
+          const existingMember = existingMembers.find(m => m.userId.toString() === userId);
+          
+          if (!existingMember) {
+            // Создаем нового участника
+            const memberData = {
+              groupId: group.id,
+              userId: parseInt(userId),
+              username: member.user?.username || null,
+              firstName: member.user?.first_name || null,
+              lastName: member.user?.last_name || null,
+              status: member.status,
+              isBot: member.user?.is_bot ? 1 : 0,
+              isActive: 1,
+              adminRights: member.status === 'administrator' ? {
+                can_change_info: member.can_change_info || false,
+                can_delete_messages: member.can_delete_messages || false,
+                can_restrict_members: member.can_restrict_members || false,
+                can_invite_users: member.can_invite_users || false,
+                can_pin_messages: member.can_pin_messages || false,
+                can_promote_members: member.can_promote_members || false,
+                can_manage_video_chats: member.can_manage_video_chats || false,
+                can_be_anonymous: member.is_anonymous || false
+              } : {},
+              customTitle: member.custom_title || null,
+              restrictions: {},
+              messageCount: 0,
+              lastSeen: new Date()
+            };
+            
+            await storage.createGroupMember(memberData);
+            console.log(`✅ Участник ${member.user?.first_name || userId} сохранен в базу данных`);
+          } else {
+            // Обновляем существующего участника
+            const updateData = {
+              status: member.status,
+              username: member.user?.username || existingMember.username,
+              firstName: member.user?.first_name || existingMember.firstName,
+              lastName: member.user?.last_name || existingMember.lastName,
+              isActive: 1,
+              adminRights: member.status === 'administrator' ? {
+                can_change_info: member.can_change_info || false,
+                can_delete_messages: member.can_delete_messages || false,
+                can_restrict_members: member.can_restrict_members || false,
+                can_invite_users: member.can_invite_users || false,
+                can_pin_messages: member.can_pin_messages || false,
+                can_promote_members: member.can_promote_members || false,
+                can_manage_video_chats: member.can_manage_video_chats || false,
+                can_be_anonymous: member.is_anonymous || false
+              } : {},
+              customTitle: member.custom_title || existingMember.customTitle,
+              restrictions: existingMember.restrictions || {},
+              messageCount: existingMember.messageCount || 0,
+              lastSeen: new Date()
+            };
+            
+            await storage.updateGroupMember(existingMember.id, updateData);
+            console.log(`✅ Участник ${member.user?.first_name || userId} обновлен в базе данных`);
+          }
+        }
+      } catch (dbError) {
+        console.error("Ошибка сохранения участника в базу:", dbError);
+        // Не прерываем выполнение, просто логируем ошибку
+      }
+
       const responseData = { 
         member: {
           ...member,
@@ -3614,6 +3685,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to check member status:", error);
       res.status(500).json({ message: "Failed to check member status" });
+    }
+  });
+
+  // Get saved group members from database
+  app.get("/api/projects/:projectId/groups/:groupId/saved-members", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId } = req.params;
+      
+      if (!groupId || groupId === "null") {
+        return res.status(400).json({ message: "Group ID is required" });
+      }
+
+      // Находим внутренний ID группы из botGroups таблицы
+      const group = await storage.getBotGroupByProjectAndGroupId(projectId, groupId);
+      if (!group) {
+        return res.json({ members: [] }); // Возвращаем пустой список если группа не найдена
+      }
+
+      // Получаем сохраненных участников из базы данных
+      const savedMembers = await storage.getGroupMembers(group.id);
+      
+      // Преобразуем данные в формат, совместимый с фронтендом
+      const members = savedMembers.map(member => ({
+        user: {
+          id: member.userId,
+          username: member.username || undefined,
+          first_name: member.firstName || undefined,
+          last_name: member.lastName || undefined,
+          is_bot: member.isBot === 1
+        },
+        status: member.status,
+        custom_title: member.customTitle || undefined,
+        friendlyStatus: {
+          'creator': 'Создатель',
+          'administrator': 'Администратор', 
+          'member': 'Участник',
+          'restricted': 'Ограничен',
+          'left': 'Покинул группу',
+          'kicked': 'Исключен'
+        }[member.status as keyof typeof member.status] || member.status,
+        savedFromDatabase: true, // Флаг для фронтенда
+        lastSeen: member.lastSeen,
+        messageCount: member.messageCount,
+        ...member.adminRights // Разворачиваем права администратора
+      }));
+
+      console.log(`✅ Загружено ${members.length} сохраненных участников группы ${groupId} из базы данных`);
+      res.json({ members });
+      
+    } catch (error) {
+      console.error("Failed to get saved group members:", error);
+      res.status(500).json({ message: "Failed to get saved group members" });
     }
   });
 

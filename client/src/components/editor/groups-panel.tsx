@@ -523,6 +523,30 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
+  // Get saved members from database
+  const [savedMembers, setSavedMembers] = React.useState<any[]>([]);
+  
+  const getSavedMembersMutation = useMutation({
+    mutationFn: async (groupId: string | null) => {
+      return apiRequest('GET', `/api/projects/${projectId}/groups/${groupId}/saved-members`);
+    },
+    onSuccess: (data) => {
+      setSavedMembers(data.members || []);
+      console.log(`✅ Загружено ${data.members?.length || 0} сохраненных участников из базы данных`);
+    },
+    onError: (error: any) => {
+      console.error('Ошибка загрузки сохраненных участников:', error);
+      // Не показываем toast для этой ошибки, так как это фоновая операция
+    }
+  });
+
+  // Автоматически загружаем сохраненных участников когда выбрана группа
+  useEffect(() => {
+    if (selectedGroup?.groupId) {
+      getSavedMembersMutation.mutate(selectedGroup.groupId);
+    }
+  }, [selectedGroup?.groupId]);
+
   // Mute member mutation
   const muteMemberMutation = useMutation({
     mutationFn: async ({ groupId, userId, untilDate }: { groupId: string | null; userId: string; untilDate?: number }) => {
@@ -1200,6 +1224,11 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
 
         // Очищаем поле поиска после успешного нахождения
         setUserToFind('');
+        
+        // Обновляем список сохраненных участников после добавления нового
+        if (selectedGroup?.groupId) {
+          getSavedMembersMutation.mutate(selectedGroup.groupId);
+        }
       } else {
         toast({ 
           title: '❌ Участник не найден', 
@@ -2030,10 +2059,18 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             )}
                             <Badge variant="outline">
                               {(() => {
-                                if (clientApiMembers.length > 0) {
-                                  return `${clientApiMembers.length} участников`;
-                                } else if (administrators.length > 0) {
-                                  return `${administrators.length} админов`;
+                                const totalSavedMembers = savedMembers.length;
+                                const totalApiMembers = clientApiMembers.length || administrators.length;
+                                const totalMembers = totalSavedMembers + totalApiMembers;
+                                
+                                if (totalMembers > 0) {
+                                  if (totalSavedMembers > 0 && totalApiMembers > 0) {
+                                    return `${totalMembers} участников (${totalSavedMembers} сохр. + ${totalApiMembers} API)`;
+                                  } else if (totalSavedMembers > 0) {
+                                    return `${totalSavedMembers} сохраненных участников`;
+                                  } else {
+                                    return `${totalApiMembers} участников`;
+                                  }
                                 } else if (selectedGroup.memberCount) {
                                   return `${selectedGroup.memberCount} участников`;
                                 } else {
@@ -2041,7 +2078,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 }
                               })()}
                             </Badge>
-                            {clientApiMembers.length === 0 && (
+                            {clientApiMembers.length === 0 && savedMembers.length === 0 && (
                               <Button 
                                 variant="outline" 
                                 size="sm"
@@ -2051,16 +2088,59 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                 Загрузить всех участников
                               </Button>
                             )}
+                            {savedMembers.length > 0 && clientApiMembers.length === 0 && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setShowTelegramAuth(true)}
+                              >
+                                <Shield className="h-4 w-4 mr-2" />
+                                Загрузить еще участников
+                              </Button>
+                            )}
                           </div>
                         </div>
                         
                         {(() => {
-                          // Показываем Client API данные если они есть (приоритет)
+                          // Создаем объединенный список: сначала сохраненные участники, затем API участники
+                          const allMembers = [];
+                          
+                          // Добавляем сохраненных участников из базы данных
+                          if (savedMembers.length > 0) {
+                            allMembers.push(...savedMembers.map(member => ({ ...member, sourceType: 'database' })));
+                          }
+                          
+                          // Добавляем участников из Client API (если нет дубликатов)
                           if (clientApiMembers.length > 0) {
+                            const uniqueApiMembers = clientApiMembers.filter(apiMember => {
+                              const apiUserId = apiMember.id?.toString() || apiMember.user?.id?.toString() || apiMember.userId?.toString();
+                              return !savedMembers.some(savedMember => 
+                                savedMember.user?.id?.toString() === apiUserId
+                              );
+                            });
+                            allMembers.push(...uniqueApiMembers.map(member => ({ ...member, sourceType: 'api' })));
+                          }
+                          
+                          // Добавляем найденных через поиск администраторов (если нет Client API данных и нет дубликатов)
+                          if (clientApiMembers.length === 0 && administrators.length > 0) {
+                            const uniqueAdmins = administrators.filter(admin => {
+                              const adminUserId = admin.id?.toString() || admin.user?.id?.toString() || admin.userId?.toString();
+                              return !savedMembers.some(savedMember => 
+                                savedMember.user?.id?.toString() === adminUserId
+                              );
+                            });
+                            allMembers.push(...uniqueAdmins.map(admin => ({ ...admin, sourceType: 'admin_api' })));
+                          }
+                          
+                          // Показываем объединенный список если есть участники
+                          if (allMembers.length > 0) {
                             return (
                               <div className="space-y-2 max-h-60 overflow-y-auto">
-                                {clientApiMembers.map((member, index) => (
-                                  <div key={`client-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
+                                {allMembers.map((member, index) => (
+                                  <div key={`${member.sourceType}-${index}`} className={`flex items-center justify-between p-3 border rounded-lg ${
+                                    member.sourceType === 'database' ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950' :
+                                    member.foundViaSearch ? 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950' : ''
+                                  }`}>
                                     <div className="flex items-center space-x-3">
                                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                                         member.status === 'creator' ? 'bg-yellow-100 dark:bg-yellow-900' :
@@ -2084,6 +2164,7 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                             {member?.firstName || member?.user?.first_name || member?.first_name || 'Неизвестно'} {member?.lastName || member?.user?.last_name || member?.last_name || ''}
                                           </p>
                                           {member?.isBot && <Badge variant="outline" className="text-xs">Бот</Badge>}
+                                          {member.sourceType === 'database' && <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200">💾 Сохранен</Badge>}
                                         </div>
                                         <p className="text-xs text-muted-foreground">
                                           @{member?.username || member?.user?.username || 'Без username'} • ID: {member?.id || member?.user?.id || 'Неизвестно'}
