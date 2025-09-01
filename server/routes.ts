@@ -3539,6 +3539,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check specific member status
+  app.get("/api/projects/:projectId/bot/check-member/:groupId/:userId", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { groupId, userId } = req.params;
+      
+      if (!groupId || groupId === "null" || !userId) {
+        return res.status(400).json({ message: "Group ID and User ID are required" });
+      }
+
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getChatMember`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: groupId,
+          user_id: parseInt(userId)
+        })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to check member status", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      // Return member info with friendly status
+      const member = result.result;
+      const friendlyStatus = {
+        'creator': 'Создатель',
+        'administrator': 'Администратор', 
+        'member': 'Участник',
+        'restricted': 'Ограничен',
+        'left': 'Покинул группу',
+        'kicked': 'Исключен'
+      };
+
+      res.json({ 
+        member: {
+          ...member,
+          friendlyStatus: friendlyStatus[member.status as keyof typeof friendlyStatus] || member.status
+        }
+      });
+    } catch (error) {
+      console.error("Failed to check member status:", error);
+      res.status(500).json({ message: "Failed to check member status" });
+    }
+  });
+
   // Ban group member
   app.post("/api/projects/:projectId/bot/ban-member", async (req, res) => {
     try {

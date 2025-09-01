@@ -1005,6 +1005,26 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
+  // Check member status mutation
+  const checkMemberMutation = useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
+      return await apiRequest('GET', `/api/projects/${projectId}/bot/check-member/${groupId}/${userId}`);
+    },
+    onSuccess: (data: any) => {
+      toast({ 
+        title: 'Статус участника', 
+        description: `Статус: ${data.member.friendlyStatus}` 
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Ошибка проверки статуса', 
+        description: error.error || 'Не удалось проверить статус участника',
+        variant: 'destructive' 
+      });
+    }
+  });
+
   // Search user mutation
   const searchUserMutation = useMutation({
     mutationFn: async (query: string) => {
@@ -2140,11 +2160,41 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                             );
                           }
                           
-                          // Если ничего нет, показываем подсказку
+                          // Если ничего нет, показываем улучшенную подсказку
                           return (
-                            <p className="text-sm text-muted-foreground text-center py-4">
-                              Нажмите "Загрузить всех участников" для просмотра полного списка
-                            </p>
+                            <div className="space-y-3 py-4">
+                              <div className="text-center">
+                                <p className="text-sm text-muted-foreground">
+                                  📝 Показаны только администраторы
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Telegram API ограничивает доступ к полному списку участников
+                                </p>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => {
+                                    if (selectedGroup?.groupId) {
+                                      checkMemberMutation.mutate({
+                                        groupId: selectedGroup.groupId,
+                                        userId: '6591857297' // Sonofbog2 ID
+                                      });
+                                    }
+                                  }}
+                                  disabled={checkMemberMutation.isPending}
+                                >
+                                  {checkMemberMutation.isPending ? '⏳' : '🔍'} Проверить статус Sonofbog2
+                                </Button>
+                                
+                                <p className="text-xs text-muted-foreground text-center">
+                                  Нажмите "Загрузить всех участников" выше для полного списка
+                                </p>
+                              </div>
+                            </div>
                           );
                         })()}
                       </div>
