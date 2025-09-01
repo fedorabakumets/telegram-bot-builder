@@ -467,14 +467,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [showPermissionsDialog, setShowPermissionsDialog] = useState(false);
   const [memberPermissions, setMemberPermissions] = useState({
+    // Основные разрешения участника
     can_send_messages: true,
     can_send_media_messages: true,
     can_send_polls: true,
     can_send_other_messages: true,
     can_add_web_page_previews: true,
+    
+    // Административные разрешения
     can_change_info: false,
+    can_delete_messages: false,
+    can_restrict_members: false,
     can_invite_users: false,
-    can_pin_messages: false
+    can_pin_messages: false,
+    can_manage_video_chats: false,
+    can_be_anonymous: false,
+    can_promote_members: false
   });
   
   const getAdminsMutation = useMutation({
@@ -597,24 +605,89 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
     }
   });
 
+  // Load member permissions when dialog opens
+  const loadMemberPermissionsMutation = useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
+      return await apiRequest('GET', `/api/projects/${projectId}/bot/check-member/${groupId}/${userId}`);
+    },
+    onSuccess: (data: any) => {
+      const member = data?.member;
+      if (member) {
+        // Устанавливаем текущие разрешения участника
+        setMemberPermissions({
+          // Основные разрешения участника (по умолчанию true для обычных участников)
+          can_send_messages: true,
+          can_send_media_messages: true,
+          can_send_polls: true,
+          can_send_other_messages: true,
+          can_add_web_page_previews: true,
+          
+          // Административные разрешения (берем из текущих прав)
+          can_change_info: member.can_change_info || false,
+          can_delete_messages: member.can_delete_messages || false,
+          can_restrict_members: member.can_restrict_members || false,
+          can_invite_users: member.can_invite_users || false,
+          can_pin_messages: member.can_pin_messages || false,
+          can_manage_video_chats: member.can_manage_video_chats || false,
+          can_be_anonymous: member.is_anonymous || false,
+          can_promote_members: member.can_promote_members || false
+        });
+      }
+    },
+    onError: (error: any) => {
+      console.log('Failed to load member permissions:', error);
+      // Оставляем разрешения по умолчанию
+    }
+  });
+
   // Update member permissions mutation
   const updatePermissionsMutation = useMutation({
     mutationFn: async ({ groupId, userId, permissions }: { groupId: string | null; userId: string; permissions: any }) => {
-      try {
-        // Сначала пробуем Bot API
-        return await apiRequest('POST', `/api/projects/${projectId}/bot/restrict-member`, {
+      // Проверяем, есть ли административные права
+      const hasAdminRights = permissions.can_delete_messages || permissions.can_restrict_members || 
+                            permissions.can_promote_members || permissions.can_manage_video_chats ||
+                            permissions.can_be_anonymous;
+      
+      if (hasAdminRights) {
+        // Если есть административные права, используем promote-member
+        return await apiRequest('POST', `/api/projects/${projectId}/bot/promote-member`, {
           groupId,
           userId,
-          permissions
+          adminRights: {
+            can_change_info: permissions.can_change_info,
+            can_delete_messages: permissions.can_delete_messages,
+            can_invite_users: permissions.can_invite_users,
+            can_restrict_members: permissions.can_restrict_members,
+            can_pin_messages: permissions.can_pin_messages,
+            can_promote_members: permissions.can_promote_members,
+            can_manage_video_chats: permissions.can_manage_video_chats,
+            can_be_anonymous: permissions.can_be_anonymous,
+            can_manage_topics: false
+          }
         });
-      } catch (botApiError: any) {
-        console.log('Bot API failed, trying Client API:', botApiError);
-        // Если Bot API не работает, пробуем Client API
-        return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/restrict-member`, {
-          groupId,
-          userId,
-          untilDate: Math.floor(Date.now() / 1000) + 3600 // 1 час по умолчанию
-        });
+      } else {
+        // Если только обычные права, используем restrict-member
+        try {
+          return await apiRequest('POST', `/api/projects/${projectId}/bot/restrict-member`, {
+            groupId,
+            userId,
+            permissions: {
+              can_send_messages: permissions.can_send_messages,
+              can_send_media_messages: permissions.can_send_media_messages,
+              can_send_polls: permissions.can_send_polls,
+              can_send_other_messages: permissions.can_send_other_messages,
+              can_add_web_page_previews: permissions.can_add_web_page_previews
+            }
+          });
+        } catch (botApiError: any) {
+          console.log('Bot API failed, trying Client API:', botApiError);
+          // Если Bot API не работает, пробуем Client API
+          return await apiRequest('POST', `/api/projects/${projectId}/telegram-client/restrict-member`, {
+            groupId,
+            userId,
+            untilDate: Math.floor(Date.now() / 1000) + 3600 // 1 час по умолчанию
+          });
+        }
       }
     },
     onSuccess: () => {
@@ -1984,16 +2057,34 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                               <DropdownMenuItem 
                                                 onClick={() => {
                                                   setSelectedMember(member);
-                                                  setMemberPermissions({
-                                                    can_send_messages: true,
-                                                    can_send_media_messages: true,
-                                                    can_send_polls: true,
-                                                    can_send_other_messages: true,
-                                                    can_add_web_page_previews: true,
-                                                    can_change_info: false,
-                                                    can_invite_users: false,
-                                                    can_pin_messages: false
-                                                  });
+                                                  const userId = member.id?.toString() || member.user?.id?.toString() || member.userId?.toString();
+                                                  if (userId && selectedGroup?.groupId) {
+                                                    // Загружаем текущие разрешения участника
+                                                    loadMemberPermissionsMutation.mutate({ 
+                                                      groupId: selectedGroup.groupId, 
+                                                      userId 
+                                                    });
+                                                  } else {
+                                                    // Если не удалось получить ID, используем разрешения по умолчанию
+                                                    setMemberPermissions({
+                                                      // Основные разрешения участника
+                                                      can_send_messages: true,
+                                                      can_send_media_messages: true,
+                                                      can_send_polls: true,
+                                                      can_send_other_messages: true,
+                                                      can_add_web_page_previews: true,
+                                                      
+                                                      // Административные разрешения
+                                                      can_change_info: false,
+                                                      can_delete_messages: false,
+                                                      can_restrict_members: false,
+                                                      can_invite_users: false,
+                                                      can_pin_messages: false,
+                                                      can_manage_video_chats: false,
+                                                      can_be_anonymous: false,
+                                                      can_promote_members: false
+                                                    });
+                                                  }
                                                   setShowPermissionsDialog(true);
                                                 }}
                                               >
@@ -2174,14 +2265,22 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                                                 onClick={() => {
                                                   setSelectedMember(admin);
                                                   setMemberPermissions({
+                                                    // Основные разрешения участника
                                                     can_send_messages: true,
                                                     can_send_media_messages: true,
                                                     can_send_polls: true,
                                                     can_send_other_messages: true,
                                                     can_add_web_page_previews: true,
+                                                    
+                                                    // Административные разрешения
                                                     can_change_info: false,
+                                                    can_delete_messages: false,
+                                                    can_restrict_members: false,
                                                     can_invite_users: false,
-                                                    can_pin_messages: false
+                                                    can_pin_messages: false,
+                                                    can_manage_video_chats: false,
+                                                    can_be_anonymous: false,
+                                                    can_promote_members: false
                                                   });
                                                   setShowPermissionsDialog(true);
                                                 }}
@@ -2950,9 +3049,14 @@ export function GroupsPanel({ projectId, projectName }: GroupsPanelProps) {
                 <div className="space-y-3">
                   <h4 className="font-medium text-sm">Административные разрешения</h4>
                   {Object.entries({
-                    can_change_info: 'Изменение информации группы',
-                    can_invite_users: 'Приглашение пользователей',
-                    can_pin_messages: 'Закрепление сообщений'
+                    can_change_info: 'Изменение профиля группы',
+                    can_delete_messages: 'Удаление сообщений',
+                    can_restrict_members: 'Блокировка пользователей',
+                    can_invite_users: 'Пригласительные ссылки',
+                    can_pin_messages: 'Закрепление сообщений',
+                    can_manage_video_chats: 'Управление видеочатами',
+                    can_be_anonymous: 'Анонимность',
+                    can_promote_members: 'Добавление администраторов'
                   }).map(([key, label]) => (
                     <div key={key} className="flex items-center space-x-2">
                       <Switch
