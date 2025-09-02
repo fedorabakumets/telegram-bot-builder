@@ -1050,11 +1050,14 @@ export function Canvas({
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && onBotDataUpdate && (
         <div className="absolute bottom-0 z-40 pointer-events-none" style={{
-          left: sidebarVisible ? '280px' : '20px',
-          right: propertiesVisible ? '350px' : '20px'
+          left: sidebarVisible ? '260px' : '20px',
+          right: propertiesVisible ? '320px' : '20px'
         }}>
           <div className="flex justify-center pb-4">
-            <div className="pointer-events-auto w-full max-w-4xl">
+            <div className="pointer-events-auto w-full" style={{
+              minWidth: '600px',
+              maxWidth: '1000px'
+            }}>
               <CanvasSheets
                 sheets={botData.sheets}
                 activeSheetId={botData.activeSheetId || null}
