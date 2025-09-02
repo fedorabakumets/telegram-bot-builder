@@ -7938,7 +7938,7 @@ function generateDeleteMessageHandler(node: Node): string {
       code += `            chat_id=chat_id,\n`;
       code += `            message_id=target_message_id\n`;
       code += `        )\n`;
-      code += `        await message.answer("✅ Сообщение удалено")\n`;
+      code += `        await message.answer("🗑️ Сообщение успешно удалено!")\n`;
       code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")\n`;
       code += `    except TelegramBadRequest as e:\n`;
       code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
@@ -8000,7 +8000,7 @@ function generateDeleteMessageHandler(node: Node): string {
     code += `            chat_id=chat_id,\n`;
     code += `            message_id=target_message_id\n`;
     code += `        )\n`;
-    code += `        await message.answer("✅ Сообщение удалено")\n`;
+    code += `        await message.answer("🗑️ Сообщение успешно удалено!")\n`;
     code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")\n`;
     code += `    except TelegramBadRequest as e:\n`;
     code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
@@ -8051,7 +8051,7 @@ function generateDeleteMessageHandler(node: Node): string {
       code += `            chat_id=chat_id,\n`;
       code += `            message_id=target_message_id\n`;
       code += `        )\n`;
-      code += `        await message.answer("✅ Сообщение удалено")\n`;
+      code += `        await message.answer("🗑️ Сообщение успешно удалено!")\n`;
       code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним '${synonym}'")\n`;
       code += `    except TelegramBadRequest as e:\n`;
       code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
@@ -8128,7 +8128,7 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
     code += `            chat_id=chat_id,\n`;
     code += `            message_id=target_message_id\n`;
     code += `        )\n`;
-    code += `        await message.answer("✅ Сообщение удалено")\n`;
+    code += `        await message.answer("🗑️ Сообщение успешно удалено!")\n`;
     code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id}")\n`;
   }
   
