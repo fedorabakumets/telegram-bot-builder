@@ -484,7 +484,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
           )}
           
           {/* Синонимы */}
-          {node.data.synonyms && node.data.synonyms.length > 0 && (
+          {(() => {
+            console.log('Node synonyms debug:', node.id, node.type, node.data.synonyms);
+            return node.data.synonyms && node.data.synonyms.length > 0;
+          })() && (
             <div className="mt-2">
               <div className="flex flex-wrap gap-1">
                 {node.data.synonyms.slice(0, 3).map((synonym, index) => (
