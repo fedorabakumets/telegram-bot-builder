@@ -8048,29 +8048,21 @@ function generateBanUserHandler(node: Node): string {
   const targetUserId = node.data.targetUserId || '';
   const reason = node.data.reason || 'Нарушение правил группы';
   const untilDate = node.data.untilDate || 0;
-  const targetGroupId = node.data.targetGroupId || '';
-  const synonyms = node.data.synonyms || 'забанить, бан, заблокировать';
+  const synonyms = node.data.synonyms || ['забанить', 'бан', 'заблокировать'];
   
   // Создаем список синонимов для проверки
-  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
   
-  // Генерируем условие с учётом целевой группы и синонимов
-  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
-  if (targetGroupId) {
-    condition += ` and str(message.chat.id) == "${targetGroupId}"`;
-  } else {
-    condition += ` and message.chat.type in ['group', 'supergroup']`;
-  }
+  // Генерируем условие для работы в любых группах
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}]) and message.chat.type in ['group', 'supergroup']`;
   
   code += `@dp.message(${condition})\n`;
   code += `async def ban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик для блокировки пользователя\n`;
-  code += `    Синонимы: ${synonyms}\n`;
-  if (targetGroupId) {
-    code += `    Группа: ${targetGroupId}\n`;
-  }
+  code += `    Синонимы: ${synonymsList.join(', ')}\n`;
+  code += `    Работает в любых группах где бот имеет права администратора\n`;
   code += `    Использование: ответ на сообщение пользователя или указание ID\n`;
   code += `    """\n`;
   code += `    user_id = message.from_user.id\n`;
@@ -8137,20 +8129,14 @@ function generateBanUserHandler(node: Node): string {
 function generateUnbanUserHandler(node: Node): string {
   let code = `\n# Unban User Handler\n`;
   const targetUserId = node.data.targetUserId || '';
-  const targetGroupId = node.data.targetGroupId || '';
-  const synonyms = node.data.synonyms || 'разбанить, разблокировать, unbang';
+  const synonyms = node.data.synonyms || ['разбанить', 'разблокировать', 'unban'];
   
   // Создаем список синонимов для проверки
-  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
   
-  // Генерируем условие с учётом целевой группы и синонимов
-  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}])`;
-  if (targetGroupId) {
-    condition += ` and str(message.chat.id) == "${targetGroupId}"`;
-  } else {
-    condition += ` and message.chat.type in ['group', 'supergroup']`;
-  }
+  // Генерируем условие для работы в любых группах
+  let condition = `lambda message: message.text and any(message.text.lower().startswith(word) for word in [${synonymsPattern}]) and message.chat.type in ['group', 'supergroup']`;
   
   code += `@dp.message(${condition})\n`;
   code += `async def unban_user_${node.id.replace(/[^a-zA-Z0-9_]/g, '_')}_handler(message: types.Message):\n`;

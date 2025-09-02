@@ -1923,34 +1923,6 @@ export function PropertiesPanel({
             {/* Content Management Configuration */}
             {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message') && (
               <div className="space-y-6">
-                {/* Group Selection Section */}
-                <div className="bg-gradient-to-br from-cyan-50/50 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/30 dark:border-cyan-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">
-                      <i className="fas fa-users text-cyan-600 dark:text-cyan-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">Настройки группы</Label>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
-                        <i className="fas fa-hashtag mr-1"></i>
-                        ID группы
-                      </Label>
-                      <Input
-                        value={selectedNode.data.targetGroupId || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { targetGroupId: e.target.value })}
-                        className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
-                        placeholder="-1001234567890"
-                      />
-                      <div className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">
-                        Chat ID группы (можно получить через @userinfobot)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Automatic Message Handling Info */}
                 <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-3">
@@ -2039,34 +2011,6 @@ export function PropertiesPanel({
               selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' || 
               selectedNode.type === 'demote_user') && (
               <div className="space-y-6">
-                {/* Group Selection Section */}
-                <div className="bg-gradient-to-br from-cyan-50/50 to-blue-50/30 dark:from-cyan-950/20 dark:to-blue-950/10 border border-cyan-200/30 dark:border-cyan-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">
-                      <i className="fas fa-users text-cyan-600 dark:text-cyan-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-cyan-900 dark:text-cyan-100">Настройки группы</Label>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-xs font-medium text-cyan-700 dark:text-cyan-300 mb-2 block">
-                        <i className="fas fa-hashtag mr-1"></i>
-                        ID группы
-                      </Label>
-                      <Input
-                        value={selectedNode.data.targetGroupId || ''}
-                        onChange={(e) => onNodeUpdate(selectedNode.id, { targetGroupId: e.target.value })}
-                        className="border-cyan-200 dark:border-cyan-700 focus:border-cyan-500 focus:ring-cyan-200"
-                        placeholder="-1001234567890"
-                      />
-                      <div className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">
-                        Chat ID группы (можно получить через @userinfobot)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 {/* User ID Section */}
                 <div className="bg-gradient-to-br from-red-50/50 to-orange-50/30 dark:from-red-950/20 dark:to-orange-950/10 border border-red-200/30 dark:border-red-800/30 rounded-lg p-4">
                   <div className="flex items-center space-x-2 mb-3">

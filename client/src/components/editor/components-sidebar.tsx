@@ -405,7 +405,6 @@ const components: ComponentDefinition[] = [
     color: 'bg-cyan-100 text-cyan-600',
     type: 'pin_message',
     defaultData: {
-      targetGroupId: '',
       targetMessageId: '',
       messageIdSource: 'manual',
       variableName: '',
@@ -420,7 +419,6 @@ const components: ComponentDefinition[] = [
     color: 'bg-slate-100 text-slate-600',
     type: 'unpin_message',
     defaultData: {
-      targetGroupId: '',
       targetMessageId: '',
       messageIdSource: 'manual',
       variableName: ''
@@ -434,7 +432,6 @@ const components: ComponentDefinition[] = [
     color: 'bg-red-100 text-red-600',
     type: 'delete_message',
     defaultData: {
-      targetGroupId: '',
       targetMessageId: '',
       messageIdSource: 'manual',
       variableName: ''

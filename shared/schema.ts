@@ -509,7 +509,6 @@ export const nodeSchema = z.object({
     enableStatistics: z.boolean().default(true), // Включить сбор статистики
     customParameters: z.array(z.string()).default([]), // Дополнительные параметры команды
     // Поля для управления контентом в группах
-    targetGroupId: z.string().optional(), // ID группы для действий
     targetMessageId: z.string().optional(), // ID сообщения для закрепления/удаления
     messageIdSource: z.enum(['manual', 'variable', 'last_message']).default('manual'), // Источник ID сообщения
     variableName: z.string().optional(), // Имя переменной с ID сообщения
