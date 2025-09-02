@@ -1090,25 +1090,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                     </code>
                   </div>
                 )}
-                {node.data.messageIdSource && node.data.messageIdSource !== 'manual' && (
-                  <div className="flex items-center space-x-2 text-xs">
-                    <i className="fas fa-magic text-orange-500 dark:text-orange-400"></i>
-                    <span className="text-gray-600 dark:text-gray-400">Источник ID:</span>
-                    <span className="bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded text-xs">
-                      {node.data.messageIdSource === 'variable' ? 'Переменная' : 
-                       node.data.messageIdSource === 'last_message' ? 'Последнее сообщение' : node.data.messageIdSource}
-                    </span>
-                  </div>
-                )}
-                {node.data.variableName && node.data.messageIdSource === 'variable' && (
-                  <div className="flex items-center space-x-2 text-xs">
-                    <i className="fas fa-tag text-green-500 dark:text-green-400"></i>
-                    <span className="text-gray-600 dark:text-gray-400">Переменная:</span>
-                    <code className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded font-mono">
-                      {node.data.variableName}
-                    </code>
-                  </div>
-                )}
               </div>
               
               {/* Action Status */}
