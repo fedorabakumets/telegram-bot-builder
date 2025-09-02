@@ -4503,22 +4503,6 @@ async function seedDefaultTemplates(force = false) {
                   keyboardType: "inline",
                   buttons: [
                     {
-                      id: "btn-content",
-                      text: "📝 Управление контентом",
-                      action: "goto",
-                      targetSheetId: "content_sheet",
-                      target: "content_management",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-users",
-                      text: "👥 Управление пользователями",
-                      action: "goto",
-                      targetSheetId: "users_sheet",
-                      target: "user_management",
-                      buttonType: "navigation"
-                    },
-                    {
                       id: "btn-help",
                       text: "❓ Справка по командам",
                       action: "goto",
@@ -4569,49 +4553,6 @@ async function seedDefaultTemplates(force = false) {
             description: "Инструменты для модерации сообщений и контента",
             nodes: [
               {
-                id: "content_management",
-                type: "message",
-                position: { x: 400, y: 100 },
-                data: {
-                  messageText: "📝 Управление контентом группы\n\nВыберите действие с сообщениями:",
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-pin",
-                      text: "📌 Закрепить сообщение",
-                      action: "goto",
-                      target: "pin_message_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-unpin",
-                      text: "📌❌ Открепить сообщение",
-                      action: "goto",
-                      target: "unpin_message_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-delete",
-                      text: "🗑️ Удалить сообщение",
-                      action: "goto",
-                      target: "delete_message_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-back-start",
-                      text: "⬅️ Назад в главное меню",
-                      action: "goto",
-                      targetSheetId: "main_sheet",
-                      target: "start",
-                      buttonType: "navigation"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              },
-              {
                 id: "pin_message_node",
                 type: "pin_message",
                 position: { x: 200, y: 300 },
@@ -4620,16 +4561,8 @@ async function seedDefaultTemplates(force = false) {
                   messageText: "📌 Сообщение успешно закреплено!",
                   synonyms: ["закрепить", "прикрепить", "зафиксировать"],
                   disableNotification: false,
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-content",
-                      text: "⬅️ Назад к управлению контентом",
-                      action: "goto",
-                      target: "content_management",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               },
               {
@@ -4640,16 +4573,8 @@ async function seedDefaultTemplates(force = false) {
                   command: "/unpin_message",
                   messageText: "📌❌ Сообщение успешно откреплено!",
                   synonyms: ["открепить", "отцепить", "убрать закрепление"],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-content",
-                      text: "⬅️ Назад к управлению контентом",
-                      action: "goto",
-                      target: "content_management",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               },
               {
@@ -4660,175 +4585,18 @@ async function seedDefaultTemplates(force = false) {
                   command: "/delete_message",
                   messageText: "🗑️ Сообщение успешно удалено!",
                   synonyms: ["удалить", "стереть", "убрать сообщение"],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-content",
-                      text: "⬅️ Назад к управлению контентом",
-                      action: "goto",
-                      target: "content_management",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               }
             ],
-            connections: [
-              {
-                id: "content-pin",
-                sourceNodeId: "content_management",
-                targetNodeId: "pin_message_node",
-                sourceHandle: "btn-pin",
-                targetHandle: "target"
-              },
-              {
-                id: "content-unpin",
-                sourceNodeId: "content_management",
-                targetNodeId: "unpin_message_node",
-                sourceHandle: "btn-unpin",
-                targetHandle: "target"
-              },
-              {
-                id: "content-delete",
-                sourceNodeId: "content_management",
-                targetNodeId: "delete_message_node",
-                sourceHandle: "btn-delete",
-                targetHandle: "target"
-              }
-            ]
+            connections: []
           },
           {
             id: "users_sheet",
             name: "👥 Управление пользователями",
             description: "Инструменты для модерации участников группы",
             nodes: [
-              {
-                id: "user_management",
-                type: "message",
-                position: { x: 400, y: 100 },
-                data: {
-                  messageText: "👥 Управление пользователями группы\n\nВыберите действие с участниками:",
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-restrict",
-                      text: "🚫 Ограничения",
-                      action: "goto",
-                      target: "restrict_menu",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-admin",
-                      text: "👑 Администрирование",
-                      action: "goto",
-                      target: "admin_menu",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-back-start-users",
-                      text: "⬅️ Назад в главное меню",
-                      action: "goto",
-                      targetSheetId: "main_sheet",
-                      target: "start",
-                      buttonType: "navigation"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              },
-              {
-                id: "restrict_menu",
-                type: "message",
-                position: { x: 200, y: 300 },
-                data: {
-                  messageText: "🚫 Ограничения пользователей\n\nВыберите тип ограничения:",
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-ban",
-                      text: "🚫 Заблокировать",
-                      action: "goto",
-                      target: "ban_user_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-unban",
-                      text: "✅ Разблокировать",
-                      action: "goto",
-                      target: "unban_user_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-mute",
-                      text: "🔇 Ограничить права",
-                      action: "goto",
-                      target: "mute_user_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-unmute",
-                      text: "🔊 Снять ограничения",
-                      action: "goto",
-                      target: "unmute_user_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-kick",
-                      text: "👢 Исключить",
-                      action: "goto",
-                      target: "kick_user_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-back-users",
-                      text: "⬅️ Назад",
-                      action: "goto",
-                      target: "user_management",
-                      buttonType: "navigation"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              },
-              {
-                id: "admin_menu",
-                type: "message",
-                position: { x: 600, y: 300 },
-                data: {
-                  messageText: "👑 Администрирование\n\nУправление правами:",
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-promote",
-                      text: "👑 Назначить админом",
-                      action: "goto",
-                      target: "promote_user_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-demote",
-                      text: "👤 Снять с админа",
-                      action: "goto",
-                      target: "demote_user_node",
-                      buttonType: "navigation"
-                    },
-                    {
-                      id: "btn-back-users-admin",
-                      text: "⬅️ Назад",
-                      action: "goto",
-                      target: "user_management",
-                      buttonType: "navigation"
-                    }
-                  ],
-                  markdown: false,
-                  oneTimeKeyboard: true,
-                  resizeKeyboard: true
-                }
-              },
               {
                 id: "ban_user_node",
                 type: "ban_user",
@@ -4839,16 +4607,8 @@ async function seedDefaultTemplates(force = false) {
                   synonyms: ["забанить", "заблокировать", "бан"],
                   reason: "Нарушение правил группы",
                   untilDate: 0,
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-restrict",
-                      text: "⬅️ Назад к ограничениям",
-                      action: "goto",
-                      target: "restrict_menu",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               },
               {
@@ -4859,16 +4619,8 @@ async function seedDefaultTemplates(force = false) {
                   command: "/unban_user",
                   messageText: "✅ Пользователь разблокирован!",
                   synonyms: ["разбанить", "разблокировать", "unbан"],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-restrict",
-                      text: "⬅️ Назад к ограничениям",
-                      action: "goto",
-                      target: "restrict_menu",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               },
               {
@@ -4889,16 +4641,8 @@ async function seedDefaultTemplates(force = false) {
                   canChangeGroupInfo: false,
                   canInviteUsers2: false,
                   canPinMessages2: false,
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-restrict",
-                      text: "⬅️ Назад к ограничениям",
-                      action: "goto",
-                      target: "restrict_menu",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               },
               {
@@ -4909,16 +4653,8 @@ async function seedDefaultTemplates(force = false) {
                   command: "/unmute_user",
                   messageText: "🔊 Ограничения с пользователя сняты!",
                   synonyms: ["размутить", "разглушить", "анмут"],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-restrict",
-                      text: "⬅️ Назад к ограничениям",
-                      action: "goto",
-                      target: "restrict_menu",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               },
               {
@@ -4930,16 +4666,8 @@ async function seedDefaultTemplates(force = false) {
                   messageText: "👢 Пользователь исключен из группы!",
                   synonyms: ["кикнуть", "исключить", "выгнать"],
                   reason: "Нарушение правил группы",
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-restrict",
-                      text: "⬅️ Назад к ограничениям",
-                      action: "goto",
-                      target: "restrict_menu",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               },
               {
@@ -4961,16 +4689,8 @@ async function seedDefaultTemplates(force = false) {
                   canManageVideoChats: false,
                   canManageTopics: false,
                   isAnonymous: false,
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-admin",
-                      text: "⬅️ Назад к администрированию",
-                      action: "goto",
-                      target: "admin_menu",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               },
               {
@@ -4981,124 +4701,15 @@ async function seedDefaultTemplates(force = false) {
                   command: "/demote_user",
                   messageText: "👤 Пользователь снят с должности администратора!",
                   synonyms: ["понизить", "снять с админа", "демоут"],
-                  keyboardType: "inline",
-                  buttons: [
-                    {
-                      id: "btn-back-admin",
-                      text: "⬅️ Назад к администрированию",
-                      action: "goto",
-                      target: "admin_menu",
-                      buttonType: "navigation"
-                    }
-                  ]
+                  keyboardType: "none",
+                  buttons: []
                 }
               }
             ],
-            connections: [
-              {
-                id: "users-restrict",
-                sourceNodeId: "user_management",
-                targetNodeId: "restrict_menu",
-                sourceHandle: "btn-restrict",
-                targetHandle: "target"
-              },
-              {
-                id: "users-admin",
-                sourceNodeId: "user_management",
-                targetNodeId: "admin_menu",
-                sourceHandle: "btn-admin",
-                targetHandle: "target"
-              },
-              {
-                id: "restrict-ban",
-                sourceNodeId: "restrict_menu",
-                targetNodeId: "ban_user_node",
-                sourceHandle: "btn-ban",
-                targetHandle: "target"
-              },
-              {
-                id: "restrict-unban",
-                sourceNodeId: "restrict_menu",
-                targetNodeId: "unban_user_node",
-                sourceHandle: "btn-unban",
-                targetHandle: "target"
-              },
-              {
-                id: "restrict-mute",
-                sourceNodeId: "restrict_menu",
-                targetNodeId: "mute_user_node",
-                sourceHandle: "btn-mute",
-                targetHandle: "target"
-              },
-              {
-                id: "restrict-unmute",
-                sourceNodeId: "restrict_menu",
-                targetNodeId: "unmute_user_node",
-                sourceHandle: "btn-unmute",
-                targetHandle: "target"
-              },
-              {
-                id: "restrict-kick",
-                sourceNodeId: "restrict_menu",
-                targetNodeId: "kick_user_node",
-                sourceHandle: "btn-kick",
-                targetHandle: "target"
-              },
-              {
-                id: "admin-promote",
-                sourceNodeId: "admin_menu",
-                targetNodeId: "promote_user_node",
-                sourceHandle: "btn-promote",
-                targetHandle: "target"
-              },
-              {
-                id: "admin-demote",
-                sourceNodeId: "admin_menu",
-                targetNodeId: "demote_user_node",
-                sourceHandle: "btn-demote",
-                targetHandle: "target"
-              }
-            ]
+            connections: []
           }
         ],
-        interSheetConnections: [
-          {
-            id: "main-to-content",
-            sourceSheetId: "main_sheet",
-            targetSheetId: "content_sheet",
-            sourceNodeId: "start",
-            targetNodeId: "content_management",
-            sourceHandle: "btn-content",
-            targetHandle: "target"
-          },
-          {
-            id: "main-to-users",
-            sourceSheetId: "main_sheet",
-            targetSheetId: "users_sheet",
-            sourceNodeId: "start",
-            targetNodeId: "user_management",
-            sourceHandle: "btn-users",
-            targetHandle: "target"
-          },
-          {
-            id: "content-to-main",
-            sourceSheetId: "content_sheet",
-            targetSheetId: "main_sheet",
-            sourceNodeId: "content_management",
-            targetNodeId: "start",
-            sourceHandle: "btn-back-start",
-            targetHandle: "target"
-          },
-          {
-            id: "users-to-main",
-            sourceSheetId: "users_sheet",
-            targetSheetId: "main_sheet",
-            sourceNodeId: "user_management",
-            targetNodeId: "start",
-            sourceHandle: "btn-back-start-users",
-            targetHandle: "target"
-          }
-        ]
+        interSheetConnections: []
       }
     });
 
