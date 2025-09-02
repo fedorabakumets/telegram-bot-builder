@@ -731,7 +731,7 @@ export function PropertiesPanel({
                   <Label className="text-xs font-medium text-muted-foreground">Команда</Label>
                   <div className="relative">
                     <Input
-                      value={selectedNode.data.command || ''}
+                      value={selectedNode.data.command || getDefaultDataForType(selectedNode.type).command || ''}
                       onChange={(e) => {
                         onNodeUpdate(selectedNode.id, { command: e.target.value });
                         setCommandInput(e.target.value);
@@ -782,7 +782,7 @@ export function PropertiesPanel({
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground">Описание</Label>
                   <Input
-                    value={selectedNode.data.description || ''}
+                    value={selectedNode.data.description || getDefaultDataForType(selectedNode.type).description || ''}
                     onChange={(e) => onNodeUpdate(selectedNode.id, { description: e.target.value })}
                     placeholder="Описание команды"
                     className="text-xs"
@@ -811,7 +811,7 @@ export function PropertiesPanel({
               <div>
                 <Label className="text-xs font-medium text-muted-foreground">Команда</Label>
                 <Input
-                  value={selectedNode.data.command || ''}
+                  value={selectedNode.data.command || getDefaultDataForType(selectedNode.type).command || ''}
                   onChange={(e) => onNodeUpdate(selectedNode.id, { command: e.target.value })}
                   className="mt-2"
                   placeholder={
