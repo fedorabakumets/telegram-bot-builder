@@ -1049,9 +1049,12 @@ export function Canvas({
       
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && onBotDataUpdate && (
-        <div className="absolute bottom-0 left-0 right-0 z-40 pointer-events-none">
-          <div className="flex justify-center px-4 pb-4">
-            <div className="pointer-events-auto">
+        <div className="absolute bottom-0 z-40 pointer-events-none" style={{
+          left: sidebarVisible ? '280px' : '20px',
+          right: propertiesVisible ? '350px' : '20px'
+        }}>
+          <div className="flex justify-center pb-4">
+            <div className="pointer-events-auto w-full max-w-4xl">
               <CanvasSheets
                 sheets={botData.sheets}
                 activeSheetId={botData.activeSheetId || null}
@@ -1060,7 +1063,7 @@ export function Canvas({
                 onSheetDelete={handleSheetDelete}
                 onSheetRename={handleSheetRename}
                 onSheetDuplicate={handleSheetDuplicate}
-                maxVisibleTabs={6}
+                maxVisibleTabs={5}
               />
             </div>
           </div>
