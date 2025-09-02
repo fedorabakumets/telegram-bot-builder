@@ -185,7 +185,7 @@ export function CanvasSheets({
               ) : (
                 <span 
                   className={cn(
-                    "flex-1 text-sm font-semibold truncate cursor-text transition-all duration-200",
+                    "flex-1 text-sm font-semibold cursor-text transition-all duration-200",
                     activeSheetId === sheet.id
                       ? "text-white drop-shadow-sm"
                       : "text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400"
