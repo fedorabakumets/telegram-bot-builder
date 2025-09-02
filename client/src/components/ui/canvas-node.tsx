@@ -452,10 +452,24 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               {node.type === 'animation' && 'GIF анимация'}
               {node.type === 'location' && 'Геолокация'}
               {node.type === 'contact' && 'Контакт'}
-              {(node.type === 'pin_message' || node.type === 'unpin_message' || node.type === 'delete_message') && 'Управление контентом'}
+              {(node.type === 'pin_message' || node.type === 'unpin_message' || node.type === 'delete_message') && (
+                <span className="inline-flex items-center">
+                  <span className="text-cyan-600 dark:text-cyan-400 font-mono text-sm bg-cyan-50 dark:bg-cyan-900/30 px-2 py-1 rounded-lg border border-cyan-200 dark:border-cyan-800 mr-2">
+                    {node.data.command || `/${node.type}`}
+                  </span>
+                  <span>Управление контентом</span>
+                </span>
+              )}
               {(node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || 
                 node.type === 'unmute_user' || node.type === 'kick_user' || node.type === 'promote_user' || 
-                node.type === 'demote_user') && 'Действие с пользователем'}
+                node.type === 'demote_user') && (
+                <span className="inline-flex items-center">
+                  <span className="text-rose-600 dark:text-rose-400 font-mono text-sm bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 mr-2">
+                    {node.data.command || `/${node.type}`}
+                  </span>
+                  <span>Действие с пользователем</span>
+                </span>
+              )}
             </h3>
             {onMove && (
               <div className="ml-2 opacity-40 hover:opacity-70 transition-all duration-200 cursor-grab">
