@@ -8208,7 +8208,7 @@ function generateMuteUserHandler(node: Node): string {
   const canPinMessages2 = node.data.canPinMessages2 || false;
   
   // Создаем список синонимов для проверки
-  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
   
   // Генерируем условие с учётом целевой группы и синонимов
@@ -8301,7 +8301,7 @@ function generateUnmuteUserHandler(node: Node): string {
   const synonyms = node.data.synonyms || 'размутить, размут, освободить';
   
   // Создаем список синонимов для проверки
-  const synonymsList = synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
+  const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
   const synonymsPattern = synonymsList.map((s: string) => `"${s}"`).join(', ');
   
   // Генерируем условие с учётом целевой группы и синонимов
@@ -8331,20 +8331,15 @@ function generateUnmuteUserHandler(node: Node): string {
   code += `    if message.reply_to_message:\n`;
   code += `        target_user_id = message.reply_to_message.from_user.id\n`;
   code += `    else:\n`;
-  code += `        text_parts = message.text.split()\n`;
-  if (targetUserId) {
-    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
-  } else {
-    code += `        if len(text_parts) > 1:\n`;
-    code += `            try:\n`;
-    code += `                target_user_id = int(text_parts[1])\n`;
-    code += `            except ValueError:\n`;
-    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
-    code += `                return\n`;
-    code += `        else:\n`;
-    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /unmute USER_ID")\n`;
-    code += `            return\n`;
-  }
+  code += `        # Пробуем найти упоминание пользователя в сообщении\n`;
+  code += `        if message.entities:\n`;
+  code += `            for entity in message.entities:\n`;
+  code += `                if entity.type == "text_mention":\n`;
+  code += `                    target_user_id = entity.user.id\n`;
+  code += `                    break\n`;
+  code += `        if not target_user_id:\n`;
+  code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
+  code += `            return\n`;
   
   code += `    \n`;
   code += `    if not target_user_id:\n`;
@@ -8422,20 +8417,15 @@ function generateKickUserHandler(node: Node): string {
   code += `    if message.reply_to_message:\n`;
   code += `        target_user_id = message.reply_to_message.from_user.id\n`;
   code += `    else:\n`;
-  code += `        text_parts = message.text.split()\n`;
-  if (targetUserId) {
-    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
-  } else {
-    code += `        if len(text_parts) > 1:\n`;
-    code += `            try:\n`;
-    code += `                target_user_id = int(text_parts[1])\n`;
-    code += `            except ValueError:\n`;
-    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
-    code += `                return\n`;
-    code += `        else:\n`;
-    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /kick USER_ID")\n`;
-    code += `            return\n`;
-  }
+  code += `        # Пробуем найти упоминание пользователя в сообщении\n`;
+  code += `        if message.entities:\n`;
+  code += `            for entity in message.entities:\n`;
+  code += `                if entity.type == "text_mention":\n`;
+  code += `                    target_user_id = entity.user.id\n`;
+  code += `                    break\n`;
+  code += `        if not target_user_id:\n`;
+  code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
+  code += `            return\n`;
   
   code += `    \n`;
   code += `    if not target_user_id:\n`;
@@ -8479,7 +8469,7 @@ function generateKickUserHandler(node: Node): string {
 
 function generatePromoteUserHandler(node: Node): string {
   let code = `\n# Promote User Handler\n`;
-  const targetUserId = node.data.targetUserId || '';
+
   const targetGroupId = node.data.targetGroupId || '';
   const synonyms = node.data.synonyms || ['повысить', 'админ', 'назначить'];
   
@@ -8529,20 +8519,15 @@ function generatePromoteUserHandler(node: Node): string {
   code += `    if message.reply_to_message:\n`;
   code += `        target_user_id = message.reply_to_message.from_user.id\n`;
   code += `    else:\n`;
-  code += `        text_parts = message.text.split()\n`;
-  if (targetUserId) {
-    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
-  } else {
-    code += `        if len(text_parts) > 1:\n`;
-    code += `            try:\n`;
-    code += `                target_user_id = int(text_parts[1])\n`;
-    code += `            except ValueError:\n`;
-    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
-    code += `                return\n`;
-    code += `        else:\n`;
-    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /promote USER_ID")\n`;
-    code += `            return\n`;
-  }
+  code += `        # Пробуем найти упоминание пользователя в сообщении\n`;
+  code += `        if message.entities:\n`;
+  code += `            for entity in message.entities:\n`;
+  code += `                if entity.type == "text_mention":\n`;
+  code += `                    target_user_id = entity.user.id\n`;
+  code += `                    break\n`;
+  code += `        if not target_user_id:\n`;
+  code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
+  code += `            return\n`;
   
   code += `    \n`;
   code += `    if not target_user_id:\n`;
@@ -8599,7 +8584,7 @@ function generatePromoteUserHandler(node: Node): string {
 
 function generateDemoteUserHandler(node: Node): string {
   let code = `\n# Demote User Handler\n`;
-  const targetUserId = node.data.targetUserId || '';
+
   const targetGroupId = node.data.targetGroupId || '';
   const synonyms = node.data.synonyms || ['понизить', 'снять с админки', 'демоут'];
   
@@ -8636,20 +8621,15 @@ function generateDemoteUserHandler(node: Node): string {
   code += `    if message.reply_to_message:\n`;
   code += `        target_user_id = message.reply_to_message.from_user.id\n`;
   code += `    else:\n`;
-  code += `        text_parts = message.text.split()\n`;
-  if (targetUserId) {
-    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
-  } else {
-    code += `        if len(text_parts) > 1:\n`;
-    code += `            try:\n`;
-    code += `                target_user_id = int(text_parts[1])\n`;
-    code += `            except ValueError:\n`;
-    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
-    code += `                return\n`;
-    code += `        else:\n`;
-    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /demote USER_ID")\n`;
-    code += `            return\n`;
-  }
+  code += `        # Пробуем найти упоминание пользователя в сообщении\n`;
+  code += `        if message.entities:\n`;
+  code += `            for entity in message.entities:\n`;
+  code += `                if entity.type == "text_mention":\n`;
+  code += `                    target_user_id = entity.user.id\n`;
+  code += `                    break\n`;
+  code += `        if not target_user_id:\n`;
+  code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
+  code += `            return\n`;
   
   code += `    \n`;
   code += `    if not target_user_id:\n`;
