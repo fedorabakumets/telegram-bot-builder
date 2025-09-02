@@ -465,11 +465,25 @@ export function PropertiesPanel({
 
   // Валидация команды
   const commandValidation = useMemo(() => {
-    if (selectedNode && (selectedNode.type === 'start' || selectedNode.type === 'command')) {
-      return validateCommand(selectedNode.data.command || '');
+    if (selectedNode && (
+      selectedNode.type === 'start' || 
+      selectedNode.type === 'command' ||
+      selectedNode.type === 'pin_message' || 
+      selectedNode.type === 'unpin_message' || 
+      selectedNode.type === 'delete_message' ||
+      selectedNode.type === 'ban_user' || 
+      selectedNode.type === 'unban_user' || 
+      selectedNode.type === 'mute_user' || 
+      selectedNode.type === 'unmute_user' || 
+      selectedNode.type === 'kick_user' || 
+      selectedNode.type === 'promote_user' || 
+      selectedNode.type === 'demote_user'
+    )) {
+      const commandValue = selectedNode.data.command || getDefaultDataForType(selectedNode.type).command || '';
+      return validateCommand(commandValue);
     }
     return { isValid: true, errors: [] };
-  }, [selectedNode?.data.command]);
+  }, [selectedNode?.data.command, selectedNode?.type]);
 
   // Автодополнение команд
   const commandSuggestions = useMemo(() => {
