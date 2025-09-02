@@ -976,7 +976,7 @@ export function Canvas({
 
           {/* Smart Connection Tools */}
           {nodes.length > 1 && (
-            <div className="absolute bottom-20 right-4 flex flex-col space-y-2 z-20">
+            <div className="absolute bottom-24 right-4 flex flex-col space-y-2 z-20">
               {/* Auto Connection Panel */}
               <Popover open={showAutoPanel} onOpenChange={setShowAutoPanel}>
                 <PopoverTrigger asChild>
@@ -1045,10 +1045,13 @@ export function Canvas({
           )}
         </div>
 
-        {/* Компонент листов холста внизу холста (только если включена новая система) */}
-        {botData && onBotDataUpdate && (
-          <div className="absolute bottom-4 left-4 right-4 z-30 flex justify-center">
-            <div className="w-full max-w-3xl">
+      </div>
+      
+      {/* Компонент листов холста - фиксированная панель внизу */}
+      {botData && onBotDataUpdate && (
+        <div className="absolute bottom-0 left-0 right-0 z-40 pointer-events-none">
+          <div className="flex justify-center px-4 pb-4">
+            <div className="pointer-events-auto">
               <CanvasSheets
                 sheets={botData.sheets}
                 activeSheetId={botData.activeSheetId || null}
@@ -1057,12 +1060,12 @@ export function Canvas({
                 onSheetDelete={handleSheetDelete}
                 onSheetRename={handleSheetRename}
                 onSheetDuplicate={handleSheetDuplicate}
-                maxVisibleTabs={5}
+                maxVisibleTabs={6}
               />
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </main>
   );
 }
