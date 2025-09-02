@@ -779,8 +779,8 @@ export function Canvas({
       
       {/* Панель инструментов - фиксированная панель вверху */}
       <div className="absolute top-0 z-40 pointer-events-none" style={{
-        left: sidebarVisible ? '200px' : '20px',
-        right: propertiesVisible ? '250px' : '20px'
+        left: sidebarVisible ? '100px' : '20px',
+        right: propertiesVisible ? '150px' : '20px'
       }}>
         <div className="pt-6">
           <div className="pointer-events-auto flex items-center space-x-2 canvas-controls overflow-x-auto">
