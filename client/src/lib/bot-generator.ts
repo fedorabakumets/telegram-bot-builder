@@ -8125,6 +8125,7 @@ function generateBanUserHandler(node: Node): string {
 function generateUnbanUserHandler(node: Node): string {
   let code = `\n# Unban User Handler\n`;
   const synonyms = node.data.synonyms || ['разбанить', 'разблокировать', 'unban'];
+  const targetGroupId = node.data.targetGroupId || '';
   
   // Создаем список синонимов для проверки
   const synonymsList = Array.isArray(synonyms) ? synonyms.map((s: string) => s.trim().toLowerCase()).filter((s: string) => s) : synonyms.split(',').map((s: string) => s.trim().toLowerCase()).filter((s: string) => s);
@@ -8237,20 +8238,15 @@ function generateMuteUserHandler(node: Node): string {
   code += `    if message.reply_to_message:\n`;
   code += `        target_user_id = message.reply_to_message.from_user.id\n`;
   code += `    else:\n`;
-  code += `        text_parts = message.text.split()\n`;
-  if (targetUserId) {
-    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
-  } else {
-    code += `        if len(text_parts) > 1:\n`;
-    code += `            try:\n`;
-    code += `                target_user_id = int(text_parts[1])\n`;
-    code += `            except ValueError:\n`;
-    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
-    code += `                return\n`;
-    code += `        else:\n`;
-    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /mute USER_ID")\n`;
-    code += `            return\n`;
-  }
+  code += `        # Пробуем найти упоминание пользователя в сообщении\n`;
+  code += `        if message.entities:\n`;
+  code += `            for entity in message.entities:\n`;
+  code += `                if entity.type == "text_mention":\n`;
+  code += `                    target_user_id = entity.user.id\n`;
+  code += `                    break\n`;
+  code += `        if not target_user_id:\n`;
+  code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
+  code += `            return\n`;
   
   code += `    \n`;
   code += `    if not target_user_id:\n`;
