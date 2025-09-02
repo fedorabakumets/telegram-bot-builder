@@ -7898,6 +7898,7 @@ function generateDeleteMessageHandler(node: Node): string {
   let code = `\n# Delete Message Handler\n`;
   const synonyms = node.data.synonyms || ['удалить', 'стереть', 'убрать сообщение'];
   const targetGroupId = node.data.targetGroupId;
+  const messageText = node.data.messageText || "🗑️ Сообщение успешно удалено!";
   
   // Если указан конкретный ID группы, генерируем обработчик для этой группы
   if (targetGroupId) {
@@ -7938,7 +7939,7 @@ function generateDeleteMessageHandler(node: Node): string {
       code += `            chat_id=chat_id,\n`;
       code += `            message_id=target_message_id\n`;
       code += `        )\n`;
-      code += `        await message.answer("🗑️ Сообщение успешно удалено!")\n`;
+      code += `        await message.answer("${messageText}")\n`;
       code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")\n`;
       code += `    except TelegramBadRequest as e:\n`;
       code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
@@ -8000,7 +8001,7 @@ function generateDeleteMessageHandler(node: Node): string {
     code += `            chat_id=chat_id,\n`;
     code += `            message_id=target_message_id\n`;
     code += `        )\n`;
-    code += `        await message.answer("🗑️ Сообщение успешно удалено!")\n`;
+    code += `        await message.answer("${messageText}")\n`;
     code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id}")\n`;
     code += `    except TelegramBadRequest as e:\n`;
     code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
@@ -8051,7 +8052,7 @@ function generateDeleteMessageHandler(node: Node): string {
       code += `            chat_id=chat_id,\n`;
       code += `            message_id=target_message_id\n`;
       code += `        )\n`;
-      code += `        await message.answer("🗑️ Сообщение успешно удалено!")\n`;
+      code += `        await message.answer("${messageText}")\n`;
       code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id} в группе {chat_id} через синоним '${synonym}'")\n`;
       code += `    except TelegramBadRequest as e:\n`;
       code += `        if "message to delete not found" in str(e) or "message not found" in str(e):\n`;
@@ -8074,6 +8075,12 @@ function generateDeleteMessageHandler(node: Node): string {
 function generateContentManagementSynonymHandler(node: Node, synonym: string): string {
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
   const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  const messageText = node.data.messageText || (
+    node.type === 'pin_message' ? "✅ Сообщение закреплено" :
+    node.type === 'unpin_message' ? "✅ Сообщение откреплено" :
+    node.type === 'delete_message' ? "🗑️ Сообщение успешно удалено!" :
+    "✅ Действие выполнено"
+  );
   
   let code = `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
   code += `async def ${node.type}_${sanitizedNodeId}_synonym_${sanitizedSynonym}_handler(message: types.Message):\n`;
@@ -8112,7 +8119,7 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
     code += `            message_id=target_message_id,\n`;
     code += `            disable_notification=${disableNotification ? 'True' : 'False'}\n`;
     code += `        )\n`;
-    code += `        await message.answer("✅ Сообщение закреплено")\n`;
+    code += `        await message.answer("${messageText}")\n`;
     code += `        logging.info(f"Сообщение {target_message_id} закреплено пользователем {user_id}")\n`;
   } else if (node.type === 'unpin_message') {
     code += `        # Открепляем сообщение\n`;
@@ -8120,7 +8127,7 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
     code += `            chat_id=chat_id,\n`;
     code += `            message_id=target_message_id\n`;
     code += `        )\n`;
-    code += `        await message.answer("✅ Сообщение откреплено")\n`;
+    code += `        await message.answer("${messageText}")\n`;
     code += `        logging.info(f"Сообщение {target_message_id} откреплено пользователем {user_id}")\n`;
   } else if (node.type === 'delete_message') {
     code += `        # Удаляем сообщение\n`;
@@ -8128,7 +8135,7 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
     code += `            chat_id=chat_id,\n`;
     code += `            message_id=target_message_id\n`;
     code += `        )\n`;
-    code += `        await message.answer("🗑️ Сообщение успешно удалено!")\n`;
+    code += `        await message.answer("${messageText}")\n`;
     code += `        logging.info(f"Сообщение {target_message_id} удалено пользователем {user_id}")\n`;
   }
   
