@@ -976,15 +976,15 @@ export function Canvas({
 
           {/* Smart Connection Tools */}
           {nodes.length > 1 && (
-            <div className="absolute bottom-20 right-6 flex flex-col space-y-3 z-20">
+            <div className="absolute bottom-20 right-4 flex flex-col space-y-2 z-20">
               {/* Auto Connection Panel */}
               <Popover open={showAutoPanel} onOpenChange={setShowAutoPanel}>
                 <PopoverTrigger asChild>
                   <Button
-                    className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                     title="Управление автосоединениями"
                   >
-                    <i className="fas fa-magic text-white" />
+                    <i className="fas fa-magic text-white text-sm" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent side="left" className="w-auto p-0">
@@ -1002,10 +1002,10 @@ export function Canvas({
               {/* Auto-connect button */}
               <Button
                 onClick={handleAutoConnect}
-                className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
                 title="Быстрое автосоединение"
               >
-                <i className="fas fa-bolt text-white" />
+                <i className="fas fa-bolt text-white text-sm" />
               </Button>
 
               {/* Connection suggestions */}
@@ -1013,10 +1013,10 @@ export function Canvas({
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm"
+                    className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm"
                     title="Рекомендации соединений"
                   >
-                    <i className="fas fa-lightbulb text-yellow-500" />
+                    <i className="fas fa-lightbulb text-yellow-500 text-sm" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent side="left" className="w-80 p-0">
@@ -1035,10 +1035,10 @@ export function Canvas({
                     connections.forEach(conn => onConnectionDelete?.(conn.id));
                   }}
                   variant="outline"
-                  className="rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-900/20"
+                  className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-900/20"
                   title="Очистить все соединения"
                 >
-                  <i className="fas fa-eraser text-red-500" />
+                  <i className="fas fa-eraser text-red-500 text-sm" />
                 </Button>
               )}
             </div>
@@ -1047,8 +1047,8 @@ export function Canvas({
 
         {/* Компонент листов холста внизу холста (только если включена новая система) */}
         {botData && onBotDataUpdate && (
-          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30 max-w-4xl w-full px-6">
-            <div className="flex justify-center">
+          <div className="absolute bottom-4 left-4 right-4 z-30 flex justify-center">
+            <div className="w-full max-w-3xl">
               <CanvasSheets
                 sheets={botData.sheets}
                 activeSheetId={botData.activeSheetId || null}
@@ -1057,7 +1057,7 @@ export function Canvas({
                 onSheetDelete={handleSheetDelete}
                 onSheetRename={handleSheetRename}
                 onSheetDuplicate={handleSheetDuplicate}
-                maxVisibleTabs={6}
+                maxVisibleTabs={5}
               />
             </div>
           </div>

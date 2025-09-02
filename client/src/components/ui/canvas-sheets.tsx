@@ -68,7 +68,7 @@ export function CanvasSheets({
       const newPosition = Math.max(0, scrollPosition - 1);
       setScrollPosition(newPosition);
       tabsContainerRef.current.scrollTo({
-        left: newPosition * 160, // 160px per tab
+        left: newPosition * 150, // 150px per tab
         behavior: 'smooth'
       });
     }
@@ -80,7 +80,7 @@ export function CanvasSheets({
       const newPosition = Math.min(maxScroll, scrollPosition + 1);
       setScrollPosition(newPosition);
       tabsContainerRef.current.scrollTo({
-        left: newPosition * 160,
+        left: newPosition * 150,
         behavior: 'smooth'
       });
     }
@@ -151,7 +151,7 @@ export function CanvasSheets({
       <div 
         ref={tabsContainerRef}
         className="flex-1 flex overflow-x-hidden scroll-smooth relative z-10"
-        style={{ maxWidth: `${maxVisibleTabs * 170}px` }}
+        style={{ maxWidth: `min(${maxVisibleTabs * 170}px, calc(100vw - 320px))` }}
       >
         <div className="flex gap-2">
           {sheets.map((sheet) => (
@@ -159,7 +159,7 @@ export function CanvasSheets({
               key={sheet.id}
               data-sheet-id={sheet.id}
               className={cn(
-                "group flex items-center min-w-[160px] max-w-[220px] h-10 px-4 cursor-pointer transition-all duration-300 relative backdrop-blur-sm transform hover:scale-105",
+                "group flex items-center min-w-[140px] max-w-[200px] h-10 px-3 cursor-pointer transition-all duration-300 relative backdrop-blur-sm transform hover:scale-[1.02] select-none",
                 activeSheetId === sheet.id
                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 rounded-lg z-20 ring-2 ring-blue-300/50 dark:ring-blue-600/50"
                   : "bg-white/70 dark:bg-slate-800/70 text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-700/90 rounded-lg shadow-sm hover:shadow-md border border-gray-200/50 dark:border-slate-600/50"
