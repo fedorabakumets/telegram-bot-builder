@@ -604,6 +604,20 @@ export const nodeSchema = z.object({
     maxLength: z.number().optional(), // Максимальная длина текста
     placeholder: z.string().optional(), // Подсказка для ввода
     defaultValue: z.string().optional(), // Значение по умолчанию
+    
+    // Дополнительные настройки клавиатуры
+    resizeKeyboard: z.boolean().default(true), // Автоматически изменять размер клавиатуры
+    oneTimeKeyboard: z.boolean().default(false), // Скрывать клавиатуру после использования
+    
+    // Настройки пользовательских действий
+    enableUserActions: z.boolean().default(false), // Включить пользовательские действия
+    actionTrigger: z.enum(['join', 'leave', 'message', 'button_click', 'custom']).optional(), // Триггер действия
+    triggerText: z.string().optional(), // Текст триггера
+    userActionType: z.enum(['message', 'command', 'button', 'media']).optional(), // Тип пользовательского действия
+    actionTag: z.string().optional(), // Тег действия
+    actionMessage: z.string().optional(), // Сообщение действия
+    silentAction: z.boolean().default(false), // Беззвучное действие
+    
     // Дополнительные поля для различных типов узлов
     mimeType: z.string().optional(),
     stickerSetName: z.string().optional(),
@@ -617,6 +631,7 @@ export const nodeSchema = z.object({
     multiSelectCheckmark: z.string().optional(),
     
     // Поля для управления пользователями (ID определяется автоматически из контекста)
+    duration: z.number().optional(), // Длительность действия в секундах
     muteDuration: z.number().optional(), // Длительность действия (для mute) в секундах
     reason: z.string().optional(), // Причина действия (бан, мут и т.д.)
     // Права для promote/demote

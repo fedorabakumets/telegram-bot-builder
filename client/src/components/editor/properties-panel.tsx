@@ -704,6 +704,13 @@ export function PropertiesPanel({
                   <SelectItem value="pin_message">📌 Закрепить сообщение</SelectItem>
                   <SelectItem value="unpin_message">📌❌ Открепить сообщение</SelectItem>
                   <SelectItem value="delete_message">🗑️ Удалить сообщение</SelectItem>
+                  <SelectItem value="ban_user">🚫 Заблокировать пользователя</SelectItem>
+                  <SelectItem value="unban_user">✅ Разблокировать пользователя</SelectItem>
+                  <SelectItem value="mute_user">🔇 Ограничить пользователя</SelectItem>
+                  <SelectItem value="unmute_user">🔊 Снять ограничения</SelectItem>
+                  <SelectItem value="kick_user">👢 Исключить пользователя</SelectItem>
+                  <SelectItem value="promote_user">👑 Назначить администратором</SelectItem>
+                  <SelectItem value="demote_user">👤 Снять с администратора</SelectItem>
                 </SelectContent>
               </Select>
             </div>
