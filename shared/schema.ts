@@ -612,10 +612,7 @@ export const nodeSchema = z.object({
     checkmarkSymbol: z.string().optional(),
     multiSelectCheckmark: z.string().optional(),
     
-    // Поля для управления пользователями
-    targetUserId: z.string().optional(), // ID пользователя для действий
-    userIdSource: z.enum(['manual', 'variable', 'reply_user']).default('manual'), // Источник ID пользователя
-    userVariableName: z.string().optional(), // Имя переменной с ID пользователя
+    // Поля для управления пользователями (ID определяется автоматически из контекста)
     muteDuration: z.number().optional(), // Длительность действия (для mute) в секундах
     reason: z.string().optional(), // Причина действия (бан, мут и т.д.)
     // Права для promote/demote

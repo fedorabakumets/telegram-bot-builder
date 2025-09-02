@@ -8045,7 +8045,6 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
 
 function generateBanUserHandler(node: Node): string {
   let code = `\n# Ban User Handler\n`;
-  const targetUserId = node.data.targetUserId || '';
   const reason = node.data.reason || 'Нарушение правил группы';
   const untilDate = node.data.untilDate || 0;
   const synonyms = node.data.synonyms || ['забанить', 'бан', 'заблокировать'];
@@ -8076,19 +8075,16 @@ function generateBanUserHandler(node: Node): string {
   code += `        target_username = message.reply_to_message.from_user.username or message.reply_to_message.from_user.first_name\n`;
   code += `    else:\n`;
   code += `        text_parts = message.text.split()\n`;
-  if (targetUserId) {
-    code += `        target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
-  } else {
-    code += `        if len(text_parts) > 1:\n`;
-    code += `            try:\n`;
-    code += `                target_user_id = int(text_parts[1])\n`;
-    code += `            except ValueError:\n`;
-    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
-    code += `                return\n`;
-    code += `        else:\n`;
-    code += `            await message.answer("❌ Укажите пользователя: ответьте на сообщение или напишите /ban USER_ID")\n`;
+    // Автоматическое определение пользователя из упоминаний
+    code += `        # Пробуем найти упоминание пользователя в сообщении\n`;
+    code += `        if message.entities:\n`;
+    code += `            for entity in message.entities:\n`;
+    code += `                if entity.type == "text_mention":\n`;
+    code += `                    target_user_id = entity.user.id\n`;
+    code += `                    break\n`;
+    code += `        if not target_user_id:\n`;
+    code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для выполнения действия")\n`;
     code += `            return\n`;
-  }
   
   code += `    \n`;
   code += `    if not target_user_id:\n`;
@@ -8128,7 +8124,6 @@ function generateBanUserHandler(node: Node): string {
 
 function generateUnbanUserHandler(node: Node): string {
   let code = `\n# Unban User Handler\n`;
-  const targetUserId = node.data.targetUserId || '';
   const synonyms = node.data.synonyms || ['разбанить', 'разблокировать', 'unban'];
   
   // Создаем список синонимов для проверки
@@ -8154,27 +8149,21 @@ function generateUnbanUserHandler(node: Node): string {
   code += `    # Определяем целевого пользователя\n`;
   code += `    target_user_id = None\n`;
   code += `    \n`;
-  if (targetUserId) {
-    code += `    target_user_id = ${targetUserId}  # Предустановленный ID пользователя\n`;
-  } else {
-    code += `    # Проверяем, есть ли ответ на сообщение\n`;
-    code += `    if message.reply_to_message:\n`;
-    code += `        target_user_id = message.reply_to_message.from_user.id\n`;
-    code += `        logging.info(f"Определен пользователь для разбана из reply: {target_user_id}")\n`;
-    code += `    else:\n`;
-    code += `        # Пытаемся извлечь ID из текста команды\n`;
-    code += `        text_parts = message.text.split()\n`;
-    code += `        if len(text_parts) > 1:\n`;
-    code += `            try:\n`;
-    code += `                target_user_id = int(text_parts[1])\n`;
-    code += `                logging.info(f"Определен пользователь для разбана из текста: {target_user_id}")\n`;
-    code += `            except ValueError:\n`;
-    code += `                await message.answer("❌ Неверный ID пользователя")\n`;
-    code += `                return\n`;
-    code += `        else:\n`;
-    code += `            await message.answer("❌ Ответьте на сообщение пользователя или укажите ID: разбанить USER_ID")\n`;
-    code += `            return\n`;
-  }
+  // Автоматическое определение пользователя из контекста
+  code += `    # Проверяем, есть ли ответ на сообщение\n`;
+  code += `    if message.reply_to_message:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `        logging.info(f"Определен пользователь для разбана из reply: {target_user_id}")\n`;
+  code += `    else:\n`;
+  code += `        # Пробуем найти упоминание пользователя в сообщении\n`;
+  code += `        if message.entities:\n`;
+  code += `            for entity in message.entities:\n`;
+  code += `                if entity.type == "text_mention":\n`;
+  code += `                    target_user_id = entity.user.id\n`;
+  code += `                    break\n`;
+  code += `        if not target_user_id:\n`;
+  code += `            await message.answer("❌ Ответьте на сообщение пользователя или упомяните его для разблокировки")\n`;
+  code += `            return\n`;
   
   code += `    \n`;
   code += `    try:\n`;
@@ -8202,7 +8191,6 @@ function generateUnbanUserHandler(node: Node): string {
 
 function generateMuteUserHandler(node: Node): string {
   let code = `\n# Mute User Handler\n`;
-  const targetUserId = node.data.targetUserId || '';
   const duration = node.data.duration || 3600;
   const reason = node.data.reason || 'Нарушение правил группы';
   const targetGroupId = node.data.targetGroupId || '';
@@ -8313,7 +8301,6 @@ function generateMuteUserHandler(node: Node): string {
 
 function generateUnmuteUserHandler(node: Node): string {
   let code = `\n# Unmute User Handler\n`;
-  const targetUserId = node.data.targetUserId || '';
   const targetGroupId = node.data.targetGroupId || '';
   const synonyms = node.data.synonyms || 'размутить, размут, освободить';
   
@@ -8402,7 +8389,6 @@ function generateUnmuteUserHandler(node: Node): string {
 
 function generateKickUserHandler(node: Node): string {
   let code = `\n# Kick User Handler\n`;
-  const targetUserId = node.data.targetUserId || '';
   const reason = node.data.reason || 'Нарушение правил группы';
   const targetGroupId = node.data.targetGroupId || '';
   const synonyms = node.data.synonyms || ['кикнуть', 'кик', 'исключить'];

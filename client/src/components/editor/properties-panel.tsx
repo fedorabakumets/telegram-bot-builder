@@ -139,17 +139,14 @@ export function PropertiesPanel({
       },
       ban_user: {
         synonyms: ['забанить', 'заблокировать', 'бан'],
-        targetUserId: '',
         reason: 'Нарушение правил группы',
         untilDate: 0
       },
       unban_user: {
-        synonyms: ['разбанить', 'разблокировать', 'unbан'],
-        targetUserId: ''
+        synonyms: ['разбанить', 'разблокировать', 'unbан']
       },
       mute_user: {
         synonyms: ['замутить', 'заглушить', 'мут'],
-        targetUserId: '',
         reason: 'Нарушение правил группы',
         duration: 3600,
         canSendMessages: false,
@@ -162,17 +159,14 @@ export function PropertiesPanel({
         canPinMessages2: false
       },
       unmute_user: {
-        synonyms: ['размутить', 'разглушить', 'анмут'],
-        targetUserId: ''
+        synonyms: ['размутить', 'разглушить', 'анмут']
       },
       kick_user: {
         synonyms: ['кикнуть', 'исключить', 'выгнать'],
-        targetUserId: '',
         reason: 'Нарушение правил группы'
       },
       promote_user: {
         synonyms: ['повысить', 'назначить админом', 'промоут'],
-        targetUserId: '',
         canChangeInfo: false,
         canDeleteMessages: true,
         canBanUsers: false,
@@ -186,8 +180,7 @@ export function PropertiesPanel({
         isAnonymous: false
       },
       demote_user: {
-        synonyms: ['понизить', 'снять с админки', 'демоут'],
-        targetUserId: ''
+        synonyms: ['понизить', 'снять с админки', 'демоут']
       }
     };
     
@@ -2011,72 +2004,6 @@ export function PropertiesPanel({
               selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' || 
               selectedNode.type === 'demote_user') && (
               <div className="space-y-6">
-                {/* User ID Section */}
-                <div className="bg-gradient-to-br from-red-50/50 to-orange-50/30 dark:from-red-950/20 dark:to-orange-950/10 border border-red-200/30 dark:border-red-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-                      <i className="fas fa-user text-red-600 dark:text-red-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-red-900 dark:text-red-100">Пользователь</Label>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-xs font-medium text-red-700 dark:text-red-300 mb-2 block">
-                        <i className="fas fa-hashtag mr-1"></i>
-                        Источник User ID
-                      </Label>
-                      <Select
-                        value={selectedNode.data.userIdSource || 'manual'}
-                        onValueChange={(value: 'manual' | 'variable') => 
-                          onNodeUpdate(selectedNode.id, { userIdSource: value })
-                        }
-                      >
-                        <SelectTrigger className="text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="manual">Ввести вручную</SelectItem>
-                          <SelectItem value="variable">Из переменной</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {selectedNode.data.userIdSource === 'manual' ? (
-                      <div>
-                        <Label className="text-xs font-medium text-red-700 dark:text-red-300 mb-2 block">
-                          <i className="fas fa-id-badge mr-1"></i>
-                          User ID пользователя
-                        </Label>
-                        <Input
-                          value={selectedNode.data.targetUserId || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { targetUserId: e.target.value })}
-                          className="border-red-200 dark:border-red-700 focus:border-red-500 focus:ring-red-200"
-                          placeholder="123456789"
-                        />
-                        <div className="text-xs text-red-600 dark:text-red-400 mt-1">
-                          User ID из Telegram (можно получить через @userinfobot)
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <Label className="text-xs font-medium text-red-700 dark:text-red-300 mb-2 block">
-                          <i className="fas fa-variable mr-1"></i>
-                          Имя переменной с User ID
-                        </Label>
-                        <Input
-                          value={selectedNode.data.userVariableName || ''}
-                          onChange={(e) => onNodeUpdate(selectedNode.id, { userVariableName: e.target.value })}
-                          className="border-red-200 dark:border-red-700 focus:border-red-500 focus:ring-red-200"
-                          placeholder="user_id_variable"
-                        />
-                        <div className="text-xs text-red-600 dark:text-red-400 mt-1">
-                          Переменная, содержащая User ID пользователя
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
 
                 {/* Reason Section (for ban, mute, kick) */}
                 {(selectedNode.type === 'ban_user' || selectedNode.type === 'mute_user' || selectedNode.type === 'kick_user') && (

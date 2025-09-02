@@ -1114,13 +1114,12 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               {/* Action Status */}
               <div className="flex items-center space-x-2 pt-2 border-t border-blue-200/50 dark:border-blue-700/50">
                 {(() => {
-                  const hasTargetGroup = node.data.targetGroupId && node.data.targetGroupId.trim() !== '';
                   const needsMessageId = node.type !== 'unpin_message'; // unpin не требует ID сообщения
                   const hasMessageId = node.data.targetMessageId && node.data.targetMessageId.trim() !== '';
                   const hasVariableSource = node.data.messageIdSource === 'variable' && node.data.variableName;
                   const hasLastMessageSource = node.data.messageIdSource === 'last_message';
                   const messageIdOk = !needsMessageId || hasMessageId || hasVariableSource || hasLastMessageSource;
-                  const isReady = hasTargetGroup && messageIdOk;
+                  const isReady = messageIdOk; // Группа определяется автоматически
                   
                   return (
                     <>
@@ -1133,8 +1132,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                           <span className="text-green-600 dark:text-green-400">Готово к выполнению</span>
                         ) : (
                           <span className="text-orange-600 dark:text-orange-400">
-                            {!hasTargetGroup ? 'Укажите ID группы' :
-                             needsMessageId && !messageIdOk ? 'Укажите ID сообщения или источник' :
+                            {needsMessageId && !messageIdOk ? 'Укажите ID сообщения или источник' :
                              'Требуется настройка'}
                           </span>
                         )}
@@ -1217,26 +1215,17 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               {/* Action Status */}
               <div className="flex items-center space-x-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
                 {(() => {
-                  const hasTargetGroup = node.data.targetGroupId && node.data.targetGroupId.trim() !== '';
-                  const hasTargetUser = node.data.targetUserId && node.data.targetUserId.trim() !== '';
-                  const isReady = hasTargetGroup && hasTargetUser;
+                  // Группа и пользователь определяются автоматически из контекста сообщения
+                  const isReady = true;
                   
                   return (
                     <>
                       <div className={cn(
                         "w-2 h-2 rounded-full",
-                        isReady ? "bg-green-500" : "bg-orange-500"
+                        "bg-green-500"
                       )}></div>
                       <span className="text-xs font-medium">
-                        {isReady ? (
-                          <span className="text-green-600 dark:text-green-400">Готово к выполнению</span>
-                        ) : (
-                          <span className="text-orange-600 dark:text-orange-400">
-                            {!hasTargetGroup && !hasTargetUser ? 'Укажите группу и пользователя' :
-                             !hasTargetGroup ? 'Укажите ID группы' :
-                             'Укажите ID пользователя'}
-                          </span>
-                        )}
+                        <span className="text-green-600 dark:text-green-400">Готово к выполнению</span>
                       </span>
                     </>
                   );
