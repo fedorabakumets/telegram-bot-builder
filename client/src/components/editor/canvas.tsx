@@ -965,18 +965,18 @@ export function Canvas({
           
           {/* Drop Zone Hint */}
           {nodes.length === 0 && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg rounded-2xl shadow-2xl border-2 border-dashed border-gray-300 dark:border-slate-600 p-10 w-96 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-200 dark:border-blue-800">
-                <i className="fas fa-plus text-blue-600 dark:text-blue-400 text-2xl"></i>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/20 dark:via-purple-400/20 dark:to-pink-400/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-blue-200/50 dark:border-blue-600/30 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/20">
+                <i className="fas fa-plus text-blue-600 dark:text-blue-400 text-3xl drop-shadow-sm"></i>
               </div>
-              <h3 className="text-gray-800 dark:text-gray-200 mb-3 font-semibold text-lg">Перетащите элемент сюда</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">Выберите компонент из левой панели и перетащите на холст для создания бота</p>
+              <h3 className="text-gray-800 dark:text-gray-200 mb-4 font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Перетащите элемент сюда</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Выберите компонент из левой панели и перетащите на холст для создания бота</p>
             </div>
           )}
 
           {/* Smart Connection Tools */}
           {nodes.length > 1 && (
-            <div className="absolute bottom-6 right-6 flex flex-col space-y-3 z-10">
+            <div className="absolute bottom-20 right-6 flex flex-col space-y-3 z-20">
               {/* Auto Connection Panel */}
               <Popover open={showAutoPanel} onOpenChange={setShowAutoPanel}>
                 <PopoverTrigger asChild>
@@ -1047,16 +1047,19 @@ export function Canvas({
 
         {/* Компонент листов холста внизу холста (только если включена новая система) */}
         {botData && onBotDataUpdate && (
-          <div className="absolute bottom-4 left-6 right-6 z-10">
-            <CanvasSheets
-              sheets={botData.sheets}
-              activeSheetId={botData.activeSheetId || null}
-              onSheetSelect={handleSheetSelect}
-              onSheetAdd={handleSheetAdd}
-              onSheetDelete={handleSheetDelete}
-              onSheetRename={handleSheetRename}
-              onSheetDuplicate={handleSheetDuplicate}
-            />
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30 max-w-4xl w-full px-6">
+            <div className="flex justify-center">
+              <CanvasSheets
+                sheets={botData.sheets}
+                activeSheetId={botData.activeSheetId || null}
+                onSheetSelect={handleSheetSelect}
+                onSheetAdd={handleSheetAdd}
+                onSheetDelete={handleSheetDelete}
+                onSheetRename={handleSheetRename}
+                onSheetDuplicate={handleSheetDuplicate}
+                maxVisibleTabs={6}
+              />
+            </div>
           </div>
         )}
       </div>
