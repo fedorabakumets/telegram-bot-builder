@@ -779,11 +779,11 @@ export function Canvas({
       
       {/* Панель инструментов - фиксированная панель вверху */}
       <div className="absolute top-0 z-40 pointer-events-none" style={{
-        left: sidebarVisible ? '260px' : '20px',
-        right: propertiesVisible ? '320px' : '20px'
+        left: sidebarVisible ? '280px' : '20px',
+        right: propertiesVisible ? '350px' : '20px'
       }}>
         <div className="pt-6">
-          <div className="pointer-events-auto flex items-center space-x-3 canvas-controls">
+          <div className="pointer-events-auto flex items-center space-x-2 canvas-controls overflow-x-auto">
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 flex items-center overflow-hidden zoom-controls">
               <button 
                 onClick={zoomOut}
@@ -857,7 +857,7 @@ export function Canvas({
               </button>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 flex-shrink-0">
               <button 
                 onClick={fitToContent}
                 disabled={nodes.length === 0}
