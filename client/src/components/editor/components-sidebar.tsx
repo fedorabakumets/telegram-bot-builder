@@ -406,7 +406,7 @@ const components: ComponentDefinition[] = [
     type: 'pin_message',
     defaultData: {
       targetMessageId: '',
-      messageIdSource: 'manual',
+      messageIdSource: 'last_message',
       variableName: '',
       disableNotification: false
     }
@@ -420,7 +420,7 @@ const components: ComponentDefinition[] = [
     type: 'unpin_message',
     defaultData: {
       targetMessageId: '',
-      messageIdSource: 'manual',
+      messageIdSource: 'last_message',
       variableName: ''
     }
   },
@@ -433,7 +433,7 @@ const components: ComponentDefinition[] = [
     type: 'delete_message',
     defaultData: {
       targetMessageId: '',
-      messageIdSource: 'manual',
+      messageIdSource: 'last_message',
       variableName: ''
     }
   },
@@ -446,7 +446,7 @@ const components: ComponentDefinition[] = [
     type: 'ban_user',
     defaultData: {
       targetUserId: '',
-      userIdSource: 'manual',
+      userIdSource: 'last_message',
       userVariableName: '',
       reason: 'Нарушение правил группы',
       untilDate: 0
@@ -461,7 +461,7 @@ const components: ComponentDefinition[] = [
     type: 'unban_user',
     defaultData: {
       targetUserId: '',
-      userIdSource: 'manual',
+      userIdSource: 'last_message',
       userVariableName: ''
     }
   },
@@ -474,7 +474,7 @@ const components: ComponentDefinition[] = [
     type: 'mute_user',
     defaultData: {
       targetUserId: '',
-      userIdSource: 'manual',
+      userIdSource: 'last_message',
       userVariableName: '',
       duration: 3600,
       reason: 'Нарушение правил группы',
@@ -497,7 +497,7 @@ const components: ComponentDefinition[] = [
     type: 'unmute_user',
     defaultData: {
       targetUserId: '',
-      userIdSource: 'manual',
+      userIdSource: 'last_message',
       userVariableName: ''
     }
   },
@@ -510,7 +510,7 @@ const components: ComponentDefinition[] = [
     type: 'kick_user',
     defaultData: {
       targetUserId: '',
-      userIdSource: 'manual',
+      userIdSource: 'last_message',
       userVariableName: '',
       reason: 'Нарушение правил группы'
     }
@@ -524,7 +524,7 @@ const components: ComponentDefinition[] = [
     type: 'promote_user',
     defaultData: {
       targetUserId: '',
-      userIdSource: 'manual',
+      userIdSource: 'last_message',
       userVariableName: '',
       canChangeInfo: false,
       canDeleteMessages: true,
@@ -548,7 +548,7 @@ const components: ComponentDefinition[] = [
     type: 'demote_user',
     defaultData: {
       targetUserId: '',
-      userIdSource: 'manual',
+      userIdSource: 'last_message',
       userVariableName: ''
     }
   }

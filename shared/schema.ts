@@ -510,9 +510,13 @@ export const nodeSchema = z.object({
     customParameters: z.array(z.string()).default([]), // Дополнительные параметры команды
     // Поля для управления контентом в группах
     targetMessageId: z.string().optional(), // ID сообщения для закрепления/удаления
-    messageIdSource: z.enum(['manual', 'variable', 'last_message']).default('manual'), // Источник ID сообщения
+    messageIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'), // Источник ID сообщения
     variableName: z.string().optional(), // Имя переменной с ID сообщения
     disableNotification: z.boolean().default(false), // Отключить уведомления
+    // Поля для управления пользователями в группах
+    targetUserId: z.string().optional(), // ID пользователя для модерации
+    userIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'), // Источник ID пользователя
+    userVariableName: z.string().optional(), // Имя переменной с ID пользователя
     // Дополнительные поля для новых типов узлов
     stickerUrl: z.string().optional(),
     stickerFileId: z.string().optional(),
