@@ -405,6 +405,7 @@ const components: ComponentDefinition[] = [
     color: 'bg-cyan-100 text-cyan-600',
     type: 'pin_message',
     defaultData: {
+      command: '/pin_message',
       targetMessageId: '',
       messageIdSource: 'last_message',
       variableName: '',
@@ -419,6 +420,7 @@ const components: ComponentDefinition[] = [
     color: 'bg-slate-100 text-slate-600',
     type: 'unpin_message',
     defaultData: {
+      command: '/unpin_message',
       targetMessageId: '',
       messageIdSource: 'last_message',
       variableName: ''
@@ -432,6 +434,7 @@ const components: ComponentDefinition[] = [
     color: 'bg-red-100 text-red-600',
     type: 'delete_message',
     defaultData: {
+      command: '/delete_message',
       targetMessageId: '',
       messageIdSource: 'last_message',
       variableName: ''
@@ -445,6 +448,7 @@ const components: ComponentDefinition[] = [
     color: 'bg-red-100 text-red-600',
     type: 'ban_user',
     defaultData: {
+      command: '/ban_user',
       targetUserId: '',
       userIdSource: 'last_message',
       userVariableName: '',
@@ -460,6 +464,7 @@ const components: ComponentDefinition[] = [
     color: 'bg-green-100 text-green-600',
     type: 'unban_user',
     defaultData: {
+      command: '/unban_user',
       targetUserId: '',
       userIdSource: 'last_message',
       userVariableName: ''
@@ -473,6 +478,7 @@ const components: ComponentDefinition[] = [
     color: 'bg-orange-100 text-orange-600',
     type: 'mute_user',
     defaultData: {
+      command: '/mute_user',
       targetUserId: '',
       userIdSource: 'last_message',
       userVariableName: '',
@@ -496,6 +502,7 @@ const components: ComponentDefinition[] = [
     color: 'bg-green-100 text-green-600',
     type: 'unmute_user',
     defaultData: {
+      command: '/unmute_user',
       targetUserId: '',
       userIdSource: 'last_message',
       userVariableName: ''

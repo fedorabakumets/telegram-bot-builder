@@ -128,24 +128,30 @@ export function PropertiesPanel({
       start: { command: '/start', description: 'Запустить бота', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
       command: { command: '/custom', description: 'Новая команда', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
       pin_message: { 
+        command: '/pin_message',
         synonyms: ['закрепить', 'прикрепить', 'зафиксировать'],
         disableNotification: false
       },
       unpin_message: { 
+        command: '/unpin_message',
         synonyms: ['открепить', 'отцепить', 'убрать закрепление']
       },
       delete_message: { 
+        command: '/delete_message',
         synonyms: ['удалить', 'стереть', 'убрать сообщение']
       },
       ban_user: {
+        command: '/ban_user',
         synonyms: ['забанить', 'заблокировать', 'бан'],
         reason: 'Нарушение правил группы',
         untilDate: 0
       },
       unban_user: {
+        command: '/unban_user',
         synonyms: ['разбанить', 'разблокировать', 'unbан']
       },
       mute_user: {
+        command: '/mute_user',
         synonyms: ['замутить', 'заглушить', 'мут'],
         reason: 'Нарушение правил группы',
         duration: 3600,
@@ -159,13 +165,16 @@ export function PropertiesPanel({
         canPinMessages2: false
       },
       unmute_user: {
+        command: '/unmute_user',
         synonyms: ['размутить', 'разглушить', 'анмут']
       },
       kick_user: {
+        command: '/kick_user',
         synonyms: ['кикнуть', 'исключить', 'выгнать'],
         reason: 'Нарушение правил группы'
       },
       promote_user: {
+        command: '/promote_user',
         synonyms: ['повысить', 'назначить админом', 'промоут'],
         canChangeInfo: false,
         canDeleteMessages: true,
@@ -180,6 +189,7 @@ export function PropertiesPanel({
         isAnonymous: false
       },
       demote_user: {
+        command: '/demote_user',
         synonyms: ['понизить', 'снять с админки', 'демоут']
       }
     };
@@ -791,6 +801,36 @@ export function PropertiesPanel({
                   placeholder="Например: старт, привет, начать"
                 />
               </>
+            )}
+
+            {/* Command for Content Management and User Management */}
+            {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message' ||
+              selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' || 
+              selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' || 
+              selectedNode.type === 'demote_user') && (
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground">Команда</Label>
+                <Input
+                  value={selectedNode.data.command || ''}
+                  onChange={(e) => onNodeUpdate(selectedNode.id, { command: e.target.value })}
+                  className="mt-2"
+                  placeholder={
+                    selectedNode.type === 'pin_message' ? '/pin_message' :
+                    selectedNode.type === 'unpin_message' ? '/unpin_message' :
+                    selectedNode.type === 'delete_message' ? '/delete_message' :
+                    selectedNode.type === 'ban_user' ? '/ban_user' :
+                    selectedNode.type === 'unban_user' ? '/unban_user' :
+                    selectedNode.type === 'mute_user' ? '/mute_user' :
+                    selectedNode.type === 'unmute_user' ? '/unmute_user' :
+                    selectedNode.type === 'kick_user' ? '/kick_user' :
+                    selectedNode.type === 'promote_user' ? '/promote_user' :
+                    selectedNode.type === 'demote_user' ? '/demote_user' : '/command'
+                  }
+                />
+                <div className="text-xs text-muted-foreground mt-1">
+                  Основная команда для вызова этого действия
+                </div>
+              </div>
             )}
 
             {/* Enhanced Media Settings */}
