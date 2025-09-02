@@ -2003,11 +2003,18 @@ export function PropertiesPanel({
                   </div>
                   
                   <SynonymEditor
-                    synonyms={selectedNode.data.synonyms || (
-                      selectedNode.type === 'pin_message' ? ['закрепить', 'прикрепить', 'зафиксировать'] :
-                      selectedNode.type === 'unpin_message' ? ['открепить', 'отцепить', 'убрать закрепление'] :
-                      selectedNode.type === 'delete_message' ? ['удалить', 'стереть', 'убрать сообщение'] : []
-                    )}
+                    synonyms={(() => {
+                      if (!selectedNode.data.synonyms || selectedNode.data.synonyms.length === 0) {
+                        const defaultSynonyms = selectedNode.type === 'pin_message' ? ['закрепить', 'прикрепить', 'зафиксировать'] :
+                                                selectedNode.type === 'unpin_message' ? ['открепить', 'отцепить', 'убрать закрепление'] :
+                                                selectedNode.type === 'delete_message' ? ['удалить', 'стереть', 'убрать сообщение'] : [];
+                        if (defaultSynonyms.length > 0) {
+                          setTimeout(() => onNodeUpdate(selectedNode.id, { synonyms: defaultSynonyms }), 0);
+                          return defaultSynonyms;
+                        }
+                      }
+                      return selectedNode.data.synonyms || [];
+                    })()} 
                     onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
                     title="Альтернативные команды"
                     description={
@@ -2296,15 +2303,22 @@ export function PropertiesPanel({
                   </div>
                   
                   <SynonymEditor
-                    synonyms={selectedNode.data.synonyms || (
-                      selectedNode.type === 'ban_user' ? ['забанить', 'заблокировать', 'бан'] :
-                      selectedNode.type === 'unban_user' ? ['разбанить', 'разблокировать', 'unbан'] :
-                      selectedNode.type === 'mute_user' ? ['замутить', 'заглушить', 'мут'] :
-                      selectedNode.type === 'unmute_user' ? ['размутить', 'разглушить', 'анмут'] :
-                      selectedNode.type === 'kick_user' ? ['кикнуть', 'исключить', 'выгнать'] :
-                      selectedNode.type === 'promote_user' ? ['повысить', 'назначить админом', 'промоут'] :
-                      selectedNode.type === 'demote_user' ? ['понизить', 'снять с админки', 'демоут'] : []
-                    )}
+                    synonyms={(() => {
+                      if (!selectedNode.data.synonyms || selectedNode.data.synonyms.length === 0) {
+                        const defaultSynonyms = selectedNode.type === 'ban_user' ? ['забанить', 'заблокировать', 'бан'] :
+                                                selectedNode.type === 'unban_user' ? ['разбанить', 'разблокировать', 'unbан'] :
+                                                selectedNode.type === 'mute_user' ? ['замутить', 'заглушить', 'мут'] :
+                                                selectedNode.type === 'unmute_user' ? ['размутить', 'разглушить', 'анмут'] :
+                                                selectedNode.type === 'kick_user' ? ['кикнуть', 'исключить', 'выгнать'] :
+                                                selectedNode.type === 'promote_user' ? ['повысить', 'назначить админом', 'промоут'] :
+                                                selectedNode.type === 'demote_user' ? ['понизить', 'снять с админки', 'демоут'] : [];
+                        if (defaultSynonyms.length > 0) {
+                          setTimeout(() => onNodeUpdate(selectedNode.id, { synonyms: defaultSynonyms }), 0);
+                          return defaultSynonyms;
+                        }
+                      }
+                      return selectedNode.data.synonyms || [];
+                    })()} 
                     onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
                     title="Альтернативные команды"
                     description={
