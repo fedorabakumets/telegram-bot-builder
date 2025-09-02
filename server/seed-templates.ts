@@ -4505,7 +4505,7 @@ async function seedDefaultTemplates(force = false) {
                     {
                       id: "btn-content",
                       text: "📝 Управление контентом",
-                      action: "intersheet_goto",
+                      action: "goto",
                       targetSheetId: "content_sheet",
                       target: "content_management",
                       buttonType: "navigation"
@@ -4513,7 +4513,7 @@ async function seedDefaultTemplates(force = false) {
                     {
                       id: "btn-users",
                       text: "👥 Управление пользователями",
-                      action: "intersheet_goto",
+                      action: "goto",
                       targetSheetId: "users_sheet",
                       target: "user_management",
                       buttonType: "navigation"
@@ -4600,7 +4600,7 @@ async function seedDefaultTemplates(force = false) {
                     {
                       id: "btn-back-start",
                       text: "⬅️ Назад в главное меню",
-                      action: "intersheet_goto",
+                      action: "goto",
                       targetSheetId: "main_sheet",
                       target: "start",
                       buttonType: "navigation"
@@ -4727,7 +4727,7 @@ async function seedDefaultTemplates(force = false) {
                     {
                       id: "btn-back-start-users",
                       text: "⬅️ Назад в главное меню",
-                      action: "intersheet_goto",
+                      action: "goto",
                       targetSheetId: "main_sheet",
                       target: "start",
                       buttonType: "navigation"
