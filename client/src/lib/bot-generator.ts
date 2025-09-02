@@ -931,11 +931,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        logging.error(f"Ошибка получения пользователя из БД: {e}")\n';
   code += '        return None\n\n';
 
-  // Добавляем функцию handle_command_start как алиас для start_handler
-  code += '# Алиас функция для callback обработчиков\n';
+  // Добавляем функции handle_command_ как алиасы для handlers
+  code += '# Алиас функции для callback обработчиков\n';
   code += 'async def handle_command_start(message):\n';
   code += '    """Алиас для start_handler, используется в callback обработчиках"""\n';
   code += '    await start_handler(message)\n\n';
+  
+  // Добавляем алиасы для всех команд
+  const commandAliasNodes = (nodes || []).filter(node => node.type === 'command' && node.data.command);
+  commandAliasNodes.forEach(node => {
+    const command = node.data.command.replace('/', '');
+    const functionName = command.replace(/[^a-zA-Z0-9_]/g, '_');
+    code += `async def handle_command_${functionName}(message):\n`;
+    code += `    """Алиас для ${functionName}_handler, используется в callback обработчиках"""\n`;
+    code += `    await ${functionName}_handler(message)\n\n`;
+  });
 
   code += 'async def update_user_data_in_db(user_id: int, data_key: str, data_value):\n';
   code += '    """Обновляет пользовательские данные в базе данных"""\n';
@@ -6921,6 +6931,7 @@ function generateCommandHandler(node: Node): string {
   const messageText = node.data.messageText || "🤖 Доступные команды:\n\n/start - Начать работу\n/help - Эта справка\n/settings - Настройки";
   const cleanedMessageText = stripHtmlTags(messageText); // Удаляем HTML теги
   const formattedText = formatTextForPython(cleanedMessageText);
+  const parseMode = getParseMode(node.data.formatMode || (node.data.markdown ? 'markdown' : ''));
   
   if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
     code += '\n    # Проверяем условные сообщения\n';
