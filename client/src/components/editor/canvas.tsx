@@ -617,276 +617,6 @@ export function Canvas({
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
       <div className="absolute inset-0 overflow-auto p-8">
-        {/* Enhanced Canvas Controls */}
-        <div className="absolute top-6 left-6 flex items-center space-x-3 z-10 canvas-controls">
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 flex items-center overflow-hidden zoom-controls">
-            <button 
-              onClick={zoomOut}
-              disabled={zoom <= 1}
-              className="px-3 py-2 zoom-button disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Уменьшить масштаб (Ctrl + -)"
-            >
-              <i className="fas fa-search-minus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
-            </button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-x border-gray-200 dark:border-slate-700 font-mono min-w-[4rem] text-center bg-gray-50 dark:bg-slate-800/50 zoom-indicator group"
-                  title="Выбрать масштаб"
-                >
-                  <span className="flex items-center space-x-1">
-                    <span>{Math.round(zoom)}%</span>
-                    <i className="fas fa-chevron-down text-xs opacity-50 group-hover:opacity-100 transition-opacity"></i>
-                  </span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" className="w-40 p-2">
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-gray-600 dark:text-gray-400 px-2 py-1">Быстрый масштаб</div>
-                  {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200].map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => setZoomLevel(level)}
-                      className={`w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
-                        Math.abs(zoom - level) < 1 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{level}%</span>
-                        {level === 100 && <span className="text-xs opacity-60">По умолчанию</span>}
-                        {level === 200 && <span className="text-xs opacity-60">Максимум</span>}
-                        {level === 1 && <span className="text-xs opacity-60">Минимум</span>}
-                      </div>
-                    </button>
-                  ))}
-                  <div className="border-t border-gray-200 dark:border-slate-600 my-1"></div>
-                  <button
-                    onClick={resetZoom}
-                    className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-blue-600 dark:text-blue-400"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <i className="fas fa-home text-xs"></i>
-                      <span>Сбросить вид</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={fitToContent}
-                    disabled={nodes.length === 0}
-                    className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-green-600 dark:text-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <i className="fas fa-expand-arrows-alt text-xs"></i>
-                      <span>Уместить всё</span>
-                    </div>
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
-            <button 
-              onClick={zoomIn}
-              disabled={zoom >= 200}
-              className="px-3 py-2 zoom-button disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Увеличить масштаб (Ctrl + +)"
-            >
-              <i className="fas fa-search-plus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
-            </button>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={fitToContent}
-              disabled={nodes.length === 0}
-              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Уместить в экран (Ctrl + 1)"
-            >
-              <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
-            </button>
-
-            {onFullscreen && (
-              <button 
-                onClick={onFullscreen}
-                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
-                title="Полноэкранный режим (F11)"
-              >
-                <i className="fas fa-expand text-gray-600 dark:text-gray-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
-              </button>
-            )}
-
-            <button 
-              onClick={onUndo}
-              disabled={!canUndo}
-              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Отменить действие (Ctrl + Z)"
-            >
-              <i className="fas fa-undo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
-            </button>
-
-            <button 
-              onClick={onRedo}
-              disabled={!canRedo}
-              className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Повторить действие (Ctrl + Y)"
-            >
-              <i className="fas fa-redo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
-            </button>
-
-            {onSave && (
-              <button 
-                onClick={onSave}
-                disabled={isSaving}
-                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Сохранить проект (Ctrl + S)"
-              >
-                {isSaving ? (
-                  <i className="fas fa-spinner fa-spin text-gray-600 dark:text-gray-400 text-sm"></i>
-                ) : (
-                  <i className="fas fa-save text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
-                )}
-              </button>
-            )}
-
-            {/* Межпроектное копирование/вставка */}
-            {onCopyToClipboard && selectedNodeId && (
-              <button 
-                onClick={() => onCopyToClipboard([selectedNodeId])}
-                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
-                title="Копировать в буфер (Shift + Ctrl + C)"
-              >
-                <i className="fas fa-clipboard text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
-              </button>
-            )}
-
-            {onPasteFromClipboard && hasClipboardData && (
-              <button 
-                onClick={onPasteFromClipboard}
-                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
-                title="Вставить из буфера (Shift + Ctrl + V)"
-              >
-                <i className="fas fa-paste text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
-              </button>
-            )}
-
-            {/* Кнопки управления интерфейсом - показываем только когда шапка скрыта */}
-            {headerVisible === false && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
-              <div className="flex items-center space-x-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 p-1">
-                {onToggleHeader && (
-                  <button
-                    onClick={onToggleHeader}
-                    className={`p-2 rounded-md transition-all duration-200 ${
-                      headerVisible 
-                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
-                    }`}
-                    title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
-                  >
-                    <Navigation className="w-4 h-4" />
-                  </button>
-                )}
-                
-                {onToggleSidebar && (
-                  <button
-                    onClick={onToggleSidebar}
-                    className={`p-2 rounded-md transition-all duration-200 ${
-                      sidebarVisible 
-                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
-                    }`}
-                    title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
-                  >
-                    <Sidebar className="w-4 h-4" />
-                  </button>
-                )}
-                
-                {onToggleCanvas && (
-                  <button
-                    onClick={onToggleCanvas}
-                    className={`p-2 rounded-md transition-all duration-200 ${
-                      canvasVisible 
-                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
-                    }`}
-                    title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
-                  >
-                    <Monitor className="w-4 h-4" />
-                  </button>
-                )}
-                
-                {onToggleProperties && (
-                  <button
-                    onClick={onToggleProperties}
-                    className={`p-2 rounded-md transition-all duration-200 ${
-                      propertiesVisible 
-                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
-                    }`}
-                    title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
-                  >
-                    <Sliders className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            )}
-
-          </div>
-          
-          {/* Zoom Info and Help */}
-          <div className="flex items-center space-x-2">
-            {zoom !== 100 && (
-              <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
-                <div className="flex items-center space-x-2">
-                  <i className="fas fa-info-circle text-blue-500"></i>
-                  <span>
-                    {zoom > 100 ? 'Увеличено' : 'Уменьшено'} до {Math.round(zoom)}%
-                  </span>
-                  <span className="text-gray-400 dark:text-gray-500">•</span>
-                  <span>Ctrl+0 для сброса</span>
-                </div>
-              </div>
-            )}
-            
-            {/* Zoom Help */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <button className="p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group">
-                  <i className="fas fa-question-circle text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-500 transition-colors"></i>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent side="bottom" className="w-64 p-3">
-                <div className="space-y-3">
-                  <h4 className="font-medium text-sm">Управление масштабом</h4>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Увеличить:</span>
-                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + +</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Уменьшить:</span>
-                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + -</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Сбросить:</span>
-                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 0</code>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Уместить всё:</span>
-                      <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 1</code>
-                    </div>
-                    <div className="border-t border-gray-200 dark:border-slate-600 pt-2 mt-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Масштабирование:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + колесо</code>
-                      </div>
-                      <div className="flex justify-between mt-1">
-                        <span className="text-gray-600 dark:text-gray-400">Панорамирование:</span>
-                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Alt + ЛКМ</code>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
         
         {/* Enhanced Canvas Grid */}
         <div 
@@ -1045,6 +775,284 @@ export function Canvas({
           )}
         </div>
 
+      </div>
+      
+      {/* Панель инструментов - фиксированная панель вверху */}
+      <div className="absolute top-0 z-40 pointer-events-none" style={{
+        left: sidebarVisible ? '260px' : '20px',
+        right: propertiesVisible ? '320px' : '20px'
+      }}>
+        <div className="pt-6">
+          <div className="pointer-events-auto flex items-center space-x-3 canvas-controls">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 flex items-center overflow-hidden zoom-controls">
+              <button 
+                onClick={zoomOut}
+                disabled={zoom <= 1}
+                className="px-3 py-2 zoom-button disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Уменьшить масштаб (Ctrl + -)"
+              >
+                <i className="fas fa-search-minus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+              </button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-x border-gray-200 dark:border-slate-700 font-mono min-w-[4rem] text-center bg-gray-50 dark:bg-slate-800/50 zoom-indicator group"
+                    title="Выбрать масштаб"
+                  >
+                    <span className="flex items-center space-x-1">
+                      <span>{Math.round(zoom)}%</span>
+                      <i className="fas fa-chevron-down text-xs opacity-50 group-hover:opacity-100 transition-opacity"></i>
+                    </span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" className="w-40 p-2">
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600 dark:text-gray-400 px-2 py-1">Быстрый масштаб</div>
+                    {[1, 5, 10, 25, 50, 75, 100, 125, 150, 200].map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => setZoomLevel(level)}
+                        className={`w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors ${
+                          Math.abs(zoom - level) < 1 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{level}%</span>
+                          {level === 100 && <span className="text-xs opacity-60">По умолчанию</span>}
+                          {level === 200 && <span className="text-xs opacity-60">Максимум</span>}
+                          {level === 1 && <span className="text-xs opacity-60">Минимум</span>}
+                        </div>
+                      </button>
+                    ))}
+                    <div className="border-t border-gray-200 dark:border-slate-600 my-1"></div>
+                    <button
+                      onClick={resetZoom}
+                      className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-blue-600 dark:text-blue-400"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <i className="fas fa-home text-xs"></i>
+                        <span>Сбросить вид</span>
+                      </div>
+                    </button>
+                    <button
+                      onClick={fitToContent}
+                      disabled={nodes.length === 0}
+                      className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-green-600 dark:text-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <i className="fas fa-expand-arrows-alt text-xs"></i>
+                        <span>Уместить всё</span>
+                      </div>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <button 
+                onClick={zoomIn}
+                disabled={zoom >= 200}
+                className="px-3 py-2 zoom-button disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Увеличить масштаб (Ctrl + +)"
+              >
+                <i className="fas fa-search-plus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+              </button>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={fitToContent}
+                disabled={nodes.length === 0}
+                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Уместить в экран (Ctrl + 1)"
+              >
+                <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+              </button>
+
+              {onFullscreen && (
+                <button 
+                  onClick={onFullscreen}
+                  className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+                  title="Полноэкранный режим (F11)"
+                >
+                  <i className="fas fa-expand text-gray-600 dark:text-gray-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
+                </button>
+              )}
+
+              <button 
+                onClick={onUndo}
+                disabled={!canUndo}
+                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Отменить действие (Ctrl + Z)"
+              >
+                <i className="fas fa-undo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+              </button>
+
+              <button 
+                onClick={onRedo}
+                disabled={!canRedo}
+                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Повторить действие (Ctrl + Y)"
+              >
+                <i className="fas fa-redo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+              </button>
+
+              {onSave && (
+                <button 
+                  onClick={onSave}
+                  disabled={isSaving}
+                  className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Сохранить проект (Ctrl + S)"
+                >
+                  {isSaving ? (
+                    <i className="fas fa-spinner fa-spin text-gray-600 dark:text-gray-400 text-sm"></i>
+                  ) : (
+                    <i className="fas fa-save text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
+                  )}
+                </button>
+              )}
+
+              {/* Межпроектное копирование/вставка */}
+              {onCopyToClipboard && selectedNodeId && (
+                <button 
+                  onClick={() => onCopyToClipboard([selectedNodeId])}
+                  className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+                  title="Копировать в буфер (Shift + Ctrl + C)"
+                >
+                  <i className="fas fa-clipboard text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
+                </button>
+              )}
+
+              {onPasteFromClipboard && hasClipboardData && (
+                <button 
+                  onClick={onPasteFromClipboard}
+                  className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+                  title="Вставить из буфера (Shift + Ctrl + V)"
+                >
+                  <i className="fas fa-paste text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
+                </button>
+              )}
+
+              {/* Кнопки управления интерфейсом - показываем только когда шапка скрыта */}
+              {headerVisible === false && (onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
+                <div className="flex items-center space-x-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 p-1">
+                  {onToggleHeader && (
+                    <button
+                      onClick={onToggleHeader}
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        headerVisible 
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                      }`}
+                      title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
+                    >
+                      <Navigation className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {onToggleSidebar && (
+                    <button
+                      onClick={onToggleSidebar}
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        sidebarVisible 
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                      }`}
+                      title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
+                    >
+                      <Sidebar className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {onToggleCanvas && (
+                    <button
+                      onClick={onToggleCanvas}
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        canvasVisible 
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                      }`}
+                      title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
+                    >
+                      <Monitor className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {onToggleProperties && (
+                    <button
+                      onClick={onToggleProperties}
+                      className={`p-2 rounded-md transition-all duration-200 ${
+                        propertiesVisible 
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
+                      }`}
+                      title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
+                    >
+                      <Sliders className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              )}
+
+            </div>
+            
+            {/* Zoom Info and Help */}
+            <div className="flex items-center space-x-2">
+              {zoom !== 100 && (
+                <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 px-3 py-2 text-xs text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center space-x-2">
+                    <i className="fas fa-info-circle text-blue-500"></i>
+                    <span>
+                      {zoom > 100 ? 'Увеличено' : 'Уменьшено'} до {Math.round(zoom)}%
+                    </span>
+                    <span className="text-gray-400 dark:text-gray-500">•</span>
+                    <span>Ctrl+0 для сброса</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Zoom Help */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group">
+                    <i className="fas fa-question-circle text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-500 transition-colors"></i>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="bottom" className="w-64 p-3">
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm">Управление масштабом</h4>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Увеличить:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + +</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Уменьшить:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + -</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Сбросить:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 0</code>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Уместить всё:</span>
+                        <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + 1</code>
+                      </div>
+                      <div className="border-t border-gray-200 dark:border-slate-600 pt-2 mt-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Масштабирование:</span>
+                          <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Ctrl + колесо</code>
+                        </div>
+                        <div className="flex justify-between mt-1">
+                          <span className="text-gray-600 dark:text-gray-400">Панорамирование:</span>
+                          <code className="bg-gray-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">Alt + ЛКМ</code>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        </div>
       </div>
       
       {/* Компонент листов холста - фиксированная панель внизу */}
