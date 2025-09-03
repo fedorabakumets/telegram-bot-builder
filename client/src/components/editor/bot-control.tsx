@@ -193,7 +193,16 @@ function BotProfileEditor({
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       
       // Ждем, чтобы изменения применились в Telegram API и бот перезапустился
-      setTimeout(() => {
+      setTimeout(async () => {
+        // Принудительно запрашиваем свежие данные, обходя кэш
+        try {
+          const freshBotInfo = await apiRequest('GET', `/api/projects/${projectId}/bot/info?_t=${Date.now()}`);
+          // Обновляем кэш вручную с новыми данными
+          queryClient.setQueryData([`/api/projects/${projectId}/bot/info`], freshBotInfo);
+        } catch (error) {
+          console.warn('Не удалось получить свежие данные бота:', error);
+        }
+        
         queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
         onProfileUpdated();
       }, 3000);
@@ -767,7 +776,16 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       <BotProfile 
         projectId={projectId}
         botInfo={botInfo}
-        onRefresh={() => refetchBotInfo()}
+        onRefresh={async () => {
+          // Принудительное обновление с обходом кэша
+          try {
+            const freshBotInfo = await apiRequest('GET', `/api/projects/${projectId}/bot/info?_t=${Date.now()}`);
+            queryClient.setQueryData([`/api/projects/${projectId}/bot/info`], freshBotInfo);
+          } catch (error) {
+            console.warn('Не удалось получить свежие данные бота:', error);
+          }
+          refetchBotInfo();
+        }}
         isRefreshing={false}
         fallbackName={projectName}
       />
