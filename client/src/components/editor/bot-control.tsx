@@ -175,7 +175,9 @@ function BotProfileEditor({
         title: "Успешно",
         description: "Имя бота обновлено",
       });
+      // Принудительно обновляем данные бота
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+      queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       onProfileUpdated();
     },
     onError: (error: any) => {
@@ -198,7 +200,9 @@ function BotProfileEditor({
         title: "Успешно",
         description: "Описание бота обновлено",
       });
+      // Принудительно обновляем данные бота
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+      queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       onProfileUpdated();
     },
     onError: (error: any) => {
@@ -221,7 +225,9 @@ function BotProfileEditor({
         title: "Успешно",
         description: "Краткое описание бота обновлено",
       });
+      // Принудительно обновляем данные бота
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+      queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       onProfileUpdated();
     },
     onError: (error: any) => {
@@ -247,6 +253,9 @@ function BotProfileEditor({
       }
       
       setIsOpen(false);
+      // Принудительно обновляем данные после сохранения всех изменений
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+      queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
     } catch (error) {
       // Ошибки уже обработаны в мутациях
     }
