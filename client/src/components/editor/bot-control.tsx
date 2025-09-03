@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit, Settings, AlertTriangle, Activity } from 'lucide-react';
+import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit, Settings, AlertTriangle, Activity, Bot, RefreshCw } from 'lucide-react';
 import { TokenManager } from './token-manager';
 
 interface BotControlProps {
@@ -57,6 +57,209 @@ interface DefaultTokenResponse {
   token: BotToken | null;
 }
 
+interface BotInfo {
+  id: number;
+  is_bot: boolean;
+  first_name: string;
+  username: string;
+  can_join_groups: boolean;
+  can_read_all_group_messages: boolean;
+  supports_inline_queries: boolean;
+  description?: string;
+  short_description?: string;
+  photoUrl?: string;
+  photo?: {
+    small_file_id: string;
+    small_file_unique_id: string;
+    big_file_id: string;
+    big_file_unique_id: string;
+  };
+}
+
+// Компонент аватарки бота с fallback
+function BotAvatar({ 
+  photoUrl, 
+  botName, 
+  size = 40, 
+  className = "" 
+}: { 
+  photoUrl?: string | null; 
+  botName: string; 
+  size?: number; 
+  className?: string; 
+}) {
+  const [imageError, setImageError] = useState(false);
+  
+  // Получаем первые буквы названия бота для fallback
+  const initials = botName
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  
+  const handleImageError = () => {
+    setImageError(true);
+  };
+  
+  // Если есть аватарка, показываем её
+  const showImage = photoUrl && !imageError;
+  
+  if (showImage) {
+    return (
+      <div 
+        className={`relative rounded-lg overflow-hidden flex-shrink-0 ${className}`}
+        style={{ width: size, height: size }}
+      >
+        <img 
+          src={photoUrl}
+          alt={`${botName} avatar`}
+          className="w-full h-full object-cover"
+          onError={handleImageError}
+        />
+      </div>
+    );
+  }
+  
+  // Fallback: показываем инициалы или иконку бота
+  return (
+    <div 
+      className={`bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-lg flex items-center justify-center flex-shrink-0 ${className}`}
+      style={{ width: size, height: size }}
+    >
+      {initials ? (
+        <span 
+          className="text-white font-semibold"
+          style={{ fontSize: size * 0.4 }}
+        >
+          {initials}
+        </span>
+      ) : (
+        <Bot 
+          className="text-white" 
+          size={size * 0.5} 
+        />
+      )}
+    </div>
+  );
+}
+
+// Компонент профиля бота
+function BotProfile({ 
+  botInfo, 
+  onRefresh, 
+  isRefreshing,
+  fallbackName = 'Бот'
+}: { 
+  botInfo?: BotInfo | null; 
+  onRefresh: () => void; 
+  isRefreshing: boolean; 
+  fallbackName?: string;
+}) {
+  if (!botInfo) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <BotAvatar 
+                botName={fallbackName} 
+                size={48}
+              />
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Информация о боте недоступна
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Запустите бота для получения данных
+                </p>
+              </div>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Обновить
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-4">
+            <BotAvatar 
+              photoUrl={botInfo.photoUrl} 
+              botName={botInfo.first_name} 
+              size={56}
+            />
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg leading-tight mb-1">{botInfo.first_name}</h3>
+              <div className="flex items-center gap-2">
+                <Badge variant="default" className="text-xs">
+                  @{botInfo.username}
+                </Badge>
+                {botInfo.is_bot && (
+                  <Badge variant="outline" className="text-xs">
+                    Бот
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+            title="Обновить информацию о боте"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+        
+        <div className="space-y-3">
+          {/* Описание бота */}
+          {(botInfo.description || botInfo.short_description) && (
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {botInfo.description || botInfo.short_description}
+              </p>
+            </div>
+          )}
+          
+          {/* Возможности бота */}
+          <div className="flex flex-wrap gap-2">
+            {botInfo.can_join_groups && (
+              <Badge variant="secondary" className="text-xs">
+                Может присоединяться к группам
+              </Badge>
+            )}
+            {botInfo.can_read_all_group_messages && (
+              <Badge variant="secondary" className="text-xs">
+                Читает все сообщения
+              </Badge>
+            )}
+            {botInfo.supports_inline_queries && (
+              <Badge variant="secondary" className="text-xs">
+                Поддерживает inline запросы
+              </Badge>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function BotControl({ projectId, projectName }: BotControlProps) {
   const [token, setToken] = useState('');
   const [useNewToken, setUseNewToken] = useState(false);
@@ -84,6 +287,17 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   // Получаем токен по умолчанию
   const { data: defaultTokenData } = useQuery<DefaultTokenResponse>({
     queryKey: [`/api/projects/${projectId}/tokens/default`],
+  });
+
+  const isRunning = botStatus?.status === 'running';
+  const isError = botStatus?.status === 'error';
+  const isStopped = botStatus?.status === 'stopped' || !botStatus?.instance;
+
+  // Получаем информацию о боте (getMe)
+  const { data: botInfo, refetch: refetchBotInfo } = useQuery<BotInfo>({
+    queryKey: [`/api/projects/${projectId}/bot/info`],
+    enabled: isRunning, // Запрашиваем только когда бот запущен
+    refetchInterval: isRunning ? 30000 : false, // Обновляем каждые 30 секунд когда бот работает
   });
 
   // Запуск бота
@@ -153,10 +367,6 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       });
     },
   });
-
-  const isRunning = botStatus?.status === 'running';
-  const isError = botStatus?.status === 'error';
-  const isStopped = botStatus?.status === 'stopped' || !botStatus?.instance;
 
   const handleStart = () => {
     if (startMode === 'new') {
@@ -320,29 +530,39 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {getStatusIcon()}
-          Управление ботом
-          {isRunning && (
-            <div className="flex items-center gap-1 ml-auto">
-              <Activity className="w-4 h-4 text-green-500 animate-pulse" />
-              <span className="text-sm font-normal text-green-600 dark:text-green-400">
-                Активен
+    <div className="w-full space-y-6">
+      {/* Профиль бота */}
+      <BotProfile 
+        botInfo={botInfo}
+        onRefresh={() => refetchBotInfo()}
+        isRefreshing={false}
+        fallbackName={projectName}
+      />
+
+      {/* Управление ботом */}
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {getStatusIcon()}
+            Управление ботом
+            {isRunning && (
+              <div className="flex items-center gap-1 ml-auto">
+                <Activity className="w-4 h-4 text-green-500 animate-pulse" />
+                <span className="text-sm font-normal text-green-600 dark:text-green-400">
+                  Активен
+                </span>
+              </div>
+            )}
+          </CardTitle>
+          <CardDescription>
+            Запустите или остановите бота "{projectName}"
+            {isRunning && botStatus?.instance?.processId && (
+              <span className="block text-xs text-muted-foreground mt-1">
+                Процесс ID: {botStatus.instance.processId}
               </span>
-            </div>
-          )}
-        </CardTitle>
-        <CardDescription>
-          Запустите или остановите бота "{projectName}"
-          {isRunning && botStatus?.instance?.processId && (
-            <span className="block text-xs text-muted-foreground mt-1">
-              Процесс ID: {botStatus.instance.processId}
-            </span>
-          )}
-        </CardDescription>
-      </CardHeader>
+            )}
+          </CardDescription>
+        </CardHeader>
       <CardContent className="space-y-4">
         {/* Предупреждение о множественных процессах */}
         {isRunning && startBotMutation.isPending && (
@@ -605,5 +825,6 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }

@@ -3134,6 +3134,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get bot information (getMe)
+  app.get("/api/projects/:id/bot/info", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      
+      // Get bot token for this project
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found. Please add a token first." });
+      }
+
+      // Get bot information via Telegram Bot API
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getMe`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to get bot info", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      const botInfo = result.result;
+      
+      // If bot has photo, get the file URL
+      let photoUrl = null;
+      if (botInfo.photo && botInfo.photo.big_file_id) {
+        try {
+          // Get file info
+          const fileResponse = await fetch(`https://api.telegram.org/bot${defaultToken.token}/getFile`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              file_id: botInfo.photo.big_file_id
+            })
+          });
+          
+          const fileResult = await fileResponse.json();
+          
+          if (fileResponse.ok && fileResult.result && fileResult.result.file_path) {
+            // Construct full photo URL
+            photoUrl = `https://api.telegram.org/file/bot${defaultToken.token}/${fileResult.result.file_path}`;
+          }
+        } catch (photoError) {
+          console.warn("Failed to get bot photo URL:", photoError);
+          // Continue without photo - not a critical error
+        }
+      }
+
+      // Add photo URL to response
+      const responseData = {
+        ...botInfo,
+        photoUrl: photoUrl
+      };
+
+      res.json(responseData);
+    } catch (error) {
+      console.error("Failed to get bot info:", error);
+      res.status(500).json({ message: "Failed to get bot info" });
+    }
+  });
+
   // Telegram Bot API integration for groups
   // Send message to group
   app.post("/api/projects/:projectId/bot/send-group-message", async (req, res) => {
