@@ -605,9 +605,6 @@ export const nodeSchema = z.object({
     placeholder: z.string().optional(), // Подсказка для ввода
     defaultValue: z.string().optional(), // Значение по умолчанию
     
-    // Дополнительные настройки клавиатуры
-    resizeKeyboard: z.boolean().default(true), // Автоматически изменять размер клавиатуры
-    oneTimeKeyboard: z.boolean().default(false), // Скрывать клавиатуру после использования
     
     // Настройки пользовательских действий
     enableUserActions: z.boolean().default(false), // Включить пользовательские действия
