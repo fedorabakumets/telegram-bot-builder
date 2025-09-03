@@ -3205,6 +3205,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update bot name
+  app.put("/api/projects/:id/bot/name", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { name, language_code = 'ru' } = req.body;
+
+      // Get bot token for this project
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found. Please add a token first." });
+      }
+
+      // Update bot name via Telegram Bot API
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setMyName`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, language_code })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to update bot name", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ message: "Bot name updated successfully" });
+    } catch (error) {
+      console.error("Failed to update bot name:", error);
+      res.status(500).json({ message: "Failed to update bot name" });
+    }
+  });
+
+  // Update bot description
+  app.put("/api/projects/:id/bot/description", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { description, language_code = 'ru' } = req.body;
+
+      // Get bot token for this project
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found. Please add a token first." });
+      }
+
+      // Update bot description via Telegram Bot API
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setMyDescription`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ description, language_code })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to update bot description", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ message: "Bot description updated successfully" });
+    } catch (error) {
+      console.error("Failed to update bot description:", error);
+      res.status(500).json({ message: "Failed to update bot description" });
+    }
+  });
+
+  // Update bot short description
+  app.put("/api/projects/:id/bot/short-description", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { short_description, language_code = 'ru' } = req.body;
+
+      // Get bot token for this project
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found. Please add a token first." });
+      }
+
+      // Update bot short description via Telegram Bot API
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setMyShortDescription`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ short_description, language_code })
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to update bot short description", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      res.json({ message: "Bot short description updated successfully" });
+    } catch (error) {
+      console.error("Failed to update bot short description:", error);
+      res.status(500).json({ message: "Failed to update bot short description" });
+    }
+  });
+
   // Telegram Bot API integration for groups
   // Send message to group
   app.post("/api/projects/:projectId/bot/send-group-message", async (req, res) => {

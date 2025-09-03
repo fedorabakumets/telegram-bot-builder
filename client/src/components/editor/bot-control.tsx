@@ -6,11 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit, Settings, AlertTriangle, Activity, Bot, RefreshCw } from 'lucide-react';
+import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit, Edit2, Settings, AlertTriangle, Activity, Bot, RefreshCw, Check, X } from 'lucide-react';
 import { TokenManager } from './token-manager';
 
 interface BotControlProps {
@@ -144,13 +146,221 @@ function BotAvatar({
   );
 }
 
+// Компонент для редактирования профиля бота
+function BotProfileEditor({ 
+  projectId, 
+  botInfo, 
+  onProfileUpdated 
+}: { 
+  projectId: number; 
+  botInfo: BotInfo; 
+  onProfileUpdated: () => void; 
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState(botInfo.first_name || '');
+  const [description, setDescription] = useState(botInfo.description || '');
+  const [shortDescription, setShortDescription] = useState(botInfo.short_description || '');
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Мутация для обновления имени бота
+  const updateNameMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      const response = await apiRequest(`/api/projects/${projectId}/bot/name`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName })
+      });
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Успешно",
+        description: "Имя бота обновлено",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+      onProfileUpdated();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось обновить имя бота",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Мутация для обновления описания бота
+  const updateDescriptionMutation = useMutation({
+    mutationFn: async (newDescription: string) => {
+      const response = await apiRequest(`/api/projects/${projectId}/bot/description`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: newDescription })
+      });
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Успешно",
+        description: "Описание бота обновлено",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+      onProfileUpdated();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось обновить описание бота",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Мутация для обновления краткого описания бота
+  const updateShortDescriptionMutation = useMutation({
+    mutationFn: async (newShortDescription: string) => {
+      const response = await apiRequest(`/api/projects/${projectId}/bot/short-description`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ short_description: newShortDescription })
+      });
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Успешно",
+        description: "Краткое описание бота обновлено",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+      onProfileUpdated();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Ошибка",
+        description: error.message || "Не удалось обновить краткое описание бота",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSave = async () => {
+    try {
+      // Обновляем только те поля, которые изменились
+      if (name !== botInfo.first_name) {
+        await updateNameMutation.mutateAsync(name);
+      }
+      if (description !== (botInfo.description || '')) {
+        await updateDescriptionMutation.mutateAsync(description);
+      }
+      if (shortDescription !== (botInfo.short_description || '')) {
+        await updateShortDescriptionMutation.mutateAsync(shortDescription);
+      }
+      
+      setIsOpen(false);
+    } catch (error) {
+      // Ошибки уже обработаны в мутациях
+    }
+  };
+
+  const handleCancel = () => {
+    // Сбрасываем значения к исходным
+    setName(botInfo.first_name || '');
+    setDescription(botInfo.description || '');
+    setShortDescription(botInfo.short_description || '');
+    setIsOpen(false);
+  };
+
+  const isLoading = updateNameMutation.isPending || updateDescriptionMutation.isPending || updateShortDescriptionMutation.isPending;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Edit2 className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Редактировать профиль бота</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="bot-name">Имя бота</Label>
+            <Input
+              id="bot-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Введите имя бота"
+              maxLength={64}
+            />
+            <p className="text-sm text-muted-foreground">
+              Максимум 64 символа. Это имя будет отображаться в Telegram.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bot-short-description">Краткое описание</Label>
+            <Input
+              id="bot-short-description"
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
+              placeholder="Краткое описание бота"
+              maxLength={120}
+            />
+            <p className="text-sm text-muted-foreground">
+              Максимум 120 символов. Отображается в профиле и предпросмотрах ссылок.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bot-description">Полное описание</Label>
+            <Textarea
+              id="bot-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Полное описание бота"
+              maxLength={512}
+              rows={4}
+            />
+            <p className="text-sm text-muted-foreground">
+              Максимум 512 символов. Отображается в пустых чатах с ботом.
+            </p>
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleSave}
+              disabled={isLoading}
+            >
+              <Check className="h-4 w-4 mr-2" />
+              {isLoading ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // Компонент профиля бота
 function BotProfile({ 
+  projectId,
   botInfo, 
   onRefresh, 
   isRefreshing,
   fallbackName = 'Бот'
 }: { 
+  projectId: number;
   botInfo?: BotInfo | null; 
   onRefresh: () => void; 
   isRefreshing: boolean; 
@@ -215,15 +425,22 @@ function BotProfile({
               </div>
             </div>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            title="Обновить информацию о боте"
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex items-center gap-2">
+            <BotProfileEditor 
+              projectId={projectId} 
+              botInfo={botInfo} 
+              onProfileUpdated={onRefresh} 
+            />
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title="Обновить информацию о боте"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </div>
         
         <div className="space-y-3">
@@ -533,6 +750,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     <div className="w-full space-y-6">
       {/* Профиль бота */}
       <BotProfile 
+        projectId={projectId}
         botInfo={botInfo}
         onRefresh={() => refetchBotInfo()}
         isRefreshing={false}
