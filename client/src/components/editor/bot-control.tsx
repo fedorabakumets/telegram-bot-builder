@@ -167,11 +167,7 @@ function BotProfileEditor({
   // Мутация для обновления имени бота
   const updateNameMutation = useMutation({
     mutationFn: async (newName: string) => {
-      const response = await apiRequest(`/api/projects/${projectId}/bot/name`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName })
-      });
+      const response = await apiRequest('PUT', `/api/projects/${projectId}/bot/name`, { name: newName });
       return response;
     },
     onSuccess: () => {
@@ -194,11 +190,7 @@ function BotProfileEditor({
   // Мутация для обновления описания бота
   const updateDescriptionMutation = useMutation({
     mutationFn: async (newDescription: string) => {
-      const response = await apiRequest(`/api/projects/${projectId}/bot/description`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: newDescription })
-      });
+      const response = await apiRequest('PUT', `/api/projects/${projectId}/bot/description`, { description: newDescription });
       return response;
     },
     onSuccess: () => {
@@ -221,11 +213,7 @@ function BotProfileEditor({
   // Мутация для обновления краткого описания бота
   const updateShortDescriptionMutation = useMutation({
     mutationFn: async (newShortDescription: string) => {
-      const response = await apiRequest(`/api/projects/${projectId}/bot/short-description`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ short_description: newShortDescription })
-      });
+      const response = await apiRequest('PUT', `/api/projects/${projectId}/bot/short-description`, { short_description: newShortDescription });
       return response;
     },
     onSuccess: () => {
