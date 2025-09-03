@@ -3279,11 +3279,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.id);
       const { name, language_code = 'ru' } = req.body;
 
+      console.log('🔧 Обновление имени бота:', { projectId, name, language_code });
+
       // Get bot token for this project
       const defaultToken = await storage.getDefaultBotToken(projectId);
       if (!defaultToken) {
+        console.error('❌ Токен бота не найден для проекта', projectId);
         return res.status(400).json({ message: "Bot token not found. Please add a token first." });
       }
+
+      console.log('✅ Токен найден, отправляем запрос к Telegram API...');
 
       // Update bot name via Telegram Bot API
       const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setMyName`;
@@ -3297,13 +3302,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const result = await response.json();
       
+      console.log('📡 Ответ от Telegram API setMyName:', { status: response.status, result });
+      
       if (!response.ok) {
+        console.error('❌ Ошибка от Telegram API:', result);
         return res.status(400).json({ 
           message: "Failed to update bot name", 
           error: result.description || "Unknown error"
         });
       }
 
+      console.log('✅ Имя бота успешно обновлено через Telegram API');
       res.json({ message: "Bot name updated successfully" });
     } catch (error) {
       console.error("Failed to update bot name:", error);
@@ -3317,11 +3326,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const projectId = parseInt(req.params.id);
       const { description, language_code = 'ru' } = req.body;
 
+      console.log('🔧 Обновление описания бота:', { projectId, description, language_code });
+
       // Get bot token for this project
       const defaultToken = await storage.getDefaultBotToken(projectId);
       if (!defaultToken) {
+        console.error('❌ Токен бота не найден для проекта', projectId);
         return res.status(400).json({ message: "Bot token not found. Please add a token first." });
       }
+
+      console.log('✅ Токен найден, отправляем запрос к Telegram API...');
 
       // Update bot description via Telegram Bot API
       const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/setMyDescription`;
@@ -3334,6 +3348,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const result = await response.json();
+      
+      console.log('📡 Ответ от Telegram API setMyDescription:', { status: response.status, result });
       
       if (!response.ok) {
         return res.status(400).json({ 
