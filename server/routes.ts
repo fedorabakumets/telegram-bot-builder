@@ -3203,12 +3203,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Bot token not found. Please add a token first." });
       }
 
-      // Get bot information via Telegram Bot API
-      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getMe`;
+      // Get bot information via Telegram Bot API with cache busting
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/getMe?_t=${Date.now()}`;
       const response = await fetch(telegramApiUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
       });
 
@@ -3222,6 +3224,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const botInfo = result.result;
+      
+      // Логируем ответ от Telegram API для отладки
+      console.log('Telegram API response:', JSON.stringify({
+        first_name: botInfo.first_name,
+        username: botInfo.username,
+        description: botInfo.description,
+        short_description: botInfo.short_description
+      }, null, 2));
       
       // If bot has photo, get the file URL
       let photoUrl = null;
