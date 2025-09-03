@@ -189,10 +189,14 @@ function BotProfileEditor({
         console.warn('Не удалось перезапустить бота:', error);
       }
       
-      // Принудительно обновляем данные бота
+      // Принудительно обновляем данные бота с задержкой
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
-      onProfileUpdated();
+      
+      // Ждем, чтобы изменения применились в Telegram API и бот перезапустился
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+        onProfileUpdated();
+      }, 3000);
     },
     onError: (error: any) => {
       toast({

@@ -3190,6 +3190,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.id);
       
+      // Добавляем заголовки для отключения кэширования при обновлении
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      
       // Get bot token for this project
       const defaultToken = await storage.getDefaultBotToken(projectId);
       if (!defaultToken) {

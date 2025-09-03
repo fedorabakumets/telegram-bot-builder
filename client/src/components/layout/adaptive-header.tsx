@@ -3,9 +3,17 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users } from 'lucide-react';
 import { LayoutConfig } from './layout-manager';
 
+interface BotInfo {
+  first_name: string;
+  username?: string;
+  description?: string;
+  short_description?: string;
+}
+
 interface AdaptiveHeaderProps {
   config: LayoutConfig;
   projectName: string;
+  botInfo?: BotInfo | null;
   currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups';
   onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => void;
   onExport: () => void;
@@ -25,7 +33,8 @@ interface AdaptiveHeaderProps {
 
 export function AdaptiveHeader({ 
   config,
-  projectName, 
+  projectName,
+  botInfo,
   currentTab, 
   onTabChange, 
   onExport, 
@@ -64,7 +73,10 @@ export function AdaptiveHeader({
           {isVertical && !isCompact ? 'BotCraft' : 'BotCraft Studio'}
         </h1>
         <p className={`text-muted-foreground ${isCompact ? 'text-xs' : 'text-xs'}`}>
-          {isVertical ? (projectName.length > 12 ? projectName.substring(0, 12) + '...' : projectName) : projectName}
+          {(() => {
+            const displayName = botInfo?.first_name || projectName;
+            return isVertical ? (displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName) : displayName;
+          })()}
         </p>
       </div>
     </div>
