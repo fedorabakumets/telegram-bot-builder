@@ -1403,6 +1403,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Restart bot
+  app.post("/api/projects/:id/bot/restart", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      
+      // Сначала останавливаем бота
+      const stopResult = await stopBot(projectId);
+      if (!stopResult.success) {
+        return res.status(500).json({ message: stopResult.error || "Failed to stop bot" });
+      }
+      
+      // Ждем немного, чтобы процесс полностью остановился
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Получаем токен для запуска
+      const project = await storage.getBotProject(projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      let botToken = null;
+      
+      // Используем токен по умолчанию
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (defaultToken) {
+        botToken = defaultToken.token;
+      } else {
+        // Fallback к старому способу - токен в проекте
+        botToken = project.botToken;
+      }
+      
+      if (!botToken) {
+        return res.status(400).json({ message: "Bot token is required" });
+      }
+      
+      // Запускаем бота заново
+      const startResult = await startBot(projectId, botToken);
+      if (startResult.success) {
+        res.json({ 
+          message: "Bot restarted successfully", 
+          processId: startResult.processId
+        });
+      } else {
+        res.status(500).json({ message: startResult.error || "Failed to start bot after restart" });
+      }
+    } catch (error) {
+      console.error('Ошибка перезапуска бота:', error);
+      res.status(500).json({ message: "Failed to restart bot" });
+    }
+  });
+
   // Get saved bot token
   app.get("/api/projects/:id/token", async (req, res) => {
     try {

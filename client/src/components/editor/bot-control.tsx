@@ -170,11 +170,25 @@ function BotProfileEditor({
       const response = await apiRequest('PUT', `/api/projects/${projectId}/bot/name`, { name: newName });
       return response;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "Успешно",
-        description: "Имя бота обновлено",
+        description: "Имя бота обновлено. Перезапускаем бота для применения изменений...",
       });
+      
+      try {
+        // Перезапускаем бота для применения нового имени
+        await apiRequest('POST', `/api/projects/${projectId}/bot/restart`);
+        
+        toast({
+          title: "Готово!",
+          description: "Бот перезапущен с новым именем",
+        });
+      } catch (error) {
+        // Если перезапуск не удался, просто обновляем данные
+        console.warn('Не удалось перезапустить бота:', error);
+      }
+      
       // Принудительно обновляем данные бота
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
       queryClient.refetchQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
