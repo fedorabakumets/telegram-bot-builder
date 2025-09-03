@@ -2207,7 +2207,7 @@ export function PropertiesPanel({
                         { key: 'canRestrictMembers', label: 'Ограничивать участников', icon: 'fas fa-user-lock' },
                         { key: 'canPromoteMembers', label: 'Повышать участников', icon: 'fas fa-arrow-up' },
                         { key: 'canManageVideoChats', label: 'Управлять видеозвонками', icon: 'fas fa-video' },
-                        { key: 'canManageTopics', label: 'Управлять темами', icon: 'fas fa-tags' },
+                        // { key: 'canManageTopics', label: 'Управлять темами', icon: 'fas fa-tags' }, // Архивировано - не используется в обычных группах
                         { key: 'isAnonymous', label: 'Анонимный админ', icon: 'fas fa-user-secret' }
                       ].map(({ key, label, icon }) => (
                         <div key={key} className="flex items-center justify-between p-2 rounded-lg bg-card/50 border border-yellow-200/30 dark:border-yellow-800/30">

@@ -4685,7 +4685,6 @@ async function seedDefaultTemplates(force = false) {
                   canRestrictMembers: false,
                   canPromoteMembers: false,
                   canManageVideoChats: false,
-                  canManageTopics: false,
                   isAnonymous: false,
                   keyboardType: "none",
                   buttons: []
