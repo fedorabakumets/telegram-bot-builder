@@ -34,7 +34,8 @@ export default function EditorSimple() {
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);
   
-  const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>({
+  // Базовая конфигурация макета
+  const baseLayoutConfig: SimpleLayoutConfig = {
     elements: [
       {
         id: 'header',
@@ -71,7 +72,37 @@ export default function EditorSimple() {
     ],
     compactMode: false,
     showGrid: true
-  });
+  };
+
+  const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>(baseLayoutConfig);
+
+  // Используем хук для отслеживания размера экрана
+  const isMobile = useMediaQuery('(max-width: 1200px)');
+
+  // Создаем адаптивную конфигурацию в зависимости от текущей вкладки
+  const adaptiveLayoutConfig = useMemo(() => {
+    console.log('Adaptive Layout Config Update:', {
+      currentTab,
+      isMobile,
+      shouldHidePanels: currentTab === 'bot' && isMobile
+    });
+    
+    if (currentTab === 'bot' && isMobile) {
+      // На странице бота на мобильных устройствах скрываем боковые панели
+      const newConfig = {
+        ...flexibleLayoutConfig,
+        elements: flexibleLayoutConfig.elements.map(el => ({
+          ...el,
+          visible: el.type === 'sidebar' || el.type === 'properties' ? false : el.visible
+        }))
+      };
+      console.log('Hiding panels for mobile bot page', newConfig);
+      return newConfig;
+    }
+    
+    console.log('Using default layout', flexibleLayoutConfig);
+    return flexibleLayoutConfig;
+  }, [flexibleLayoutConfig, currentTab, isMobile]);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -267,12 +298,10 @@ export default function EditorSimple() {
   );
 
   const sidebarContent = (
-    <div className={currentTab === 'bot' ? 'hidden sm:block' : ''}>
-      <ComponentsSidebar 
-        onComponentDrag={handleComponentDrag} 
-        onLoadTemplate={handleLoadTemplate}
-      />
-    </div>
+    <ComponentsSidebar 
+      onComponentDrag={handleComponentDrag} 
+      onLoadTemplate={handleLoadTemplate}
+    />
   );
 
   const canvasContent = (
@@ -362,17 +391,15 @@ export default function EditorSimple() {
   );
 
   const propertiesContent = (
-    <div className={currentTab === 'bot' ? 'hidden sm:block' : ''}>
-      <PropertiesPanel
-        projectId={currentProject.id}
-        selectedNode={selectedNode}
-        allNodes={nodes}
-        onNodeUpdate={updateNodeData}
-        onButtonAdd={addButton}
-        onButtonUpdate={updateButton}
-        onButtonDelete={deleteButton}
-      />
-    </div>
+    <PropertiesPanel
+      projectId={currentProject.id}
+      selectedNode={selectedNode}
+      allNodes={nodes}
+      onNodeUpdate={updateNodeData}
+      onButtonAdd={addButton}
+      onButtonUpdate={updateButton}
+      onButtonDelete={deleteButton}
+    />
   );
 
   return (
@@ -382,7 +409,7 @@ export default function EditorSimple() {
         onConfigChange={setFlexibleLayoutConfig}
       >
         <FlexibleLayout
-          config={flexibleLayoutConfig}
+          config={adaptiveLayoutConfig}
           headerContent={headerContent}
           sidebarContent={sidebarContent}
           canvasContent={canvasContent}
