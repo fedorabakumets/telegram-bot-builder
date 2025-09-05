@@ -1,6 +1,8 @@
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X } from 'lucide-react';
 import { LayoutConfig } from './layout-manager';
 
 interface BotInfo {
@@ -51,6 +53,9 @@ export function AdaptiveHeader({
   canvasVisible
 }: AdaptiveHeaderProps) {
   
+  // Состояние для мобильного меню
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   // Определяем ориентацию заголовка
   const isVertical = config.headerPosition === 'left' || config.headerPosition === 'right';
   const isCompact = config.compactMode;
@@ -84,7 +89,7 @@ export function AdaptiveHeader({
 
   // Компонент навигации
   const Navigation = () => (
-    <nav className={`flex ${isVertical ? 'flex-col space-y-1 px-2' : 'flex-wrap items-center gap-1 max-sm:grid max-sm:grid-cols-2 max-sm:gap-x-2 max-sm:gap-y-1'}`}>
+    <nav className={`${isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden sm:flex flex-wrap items-center gap-1'}`}>
       {[
         { key: 'editor', label: 'Редактор' },
         { key: 'preview', label: 'Превью' },
@@ -108,9 +113,162 @@ export function AdaptiveHeader({
     </nav>
   );
 
+  // Мобильная версия навигации
+  const MobileNavigation = () => (
+    <div className="flex flex-col space-y-4">
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { key: 'editor', label: 'Редактор' },
+          { key: 'preview', label: 'Превью' },
+          { key: 'export', label: 'Экспорт' },
+          { key: 'bot', label: 'Бот' },
+          { key: 'users', label: 'Пользователи' },
+          { key: 'groups', label: 'Группы' }
+        ].map((tab) => (
+          <button 
+            key={tab.key}
+            onClick={() => {
+              onTabChange(tab.key as any);
+              setIsMobileMenuOpen(false);
+            }}
+            className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+              currentTab === tab.key 
+                ? 'text-primary bg-primary/10' 
+                : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Мобильная версия действий
+  const MobileActions = () => (
+    <div className="flex flex-col space-y-3">
+      {/* Кнопки управления макетом */}
+      {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
+        <div className="grid grid-cols-2 gap-2">
+          {onToggleHeader && (
+            <Button
+              variant={headerVisible ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                onToggleHeader();
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center"
+              title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
+            >
+              <NavigationIcon className="w-3 h-3 mr-1" />
+              Шапка
+            </Button>
+          )}
+          
+          {onToggleSidebar && (
+            <Button
+              variant={sidebarVisible ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                onToggleSidebar();
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center"
+              title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
+            >
+              <Sidebar className="w-3 h-3 mr-1" />
+              Панель
+            </Button>
+          )}
+          
+          {onToggleCanvas && (
+            <Button
+              variant={canvasVisible ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                onToggleCanvas();
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center"
+              title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
+            >
+              <Monitor className="w-3 h-3 mr-1" />
+              Холст
+            </Button>
+          )}
+          
+          {onToggleProperties && (
+            <Button
+              variant={propertiesVisible ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                onToggleProperties();
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center"
+              title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
+            >
+              <Sliders className="w-3 h-3 mr-1" />
+              Свойства
+            </Button>
+          )}
+        </div>
+      )}
+      
+      <div className="grid grid-cols-1 gap-2">
+        {onLoadTemplate && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              onLoadTemplate();
+              setIsMobileMenuOpen(false);
+            }}
+            className="flex items-center justify-center"
+          >
+            <FolderOpen className="h-3 w-3 mr-2" />
+            Загрузить шаблон
+          </Button>
+        )}
+        
+        {onSaveAsTemplate && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              onSaveAsTemplate();
+              setIsMobileMenuOpen(false);
+            }}
+            className="flex items-center justify-center"
+          >
+            <Bookmark className="h-3 w-3 mr-2" />
+            Сохранить как шаблон
+          </Button>
+        )}
+        
+        <Button 
+          size="sm"
+          onClick={() => {
+            onExport();
+            setIsMobileMenuOpen(false);
+          }}
+          className="flex items-center justify-center"
+        >
+          <i className="fas fa-download mr-2"></i>
+          Экспорт
+        </Button>
+        
+        <div className="flex justify-center pt-2">
+          <ThemeToggle />
+        </div>
+      </div>
+    </div>
+  );
+
   // Компонент действий
   const Actions = () => (
-    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-3 max-sm:gap-x-1 max-sm:gap-y-1 max-sm:text-xs'}`}>
+    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden sm:flex flex-wrap items-center gap-2'}`}>
       
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
@@ -236,7 +394,35 @@ export function AdaptiveHeader({
         <Separator />
         <Navigation />
       </div>
+      
+      {/* Десктопные действия */}
       <Actions />
+      
+      {/* Мобильная кнопка меню */}
+      <div className="sm:hidden">
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="p-2">
+              <Menu className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-80">
+            <SheetHeader>
+              <SheetTitle className="text-left">Меню</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6 space-y-6">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Навигация</h3>
+                <MobileNavigation />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">Действия</h3>
+                <MobileActions />
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
     </header>
   );
 }
