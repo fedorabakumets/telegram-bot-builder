@@ -299,8 +299,17 @@ export default function Editor() {
         data: projectData
       });
     },
-    onSuccess: () => {
+    onSuccess: (updatedProject) => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
+      // Обновляем проект в кеше напрямую для мгновенной синхронизации
+      queryClient.setQueryData(['/api/projects'], (oldProjects: any) => {
+        if (!oldProjects || !Array.isArray(oldProjects)) return oldProjects;
+        return oldProjects.map((p: any) => 
+          p.id === currentProject?.id ? { ...p, ...updatedProject, updatedAt: new Date().toISOString() } : p
+        );
+      });
+      
       toast({
         title: "Проект сохранен",
         description: "Изменения успешно сохранены",

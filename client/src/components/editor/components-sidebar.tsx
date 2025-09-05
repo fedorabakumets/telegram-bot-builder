@@ -1165,8 +1165,8 @@ export function ComponentsSidebar({
                       </Button>
                     </div>
                     
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-3 text-sm text-muted-foreground">
+                      <div className="flex items-center justify-between gap-3">
                         <span className="flex items-center bg-muted/50 px-2 py-1 rounded-md">
                           <User className="h-4 w-4 mr-2" />
                           <span className="font-medium">{getNodeCount(project)}</span>
