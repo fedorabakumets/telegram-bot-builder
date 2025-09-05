@@ -300,10 +300,9 @@ export default function Editor() {
       });
     },
     onSuccess: (updatedProject) => {
-      console.log('Проект сохранен, принудительно обновляем кеш проектов');
+      console.log('Проект сохранен, обновляем кеш проектов');
       
-      // Сначала очищаем кеш, затем принудительно перезагружаем данные
-      queryClient.removeQueries({ queryKey: ['/api/projects'] });
+      // Обновляем кеш проектов
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       
       toast({
@@ -714,10 +713,12 @@ export default function Editor() {
         });
       }
       
-      // Принудительно обновляем кеш проектов для синхронизации панели компонентов
-      console.log('Шаблон применен, принудительно очищаем и обновляем кеш проектов');
-      queryClient.removeQueries({ queryKey: ['/api/projects'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      // Обновляем кеш проектов для синхронизации панели компонентов  
+      console.log('Шаблон применен, обновляем кеш проектов');
+      // Даем небольшую задержку для завершения мутации, затем обновляем кеш
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      }, 500);
       
       toast({
         title: 'Шаблон применен',
