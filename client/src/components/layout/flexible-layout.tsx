@@ -23,15 +23,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   onConfigChange,
   hideOnMobile = false
 }) => {
-  // Определяем мобильное устройство (экраны меньше 1024px для более заметного эффекта)
-  const isMobile = useMediaQuery('(max-width: 1024px)');
-  
-  // Отладочная информация
-  console.log('FlexibleLayout Debug:', {
-    hideOnMobile,
-    isMobile,
-    shouldHidePanels: hideOnMobile && isMobile
-  });
+  // Определяем мобильное устройство (экраны меньше 1200px для тестирования)
+  const isMobile = useMediaQuery('(max-width: 1200px)');
   const layoutStyles = useMemo(() => {
     const visibleElements = config.elements.filter(el => {
       if (!el.visible) return false;

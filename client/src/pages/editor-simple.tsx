@@ -132,7 +132,6 @@ export default function EditorSimple() {
   }, [updateProjectMutation]);
 
   const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database' | 'responses') => {
-    console.log('Tab changed to:', tab, 'hideOnMobile will be:', tab === 'bot');
     setCurrentTab(tab);
     if (tab === 'preview') {
       updateProjectMutation.mutate({});
