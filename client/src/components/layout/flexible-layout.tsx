@@ -21,16 +21,24 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   propertiesContent,
   onConfigChange
 }) => {
-  // Определяем мобильное устройство (экраны меньше 768px)
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  // Определяем мобильное устройство (экраны меньше 640px)
+  const isMobile = useMediaQuery('(max-width: 640px)');
+  
+  // Также проверим планшеты (до 1024px) для частичного скрытия
+  const isTablet = useMediaQuery('(max-width: 1024px) and (min-width: 641px)');
   
   const layoutStyles = useMemo(() => {
     // На мобильных устройствах скрываем боковые панели
     const visibleElements = config.elements.filter(el => {
       if (!el.visible) return false;
       
-      // На мобильных устройствах скрываем sidebar и properties панели
+      // На мобильных устройствах (до 640px) скрываем sidebar и properties панели полностью
       if (isMobile && (el.type === 'sidebar' || el.type === 'properties')) {
+        return false;
+      }
+      
+      // На планшетах (640px-1024px) можно скрыть только properties панель
+      if (isTablet && el.type === 'properties') {
         return false;
       }
       
@@ -70,7 +78,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         center: { gridArea: 'center' }
       }
     };
-  }, [config, isMobile]);
+  }, [config, isMobile, isTablet]);
 
   const getElementContent = (type: string) => {
     switch (type) {
@@ -136,8 +144,13 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     const visibleElements = config.elements.filter(el => {
       if (!el.visible) return false;
       
-      // На мобильных устройствах скрываем sidebar и properties панели
+      // На мобильных устройствах (до 640px) скрываем sidebar и properties панели полностью
       if (isMobile && (el.type === 'sidebar' || el.type === 'properties')) {
+        return false;
+      }
+      
+      // На планшетах (640px-1024px) можно скрыть только properties панель
+      if (isTablet && el.type === 'properties') {
         return false;
       }
       
@@ -149,11 +162,13 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground bg-background relative">
           <div className="text-center mb-8">
             <h3 className="text-lg font-medium mb-2">
-              {isMobile ? 'Мобильный режим' : 'Все панели скрыты'}
+              {isMobile ? 'Мобильный режим' : isTablet ? 'Планшетный режим' : 'Все панели скрыты'}
             </h3>
             <p className="text-sm">
               {isMobile 
                 ? 'На мобильных устройствах боковые панели автоматически скрыты' 
+                : isTablet 
+                ? 'На планшетах панель свойств автоматически скрыта'
                 : 'Используйте кнопки ниже для показа панелей'
               }
             </p>
