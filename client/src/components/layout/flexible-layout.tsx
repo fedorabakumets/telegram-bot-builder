@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { SimpleLayoutConfig } from './simple-layout-customizer';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface FlexibleLayoutProps {
   config: SimpleLayoutConfig;
@@ -10,6 +11,7 @@ interface FlexibleLayoutProps {
   canvasContent: React.ReactNode;
   propertiesContent: React.ReactNode;
   onConfigChange?: (newConfig: SimpleLayoutConfig) => void;
+  hideOnMobile?: boolean; // Скрывать боковые панели на маленьких устройствах
 }
 
 export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
@@ -18,10 +20,22 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   sidebarContent,
   canvasContent,
   propertiesContent,
-  onConfigChange
+  onConfigChange,
+  hideOnMobile = false
 }) => {
+  // Определяем мобильное устройство (экраны меньше 640px)
+  const isMobile = useMediaQuery('(max-width: 640px)');
   const layoutStyles = useMemo(() => {
-    const visibleElements = config.elements.filter(el => el.visible);
+    const visibleElements = config.elements.filter(el => {
+      if (!el.visible) return false;
+      
+      // Скрываем боковые панели на мобильных устройствах, если включен режим hideOnMobile
+      if (hideOnMobile && isMobile && (el.type === 'sidebar' || el.type === 'properties')) {
+        return false;
+      }
+      
+      return true;
+    });
     
     // Определяем элементы по позициям
     const topElements = visibleElements.filter(el => el.position === 'top');
@@ -56,7 +70,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         center: { gridArea: 'center' }
       }
     };
-  }, [config]);
+  }, [config, hideOnMobile, isMobile]);
 
   const getElementContent = (type: string) => {
     switch (type) {
@@ -118,14 +132,30 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 
   // Создаем упрощенный CSS Grid layout
   const createSimpleLayout = () => {
-    const visibleElements = config.elements.filter(el => el.visible);
+    const visibleElements = config.elements.filter(el => {
+      if (!el.visible) return false;
+      
+      // Скрываем боковые панели на мобильных устройствах, если включен режим hideOnMobile
+      if (hideOnMobile && isMobile && (el.type === 'sidebar' || el.type === 'properties')) {
+        return false;
+      }
+      
+      return true;
+    });
     
     if (visibleElements.length === 0) {
       return (
         <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground bg-background relative">
           <div className="text-center mb-8">
-            <h3 className="text-lg font-medium mb-2">Все панели скрыты</h3>
-            <p className="text-sm">Используйте кнопки ниже для показа панелей</p>
+            <h3 className="text-lg font-medium mb-2">
+              {hideOnMobile && isMobile ? 'Мобильный режим' : 'Все панели скрыты'}
+            </h3>
+            <p className="text-sm">
+              {hideOnMobile && isMobile 
+                ? 'На мобильных устройствах боковые панели скрыты для экономии места' 
+                : 'Используйте кнопки ниже для показа панелей'
+              }
+            </p>
           </div>
           
           {/* Кнопки управления макетом */}

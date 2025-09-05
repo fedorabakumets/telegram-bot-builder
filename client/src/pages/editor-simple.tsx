@@ -383,6 +383,7 @@ export default function EditorSimple() {
           sidebarContent={sidebarContent}
           canvasContent={canvasContent}
           propertiesContent={propertiesContent}
+          hideOnMobile={currentTab === 'bot'}
         />
       </SimpleLayoutCustomizer>
 
