@@ -132,6 +132,7 @@ export default function EditorSimple() {
   }, [updateProjectMutation]);
 
   const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'connections' | 'database' | 'responses') => {
+    console.log('Tab changed to:', tab, 'hideOnMobile will be:', tab === 'bot');
     setCurrentTab(tab);
     if (tab === 'preview') {
       updateProjectMutation.mutate({});
@@ -384,6 +385,7 @@ export default function EditorSimple() {
           canvasContent={canvasContent}
           propertiesContent={propertiesContent}
           hideOnMobile={currentTab === 'bot'}
+          onConfigChange={setFlexibleLayoutConfig}
         />
       </SimpleLayoutCustomizer>
 
