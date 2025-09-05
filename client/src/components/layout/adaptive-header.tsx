@@ -89,7 +89,7 @@ export function AdaptiveHeader({
 
   // Компонент навигации
   const Navigation = () => (
-    <nav className={`${isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden sm:flex flex-wrap items-center gap-1'}`}>
+    <nav className={`${isVertical ? 'flex flex-col space-y-1 px-2' : 'hidden lg:flex flex-wrap items-center gap-1'}`}>
       {[
         { key: 'editor', label: 'Редактор' },
         { key: 'preview', label: 'Превью' },
@@ -268,7 +268,7 @@ export function AdaptiveHeader({
 
   // Компонент действий
   const Actions = () => (
-    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden sm:flex flex-wrap items-center gap-2'}`}>
+    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-2'}`}>
       
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
@@ -399,7 +399,7 @@ export function AdaptiveHeader({
       <Actions />
       
       {/* Мобильная кнопка меню */}
-      <div className="sm:hidden">
+      <div className="lg:hidden">
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm" className="p-2">
