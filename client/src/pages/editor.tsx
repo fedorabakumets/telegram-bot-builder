@@ -708,6 +708,9 @@ export default function Editor() {
         });
       }
       
+      // Принудительно обновляем кеш проектов для синхронизации панели компонентов
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
       toast({
         title: 'Шаблон применен',
         description: `Шаблон "${template.name}" успешно загружен`,
@@ -720,7 +723,7 @@ export default function Editor() {
         variant: 'destructive',
       });
     }
-  }, [setBotData, setBotDataWithSheets, updateProjectMutation, toast]);
+  }, [setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
 
   // Обработчики для управления связями
   const handleConnectionsChange = useCallback((newConnections: Connection[]) => {
