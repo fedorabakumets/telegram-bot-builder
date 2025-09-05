@@ -300,15 +300,34 @@ export default function Editor() {
       });
     },
     onSuccess: (updatedProject) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      console.log('Проект сохранен, обновляем кеш:', updatedProject);
       
       // Обновляем проект в кеше напрямую для мгновенной синхронизации
       queryClient.setQueryData(['/api/projects'], (oldProjects: any) => {
-        if (!oldProjects || !Array.isArray(oldProjects)) return oldProjects;
-        return oldProjects.map((p: any) => 
-          p.id === currentProject?.id ? { ...p, ...updatedProject, updatedAt: new Date().toISOString() } : p
-        );
+        if (!oldProjects || !Array.isArray(oldProjects)) {
+          console.log('Старые проекты отсутствуют в кеше');
+          return oldProjects;
+        }
+        
+        const newProjects = oldProjects.map((p: any) => {
+          if (p.id === currentProject?.id) {
+            const updated = { ...p, ...updatedProject, updatedAt: new Date().toISOString() };
+            console.log('Обновляем проект в кеше:', {
+              id: p.id,
+              oldData: p.data ? 'есть' : 'нет',
+              newData: updated.data ? 'есть' : 'нет'
+            });
+            return updated;
+          }
+          return p;
+        });
+        
+        console.log('Кеш проектов обновлен');
+        return newProjects;
       });
+      
+      // Принудительно обновляем кеш из API
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       
       toast({
         title: "Проект сохранен",
@@ -718,6 +737,7 @@ export default function Editor() {
       }
       
       // Принудительно обновляем кеш проектов для синхронизации панели компонентов
+      console.log('Шаблон применен, обновляем кеш проектов');
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       
       toast({

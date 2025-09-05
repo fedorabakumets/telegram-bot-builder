@@ -979,10 +979,14 @@ export function ComponentsSidebar({
       // Проверяем, новый формат с листами или старый
       if (SheetsManager.isNewFormat(project.data)) {
         const sheets = (project.data as any).sheets || [];
-        return sheets.reduce((total: number, sheet: any) => total + (sheet.nodes?.length || 0), 0);
+        const nodeCount = sheets.reduce((total: number, sheet: any) => total + (sheet.nodes?.length || 0), 0);
+        console.log(`[${project.name}] Формат с листами. Листов: ${sheets.length}, Узлов: ${nodeCount}`);
+        return nodeCount;
       } else {
         const data = project.data as { nodes?: any[] };
-        return data.nodes?.length || 0;
+        const nodeCount = data.nodes?.length || 0;
+        console.log(`[${project.name}] Старый формат. Узлов: ${nodeCount}`);
+        return nodeCount;
       }
     } catch (error) {
       console.error('Ошибка подсчета узлов:', error);
