@@ -267,10 +267,12 @@ export default function EditorSimple() {
   );
 
   const sidebarContent = (
-    <ComponentsSidebar 
-      onComponentDrag={handleComponentDrag} 
-      onLoadTemplate={handleLoadTemplate}
-    />
+    <div className={currentTab === 'bot' ? 'hidden sm:block' : ''}>
+      <ComponentsSidebar 
+        onComponentDrag={handleComponentDrag} 
+        onLoadTemplate={handleLoadTemplate}
+      />
+    </div>
   );
 
   const canvasContent = (
@@ -360,15 +362,17 @@ export default function EditorSimple() {
   );
 
   const propertiesContent = (
-    <PropertiesPanel
-      projectId={currentProject.id}
-      selectedNode={selectedNode}
-      allNodes={nodes}
-      onNodeUpdate={updateNodeData}
-      onButtonAdd={addButton}
-      onButtonUpdate={updateButton}
-      onButtonDelete={deleteButton}
-    />
+    <div className={currentTab === 'bot' ? 'hidden sm:block' : ''}>
+      <PropertiesPanel
+        projectId={currentProject.id}
+        selectedNode={selectedNode}
+        allNodes={nodes}
+        onNodeUpdate={updateNodeData}
+        onButtonAdd={addButton}
+        onButtonUpdate={updateButton}
+        onButtonDelete={deleteButton}
+      />
+    </div>
   );
 
   return (
@@ -383,7 +387,6 @@ export default function EditorSimple() {
           sidebarContent={sidebarContent}
           canvasContent={canvasContent}
           propertiesContent={propertiesContent}
-          hideOnMobile={currentTab === 'bot'}
           onConfigChange={setFlexibleLayoutConfig}
         />
       </SimpleLayoutCustomizer>
