@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { SimpleLayoutConfig } from './simple-layout-customizer';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface FlexibleLayoutProps {
   config: SimpleLayoutConfig;
@@ -20,8 +21,21 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   propertiesContent,
   onConfigChange
 }) => {
+  // Определяем мобильное устройство (экраны меньше 768px)
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
   const layoutStyles = useMemo(() => {
-    const visibleElements = config.elements.filter(el => el.visible);
+    // На мобильных устройствах скрываем боковые панели
+    const visibleElements = config.elements.filter(el => {
+      if (!el.visible) return false;
+      
+      // На мобильных устройствах скрываем sidebar и properties панели
+      if (isMobile && (el.type === 'sidebar' || el.type === 'properties')) {
+        return false;
+      }
+      
+      return true;
+    });
     
     // Определяем элементы по позициям
     const topElements = visibleElements.filter(el => el.position === 'top');
@@ -56,7 +70,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         center: { gridArea: 'center' }
       }
     };
-  }, [config]);
+  }, [config, isMobile]);
 
   const getElementContent = (type: string) => {
     switch (type) {
@@ -118,14 +132,31 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 
   // Создаем упрощенный CSS Grid layout
   const createSimpleLayout = () => {
-    const visibleElements = config.elements.filter(el => el.visible);
+    // На мобильных устройствах скрываем боковые панели
+    const visibleElements = config.elements.filter(el => {
+      if (!el.visible) return false;
+      
+      // На мобильных устройствах скрываем sidebar и properties панели
+      if (isMobile && (el.type === 'sidebar' || el.type === 'properties')) {
+        return false;
+      }
+      
+      return true;
+    });
     
     if (visibleElements.length === 0) {
       return (
         <div className="h-full w-full flex flex-col items-center justify-center text-muted-foreground bg-background relative">
           <div className="text-center mb-8">
-            <h3 className="text-lg font-medium mb-2">Все панели скрыты</h3>
-            <p className="text-sm">Используйте кнопки ниже для показа панелей</p>
+            <h3 className="text-lg font-medium mb-2">
+              {isMobile ? 'Мобильный режим' : 'Все панели скрыты'}
+            </h3>
+            <p className="text-sm">
+              {isMobile 
+                ? 'На мобильных устройствах боковые панели автоматически скрыты' 
+                : 'Используйте кнопки ниже для показа панелей'
+              }
+            </p>
           </div>
           
           {/* Кнопки управления макетом */}
