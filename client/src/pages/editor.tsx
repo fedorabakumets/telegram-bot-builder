@@ -730,7 +730,8 @@ export default function Editor() {
         console.log('Применили данные шаблона, узлов:', templateData.nodes.length);
         console.log('Применили данные шаблона, связей:', templateData.connections?.length || 0);
         
-        // Сохраняем изменения в базе данных
+        // Сохраняем изменения в базе данных сразу с новыми данными
+        console.log('Сохраняем шаблон в БД, узлов:', migratedData.sheets?.[0]?.nodes?.length || templateData.nodes?.length);
         updateProjectMutation.mutate({
           data: migratedData
         });

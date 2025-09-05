@@ -1010,12 +1010,15 @@ export function ComponentsSidebar({
       // Проверяем, новый формат с листами или старый
       if (SheetsManager.isNewFormat(project.data)) {
         const sheets = (project.data as any).sheets || [];
-        return {
+        const sheetsInfo = {
           count: sheets.length,
-          names: sheets.map((sheet: any) => sheet.name || 'Лист')
+          names: sheets.map((sheet: any) => sheet.name || 'Лист без названия')
         };
+        console.log(`[${project.name}] Информация о листах:`, sheetsInfo);
+        return sheetsInfo;
       } else {
         // Старый формат - один лист
+        console.log(`[${project.name}] Старый формат - один основной лист`);
         return {
           count: 1,
           names: ['Основной поток']
