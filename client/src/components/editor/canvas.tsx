@@ -785,12 +785,14 @@ export function Canvas({
         right: isMobile ? '10px' : (propertiesVisible ? '150px' : '20px')
       }}>
         <div className="pt-6">
-          <div className="pointer-events-auto flex items-center space-x-2 canvas-controls overflow-x-auto">
+          <div className={`pointer-events-auto flex items-center canvas-controls overflow-x-auto ${
+            isMobile ? 'space-x-1 text-sm' : 'space-x-2'
+          }`}>
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 flex items-center overflow-hidden zoom-controls">
               <button 
                 onClick={zoomOut}
                 disabled={zoom <= 1}
-                className="px-3 py-2 zoom-button disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} zoom-button disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Уменьшить масштаб (Ctrl + -)"
               >
                 <i className="fas fa-search-minus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
@@ -798,7 +800,7 @@ export function Canvas({
               <Popover>
                 <PopoverTrigger asChild>
                   <button
-                    className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-x border-gray-200 dark:border-slate-700 font-mono min-w-[4rem] text-center bg-gray-50 dark:bg-slate-800/50 zoom-indicator group"
+                    className={`${isMobile ? 'px-2 py-1.5 text-xs min-w-[3rem]' : 'px-4 py-2 text-sm min-w-[4rem]'} text-gray-700 dark:text-gray-300 border-x border-gray-200 dark:border-slate-700 font-mono text-center bg-gray-50 dark:bg-slate-800/50 zoom-indicator group`}
                     title="Выбрать масштаб"
                   >
                     <span className="flex items-center space-x-1">
@@ -852,18 +854,18 @@ export function Canvas({
               <button 
                 onClick={zoomIn}
                 disabled={zoom >= 200}
-                className="px-3 py-2 zoom-button disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} zoom-button disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Увеличить масштаб (Ctrl + +)"
               >
                 <i className="fas fa-search-plus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
             </div>
             
-            <div className="flex items-center space-x-1 flex-shrink-0">
+            <div className={`flex items-center flex-shrink-0 ${isMobile ? 'space-x-0.5' : 'space-x-1'}`}>
               <button 
                 onClick={fitToContent}
                 disabled={nodes.length === 0}
-                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Уместить в экран (Ctrl + 1)"
               >
                 <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
@@ -872,7 +874,7 @@ export function Canvas({
               {onFullscreen && (
                 <button 
                   onClick={onFullscreen}
-                  className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+                  className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}
                   title="Полноэкранный режим (F11)"
                 >
                   <i className="fas fa-expand text-gray-600 dark:text-gray-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
@@ -882,7 +884,7 @@ export function Canvas({
               <button 
                 onClick={onUndo}
                 disabled={!canUndo}
-                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Отменить действие (Ctrl + Z)"
               >
                 <i className="fas fa-undo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
@@ -891,7 +893,7 @@ export function Canvas({
               <button 
                 onClick={onRedo}
                 disabled={!canRedo}
-                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Повторить действие (Ctrl + Y)"
               >
                 <i className="fas fa-redo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
@@ -901,7 +903,7 @@ export function Canvas({
                 <button 
                   onClick={onSave}
                   disabled={isSaving}
-                  className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
                   title="Сохранить проект (Ctrl + S)"
                 >
                   {isSaving ? (
@@ -916,7 +918,7 @@ export function Canvas({
               {onCopyToClipboard && selectedNodeId && (
                 <button 
                   onClick={() => onCopyToClipboard([selectedNodeId])}
-                  className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+                  className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}
                   title="Копировать в буфер (Shift + Ctrl + C)"
                 >
                   <i className="fas fa-clipboard text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
@@ -926,7 +928,7 @@ export function Canvas({
               {onPasteFromClipboard && hasClipboardData && (
                 <button 
                   onClick={onPasteFromClipboard}
-                  className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group"
+                  className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}
                   title="Вставить из буфера (Shift + Ctrl + V)"
                 >
                   <i className="fas fa-paste text-gray-600 dark:text-gray-400 text-sm group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors"></i>
@@ -1014,7 +1016,7 @@ export function Canvas({
               {/* Zoom Help */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group">
+                  <button className={`${isMobile ? 'p-1.5' : 'p-2'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}>
                     <i className="fas fa-question-circle text-gray-500 dark:text-gray-400 text-sm group-hover:text-blue-500 transition-colors"></i>
                   </button>
                 </PopoverTrigger>
@@ -1065,8 +1067,8 @@ export function Canvas({
         }}>
           <div className="flex justify-center pb-4">
             <div className="pointer-events-auto w-full" style={{
-              minWidth: '600px',
-              maxWidth: '1000px'
+              minWidth: isMobile ? '300px' : '600px',
+              maxWidth: isMobile ? '100%' : '1000px'
             }}>
               <CanvasSheets
                 sheets={botData.sheets}
