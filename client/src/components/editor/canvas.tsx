@@ -8,6 +8,7 @@ import { CanvasSheets } from '@/components/ui/canvas-sheets';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Node, ComponentDefinition, Connection } from '@/types/bot';
 import { BotDataWithSheets, CanvasSheet } from '@shared/schema';
@@ -93,6 +94,7 @@ export function Canvas({
   canvasVisible
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const [isDragOver, setIsDragOver] = useState(false);
   const [connectionStart, setConnectionStart] = useState<{
     nodeId: string;
