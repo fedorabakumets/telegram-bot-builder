@@ -981,7 +981,7 @@ export default function Editor() {
             canvasContent={canvasContent}
             propertiesContent={propertiesContent}
             onConfigChange={setFlexibleLayoutConfig}
-            hideOnMobile={currentTab === 'bot' && isMobile}
+            hideOnMobile={isMobile}
             currentTab={currentTab}
           />
         </SimpleLayoutCustomizer>
