@@ -306,7 +306,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               {getElementContent(topEl.type)}
             </div>
           </ResizablePanel>
-          {!hideResizeHandle && <ResizableHandle />}
+          <ResizableHandle className={hideResizeHandle ? 'opacity-0 pointer-events-none h-0' : ''} />
           <ResizablePanel defaultSize={100 - topEl.size}>
             <div className="h-full bg-background overflow-auto">
               {centerEl ? getElementContent(centerEl.type) : (bottomEl ? getElementContent(bottomEl.type) : null)}

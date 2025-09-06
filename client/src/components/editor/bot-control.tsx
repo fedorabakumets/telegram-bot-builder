@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { apiRequest } from '@/lib/queryClient';
 import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit, Edit2, Settings, AlertTriangle, Activity, Bot, RefreshCw, Check, X } from 'lucide-react';
 import { TokenManager } from './token-manager';
@@ -508,6 +509,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const [startMode, setStartMode] = useState<'token' | 'new' | 'saved'>('token'); // token management, new token, or legacy saved token
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useMediaQuery('(max-width: 1200px)');
 
   // Получаем статус бота
   const { data: botStatus, isLoading: isLoadingStatus } = useQuery<BotStatusResponse>({
@@ -884,10 +886,10 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         <Separator />
 
         <Tabs value={startMode} onValueChange={(value) => setStartMode(value as any)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="token">Токены</TabsTrigger>
-            <TabsTrigger value="new">Новый токен</TabsTrigger>
-            <TabsTrigger value="saved">Сохраненный</TabsTrigger>
+          <TabsList className={`grid w-full grid-cols-3 ${isMobile ? 'text-xs h-8' : ''}`}>
+            <TabsTrigger value="token" className={isMobile ? 'px-2 py-1' : ''}>Токены</TabsTrigger>
+            <TabsTrigger value="new" className={isMobile ? 'px-2 py-1' : ''}>Новый токен</TabsTrigger>
+            <TabsTrigger value="saved" className={isMobile ? 'px-2 py-1' : ''}>Сохраненный</TabsTrigger>
           </TabsList>
           
           <TabsContent value="token" className="space-y-4">
