@@ -25,6 +25,7 @@ import { LayoutCustomizer } from '@/components/layout/layout-customizer';
 import { SimpleLayoutCustomizer, SimpleLayoutConfig } from '@/components/layout/simple-layout-customizer';
 import { FlexibleLayout } from '@/components/layout/flexible-layout';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -42,6 +43,7 @@ export default function Editor() {
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   
   // Определяем мобильное устройство
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -99,6 +101,10 @@ export default function Editor() {
           : element
       )
     }));
+  }, []);
+
+  const handleOpenMobileSidebar = useCallback(() => {
+    setShowMobileSidebar(true);
   }, []);
 
   // Создаем динамическую конфигурацию макета
@@ -890,6 +896,7 @@ export default function Editor() {
             sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
             propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
             canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+            onOpenMobileSidebar={handleOpenMobileSidebar}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-background overflow-auto">
@@ -1078,6 +1085,7 @@ export default function Editor() {
                   sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
                   propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                   canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+                  onOpenMobileSidebar={handleOpenMobileSidebar}
                 />
               ) : currentTab === 'bot' ? (
                 <div className="h-full p-6 bg-background overflow-auto">
@@ -1257,6 +1265,7 @@ export default function Editor() {
                   headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
                   sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
                   propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                  onOpenMobileSidebar={handleOpenMobileSidebar}
                 />
               ) : null}
             </div>
@@ -1334,6 +1343,45 @@ export default function Editor() {
           onExitFullscreen={handleExitFullscreen}
         />
       )}
+
+      {/* Мобильный sidebar */}
+      <Sheet open={showMobileSidebar} onOpenChange={setShowMobileSidebar}>
+        <SheetContent side="left" className="p-0 w-80">
+          <SheetHeader className="px-4 py-3 border-b">
+            <SheetTitle>Компоненты</SheetTitle>
+          </SheetHeader>
+          <div className="h-full overflow-auto">
+            <ComponentsSidebar 
+              onComponentDrag={handleComponentDrag} 
+              onLoadTemplate={handleLoadTemplate}
+              onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
+              onLayoutChange={updateLayoutConfig}
+              onGoToProjects={handleGoToProjects}
+              onProjectSelect={handleProjectSelect}
+              currentProjectId={currentProject?.id}
+              onToggleCanvas={handleToggleCanvas}
+              onToggleHeader={handleToggleHeader}
+              onToggleProperties={handleToggleProperties}
+              onShowFullLayout={() => {
+                setFlexibleLayoutConfig(prev => ({
+                  ...prev,
+                  elements: prev.elements.map(element => ({ ...element, visible: true }))
+                }))
+              }}
+              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+              headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
+              propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+              showLayoutButtons={!flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible && !flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible}
+              onSheetAdd={handleSheetAdd}
+              onSheetDelete={handleSheetDelete}
+              onSheetRename={handleSheetRename}
+              onSheetDuplicate={handleSheetDuplicate}
+              onSheetSelect={handleSheetSelect}
+              isMobile={isMobile}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
     </>
   );
