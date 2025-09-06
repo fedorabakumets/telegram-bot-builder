@@ -781,8 +781,8 @@ export function Canvas({
       
       {/* Панель инструментов - фиксированная панель вверху */}
       <div className="absolute top-0 z-40 pointer-events-none" style={{
-        left: sidebarVisible ? '100px' : '20px',
-        right: propertiesVisible ? '150px' : '20px'
+        left: isMobile ? '10px' : (sidebarVisible ? '100px' : '20px'),
+        right: isMobile ? '10px' : (propertiesVisible ? '150px' : '20px')
       }}>
         <div className="pt-6">
           <div className="pointer-events-auto flex items-center space-x-2 canvas-controls overflow-x-auto">
@@ -1060,8 +1060,8 @@ export function Canvas({
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && onBotDataUpdate && (
         <div className="absolute bottom-0 z-40 pointer-events-none" style={{
-          left: sidebarVisible ? '260px' : '20px',
-          right: propertiesVisible ? '320px' : '20px'
+          left: isMobile ? '10px' : (sidebarVisible ? '260px' : '20px'),
+          right: isMobile ? '10px' : (propertiesVisible ? '320px' : '20px')
         }}>
           <div className="flex justify-center pb-4">
             <div className="pointer-events-auto w-full" style={{
