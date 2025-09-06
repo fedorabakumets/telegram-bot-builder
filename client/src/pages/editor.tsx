@@ -27,6 +27,7 @@ import { FlexibleLayout } from '@/components/layout/flexible-layout';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { apiRequest } from '@/lib/queryClient';
 import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
@@ -41,6 +42,9 @@ export default function Editor() {
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Определяем мобильное устройство
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
@@ -955,6 +959,7 @@ export default function Editor() {
             canvasContent={canvasContent}
             propertiesContent={propertiesContent}
             onConfigChange={setFlexibleLayoutConfig}
+            hideOnMobile={currentTab === 'bot' && isMobile}
           />
         </SimpleLayoutCustomizer>
       );
