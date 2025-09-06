@@ -1405,7 +1405,7 @@ export function ComponentsSidebar({
             <Button
               size="sm"
               className={cn(
-                "fixed top-4 left-4 z-50 shadow-lg",
+                "fixed top-16 left-4 z-50 shadow-lg",
                 "h-10 w-10 p-0 rounded-full",
                 "bg-primary hover:bg-primary/90",
                 "border border-primary-foreground/20"
@@ -1432,7 +1432,7 @@ export function ComponentsSidebar({
               setIsMobileMenuOpen(true);
             }}
             className={cn(
-              "fixed top-4 right-4 z-50 shadow-lg",
+              "fixed bottom-4 right-4 z-50 shadow-lg",
               "h-10 px-3 rounded-full",
               "bg-background border border-border"
             )}
