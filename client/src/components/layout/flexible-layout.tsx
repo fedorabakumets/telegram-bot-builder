@@ -12,6 +12,7 @@ interface FlexibleLayoutProps {
   propertiesContent: React.ReactNode;
   onConfigChange?: (newConfig: SimpleLayoutConfig) => void;
   hideOnMobile?: boolean; // Скрывать боковые панели на маленьких устройствах
+  currentTab?: string; // Текущая активная вкладка
 }
 
 export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
@@ -21,7 +22,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   canvasContent,
   propertiesContent,
   onConfigChange,
-  hideOnMobile = false
+  hideOnMobile = false,
+  currentTab
 }) => {
   // Определяем мобильное устройство (экраны меньше 1200px для тестирования)
   const isMobile = useMediaQuery('(max-width: 1200px)');
@@ -294,6 +296,9 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 
     // Если есть только верхняя/нижняя панель и основной контент
     if (topEl && !leftEl && !rightEl && (centerEl || bottomEl)) {
+      // Скрываем ResizableHandle на мобильных устройствах для вкладки "Бот"
+      const hideResizeHandle = isMobile && currentTab === 'bot';
+      
       return (
         <ResizablePanelGroup direction="vertical" className="h-full">
           <ResizablePanel defaultSize={topEl.size} minSize={15} maxSize={30}>
@@ -301,7 +306,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               {getElementContent(topEl.type)}
             </div>
           </ResizablePanel>
-          <ResizableHandle />
+          {!hideResizeHandle && <ResizableHandle />}
           <ResizablePanel defaultSize={100 - topEl.size}>
             <div className="h-full bg-background overflow-auto">
               {centerEl ? getElementContent(centerEl.type) : (bottomEl ? getElementContent(bottomEl.type) : null)}

@@ -974,6 +974,7 @@ export default function Editor() {
             propertiesContent={propertiesContent}
             onConfigChange={setFlexibleLayoutConfig}
             hideOnMobile={currentTab === 'bot' && isMobile}
+            currentTab={currentTab}
           />
         </SimpleLayoutCustomizer>
       );
