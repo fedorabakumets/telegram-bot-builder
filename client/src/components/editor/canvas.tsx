@@ -7,7 +7,7 @@ import { AutoConnectionPanel } from '@/components/ui/auto-connection-panel';
 import { CanvasSheets } from '@/components/ui/canvas-sheets';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
+import { Navigation, Sidebar, Sliders, Monitor, Menu } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 import { Node, ComponentDefinition, Connection } from '@/types/bot';
@@ -56,6 +56,9 @@ interface CanvasProps {
   sidebarVisible?: boolean;
   propertiesVisible?: boolean;
   canvasVisible?: boolean;
+  
+  // Мобильные функции
+  onOpenMobileSidebar?: () => void;
 }
 
 export function Canvas({ 
@@ -91,7 +94,8 @@ export function Canvas({
   headerVisible,
   sidebarVisible,
   propertiesVisible,
-  canvasVisible
+  canvasVisible,
+  onOpenMobileSidebar
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -788,6 +792,17 @@ export function Canvas({
           <div className={`pointer-events-auto flex items-center canvas-controls overflow-x-auto ${
             isMobile ? 'space-x-1 text-sm' : 'space-x-2'
           }`}>
+            {/* Кнопка-бургер для мобильных устройств */}
+            {isMobile && onOpenMobileSidebar && (
+              <button
+                onClick={onOpenMobileSidebar}
+                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group mr-2"
+                title="Открыть панель компонентов"
+              >
+                <Menu className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+              </button>
+            )}
+            
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 flex items-center overflow-hidden zoom-controls">
               <button 
                 onClick={zoomOut}
