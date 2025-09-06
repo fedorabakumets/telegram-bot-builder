@@ -957,6 +957,7 @@ export default function Editor() {
         onSheetRename={handleSheetRename}
         onSheetDuplicate={handleSheetDuplicate}
         onSheetSelect={handleSheetSelect}
+        isMobile={isMobile}
       />
     );
 
@@ -1037,6 +1038,7 @@ export default function Editor() {
               onSheetRename={handleSheetRename}
               onSheetDuplicate={handleSheetDuplicate}
               onSheetSelect={handleSheetSelect}
+              isMobile={isMobile}
             />
           }
           canvas={
@@ -1220,6 +1222,7 @@ export default function Editor() {
               onSheetRename={handleSheetRename}
               onSheetDuplicate={handleSheetDuplicate}
               onSheetSelect={handleSheetSelect}
+              isMobile={isMobile}
             />
           }
           canvasContent={

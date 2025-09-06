@@ -12,12 +12,14 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText, Copy, MoreHorizontal, ChevronDown, ChevronRight } from 'lucide-react';
+import { Layout, Settings, Grid, Home, Plus, Edit, Trash2, Calendar, User, GripVertical, FileText, Copy, MoreHorizontal, ChevronDown, ChevronRight, Menu, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 
 
@@ -48,6 +50,8 @@ interface ComponentsSidebarProps {
   onSheetRename?: (sheetId: string, name: string) => void;
   onSheetDuplicate?: (sheetId: string) => void;
   onSheetSelect?: (sheetId: string) => void;
+  // Мобильный режим
+  isMobile?: boolean;
 }
 
 const components: ComponentDefinition[] = [
@@ -608,7 +612,8 @@ export function ComponentsSidebar({
   onSheetDelete,
   onSheetRename,
   onSheetDuplicate,
-  onSheetSelect
+  onSheetSelect,
+  isMobile = false
 }: ComponentsSidebarProps) {
   const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
   const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
@@ -619,6 +624,9 @@ export function ComponentsSidebar({
   const [editingSheetName, setEditingSheetName] = useState('');
   // Состояние для сворачивания/раскрытия категорий
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  // Мобильное меню
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isActuallyMobile = useMediaQuery('(max-width: 768px)');
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
@@ -1033,8 +1041,9 @@ export function ComponentsSidebar({
     }
   };
 
-  return (
-    <aside className="w-full h-full bg-background border-r border-border flex flex-col">
+  // Создаем контент панели
+  const SidebarContent = () => (
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Sidebar Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
@@ -1382,11 +1391,64 @@ export function ComponentsSidebar({
             </div>
           );
         })}
-        
-
       </div>
+    </div>
+  );
 
+  // На мобильных устройствах показываем Sheet, на десктопе - обычную боковую панель
+  if (isActuallyMobile || isMobile) {
+    return (
+      <>
+        {/* Floating Action Button для мобильного меню */}
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button
+              size="sm"
+              className={cn(
+                "fixed top-4 left-4 z-50 shadow-lg",
+                "h-10 w-10 p-0 rounded-full",
+                "bg-primary hover:bg-primary/90",
+                "border border-primary-foreground/20"
+              )}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 sm:w-96 p-0">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Панель компонентов</SheetTitle>
+            </SheetHeader>
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+        
+        {/* Быстрая кнопка добавления на мобильных */}
+        {onLoadTemplate && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              setCurrentTab('projects');
+              setIsMobileMenuOpen(true);
+            }}
+            className={cn(
+              "fixed top-4 right-4 z-50 shadow-lg",
+              "h-10 px-3 rounded-full",
+              "bg-background border border-border"
+            )}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Проекты
+          </Button>
+        )}
+      </>
+    );
+  }
 
+  // Десктопная версия
+  return (
+    <aside className="w-80 bg-background border-r border-border h-full flex flex-col overflow-hidden">
+      <SidebarContent />
     </aside>
   );
 }
