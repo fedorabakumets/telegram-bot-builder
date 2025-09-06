@@ -878,7 +878,7 @@ export default function Editor() {
             canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
           />
         ) : currentTab === 'bot' ? (
-          <div className="h-full p-6 bg-gray-50 overflow-auto">
+          <div className="h-full p-6 bg-background overflow-auto">
             <div className="max-w-2xl mx-auto">
               <BotControl
                 projectId={currentProject.id}
@@ -1063,7 +1063,7 @@ export default function Editor() {
                   canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
                 />
               ) : currentTab === 'bot' ? (
-                <div className="h-full p-6 bg-gray-50 overflow-auto">
+                <div className="h-full p-6 bg-background overflow-auto">
                   <div className="max-w-2xl mx-auto">
                     <BotControl
                       projectId={currentProject.id}
