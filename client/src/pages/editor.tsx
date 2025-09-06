@@ -101,44 +101,58 @@ export default function Editor() {
     }));
   }, []);
 
-  const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>({
-    elements: [
-      {
-        id: 'header',
-        type: 'header',
-        name: 'Шапка',
-        position: 'top',
-        size: 8,
-        visible: true
-      },
-      {
-        id: 'sidebar',
-        type: 'sidebar',
-        name: 'Боковая панель',
-        position: 'left',
-        size: 20,
-        visible: true
-      },
-      {
-        id: 'canvas',
-        type: 'canvas',
-        name: 'Холст',
-        position: 'center',
-        size: 55,
-        visible: true
-      },
-      {
-        id: 'properties',
-        type: 'properties',
-        name: 'Свойства',
-        position: 'right',
-        size: 25,
-        visible: true
-      }
-    ],
-    compactMode: false,
-    showGrid: true
-  });
+  // Создаем динамическую конфигурацию макета
+  const getFlexibleLayoutConfig = useCallback((): SimpleLayoutConfig => {
+    // Для мобильных устройств на вкладке "Бот" используем компактный заголовок
+    const headerSize = (currentTab === 'bot' && isMobile) ? 4 : 8;
+    
+    return {
+      elements: [
+        {
+          id: 'header',
+          type: 'header',
+          name: 'Шапка',
+          position: 'top',
+          size: headerSize,
+          visible: true
+        },
+        {
+          id: 'sidebar',
+          type: 'sidebar',
+          name: 'Боковая панель',
+          position: 'left',
+          size: 20,
+          visible: true
+        },
+        {
+          id: 'canvas',
+          type: 'canvas',
+          name: 'Холст',
+          position: 'center',
+          size: 55,
+          visible: true
+        },
+        {
+          id: 'properties',
+          type: 'properties',
+          name: 'Свойства',
+          position: 'right',
+          size: 25,
+          visible: true
+        }
+      ],
+      compactMode: false,
+      showGrid: true
+    };
+  }, [currentTab, isMobile]);
+
+  const [flexibleLayoutConfig, setFlexibleLayoutConfig] = useState<SimpleLayoutConfig>(getFlexibleLayoutConfig());
+  
+  // Обновляем конфигурацию макета при изменении вкладки или размера экрана
+  useEffect(() => {
+    setFlexibleLayoutConfig(getFlexibleLayoutConfig());
+  }, [getFlexibleLayoutConfig]);
+  
   const { config: layoutConfig, updateConfig: updateLayoutConfig, resetConfig: resetLayoutConfig, applyConfig: applyLayoutConfig } = useLayoutManager();
   const { toast } = useToast();
   const queryClient = useQueryClient();
