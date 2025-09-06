@@ -1395,54 +1395,9 @@ export function ComponentsSidebar({
     </div>
   );
 
-  // На мобильных устройствах показываем Sheet, на десктопе - обычную боковую панель
+  // На мобильных устройствах возвращаем содержимое для использования в Sheet из editor.tsx
   if (isActuallyMobile || isMobile) {
-    return (
-      <>
-        {/* Floating Action Button для мобильного меню */}
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button
-              size="sm"
-              className={cn(
-                "fixed top-16 left-4 z-50 shadow-lg",
-                "h-10 w-10 p-0 rounded-full",
-                "bg-primary hover:bg-primary/90",
-                "border border-primary-foreground/20"
-              )}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-80 sm:w-96 p-0">
-            <SheetHeader className="sr-only">
-              <SheetTitle>Панель компонентов</SheetTitle>
-            </SheetHeader>
-            <SidebarContent />
-          </SheetContent>
-        </Sheet>
-        
-        {/* Быстрая кнопка добавления на мобильных */}
-        {onLoadTemplate && (
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              setCurrentTab('projects');
-              setIsMobileMenuOpen(true);
-            }}
-            className={cn(
-              "fixed bottom-4 right-4 z-50 shadow-lg",
-              "h-10 px-3 rounded-full",
-              "bg-background border border-border"
-            )}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Проекты
-          </Button>
-        )}
-      </>
-    );
+    return <SidebarContent />;
   }
 
   // Десктопная версия
