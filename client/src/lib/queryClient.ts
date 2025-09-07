@@ -59,9 +59,9 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 минут кэш для всех данных
-      gcTime: 10 * 60 * 1000, // 10 минут в garbage collection
-      retry: false,
+      staleTime: 10 * 60 * 1000, // 10 минут кеш для всех данных (увеличено для лучшей производительности)
+      gcTime: 30 * 60 * 1000, // 30 минут в garbage collection
+      retry: 1, // Одна попытка пересылки при ошибке
     },
     mutations: {
       retry: false,

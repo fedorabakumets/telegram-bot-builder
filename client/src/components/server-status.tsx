@@ -33,19 +33,20 @@ export function ServerStatus() {
 
   useEffect(() => {
     checkHealth();
-    // Проверяем чаще только если сервер еще не готов
-    const getInterval = () => status?.ready ? 30000 : 2000; // 30с если готов, 2с если нет
     
-    const scheduleNext = () => {
-      setTimeout(() => {
-        checkHealth();
-        if (!status?.ready) {
-          scheduleNext();
-        }
-      }, getInterval());
+    // Только делаем один запрос при загрузке, дальше полагаемся на кеширование
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (!status?.ready) {
+      // Проверяем каждые 5 секунд только если сервер не готов
+      interval = setInterval(checkHealth, 5000);
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
     };
-    
-    scheduleNext();
   }, [status?.ready]);
 
   // Не показываем индикатор если статус неизвестен или система готова и прошло время
