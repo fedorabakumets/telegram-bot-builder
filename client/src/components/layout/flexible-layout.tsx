@@ -302,7 +302,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
       return (
         <ResizablePanelGroup direction="vertical" className="h-full">
           <ResizablePanel defaultSize={isMobile ? 7 : topEl.size} minSize={isMobile ? 7 : 15} maxSize={30}>
-            <div className="h-full border-b border-border bg-background overflow-auto">
+            <div className="h-full bg-background overflow-auto">
               {getElementContent(topEl.type)}
             </div>
           </ResizablePanel>
