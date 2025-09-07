@@ -44,6 +44,7 @@ export default function Editor() {
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showMobileProperties, setShowMobileProperties] = useState(false);
   
   // Определяем мобильное устройство
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -105,6 +106,10 @@ export default function Editor() {
 
   const handleOpenMobileSidebar = useCallback(() => {
     setShowMobileSidebar(true);
+  }, []);
+
+  const handleOpenMobileProperties = useCallback(() => {
+    setShowMobileProperties(true);
   }, []);
 
   // Создаем динамическую конфигурацию макета
@@ -816,6 +821,22 @@ export default function Editor() {
     };
   }, [isFullscreen, currentTab, handleEnterFullscreen, handleExitFullscreen]);
 
+  // Определяем содержимое панели свойств для переиспользования
+  const propertiesContent = currentProject ? (
+    <PropertiesPanel
+      projectId={currentProject.id}
+      selectedNode={selectedNode}
+      allNodes={nodes}
+      allSheets={botDataWithSheets?.sheets || []}
+      currentSheetId={botDataWithSheets?.activeSheetId || undefined}
+      onNodeUpdate={handleNodeUpdateWithSheets}
+      onNodeTypeChange={handleNodeTypeChange}
+      onButtonAdd={addButton}
+      onButtonUpdate={updateButton}
+      onButtonDelete={deleteButton}
+    />
+  ) : null;
+
   if (!currentProject) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -897,6 +918,7 @@ export default function Editor() {
             propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
             canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
             onOpenMobileSidebar={handleOpenMobileSidebar}
+            onOpenMobileProperties={handleOpenMobileProperties}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-background overflow-auto">
@@ -916,21 +938,6 @@ export default function Editor() {
           </div>
         ) : null}
       </div>
-    );
-
-    const propertiesContent = (
-      <PropertiesPanel
-        projectId={currentProject.id}
-        selectedNode={selectedNode}
-        allNodes={nodes}
-        allSheets={botDataWithSheets?.sheets || []}
-        currentSheetId={botDataWithSheets?.activeSheetId || undefined}
-        onNodeUpdate={handleNodeUpdateWithSheets}
-        onNodeTypeChange={handleNodeTypeChange}
-        onButtonAdd={addButton}
-        onButtonUpdate={updateButton}
-        onButtonDelete={deleteButton}
-      />
     );
 
     const sidebarContent = (
@@ -1379,6 +1386,18 @@ export default function Editor() {
               onSheetSelect={handleSheetSelect}
               isMobile={isMobile}
             />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Мобильная панель свойств */}
+      <Sheet open={showMobileProperties} onOpenChange={setShowMobileProperties}>
+        <SheetContent side="right" className="p-0 w-80">
+          <SheetHeader className="px-4 py-3 border-b">
+            <SheetTitle>Свойства</SheetTitle>
+          </SheetHeader>
+          <div className="h-full overflow-auto">
+            {propertiesContent}
           </div>
         </SheetContent>
       </Sheet>

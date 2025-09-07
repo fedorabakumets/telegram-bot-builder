@@ -59,6 +59,7 @@ interface CanvasProps {
   
   // Мобильные функции
   onOpenMobileSidebar?: () => void;
+  onOpenMobileProperties?: () => void;
 }
 
 export function Canvas({ 
@@ -95,7 +96,8 @@ export function Canvas({
   sidebarVisible,
   propertiesVisible,
   canvasVisible,
-  onOpenMobileSidebar
+  onOpenMobileSidebar,
+  onOpenMobileProperties
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -804,9 +806,9 @@ export function Canvas({
             )}
 
             {/* Кнопка панели свойств для мобильных устройств */}
-            {isMobile && onToggleProperties && (
+            {isMobile && onOpenMobileProperties && (
               <button
-                onClick={onToggleProperties}
+                onClick={onOpenMobileProperties}
                 className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group mr-2"
                 title="Открыть панель свойств"
               >
