@@ -264,8 +264,10 @@ export function Canvas({
     }
     
     if (canvasRef.current) {
-      const containerWidth = canvasRef.current.clientWidth;
-      const containerHeight = canvasRef.current.clientHeight;
+      // Получаем размеры видимой области (родительского контейнера с overflow)
+      const scrollContainer = canvasRef.current.parentElement;
+      const containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64; // -64 для padding
+      const containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
       
       console.log('Container dimensions:', { containerWidth, containerHeight });
       
