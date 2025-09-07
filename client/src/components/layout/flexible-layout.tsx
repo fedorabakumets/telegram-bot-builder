@@ -112,7 +112,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         `}
         style={{
           gridArea: gridArea,
-          minHeight: element.type === 'header' ? '60px' : '200px',
+          minHeight: element.type === 'header' ? (isMobile ? '48px' : '60px') : '200px',
           overflow: 'hidden'
         }}
       >
