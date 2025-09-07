@@ -232,6 +232,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
+  
+  // Touch состояние для мобильного перемещения элементов
+  const [isTouchDragging, setIsTouchDragging] = useState(false);
+  const [touchOffset, setTouchOffset] = useState({ x: 0, y: 0 });
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!onMove) return;
@@ -312,7 +316,93 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
     setIsDragging(false);
   };
 
-  // Добавляем и удаляем обработчики событий
+  // Touch обработчики для мобильного перемещения элементов
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!onMove) return;
+    
+    // Не запускать драг если кликнули по кнопке удаления
+    if ((e.target as HTMLElement).closest('button')) return;
+    
+    // Предотвращаем стандартное поведение браузера
+    e.preventDefault();
+    e.stopPropagation(); // Останавливаем всплытие, чтобы не конфликтовать с панорамированием холста
+    
+    const touch = e.touches[0];
+    if (!touch) return;
+    
+    // Находим канвас (родительский элемент трансформируемого контейнера)
+    const transformedContainer = nodeRef.current?.parentElement;
+    const canvas = transformedContainer?.parentElement;
+    
+    if (canvas) {
+      const canvasRect = canvas.getBoundingClientRect();
+      const zoomFactor = zoom / 100;
+      
+      // Рассчитываем смещение в канвасных координатах
+      const screenX = touch.clientX - canvasRect.left;
+      const screenY = touch.clientY - canvasRect.top;
+      
+      const canvasX = (screenX - pan.x) / zoomFactor;
+      const canvasY = (screenY - pan.y) / zoomFactor;
+      
+      setTouchOffset({
+        x: canvasX - node.position.x,
+        y: canvasY - node.position.y
+      });
+      setIsTouchDragging(true);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isTouchDragging || !onMove) return;
+    
+    e.preventDefault();
+    e.stopPropagation(); // Останавливаем всплытие, чтобы не конфликтовать с панорамированием холста
+    
+    const touch = e.touches[0];
+    if (!touch) return;
+    
+    // Находим канвас (родительский элемент трансформируемого контейнера)
+    const transformedContainer = nodeRef.current?.parentElement;
+    const canvas = transformedContainer?.parentElement;
+    
+    if (canvas && transformedContainer) {
+      const canvasRect = canvas.getBoundingClientRect();
+      
+      // Получаем экранные координаты touch относительно канваса
+      const screenX = touch.clientX - canvasRect.left;
+      const screenY = touch.clientY - canvasRect.top;
+      
+      // Преобразуем экранные координаты в координаты канваса с учетом зума и панорамирования
+      const zoomFactor = zoom / 100;
+      const canvasX = (screenX - pan.x) / zoomFactor - touchOffset.x;
+      const canvasY = (screenY - pan.y) / zoomFactor - touchOffset.y;
+      
+      // Привязка к сетке (20px grid в канвасных координатах)
+      const gridSize = 20;
+      const snappedX = Math.round(canvasX / gridSize) * gridSize;
+      const snappedY = Math.round(canvasY / gridSize) * gridSize;
+      
+      // Ограничиваем позицию в пределах canvas с отступами (в канвасных координатах)
+      const minX = 20;
+      const minY = 20;
+      const maxX = Math.max(minX, (canvas.clientWidth / zoomFactor) - 340);
+      const maxY = Math.max(minY, Math.min(snappedY, (canvas.clientHeight / zoomFactor) - 220));
+      
+      const boundedX = Math.max(minX, Math.min(snappedX, maxX));
+      const boundedY = Math.max(minY, Math.min(snappedY, maxY));
+      
+      onMove({ x: boundedX, y: boundedY });
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Останавливаем всплытие
+    setIsTouchDragging(false);
+  };
+
+  // Добавляем и удаляем обработчики событий для mouse
   useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -329,24 +419,40 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
     }
   }, [isDragging, dragOffset, onMove]);
 
+  // Touch события уже обрабатываются в handleTouchMove, не нужно добавлять глобальные слушатели
+  useEffect(() => {
+    if (isTouchDragging) {
+      document.body.style.userSelect = 'none';
+      document.body.style.touchAction = 'none'; // Предотвращаем прокрутку при перетаскивании
+      
+      return () => {
+        document.body.style.userSelect = '';
+        document.body.style.touchAction = '';
+      };
+    }
+  }, [isTouchDragging]);
+
   return (
     <div
       ref={nodeRef}
       className={cn(
         "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 transition-all duration-300 relative select-none group",
         isSelected ? "border-blue-500 ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10" : "border-gray-200 dark:border-slate-700",
-        isDragging ? "shadow-3xl scale-105 cursor-grabbing z-50 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "hover:shadow-2xl hover:border-gray-300 dark:hover:border-slate-600",
+        (isDragging || isTouchDragging) ? "shadow-3xl scale-105 cursor-grabbing z-50 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "hover:shadow-2xl hover:border-gray-300 dark:hover:border-slate-600",
         onMove ? "cursor-grab hover:cursor-grab" : "cursor-pointer"
       )}
-      onClick={!isDragging ? onClick : undefined}
+      onClick={!(isDragging || isTouchDragging) ? onClick : undefined}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       style={{
         position: 'absolute',
         left: node.position.x,
         top: node.position.y,
-        transform: isDragging ? 'rotate(2deg) scale(1.05)' : 'rotate(0deg) scale(1)',
-        zIndex: isDragging ? 1000 : isSelected ? 10 : 1,
-        transition: isDragging ? 'none' : 'all 0.2s ease'
+        transform: (isDragging || isTouchDragging) ? 'rotate(2deg) scale(1.05)' : 'rotate(0deg) scale(1)',
+        zIndex: (isDragging || isTouchDragging) ? 1000 : isSelected ? 10 : 1,
+        transition: (isDragging || isTouchDragging) ? 'none' : 'all 0.2s ease'
       }}
     >
       {/* Action buttons */}
