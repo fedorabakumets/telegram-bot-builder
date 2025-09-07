@@ -56,7 +56,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
       container: {
         display: 'grid',
         height: '100vh',
-        gridTemplateRows: `${topSize > 0 ? `${topSize}px` : ''} 1fr ${bottomSize > 0 ? `${bottomSize}px` : ''}`.trim(),
+        gridTemplateRows: `${topSize > 0 ? `${topSize}rem` : ''} 1fr ${bottomSize > 0 ? `${bottomSize}rem` : ''}`.trim(),
         gridTemplateColumns: `${leftSize > 0 ? `${leftSize}%` : ''} 1fr ${rightSize > 0 ? `${rightSize}%` : ''}`.trim(),
         gridTemplateAreas: `
           ${topSize > 0 ? `"${leftSize > 0 ? 'top-left' : ''} top ${rightSize > 0 ? 'top-right' : ''}"` : ''}
@@ -112,7 +112,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         `}
         style={{
           gridArea: gridArea,
-          minHeight: element.type === 'header' ? (isMobile ? '48px' : '60px') : '200px',
+          minHeight: element.type === 'header' ? 'auto' : '200px',
           overflow: 'hidden'
         }}
       >
