@@ -201,19 +201,17 @@ export function useBotEditor(initialData?: BotData) {
   }, []);
 
   const setBotData = useCallback((botData: BotData, templateName?: string) => {
-    console.log('setBotData вызван с данными:', botData);
-    console.log('Устанавливаем узлы:', botData.nodes?.length || 0);
-    console.log('Устанавливаем связи:', botData.connections?.length || 0);
+    // Устанавливаем данные бота
     
     // Применяем иерархическую компоновку к узлам
     const layoutNodes = applyTemplateLayout(botData.nodes || [], botData.connections || [], templateName);
-    console.log('Применили иерархическую компоновку:', layoutNodes.length);
+    // Применили иерархическую компоновку
     
     setNodes(layoutNodes);
     setConnections(botData.connections || []);
     setSelectedNodeId(null); // Сбрасываем выбранный узел
     
-    console.log('setBotData завершен');
+    // setBotData завершен
   }, []);
 
   const duplicateNode = useCallback((nodeId: string) => {

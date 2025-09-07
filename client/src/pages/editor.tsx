@@ -1291,7 +1291,7 @@ export default function Editor() {
             />
           }
           onLayoutChange={(elements) => {
-            console.log('Layout changed:', elements);
+            // Layout changed
             // Здесь можно обновить конфигурацию макета
           }}
         />

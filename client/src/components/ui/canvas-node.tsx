@@ -301,11 +301,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       const boundedX = Math.max(minX, Math.min(snappedX, maxX));
       const boundedY = Math.max(minY, Math.min(snappedY, maxY));
       
-      // Отладочный вывод для диагностики
-      console.log('Mouse move debug:', {
-        screenX, screenY, canvasX, canvasY, snappedX, snappedY, boundedX, boundedY,
-        dragOffset, zoomFactor, pan
-      });
+      // Отладочный вывод убран для улучшения производительности
       
       onMove({ x: boundedX, y: boundedY });
     }

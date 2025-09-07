@@ -727,10 +727,7 @@ export function ComponentsSidebar({
           y: touch.clientY - canvasRect.top
         };
         
-        console.log('Dispatching canvas-drop event:', {
-          component: touchedComponent.name,
-          position: dropPosition
-        });
+        // Dispatching canvas-drop event
         
         // Создаем синтетическое событие drop
         const dropEvent = new CustomEvent('canvas-drop', {
@@ -741,10 +738,10 @@ export function ComponentsSidebar({
         });
         canvas.dispatchEvent(dropEvent);
       } else {
-        console.log('Touch ended outside canvas');
+        // Touch ended outside canvas
       }
     } else {
-      console.log('Canvas not found or no element at touch point');
+      // Canvas not found
     }
     
     setTouchedComponent(null);
@@ -758,19 +755,18 @@ export function ComponentsSidebar({
     const handleGlobalTouchMove = (e: TouchEvent) => {
       if (isDragging && touchedComponent) {
         e.preventDefault();
-        console.log('Global touch move:', { x: e.touches[0].clientX, y: e.touches[0].clientY });
+        // Global touch move
       }
     };
 
     const handleGlobalTouchEnd = (e: TouchEvent) => {
       if (!isDragging || !touchedComponent) return;
       
-      console.log('Global touch end for component:', touchedComponent.name);
+      // Global touch end
       const touch = e.changedTouches[0];
       const element = document.elementFromPoint(touch.clientX, touch.clientY);
       
-      console.log('Global touch end position:', { x: touch.clientX, y: touch.clientY });
-      console.log('Element at global touch point:', element);
+      // Global touch end position
       
       // Восстанавливаем стили элемента
       if (touchStartElement) {
@@ -781,13 +777,13 @@ export function ComponentsSidebar({
       
       // Проверяем, попали ли мы на холст
       const canvas = document.querySelector('[data-canvas-drop-zone]');
-      console.log('Canvas element found (global):', canvas);
+      // Canvas element check
       
       if (canvas && element) {
         const isInCanvas = canvas.contains(element) || element === canvas || 
                           element.closest('[data-canvas-drop-zone]') === canvas;
         
-        console.log('Is in canvas (global):', isInCanvas);
+        // Is in canvas check
         
         if (isInCanvas) {
           const canvasRect = canvas.getBoundingClientRect();
@@ -796,10 +792,7 @@ export function ComponentsSidebar({
             y: touch.clientY - canvasRect.top
           };
           
-          console.log('Dispatching global canvas-drop event:', {
-            component: touchedComponent.name,
-            position: dropPosition
-          });
+          // Dispatching global canvas-drop event
           
           const dropEvent = new CustomEvent('canvas-drop', {
             detail: {

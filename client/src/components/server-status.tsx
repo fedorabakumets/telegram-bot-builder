@@ -34,7 +34,7 @@ export function ServerStatus() {
   useEffect(() => {
     checkHealth();
     // Проверяем чаще только если сервер еще не готов
-    const getInterval = () => status?.ready ? 10000 : 2000; // 10с если готов, 2с если нет
+    const getInterval = () => status?.ready ? 30000 : 2000; // 30с если готов, 2с если нет
     
     const scheduleNext = () => {
       setTimeout(() => {

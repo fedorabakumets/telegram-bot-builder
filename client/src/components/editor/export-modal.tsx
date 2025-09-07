@@ -11,7 +11,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { generatePythonCode, validateBotStructure, generateRequirementsTxt, generateReadme, generateDockerfile, generateConfigYaml } from '@/lib/bot-generator';
 import { generateBotFatherCommands } from '@/lib/commands';
 import { BotData, BotGroup } from '@shared/schema';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 interface ExportModalProps {
@@ -64,36 +64,52 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     ).length || 0
   };
 
-  useEffect(() => {
-    if (isOpen && botData) {
-      const validation = validateBotStructure(botData);
-      setValidationResult(validation || { isValid: false, errors: [] });
+  // Ленивая генерация экспорта - только когда нужен конкретный формат
+  const generateExportContent = useMemo(() => {
+    if (!isOpen || !botData) return {};
+    
+    const validation = validateBotStructure(botData);
+    setValidationResult(validation || { isValid: false, errors: [] });
+    
+    if (!validation?.isValid) return {};
+    
+    return {
+      python: () => generatePythonCode(botData, projectName, groups),
+      json: () => JSON.stringify(botData, null, 2),
+      requirements: () => generateRequirementsTxt(),
+      readme: () => generateReadme(botData, projectName),
+      dockerfile: () => generateDockerfile(),
+      config: () => generateConfigYaml(projectName)
+    };
+  }, [isOpen, botData, projectName, groups]);
+
+  // Получение контента для выбранного формата
+  const getCurrentContent = useMemo(() => {
+    if (!generateExportContent[selectedFormat]) return '';
+    
+    // Кэшируем результат для выбранного формата
+    if (!exportContent[selectedFormat]) {
+      const content = generateExportContent[selectedFormat]();
+      setExportContent(prev => ({ ...prev, [selectedFormat]: content }));
       
-      if (validation?.isValid) {
-        // Generate all export formats with groups data
-        const pythonCode = generatePythonCode(botData, projectName, groups);
-        const jsonData = JSON.stringify(botData, null, 2);
-        const requirements = generateRequirementsTxt();
-        const readme = generateReadme(botData, projectName);
-        const dockerfile = generateDockerfile();
-        const config = generateConfigYaml(projectName);
-        
-        setGeneratedCode(pythonCode);
-        setExportContent({
-          python: pythonCode,
-          json: jsonData,
-          requirements: requirements,
-          readme: readme,
-          dockerfile: dockerfile,
-          config: config
-        });
+      // Для Python также устанавливаем основной код
+      if (selectedFormat === 'python') {
+        setGeneratedCode(content);
       }
       
-      // Генерация команд для BotFather
+      return content;
+    }
+    
+    return exportContent[selectedFormat];
+  }, [generateExportContent, selectedFormat, exportContent]);
+
+  // Генерация команд BotFather только при открытии
+  useEffect(() => {
+    if (isOpen && botData) {
       const botFatherCmds = generateBotFatherCommands(botData?.nodes || []);
       setBotFatherCommands(botFatherCmds);
     }
-  }, [isOpen, botData, projectName, groups]);
+  }, [isOpen, botData]);
 
   const getFileExtension = (format: ExportFormat): string => {
     const extensions = {
@@ -121,7 +137,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
   };
 
   const copyToClipboard = async (content?: string) => {
-    const textToCopy = content || exportContent[selectedFormat];
+    const textToCopy = content || getCurrentContent;
     try {
       await navigator.clipboard.writeText(textToCopy);
       toast({
@@ -139,7 +155,8 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
   const downloadFile = (format?: ExportFormat) => {
     const formatToDownload = format || selectedFormat;
-    const content = exportContent[formatToDownload];
+    const content = formatToDownload === selectedFormat ? getCurrentContent : 
+      (generateExportContent[formatToDownload] ? generateExportContent[formatToDownload]() : '');
     const fileName = getFileName(formatToDownload);
     
     const blob = new Blob([content], { type: 'text/plain' });
@@ -338,7 +355,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 
                 {validationResult.isValid ? (
                   <Textarea
-                    value={exportContent[selectedFormat]}
+                    value={getCurrentContent}
                     readOnly
                     className={`${isMobile ? 'min-h-[200px]' : 'min-h-[350px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-muted/50 dark:bg-muted/20 border-muted dark:border-muted/40 resize-none`}
                     placeholder="Выберите формат для просмотра..."
