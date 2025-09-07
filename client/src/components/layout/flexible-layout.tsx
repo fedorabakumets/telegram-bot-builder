@@ -326,23 +326,40 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {leftEl && (
             <>
-              <ResizablePanel defaultSize={leftSize} minSize={15} maxSize={40}>
+              <ResizablePanel 
+                defaultSize={leftSize} 
+                minSize={15} 
+                maxSize={40}
+                collapsedSize={0}
+                collapsible={false}
+              >
                 <div className="h-full border-r border-border bg-background overflow-auto">
                   {getElementContent(leftEl.type)}
                 </div>
               </ResizablePanel>
-              <ResizableHandle />
+              <ResizableHandle withHandle />
             </>
           )}
-          <ResizablePanel defaultSize={centerSize} minSize={30}>
+          <ResizablePanel 
+            defaultSize={centerSize} 
+            minSize={30}
+            collapsedSize={0}
+            collapsible={false}
+          >
             <div className="h-full bg-background overflow-auto">
               {getElementContent(centerEl.type)}
             </div>
           </ResizablePanel>
           {rightEl && (
             <>
-              <ResizableHandle />
-              <ResizablePanel defaultSize={rightSize} minSize={15} maxSize={40}>
+              <ResizableHandle withHandle />
+              <ResizablePanel 
+                defaultSize={rightSize} 
+                minSize={15} 
+                maxSize={40}
+                collapsedSize={0}
+                collapsible={false}
+              >
                 <div className="h-full border-l border-border bg-background overflow-auto">
                   {getElementContent(rightEl.type)}
                 </div>
@@ -365,23 +382,40 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           <ResizablePanelGroup direction="horizontal" className="h-full">
             {leftEl && (
               <>
-                <ResizablePanel defaultSize={leftEl.size} minSize={15} maxSize={40}>
+                <ResizablePanel 
+                  defaultSize={leftEl.size} 
+                  minSize={15} 
+                  maxSize={40}
+                  collapsedSize={0}
+                  collapsible={false}
+                >
                   <div className="h-full border-r border-border bg-background overflow-auto">
                     {getElementContent(leftEl.type)}
                   </div>
                 </ResizablePanel>
-                <ResizableHandle />
+                <ResizableHandle withHandle />
               </>
             )}
-            <ResizablePanel defaultSize={Math.max(100 - (leftEl?.size || 0) - (rightEl?.size || 0), 30)} minSize={30}>
+            <ResizablePanel 
+              defaultSize={Math.max(100 - (leftEl?.size || 0) - (rightEl?.size || 0), 30)} 
+              minSize={30}
+              collapsedSize={0}
+              collapsible={false}
+            >
               <div className="h-full bg-background overflow-auto">
                 {centerEl ? getElementContent(centerEl.type) : null}
               </div>
             </ResizablePanel>
             {rightEl && (
               <>
-                <ResizableHandle />
-                <ResizablePanel defaultSize={rightEl.size} minSize={15} maxSize={40}>
+                <ResizableHandle withHandle />
+                <ResizablePanel 
+                  defaultSize={rightEl.size} 
+                  minSize={15} 
+                  maxSize={40}
+                  collapsedSize={0}
+                  collapsible={false}
+                >
                   <div className="h-full border-l border-border bg-background overflow-auto">
                     {getElementContent(rightEl.type)}
                   </div>
