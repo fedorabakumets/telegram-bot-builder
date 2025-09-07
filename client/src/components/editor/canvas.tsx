@@ -788,7 +788,7 @@ export function Canvas({
         left: isMobile ? '10px' : (sidebarVisible ? '100px' : '20px'),
         right: isMobile ? '10px' : (propertiesVisible ? '150px' : '20px')
       }}>
-        <div className="pt-1">
+        <div className="pt-0">
           <div className={`pointer-events-auto flex items-center canvas-controls overflow-x-auto ${
             isMobile ? 'space-x-1 text-sm' : 'space-x-2'
           }`}>
