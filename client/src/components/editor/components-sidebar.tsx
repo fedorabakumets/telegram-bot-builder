@@ -25,6 +25,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 
 interface ComponentsSidebarProps {
   onComponentDrag: (component: ComponentDefinition) => void;
+  onComponentAdd?: (component: ComponentDefinition) => void;
   onLoadTemplate?: () => void;
   onOpenLayoutCustomizer?: () => void;
   onLayoutChange?: (config: any) => void;
@@ -590,6 +591,7 @@ const componentCategories = [
 
 export function ComponentsSidebar({ 
   onComponentDrag, 
+  onComponentAdd,
   onLoadTemplate, 
   onOpenLayoutCustomizer, 
   onLayoutChange,
@@ -1366,7 +1368,7 @@ export function ComponentsSidebar({
                       onTouchStart={(e) => handleTouchStart(e, component)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
-                      className={`component-item flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors touch-action-none no-select ${
+                      className={`component-item group flex items-center p-3 bg-muted/50 hover:bg-muted rounded-lg cursor-move transition-colors touch-action-none no-select ${
                         touchedComponent?.id === component.id && isDragging ? 'opacity-50 scale-95' : ''
                       }`}
                     >
@@ -1377,6 +1379,18 @@ export function ComponentsSidebar({
                         <p className="text-sm font-medium text-foreground">{component.name}</p>
                         <p className="text-xs text-muted-foreground">{component.description}</p>
                       </div>
+                      {onComponentAdd && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onComponentAdd(component);
+                          }}
+                          className="ml-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title={`Добавить ${component.name} на холст`}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
