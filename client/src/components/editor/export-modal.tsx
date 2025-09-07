@@ -8,8 +8,9 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { generatePythonCode, validateBotStructure, generateRequirementsTxt, generateReadme, generateDockerfile, generateConfigYaml } from '@/lib/bot-generator';
-import { generateBotFatherCommands } from '@/lib/commands';
+// Динамический импорт тяжелых генераторов для улучшения производительности
+const loadBotGenerator = () => import('@/lib/bot-generator');
+const loadCommands = () => import('@/lib/commands');
 import { BotData, BotGroup } from '@shared/schema';
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -64,51 +65,85 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     ).length || 0
   };
 
-  // Ленивая генерация экспорта - только когда нужен конкретный формат
+  // Асинхронная ленивая генерация экспорта - только когда нужен конкретный формат
   const generateExportContent = useMemo(() => {
     if (!isOpen || !botData) return {};
     
-    const validation = validateBotStructure(botData);
-    setValidationResult(validation || { isValid: false, errors: [] });
-    
-    if (!validation?.isValid) return {};
-    
     return {
-      python: () => generatePythonCode(botData, projectName, groups),
-      json: () => JSON.stringify(botData, null, 2),
-      requirements: () => generateRequirementsTxt(),
-      readme: () => generateReadme(botData, projectName),
-      dockerfile: () => generateDockerfile(),
-      config: () => generateConfigYaml(projectName)
+      python: async () => {
+        const botGenerator = await loadBotGenerator();
+        const validation = botGenerator.validateBotStructure(botData);
+        setValidationResult(validation || { isValid: false, errors: [] });
+        
+        if (!validation?.isValid) return '';
+        return botGenerator.generatePythonCode(botData, projectName, groups);
+      },
+      json: async () => JSON.stringify(botData, null, 2),
+      requirements: async () => {
+        const botGenerator = await loadBotGenerator();
+        return botGenerator.generateRequirementsTxt();
+      },
+      readme: async () => {
+        const botGenerator = await loadBotGenerator();
+        return botGenerator.generateReadme(botData, projectName);
+      },
+      dockerfile: async () => {
+        const botGenerator = await loadBotGenerator();
+        return botGenerator.generateDockerfile();
+      },
+      config: async () => {
+        const botGenerator = await loadBotGenerator();
+        return botGenerator.generateConfigYaml(projectName);
+      }
     };
   }, [isOpen, botData, projectName, groups]);
 
-  // Получение контента для выбранного формата
-  const getCurrentContent = useMemo(() => {
-    if (!generateExportContent[selectedFormat]) return '';
-    
-    // Кэшируем результат для выбранного формата
-    if (!exportContent[selectedFormat]) {
-      const content = generateExportContent[selectedFormat]();
-      setExportContent(prev => ({ ...prev, [selectedFormat]: content }));
+  // Асинхронное получение контента для выбранного формата
+  useEffect(() => {
+    async function loadContent() {
+      if (!generateExportContent[selectedFormat] || exportContent[selectedFormat]) return;
       
-      // Для Python также устанавливаем основной код
-      if (selectedFormat === 'python') {
-        setGeneratedCode(content);
+      try {
+        const content = await generateExportContent[selectedFormat]();
+        setExportContent(prev => ({ ...prev, [selectedFormat]: content }));
+        
+        // Для Python также устанавливаем основной код
+        if (selectedFormat === 'python') {
+          setGeneratedCode(content);
+        }
+      } catch (error) {
+        console.error('Error loading export content:', error);
+        toast({
+          title: "Ошибка генерации",
+          description: "Не удалось сгенерировать контент для экспорта",
+          variant: "destructive",
+        });
       }
-      
-      return content;
     }
     
-    return exportContent[selectedFormat];
-  }, [generateExportContent, selectedFormat, exportContent]);
+    loadContent();
+  }, [generateExportContent, selectedFormat, exportContent, toast]);
+
+  // Получение текущего контента
+  const getCurrentContent = () => {
+    return exportContent[selectedFormat] || '';
+  };
 
   // Генерация команд BotFather только при открытии
   useEffect(() => {
-    if (isOpen && botData) {
-      const botFatherCmds = generateBotFatherCommands(botData?.nodes || []);
-      setBotFatherCommands(botFatherCmds);
+    async function loadBotFatherCommands() {
+      if (isOpen && botData) {
+        try {
+          const commands = await loadCommands();
+          const botFatherCmds = commands.generateBotFatherCommands(botData?.nodes || []);
+          setBotFatherCommands(botFatherCmds);
+        } catch (error) {
+          console.error('Error loading BotFather commands:', error);
+        }
+      }
     }
+    
+    loadBotFatherCommands();
   }, [isOpen, botData]);
 
   const getFileExtension = (format: ExportFormat): string => {
