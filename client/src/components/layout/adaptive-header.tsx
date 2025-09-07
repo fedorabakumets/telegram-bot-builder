@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X } from 'lucide-react';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { LayoutConfig } from './layout-manager';
 
 interface BotInfo {
@@ -56,28 +57,31 @@ export function AdaptiveHeader({
   // Состояние для мобильного меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
+  // Определяем мобильное устройство
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  
   // Определяем ориентацию заголовка
   const isVertical = config.headerPosition === 'left' || config.headerPosition === 'right';
   const isCompact = config.compactMode;
   
-  // Классы для контейнера
+  // Классы для контейнера с адаптивной высотой для мобильных устройств
   const containerClasses = [
     'bg-background border-border relative z-50',
-    isVertical ? 'h-full w-full border-r flex flex-col' : 'h-16 flex items-center justify-between px-6 border-b',
+    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-10' : 'h-16'} flex items-center justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
     isCompact ? 'text-sm' : ''
   ].join(' ');
 
   // Компонент логотипа и названия
   const BrandSection = () => (
-    <div className={`flex items-center ${isVertical ? 'flex-col space-y-2 p-4' : 'space-x-3'}`}>
-      <div className={`bg-primary rounded-lg flex items-center justify-center ${isCompact ? 'w-6 h-6' : 'w-8 h-8'}`}>
-        <i className={`fab fa-telegram-plane text-primary-foreground ${isCompact ? 'text-sm' : 'text-lg'}`}></i>
+    <div className={`flex items-center ${isVertical ? 'flex-col space-y-2 p-4' : (isMobile ? 'space-x-2' : 'space-x-3')}`}>
+      <div className={`bg-primary rounded-lg flex items-center justify-center ${isCompact || isMobile ? 'w-6 h-6' : 'w-8 h-8'}`}>
+        <i className={`fab fa-telegram-plane text-primary-foreground ${isCompact || isMobile ? 'text-sm' : 'text-lg'}`}></i>
       </div>
       <div className={isVertical ? 'text-center' : ''}>
-        <h1 className={`font-semibold text-foreground ${isCompact ? 'text-sm' : 'text-lg'}`}>
+        <h1 className={`font-semibold text-foreground ${isCompact || isMobile ? 'text-sm' : 'text-lg'}`}>
           {isVertical && !isCompact ? 'BotCraft' : 'BotCraft Studio'}
         </h1>
-        <p className={`text-muted-foreground ${isCompact ? 'text-xs' : 'text-xs'}`}>
+        <p className={`text-muted-foreground ${isCompact || isMobile ? 'text-xs' : 'text-xs'}`}>
           {(() => {
             const displayName = botInfo?.first_name || projectName;
             return isVertical ? (displayName.length > 12 ? displayName.substring(0, 12) + '...' : displayName) : displayName;

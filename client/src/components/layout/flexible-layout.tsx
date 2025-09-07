@@ -301,13 +301,13 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
       
       return (
         <ResizablePanelGroup direction="vertical" className="h-full">
-          <ResizablePanel defaultSize={topEl.size} minSize={15} maxSize={30}>
+          <ResizablePanel defaultSize={isMobile ? 8 : topEl.size} minSize={isMobile ? 8 : 15} maxSize={30}>
             <div className="h-full border-b border-border bg-background overflow-auto">
               {getElementContent(topEl.type)}
             </div>
           </ResizablePanel>
           <ResizableHandle className={hideResizeHandle ? 'opacity-0 pointer-events-none h-0' : ''} />
-          <ResizablePanel defaultSize={100 - topEl.size}>
+          <ResizablePanel defaultSize={isMobile ? 92 : (100 - topEl.size)}>
             <div className="h-full bg-background overflow-auto">
               {centerEl ? getElementContent(centerEl.type) : (bottomEl ? getElementContent(bottomEl.type) : null)}
             </div>
@@ -357,7 +357,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     return (
       <div className="h-full flex flex-col">
         {topEl && (
-          <div className="border-b border-border bg-background" style={{ minHeight: `${topEl.size}px` }}>
+          <div className="border-b border-border bg-background" style={{ minHeight: `${topEl.size}rem` }}>
             {getElementContent(topEl.type)}
           </div>
         )}
