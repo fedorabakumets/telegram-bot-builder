@@ -56,6 +56,19 @@ export function FullscreenCanvas({
     // Handle component drag if needed
   }, []);
 
+  const handleComponentAdd = useCallback((component: ComponentDefinition) => {
+    // Создаем новый узел из компонента
+    const newNode: any = {
+      id: Date.now().toString(), // Простой уникальный ID
+      type: component.type,
+      position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 },
+      data: component.defaultData || {}
+    };
+    
+    // Добавляем узел на холст
+    onNodeAdd(newNode);
+  }, [onNodeAdd]);
+
   const toggleComponentsSidebar = useCallback(() => {
     setShowComponentsSidebar(prev => !prev);
   }, []);
@@ -111,6 +124,7 @@ export function FullscreenCanvas({
             <div className="flex-1 overflow-hidden">
               <ComponentsSidebar
                 onComponentDrag={handleComponentDrag}
+                onComponentAdd={handleComponentAdd}
               />
             </div>
           </div>
