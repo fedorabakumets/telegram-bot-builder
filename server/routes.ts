@@ -16,7 +16,7 @@ import dbRoutes from "./db-routes";
 import { Pool } from "pg";
 import { generatePythonCode } from "../client/src/lib/bot-generator";
 import { initializeDatabaseTables } from "./init-db";
-import { telegramClientManager } from "./telegram-client";
+import { telegramClientManager, initializeTelegramManager } from "./telegram-client";
 
 // Глобальное хранилище активных процессов ботов
 const botProcesses = new Map<number, ChildProcess>();
@@ -908,29 +908,84 @@ async function ensureDefaultProject() {
   }
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize database tables first
-  console.log('🔧 Initializing database...');
-  const dbInitSuccess = await initializeDatabaseTables();
-  if (!dbInitSuccess) {
-    console.error('❌ Failed to initialize database tables');
-    throw new Error('Database initialization failed');
+// Глобальные флаги готовности компонентов
+let isDbReady = false;
+let areTemplatesReady = false;
+let isTelegramReady = false;
+
+// Асинхронная инициализация компонентов в фоне
+async function initializeComponents() {
+  try {
+    // Инициализация базы данных
+    console.log('🔧 Initializing database...');
+    const dbInitSuccess = await initializeDatabaseTables();
+    if (dbInitSuccess) {
+      isDbReady = true;
+      console.log('✅ Database ready');
+      
+      // После готовности БД запускаем остальные компоненты
+      Promise.all([
+        // Загрузка шаблонов
+        seedDefaultTemplates(false).then(() => {
+          areTemplatesReady = true;
+          console.log('✅ Templates ready');
+        }).catch(err => console.error('❌ Templates failed:', err)),
+        
+        // Создание проекта по умолчанию
+        ensureDefaultProject().then(() => {
+          console.log('✅ Default project ready');
+        }).catch(err => console.error('❌ Default project failed:', err)),
+        
+        // Очистка состояний ботов
+        cleanupBotStates().then(() => {
+          console.log('✅ Bot states cleaned');
+        }).catch(err => console.error('❌ Bot cleanup failed:', err)),
+        
+        // Инициализация Telegram клиентов
+        initializeTelegramManager().then(() => {
+          isTelegramReady = true;
+          console.log('✅ Telegram clients ready');
+        }).catch(err => console.error('❌ Telegram initialization failed:', err))
+      ]).catch(err => console.error('❌ Component initialization failed:', err));
+    } else {
+      console.error('❌ Database initialization failed');
+    }
+  } catch (error) {
+    console.error('❌ Critical initialization error:', error);
   }
-  
-  // Initialize default templates on startup
-  await seedDefaultTemplates(true);
-  
-  // Ensure at least one default project exists
-  await ensureDefaultProject();
-  
-  // Clean up inconsistent bot states
-  await cleanupBotStates();
+}
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Запускаем инициализацию в фоне без блокировки сервера
+  initializeComponents();
+
+  // API для проверки готовности компонентов
+  app.get("/api/health", (req, res) => {
+    res.json({
+      database: isDbReady,
+      templates: areTemplatesReady,
+      telegram: isTelegramReady,
+      ready: isDbReady && areTemplatesReady
+    });
+  });
+
+  // Middleware для проверки готовности БД для критически важных операций
+  const requireDbReady = (req: any, res: any, next: any) => {
+    if (!isDbReady) {
+      return res.status(503).json({ 
+        message: "Сервер еще загружается, попробуйте через несколько секунд",
+        database: isDbReady,
+        ready: false
+      });
+    }
+    next();
+  };
   
   // Register database management routes
   app.use("/api/database", dbRoutes);
   
   // Get all bot projects
-  app.get("/api/projects", async (req, res) => {
+  app.get("/api/projects", requireDbReady, async (req, res) => {
     try {
       const projects = await storage.getAllBotProjects();
       res.json(projects);

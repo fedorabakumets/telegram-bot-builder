@@ -906,5 +906,7 @@ class TelegramClientManager {
 
 export const telegramClientManager = new TelegramClientManager();
 
-// Автоматически инициализируем при запуске
-telegramClientManager.initialize().catch(console.error);
+// Экспортируем функцию для ручной инициализации из routes.ts
+export function initializeTelegramManager() {
+  return telegramClientManager.initialize();
+}
