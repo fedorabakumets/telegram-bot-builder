@@ -213,14 +213,18 @@ export function CanvasSheets({
                 </span>
               )}
 
-              {/* Отдельные кнопки действий - скрываем на мобильных */}
-              {!isMobile && (
-                <div className="flex items-center ml-2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
+              {/* Отдельные кнопки действий */}
+              <div className={`flex items-center transition-all duration-200 ${
+                isMobile 
+                  ? 'ml-1 opacity-60 group-hover:opacity-100' 
+                  : 'ml-2 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0'
+              }`}>
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "h-6 w-6 p-0 rounded-full transition-all duration-200 hover:scale-110",
+                    "p-0 rounded-full transition-all duration-200 hover:scale-110",
+                    isMobile ? "h-5 w-5" : "h-6 w-6",
                     activeSheetId === sheet.id
                       ? "hover:bg-white/20 text-white/80 hover:text-white"
                       : "hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
@@ -231,7 +235,7 @@ export function CanvasSheets({
                   }}
                   title="Дублировать лист"
                 >
-                  <Copy className="h-3 w-3" />
+                  <Copy className={isMobile ? "h-2.5 w-2.5" : "h-3 w-3"} />
                 </Button>
                 
                 {sheets.length > 1 && (
@@ -239,7 +243,8 @@ export function CanvasSheets({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "h-6 w-6 p-0 ml-1 rounded-full transition-all duration-200 hover:scale-110",
+                      "p-0 rounded-full transition-all duration-200 hover:scale-110",
+                      isMobile ? "h-5 w-5 ml-0.5" : "h-6 w-6 ml-1",
                       activeSheetId === sheet.id
                         ? "hover:bg-red-500/20 text-red-200 hover:text-white"
                         : "hover:bg-red-100 dark:hover:bg-red-900/50 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
@@ -250,11 +255,10 @@ export function CanvasSheets({
                     }}
                     title="Удалить лист"
                   >
-                    <X className="h-3 w-3" />
+                    <X className={isMobile ? "h-2.5 w-2.5" : "h-3 w-3"} />
                   </Button>
                 )}
-                </div>
-              )}
+              </div>
             </div>
           ))}
         </div>
