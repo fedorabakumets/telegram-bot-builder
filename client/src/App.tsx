@@ -7,11 +7,14 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ServerStatus } from "@/components/server-status";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
+import React from "react";
 
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
 const Editor = lazy(() => import("@/pages/editor"));
-const TemplatesPage = lazy(() => import("@/pages/templates").then(m => ({ default: m.TemplatesPage })));
+const TemplatesPage = lazy(() => import("@/pages/templates").then(m => ({ 
+  default: () => <m.TemplatesPage />
+})));
 const DatabaseManager = lazy(() => import("@/pages/DatabaseManager"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
