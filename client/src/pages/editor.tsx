@@ -30,7 +30,7 @@ import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { apiRequest } from '@/lib/queryClient';
-import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets } from '@shared/schema';
+import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets, Node } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
 import { nanoid } from 'nanoid';
 
@@ -631,6 +631,19 @@ export default function Editor() {
     // Handle component drag start if needed
   }, []);
 
+  const handleComponentAdd = useCallback((component: ComponentDefinition) => {
+    // Создаем новый узел из компонента
+    const newNode: Node = {
+      id: nanoid(),
+      type: component.type,
+      position: { x: 200 + Math.random() * 100, y: 200 + Math.random() * 100 }, // Случайная позиция с небольшим смещением
+      data: component.defaultData || {}
+    };
+    
+    // Добавляем узел на холст
+    addNode(newNode);
+  }, [addNode]);
+
   const handleSaveAsTemplate = useCallback(() => {
     setShowSaveTemplate(true);
   }, []);
@@ -942,7 +955,8 @@ export default function Editor() {
 
     const sidebarContent = (
       <ComponentsSidebar 
-        onComponentDrag={handleComponentDrag} 
+        onComponentDrag={handleComponentDrag}
+        onComponentAdd={handleComponentAdd}
         onLoadTemplate={handleLoadTemplate}
         onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
         onLayoutChange={updateLayoutConfig}
@@ -1027,7 +1041,8 @@ export default function Editor() {
           }
           sidebar={
             <ComponentsSidebar 
-              onComponentDrag={handleComponentDrag} 
+              onComponentDrag={handleComponentDrag}
+              onComponentAdd={handleComponentAdd}
               onLoadTemplate={handleLoadTemplate}
               onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
@@ -1161,7 +1176,8 @@ export default function Editor() {
           }
           sidebarContent={
             <ComponentsSidebar 
-              onComponentDrag={handleComponentDrag} 
+              onComponentDrag={handleComponentDrag}
+              onComponentAdd={handleComponentAdd}
               onLoadTemplate={handleLoadTemplate}
               onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
@@ -1359,7 +1375,8 @@ export default function Editor() {
           </SheetHeader>
           <div className="h-full overflow-auto">
             <ComponentsSidebar 
-              onComponentDrag={handleComponentDrag} 
+              onComponentDrag={handleComponentDrag}
+              onComponentAdd={handleComponentAdd}
               onLoadTemplate={handleLoadTemplate}
               onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
