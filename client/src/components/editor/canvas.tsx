@@ -220,7 +220,13 @@ export function Canvas({
   }, []);
 
   const fitToContent = useCallback(() => {
-    if (nodes.length === 0) return;
+    if (nodes.length === 0) {
+      console.log('fitToContent: No nodes to fit');
+      return;
+    }
+    
+    console.log('fitToContent: Starting with', nodes.length, 'nodes');
+    console.log('Current pan:', pan, 'zoom:', zoom);
     
     // Вычисляем границы всех узлов
     const nodeBounds = nodes.reduce((bounds, node) => {
@@ -237,6 +243,8 @@ export function Canvas({
       };
     }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
     
+    console.log('Node bounds:', nodeBounds);
+    
     // Проверяем валидность границ
     if (!isFinite(nodeBounds.left) || !isFinite(nodeBounds.right) || 
         !isFinite(nodeBounds.top) || !isFinite(nodeBounds.bottom)) {
@@ -246,6 +254,8 @@ export function Canvas({
     
     const contentWidth = nodeBounds.right - nodeBounds.left;
     const contentHeight = nodeBounds.bottom - nodeBounds.top;
+    
+    console.log('Content dimensions:', { contentWidth, contentHeight });
     
     // Проверяем размеры контента
     if (contentWidth <= 0 || contentHeight <= 0) {
@@ -257,6 +267,8 @@ export function Canvas({
       const containerWidth = canvasRef.current.clientWidth;
       const containerHeight = canvasRef.current.clientHeight;
       
+      console.log('Container dimensions:', { containerWidth, containerHeight });
+      
       // Проверяем размеры контейнера
       if (containerWidth <= 0 || containerHeight <= 0) {
         console.warn('Invalid container dimensions, skipping fitToContent');
@@ -266,10 +278,12 @@ export function Canvas({
       // Вычисляем масштаб с отступами
       const scaleX = (containerWidth * 0.8) / contentWidth;
       const scaleY = (containerHeight * 0.8) / contentHeight;
-      const scale = Math.min(scaleX, scaleY, 2); // Max 200% zoom
+      const scale = Math.min(scaleX, scaleY, 1.5); // Ограничиваем max zoom до 150%
       
       // Ограничиваем zoom разумными пределами
-      const newZoom = Math.max(Math.min(scale * 100, 200), 25);
+      const newZoom = Math.max(Math.min(scale * 100, 150), 50); // min 50%, max 150%
+      
+      console.log('Scale calculations:', { scaleX, scaleY, scale, newZoom });
       
       // Вычисляем центр контента
       const centerX = (nodeBounds.left + nodeBounds.right) / 2;
@@ -281,20 +295,31 @@ export function Canvas({
       const newPanX = containerCenterX - centerX * (newZoom / 100);
       const newPanY = containerCenterY - centerY * (newZoom / 100);
       
+      console.log('Center calculations:', { 
+        centerX, centerY, 
+        containerCenterX, containerCenterY,
+        newPanX, newPanY 
+      });
+      
       // Проверяем валидность pan значений
       if (!isFinite(newPanX) || !isFinite(newPanY)) {
         console.warn('Invalid pan values calculated, skipping fitToContent');
         return;
       }
       
-      // Применяем изменения
+      // Применяем изменения постепенно, сначала сбрасываем pan, потом zoom
+      console.log('Applying changes: zoom =', newZoom, 'pan =', { x: newPanX, y: newPanY });
+      
+      // Применяем изменения одновременно
       setZoom(newZoom);
       setPan({
         x: newPanX,
         y: newPanY
       });
+      
+      console.log('fitToContent: Changes applied successfully');
     }
-  }, [nodes]);
+  }, [nodes, pan, zoom]);
 
   // Handle wheel zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
