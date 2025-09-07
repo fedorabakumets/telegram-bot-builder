@@ -816,22 +816,24 @@ export function Canvas({
               </button>
             )}
             
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl shadow-xl border border-gray-200/50 dark:border-slate-700/50 flex items-center overflow-hidden zoom-controls">
+            <div className={`flex items-center flex-shrink-0 ${isMobile ? 'space-x-0.5' : 'space-x-1'}`}>
+              {/* Кнопки масштаба */}
               <button 
                 onClick={zoomOut}
                 disabled={zoom <= 1}
-                className={`${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} zoom-button disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Уменьшить масштаб (Ctrl + -)"
               >
                 <i className="fas fa-search-minus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
+              
               <Popover>
                 <PopoverTrigger asChild>
                   <button
-                    className={`${isMobile ? 'px-2 py-1.5 text-xs min-w-[3rem]' : 'px-4 py-2 text-sm min-w-[4rem]'} text-gray-700 dark:text-gray-300 border-x border-gray-200 dark:border-slate-700 font-mono text-center bg-gray-50 dark:bg-slate-800/50 zoom-indicator group`}
+                    className={`${isMobile ? 'px-2 py-2 text-xs min-w-[3rem]' : 'px-3 py-2.5 text-sm min-w-[4rem]'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 text-gray-700 dark:text-gray-300 font-mono text-center group`}
                     title="Выбрать масштаб"
                   >
-                    <span className="flex items-center space-x-1">
+                    <span className="flex items-center justify-center space-x-1">
                       <span>{Math.round(zoom)}%</span>
                       <i className="fas fa-chevron-down text-xs opacity-50 group-hover:opacity-100 transition-opacity"></i>
                     </span>
@@ -879,17 +881,15 @@ export function Canvas({
                   </div>
                 </PopoverContent>
               </Popover>
+              
               <button 
                 onClick={zoomIn}
                 disabled={zoom >= 200}
-                className={`${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} zoom-button disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Увеличить масштаб (Ctrl + +)"
               >
                 <i className="fas fa-search-plus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
-            </div>
-            
-            <div className={`flex items-center flex-shrink-0 ${isMobile ? 'space-x-0.5' : 'space-x-1'}`}>
               <button 
                 onClick={fitToContent}
                 disabled={nodes.length === 0}
