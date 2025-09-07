@@ -219,14 +219,27 @@ export function Canvas({
     setZoom(Math.max(Math.min(level, 200), 1));
   }, []);
 
-  const fitToContent = useCallback(() => {
-    if (nodes.length === 0) {
-      console.log('fitToContent: No nodes to fit');
-      return;
+  // Функция для получения центральной позиции видимой области canvas
+  const getCenterPosition = useCallback(() => {
+    if (canvasRef.current) {
+      const scrollContainer = canvasRef.current.parentElement;
+      const containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64;
+      const containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
+      
+      // Вычисляем центр в координатах canvas (с учетом текущего pan и zoom)
+      const centerX = (containerWidth / 2 - pan.x) / (zoom / 100);
+      const centerY = (containerHeight / 2 - pan.y) / (zoom / 100);
+      
+      return { 
+        x: Math.max(50, centerX - 160), // -160 чтобы центрировать узел (половина ширины узла)
+        y: Math.max(50, centerY - 50)   // -50 чтобы центрировать узел (половина высоты узла)
+      };
     }
-    
-    console.log('fitToContent: Starting with', nodes.length, 'nodes');
-    console.log('Current pan:', pan, 'zoom:', zoom);
+    return { x: 300, y: 200 }; // fallback если canvas не найден
+  }, [pan, zoom]);
+
+  const fitToContent = useCallback(() => {
+    if (nodes.length === 0) return;
     
     // Вычисляем границы всех узлов
     const nodeBounds = nodes.reduce((bounds, node) => {
@@ -243,23 +256,17 @@ export function Canvas({
       };
     }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
     
-    console.log('Node bounds:', nodeBounds);
-    
     // Проверяем валидность границ
     if (!isFinite(nodeBounds.left) || !isFinite(nodeBounds.right) || 
         !isFinite(nodeBounds.top) || !isFinite(nodeBounds.bottom)) {
-      console.warn('Invalid node bounds detected, skipping fitToContent');
       return;
     }
     
     const contentWidth = nodeBounds.right - nodeBounds.left;
     const contentHeight = nodeBounds.bottom - nodeBounds.top;
     
-    console.log('Content dimensions:', { contentWidth, contentHeight });
-    
     // Проверяем размеры контента
     if (contentWidth <= 0 || contentHeight <= 0) {
-      console.warn('Invalid content dimensions, skipping fitToContent');
       return;
     }
     
@@ -269,11 +276,8 @@ export function Canvas({
       const containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64; // -64 для padding
       const containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
       
-      console.log('Container dimensions:', { containerWidth, containerHeight });
-      
       // Проверяем размеры контейнера
       if (containerWidth <= 0 || containerHeight <= 0) {
-        console.warn('Invalid container dimensions, skipping fitToContent');
         return;
       }
       
@@ -285,8 +289,6 @@ export function Canvas({
       // Ограничиваем zoom разумными пределами
       const newZoom = Math.max(Math.min(scale * 100, 150), 50); // min 50%, max 150%
       
-      console.log('Scale calculations:', { scaleX, scaleY, scale, newZoom });
-      
       // Вычисляем центр контента
       const centerX = (nodeBounds.left + nodeBounds.right) / 2;
       const centerY = (nodeBounds.top + nodeBounds.bottom) / 2;
@@ -297,31 +299,19 @@ export function Canvas({
       const newPanX = containerCenterX - centerX * (newZoom / 100);
       const newPanY = containerCenterY - centerY * (newZoom / 100);
       
-      console.log('Center calculations:', { 
-        centerX, centerY, 
-        containerCenterX, containerCenterY,
-        newPanX, newPanY 
-      });
-      
       // Проверяем валидность pan значений
       if (!isFinite(newPanX) || !isFinite(newPanY)) {
-        console.warn('Invalid pan values calculated, skipping fitToContent');
         return;
       }
       
-      // Применяем изменения постепенно, сначала сбрасываем pan, потом zoom
-      console.log('Applying changes: zoom =', newZoom, 'pan =', { x: newPanX, y: newPanY });
-      
-      // Применяем изменения одновременно
+      // Применяем изменения
       setZoom(newZoom);
       setPan({
         x: newPanX,
         y: newPanY
       });
-      
-      console.log('fitToContent: Changes applied successfully');
     }
-  }, [nodes, pan, zoom]);
+  }, [nodes]);
 
   // Handle wheel zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -645,26 +635,36 @@ export function Canvas({
     console.log('Canvas drop event received:', e.detail);
     const { component, position } = e.detail;
     
-    if (!component || !position) {
-      console.error('Invalid drop data:', { component, position });
+    if (!component) {
+      console.error('Invalid drop data: no component');
       return;
     }
     
-    // Transform screen coordinates to canvas coordinates
-    const canvasX = (position.x - pan.x) / (zoom / 100);
-    const canvasY = (position.y - pan.y) / (zoom / 100);
+    let nodePosition;
     
-    console.log('Drop position calculation:', {
-      screenPos: position,
-      pan,
-      zoom,
-      canvasPos: { x: canvasX, y: canvasY }
-    });
+    if (position) {
+      // Transform screen coordinates to canvas coordinates
+      const canvasX = (position.x - pan.x) / (zoom / 100);
+      const canvasY = (position.y - pan.y) / (zoom / 100);
+      
+      console.log('Drop position calculation:', {
+        screenPos: position,
+        pan,
+        zoom,
+        canvasPos: { x: canvasX, y: canvasY }
+      });
+      
+      nodePosition = { x: Math.max(0, canvasX - 80), y: Math.max(0, canvasY - 25) };
+    } else {
+      // Если нет позиции drop, используем центр видимой области
+      nodePosition = getCenterPosition();
+      console.log('Using center position:', nodePosition);
+    }
     
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
-      position: { x: Math.max(0, canvasX - 80), y: Math.max(0, canvasY - 25) }, // Center the node
+      position: nodePosition,
       data: {
         keyboardType: 'none',
         buttons: [],
@@ -677,7 +677,7 @@ export function Canvas({
     
     console.log('Creating new node:', newNode);
     onNodeAdd(newNode);
-  }, [onNodeAdd, pan, zoom]);
+  }, [onNodeAdd, pan, zoom, getCenterPosition]);
 
   // Handle canvas-drop событие для touch устройств
   useEffect(() => {

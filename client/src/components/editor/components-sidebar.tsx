@@ -837,9 +837,9 @@ export function ComponentsSidebar({
           nodes: [{
             id: 'start',
             type: 'start',
-            position: { x: 100, y: 100 },
+            position: { x: 400, y: 300 }, // Центральная позиция для нового проекта
             data: {
-              messageText: 'Привет! Я ваш новый бот.',
+              messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
               keyboardType: 'none',
               buttons: [],
             }
