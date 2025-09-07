@@ -115,6 +115,13 @@ export function Canvas({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
+  
+  // Touch состояние для мобильного управления
+  const [isTouchPanning, setIsTouchPanning] = useState(false);
+  const [touchStart, setTouchStart] = useState({ x: 0, y: 0 });
+  const [lastTouchPosition, setLastTouchPosition] = useState({ x: 0, y: 0 });
+  const [lastPinchDistance, setLastPinchDistance] = useState(0);
+  const [initialPinchZoom, setInitialPinchZoom] = useState(100);
 
   // Получение активного листа (с fallback'ом для совместимости)
   const activeSheet = botData ? SheetsManager.getActiveSheet(botData) : null;
@@ -312,6 +319,107 @@ export function Canvas({
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
   }, []);
+
+  // Вспомогательная функция для расчета расстояния между двумя точками touch
+  const getTouchDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    const dx = touch2.clientX - touch1.clientX;
+    const dy = touch2.clientY - touch1.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // Получение центра между двумя касаниями
+  const getTouchCenter = (touches: React.TouchList) => {
+    if (touches.length < 2) return { x: touches[0].clientX, y: touches[0].clientY };
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2
+    };
+  };
+
+  // Обработка touch событий для мобильного управления
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Предотвращаем default действия браузера
+    e.preventDefault();
+    
+    const touches = e.touches;
+    
+    if (touches.length === 1) {
+      // Одно касание - панорамирование
+      const touch = touches[0];
+      setIsTouchPanning(true);
+      setTouchStart({ x: touch.clientX, y: touch.clientY });
+      setLastTouchPosition(pan);
+    } else if (touches.length === 2) {
+      // Два касания - масштабирование
+      const distance = getTouchDistance(touches);
+      setLastPinchDistance(distance);
+      setInitialPinchZoom(zoom);
+      setIsTouchPanning(false); // Отключаем панорамирование при pinch
+    }
+  }, [pan, zoom]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    
+    const touches = e.touches;
+    
+    if (touches.length === 1 && isTouchPanning) {
+      // Панорамирование одним пальцем
+      const touch = touches[0];
+      const deltaX = touch.clientX - touchStart.x;
+      const deltaY = touch.clientY - touchStart.y;
+      
+      setPan({
+        x: lastTouchPosition.x + deltaX,
+        y: lastTouchPosition.y + deltaY
+      });
+    } else if (touches.length === 2) {
+      // Pinch zoom двумя пальцами
+      const currentDistance = getTouchDistance(touches);
+      const center = getTouchCenter(touches);
+      
+      if (lastPinchDistance > 0) {
+        const scaleFactor = currentDistance / lastPinchDistance;
+        const newZoom = Math.max(Math.min(initialPinchZoom * scaleFactor, 200), 10);
+        
+        // Масштабирование относительно центра касания
+        const rect = canvasRef.current?.getBoundingClientRect();
+        if (rect) {
+          const centerX = center.x - rect.left;
+          const centerY = center.y - rect.top;
+          
+          const zoomRatio = newZoom / zoom;
+          
+          setPan(prev => ({
+            x: centerX - (centerX - prev.x) * zoomRatio,
+            y: centerY - (centerY - prev.y) * zoomRatio
+          }));
+          
+          setZoom(newZoom);
+        }
+      }
+    }
+  }, [isTouchPanning, touchStart, lastTouchPosition, lastPinchDistance, initialPinchZoom, zoom]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 0) {
+      // Все касания завершены
+      setIsTouchPanning(false);
+      setLastPinchDistance(0);
+    } else if (e.touches.length === 1) {
+      // Осталось одно касание - возможно продолжение панорамирования
+      const touch = e.touches[0];
+      setTouchStart({ x: touch.clientX, y: touch.clientY });
+      setLastTouchPosition(pan);
+      setIsTouchPanning(true);
+      setLastPinchDistance(0);
+    }
+  }, [pan]);
 
   // Prevent context menu on right-click when using for panning
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
@@ -606,6 +714,7 @@ export function Canvas({
       id: nanoid(),
       source,
       target,
+      isInterSheet: false,
     };
     onConnectionAdd?.(newConnection);
     setShowSuggestions(false);
@@ -651,6 +760,9 @@ export function Canvas({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onContextMenu={handleContextMenu}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {/* Transformable Canvas Content */}
           <div 
