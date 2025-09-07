@@ -222,6 +222,7 @@ export function Canvas({
   const fitToContent = useCallback(() => {
     if (nodes.length === 0) return;
     
+    // Вычисляем границы всех узлов
     const nodeBounds = nodes.reduce((bounds, node) => {
       const left = node.position.x;
       const right = node.position.x + 320; // Approximate node width
@@ -236,29 +237,61 @@ export function Canvas({
       };
     }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
     
+    // Проверяем валидность границ
+    if (!isFinite(nodeBounds.left) || !isFinite(nodeBounds.right) || 
+        !isFinite(nodeBounds.top) || !isFinite(nodeBounds.bottom)) {
+      console.warn('Invalid node bounds detected, skipping fitToContent');
+      return;
+    }
+    
     const contentWidth = nodeBounds.right - nodeBounds.left;
     const contentHeight = nodeBounds.bottom - nodeBounds.top;
+    
+    // Проверяем размеры контента
+    if (contentWidth <= 0 || contentHeight <= 0) {
+      console.warn('Invalid content dimensions, skipping fitToContent');
+      return;
+    }
     
     if (canvasRef.current) {
       const containerWidth = canvasRef.current.clientWidth;
       const containerHeight = canvasRef.current.clientHeight;
       
+      // Проверяем размеры контейнера
+      if (containerWidth <= 0 || containerHeight <= 0) {
+        console.warn('Invalid container dimensions, skipping fitToContent');
+        return;
+      }
+      
+      // Вычисляем масштаб с отступами
       const scaleX = (containerWidth * 0.8) / contentWidth;
       const scaleY = (containerHeight * 0.8) / contentHeight;
       const scale = Math.min(scaleX, scaleY, 2); // Max 200% zoom
       
-      const newZoom = Math.max(Math.min(scale * 100, 200), 1);
-      setZoom(newZoom);
+      // Ограничиваем zoom разумными пределами
+      const newZoom = Math.max(Math.min(scale * 100, 200), 25);
       
-      // Center the content
+      // Вычисляем центр контента
       const centerX = (nodeBounds.left + nodeBounds.right) / 2;
       const centerY = (nodeBounds.top + nodeBounds.bottom) / 2;
       const containerCenterX = containerWidth / 2;
       const containerCenterY = containerHeight / 2;
       
+      // Вычисляем новые значения pan
+      const newPanX = containerCenterX - centerX * (newZoom / 100);
+      const newPanY = containerCenterY - centerY * (newZoom / 100);
+      
+      // Проверяем валидность pan значений
+      if (!isFinite(newPanX) || !isFinite(newPanY)) {
+        console.warn('Invalid pan values calculated, skipping fitToContent');
+        return;
+      }
+      
+      // Применяем изменения
+      setZoom(newZoom);
       setPan({
-        x: containerCenterX - centerX * (newZoom / 100),
-        y: containerCenterY - centerY * (newZoom / 100)
+        x: newPanX,
+        y: newPanY
       });
     }
   }, [nodes]);
