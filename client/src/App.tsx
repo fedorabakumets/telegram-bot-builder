@@ -12,9 +12,7 @@ import React from "react";
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
 const Editor = lazy(() => import("@/pages/editor"));
-const TemplatesPage = lazy(() => import("@/pages/templates").then(m => ({ 
-  default: () => <m.TemplatesPage />
-})));
+const TemplatesPage = lazy(() => import("@/pages/templates-wrapper"));
 const DatabaseManager = lazy(() => import("@/pages/DatabaseManager"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
