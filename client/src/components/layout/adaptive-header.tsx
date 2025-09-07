@@ -67,7 +67,7 @@ export function AdaptiveHeader({
   // Классы для контейнера с адаптивной высотой для мобильных устройств
   const containerClasses = [
     'bg-background border-border relative z-50',
-    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-10' : 'h-16'} flex items-center justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
+    isVertical ? 'h-full w-full border-r flex flex-col' : `${isMobile ? 'h-8' : 'h-16'} flex items-center justify-between ${isMobile ? 'px-3' : 'px-6'} border-b`,
     isCompact ? 'text-sm' : ''
   ].join(' ');
 
