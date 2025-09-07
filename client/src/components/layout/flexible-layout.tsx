@@ -320,7 +320,6 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     if ((leftEl || rightEl) && centerEl && !topEl && !bottomEl) {
       const leftSize = leftEl?.size || 0;
       const rightSize = rightEl?.size || 0;
-      const centerSize = Math.max(100 - leftSize - rightSize, 30); // минимум 30% для центра
       
       return (
         <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -330,10 +329,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 defaultSize={leftSize} 
                 minSize={15} 
                 maxSize={40}
-                collapsedSize={0}
-                collapsible={false}
               >
-                <div className="h-full border-r border-border bg-background overflow-auto">
+                <div className="h-full border-r border-border bg-background overflow-hidden">
                   {getElementContent(leftEl.type)}
                 </div>
               </ResizablePanel>
@@ -341,12 +338,9 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             </>
           )}
           <ResizablePanel 
-            defaultSize={centerSize} 
             minSize={30}
-            collapsedSize={0}
-            collapsible={false}
           >
-            <div className="h-full bg-background overflow-auto">
+            <div className="h-full bg-background overflow-hidden">
               {getElementContent(centerEl.type)}
             </div>
           </ResizablePanel>
@@ -357,10 +351,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 defaultSize={rightSize} 
                 minSize={15} 
                 maxSize={40}
-                collapsedSize={0}
-                collapsible={false}
               >
-                <div className="h-full border-l border-border bg-background overflow-auto">
+                <div className="h-full border-l border-border bg-background overflow-hidden">
                   {getElementContent(rightEl.type)}
                 </div>
               </ResizablePanel>
@@ -386,10 +378,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   defaultSize={leftEl.size} 
                   minSize={15} 
                   maxSize={40}
-                  collapsedSize={0}
-                  collapsible={false}
                 >
-                  <div className="h-full border-r border-border bg-background overflow-auto">
+                  <div className="h-full border-r border-border bg-background overflow-hidden">
                     {getElementContent(leftEl.type)}
                   </div>
                 </ResizablePanel>
@@ -397,12 +387,9 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               </>
             )}
             <ResizablePanel 
-              defaultSize={Math.max(100 - (leftEl?.size || 0) - (rightEl?.size || 0), 30)} 
               minSize={30}
-              collapsedSize={0}
-              collapsible={false}
             >
-              <div className="h-full bg-background overflow-auto">
+              <div className="h-full bg-background overflow-hidden">
                 {centerEl ? getElementContent(centerEl.type) : null}
               </div>
             </ResizablePanel>
@@ -413,10 +400,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   defaultSize={rightEl.size} 
                   minSize={15} 
                   maxSize={40}
-                  collapsedSize={0}
-                  collapsible={false}
                 >
-                  <div className="h-full border-l border-border bg-background overflow-auto">
+                  <div className="h-full border-l border-border bg-background overflow-hidden">
                     {getElementContent(rightEl.type)}
                   </div>
                 </ResizablePanel>
