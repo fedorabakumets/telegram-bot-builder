@@ -29,6 +29,7 @@ function LoadingSpinner() {
         {/* Текст загрузки */}
         <div className="text-center space-y-2">
           <h3 className="text-lg font-medium text-foreground">Telegram Bot Builder</h3>
+          <p className="text-sm text-muted-foreground">Загружаем интерфейс...</p>
           
           {/* Индикатор прогресса */}
           <div className="w-48 h-1 bg-muted rounded-full overflow-hidden">
