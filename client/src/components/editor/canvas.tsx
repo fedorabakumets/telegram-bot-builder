@@ -631,13 +631,6 @@ export function Canvas({
           ref={canvasRef}
           className="min-h-full relative canvas-grid-modern"
           style={{
-            backgroundImage: `
-              radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.15) 1px, transparent 0),
-              linear-gradient(90deg, rgba(148, 163, 184, 0.1) 1px, transparent 1px),
-              linear-gradient(rgba(148, 163, 184, 0.1) 1px, transparent 1px)
-            `,
-            backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px, ${24 * zoom / 100}px ${24 * zoom / 100}px, ${24 * zoom / 100}px ${24 * zoom / 100}px`,
-            backgroundPosition: `${pan.x}px ${pan.y}px`,
             minHeight: '2000vh',
             minWidth: '2000vw',
             cursor: isPanning ? 'grabbing' : 'grab'
