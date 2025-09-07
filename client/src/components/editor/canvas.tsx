@@ -230,12 +230,16 @@ export function Canvas({
       const centerX = (containerWidth / 2 - pan.x) / (zoom / 100);
       const centerY = (containerHeight / 2 - pan.y) / (zoom / 100);
       
-      return { 
+      const position = { 
         x: Math.max(50, centerX - 160), // -160 чтобы центрировать узел (половина ширины узла)
         y: Math.max(50, centerY - 50)   // -50 чтобы центрировать узел (половина высоты узла)
       };
+      
+      console.log('getCenterPosition:', { containerWidth, containerHeight, pan, zoom, centerX, centerY, position });
+      return position;
     }
-    return { x: 300, y: 200 }; // fallback если canvas не найден
+    console.log('getCenterPosition: using fallback');
+    return { x: 400, y: 300 }; // fallback если canvas не найден
   }, [pan, zoom]);
 
   const fitToContent = useCallback(() => {
@@ -603,32 +607,45 @@ export function Canvas({
     const component: ComponentDefinition = JSON.parse(componentData);
     const rect = canvasRef.current?.getBoundingClientRect();
     
+    let nodePosition;
+    
     if (rect) {
       // Transform screen coordinates to canvas coordinates
-      const screenX = e.clientX - rect.left - 160; // Adjust for node width
+      const screenX = e.clientX - rect.left - 160; // Adjust for node width  
       const screenY = e.clientY - rect.top - 50;   // Adjust for node height
       
       // Apply inverse transformation to get canvas coordinates
       const canvasX = (screenX - pan.x) / (zoom / 100);
       const canvasY = (screenY - pan.y) / (zoom / 100);
       
-      const newNode: Node = {
-        id: nanoid(),
-        type: component.type,
-        position: { x: Math.max(0, canvasX), y: Math.max(0, canvasY) },
-        data: {
-          keyboardType: 'none',
-          buttons: [],
-          oneTimeKeyboard: false,
-          resizeKeyboard: true,
-          markdown: false,
-          ...component.defaultData
-        }
-      };
-      
-      onNodeAdd(newNode);
+      // Если координаты разумные (не слишком близко к краю), используем их
+      if (canvasX > 20 && canvasY > 20 && canvasX < 10000 && canvasY < 10000) {
+        nodePosition = { x: Math.max(50, canvasX), y: Math.max(50, canvasY) };
+      } else {
+        // Иначе используем центр видимой области
+        nodePosition = getCenterPosition();
+      }
+    } else {
+      // Если не удалось получить rect, используем центр
+      nodePosition = getCenterPosition();
     }
-  }, [onNodeAdd, pan, zoom]);
+    
+    const newNode: Node = {
+      id: nanoid(),
+      type: component.type,
+      position: nodePosition,
+      data: {
+        keyboardType: 'none',
+        buttons: [],
+        oneTimeKeyboard: false,
+        resizeKeyboard: true,
+        markdown: false,
+        ...component.defaultData
+      }
+    };
+    
+    onNodeAdd(newNode);
+  }, [onNodeAdd, pan, zoom, getCenterPosition]);
 
   // Обработчик canvas-drop события для touch устройств  
   const handleCanvasDrop = useCallback((e: CustomEvent) => {
