@@ -1402,7 +1402,7 @@ export function ComponentsSidebar({
 
   // Десктопная версия
   return (
-    <aside className="w-80 bg-background border-r border-border h-full flex flex-col overflow-hidden">
+    <aside className="w-full bg-background h-full flex flex-col overflow-hidden">
       <SidebarContent />
     </aside>
   );
