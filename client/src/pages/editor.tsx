@@ -114,8 +114,8 @@ export default function Editor() {
 
   // Создаем динамическую конфигурацию макета
   const getFlexibleLayoutConfig = useCallback((): SimpleLayoutConfig => {
-    // Для мобильных устройств используем сверхкомпактный заголовок
-    const headerSize = isMobile ? 1.5 : 8;
+    // Используем компактный заголовок для всех устройств
+    const headerSize = isMobile ? 1.5 : 3;
     
     return {
       elements: [
