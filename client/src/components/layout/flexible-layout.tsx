@@ -301,13 +301,13 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
       
       return (
         <ResizablePanelGroup direction="vertical" className="h-full">
-          <ResizablePanel defaultSize={isMobile ? 5 : topEl.size} minSize={isMobile ? 5 : 15} maxSize={30}>
+          <ResizablePanel defaultSize={isMobile ? 7 : topEl.size} minSize={isMobile ? 7 : 15} maxSize={30}>
             <div className="h-full border-b border-border bg-background overflow-auto">
               {getElementContent(topEl.type)}
             </div>
           </ResizablePanel>
           <ResizableHandle className={hideResizeHandle ? 'opacity-0 pointer-events-none h-0' : ''} />
-          <ResizablePanel defaultSize={isMobile ? 95 : (100 - topEl.size)}>
+          <ResizablePanel defaultSize={isMobile ? 93 : (100 - topEl.size)}>
             <div className="h-full bg-background overflow-auto">
               {centerEl ? getElementContent(centerEl.type) : (bottomEl ? getElementContent(bottomEl.type) : null)}
             </div>
