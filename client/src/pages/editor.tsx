@@ -114,8 +114,8 @@ export default function Editor() {
 
   // Создаем динамическую конфигурацию макета
   const getFlexibleLayoutConfig = useCallback((): SimpleLayoutConfig => {
-    // Для мобильных устройств используем минимальный заголовок (размер в rem)
-    const headerSize = isMobile ? 2.5 : 8;
+    // Для мобильных устройств полностью скрываем заголовок
+    const headerSize = isMobile ? 0 : 8;
     
     return {
       elements: [
@@ -125,7 +125,7 @@ export default function Editor() {
           name: 'Шапка',
           position: 'top',
           size: headerSize,
-          visible: true
+          visible: !isMobile
         },
         {
           id: 'sidebar',
