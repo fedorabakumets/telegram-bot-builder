@@ -995,7 +995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get single bot project
-  app.get("/api/projects/:id", async (req, res) => {
+  app.get("/api/projects/:id", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const project = await storage.getBotProject(id);
@@ -1009,7 +1009,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new bot project
-  app.post("/api/projects", async (req, res) => {
+  app.post("/api/projects", requireDbReady, async (req, res) => {
     try {
       const validatedData = insertBotProjectSchema.parse(req.body);
       const project = await storage.createBotProject(validatedData);
@@ -1023,7 +1023,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update bot project
-  app.put("/api/projects/:id", async (req, res) => {
+  app.put("/api/projects/:id", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertBotProjectSchema.partial().parse(req.body);
@@ -1051,7 +1051,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete bot project
-  app.delete("/api/projects/:id", async (req, res) => {
+  app.delete("/api/projects/:id", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       console.log(`🗑️ Начинаем удаление проекта ${id}`);
@@ -1577,7 +1577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get all templates
-  app.get("/api/templates", async (req, res) => {
+  app.get("/api/templates", requireDbReady, async (req, res) => {
     try {
       const templates = await storage.getAllBotTemplates();
       // Маппинг data -> flow_data для совместимости с фронтендом
@@ -1627,7 +1627,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get single template
-  app.get("/api/templates/:id", async (req, res) => {
+  app.get("/api/templates/:id", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const template = await storage.getBotTemplate(id);
@@ -1641,7 +1641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create new template
-  app.post("/api/templates", async (req, res) => {
+  app.post("/api/templates", requireDbReady, async (req, res) => {
     try {
       const validatedData = insertBotTemplateSchema.parse(req.body);
       const template = await storage.createBotTemplate(validatedData);
@@ -1687,7 +1687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Use template (increment use count)
-  app.post("/api/templates/:id/use", async (req, res) => {
+  app.post("/api/templates/:id/use", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.incrementTemplateUseCount(id);
