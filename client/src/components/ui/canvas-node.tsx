@@ -6,8 +6,7 @@ import { useState, useRef, useEffect } from 'react';
 function parseFormattedText(text: string, formatMode?: string, markdown?: boolean): JSX.Element {
   if (!text) return <span>{text}</span>;
   
-  // Debug logging
-  console.log('parseFormattedText called with:', { text: text.substring(0, 100), formatMode, markdown });
+  // Убрали debug логи для улучшения производительности
   
   // Remove HTML tags and replace with styled spans
   const parseHTML = (htmlText: string): JSX.Element[] => {

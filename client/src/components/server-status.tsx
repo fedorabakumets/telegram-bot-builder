@@ -33,9 +33,20 @@ export function ServerStatus() {
 
   useEffect(() => {
     checkHealth();
-    const interval = setInterval(checkHealth, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    // Проверяем чаще только если сервер еще не готов
+    const getInterval = () => status?.ready ? 10000 : 2000; // 10с если готов, 2с если нет
+    
+    const scheduleNext = () => {
+      setTimeout(() => {
+        checkHealth();
+        if (!status?.ready) {
+          scheduleNext();
+        }
+      }, getInterval());
+    };
+    
+    scheduleNext();
+  }, [status?.ready]);
 
   // Не показываем индикатор если статус неизвестен или система готова и прошло время
   if (!status || (!isVisible && status.ready)) {
