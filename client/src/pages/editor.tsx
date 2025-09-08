@@ -1289,6 +1289,7 @@ export default function Editor() {
                   sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
                   propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
                   onOpenMobileSidebar={handleOpenMobileSidebar}
+                  onOpenMobileProperties={handleOpenMobileProperties}
                 />
               ) : null}
             </div>
