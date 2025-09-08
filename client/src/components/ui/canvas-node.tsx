@@ -235,6 +235,9 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
   // Touch состояние для мобильного перемещения элементов
   const [isTouchDragging, setIsTouchDragging] = useState(false);
   const [touchOffset, setTouchOffset] = useState({ x: 0, y: 0 });
+  const [touchStartTime, setTouchStartTime] = useState(0);
+  const [touchStartPos, setTouchStartPos] = useState({ x: 0, y: 0 });
+  const [touchMoved, setTouchMoved] = useState(false);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!onMove) return;
@@ -313,9 +316,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
 
   // Touch обработчики для мобильного перемещения элементов
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!onMove) return;
-    
-    // Не запускать драг если кликнули по кнопке удаления
+    // Не запускать события если кликнули по кнопке
     if ((e.target as HTMLElement).closest('button')) return;
     
     // Предотвращаем стандартное поведение браузера
@@ -325,37 +326,55 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
     const touch = e.touches[0];
     if (!touch) return;
     
-    // Находим канвас (родительский элемент трансформируемого контейнера)
-    const transformedContainer = nodeRef.current?.parentElement;
-    const canvas = transformedContainer?.parentElement;
+    // Записываем информацию о начале касания
+    setTouchStartTime(Date.now());
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    setTouchMoved(false);
     
-    if (canvas) {
-      const canvasRect = canvas.getBoundingClientRect();
-      const zoomFactor = zoom / 100;
+    // Подготавливаем для потенциального перетаскивания только если onMove доступен
+    if (onMove) {
+      // Находим канвас (родительский элемент трансформируемого контейнера)
+      const transformedContainer = nodeRef.current?.parentElement;
+      const canvas = transformedContainer?.parentElement;
       
-      // Рассчитываем смещение в канвасных координатах
-      const screenX = touch.clientX - canvasRect.left;
-      const screenY = touch.clientY - canvasRect.top;
-      
-      const canvasX = (screenX - pan.x) / zoomFactor;
-      const canvasY = (screenY - pan.y) / zoomFactor;
-      
-      setTouchOffset({
-        x: canvasX - node.position.x,
-        y: canvasY - node.position.y
-      });
-      setIsTouchDragging(true);
+      if (canvas) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const zoomFactor = zoom / 100;
+        
+        // Рассчитываем смещение в канвасных координатах
+        const screenX = touch.clientX - canvasRect.left;
+        const screenY = touch.clientY - canvasRect.top;
+        
+        const canvasX = (screenX - pan.x) / zoomFactor;
+        const canvasY = (screenY - pan.y) / zoomFactor;
+        
+        setTouchOffset({
+          x: canvasX - node.position.x,
+          y: canvasY - node.position.y
+        });
+      }
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isTouchDragging || !onMove) return;
+    const touch = e.touches[0];
+    if (!touch || !onMove) return;
+    
+    // Вычисляем расстояние от начальной точки касания
+    const deltaX = touch.clientX - touchStartPos.x;
+    const deltaY = touch.clientY - touchStartPos.y;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Начинаем перетаскивание только если движение больше 10 пикселей
+    if (distance > 10 && !isTouchDragging) {
+      setIsTouchDragging(true);
+      setTouchMoved(true);
+    }
+    
+    if (!isTouchDragging) return;
     
     e.preventDefault();
     e.stopPropagation(); // Останавливаем всплытие, чтобы не конфликтовать с панорамированием холста
-    
-    const touch = e.touches[0];
-    if (!touch) return;
     
     // Находим канвас (родительский элемент трансформируемого контейнера)
     const transformedContainer = nodeRef.current?.parentElement;
@@ -394,7 +413,17 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation(); // Останавливаем всплытие
+    
+    const touchEndTime = Date.now();
+    const touchDuration = touchEndTime - touchStartTime;
+    
+    // Если это было короткое касание (менее 300ms) и не было движения, обрабатываем как клик
+    if (touchDuration < 300 && !touchMoved && onClick) {
+      onClick();
+    }
+    
     setIsTouchDragging(false);
+    setTouchMoved(false);
   };
 
   // Добавляем и удаляем обработчики событий для mouse
@@ -436,7 +465,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         (isDragging || isTouchDragging) ? "shadow-3xl scale-105 cursor-grabbing z-50 border-blue-500 bg-blue-50/50 dark:bg-blue-900/20" : "hover:shadow-2xl hover:border-gray-300 dark:hover:border-slate-600",
         onMove ? "cursor-grab hover:cursor-grab" : "cursor-pointer"
       )}
-      onClick={!(isDragging || isTouchDragging) ? onClick : undefined}
+      onClick={!isDragging ? onClick : undefined}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
