@@ -395,6 +395,15 @@ export function Canvas({
 
   // Обработка touch событий для мобильного управления
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Проверяем, не происходит ли касание на узле
+    const target = e.target as HTMLElement;
+    const isOnNode = target.closest('[data-canvas-node]');
+    
+    // Если касание на узле, не начинаем панорамирование холста
+    if (isOnNode) {
+      return;
+    }
+    
     // Предотвращаем default действия браузера
     e.preventDefault();
     
@@ -416,6 +425,15 @@ export function Canvas({
   }, [pan, zoom]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    // Проверяем, не происходит ли касание на узле
+    const target = e.target as HTMLElement;
+    const isOnNode = target.closest('[data-canvas-node]');
+    
+    // Если касание на узле, не панорамируем холст
+    if (isOnNode) {
+      return;
+    }
+    
     e.preventDefault();
     
     const touches = e.touches;

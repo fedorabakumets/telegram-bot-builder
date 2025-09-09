@@ -371,10 +371,11 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       setTouchMoved(true);
     }
     
-    if (!isTouchDragging) return;
-    
+    // Всегда предотвращаем всплытие при движении по узлу, даже если еще не началось перетаскивание
     e.preventDefault();
     e.stopPropagation(); // Останавливаем всплытие, чтобы не конфликтовать с панорамированием холста
+    
+    if (!isTouchDragging) return;
     
     // Находим канвас (родительский элемент трансформируемого контейнера)
     const transformedContainer = nodeRef.current?.parentElement;
@@ -459,6 +460,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
   return (
     <div
       ref={nodeRef}
+      data-canvas-node="true"
       className={cn(
         "bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-2xl shadow-xl border-2 p-6 w-80 transition-all duration-300 relative select-none group",
         isSelected ? "border-blue-500 ring-4 ring-blue-500/20 shadow-2xl shadow-blue-500/10" : "border-gray-200 dark:border-slate-700",
