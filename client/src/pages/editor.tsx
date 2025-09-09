@@ -203,7 +203,9 @@ export default function Editor() {
     canRedo,
     copyToClipboard,
     pasteFromClipboard,
-    hasClipboardData
+    hasClipboardData,
+    isNodeBeingDragged,
+    setIsNodeBeingDragged
   } = useBotEditor(currentProject?.data as BotData);
 
   // Обработчик обновления данных листов
@@ -922,6 +924,8 @@ export default function Editor() {
             onCopyToClipboard={copyToClipboard}
             onPasteFromClipboard={pasteFromClipboard}
             hasClipboardData={hasClipboardData()}
+            isNodeBeingDragged={isNodeBeingDragged}
+            setIsNodeBeingDragged={setIsNodeBeingDragged}
             onToggleHeader={handleToggleHeader}
             onToggleSidebar={handleToggleSidebar}
             onToggleProperties={handleToggleProperties}

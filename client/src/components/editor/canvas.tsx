@@ -47,6 +47,10 @@ interface CanvasProps {
   onPasteFromClipboard?: () => void;
   hasClipboardData?: boolean;
   
+  // Глобальное состояние перетаскивания узлов
+  isNodeBeingDragged?: boolean;
+  setIsNodeBeingDragged?: (isDragging: boolean) => void;
+  
   // Кнопки управления интерфейсом
   onToggleHeader?: () => void;
   onToggleSidebar?: () => void;
@@ -88,6 +92,8 @@ export function Canvas({
   onCopyToClipboard,
   onPasteFromClipboard,
   hasClipboardData,
+  isNodeBeingDragged,
+  setIsNodeBeingDragged,
   onToggleHeader,
   onToggleSidebar,
   onToggleProperties,
@@ -395,12 +401,12 @@ export function Canvas({
 
   // Обработка touch событий для мобильного управления
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Проверяем, не происходит ли касание на узле
+    // Проверяем, не происходит ли касание на узле или перетаскивается ли уже узел
     const target = e.target as HTMLElement;
     const isOnNode = target.closest('[data-canvas-node]');
     
-    // Если касание на узле, не начинаем панорамирование холста
-    if (isOnNode) {
+    // Если касание на узле или уже перетаскивается узел, не начинаем панорамирование холста
+    if (isOnNode || isNodeBeingDragged) {
       return;
     }
     
@@ -422,15 +428,15 @@ export function Canvas({
       setInitialPinchZoom(zoom);
       setIsTouchPanning(false); // Отключаем панорамирование при pinch
     }
-  }, [pan, zoom]);
+  }, [pan, zoom, isNodeBeingDragged]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // Проверяем, не происходит ли касание на узле
+    // Проверяем, не происходит ли касание на узле или перетаскивается ли узел
     const target = e.target as HTMLElement;
     const isOnNode = target.closest('[data-canvas-node]');
     
-    // Если касание на узле, не панорамируем холст
-    if (isOnNode) {
+    // Если касание на узле или перетаскивается узел, не панорамируем холст
+    if (isOnNode || isNodeBeingDragged) {
       return;
     }
     
@@ -474,7 +480,7 @@ export function Canvas({
         }
       }
     }
-  }, [isTouchPanning, touchStart, lastTouchPosition, lastPinchDistance, initialPinchZoom, zoom]);
+  }, [isTouchPanning, touchStart, lastTouchPosition, lastPinchDistance, initialPinchZoom, zoom, isNodeBeingDragged]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
@@ -902,6 +908,7 @@ export function Canvas({
                 connectionStart={connectionStart}
                 zoom={zoom}
                 pan={pan}
+                setIsNodeBeingDragged={setIsNodeBeingDragged}
               />
             ))}
           </div>

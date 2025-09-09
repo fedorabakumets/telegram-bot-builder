@@ -173,6 +173,7 @@ interface CanvasNodeProps {
   } | null;
   zoom?: number;
   pan?: { x: number; y: number };
+  setIsNodeBeingDragged?: (isDragging: boolean) => void;
 }
 
 const nodeIcons = {
@@ -227,7 +228,7 @@ const nodeColors = {
   demote_user: 'bg-gradient-to-br from-slate-100 to-gray-200 dark:from-slate-900/40 dark:to-gray-800/40 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700/50 shadow-lg shadow-slate-500/20'
 };
 
-export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 } }: CanvasNodeProps) {
+export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -265,6 +266,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         y: canvasY - node.position.y
       });
       setIsDragging(true);
+      // Уведомляем глобальное состояние о начале перетаскивания
+      if (setIsNodeBeingDragged) {
+        setIsNodeBeingDragged(true);
+      }
     }
     
     // Предотвращаем выделение текста при перетаскивании
@@ -312,6 +317,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
 
   const handleMouseUp = () => {
     setIsDragging(false);
+    // Уведомляем глобальное состояние об окончании перетаскивания
+    if (setIsNodeBeingDragged) {
+      setIsNodeBeingDragged(false);
+    }
   };
 
   // Touch обработчики для мобильного перемещения элементов
@@ -369,6 +378,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
     if (distance > 10 && !isTouchDragging) {
       setIsTouchDragging(true);
       setTouchMoved(true);
+      // Уведомляем глобальное состояние о начале перетаскивания
+      if (setIsNodeBeingDragged) {
+        setIsNodeBeingDragged(true);
+      }
     }
     
     // Всегда предотвращаем всплытие при движении по узлу, даже если еще не началось перетаскивание
@@ -425,6 +438,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
     
     setIsTouchDragging(false);
     setTouchMoved(false);
+    // Уведомляем глобальное состояние об окончании перетаскивания
+    if (setIsNodeBeingDragged) {
+      setIsNodeBeingDragged(false);
+    }
   };
 
   // Добавляем и удаляем обработчики событий для mouse
