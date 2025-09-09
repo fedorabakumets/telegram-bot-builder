@@ -12,6 +12,9 @@ export function useBotEditor(initialData?: BotData) {
   const [connections, setConnections] = useState<Connection[]>(initialData?.connections || []);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   
+  // Состояние для отслеживания перетаскивания узлов
+  const [isNodeBeingDragged, setIsNodeBeingDragged] = useState(false);
+  
   // История для undo/redo
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -417,6 +420,8 @@ export function useBotEditor(initialData?: BotData) {
     canRedo,
     copyToClipboard,
     pasteFromClipboard,
-    hasClipboardData
+    hasClipboardData,
+    isNodeBeingDragged,
+    setIsNodeBeingDragged
   };
 }
