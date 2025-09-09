@@ -1286,6 +1286,8 @@ export default function Editor() {
                   onSave={() => updateProjectMutation.mutate({})}
                   isSaving={updateProjectMutation.isPending}
                   onFullscreen={handleEnterFullscreen}
+                  isNodeBeingDragged={isNodeBeingDragged}
+                  setIsNodeBeingDragged={setIsNodeBeingDragged}
                   onToggleHeader={handleToggleHeader}
                   onToggleSidebar={handleToggleSidebar}
                   onToggleProperties={handleToggleProperties}

@@ -51,6 +51,7 @@ export function FullscreenCanvas({
 }: FullscreenCanvasProps) {
   
   const [showComponentsSidebar, setShowComponentsSidebar] = useState(false);
+  const [isNodeBeingDragged, setIsNodeBeingDragged] = useState(false);
 
   const handleComponentDrag = useCallback((component: ComponentDefinition) => {
     // Handle component drag if needed
@@ -187,6 +188,8 @@ export function FullscreenCanvas({
             canRedo={canRedo}
             onSave={onSave}
             isSaving={isSaving}
+            isNodeBeingDragged={isNodeBeingDragged}
+            setIsNodeBeingDragged={setIsNodeBeingDragged}
           />
         </div>
       </div>
