@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal } from 'lucide-react';
+import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Camera, Upload, ExternalLink } from 'lucide-react';
 
 interface BotControlProps {
   projectId: number;
@@ -141,6 +141,213 @@ function BotAvatar({
   );
 }
 
+// Компонент для загрузки аватарки бота
+function BotAvatarUploader({
+  botInfo,
+  onAvatarSelected
+}: {
+  botInfo: BotInfo;
+  onAvatarSelected: (file: File) => void;
+}) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const fileInputRef = useState<HTMLInputElement | null>(null);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Проверяем тип файла
+    if (!file.type.startsWith('image/')) {
+      alert('Пожалуйста, выберите изображение');
+      return;
+    }
+
+    // Проверяем размер файла (макс 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Размер файла не должен превышать 5MB');
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // Создаем превью
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    onAvatarSelected(file);
+    setShowInstructions(true);
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const fakeEvent = {
+        target: { files: [file] }
+      } as any;
+      handleFileSelect(fakeEvent);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+  };
+
+  return (
+    <>
+      <div className="space-y-3">
+        <Label>Аватар бота</Label>
+        <div className="flex items-center gap-4">
+          {/* Текущий аватар */}
+          <BotAvatar
+            photoUrl={botInfo.photoUrl}
+            botName={botInfo.first_name}
+            size={64}
+          />
+          
+          {/* Превью нового аватара */}
+          {previewUrl && (
+            <div className="relative">
+              <img
+                src={previewUrl}
+                alt="Предпросмотр"
+                className="w-16 h-16 rounded-lg object-cover border-2 border-green-500"
+              />
+              <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                ✓
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Зона загрузки */}
+        <div
+          className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onClick={() => fileInputRef[0]?.click()}
+          data-testid="avatar-upload-zone"
+        >
+          <input
+            type="file"
+            ref={(el) => (fileInputRef[0] = el)}
+            onChange={handleFileSelect}
+            accept="image/*"
+            className="hidden"
+            data-testid="avatar-file-input"
+          />
+          <div className="flex flex-col items-center gap-2">
+            <Camera className="h-8 w-8 text-muted-foreground" />
+            <p className="text-sm font-medium">Загрузить новый аватар</p>
+            <p className="text-xs text-muted-foreground">
+              Перетащите изображение или нажмите для выбора
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Поддерживаются JPG, PNG (до 5MB)
+            </p>
+          </div>
+        </div>
+
+        {selectedFile && (
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+              <Upload className="h-4 w-4" />
+              <p className="text-sm font-medium">
+                Файл выбран: {selectedFile.name}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Диалог с инструкциями */}
+      <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              Установка аватара бота
+            </DialogTitle>
+            <DialogDescription>
+              Для установки аватара необходимо использовать BotFather в Telegram
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {previewUrl && (
+              <div className="flex justify-center">
+                <img
+                  src={previewUrl}
+                  alt="Предпросмотр аватара"
+                  className="w-24 h-24 rounded-full object-cover border-4 border-blue-500"
+                />
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm">Инструкция по установке:</h4>
+              <ol className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">1</span>
+                  <span>Сохраните выбранное изображение на устройство</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">2</span>
+                  <span>Откройте @BotFather в Telegram</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">3</span>
+                  <span>Отправьте команду <code className="bg-muted px-1 rounded">/setuserpic</code></span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">4</span>
+                  <span>Выберите вашего бота: <strong>@{botInfo.username}</strong></span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-medium">5</span>
+                  <span>Загрузите изображение как <strong>фото</strong> (не файл)</span>
+                </li>
+              </ol>
+            </div>
+
+            <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+              <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                <strong>Важно:</strong> Загружайте изображение как фото, а не как файл. 
+                Квадратные изображения работают лучше всего.
+              </p>
+            </div>
+            
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowInstructions(false)}
+                data-testid="button-close-instructions"
+              >
+                Понятно
+              </Button>
+              <Button
+                onClick={() => {
+                  window.open('https://t.me/botfather', '_blank');
+                }}
+                className="flex items-center gap-2"
+                data-testid="button-open-botfather"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Открыть BotFather
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 // Компонент для редактирования профиля бота
 function BotProfileEditor({ 
   projectId, 
@@ -155,6 +362,7 @@ function BotProfileEditor({
   const [name, setName] = useState(botInfo.first_name || '');
   const [description, setDescription] = useState(botInfo.description || '');
   const [shortDescription, setShortDescription] = useState(botInfo.short_description || '');
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -305,6 +513,14 @@ function BotProfileEditor({
           <DialogTitle>Редактировать профиль бота</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {/* Компонент загрузки аватара */}
+          <BotAvatarUploader
+            botInfo={botInfo}
+            onAvatarSelected={setSelectedAvatarFile}
+          />
+          
+          <Separator />
+          
           <div className="space-y-2">
             <Label htmlFor="bot-name">Имя бота</Label>
             <Input
