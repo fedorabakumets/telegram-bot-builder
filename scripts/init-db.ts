@@ -45,9 +45,25 @@ async function initDatabase() {
     `);
 
     await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS bot_tokens (
+        id SERIAL PRIMARY KEY,
+        project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
+        name TEXT NOT NULL,
+        token TEXT NOT NULL,
+        is_default INTEGER DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        description TEXT,
+        last_used_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
       CREATE TABLE IF NOT EXISTS bot_instances (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) NOT NULL,
+        token_id INTEGER REFERENCES bot_tokens(id) ON DELETE CASCADE NOT NULL,
         status TEXT NOT NULL,
         token TEXT NOT NULL,
         process_id TEXT,
@@ -84,21 +100,6 @@ async function initDatabase() {
         requires_token INTEGER NOT NULL DEFAULT 0,
         complexity INTEGER NOT NULL DEFAULT 1,
         estimated_time INTEGER NOT NULL DEFAULT 5,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
-
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS bot_tokens (
-        id SERIAL PRIMARY KEY,
-        project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
-        name TEXT NOT NULL,
-        token TEXT NOT NULL,
-        is_default INTEGER DEFAULT 0,
-        is_active INTEGER DEFAULT 1,
-        description TEXT,
-        last_used_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );

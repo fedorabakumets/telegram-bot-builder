@@ -48,9 +48,25 @@ export async function initializeDatabaseTables() {
     `, "Создание таблицы bot_projects");
 
     await executeWithRetry(db, sql`
+      CREATE TABLE IF NOT EXISTS bot_tokens (
+        id SERIAL PRIMARY KEY,
+        project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
+        name TEXT NOT NULL,
+        token TEXT NOT NULL,
+        is_default INTEGER DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        description TEXT,
+        last_used_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `, "Создание таблицы bot_tokens");
+
+    await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS bot_instances (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES bot_projects(id) NOT NULL,
+        token_id INTEGER REFERENCES bot_tokens(id) ON DELETE CASCADE NOT NULL,
         status TEXT NOT NULL,
         token TEXT NOT NULL,
         process_id TEXT,
@@ -91,21 +107,6 @@ export async function initializeDatabaseTables() {
         updated_at TIMESTAMP DEFAULT NOW()
       );
     `, "Создание таблицы bot_templates");
-
-    await executeWithRetry(db, sql`
-      CREATE TABLE IF NOT EXISTS bot_tokens (
-        id SERIAL PRIMARY KEY,
-        project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
-        name TEXT NOT NULL,
-        token TEXT NOT NULL,
-        is_default INTEGER DEFAULT 0,
-        is_active INTEGER DEFAULT 1,
-        description TEXT,
-        last_used_at TIMESTAMP,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      );
-    `, "Создание таблицы bot_tokens");
 
     await executeWithRetry(db, sql`
       CREATE TABLE IF NOT EXISTS media_files (
