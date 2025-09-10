@@ -15,6 +15,65 @@ import { URL } from "url";
 import dbRoutes from "./db-routes";
 import { Pool } from "pg";
 import { generatePythonCode } from "../client/src/lib/bot-generator";
+
+// Функция нормализации данных узлов для добавления недостающих полей
+function normalizeNodeData(node: any) {
+  // Определяем значения по умолчанию для разных типов узлов
+  const nodeDefaults = {
+    start: { 
+      command: '/start', 
+      description: 'Запустить бота', 
+      showInMenu: true, 
+      isPrivateOnly: false, 
+      requiresAuth: false, 
+      adminOnly: false 
+    },
+    command: { 
+      command: '/custom', 
+      description: 'Новая команда', 
+      showInMenu: true, 
+      isPrivateOnly: false, 
+      requiresAuth: false, 
+      adminOnly: false 
+    }
+  };
+
+  // Получаем значения по умолчанию для типа узла
+  const defaults = nodeDefaults[node.type as keyof typeof nodeDefaults];
+  if (!defaults) return node;
+
+  // Объединяем существующие данные с недостающими значениями по умолчанию
+  const normalizedData = { ...node.data };
+  
+  for (const [key, value] of Object.entries(defaults)) {
+    if (normalizedData[key] === undefined) {
+      normalizedData[key] = value;
+    }
+  }
+
+  return {
+    ...node,
+    data: normalizedData
+  };
+}
+
+// Функция нормализации данных проекта
+function normalizeProjectData(projectData: any) {
+  if (!projectData?.data?.sheets) return projectData;
+
+  const normalizedSheets = projectData.data.sheets.map((sheet: any) => ({
+    ...sheet,
+    nodes: sheet.nodes ? sheet.nodes.map(normalizeNodeData) : []
+  }));
+
+  return {
+    ...projectData,
+    data: {
+      ...projectData.data,
+      sheets: normalizedSheets
+    }
+  };
+}
 import { initializeDatabaseTables } from "./init-db";
 import { telegramClientManager, initializeTelegramManager } from "./telegram-client";
 
@@ -1006,7 +1065,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
-      res.json(project);
+      
+      // Нормализуем данные проекта для добавления недостающих полей в узлы
+      const normalizedProject = normalizeProjectData(project);
+      
+      res.json(normalizedProject);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch project" });
     }

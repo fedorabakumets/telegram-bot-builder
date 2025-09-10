@@ -129,13 +129,51 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     return exportContent[selectedFormat] || '';
   };
 
-  // Генерация команд BotFather только при открытии
+  // Получение свежих данных проекта с нормализацией при открытии
+  const [freshBotData, setFreshBotData] = useState<BotData | null>(null);
+  
+  useEffect(() => {
+    async function loadFreshProjectData() {
+      if (isOpen) {
+        try {
+          // Получаем ID проекта из URL
+          const projectId = window.location.pathname.split('/').pop();
+          if (projectId && !isNaN(Number(projectId))) {
+            const response = await fetch(`/api/projects/${projectId}`);
+            if (response.ok) {
+              const project = await response.json();
+              // Устанавливаем свежие данные с нормализацией
+              if (project.data) {
+                setFreshBotData(project.data);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error loading fresh project data:', error);
+        }
+      }
+    }
+    
+    loadFreshProjectData();
+  }, [isOpen]);
+
+  // Генерация команд BotFather с использованием свежих данных
   useEffect(() => {
     async function loadBotFatherCommands() {
-      if (isOpen && botData) {
+      const dataToUse = freshBotData || botData;
+      if (isOpen && dataToUse) {
         try {
           const commands = await loadCommands();
-          const botFatherCmds = commands.generateBotFatherCommands(botData?.nodes || []);
+          // Используем данные из активного листа или первого листа
+          const nodes = dataToUse.sheets?.[0]?.nodes || dataToUse.nodes || [];
+          console.log('🎯 ExportModal: Генерируем команды для узлов:', nodes);
+          console.log('🎯 ExportModal: Узлы с командами:', nodes.filter(node => 
+            (node.type === 'start' || node.type === 'command') && 
+            node.data.showInMenu && 
+            node.data.command
+          ));
+          const botFatherCmds = commands.generateBotFatherCommands(nodes);
+          console.log('🎯 ExportModal: Результат генерации команд:', botFatherCmds);
           setBotFatherCommands(botFatherCmds);
         } catch (error) {
           console.error('Error loading BotFather commands:', error);
@@ -144,7 +182,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     }
     
     loadBotFatherCommands();
-  }, [isOpen, botData]);
+  }, [isOpen, freshBotData, botData]);
 
   const getFileExtension = (format: ExportFormat): string => {
     const extensions = {
