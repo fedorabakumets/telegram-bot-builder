@@ -753,11 +753,6 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                       <h3 className="font-semibold text-lg leading-tight mb-1">{token.name}</h3>
                       <div className="flex items-center gap-2 mb-2">
                         {getStatusBadge(token)}
-                        {token.isActive ? (
-                          <Badge variant="outline" className="text-xs">
-                            Активен
-                          </Badge>
-                        ) : null}
                       </div>
                       {token.description && (
                         <p className="text-sm text-muted-foreground">{token.description}</p>
@@ -772,28 +767,39 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    {isStopped || isError ? (
-                      <Button
-                        size="sm"
-                        onClick={() => startBotMutation.mutate(token.id)}
-                        disabled={startBotMutation.isPending}
-                        className="flex items-center gap-2"
-                      >
-                        <Play className="w-4 h-4" />
-                        {startBotMutation.isPending ? 'Запуск...' : 'Запустить'}
-                      </Button>
-                    ) : isRunning ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => stopBotMutation.mutate(token.id)}
-                        disabled={stopBotMutation.isPending}
-                        className="flex items-center gap-2"
-                      >
-                        <Square className="w-4 h-4" />
-                        {stopBotMutation.isPending ? 'Остановка...' : 'Остановить'}
-                      </Button>
-                    ) : null}
+                    {/* Проверяем статус конкретного токена */}
+                    {(() => {
+                      const isThisTokenRunning = botStatus?.instance && 
+                                                isRunning && 
+                                                botStatus.instance.tokenId === token.id;
+                      
+                      if (!isThisTokenRunning) {
+                        return (
+                          <Button
+                            size="sm"
+                            onClick={() => startBotMutation.mutate(token.id)}
+                            disabled={startBotMutation.isPending}
+                            className="flex items-center gap-2"
+                          >
+                            <Play className="w-4 h-4" />
+                            {startBotMutation.isPending ? 'Запуск...' : 'Запустить'}
+                          </Button>
+                        );
+                      } else {
+                        return (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => stopBotMutation.mutate(token.id)}
+                            disabled={stopBotMutation.isPending}
+                            className="flex items-center gap-2"
+                          >
+                            <Square className="w-4 h-4" />
+                            {stopBotMutation.isPending ? 'Остановка...' : 'Остановить'}
+                          </Button>
+                        );
+                      }
+                    })()}
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
