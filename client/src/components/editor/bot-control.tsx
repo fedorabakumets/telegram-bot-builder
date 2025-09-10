@@ -22,6 +22,7 @@ interface BotControlProps {
 interface BotInstance {
   id: number;
   projectId: number;
+  tokenId: number;
   status: 'running' | 'stopped' | 'error';
   token: string;
   processId?: string;
@@ -499,6 +500,9 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const [showAddBot, setShowAddBot] = useState(false);
   const [newBotToken, setNewBotToken] = useState('');
   const [isParsingBot, setIsParsingBot] = useState(false);
+  const [editingToken, setEditingToken] = useState<BotToken | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -596,6 +600,21 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     }
   });
 
+  // Обновление информации о токене
+  const updateTokenMutation = useMutation({
+    mutationFn: async ({ tokenId, data }: { tokenId: number; data: { name?: string; description?: string } }) => {
+      return apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+      toast({ title: 'Информация о боте обновлена' });
+      setEditingToken(null);
+    },
+    onError: (error: any) => {
+      toast({ title: 'Ошибка при обновлении', description: error.message, variant: 'destructive' });
+    }
+  });
+
   // Запуск бота
   const startBotMutation = useMutation({
     mutationFn: async (tokenId: number) => {
@@ -639,7 +658,10 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   };
 
   const getStatusBadge = (token: BotToken) => {
-    const isActiveBot = botStatus?.instance && isRunning;
+    // Проверяем, что именно этот токен запущен
+    const isActiveBot = botStatus?.instance && 
+                       isRunning && 
+                       botStatus.instance.tokenId === token.id;
     
     if (isActiveBot) {
       return (
@@ -669,17 +691,6 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
 
   return (
     <div className="space-y-6">
-      {/* Bot Profile Section */}
-      {isRunning && botInfo && (
-        <BotProfile 
-          projectId={projectId}
-          botInfo={botInfo}
-          onRefresh={() => refetchBotInfo()}
-          isRefreshing={false}
-          fallbackName={projectName}
-        />
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -791,6 +802,16 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            setEditingToken(token);
+                            setEditName(token.name);
+                            setEditDescription(token.description || '');
+                          }}
+                        >
+                          <Edit2 className="mr-2 h-4 w-4" />
+                          Редактировать
+                        </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => deleteBotMutation.mutate(token.id)}
                           className="text-red-600"
