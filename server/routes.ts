@@ -418,7 +418,7 @@ function createBotFile(botCode: string, projectId: number): string {
 }
 
 // Функция для запуска бота
-async function startBot(projectId: number, token: string): Promise<{ success: boolean; error?: string; processId?: string }> {
+async function startBot(projectId: number, token: string, tokenId: number): Promise<{ success: boolean; error?: string; processId?: string }> {
   try {
     // Проверяем, не запущен ли уже бот в базе данных
     const currentInstance = await storage.getBotInstance(projectId);
@@ -518,6 +518,7 @@ async function startBot(projectId: number, token: string): Promise<{ success: bo
     } else {
       await storage.createBotInstance({
         projectId,
+        tokenId,
         status: 'running',
         token,
         processId,
@@ -633,7 +634,7 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
     }
 
     // Запускаем заново с тем же токеном
-    const startResult = await startBot(projectId, instance.token);
+    const startResult = await startBot(projectId, instance.token, instance.tokenId);
     return startResult;
   } catch (error) {
     console.error('Ошибка перезапуска бота:', error);
@@ -1389,7 +1390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let botToken = token;
-      let tokenToMarkAsUsed = null;
+      let actualTokenId = tokenId;
 
       // Если не передан токен напрямую, используем токен по ID или по умолчанию
       if (!botToken) {
@@ -1397,42 +1398,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const selectedToken = await storage.getBotToken(tokenId);
           if (selectedToken && selectedToken.projectId === projectId) {
             botToken = selectedToken.token;
-            tokenToMarkAsUsed = selectedToken.id;
+            actualTokenId = selectedToken.id;
           }
         } else {
           // Используем токен по умолчанию
           const defaultToken = await storage.getDefaultBotToken(projectId);
           if (defaultToken) {
             botToken = defaultToken.token;
-            tokenToMarkAsUsed = defaultToken.id;
-          } else {
-            // Fallback к старому способу - токен в проекте
-            botToken = project.botToken;
+            actualTokenId = defaultToken.id;
           }
         }
       }
 
-      if (!botToken) {
+      if (!botToken || !actualTokenId) {
         return res.status(400).json({ message: "Bot token is required" });
       }
 
-      // Проверяем, не запущен ли уже бот
-      const existingInstance = await storage.getBotInstance(projectId);
+      // Проверяем, не запущен ли уже этот конкретный бот (токен)
+      const existingInstance = await storage.getBotInstanceByToken(actualTokenId);
       if (existingInstance && existingInstance.status === 'running') {
         return res.status(400).json({ message: "Bot is already running" });
       }
 
-      const result = await startBot(projectId, botToken);
+      const result = await startBot(projectId, botToken, actualTokenId);
       if (result.success) {
         // Отмечаем токен как использованный
-        if (tokenToMarkAsUsed) {
-          await storage.markTokenAsUsed(tokenToMarkAsUsed);
-        }
+        await storage.markTokenAsUsed(actualTokenId);
         
         res.json({ 
           message: "Bot started successfully", 
           processId: result.processId,
-          tokenUsed: tokenToMarkAsUsed ? true : false
+          tokenUsed: true
         });
       } else {
         res.status(500).json({ message: result.error || "Failed to start bot" });
@@ -1482,19 +1478,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Используем токен по умолчанию
       const defaultToken = await storage.getDefaultBotToken(projectId);
+      let botTokenId = null;
       if (defaultToken) {
         botToken = defaultToken.token;
+        botTokenId = defaultToken.id;
       } else {
-        // Fallback к старому способу - токен в проекте
-        botToken = project.botToken;
+        return res.status(400).json({ message: "Default bot token not found" });
       }
       
-      if (!botToken) {
+      if (!botToken || !botTokenId) {
         return res.status(400).json({ message: "Bot token is required" });
       }
       
       // Запускаем бота заново
-      const startResult = await startBot(projectId, botToken);
+      const startResult = await startBot(projectId, botToken, botTokenId);
       if (startResult.success) {
         res.json({ 
           message: "Bot restarted successfully", 
@@ -4053,7 +4050,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         savedFromDatabase: true, // Флаг для фронтенда
         lastSeen: member.lastSeen,
         messageCount: member.messageCount,
-        ...member.adminRights // Разворачиваем права администратора
+        ...(typeof member.adminRights === 'object' && member.adminRights ? member.adminRights : {}) // Разворачиваем права администратора
       }));
 
       console.log(`✅ Загружено ${members.length} сохраненных участников группы ${groupId} из базы данных`);
