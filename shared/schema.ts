@@ -15,6 +15,7 @@ export const botProjects = pgTable("bot_projects", {
 export const botInstances = pgTable("bot_instances", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => botProjects.id).notNull(),
+  tokenId: integer("token_id").references(() => botTokens.id, { onDelete: "cascade" }).notNull(),
   status: text("status").notNull(), // "running", "stopped", "error"
   token: text("token").notNull(),
   processId: text("process_id"),
@@ -219,6 +220,7 @@ export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
 
 export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
   projectId: true,
+  tokenId: true,
   status: true,
   token: true,
   processId: true,

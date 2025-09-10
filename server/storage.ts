@@ -40,11 +40,14 @@ export interface IStorage {
   
   // Bot instances
   getBotInstance(projectId: number): Promise<BotInstance | undefined>;
+  getBotInstanceByToken(tokenId: number): Promise<BotInstance | undefined>;
+  getBotInstancesByProject(projectId: number): Promise<BotInstance[]>;
   getAllBotInstances(): Promise<BotInstance[]>;
   createBotInstance(instance: InsertBotInstance): Promise<BotInstance>;
   updateBotInstance(id: number, instance: Partial<InsertBotInstance>): Promise<BotInstance | undefined>;
   deleteBotInstance(id: number): Promise<boolean>;
   stopBotInstance(projectId: number): Promise<boolean>;
+  stopBotInstanceByToken(tokenId: number): Promise<boolean>;
   
   // Bot templates
   getBotTemplate(id: number): Promise<BotTemplate | undefined>;
@@ -227,13 +230,21 @@ class MemStorage implements IStorage {
     return Array.from(this.instances.values()).find(instance => instance.projectId === projectId);
   }
 
+  async getBotInstanceByToken(tokenId: number): Promise<BotInstance | undefined> {
+    return Array.from(this.instances.values()).find(instance => instance.tokenId === tokenId);
+  }
+
+  async getBotInstancesByProject(projectId: number): Promise<BotInstance[]> {
+    return Array.from(this.instances.values()).filter(instance => instance.projectId === projectId);
+  }
+
   async getAllBotInstances(): Promise<BotInstance[]> {
     return Array.from(this.instances.values());
   }
 
   async createBotInstance(insertInstance: InsertBotInstance): Promise<BotInstance> {
-    // Сначала удаляем существующий экземпляр для этого проекта
-    const existingInstance = await this.getBotInstance(insertInstance.projectId);
+    // Теперь удаляем существующий экземпляр только для этого же токена
+    const existingInstance = await this.getBotInstanceByToken(insertInstance.tokenId);
     if (existingInstance) {
       await this.deleteBotInstance(existingInstance.id);
     }
@@ -271,6 +282,16 @@ class MemStorage implements IStorage {
 
   async stopBotInstance(projectId: number): Promise<boolean> {
     const instance = await this.getBotInstance(projectId);
+    if (!instance) return false;
+    
+    const updated = await this.updateBotInstance(instance.id, { 
+      status: 'stopped'
+    });
+    return !!updated;
+  }
+
+  async stopBotInstanceByToken(tokenId: number): Promise<boolean> {
+    const instance = await this.getBotInstanceByToken(tokenId);
     if (!instance) return false;
     
     const updated = await this.updateBotInstance(instance.id, { 
@@ -715,6 +736,15 @@ export class DatabaseStorage implements IStorage {
     return instance || undefined;
   }
 
+  async getBotInstanceByToken(tokenId: number): Promise<BotInstance | undefined> {
+    const [instance] = await this.db.select().from(botInstances).where(eq(botInstances.tokenId, tokenId));
+    return instance || undefined;
+  }
+
+  async getBotInstancesByProject(projectId: number): Promise<BotInstance[]> {
+    return await this.db.select().from(botInstances).where(eq(botInstances.projectId, projectId));
+  }
+
   async getAllBotInstances(): Promise<BotInstance[]> {
     return await this.db.select().from(botInstances).orderBy(desc(botInstances.startedAt));
   }
@@ -746,6 +776,14 @@ export class DatabaseStorage implements IStorage {
       .update(botInstances)
       .set({ status: 'stopped', stoppedAt: new Date() })
       .where(eq(botInstances.projectId, projectId));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async stopBotInstanceByToken(tokenId: number): Promise<boolean> {
+    const result = await this.db
+      .update(botInstances)
+      .set({ status: 'stopped', stoppedAt: new Date() })
+      .where(eq(botInstances.tokenId, tokenId));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
@@ -1331,6 +1369,14 @@ export class OptimizedDatabaseStorage extends DatabaseStorage {
       .update(botInstances)
       .set({ status: 'stopped', stoppedAt: new Date() })
       .where(eq(botInstances.projectId, projectId));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async stopBotInstanceByToken(tokenId: number): Promise<boolean> {
+    const result = await this.db
+      .update(botInstances)
+      .set({ status: 'stopped', stoppedAt: new Date() })
+      .where(eq(botInstances.tokenId, tokenId));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 
