@@ -612,8 +612,8 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
 
   // Остановка бота
   const stopBotMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest('POST', `/api/projects/${projectId}/bot/stop`, {});
+    mutationFn: async (tokenId: number) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/stop`, { tokenId });
     },
     onSuccess: () => {
       toast({ title: "Бот остановлен", description: "Бот успешно остановлен." });
@@ -775,7 +775,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => stopBotMutation.mutate()}
+                        onClick={() => stopBotMutation.mutate(token.id)}
                         disabled={stopBotMutation.isPending}
                         className="flex items-center gap-2"
                       >

@@ -18,8 +18,8 @@ import { generatePythonCode } from "../client/src/lib/bot-generator";
 import { initializeDatabaseTables } from "./init-db";
 import { telegramClientManager, initializeTelegramManager } from "./telegram-client";
 
-// Глобальное хранилище активных процессов ботов
-const botProcesses = new Map<number, ChildProcess>();
+// Глобальное хранилище активных процессов ботов (ключ: `${projectId}_${tokenId}`)
+const botProcesses = new Map<string, ChildProcess>();
 
 // Расширенная настройка multer для загрузки файлов
 const storage_multer = multer.diskStorage({
@@ -406,13 +406,14 @@ async function checkUrlAccessibility(url: string): Promise<{
 }
 
 // Функция для создания Python файла бота
-function createBotFile(botCode: string, projectId: number): string {
+function createBotFile(botCode: string, projectId: number, tokenId?: number): string {
   const botsDir = join(process.cwd(), 'bots');
   if (!existsSync(botsDir)) {
     mkdirSync(botsDir, { recursive: true });
   }
   
-  const filePath = join(botsDir, `bot_${projectId}.py`);
+  const fileName = tokenId ? `bot_${projectId}_${tokenId}.py` : `bot_${projectId}.py`;
+  const filePath = join(botsDir, fileName);
   writeFileSync(filePath, botCode);
   return filePath;
 }
@@ -420,22 +421,12 @@ function createBotFile(botCode: string, projectId: number): string {
 // Функция для запуска бота
 async function startBot(projectId: number, token: string, tokenId: number): Promise<{ success: boolean; error?: string; processId?: string }> {
   try {
-    // Проверяем, не запущен ли уже бот в базе данных
-    const currentInstance = await storage.getBotInstance(projectId);
-    if (currentInstance && currentInstance.status === 'running') {
-      return { success: false, error: "Бот уже запущен" };
-    }
-
-    // Проверяем, нет ли уже активного процесса в памяти
-    if (botProcesses.has(projectId)) {
-      console.log(`Найден существующий процесс для бота ${projectId}, останавливаем его`);
-      const oldProcess = botProcesses.get(projectId);
-      if (oldProcess && !oldProcess.killed) {
-        oldProcess.kill('SIGTERM');
-      }
-      botProcesses.delete(projectId);
-      // Ждем немного для завершения старого процесса
-      await new Promise(resolve => setTimeout(resolve, 3000));
+    const processKey = `${projectId}_${tokenId}`;
+    
+    // Проверяем, не запущен ли уже этот конкретный бот
+    if (botProcesses.has(processKey)) {
+      console.log(`Бот с токеном ${tokenId} для проекта ${projectId} уже запущен`);
+      return { success: false, error: "Этот бот уже запущен" };
     }
 
     const project = await storage.getBotProject(projectId);
@@ -483,8 +474,8 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     const simpleBotData = convertSheetsToSimpleBotData(project.data);
     const botCode = generatePythonCode(simpleBotData as any, project.name).replace('YOUR_BOT_TOKEN_HERE', token);
     
-    // Создаем файл бота
-    const filePath = createBotFile(botCode, projectId);
+    // Создаем файл бота (уникальный для каждого токена)
+    const filePath = createBotFile(botCode, projectId, tokenId);
     
     // Запускаем бота
     const process = spawn('python', [filePath], {
@@ -504,7 +495,7 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     const processId = process.pid?.toString();
     
     // Сохраняем процесс
-    botProcesses.set(projectId, process);
+    botProcesses.set(processKey, process);
     
     // Создаем или обновляем запись в базе данных
     const existingBotInstance = await storage.getBotInstance(projectId);
@@ -527,7 +518,7 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
 
     // Обрабатываем события процесса
     process.on('error', async (error) => {
-      console.error(`Ошибка запуска бота ${projectId}:`, error);
+      console.error(`Ошибка запуска бота ${projectId} (токен ${tokenId}):`, error);
       const instance = await storage.getBotInstance(projectId);
       if (instance) {
         await storage.updateBotInstance(instance.id, { 
@@ -535,11 +526,11 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
           errorMessage: error.message 
         });
       }
-      botProcesses.delete(projectId);
+      botProcesses.delete(processKey);
     });
 
     process.on('exit', async (code) => {
-      console.log(`Бот ${projectId} завершен с кодом ${code}`);
+      console.log(`Бот ${projectId} (токен ${tokenId}) завершен с кодом ${code}`);
       const instance = await storage.getBotInstance(projectId);
       if (instance) {
         await storage.updateBotInstance(instance.id, { 
@@ -547,7 +538,7 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
           errorMessage: code !== 0 ? `Процесс завершен с кодом ${code}` : null
         });
       }
-      botProcesses.delete(projectId);
+      botProcesses.delete(processKey);
     });
 
     return { success: true, processId };
@@ -557,16 +548,17 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
   }
 }
 
-// Функция для остановки бота
-async function stopBot(projectId: number): Promise<{ success: boolean; error?: string }> {
+// Функция для остановки бота по токену
+async function stopBot(projectId: number, tokenId: number): Promise<{ success: boolean; error?: string }> {
   try {
-    const process = botProcesses.get(projectId);
+    const processKey = `${projectId}_${tokenId}`;
+    const process = botProcesses.get(processKey);
     
     // Если процесс не найден в памяти, но в базе есть запись - исправляем несоответствие
     if (!process) {
       const instance = await storage.getBotInstance(projectId);
-      if (instance && instance.status === 'running') {
-        console.log(`Процесс бота ${projectId} не найден в памяти, но помечен как запущенный в базе. Исправляем состояние.`);
+      if (instance && instance.status === 'running' && instance.tokenId === tokenId) {
+        console.log(`Процесс бота ${projectId} (токен ${tokenId}) не найден в памяти, но помечен как запущенный в базе. Исправляем состояние.`);
         await storage.stopBotInstance(projectId);
         return { success: true };
       }
@@ -574,7 +566,7 @@ async function stopBot(projectId: number): Promise<{ success: boolean; error?: s
     }
 
     process.kill('SIGTERM');
-    botProcesses.delete(projectId);
+    botProcesses.delete(processKey);
     
     await storage.stopBotInstance(projectId);
     
@@ -1442,8 +1434,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:id/bot/stop", async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      const { tokenId } = req.body;
       
-      const result = await stopBot(projectId);
+      if (!tokenId) {
+        return res.status(400).json({ message: "Token ID is required" });
+      }
+      
+      const result = await stopBot(projectId, tokenId);
       if (result.success) {
         res.json({ message: "Bot stopped successfully" });
       } else {
