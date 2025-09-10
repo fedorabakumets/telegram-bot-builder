@@ -1910,6 +1910,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update bot information via Telegram API
+  app.put("/api/projects/:id/tokens/:tokenId/bot-info", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const tokenId = parseInt(req.params.tokenId);
+      const { field, value } = req.body;
+      
+      if (!field || value === undefined) {
+        return res.status(400).json({ message: "Field and value are required" });
+      }
+      
+      // Get bot token
+      const token = await storage.getBotToken(tokenId);
+      if (!token || token.projectId !== projectId) {
+        return res.status(404).json({ message: "Token not found" });
+      }
+      
+      // Update bot information via Telegram API
+      let telegramApiMethod;
+      let requestBody: any = {};
+      
+      switch (field) {
+        case 'name':
+          telegramApiMethod = 'setMyName';
+          requestBody = { name: value };
+          break;
+        case 'description':
+          telegramApiMethod = 'setMyDescription';
+          requestBody = { description: value };
+          break;
+        case 'shortDescription':
+          telegramApiMethod = 'setMyShortDescription';
+          requestBody = { short_description: value };
+          break;
+        default:
+          return res.status(400).json({ message: "Invalid field" });
+      }
+      
+      // Call Telegram API
+      const telegramApiUrl = `https://api.telegram.org/bot${token.token}/${telegramApiMethod}`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: `Failed to update ${field}`, 
+          error: result.description || "Unknown error"
+        });
+      }
+      
+      // Update local database with new information
+      let updateData: Partial<any> = {};
+      switch (field) {
+        case 'name':
+          updateData.botFirstName = value;
+          break;
+        case 'description':
+          updateData.botDescription = value;
+          break;
+        case 'shortDescription':
+          updateData.botShortDescription = value;
+          break;
+      }
+      
+      await storage.updateBotToken(tokenId, updateData);
+      
+      res.json({ success: true, field, value });
+    } catch (error) {
+      console.error(`Failed to update bot ${req.body.field}:`, error);
+      res.status(500).json({ message: `Failed to update bot ${req.body.field}` });
+    }
+  });
+
   // Create a new token
   app.post("/api/projects/:id/tokens", async (req, res) => {
     try {
