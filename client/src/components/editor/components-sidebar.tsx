@@ -844,6 +844,12 @@ export function ComponentsSidebar({
               messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
               keyboardType: 'none',
               buttons: [],
+              command: '/start',
+              description: 'Запустить бота',
+              showInMenu: true,
+              isPrivateOnly: false,
+              requiresAuth: false,
+              adminOnly: false
             }
           }],
           connections: []

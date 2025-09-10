@@ -361,6 +361,8 @@ export default function Editor() {
       updateProjectMutation.mutate({});
       setShowPreview(true);
     } else if (tab === 'export') {
+      // Auto-save before showing export modal
+      updateProjectMutation.mutate({});
       setShowExport(true);
     } else if (tab === 'bot') {
       // Auto-save before showing bot controls

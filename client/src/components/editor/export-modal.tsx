@@ -139,13 +139,18 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
           // Получаем ID проекта из URL
           const projectId = window.location.pathname.split('/').pop();
           if (projectId && !isNaN(Number(projectId))) {
+            console.log('🔄 ExportModal: Загружаем свежие данные проекта из API...');
             const response = await fetch(`/api/projects/${projectId}`);
             if (response.ok) {
               const project = await response.json();
+              console.log('📡 ExportModal: Данные проекта получены:', project);
               // Устанавливаем свежие данные с нормализацией
               if (project.data) {
+                console.log('✅ ExportModal: Устанавливаем свежие данные:', project.data);
                 setFreshBotData(project.data);
               }
+            } else {
+              console.error('❌ ExportModal: Ошибка загрузки данных проекта:', response.status);
             }
           }
         } catch (error) {
@@ -173,7 +178,6 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             node.data.command
           ));
           const botFatherCmds = commands.generateBotFatherCommands(nodes);
-          console.log('🎯 ExportModal: Результат генерации команд:', botFatherCmds);
           setBotFatherCommands(botFatherCmds);
         } catch (error) {
           console.error('Error loading BotFather commands:', error);

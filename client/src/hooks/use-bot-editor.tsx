@@ -203,11 +203,58 @@ export function useBotEditor(initialData?: BotData) {
     setNodes(newNodes);
   }, []);
 
+  // Функция нормализации данных узла (клиентская версия серверной нормализации)
+  const normalizeNodeData = useCallback((node: Node): Node => {
+    if (!node || !node.type) return node;
+
+    const normalizedData = { ...node.data };
+
+    // Дефолтные поля для всех узлов
+    const defaultFields = {
+      buttons: [],
+      messageText: '',
+      keyboardType: 'none',
+      oneTimeKeyboard: false,
+      resizeKeyboard: true,
+      markdown: false,
+      isPrivateOnly: false,
+      adminOnly: false,
+      requiresAuth: false,
+      showInMenu: true,
+      enableStatistics: true
+    };
+
+    // Применяем дефолтные поля
+    for (const [key, value] of Object.entries(defaultFields)) {
+      if ((normalizedData as any)[key] === undefined) {
+        (normalizedData as any)[key] = value;
+      }
+    }
+
+    // Специфичные поля для команд start и command
+    if (node.type === 'start' || node.type === 'command') {
+      if (!normalizedData.command) {
+        normalizedData.command = node.type === 'start' ? '/start' : '/command';
+      }
+      if (!normalizedData.description) {
+        normalizedData.description = node.type === 'start' ? 'Запустить бота' : 'Команда бота';
+      }
+    }
+
+    return {
+      ...node,
+      data: normalizedData
+    };
+  }, []);
+
   const setBotData = useCallback((botData: BotData, templateName?: string) => {
     // Устанавливаем данные бота
     
-    // Применяем иерархическую компоновку к узлам
-    const layoutNodes = applyTemplateLayout(botData.nodes || [], botData.connections || [], templateName);
+    // Нормализуем узлы перед применением компоновки
+    const normalizedNodes = (botData.nodes || []).map(normalizeNodeData);
+    
+    // Применяем иерархическую компоновку к нормализованным узлам
+    const layoutNodes = applyTemplateLayout(normalizedNodes, botData.connections || [], templateName);
     // Применили иерархическую компоновку
     
     setNodes(layoutNodes);
@@ -215,7 +262,7 @@ export function useBotEditor(initialData?: BotData) {
     setSelectedNodeId(null); // Сбрасываем выбранный узел
     
     // setBotData завершен
-  }, []);
+  }, [normalizeNodeData]);
 
   const duplicateNode = useCallback((nodeId: string) => {
     const nodeToDuplicate = nodes.find(node => node.id === nodeId);

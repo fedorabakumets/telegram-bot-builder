@@ -52,7 +52,9 @@ export class SheetsManager {
         showInMenu: true,
         enableStatistics: true,
         customParameters: [],
-        options: []
+        options: [],
+        command: '/start',
+        description: 'Запустить бота'
       }
     }] : nodes;
 
