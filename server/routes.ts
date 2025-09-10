@@ -1875,6 +1875,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a token for a specific project
+  app.delete("/api/projects/:projectId/tokens/:tokenId", async (req, res) => {
+    try {
+      const tokenId = parseInt(req.params.tokenId);
+      const success = await storage.deleteBotToken(tokenId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Token not found" });
+      }
+      
+      res.json({ message: "Token deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete token" });
+    }
+  });
+
   // Set default token
   app.post("/api/projects/:projectId/tokens/:tokenId/set-default", async (req, res) => {
     try {
