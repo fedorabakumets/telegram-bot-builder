@@ -577,6 +577,16 @@ async function stopBot(projectId: number, tokenId: number): Promise<{ success: b
   }
 }
 
+// Функция для поиска активного процесса для проекта
+function findActiveProcessForProject(projectId: number): { processKey: string; process: ChildProcess } | null {
+  for (const [key, process] of botProcesses.entries()) {
+    if (key.startsWith(`${projectId}_`) && process && !process.killed && process.exitCode === null) {
+      return { processKey: key, process };
+    }
+  }
+  return null;
+}
+
 // Функция для очистки несоответствий состояний ботов при запуске сервера
 async function cleanupBotStates(): Promise<void> {
   try {
@@ -586,7 +596,8 @@ async function cleanupBotStates(): Promise<void> {
     for (const instance of allInstances) {
       if (instance.status === 'running') {
         // Если в базе бот помечен как запущенный, но процесса нет в памяти
-        if (!botProcesses.has(instance.projectId)) {
+        const activeProcessInfo = findActiveProcessForProject(instance.projectId);
+        if (!activeProcessInfo) {
           console.log(`Найден бот ${instance.projectId} в статусе "running" без активного процесса. Исправляем состояние.`);
           await storage.updateBotInstance(instance.id, { status: 'stopped' });
         }
@@ -609,7 +620,7 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
     console.log(`Перезапускаем бота ${projectId} из-за обновления кода...`);
     
     // Останавливаем текущий бот
-    const stopResult = await stopBot(projectId);
+    const stopResult = await stopBot(projectId, instance.tokenId);
     if (!stopResult.success) {
       console.error(`Ошибка перезапуска бота ${projectId}:`, stopResult.error);
       return { success: true }; // Возвращаем true, чтобы не блокировать сохранение проекта
@@ -619,10 +630,10 @@ async function restartBotIfRunning(projectId: number): Promise<{ success: boolea
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     // Проверяем, что процесс действительно завершен
-    const processExists = botProcesses.has(projectId);
-    if (processExists) {
+    const activeProcessInfo = findActiveProcessForProject(projectId);
+    if (activeProcessInfo) {
       console.log(`Процесс бота ${projectId} еще не завершен, принудительно удаляем из памяти`);
-      botProcesses.delete(projectId);
+      botProcesses.delete(activeProcessInfo.processKey);
     }
 
     // Запускаем заново с тем же токеном
@@ -1215,27 +1226,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Проверяем соответствие состояния в базе и в памяти
-      const hasActiveProcess = botProcesses.has(projectId);
+      const activeProcessInfo = findActiveProcessForProject(projectId);
       let actualStatus = 'stopped';
       
-      // Если есть процесс в памяти, проверяем что он действительно активен
-      if (hasActiveProcess) {
-        const process = botProcesses.get(projectId);
-        if (process && !process.killed && process.exitCode === null) {
-          actualStatus = 'running';
-        } else {
-          // Процесс завершен, но не удален из памяти - очищаем
-          console.log(`Процесс бота ${projectId} завершен, удаляем из памяти`);
-          botProcesses.delete(projectId);
-          actualStatus = 'stopped';
-        }
+      // Если есть активный процесс в памяти
+      if (activeProcessInfo) {
+        actualStatus = 'running';
       } else {
         // Процесса нет в памяти, проверяем PID независимо от статуса в базе
         console.log(`Бот ${projectId} в базе показан как ${instance.status}, проверяем процесс по PID ${instance.processId}`);
       }
       
       // Проверяем существует ли процесс по PID (независимо от статуса в базе)
-      if (!hasActiveProcess && instance.processId) {
+      if (!activeProcessInfo && instance.processId) {
         try {
           // Проверяем существование процесса (не убиваем, только проверяем)
           process.kill(parseInt(instance.processId), 0);
@@ -1256,8 +1259,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           } as any;
           
-          // Восстанавливаем отслеживание процесса
-          botProcesses.set(projectId, mockProcess);
+          // Восстанавливаем отслеживание процесса (используем tokenId из экземпляра)
+          if (instance.tokenId) {
+            const processKey = `${projectId}_${instance.tokenId}`;
+            botProcesses.set(processKey, mockProcess);
+          }
           actualStatus = 'running';
         } catch (error) {
           console.log(`Процесс ${instance.processId} для бота ${projectId} не найден в системе`);
@@ -1266,7 +1272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Дополнительная проверка через ps для более точного определения
-      if (!hasActiveProcess && instance.processId && actualStatus === 'stopped') {
+      if (!activeProcessInfo && instance.processId && actualStatus === 'stopped') {
         try {
           const { execSync } = require('child_process');
           const psOutput = execSync(`ps -p ${instance.processId} -o pid,ppid,cmd --no-headers`, { encoding: 'utf8' }).trim();
@@ -1300,7 +1306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Дополнительная проверка через поиск процесса с нужным файлом бота
-      if (!hasActiveProcess && actualStatus === 'stopped') {
+      if (!activeProcessInfo && actualStatus === 'stopped') {
         try {
           const { execSync } = require('child_process');
           // Ищем процесс который запускает файл этого бота
