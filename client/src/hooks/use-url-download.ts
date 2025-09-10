@@ -46,10 +46,7 @@ export interface BatchDownloadResult {
 export function useCheckUrl() {
   return useMutation<UrlCheckResult, Error, string>({
     mutationFn: async (url: string) => {
-      return await apiRequest('/api/media/check-url', {
-        method: 'POST',
-        body: { url }
-      });
+      return await apiRequest('POST', '/api/media/check-url', { url });
     }
   });
 }
@@ -65,15 +62,12 @@ export function useDownloadUrl(projectId: number) {
     customFileName?: string;
   }>({
     mutationFn: async ({ url, description, tags, isPublic, customFileName }) => {
-      return await apiRequest(`/api/media/download-url/${projectId}`, {
-        method: 'POST',
-        body: { 
-          url, 
-          description, 
-          tags, 
-          isPublic, 
-          customFileName 
-        }
+      return await apiRequest('POST', `/api/media/download-url/${projectId}`, { 
+        url, 
+        description, 
+        tags, 
+        isPublic, 
+        customFileName 
       });
     },
     onSuccess: () => {
@@ -98,13 +92,10 @@ export function useDownloadUrls(projectId: number) {
     defaultDescription?: string;
   }>({
     mutationFn: async ({ urls, isPublic, defaultDescription }) => {
-      return await apiRequest(`/api/media/download-urls/${projectId}`, {
-        method: 'POST',
-        body: { 
-          urls, 
-          isPublic, 
-          defaultDescription 
-        }
+      return await apiRequest('POST', `/api/media/download-urls/${projectId}`, { 
+        urls, 
+        isPublic, 
+        defaultDescription 
       });
     },
     onSuccess: () => {

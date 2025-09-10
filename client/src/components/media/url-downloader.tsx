@@ -77,10 +77,7 @@ export function UrlDownloader({
   // Мутация для проверки URL
   const checkUrlMutation = useMutation({
     mutationFn: async (url: string) => {
-      const response = await apiRequest('/api/media/check-url', {
-        method: 'POST',
-        body: { url }
-      });
+      const response = await apiRequest('POST', '/api/media/check-url', { url });
       return response;
     }
   });
@@ -92,14 +89,11 @@ export function UrlDownloader({
       description?: string; 
       customFileName?: string; 
     }) => {
-      const response = await apiRequest(`/api/media/download-url/${projectId}`, {
-        method: 'POST',
-        body: { 
-          url, 
-          description, 
-          customFileName,
-          isPublic 
-        }
+      const response = await apiRequest('POST', `/api/media/download-url/${projectId}`, { 
+        url, 
+        description, 
+        customFileName,
+        isPublic 
       });
       return response;
     }
@@ -108,13 +102,10 @@ export function UrlDownloader({
   // Мутация для пакетной загрузки
   const downloadUrlsMutation = useMutation({
     mutationFn: async (urlsData: { url: string; fileName?: string; description?: string }[]) => {
-      const response = await apiRequest(`/api/media/download-urls/${projectId}`, {
-        method: 'POST',
-        body: { 
-          urls: urlsData,
-          isPublic,
-          defaultDescription 
-        }
+      const response = await apiRequest('POST', `/api/media/download-urls/${projectId}`, { 
+        urls: urlsData,
+        isPublic,
+        defaultDescription 
       });
       return response;
     }
