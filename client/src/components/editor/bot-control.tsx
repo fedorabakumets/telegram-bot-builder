@@ -879,6 +879,71 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Bot Token Dialog */}
+      <Dialog open={!!editingToken} onOpenChange={() => setEditingToken(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Редактировать бота</DialogTitle>
+            <DialogDescription>
+              Изменить информацию о боте
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-bot-name">Название</Label>
+              <Input
+                id="edit-bot-name"
+                placeholder="Название бота"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                disabled={updateTokenMutation.isPending}
+                data-testid="input-edit-bot-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-bot-description">Описание</Label>
+              <Textarea
+                id="edit-bot-description"
+                placeholder="Описание бота (необязательно)"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                disabled={updateTokenMutation.isPending}
+                rows={3}
+                data-testid="textarea-edit-bot-description"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-2 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setEditingToken(null)}
+              disabled={updateTokenMutation.isPending}
+              data-testid="button-cancel-edit"
+            >
+              Отмена
+            </Button>
+            <Button 
+              onClick={() => {
+                if (editingToken) {
+                  updateTokenMutation.mutate({
+                    tokenId: editingToken.id,
+                    data: {
+                      name: editName.trim() || editingToken.name,
+                      description: editDescription.trim() || undefined
+                    }
+                  });
+                }
+              }}
+              disabled={updateTokenMutation.isPending || !editName.trim()}
+              data-testid="button-save-edit"
+            >
+              {updateTokenMutation.isPending ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
