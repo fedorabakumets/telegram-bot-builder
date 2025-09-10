@@ -736,8 +736,56 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const [editingToken, setEditingToken] = useState<BotToken | null>(null);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  
+  // Inline editing states
+  const [editingField, setEditingField] = useState<{tokenId: number, field: string} | null>(null);
+  const [editValue, setEditValue] = useState('');
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Mutation for updating bot information via Telegram API
+  const updateBotInfoMutation = useMutation({
+    mutationFn: async ({ tokenId, field, value }: { tokenId: number, field: string, value: string }) => {
+      const response = await apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}/bot-info`, { field, value });
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot/info`] });
+      setEditingField(null);
+      toast({ title: 'Информация о боте обновлена', variant: 'default' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Ошибка обновления', description: error.message || 'Не удалось обновить информацию о боте', variant: 'destructive' });
+    }
+  });
+
+  // Handle inline editing
+  const handleStartEdit = (tokenId: number, field: string, currentValue: string) => {
+    setEditingField({ tokenId, field });
+    setEditValue(currentValue || '');
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingField) return;
+    
+    const trimmedValue = editValue.trim();
+    if (trimmedValue) {
+      updateBotInfoMutation.mutate({
+        tokenId: editingField.tokenId,
+        field: editingField.field,
+        value: trimmedValue
+      });
+    } else {
+      setEditingField(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setEditValue('');
+  };
 
   // Получаем статус бота
   const { data: botStatus, isLoading: isLoadingStatus } = useQuery<BotStatusResponse>({
@@ -1001,9 +1049,32 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-lg leading-tight">
-                          {token.botFirstName || token.name}
-                        </h3>
+                        {editingField?.tokenId === token.id && editingField?.field === 'name' ? (
+                          <Input
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleSaveEdit();
+                              } else if (e.key === 'Escape') {
+                                handleCancelEdit();
+                              }
+                            }}
+                            onBlur={handleSaveEdit}
+                            autoFocus
+                            className="font-semibold text-lg leading-tight h-auto px-2 py-1"
+                            data-testid="input-bot-name-edit"
+                          />
+                        ) : (
+                          <h3 
+                            className="font-semibold text-lg leading-tight cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                            onDoubleClick={() => handleStartEdit(token.id, 'name', token.botFirstName || token.name)}
+                            title="Двойной клик для редактирования"
+                            data-testid="text-bot-name"
+                          >
+                            {token.botFirstName || token.name}
+                          </h3>
+                        )}
                         {token.botUsername && (
                           <span className="text-sm text-muted-foreground">@{token.botUsername}</span>
                         )}
@@ -1012,14 +1083,62 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                         {getStatusBadge(token)}
                       </div>
                       {(token.botDescription || token.description) && (
-                        <p className="text-sm text-muted-foreground mb-1">
-                          {token.botDescription || token.description}
-                        </p>
+                        editingField?.tokenId === token.id && editingField?.field === 'description' ? (
+                          <Textarea
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSaveEdit();
+                              } else if (e.key === 'Escape') {
+                                handleCancelEdit();
+                              }
+                            }}
+                            onBlur={handleSaveEdit}
+                            autoFocus
+                            className="text-sm resize-none min-h-[40px]"
+                            rows={2}
+                            data-testid="textarea-bot-description-edit"
+                          />
+                        ) : (
+                          <p 
+                            className="text-sm text-muted-foreground mb-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                            onDoubleClick={() => handleStartEdit(token.id, 'description', token.botDescription || token.description || '')}
+                            title="Двойной клик для редактирования"
+                            data-testid="text-bot-description"
+                          >
+                            {token.botDescription || token.description}
+                          </p>
+                        )
                       )}
                       {token.botShortDescription && token.botShortDescription !== token.botDescription && (
-                        <p className="text-xs text-muted-foreground mb-1">
-                          {token.botShortDescription}
-                        </p>
+                        editingField?.tokenId === token.id && editingField?.field === 'shortDescription' ? (
+                          <Input
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleSaveEdit();
+                              } else if (e.key === 'Escape') {
+                                handleCancelEdit();
+                              }
+                            }}
+                            onBlur={handleSaveEdit}
+                            autoFocus
+                            className="text-xs h-auto px-2 py-1 mb-1"
+                            data-testid="input-bot-short-description-edit"
+                          />
+                        ) : (
+                          <p 
+                            className="text-xs text-muted-foreground mb-1 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                            onDoubleClick={() => handleStartEdit(token.id, 'shortDescription', token.botShortDescription || '')}
+                            title="Двойной клик для редактирования"
+                            data-testid="text-bot-short-description"
+                          >
+                            {token.botShortDescription}
+                          </p>
+                        )
                       )}
                       <p className="text-xs text-muted-foreground">
                         Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
