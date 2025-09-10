@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { BotToken } from '@shared/schema';
 import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Camera, Upload, ExternalLink } from 'lucide-react';
 
 interface BotControlProps {
@@ -36,18 +37,7 @@ interface BotStatusResponse {
   instance: BotInstance | null;
 }
 
-interface BotToken {
-  id: number;
-  projectId: number;
-  name: string;
-  token: string;
-  isDefault: number;
-  isActive: number;
-  description?: string;
-  lastUsedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Используем тип BotToken из shared/schema.ts
 
 interface DefaultTokenResponse {
   hasDefault: boolean;
@@ -781,12 +771,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     mutationFn: async (token: string) => {
       setIsParsingBot(true);
       try {
-        const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.description || 'Неверный токен');
-        }
-        return result.result;
+        return await apiRequest('POST', `/api/projects/${projectId}/tokens/parse`, { token });
       } finally {
         setIsParsingBot(false);
       }
@@ -794,10 +779,13 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     onSuccess: (botInfo) => {
       // Автоматически создаем токен с полученной информацией
       createBotMutation.mutate({
-        name: `@${botInfo.username}`,
+        name: botInfo.botFirstName ? `${botInfo.botFirstName}${botInfo.botUsername ? ` (@${botInfo.botUsername})` : ''}` : `@${botInfo.botUsername}`,
         token: newBotToken.trim(),
+        description: botInfo.botShortDescription,
         isDefault: tokens.length === 0 ? 1 : 0, // Первый токен становится по умолчанию
-        isActive: 1
+        isActive: 1,
+        // Добавляем всю спарсенную информацию о боте
+        ...botInfo
       });
     },
     onError: (error: any) => {
@@ -812,7 +800,22 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
 
   // Создание бота/токена
   const createBotMutation = useMutation({
-    mutationFn: async (botData: { name: string; token: string; isDefault: number; isActive: number }) => {
+    mutationFn: async (botData: { 
+      name: string; 
+      token: string; 
+      description?: string;
+      isDefault: number; 
+      isActive: number;
+      botFirstName?: string;
+      botUsername?: string;
+      botDescription?: string;
+      botShortDescription?: string;
+      botPhotoUrl?: string;
+      botCanJoinGroups?: number;
+      botCanReadAllGroupMessages?: number;
+      botSupportsInlineQueries?: number;
+      botHasMainWebApp?: number;
+    }) => {
       return apiRequest('POST', `/api/projects/${projectId}/tokens`, { 
         ...botData, 
         projectId 
@@ -820,7 +823,10 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
-      toast({ title: 'Бот успешно добавлен' });
+      toast({ 
+        title: 'Бот успешно добавлен',
+        description: 'Информация о боте автоматически получена из Telegram'
+      });
       setShowAddBot(false);
       setNewBotToken('');
     },
@@ -989,19 +995,34 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <BotAvatar 
-                      botName={token.name} 
+                      botName={token.botFirstName || token.name} 
+                      photoUrl={token.botPhotoUrl}
                       size={48}
                     />
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg leading-tight mb-1">{token.name}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-lg leading-tight">
+                          {token.botFirstName || token.name}
+                        </h3>
+                        {token.botUsername && (
+                          <span className="text-sm text-muted-foreground">@{token.botUsername}</span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 mb-2">
                         {getStatusBadge(token)}
                       </div>
-                      {token.description && (
-                        <p className="text-sm text-muted-foreground">{token.description}</p>
+                      {(token.botDescription || token.description) && (
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {token.botDescription || token.description}
+                        </p>
                       )}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Добавлен: {new Date(token.createdAt).toLocaleDateString('ru-RU')}
+                      {token.botShortDescription && token.botShortDescription !== token.botDescription && (
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {token.botShortDescription}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Добавлен: {new Date(token.createdAt!).toLocaleDateString('ru-RU')}
                         {token.lastUsedAt && (
                           <> • Последний запуск: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}</>
                         )}

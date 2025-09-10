@@ -62,6 +62,16 @@ export const botTokens = pgTable("bot_tokens", {
   isDefault: integer("is_default").default(0), // 0 = нет, 1 = да (токен по умолчанию)
   isActive: integer("is_active").default(1), // 0 = неактивен, 1 = активен
   description: text("description"), // Описание токена
+  // Информация о боте из Telegram API
+  botFirstName: text("bot_first_name"), // Имя бота
+  botUsername: text("bot_username"), // @username бота
+  botDescription: text("bot_description"), // Полное описание бота
+  botShortDescription: text("bot_short_description"), // Короткое описание бота
+  botPhotoUrl: text("bot_photo_url"), // URL аватарки бота
+  botCanJoinGroups: integer("bot_can_join_groups"), // Может ли бот присоединяться к группам
+  botCanReadAllGroupMessages: integer("bot_can_read_all_group_messages"), // Может ли читать все сообщения в группах
+  botSupportsInlineQueries: integer("bot_supports_inline_queries"), // Поддерживает ли инлайн запросы
+  botHasMainWebApp: integer("bot_has_main_web_app"), // Есть ли главное веб-приложение
   lastUsedAt: timestamp("last_used_at"), // Время последнего использования
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -262,11 +272,24 @@ export const insertBotTokenSchema = createInsertSchema(botTokens).pick({
   isDefault: true,
   isActive: true,
   description: true,
+  botFirstName: true,
+  botUsername: true,
+  botDescription: true,
+  botShortDescription: true,
+  botPhotoUrl: true,
+  botCanJoinGroups: true,
+  botCanReadAllGroupMessages: true,
+  botSupportsInlineQueries: true,
+  botHasMainWebApp: true,
 }).extend({
   name: z.string().min(1, "Имя токена обязательно"),
   token: z.string().min(1, "Токен обязателен"),
   isDefault: z.number().min(0).max(1).default(0),
   isActive: z.number().min(0).max(1).default(1),
+  botCanJoinGroups: z.number().min(0).max(1).optional(),
+  botCanReadAllGroupMessages: z.number().min(0).max(1).optional(),
+  botSupportsInlineQueries: z.number().min(0).max(1).optional(),
+  botHasMainWebApp: z.number().min(0).max(1).optional(),
 });
 
 export const insertMediaFileSchema = createInsertSchema(mediaFiles).pick({

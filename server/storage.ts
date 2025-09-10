@@ -495,6 +495,16 @@ class MemStorage implements IStorage {
       lastUsedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
+      // Добавляем значения по умолчанию для новых полей
+      botFirstName: insertToken.botFirstName || null,
+      botUsername: insertToken.botUsername || null,
+      botDescription: insertToken.botDescription || null,
+      botShortDescription: insertToken.botShortDescription || null,
+      botPhotoUrl: insertToken.botPhotoUrl || null,
+      botCanJoinGroups: insertToken.botCanJoinGroups || null,
+      botCanReadAllGroupMessages: insertToken.botCanReadAllGroupMessages || null,
+      botSupportsInlineQueries: insertToken.botSupportsInlineQueries || null,
+      botHasMainWebApp: insertToken.botHasMainWebApp || null,
     };
     return token;
   }

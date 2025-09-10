@@ -1810,6 +1810,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Parse bot information from Telegram API
+  app.post("/api/projects/:id/tokens/parse", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { token } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Token is required" });
+      }
+      
+      // Get bot information via Telegram Bot API
+      const telegramApiUrl = `https://api.telegram.org/bot${token}/getMe`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Invalid bot token or failed to get bot info", 
+          error: result.description || "Unknown error"
+        });
+      }
+
+      const botInfo = result.result;
+      
+      // Get bot description and short description
+      let botDescription = null;
+      let botShortDescription = null;
+      
+      try {
+        // Get full description
+        const descResponse = await fetch(`https://api.telegram.org/bot${token}/getMyDescription`);
+        if (descResponse.ok) {
+          const descResult = await descResponse.json();
+          if (descResult.ok && descResult.result && descResult.result.description) {
+            botDescription = descResult.result.description;
+          }
+        }
+        
+        // Get short description  
+        const shortDescResponse = await fetch(`https://api.telegram.org/bot${token}/getMyShortDescription`);
+        if (shortDescResponse.ok) {
+          const shortDescResult = await shortDescResponse.json();
+          if (shortDescResult.ok && shortDescResult.result && shortDescResult.result.short_description) {
+            botShortDescription = shortDescResult.result.short_description;
+          }
+        }
+      } catch (descError) {
+        console.warn("Failed to get bot descriptions:", descError);
+      }
+      
+      // Get bot photo URL if exists
+      let photoUrl = null;
+      if (botInfo.photo && botInfo.photo.big_file_id) {
+        try {
+          const fileResponse = await fetch(`https://api.telegram.org/bot${token}/getFile`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              file_id: botInfo.photo.big_file_id
+            })
+          });
+          
+          const fileResult = await fileResponse.json();
+          
+          if (fileResponse.ok && fileResult.result && fileResult.result.file_path) {
+            photoUrl = `https://api.telegram.org/file/bot${token}/${fileResult.result.file_path}`;
+          }
+        } catch (photoError) {
+          console.warn("Failed to get bot photo URL:", photoError);
+        }
+      }
+
+      // Return parsed bot information
+      const parsedBotInfo = {
+        botFirstName: botInfo.first_name,
+        botUsername: botInfo.username,
+        botDescription: botDescription,
+        botShortDescription: botShortDescription,
+        botPhotoUrl: photoUrl,
+        botCanJoinGroups: botInfo.can_join_groups ? 1 : 0,
+        botCanReadAllGroupMessages: botInfo.can_read_all_group_messages ? 1 : 0,
+        botSupportsInlineQueries: botInfo.supports_inline_queries ? 1 : 0,
+        botHasMainWebApp: botInfo.has_main_web_app ? 1 : 0,
+      };
+
+      res.json(parsedBotInfo);
+    } catch (error) {
+      console.error("Failed to parse bot info:", error);
+      res.status(500).json({ message: "Failed to parse bot info" });
+    }
+  });
+
   // Create a new token
   app.post("/api/projects/:id/tokens", async (req, res) => {
     try {
