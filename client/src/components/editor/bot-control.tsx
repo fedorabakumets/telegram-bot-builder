@@ -6,15 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { useMediaQuery } from '@/hooks/use-media-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit, Edit2, Settings, AlertTriangle, Activity, Bot, RefreshCw, Check, X } from 'lucide-react';
-import { TokenManager } from './token-manager';
+import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal } from 'lucide-react';
 
 interface BotControlProps {
   projectId: number;
@@ -35,11 +33,6 @@ interface BotInstance {
 interface BotStatusResponse {
   status: 'running' | 'stopped' | 'error';
   instance: BotInstance | null;
-}
-
-interface TokenInfo {
-  hasToken: boolean;
-  tokenPreview: string | null;
 }
 
 interface BotToken {
@@ -503,27 +496,24 @@ function BotProfile({
 }
 
 export function BotControl({ projectId, projectName }: BotControlProps) {
-  const [token, setToken] = useState('');
-  const [useNewToken, setUseNewToken] = useState(false);
-  const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
-  const [startMode, setStartMode] = useState<'token' | 'new' | 'saved'>('token'); // token management, new token, or legacy saved token
+  const [showAddBot, setShowAddBot] = useState(false);
+  const [showBotSettings, setShowBotSettings] = useState(false);
+  const [selectedBot, setSelectedBot] = useState<BotToken | null>(null);
+  const [newBotName, setNewBotName] = useState('');
+  const [newBotToken, setNewBotToken] = useState('');
+  const [newBotDescription, setNewBotDescription] = useState('');
+  const [isDefaultBot, setIsDefaultBot] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const isMobile = useMediaQuery('(max-width: 1200px)');
 
   // Получаем статус бота
   const { data: botStatus, isLoading: isLoadingStatus } = useQuery<BotStatusResponse>({
     queryKey: [`/api/projects/${projectId}/bot`],
-    refetchInterval: 1000, // Обновляем каждую секунду для лучшего отслеживания
+    refetchInterval: 1000,
   });
 
-  // Получаем информацию о сохраненном токене (legacy)
-  const { data: tokenInfo } = useQuery<TokenInfo>({
-    queryKey: [`/api/projects/${projectId}/token`],
-  });
-
-  // Получаем все токены проекта
-  const { data: tokens = [] } = useQuery<BotToken[]>({
+  // Получаем все токены проекта (боты)
+  const { data: tokens = [], isLoading, refetch } = useQuery<BotToken[]>({
     queryKey: [`/api/projects/${projectId}/tokens`],
   });
 
@@ -532,39 +522,61 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     queryKey: [`/api/projects/${projectId}/tokens/default`],
   });
 
+  // Получаем информацию о боте (getMe)
+  const { data: botInfo, refetch: refetchBotInfo } = useQuery<BotInfo>({
+    queryKey: [`/api/projects/${projectId}/bot/info`],
+    enabled: botStatus?.status === 'running',
+    refetchInterval: botStatus?.status === 'running' ? 30000 : false,
+  });
+
   const isRunning = botStatus?.status === 'running';
   const isError = botStatus?.status === 'error';
   const isStopped = botStatus?.status === 'stopped' || !botStatus?.instance;
 
-  // Получаем информацию о боте (getMe)
-  const { data: botInfo, refetch: refetchBotInfo } = useQuery<BotInfo>({
-    queryKey: [`/api/projects/${projectId}/bot/info`],
-    enabled: isRunning, // Запрашиваем только когда бот запущен
-    refetchInterval: isRunning ? 30000 : false, // Обновляем каждые 30 секунд когда бот работает
+  // Создание бота/токена
+  const createBotMutation = useMutation({
+    mutationFn: async (botData: { name: string; token: string; description?: string; isDefault: boolean }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/tokens`, botData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+      toast({ title: 'Бот успешно добавлен' });
+      setShowAddBot(false);
+      setNewBotName('');
+      setNewBotToken('');
+      setNewBotDescription('');
+      setIsDefaultBot(false);
+    },
+    onError: (error: any) => {
+      toast({ title: 'Ошибка при добавлении бота', description: error.message, variant: 'destructive' });
+    }
+  });
+
+  // Удаление бота/токена
+  const deleteBotMutation = useMutation({
+    mutationFn: async (tokenId: number) => {
+      return apiRequest('DELETE', `/api/projects/${projectId}/tokens/${tokenId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
+      toast({ title: 'Бот удален' });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Ошибка при удалении бота', description: error.message, variant: 'destructive' });
+    }
   });
 
   // Запуск бота
   const startBotMutation = useMutation({
-    mutationFn: async ({ token, tokenId }: { token?: string; tokenId?: number }) => {
-      const payload: any = {};
-      if (token) payload.token = token;
-      if (tokenId) payload.tokenId = tokenId;
-      return apiRequest('POST', `/api/projects/${projectId}/bot/start`, payload);
+    mutationFn: async (tokenId: number) => {
+      return apiRequest('POST', `/api/projects/${projectId}/bot/start`, { tokenId });
     },
     onSuccess: () => {
-      toast({
-        title: "Бот запущен",
-        description: "Бот успешно запущен и готов к работе.",
-      });
+      toast({ title: "Бот запущен", description: "Бот успешно запущен и готов к работе." });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Ошибка запуска",
-        description: error.message || "Не удалось запустить бота. Проверьте токен.",
-        variant: "destructive",
-      });
+      toast({ title: "Ошибка запуска", description: error.message || "Не удалось запустить бота.", variant: "destructive" });
     },
   });
 
@@ -574,510 +586,278 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       return apiRequest('POST', `/api/projects/${projectId}/bot/stop`, {});
     },
     onSuccess: () => {
-      toast({
-        title: "Бот остановлен",
-        description: "Бот успешно остановлен.",
-      });
+      toast({ title: "Бот остановлен", description: "Бот успешно остановлен." });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Ошибка остановки",
-        description: error.message || "Не удалось остановить бота.",
-        variant: "destructive",
-      });
+      toast({ title: "Ошибка остановки", description: error.message || "Не удалось остановить бота.", variant: "destructive" });
     },
   });
 
-  // Очистка сохраненного токена
-  const clearTokenMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest('DELETE', `/api/projects/${projectId}/token`, {});
-    },
-    onSuccess: () => {
+  const handleAddBot = () => {
+    if (!newBotName.trim() || !newBotToken.trim()) {
       toast({
-        title: "Токен удален",
-        description: "Сохраненный токен бота удален.",
-      });
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/token`] });
-      setUseNewToken(true);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Ошибка удаления",
-        description: error.message || "Не удалось удалить токен.",
+        title: "Требуются данные",
+        description: "Введите название и токен бота.",
         variant: "destructive",
       });
-    },
-  });
-
-  const handleStart = () => {
-    if (startMode === 'new') {
-      // Используем новый токен
-      const tokenToUse = token.trim();
-      if (!tokenToUse) {
-        toast({
-          title: "Требуется токен",
-          description: "Введите токен бота для запуска.",
-          variant: "destructive",
-        });
-        return;
-      }
-      startBotMutation.mutate({ token: tokenToUse });
-    } else if (startMode === 'token') {
-      // Используем выбранный токен или токен по умолчанию
-      if (selectedTokenId) {
-        startBotMutation.mutate({ tokenId: selectedTokenId });
-      } else if (defaultTokenData?.hasDefault && defaultTokenData.token) {
-        startBotMutation.mutate({ tokenId: defaultTokenData.token.id });
-      } else {
-        toast({
-          title: "Требуется токен",
-          description: "Выберите токен или добавьте новый для запуска бота.",
-          variant: "destructive",
-        });
-        return;
-      }
-    } else {
-      // Legacy режим - используем сохраненный токен проекта
-      const tokenToUse = useNewToken ? token.trim() : '';
-      
-      if (useNewToken && !tokenToUse) {
-        toast({
-          title: "Требуется токен",
-          description: "Введите токен бота для запуска.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (!useNewToken && !tokenInfo?.hasToken) {
-        toast({
-          title: "Требуется токен",
-          description: "Токен не сохранен. Введите новый токен.",
-          variant: "destructive",
-        });
-        setUseNewToken(true);
-        return;
-      }
-      
-      startBotMutation.mutate({ token: tokenToUse });
+      return;
     }
+
+    createBotMutation.mutate({
+      name: newBotName.trim(),
+      token: newBotToken.trim(),
+      description: newBotDescription.trim() || undefined,
+      isDefault: isDefaultBot
+    });
   };
 
-  const handleStop = () => {
-    stopBotMutation.mutate();
-  };
-
-  const getStatusIcon = () => {
-    if (isRunning) return <CheckCircle className="w-5 h-5 text-green-500 animate-pulse" />;
-    if (isError) return <AlertCircle className="w-5 h-5 text-red-500 animate-bounce" />;
-    return <Clock className="w-5 h-5 text-gray-500" />;
-  };
-
-  const getStatusBadge = () => {
-    if (isRunning) return (
-      <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800 animate-pulse">
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
-          Работает
-        </div>
-      </Badge>
-    );
-    if (isError) return (
-      <Badge variant="destructive" className="animate-pulse">
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" />
-          Ошибка
-        </div>
-      </Badge>
-    );
+  const getStatusBadge = (token: BotToken) => {
+    const isActiveBot = botStatus?.instance && isRunning;
+    
+    if (isActiveBot) {
+      return (
+        <Badge variant="default" className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            Активный
+          </div>
+        </Badge>
+      );
+    }
+    
+    if (token.isDefault) {
+      return (
+        <Badge variant="secondary">
+          По умолчанию
+        </Badge>
+      );
+    }
+    
     return (
-      <Badge variant="secondary">
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-gray-500 rounded-full" />
-          Остановлен
-        </div>
+      <Badge variant="outline">
+        Готов
       </Badge>
     );
-  };
-
-  const getStatusDetails = () => {
-    if (!botStatus?.instance) return null;
-    
-    const instance = botStatus.instance;
-    const now = new Date();
-    const startTime = new Date(instance.startedAt);
-    const stopTime = instance.stoppedAt ? new Date(instance.stoppedAt) : null;
-    
-    if (isRunning) {
-      const uptime = Math.floor((now.getTime() - startTime.getTime()) / 1000);
-      const hours = Math.floor(uptime / 3600);
-      const minutes = Math.floor((uptime % 3600) / 60);
-      const seconds = uptime % 60;
-      
-      return (
-        <div className="text-sm text-muted-foreground space-y-1">
-          <div className="flex items-center justify-between">
-            <span>Процесс ID:</span>
-            <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
-              {instance.processId || 'N/A'}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Время работы:</span>
-            <span className="font-mono text-xs">
-              {hours > 0 ? `${hours}ч ` : ''}{minutes > 0 ? `${minutes}м ` : ''}{seconds}с
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Запущен:</span>
-            <span className="text-xs">{startTime.toLocaleTimeString()}</span>
-          </div>
-        </div>
-      );
-    }
-    
-    if (isError && instance.errorMessage) {
-      return (
-        <div className="text-sm text-red-600 dark:text-red-400 space-y-1">
-          <div className="flex items-center justify-between">
-            <span>Ошибка:</span>
-            <span className="text-xs">{stopTime?.toLocaleTimeString()}</span>
-          </div>
-          <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded text-xs font-mono">
-            {instance.errorMessage}
-          </div>
-        </div>
-      );
-    }
-    
-    if (stopTime) {
-      return (
-        <div className="text-sm text-muted-foreground space-y-1">
-          <div className="flex items-center justify-between">
-            <span>Остановлен:</span>
-            <span className="text-xs">{stopTime.toLocaleTimeString()}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Время работы:</span>
-            <span className="text-xs font-mono">
-              {Math.floor((stopTime.getTime() - startTime.getTime()) / 1000)}с
-            </span>
-          </div>
-        </div>
-      );
-    }
-    
-    return null;
   };
 
   return (
-    <div className="w-full space-y-6">
-      {/* Профиль бота */}
-      <BotProfile 
-        projectId={projectId}
-        botInfo={botInfo}
-        onRefresh={async () => {
-          // Принудительное обновление с обходом кэша
-          try {
-            const freshBotInfo = await apiRequest('GET', `/api/projects/${projectId}/bot/info?_t=${Date.now()}`);
-            queryClient.setQueryData([`/api/projects/${projectId}/bot/info`], freshBotInfo);
-          } catch (error) {
-            console.warn('Не удалось получить свежие данные бота:', error);
-          }
-          refetchBotInfo();
-        }}
-        isRefreshing={false}
-        fallbackName={projectName}
-      />
+    <div className="space-y-6">
+      {/* Bot Profile Section */}
+      {isRunning && botInfo && (
+        <BotProfile 
+          projectId={projectId}
+          botInfo={botInfo}
+          onRefresh={() => refetchBotInfo()}
+          isRefreshing={false}
+          fallbackName={projectName}
+        />
+      )}
 
-      {/* Управление ботом */}
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {getStatusIcon()}
-            Управление ботом
-            {isRunning && (
-              <div className="flex items-center gap-1 ml-auto">
-                <Activity className="w-4 h-4 text-green-500 animate-pulse" />
-                <span className="text-sm font-normal text-green-600 dark:text-green-400">
-                  Активен
-                </span>
-              </div>
-            )}
-          </CardTitle>
-          <CardDescription>
-            Запустите или остановите бота "{projectName}"
-            {isRunning && botStatus?.instance?.processId && (
-              <span className="block text-xs text-muted-foreground mt-1">
-                Процесс ID: {botStatus.instance.processId}
-              </span>
-            )}
-          </CardDescription>
-        </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Предупреждение о множественных процессах */}
-        {isRunning && startBotMutation.isPending && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-              <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                Внимание: Запуск нового процесса
-              </span>
-            </div>
-            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-              Уже запущен процесс {botStatus?.instance?.processId}. Новый процесс может создать конфликт.
-            </p>
-          </div>
-        )}
-        
-        {/* Предупреждение о частых перезапусках */}
-        {stopBotMutation.isPending && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400 animate-spin" />
-              <span className="text-sm font-medium text-orange-800 dark:text-orange-200">
-                Остановка процесса...
-              </span>
-            </div>
-            <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
-              Процесс {botStatus?.instance?.processId} завершается. Подождите завершения.
-            </p>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Статус:</span>
-              {getStatusBadge()}
-            </div>
-            {isRunning && (
-              <Button 
-                onClick={handleStop} 
-                variant="outline" 
-                size="sm"
-                disabled={stopBotMutation.isPending}
-                className="flex items-center gap-2"
-              >
-                <Square className="w-4 h-4" />
-                {stopBotMutation.isPending ? 'Остановка...' : 'Остановить'}
-              </Button>
-            )}
-          </div>
-          
-          {getStatusDetails() && (
-            <div className="bg-muted/50 dark:bg-muted/30 p-3 rounded-lg border">
-              {getStatusDetails()}
-            </div>
-          )}
-          
-          {/* Индикатор обновления статуса */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-2">
-            <span>Статус обновляется каждую секунду</span>
-            <div className="flex items-center gap-1">
-              <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
-              <span>Онлайн</span>
-            </div>
-          </div>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Bot className="w-6 h-6" />
+            Боты
+          </h2>
+          <p className="text-muted-foreground">
+            Управление ботами проекта {projectName}
+          </p>
         </div>
+        <Button onClick={() => setShowAddBot(true)} className="flex items-center gap-2">
+          <Plus className="w-4 h-4" />
+          Подключить бот
+        </Button>
+      </div>
 
-        <Separator />
-
-        <Tabs value={startMode} onValueChange={(value) => setStartMode(value as any)} className="w-full">
-          <TabsList className={`grid w-full grid-cols-3 ${isMobile ? 'text-xs h-8' : ''}`}>
-            <TabsTrigger value="token" className={isMobile ? 'px-2 py-1' : ''}>Токены</TabsTrigger>
-            <TabsTrigger value="new" className={isMobile ? 'px-2 py-1' : ''}>Новый токен</TabsTrigger>
-            <TabsTrigger value="saved" className={isMobile ? 'px-2 py-1' : ''}>Сохраненный</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="token" className="space-y-4">
-            <div className="space-y-3">
-              {tokens.length > 0 ? (
-                <div className="space-y-2">
-                  <Label>Выберите токен для запуска:</Label>
-                  <Select 
-                    value={selectedTokenId?.toString() || (defaultTokenData?.token?.id.toString() || "")}
-                    onValueChange={(value) => setSelectedTokenId(value ? parseInt(value) : null)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите токен" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tokens.map((token) => (
-                        <SelectItem key={token.id} value={token.id.toString()}>
-                          <div className="flex items-center justify-between w-full">
-                            <span>{token.name}</span>
-                            {token.isDefault === 1 && (
-                              <Badge variant="secondary" className="ml-2">По умолчанию</Badge>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+      {isLoading ? (
+        <div className="grid gap-4">
+          {[1, 2].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-muted rounded-lg" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-muted rounded w-1/4" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : tokens.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Bot className="w-12 h-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Нет подключенных ботов</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              Подключите первого бота, чтобы начать создание Telegram-ботов
+            </p>
+            <Button onClick={() => setShowAddBot(true)} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Подключить бота
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {tokens.map((token) => (
+            <Card key={token.id} className="transition-all hover:shadow-md">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <BotAvatar 
+                      botName={token.name} 
+                      size={48}
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg leading-tight mb-1">{token.name}</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        {getStatusBadge(token)}
+                        {token.isActive ? (
+                          <Badge variant="outline" className="text-xs">
+                            Активен
+                          </Badge>
+                        ) : null}
+                      </div>
+                      {token.description && (
+                        <p className="text-sm text-muted-foreground">{token.description}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Добавлен: {new Date(token.createdAt).toLocaleDateString('ru-RU')}
+                        {token.lastUsedAt && (
+                          <> • Последний запуск: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}</>
+                        )}
+                      </p>
+                    </div>
+                  </div>
                   
-                  {defaultTokenData?.hasDefault && (
-                    <p className="text-xs text-muted-foreground">
-                      Токен по умолчанию: {defaultTokenData.token?.name}
-                    </p>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {isStopped || isError ? (
+                      <Button
+                        size="sm"
+                        onClick={() => startBotMutation.mutate(token.id)}
+                        disabled={startBotMutation.isPending}
+                        className="flex items-center gap-2"
+                      >
+                        <Play className="w-4 h-4" />
+                        {startBotMutation.isPending ? 'Запуск...' : 'Запустить'}
+                      </Button>
+                    ) : isRunning ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => stopBotMutation.mutate()}
+                        disabled={stopBotMutation.isPending}
+                        className="flex items-center gap-2"
+                      >
+                        <Square className="w-4 h-4" />
+                        {stopBotMutation.isPending ? 'Остановка...' : 'Остановить'}
+                      </Button>
+                    ) : null}
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedBot(token);
+                          setShowBotSettings(true);
+                        }}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          Настройки
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => deleteBotMutation.mutate(token.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Удалить
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-muted-foreground">Токены не найдены</p>
-                  <p className="text-sm text-muted-foreground">
-                    Добавьте токен для запуска бота
-                  </p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="new" className="space-y-4">
-            <div className="space-y-3">
-              <Label htmlFor="new-bot-token">Токен бота</Label>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Add Bot Dialog */}
+      <Dialog open={showAddBot} onOpenChange={setShowAddBot}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Подключить бота</DialogTitle>
+            <DialogDescription>
+              Добавьте нового бота, используя токен от @BotFather
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="bot-name">Название бота</Label>
               <Input
-                id="new-bot-token"
+                id="bot-name"
+                placeholder="Например: Мой Telegram Бот"
+                value={newBotName}
+                onChange={(e) => setNewBotName(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="bot-token">Токен бота</Label>
+              <Input
+                id="bot-token"
                 type="password"
-                placeholder="Введите токен бота от @BotFather"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                disabled={isRunning}
+                placeholder="Вставьте токен от @BotFather"
+                value={newBotToken}
+                onChange={(e) => setNewBotToken(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Введите токен для одноразового запуска. Токен не будет сохранен.
+                Получите токен у @BotFather в Telegram: /newbot
               </p>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="saved" className="space-y-4">
-            <div className="space-y-3">
-              {/* Информация о сохраненном токене */}
-              {tokenInfo?.hasToken && !useNewToken && (
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-green-800 dark:text-green-300">
-                        Токен сохранен
-                      </p>
-                      <p className="text-xs text-green-600 dark:text-green-400">
-                        {tokenInfo.tokenPreview}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setUseNewToken(true)}
-                        className="text-xs"
-                      >
-                        Изменить
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => clearTokenMutation.mutate()}
-                        disabled={clearTokenMutation.isPending}
-                        className="text-xs text-red-600 dark:text-red-400"
-                      >
-                        Удалить
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Ввод нового токена */}
-              {(useNewToken || !tokenInfo?.hasToken) && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="bot-token">Токен бота</Label>
-                    {tokenInfo?.hasToken && useNewToken && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setUseNewToken(false);
-                          setToken('');
-                        }}
-                        className="text-xs h-auto p-1"
-                      >
-                        Использовать сохраненный
-                      </Button>
-                    )}
-                  </div>
-                  <Input
-                    id="bot-token"
-                    type="password"
-                    placeholder="Введите токен бота от @BotFather"
-                    value={token}
-                    onChange={(e) => setToken(e.target.value)}
-                    disabled={isRunning}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Получите токен у @BotFather в Telegram. Токен будет сохранен для следующих запусков.
-                  </p>
-                </div>
-              )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="bot-description">Описание (необязательно)</Label>
+              <Textarea
+                id="bot-description"
+                placeholder="Краткое описание назначения бота"
+                value={newBotDescription}
+                onChange={(e) => setNewBotDescription(e.target.value)}
+                rows={3}
+              />
             </div>
-          </TabsContent>
-        </Tabs>
-
-        <Separator />
-
-        <div className="flex gap-2">
-          {isStopped || isError ? (
-            <Button
-              onClick={handleStart}
-              disabled={
-                startBotMutation.isPending || 
-                (startMode === 'new' && !token.trim()) ||
-                (startMode === 'token' && !selectedTokenId && !defaultTokenData?.hasDefault) ||
-                (startMode === 'saved' && ((useNewToken && !token.trim()) || (!useNewToken && !tokenInfo?.hasToken)))
-              }
-              className="flex items-center gap-2"
-            >
-              <Play className="w-4 h-4" />
-              {startBotMutation.isPending ? 'Запуск...' : 'Запустить бота'}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleStop}
-              disabled={stopBotMutation.isPending}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Square className="w-4 h-4" />
-              {stopBotMutation.isPending ? 'Остановка...' : 'Остановить бота'}
-            </Button>
-          )}
-        </div>
-
-        {/* Token Management Section */}
-        <Separator />
-        
-        <TokenManager 
-          projectId={projectId} 
-          onTokenSelect={setSelectedTokenId}
-          selectedTokenId={selectedTokenId}
-        />
-
-        {botStatus?.instance && (
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>
-              <strong>Запущен:</strong> {new Date(botStatus.instance.startedAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}
-            </p>
-            {botStatus.instance.stoppedAt && (
-              <p>
-                <strong>Остановлен:</strong> {new Date(botStatus.instance.stoppedAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}
-              </p>
-            )}
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="default-bot"
+                checked={isDefaultBot}
+                onCheckedChange={setIsDefaultBot}
+              />
+              <Label htmlFor="default-bot">Использовать как основной бот</Label>
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowAddBot(false)}>
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleAddBot}
+              disabled={createBotMutation.isPending || !newBotName.trim() || !newBotToken.trim()}
+            >
+              {createBotMutation.isPending ? 'Добавление...' : 'Добавить бота'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
