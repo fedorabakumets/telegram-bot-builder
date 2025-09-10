@@ -149,27 +149,27 @@ function groupNodesByLevel(nodes: LayoutNode[]): LayoutNode[][] {
 }
 
 /**
- * Располагает узлы по уровням с равномерным распределением
+ * Располагает узлы в вертикальной иерархии
  */
 function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayoutOptions): Node[] {
   const result: Node[] = [];
+  let currentY = options.startY;
   
-  levels.forEach((levelNodes, levelIndex) => {
-    const y = options.startY + levelIndex * options.verticalSpacing;
-    
-    // Вычисляем общую ширину уровня
-    const totalWidth = levelNodes.length * options.nodeWidth + (levelNodes.length - 1) * options.horizontalSpacing;
-    const startX = options.startX + Math.max(0, (1200 - totalWidth) / 2); // Центрируем по ширине 1200px
-    
-    levelNodes.forEach((node, nodeIndex) => {
-      const x = startX + nodeIndex * (options.nodeWidth + options.horizontalSpacing);
-      
+  levels.forEach((levelNodes) => {
+    // Для каждого уровня располагаем узлы вертикально
+    levelNodes.forEach((node) => {
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
       result.push({
         ...cleanNode,
-        position: { x, y }
+        position: { 
+          x: options.startX, 
+          y: currentY 
+        }
       });
+      
+      // Переходим к следующей позиции по вертикали
+      currentY += options.verticalSpacing;
     });
   });
   
