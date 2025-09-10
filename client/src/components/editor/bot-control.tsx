@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -355,14 +355,23 @@ function BotProfileEditor({
   onProfileUpdated 
 }: { 
   projectId: number; 
-  botInfo: BotInfo; 
+  botInfo?: BotInfo | null; 
   onProfileUpdated: () => void; 
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState(botInfo.first_name || '');
-  const [description, setDescription] = useState(botInfo.description || '');
-  const [shortDescription, setShortDescription] = useState(botInfo.short_description || '');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [shortDescription, setShortDescription] = useState('');
   const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+
+  // Обновляем состояние когда botInfo загружается
+  useEffect(() => {
+    if (botInfo) {
+      setName(botInfo.first_name || '');
+      setDescription(botInfo.description || '');
+      setShortDescription(botInfo.short_description || '');
+    }
+  }, [botInfo]);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -470,6 +479,15 @@ function BotProfileEditor({
   });
 
   const handleSave = async () => {
+    if (!botInfo) {
+      toast({
+        title: "Ошибка",
+        description: "Информация о боте не загружена",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       // Обновляем только те поля, которые изменились
       if (name !== botInfo.first_name) {
@@ -493,9 +511,9 @@ function BotProfileEditor({
 
   const handleCancel = () => {
     // Сбрасываем значения к исходным
-    setName(botInfo.first_name || '');
-    setDescription(botInfo.description || '');
-    setShortDescription(botInfo.short_description || '');
+    setName(botInfo?.first_name || '');
+    setDescription(botInfo?.description || '');
+    setShortDescription(botInfo?.short_description || '');
     setIsOpen(false);
   };
 
@@ -504,7 +522,14 @@ function BotProfileEditor({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8 w-8 p-0" 
+          data-testid="button-edit-bot-profile"
+          disabled={!botInfo}
+          title={!botInfo ? "Загрузка информации о боте..." : "Редактировать профиль бота"}
+        >
           <Edit2 className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -514,10 +539,12 @@ function BotProfileEditor({
         </DialogHeader>
         <div className="space-y-4">
           {/* Компонент загрузки аватара */}
-          <BotAvatarUploader
-            botInfo={botInfo}
-            onAvatarSelected={setSelectedAvatarFile}
-          />
+          {botInfo && (
+            <BotAvatarUploader
+              botInfo={botInfo}
+              onAvatarSelected={setSelectedAvatarFile}
+            />
+          )}
           
           <Separator />
           
@@ -741,7 +768,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   // Получаем информацию о боте (getMe)
   const { data: botInfo, refetch: refetchBotInfo } = useQuery<BotInfo>({
     queryKey: [`/api/projects/${projectId}/bot/info`],
-    enabled: botStatus?.status === 'running',
+    enabled: defaultTokenData?.hasDefault || tokens.length > 0,
     refetchInterval: botStatus?.status === 'running' ? 30000 : false,
   });
 
@@ -983,6 +1010,13 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    {/* Кнопка редактирования профиля бота - показываем всегда */}
+                    <BotProfileEditor 
+                      projectId={projectId} 
+                      botInfo={botInfo} 
+                      onProfileUpdated={refetchBotInfo} 
+                    />
+                    
                     {/* Проверяем статус конкретного токена */}
                     {(() => {
                       const isThisTokenRunning = botStatus?.instance && 
@@ -1019,21 +1053,11 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid="button-bot-menu">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            setEditingToken(token);
-                            setEditName(token.name);
-                            setEditDescription(token.description || '');
-                          }}
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          Редактировать
-                        </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => deleteBotMutation.mutate(token.id)}
                           className="text-red-600"
@@ -1100,17 +1124,17 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
       <Dialog open={!!editingToken} onOpenChange={() => setEditingToken(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Редактировать бота</DialogTitle>
+            <DialogTitle>Редактировать токен</DialogTitle>
             <DialogDescription>
-              Изменить информацию о боте
+              Изменить настройки токена бота
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-bot-name">Название</Label>
+              <Label htmlFor="edit-bot-name">Имя токена</Label>
               <Input
                 id="edit-bot-name"
-                placeholder="Название бота"
+                placeholder="Имя для токена (например: Основной бот)"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 disabled={updateTokenMutation.isPending}
