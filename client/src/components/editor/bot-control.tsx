@@ -497,12 +497,8 @@ function BotProfile({
 
 export function BotControl({ projectId, projectName }: BotControlProps) {
   const [showAddBot, setShowAddBot] = useState(false);
-  const [showBotSettings, setShowBotSettings] = useState(false);
-  const [selectedBot, setSelectedBot] = useState<BotToken | null>(null);
-  const [newBotName, setNewBotName] = useState('');
   const [newBotToken, setNewBotToken] = useState('');
-  const [newBotDescription, setNewBotDescription] = useState('');
-  const [isDefaultBot, setIsDefaultBot] = useState(false);
+  const [isParsingBot, setIsParsingBot] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -533,19 +529,53 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const isError = botStatus?.status === 'error';
   const isStopped = botStatus?.status === 'stopped' || !botStatus?.instance;
 
+  // Парсинг информации о боте по токену
+  const parseBotInfoMutation = useMutation({
+    mutationFn: async (token: string) => {
+      setIsParsingBot(true);
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.description || 'Неверный токен');
+        }
+        return result.result;
+      } finally {
+        setIsParsingBot(false);
+      }
+    },
+    onSuccess: (botInfo) => {
+      // Автоматически создаем токен с полученной информацией
+      createBotMutation.mutate({
+        name: `@${botInfo.username}`,
+        token: newBotToken.trim(),
+        isDefault: tokens.length === 0 ? 1 : 0, // Первый токен становится по умолчанию
+        isActive: 1
+      });
+    },
+    onError: (error: any) => {
+      setIsParsingBot(false);
+      toast({ 
+        title: 'Ошибка получения информации о боте', 
+        description: error.message || 'Проверьте правильность токена',
+        variant: 'destructive' 
+      });
+    }
+  });
+
   // Создание бота/токена
   const createBotMutation = useMutation({
-    mutationFn: async (botData: { name: string; token: string; description?: string; isDefault: boolean }) => {
-      return apiRequest('POST', `/api/projects/${projectId}/tokens`, botData);
+    mutationFn: async (botData: { name: string; token: string; isDefault: number; isActive: number }) => {
+      return apiRequest('POST', `/api/projects/${projectId}/tokens`, { 
+        ...botData, 
+        projectId 
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/tokens`] });
       toast({ title: 'Бот успешно добавлен' });
       setShowAddBot(false);
-      setNewBotName('');
       setNewBotToken('');
-      setNewBotDescription('');
-      setIsDefaultBot(false);
     },
     onError: (error: any) => {
       toast({ title: 'Ошибка при добавлении бота', description: error.message, variant: 'destructive' });
@@ -595,21 +625,17 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   });
 
   const handleAddBot = () => {
-    if (!newBotName.trim() || !newBotToken.trim()) {
+    if (!newBotToken.trim()) {
       toast({
-        title: "Требуются данные",
-        description: "Введите название и токен бота.",
+        title: "Требуется токен",
+        description: "Введите токен бота.",
         variant: "destructive",
       });
       return;
     }
 
-    createBotMutation.mutate({
-      name: newBotName.trim(),
-      token: newBotToken.trim(),
-      description: newBotDescription.trim() || undefined,
-      isDefault: isDefaultBot
-    });
+    // Сначала получаем информацию о боте, затем создаем токен
+    parseBotInfoMutation.mutate(newBotToken.trim());
   };
 
   const getStatusBadge = (token: BotToken) => {
@@ -765,14 +791,6 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => {
-                          setSelectedBot(token);
-                          setShowBotSettings(true);
-                        }}>
-                          <Settings className="mr-2 h-4 w-4" />
-                          Настройки
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           onClick={() => deleteBotMutation.mutate(token.id)}
                           className="text-red-600"
@@ -801,16 +819,6 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="bot-name">Название бота</Label>
-              <Input
-                id="bot-name"
-                placeholder="Например: Мой Telegram Бот"
-                value={newBotName}
-                onChange={(e) => setNewBotName(e.target.value)}
-              />
-            </div>
-            
-            <div className="space-y-2">
               <Label htmlFor="bot-token">Токен бота</Label>
               <Input
                 id="bot-token"
@@ -818,30 +826,16 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                 placeholder="Вставьте токен от @BotFather"
                 value={newBotToken}
                 onChange={(e) => setNewBotToken(e.target.value)}
+                disabled={isParsingBot || createBotMutation.isPending}
               />
               <p className="text-xs text-muted-foreground">
                 Получите токен у @BotFather в Telegram: /newbot
               </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="bot-description">Описание (необязательно)</Label>
-              <Textarea
-                id="bot-description"
-                placeholder="Краткое описание назначения бота"
-                value={newBotDescription}
-                onChange={(e) => setNewBotDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="default-bot"
-                checked={isDefaultBot}
-                onCheckedChange={setIsDefaultBot}
-              />
-              <Label htmlFor="default-bot">Использовать как основной бот</Label>
+              {isParsingBot && (
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  Получаем информацию о боте...
+                </p>
+              )}
             </div>
           </div>
           
@@ -851,9 +845,9 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
             </Button>
             <Button 
               onClick={handleAddBot}
-              disabled={createBotMutation.isPending || !newBotName.trim() || !newBotToken.trim()}
+              disabled={isParsingBot || createBotMutation.isPending || !newBotToken.trim()}
             >
-              {createBotMutation.isPending ? 'Добавление...' : 'Добавить бота'}
+              {isParsingBot ? 'Проверка токена...' : createBotMutation.isPending ? 'Добавление...' : 'Добавить бота'}
             </Button>
           </div>
         </DialogContent>
