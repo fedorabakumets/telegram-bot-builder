@@ -141,13 +141,16 @@ export function Canvas({
     setNodeSizes(prev => {
       const newMap = new Map(prev);
       newMap.set(nodeId, size);
-      // Передаем обновленные размеры в родительский компонент
-      if (onNodeSizesChange) {
-        onNodeSizesChange(newMap);
-      }
       return newMap;
     });
-  }, [onNodeSizesChange]);
+  }, []);
+
+  // Отдельный эффект для передачи размеров в родительский компонент
+  useEffect(() => {
+    if (onNodeSizesChange && nodeSizes.size > 0) {
+      onNodeSizesChange(nodeSizes);
+    }
+  }, [nodeSizes, onNodeSizesChange]);
 
   // Убираем автоматический layout при изменении nodeSizes - он был слишком агрессивным
   // Автоиерархия должна работать только при загрузке шаблонов, а не постоянно

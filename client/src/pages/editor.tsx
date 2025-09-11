@@ -49,6 +49,40 @@ export default function Editor() {
   // Определяем мобильное устройство
   const isMobile = useMediaQuery('(max-width: 768px)');
 
+  // Эффект для корректного восстановления мобильного интерфейса при навигации
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isMobile) {
+        // Закрываем все мобильные панели при возврате к редактору
+        setShowMobileSidebar(false);
+        setShowMobileProperties(false);
+        
+        // Устанавливаем корректную конфигурацию layout для мобильных устройств
+        setFlexibleLayoutConfig(prev => ({
+          ...prev,
+          elements: prev.elements.map(element => {
+            // На мобильных устройствах по умолчанию показываем только header и canvas
+            if (element.type === 'sidebar' || element.type === 'properties') {
+              return { ...element, visible: false };
+            }
+            return element;
+          })
+        }));
+      } else {
+        // На десктопе восстанавливаем все панели
+        setFlexibleLayoutConfig(prev => ({
+          ...prev,
+          elements: prev.elements.map(element => ({
+            ...element,
+            visible: true
+          }))
+        }));
+      }
+    }, 100); // Небольшая задержка для плавных переходов
+
+    return () => clearTimeout(timer);
+  }, [isMobile, match]); // Добавляем match, чтобы эффект срабатывал при навигации
+
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [selectedConnection, setSelectedConnection] = useState<Connection | null>(null);

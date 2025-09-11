@@ -27,12 +27,19 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 }) => {
   // Определяем мобильное устройство (экраны меньше 1200px для тестирования)
   const isMobile = useMediaQuery('(max-width: 1200px)');
+  const isSmallMobile = useMediaQuery('(max-width: 768px)');
+  
   const layoutStyles = useMemo(() => {
     const visibleElements = config.elements.filter(el => {
       if (!el.visible) return false;
       
       // Скрываем боковые панели на мобильных устройствах, если включен режим hideOnMobile
       if (hideOnMobile && isMobile && (el.type === 'sidebar' || el.type === 'properties')) {
+        return false;
+      }
+      
+      // На очень маленьких экранах скрываем боковые панели всегда
+      if (isSmallMobile && (el.type === 'sidebar' || el.type === 'properties')) {
         return false;
       }
       
