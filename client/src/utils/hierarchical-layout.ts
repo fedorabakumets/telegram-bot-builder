@@ -160,6 +160,49 @@ function groupNodesByLevel(nodes: LayoutNode[]): LayoutNode[][] {
 }
 
 /**
+ * Исправляет коллизии узлов на одном уровне
+ */
+function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[] {
+  // Группируем узлы по X координатам (уровням)
+  const levelGroups = new Map<number, Node[]>();
+  
+  nodes.forEach(node => {
+    const x = node.position.x;
+    if (!levelGroups.has(x)) {
+      levelGroups.set(x, []);
+    }
+    levelGroups.get(x)!.push(node);
+  });
+  
+  // Для каждого уровня проверяем коллизии и корректируем позиции
+  levelGroups.forEach((levelNodes, x) => {
+    // Сортируем узлы по Y координате
+    levelNodes.sort((a, b) => a.position.y - b.position.y);
+    
+    // Проверяем и исправляем перекрытия
+    for (let i = 1; i < levelNodes.length; i++) {
+      const currentNode = levelNodes[i];
+      const prevNode = levelNodes[i - 1];
+      
+      const currentSize = getNodeSize(currentNode.id, options);
+      const prevSize = getNodeSize(prevNode.id, options);
+      
+      const prevBottom = prevNode.position.y + prevSize.height;
+      const currentTop = currentNode.position.y;
+      
+      // Если есть перекрытие или недостаточное расстояние
+      const minSpacing = options.verticalSpacing;
+      if (currentTop < prevBottom + minSpacing) {
+        // Сдвигаем текущий узел вниз
+        currentNode.position.y = prevBottom + minSpacing;
+      }
+    }
+  });
+  
+  return nodes;
+}
+
+/**
  * Располагает узлы в правильной вертикальной древовидной иерархии
  */
 function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayoutOptions): Node[] {
@@ -179,10 +222,12 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   
   // Назначаем y позиции с учетом размеров поддеревьев
   function assignYPositions(node: LayoutNode, startY: number): number {
+    const nodeSize = getNodeSize(node.id, options);
+    
     if (!node.children || node.children.length === 0) {
       // Листовой узел - присваиваем текущую позицию
       (node as any)._y = startY;
-      return startY + options.nodeHeight + options.verticalSpacing;
+      return startY + nodeSize.height + options.verticalSpacing;
     }
     
     // Сначала назначаем позиции детям
@@ -197,7 +242,8 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     // Устанавливаем позицию родительского узла как среднее от детей
     // но обеспечиваем минимальное расстояние с учетом высоты узлов
     const avgY = childYPositions.reduce((sum, y) => sum + y, 0) / childYPositions.length;
-    const minY = Math.min(...childYPositions) - options.nodeHeight - options.verticalSpacing * 0.5;
+    const parentSize = getNodeSize(node.id, options);
+    const minY = Math.min(...childYPositions) - parentSize.height - options.verticalSpacing * 0.5;
     (node as any)._y = Math.min(avgY, minY);
     
     return childY;
@@ -215,7 +261,15 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   
   // Создаем результат с правильными позициями
   levels.forEach((levelNodes, levelIndex) => {
-    const x = options.startX + levelIndex * (options.nodeWidth + options.horizontalSpacing);
+    // Вычисляем X позицию с учетом максимальной ширины узлов на предыдущих уровнях
+    let x = options.startX;
+    for (let i = 0; i < levelIndex; i++) {
+      const prevLevel = levels[i] || [];
+      const prevLevelMaxWidth = prevLevel.length > 0 
+        ? Math.max(...prevLevel.map(n => getNodeSize(n.id, options).width))
+        : 0; // Исправляем проблему с пустыми уровнями
+      x += prevLevelMaxWidth + options.horizontalSpacing;
+    }
     
     levelNodes.forEach((node) => {
       const y = (node as any)._y || (options.startY + result.length * options.verticalSpacing);
@@ -229,7 +283,10 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     });
   });
   
-  return result;
+  // Проверка коллизий на одном уровне и корректировка позиций
+  const resultWithCollisionFix = fixCollisions(result, options);
+  
+  return resultWithCollisionFix;
 }
 
 /**
@@ -330,7 +387,12 @@ export function createVProgulkeHierarchicalLayout(nodes: Node[], connections: Co
 /**
  * Автоматически определяет тип шаблона и применяет соответствующую компоновку
  */
-export function applyTemplateLayout(nodes: Node[], connections: Connection[], templateName?: string): Node[] {
+export function applyTemplateLayout(
+  nodes: Node[], 
+  connections: Connection[], 
+  templateName?: string, 
+  nodeSizes?: Map<string, { width: number; height: number }>
+): Node[] {
   // Проверяем, это шаблон VProgulke
   if (templateName?.toLowerCase().includes('vprogulke') || templateName?.toLowerCase().includes('знакомства')) {
     return createVProgulkeHierarchicalLayout(nodes, connections);
@@ -344,6 +406,7 @@ export function applyTemplateLayout(nodes: Node[], connections: Connection[], te
     horizontalSpacing: 180,
     verticalSpacing: 180, // Согласовано с DEFAULT_OPTIONS
     startX: 100,
-    startY: 100
+    startY: 100,
+    nodeSizes
   });
 }

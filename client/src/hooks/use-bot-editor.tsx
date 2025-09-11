@@ -247,14 +247,18 @@ export function useBotEditor(initialData?: BotData) {
     };
   }, []);
 
-  const setBotData = useCallback((botData: BotData, templateName?: string) => {
+  const setBotData = useCallback((
+    botData: BotData, 
+    templateName?: string, 
+    nodeSizes?: Map<string, { width: number; height: number }>
+  ) => {
     // Устанавливаем данные бота
     
     // Нормализуем узлы перед применением компоновки
     const normalizedNodes = (botData.nodes || []).map(normalizeNodeData);
     
     // Применяем иерархическую компоновку к нормализованным узлам
-    const layoutNodes = applyTemplateLayout(normalizedNodes, botData.connections || [], templateName);
+    const layoutNodes = applyTemplateLayout(normalizedNodes, botData.connections || [], templateName, nodeSizes);
     // Применили иерархическую компоновку
     
     setNodes(layoutNodes);
