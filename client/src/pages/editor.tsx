@@ -269,9 +269,11 @@ export default function Editor() {
     // Синхронизируем активный лист с системой редактора
     const activeSheet = SheetsManager.getActiveSheet(updatedData);
     if (activeSheet) {
-      setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, currentNodeSizes); // автоиерархия должна работать при переключении листов
+      // На мобильных устройствах при переключении листов не перестраиваем layout
+      const shouldSkipLayout = isMobile && nodes.length > 0;
+      setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
     }
-  }, [setBotData, currentNodeSizes]);
+  }, [setBotData, currentNodeSizes, isMobile, nodes.length]);
 
   // Обертка для обновления узлов, которая синхронизирует изменения с системой листов
   const handleNodeUpdateWithSheets = useCallback((nodeId: string, updates: any) => {
@@ -349,13 +351,17 @@ export default function Editor() {
         // Устанавливаем активный лист для совместимости со старой системой
         const activeSheet = SheetsManager.getActiveSheet(projectData);
         if (activeSheet) {
-          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, currentNodeSizes); // автоиерархия должна работать при загрузке проекта
+          // На мобильных устройствах при возврате к существующему проекту не перестраиваем layout
+          const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate;
+          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
         }
       } else {
         // Мигрируем старые данные к новому формату
         const migratedData = SheetsManager.migrateLegacyData(projectData as BotData);
         setBotDataWithSheets(migratedData);
-        setBotData(projectData as BotData, undefined, currentNodeSizes);
+        // На мобильных устройствах при возврате к существующему проекту не перестраиваем layout
+        const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate;
+        setBotData(projectData as BotData, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       
       // Update the last loaded project ID
@@ -364,7 +370,7 @@ export default function Editor() {
       // Сохраняем ID текущего проекта для возврата со страницы шаблонов
       localStorage.setItem('lastProjectId', currentProject.id.toString());
     }
-  }, [currentProject?.id, currentProject?.data, setBotData, currentNodeSizes, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId]);
+  }, [currentProject?.id, currentProject?.data, setBotData, currentNodeSizes, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId, isMobile, nodes.length]);
 
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -453,7 +459,9 @@ export default function Editor() {
       // Переключаемся на новый лист
       const newSheet = SheetsManager.getActiveSheet(updatedData);
       if (newSheet) {
-        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }); // автоиерархия должна работать при переключении листов
+        // На мобильных устройствах при добавлении нового листа не перестраиваем layout
+        const shouldSkipLayout = isMobile && nodes.length > 0;
+        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       
       // Сохраняем изменения
@@ -470,7 +478,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast]);
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes]);
 
   const handleSheetDelete = useCallback((sheetId: string) => {
     if (!botDataWithSheets) return;
@@ -534,7 +542,9 @@ export default function Editor() {
       // Переключаемся на дублированный лист
       const newSheet = SheetsManager.getActiveSheet(updatedData);
       if (newSheet) {
-        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }); // автоиерархия должна работать при переключении листов
+        // На мобильных устройствах при дублировании листа не перестраиваем layout
+        const shouldSkipLayout = isMobile && nodes.length > 0;
+        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       
       // Сохраняем изменения
@@ -576,7 +586,9 @@ export default function Editor() {
       // Загружаем данные нового активного листа на холст
       const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
       if (newActiveSheet) {
-        setBotData({ nodes: newActiveSheet.nodes, connections: newActiveSheet.connections }); // автоиерархия должна работать при переключении листов
+        // На мобильных устройствах при переключении листа не перестраиваем layout
+        const shouldSkipLayout = isMobile && nodes.length > 0;
+        setBotData({ nodes: newActiveSheet.nodes, connections: newActiveSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       
       // Сохраняем изменения
@@ -588,7 +600,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast]);
+  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes]);
 
   // Проверяем, есть ли выбранный шаблон при загрузке страницы
   useEffect(() => {
@@ -654,7 +666,9 @@ export default function Editor() {
           // Устанавливаем первый лист как активный на холсте
           const firstSheet = updatedSheets[0];
           if (firstSheet) {
-            setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, template.name, currentNodeSizes); // автоиерархия должна работать при загрузке шаблонов
+            // На мобильных устройствах при возврате к редактору не перестраиваем layout
+            const shouldSkipLayout = isMobile && nodes.length > 0;
+            setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, template.name, currentNodeSizes, shouldSkipLayout);
           }
           
           // Сохраняем в проект
@@ -666,7 +680,9 @@ export default function Editor() {
           console.log('Применяем обычный шаблон и мигрируем к формату с листами');
           const migratedData = SheetsManager.migrateLegacyData(template.data);
           setBotDataWithSheets(migratedData);
-          setBotData(template.data, template.name, currentNodeSizes); // автоиерархия должна работать при загрузке шаблонов
+          // На мобильных устройствах при возврате к редактору не перестраиваем layout
+          const shouldSkipLayout = isMobile && nodes.length > 0;
+          setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия должна работать при загрузке шаблонов
           
           updateProjectMutation.mutate({
             data: migratedData
@@ -819,7 +835,8 @@ export default function Editor() {
         // Устанавливаем первый лист как активный на холсте
         const firstSheet = updatedSheets[0];
         if (firstSheet) {
-          setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, template.name, currentNodeSizes); // автоиерархия должна работать при загрузке шаблонов
+          // При применении шаблона layout всегда применяется независимо от устройства
+          setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, template.name, currentNodeSizes, false);
           console.log('Применили первый лист, узлов:', firstSheet.nodes.length);
           console.log('Применили первый лист, связей:', firstSheet.connections.length);
         }
@@ -840,7 +857,8 @@ export default function Editor() {
         // Мигрируем к формату с листами
         const migratedData = SheetsManager.migrateLegacyData(templateData);
         setBotDataWithSheets(migratedData);
-        setBotData(templateData, template.name, currentNodeSizes); // автоиерархия должна работать при загрузке шаблонов
+        // При применении шаблона layout всегда применяется независимо от устройства
+        setBotData(templateData, template.name, currentNodeSizes, false);
         
         console.log('Применили данные шаблона, узлов:', templateData.nodes.length);
         console.log('Применили данные шаблона, связей:', templateData.connections?.length || 0);
@@ -1394,8 +1412,16 @@ export default function Editor() {
                   onToggleSidebar={handleToggleSidebar}
                   onToggleProperties={handleToggleProperties}
                   headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-                  sidebarVisible={!isMobile && (flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true)}
-                  propertiesVisible={!isMobile && (flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true)}
+                  sidebarVisible={(() => { 
+                    const calculated = !isMobile && (flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true);
+                    console.log('🔧 SIDEBAR VISIBLE CALC:', { isMobile, flexSidebarVisible: flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible, calculated });
+                    return calculated;
+                  })()}
+                  propertiesVisible={(() => { 
+                    const calculated = !isMobile && (flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true);
+                    console.log('🔧 PROPERTIES VISIBLE CALC:', { isMobile, flexPropertiesVisible: flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible, calculated });
+                    return calculated;
+                  })()}
                   onOpenMobileSidebar={handleOpenMobileSidebar}
                   onOpenMobileProperties={handleOpenMobileProperties}
                 />
