@@ -18,11 +18,11 @@ interface HierarchicalLayoutOptions {
 }
 
 const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
-  levelHeight: 200,
+  levelHeight: 150,
   nodeWidth: 320,
   nodeHeight: 120, // Добавлена типичная высота узла
-  horizontalSpacing: 180, // Увеличено с 150 до 180
-  verticalSpacing: 180, // Увеличено с 120 до 180
+  horizontalSpacing: 100, // Уменьшено с 180 до 100 для более компактного расположения
+  verticalSpacing: 80, // Уменьшено с 180 до 80 для более компактного расположения
   startX: 50,
   startY: 50
 };
@@ -402,11 +402,11 @@ export function applyTemplateLayout(
   
   // Для остальных шаблонов используем стандартную иерархическую компоновку
   return createHierarchicalLayout(nodes, connections, {
-    levelHeight: 180,
+    levelHeight: 150,
     nodeWidth: 320,
     nodeHeight: 120,
-    horizontalSpacing: 180,
-    verticalSpacing: 180, // Согласовано с DEFAULT_OPTIONS
+    horizontalSpacing: 100, // Уменьшено для более компактного расположения
+    verticalSpacing: 80, // Уменьшено для более компактного расположения
     startX: 100,
     startY: 100,
     nodeSizes
