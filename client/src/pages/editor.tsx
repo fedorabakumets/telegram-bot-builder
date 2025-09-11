@@ -62,6 +62,15 @@ export default function Editor() {
   // Состояние для реальных размеров узлов (для иерархического layout)
   const [currentNodeSizes, setCurrentNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
   
+  // Флаг для предотвращения перезаписи данных во время загрузки шаблона  
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+  
+  // Флаг для предотвращения перезаписи при локальных изменениях
+  const [hasLocalChanges, setHasLocalChanges] = useState(false);
+  
+  // Track the last loaded project ID to prevent unnecessary reloads
+  const [lastLoadedProjectId, setLastLoadedProjectId] = useState<number | null>(null);
+  
   // Callback для получения размеров узлов из Canvas
   const handleNodeSizesChange = useCallback((nodeSizes: Map<string, { width: number; height: number }>) => {
     setCurrentNodeSizes(nodeSizes);
@@ -216,6 +225,14 @@ export default function Editor() {
     setIsNodeBeingDragged
   } = useBotEditor(currentProject?.data as BotData);
 
+  // Reset hasLocalChanges when project changes
+  useEffect(() => {
+    if (currentProject?.id !== lastLoadedProjectId && lastLoadedProjectId !== null) {
+      console.log('🔄 Resetting hasLocalChanges due to project change:', lastLoadedProjectId, '→', currentProject?.id);
+      setHasLocalChanges(false);
+    }
+  }, [currentProject?.id, lastLoadedProjectId]);
+
   // Обработчик обновления данных листов
   const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
     setBotDataWithSheets(updatedData);
@@ -283,9 +300,19 @@ export default function Editor() {
     }
   }, [updateNode, botDataWithSheets]);
 
-  // Обновляем данные бота при смене проекта
+  // Обновляем данные бота при смене проекта - only when truly switching projects
   useEffect(() => {
-    if (currentProject?.data) {
+    console.log('🔄 useEffect triggered. isLoadingTemplate:', isLoadingTemplate, 'hasLocalChanges:', hasLocalChanges, 'currentProject?.data:', !!currentProject?.data, 'projectId changed:', lastLoadedProjectId !== currentProject?.id);
+    
+    // Only load project data when:
+    // 1. We have a project with data
+    // 2. We're not loading a template  
+    // 3. We don't have local changes in progress
+    // 4. This is truly a new project (ID changed) OR initial load (lastLoadedProjectId is null)
+    if (currentProject?.data && !isLoadingTemplate && !hasLocalChanges && 
+        (lastLoadedProjectId !== currentProject?.id)) {
+      
+      console.log('📂 Loading project data for project ID:', currentProject.id);
       const projectData = currentProject.data as any;
       
       // Проверяем, новый ли это формат с листами
@@ -303,10 +330,13 @@ export default function Editor() {
         setBotData(projectData as BotData, undefined, currentNodeSizes);
       }
       
+      // Update the last loaded project ID
+      setLastLoadedProjectId(currentProject.id);
+      
       // Сохраняем ID текущего проекта для возврата со страницы шаблонов
       localStorage.setItem('lastProjectId', currentProject.id.toString());
     }
-  }, [currentProject?.id, currentProject?.data, setBotData, currentNodeSizes]);
+  }, [currentProject?.id, currentProject?.data, setBotData, currentNodeSizes, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId]);
 
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -340,6 +370,9 @@ export default function Editor() {
     },
     onSuccess: (updatedProject) => {
       console.log('Проект сохранен, обновляем кеш проектов');
+      
+      // Reset local changes flag only after successful save
+      setHasLocalChanges(false);
       
       // Обновляем кеш проектов
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
@@ -534,6 +567,7 @@ export default function Editor() {
     const selectedTemplateData = localStorage.getItem('selectedTemplate');
     if (selectedTemplateData && currentProject) {
       try {
+        setIsLoadingTemplate(true); // Устанавливаем флаг загрузки шаблона
         const template = JSON.parse(selectedTemplateData);
         console.log('Применяем сохраненный шаблон:', template.name);
         
@@ -618,9 +652,15 @@ export default function Editor() {
         
         // Удаляем сохраненный шаблон
         localStorage.removeItem('selectedTemplate');
+        
+        // Небольшая задержка, чтобы дать время на сохранение, затем убираем флаг
+        setTimeout(() => {
+          setIsLoadingTemplate(false);
+        }, 1000);
       } catch (error) {
         console.error('Ошибка применения сохраненного шаблона:', error);
         localStorage.removeItem('selectedTemplate');
+        setIsLoadingTemplate(false); // Убираем флаг при ошибке
       }
     }
   }, [currentProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast]);
@@ -629,6 +669,8 @@ export default function Editor() {
   const handleNodeUpdate = useCallback((nodeId: string, updates: any) => {
     // First update local state
     updateNodeData(nodeId, updates);
+    // Set local changes flag - don't reset it immediately
+    setHasLocalChanges(true);
     // Then auto-save to database with a small delay
     setTimeout(() => {
       updateProjectMutation.mutate({});
@@ -644,6 +686,18 @@ export default function Editor() {
   }, []);
 
   const handleComponentAdd = useCallback((component: ComponentDefinition) => {
+    console.log('🎯 handleComponentAdd called with component:', component);
+    console.log('🎯 isLoadingTemplate:', isLoadingTemplate);
+    
+    // Prevent adding nodes during template loading
+    if (isLoadingTemplate) {
+      console.log('⚠️ Preventing node addition during template loading');
+      return;
+    }
+    
+    // Set local changes flag first to prevent useEffect from running
+    setHasLocalChanges(true);
+    
     // Создаем новый узел из компонента
     const newNode: Node = {
       id: nanoid(),
@@ -652,9 +706,19 @@ export default function Editor() {
       data: component.defaultData || {}
     };
     
+    console.log('🎯 Created new node:', newNode);
+    console.log('🎯 Calling addNode...');
+    
     // Добавляем узел на холст
     addNode(newNode);
-  }, [addNode]);
+    
+    console.log('🎯 addNode called successfully');
+    
+    // Auto-save after a short delay to persist the new node
+    setTimeout(() => {
+      updateProjectMutation.mutate({});
+    }, 1000);
+  }, [addNode, isLoadingTemplate, updateProjectMutation]);
 
   const handleSaveAsTemplate = useCallback(() => {
     setShowSaveTemplate(true);
@@ -676,6 +740,7 @@ export default function Editor() {
   const handleSelectTemplate = useCallback((template: any) => {
     // Применяем шаблон к текущему проекту
     try {
+      setIsLoadingTemplate(true); // Устанавливаем флаг загрузки шаблона
       console.log('Обработка выбора шаблона:', template.name);
       console.log('Данные шаблона:', template.data);
       
@@ -778,6 +843,11 @@ export default function Editor() {
         title: 'Шаблон применен',
         description: `Шаблон "${template.name}" успешно загружен`,
       });
+      
+      // Небольшая задержка, чтобы дать время на сохранение, затем убираем флаг
+      setTimeout(() => {
+        setIsLoadingTemplate(false);
+      }, 1000);
     } catch (error) {
       console.error('Ошибка применения шаблона:', error);
       toast({
@@ -785,6 +855,7 @@ export default function Editor() {
         description: 'Не удалось применить шаблон',
         variant: 'destructive',
       });
+      setIsLoadingTemplate(false); // Убираем флаг при ошибке
     }
   }, [setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
 
