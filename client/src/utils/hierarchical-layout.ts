@@ -163,19 +163,21 @@ function groupNodesByLevel(nodes: LayoutNode[]): LayoutNode[][] {
  * Исправляет коллизии узлов на одном уровне
  */
 function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[] {
-  // Группируем узлы по X координатам (уровням)
+  // Группируем узлы по уровням (приблизительно по X координатам)
   const levelGroups = new Map<number, Node[]>();
+  const levelWidth = options.nodeWidth + options.horizontalSpacing;
   
   nodes.forEach(node => {
-    const x = node.position.x;
-    if (!levelGroups.has(x)) {
-      levelGroups.set(x, []);
+    // Округляем X координату до ближайшего уровня
+    const level = Math.round((node.position.x - options.startX) / levelWidth);
+    if (!levelGroups.has(level)) {
+      levelGroups.set(level, []);
     }
-    levelGroups.get(x)!.push(node);
+    levelGroups.get(level)!.push(node);
   });
   
   // Для каждого уровня проверяем коллизии и корректируем позиции
-  levelGroups.forEach((levelNodes, x) => {
+  levelGroups.forEach((levelNodes) => {
     // Сортируем узлы по Y координате
     levelNodes.sort((a, b) => a.position.y - b.position.y);
     
@@ -232,19 +234,19 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     
     // Сначала назначаем позиции детям
     let childY = startY;
-    const childYPositions: number[] = [];
+    const childCenters: number[] = [];
     
     for (const child of node.children) {
       childY = assignYPositions(child, childY);
-      childYPositions.push((child as any)._y);
+      const childSize = getNodeSize(child.id, options);
+      const childCenterY = (child as any)._y + childSize.height / 2;
+      childCenters.push(childCenterY);
     }
     
-    // Устанавливаем позицию родительского узла как среднее от детей
-    // но обеспечиваем минимальное расстояние с учетом высоты узлов
-    const avgY = childYPositions.reduce((sum, y) => sum + y, 0) / childYPositions.length;
+    // Центрируем родительский узел относительно центров дочерних узлов
+    const avgChildCenterY = childCenters.reduce((sum, y) => sum + y, 0) / childCenters.length;
     const parentSize = getNodeSize(node.id, options);
-    const minY = Math.min(...childYPositions) - parentSize.height - options.verticalSpacing * 0.5;
-    (node as any)._y = Math.min(avgY, minY);
+    (node as any)._y = avgChildCenterY - parentSize.height / 2;
     
     return childY;
   }
