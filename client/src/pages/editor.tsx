@@ -1394,8 +1394,8 @@ export default function Editor() {
                   onToggleSidebar={handleToggleSidebar}
                   onToggleProperties={handleToggleProperties}
                   headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
-                  sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
-                  propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+                  sidebarVisible={!isMobile && (flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true)}
+                  propertiesVisible={!isMobile && (flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true)}
                   onOpenMobileSidebar={handleOpenMobileSidebar}
                   onOpenMobileProperties={handleOpenMobileProperties}
                 />
