@@ -141,36 +141,8 @@ export function Canvas({
     });
   }, []);
 
-  // Эффект для повторного layout когда размеры узлов готовы
-  useEffect(() => {
-    // Проверяем что есть узлы и размеры для всех узлов
-    if (nodes.length === 0) return;
-    
-    const hasAllSizes = nodes.every(node => nodeSizes.has(node.id));
-    if (!hasAllSizes) return;
-    
-    // Debounce для избежания слишком частых пересчетов
-    const timer = setTimeout(() => {
-      // Импортируем applyTemplateLayout
-      import('@/utils/hierarchical-layout').then(({ applyTemplateLayout }) => {
-        // Применяем layout с реальными размерами
-        const layoutNodes = applyTemplateLayout(nodes, connections, undefined, nodeSizes);
-        
-        // Обновляем позиции только если они действительно изменились
-        const hasChanges = layoutNodes.some((layoutNode, index) => {
-          const originalNode = nodes[index];
-          return Math.abs(layoutNode.position.x - originalNode.position.x) > 1 ||
-                 Math.abs(layoutNode.position.y - originalNode.position.y) > 1;
-        });
-        
-        if (hasChanges && onNodesUpdate) {
-          onNodesUpdate(layoutNodes);
-        }
-      });
-    }, 200); // 200ms debounce
-
-    return () => clearTimeout(timer);
-  }, [nodes, connections, nodeSizes, onNodesUpdate]);
+  // Убираем автоматический layout при изменении nodeSizes - он был слишком агрессивным
+  // Автоиерархия должна работать только при загрузке шаблонов, а не постоянно
 
   // Получение активного листа (с fallback'ом для совместимости)
   const activeSheet = botData ? SheetsManager.getActiveSheet(botData) : null;
