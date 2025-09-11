@@ -19,7 +19,7 @@ const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
   levelHeight: 200,
   nodeWidth: 320,
   horizontalSpacing: 150,
-  verticalSpacing: 220,
+  verticalSpacing: 120, // Уменьшено с 220 до 120
   startX: 50,
   startY: 50
 };
@@ -179,13 +179,15 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     const childYPositions: number[] = [];
     
     for (const child of node.children) {
-      const childStartY = childY;
       childY = assignYPositions(child, childY);
       childYPositions.push((child as any)._y);
     }
     
     // Устанавливаем позицию родительского узла как среднее от детей
-    (node as any)._y = childYPositions.reduce((sum, y) => sum + y, 0) / childYPositions.length;
+    // но не ближе чем минимальное расстояние до первого ребенка
+    const avgY = childYPositions.reduce((sum, y) => sum + y, 0) / childYPositions.length;
+    const minY = Math.min(...childYPositions) - options.verticalSpacing * 0.8;
+    (node as any)._y = Math.min(avgY, minY);
     
     return childY;
   }
@@ -197,7 +199,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   // Назначаем позиции для каждого корневого узла
   rootNodes.forEach(rootNode => {
     currentY = assignYPositions(rootNode, currentY);
-    currentY += options.verticalSpacing; // Дополнительный отступ между корневыми деревьями
+    currentY += options.verticalSpacing * 0.5; // Уменьшенный отступ между корневыми деревьями
   });
   
   // Создаем результат с правильными позициями
@@ -328,7 +330,7 @@ export function applyTemplateLayout(nodes: Node[], connections: Connection[], te
     levelHeight: 180,
     nodeWidth: 320,
     horizontalSpacing: 80,
-    verticalSpacing: 200,
+    verticalSpacing: 120, // Согласовано с DEFAULT_OPTIONS
     startX: 100,
     startY: 100
   });
