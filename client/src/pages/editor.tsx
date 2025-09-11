@@ -592,7 +592,7 @@ export default function Editor() {
           // Устанавливаем первый лист как активный на холсте
           const firstSheet = updatedSheets[0];
           if (firstSheet) {
-            setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, undefined, undefined, true); // skipLayout=true для шаблонов
+            setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, template.name, currentNodeSizes); // автоиерархия должна работать при загрузке шаблонов
           }
           
           // Сохраняем в проект
@@ -604,7 +604,7 @@ export default function Editor() {
           console.log('Применяем обычный шаблон и мигрируем к формату с листами');
           const migratedData = SheetsManager.migrateLegacyData(template.data);
           setBotDataWithSheets(migratedData);
-          setBotData(template.data, undefined, undefined, true); // skipLayout=true для шаблонов
+          setBotData(template.data, template.name, currentNodeSizes); // автоиерархия должна работать при загрузке шаблонов
           
           updateProjectMutation.mutate({
             data: migratedData
@@ -734,7 +734,7 @@ export default function Editor() {
         // Устанавливаем первый лист как активный на холсте
         const firstSheet = updatedSheets[0];
         if (firstSheet) {
-          setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, undefined, undefined, true); // skipLayout=true для шаблонов
+          setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, template.name, currentNodeSizes); // автоиерархия должна работать при загрузке шаблонов
           console.log('Применили первый лист, узлов:', firstSheet.nodes.length);
           console.log('Применили первый лист, связей:', firstSheet.connections.length);
         }
@@ -755,7 +755,7 @@ export default function Editor() {
         // Мигрируем к формату с листами
         const migratedData = SheetsManager.migrateLegacyData(templateData);
         setBotDataWithSheets(migratedData);
-        setBotData(templateData);
+        setBotData(templateData, template.name, currentNodeSizes); // автоиерархия должна работать при загрузке шаблонов
         
         console.log('Применили данные шаблона, узлов:', templateData.nodes.length);
         console.log('Применили данные шаблона, связей:', templateData.connections?.length || 0);
