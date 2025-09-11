@@ -128,6 +128,18 @@ export function Canvas({
   const [lastTouchPosition, setLastTouchPosition] = useState({ x: 0, y: 0 });
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
   const [initialPinchZoom, setInitialPinchZoom] = useState(100);
+  
+  // Состояние для хранения реальных размеров узлов
+  const [nodeSizes, setNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
+
+  // Обработчик изменения размеров узлов
+  const handleNodeSizeChange = useCallback((nodeId: string, size: { width: number; height: number }) => {
+    setNodeSizes(prev => {
+      const newMap = new Map(prev);
+      newMap.set(nodeId, size);
+      return newMap;
+    });
+  }, []);
 
   // Получение активного листа (с fallback'ом для совместимости)
   const activeSheet = botData ? SheetsManager.getActiveSheet(botData) : null;
@@ -909,6 +921,7 @@ export function Canvas({
                 zoom={zoom}
                 pan={pan}
                 setIsNodeBeingDragged={setIsNodeBeingDragged}
+                onSizeChange={handleNodeSizeChange}
               />
             ))}
           </div>

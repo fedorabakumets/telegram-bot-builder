@@ -14,6 +14,7 @@ interface HierarchicalLayoutOptions {
   verticalSpacing: number;
   startX: number;
   startY: number;
+  nodeSizes?: Map<string, { width: number; height: number }>; // Карта реальных размеров узлов
 }
 
 const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
@@ -25,6 +26,14 @@ const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
   startX: 50,
   startY: 50
 };
+
+/**
+ * Получает размер узла с учетом реальных измерений или дефолтных значений
+ */
+function getNodeSize(nodeId: string, options: HierarchicalLayoutOptions): { width: number; height: number } {
+  const realSize = options.nodeSizes?.get(nodeId);
+  return realSize || { width: options.nodeWidth, height: options.nodeHeight };
+}
 
 /**
  * Создает иерархическое расположение узлов на основе соединений

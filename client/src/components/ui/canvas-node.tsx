@@ -174,6 +174,7 @@ interface CanvasNodeProps {
   zoom?: number;
   pan?: { x: number; y: number };
   setIsNodeBeingDragged?: (isDragging: boolean) => void;
+  onSizeChange?: (nodeId: string, size: { width: number; height: number }) => void;
 }
 
 const nodeIcons = {
@@ -228,7 +229,7 @@ const nodeColors = {
   demote_user: 'bg-gradient-to-br from-slate-100 to-gray-200 dark:from-slate-900/40 dark:to-gray-800/40 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700/50 shadow-lg shadow-slate-500/20'
 };
 
-export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged }: CanvasNodeProps) {
+export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -473,6 +474,24 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       };
     }
   }, [isTouchDragging]);
+
+  // ResizeObserver для измерения реальных размеров узла
+  useEffect(() => {
+    if (!onSizeChange || !nodeRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        onSizeChange(node.id, { width, height });
+      }
+    });
+
+    resizeObserver.observe(nodeRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [node.id, onSizeChange]);
 
   return (
     <div
