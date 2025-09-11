@@ -228,7 +228,6 @@ export default function Editor() {
   // Reset hasLocalChanges when project changes
   useEffect(() => {
     if (currentProject?.id !== lastLoadedProjectId && lastLoadedProjectId !== null) {
-      console.log('🔄 Resetting hasLocalChanges due to project change:', lastLoadedProjectId, '→', currentProject?.id);
       setHasLocalChanges(false);
     }
   }, [currentProject?.id, lastLoadedProjectId]);
@@ -302,7 +301,6 @@ export default function Editor() {
 
   // Обновляем данные бота при смене проекта - only when truly switching projects
   useEffect(() => {
-    console.log('🔄 useEffect triggered. isLoadingTemplate:', isLoadingTemplate, 'hasLocalChanges:', hasLocalChanges, 'currentProject?.data:', !!currentProject?.data, 'projectId changed:', lastLoadedProjectId !== currentProject?.id);
     
     // Only load project data when:
     // 1. We have a project with data
@@ -686,12 +684,8 @@ export default function Editor() {
   }, []);
 
   const handleComponentAdd = useCallback((component: ComponentDefinition) => {
-    console.log('🎯 handleComponentAdd called with component:', component);
-    console.log('🎯 isLoadingTemplate:', isLoadingTemplate);
-    
     // Prevent adding nodes during template loading
     if (isLoadingTemplate) {
-      console.log('⚠️ Preventing node addition during template loading');
       return;
     }
     
@@ -706,13 +700,9 @@ export default function Editor() {
       data: component.defaultData || {}
     };
     
-    console.log('🎯 Created new node:', newNode);
-    console.log('🎯 Calling addNode...');
-    
     // Добавляем узел на холст
     addNode(newNode);
     
-    console.log('🎯 addNode called successfully');
     
     // Auto-save after a short delay to persist the new node
     setTimeout(() => {
