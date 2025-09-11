@@ -47,6 +47,7 @@ export function createHierarchicalLayout(
   connections: Connection[], 
   options: Partial<HierarchicalLayoutOptions> = {}
 ): Node[] {
+  console.log('🔄 Hierarchical layout called with', nodes.length, 'nodes, nodeSizes:', !!options.nodeSizes);
   const opts = { ...DEFAULT_OPTIONS, ...options };
   
   if (nodes.length === 0) return nodes;
@@ -395,12 +396,16 @@ export function applyTemplateLayout(
   templateName?: string, 
   nodeSizes?: Map<string, { width: number; height: number }>
 ): Node[] {
+  console.log('🎯 ApplyTemplateLayout called:', templateName, 'nodes:', nodes.length, 'nodeSizes:', !!nodeSizes);
+  
   // Проверяем, это шаблон VProgulke
   if (templateName?.toLowerCase().includes('vprogulke') || templateName?.toLowerCase().includes('знакомства')) {
+    console.log('🌟 Using VProgulke layout');
     return createVProgulkeHierarchicalLayout(nodes, connections);
   }
   
   // Для остальных шаблонов используем стандартную иерархическую компоновку
+  console.log('📏 Using standard hierarchical layout with real sizes');
   return createHierarchicalLayout(nodes, connections, {
     levelHeight: 150,
     nodeWidth: 320,

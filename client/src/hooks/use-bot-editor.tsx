@@ -253,6 +253,7 @@ export function useBotEditor(initialData?: BotData) {
     nodeSizes?: Map<string, { width: number; height: number }>,
     skipLayout?: boolean // Новый параметр для отключения автоматического layout
   ) => {
+    console.log('📝 setBotData called with skipLayout:', skipLayout, 'templateName:', templateName, 'nodeSizes size:', nodeSizes?.size || 0);
     // Устанавливаем данные бота
     
     // Нормализуем узлы перед применением компоновки

@@ -59,6 +59,14 @@ export default function Editor() {
   // Новая система листов
   const [botDataWithSheets, setBotDataWithSheets] = useState<BotDataWithSheets | null>(null);
   
+  // Состояние для реальных размеров узлов (для иерархического layout)
+  const [currentNodeSizes, setCurrentNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
+  
+  // Callback для получения размеров узлов из Canvas
+  const handleNodeSizesChange = useCallback((nodeSizes: Map<string, { width: number; height: number }>) => {
+    setCurrentNodeSizes(nodeSizes);
+  }, []);
+  
   // Функции для управления видимостью панелей
   const handleToggleHeader = useCallback(() => {
     setFlexibleLayoutConfig(prev => ({
@@ -938,6 +946,7 @@ export default function Editor() {
             canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
             onOpenMobileSidebar={handleOpenMobileSidebar}
             onOpenMobileProperties={handleOpenMobileProperties}
+            onNodeSizesChange={handleNodeSizesChange}
           />
         ) : currentTab === 'bot' ? (
           <div className="h-full p-6 bg-background overflow-auto">

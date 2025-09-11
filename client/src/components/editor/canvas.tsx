@@ -64,6 +64,9 @@ interface CanvasProps {
   // Мобильные функции
   onOpenMobileSidebar?: () => void;
   onOpenMobileProperties?: () => void;
+  
+  // Передача размеров узлов для иерархического макета
+  onNodeSizesChange?: (nodeSizes: Map<string, { width: number; height: number }>) => void;
 }
 
 export function Canvas({ 
@@ -103,7 +106,8 @@ export function Canvas({
   propertiesVisible,
   canvasVisible,
   onOpenMobileSidebar,
-  onOpenMobileProperties
+  onOpenMobileProperties,
+  onNodeSizesChange
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -137,9 +141,13 @@ export function Canvas({
     setNodeSizes(prev => {
       const newMap = new Map(prev);
       newMap.set(nodeId, size);
+      // Передаем обновленные размеры в родительский компонент
+      if (onNodeSizesChange) {
+        onNodeSizesChange(newMap);
+      }
       return newMap;
     });
-  }, []);
+  }, [onNodeSizesChange]);
 
   // Убираем автоматический layout при изменении nodeSizes - он был слишком агрессивным
   // Автоиерархия должна работать только при загрузке шаблонов, а не постоянно
