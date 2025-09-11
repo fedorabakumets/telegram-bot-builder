@@ -9,6 +9,7 @@ interface LayoutNode extends Node {
 interface HierarchicalLayoutOptions {
   levelHeight: number;
   nodeWidth: number;
+  nodeHeight: number; // Добавлена высота узла
   horizontalSpacing: number;
   verticalSpacing: number;
   startX: number;
@@ -18,8 +19,9 @@ interface HierarchicalLayoutOptions {
 const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
   levelHeight: 200,
   nodeWidth: 320,
-  horizontalSpacing: 150,
-  verticalSpacing: 120, // Уменьшено с 220 до 120
+  nodeHeight: 120, // Добавлена типичная высота узла
+  horizontalSpacing: 180, // Увеличено с 150 до 180
+  verticalSpacing: 180, // Увеличено с 120 до 180
   startX: 50,
   startY: 50
 };
@@ -171,7 +173,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     if (!node.children || node.children.length === 0) {
       // Листовой узел - присваиваем текущую позицию
       (node as any)._y = startY;
-      return startY + options.verticalSpacing;
+      return startY + options.nodeHeight + options.verticalSpacing;
     }
     
     // Сначала назначаем позиции детям
@@ -184,9 +186,9 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     }
     
     // Устанавливаем позицию родительского узла как среднее от детей
-    // но не ближе чем минимальное расстояние до первого ребенка
+    // но обеспечиваем минимальное расстояние с учетом высоты узлов
     const avgY = childYPositions.reduce((sum, y) => sum + y, 0) / childYPositions.length;
-    const minY = Math.min(...childYPositions) - options.verticalSpacing * 0.8;
+    const minY = Math.min(...childYPositions) - options.nodeHeight - options.verticalSpacing * 0.5;
     (node as any)._y = Math.min(avgY, minY);
     
     return childY;
@@ -199,7 +201,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   // Назначаем позиции для каждого корневого узла
   rootNodes.forEach(rootNode => {
     currentY = assignYPositions(rootNode, currentY);
-    currentY += options.verticalSpacing * 0.5; // Уменьшенный отступ между корневыми деревьями
+    currentY += options.verticalSpacing; // Полный отступ между корневыми деревьями
   });
   
   // Создаем результат с правильными позициями
@@ -329,8 +331,9 @@ export function applyTemplateLayout(nodes: Node[], connections: Connection[], te
   return createHierarchicalLayout(nodes, connections, {
     levelHeight: 180,
     nodeWidth: 320,
-    horizontalSpacing: 80,
-    verticalSpacing: 120, // Согласовано с DEFAULT_OPTIONS
+    nodeHeight: 120,
+    horizontalSpacing: 180,
+    verticalSpacing: 180, // Согласовано с DEFAULT_OPTIONS
     startX: 100,
     startY: 100
   });
