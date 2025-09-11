@@ -223,9 +223,9 @@ export default function Editor() {
     // Синхронизируем активный лист с системой редактора
     const activeSheet = SheetsManager.getActiveSheet(updatedData);
     if (activeSheet) {
-      setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }); // автоиерархия должна работать при переключении листов
+      setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, currentNodeSizes); // автоиерархия должна работать при переключении листов
     }
-  }, [setBotData]);
+  }, [setBotData, currentNodeSizes]);
 
   // Обертка для обновления узлов, которая синхронизирует изменения с системой листов
   const handleNodeUpdateWithSheets = useCallback((nodeId: string, updates: any) => {
@@ -294,19 +294,19 @@ export default function Editor() {
         // Устанавливаем активный лист для совместимости со старой системой
         const activeSheet = SheetsManager.getActiveSheet(projectData);
         if (activeSheet) {
-          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }); // автоиерархия должна работать при загрузке проекта
+          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, currentNodeSizes); // автоиерархия должна работать при загрузке проекта
         }
       } else {
         // Мигрируем старые данные к новому формату
         const migratedData = SheetsManager.migrateLegacyData(projectData as BotData);
         setBotDataWithSheets(migratedData);
-        setBotData(projectData as BotData);
+        setBotData(projectData as BotData, undefined, currentNodeSizes);
       }
       
       // Сохраняем ID текущего проекта для возврата со страницы шаблонов
       localStorage.setItem('lastProjectId', currentProject.id.toString());
     }
-  }, [currentProject?.id, currentProject?.data, setBotData]);
+  }, [currentProject?.id, currentProject?.data, setBotData, currentNodeSizes]);
 
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
