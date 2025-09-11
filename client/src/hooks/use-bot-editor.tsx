@@ -250,18 +250,20 @@ export function useBotEditor(initialData?: BotData) {
   const setBotData = useCallback((
     botData: BotData, 
     templateName?: string, 
-    nodeSizes?: Map<string, { width: number; height: number }>
+    nodeSizes?: Map<string, { width: number; height: number }>,
+    skipLayout?: boolean // Новый параметр для отключения автоматического layout
   ) => {
     // Устанавливаем данные бота
     
     // Нормализуем узлы перед применением компоновки
     const normalizedNodes = (botData.nodes || []).map(normalizeNodeData);
     
-    // Применяем иерархическую компоновку к нормализованным узлам
-    const layoutNodes = applyTemplateLayout(normalizedNodes, botData.connections || [], templateName, nodeSizes);
-    // Применили иерархическую компоновку
+    // Применяем иерархическую компоновку только если не отключена
+    const finalNodes = skipLayout 
+      ? normalizedNodes 
+      : applyTemplateLayout(normalizedNodes, botData.connections || [], templateName, nodeSizes);
     
-    setNodes(layoutNodes);
+    setNodes(finalNodes);
     setConnections(botData.connections || []);
     setSelectedNodeId(null); // Сбрасываем выбранный узел
     

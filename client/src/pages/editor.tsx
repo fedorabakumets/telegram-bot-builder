@@ -215,7 +215,7 @@ export default function Editor() {
     // Синхронизируем активный лист с системой редактора
     const activeSheet = SheetsManager.getActiveSheet(updatedData);
     if (activeSheet) {
-      setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections });
+      setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }); // автоиерархия должна работать при переключении листов
     }
   }, [setBotData]);
 
@@ -286,7 +286,7 @@ export default function Editor() {
         // Устанавливаем активный лист для совместимости со старой системой
         const activeSheet = SheetsManager.getActiveSheet(projectData);
         if (activeSheet) {
-          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections });
+          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }); // автоиерархия должна работать при загрузке проекта
         }
       } else {
         // Мигрируем старые данные к новому формату
@@ -384,7 +384,7 @@ export default function Editor() {
       // Переключаемся на новый лист
       const newSheet = SheetsManager.getActiveSheet(updatedData);
       if (newSheet) {
-        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections });
+        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }); // автоиерархия должна работать при переключении листов
       }
       
       // Сохраняем изменения
@@ -413,7 +413,7 @@ export default function Editor() {
       // Переключаемся на активный лист
       const activeSheet = SheetsManager.getActiveSheet(updatedData);
       if (activeSheet) {
-        setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections });
+        setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }); // автоиерархия должна работать при переключении листов
       }
       
       // Сохраняем изменения
@@ -465,7 +465,7 @@ export default function Editor() {
       // Переключаемся на дублированный лист
       const newSheet = SheetsManager.getActiveSheet(updatedData);
       if (newSheet) {
-        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections });
+        setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }); // автоиерархия должна работать при переключении листов
       }
       
       // Сохраняем изменения
@@ -507,7 +507,7 @@ export default function Editor() {
       // Загружаем данные нового активного листа на холст
       const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
       if (newActiveSheet) {
-        setBotData({ nodes: newActiveSheet.nodes, connections: newActiveSheet.connections });
+        setBotData({ nodes: newActiveSheet.nodes, connections: newActiveSheet.connections }); // автоиерархия должна работать при переключении листов
       }
       
       // Сохраняем изменения
@@ -584,7 +584,7 @@ export default function Editor() {
           // Устанавливаем первый лист как активный на холсте
           const firstSheet = updatedSheets[0];
           if (firstSheet) {
-            setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections });
+            setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, undefined, undefined, true); // skipLayout=true для шаблонов
           }
           
           // Сохраняем в проект
@@ -596,7 +596,7 @@ export default function Editor() {
           console.log('Применяем обычный шаблон и мигрируем к формату с листами');
           const migratedData = SheetsManager.migrateLegacyData(template.data);
           setBotDataWithSheets(migratedData);
-          setBotData(template.data);
+          setBotData(template.data, undefined, undefined, true); // skipLayout=true для шаблонов
           
           updateProjectMutation.mutate({
             data: migratedData
@@ -726,7 +726,7 @@ export default function Editor() {
         // Устанавливаем первый лист как активный на холсте
         const firstSheet = updatedSheets[0];
         if (firstSheet) {
-          setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections });
+          setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, undefined, undefined, true); // skipLayout=true для шаблонов
           console.log('Применили первый лист, узлов:', firstSheet.nodes.length);
           console.log('Применили первый лист, связей:', firstSheet.connections.length);
         }
