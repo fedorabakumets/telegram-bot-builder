@@ -2373,42 +2373,6 @@ export function PropertiesPanel({
                   </div>
                 </div>
 
-                {/* Basic Admin Rights */}
-                <div className="bg-gradient-to-br from-emerald-50/50 to-green-50/30 dark:from-emerald-950/20 dark:to-green-950/10 border border-emerald-200/30 dark:border-emerald-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
-                      <i className="fas fa-crown text-emerald-600 dark:text-emerald-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Основные права администратора</Label>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { key: 'canChangeInfo', label: 'Изменять информацию группы', icon: 'fas fa-edit' },
-                      { key: 'canDeleteMessages', label: 'Удалять сообщения', icon: 'fas fa-trash', default: true },
-                      { key: 'canBanUsers', label: 'Блокировать пользователей', icon: 'fas fa-ban' },
-                      { key: 'canInviteUsers', label: 'Приглашать пользователей', icon: 'fas fa-user-plus', default: true },
-                      { key: 'canPinMessages', label: 'Закреплять сообщения', icon: 'fas fa-thumbtack', default: true },
-                      { key: 'canAddAdmins', label: 'Добавлять администраторов', icon: 'fas fa-user-shield' },
-                      { key: 'canRestrictMembers', label: 'Ограничивать участников', icon: 'fas fa-user-slash' },
-                      { key: 'canPromoteMembers', label: 'Повышать участников', icon: 'fas fa-arrow-up' },
-                      { key: 'canManageVideoChats', label: 'Управлять видеозвонками', icon: 'fas fa-video' },
-                      { key: 'canManageTopics', label: 'Управлять темами', icon: 'fas fa-tags' },
-                      { key: 'isAnonymous', label: 'Анонимный администратор', icon: 'fas fa-user-secret' }
-                    ].map(({ key, label, icon, default: defaultValue }) => (
-                      <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-emerald-200/30 dark:border-emerald-800/30 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-200">
-                        <div className="flex items-center space-x-2">
-                          <i className={`${icon} text-emerald-600 dark:text-emerald-400 text-xs`}></i>
-                          <Label className="text-xs text-emerald-700 dark:text-emerald-300">{label}</Label>
-                        </div>
-                        <Switch
-                          checked={(selectedNode.data as any)[key] ?? (defaultValue || false)}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked } as any)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Extended Admin Rights */}
                 <div className="bg-gradient-to-br from-purple-50/50 to-violet-50/30 dark:from-purple-950/20 dark:to-violet-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
