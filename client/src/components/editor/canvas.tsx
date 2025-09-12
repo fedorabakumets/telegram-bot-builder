@@ -111,6 +111,11 @@ export function Canvas({
 }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  
+  // Временное логирование для отладки мобильного состояния
+  useEffect(() => {
+    console.log('🔧 CANVAS isMobile state:', isMobile, 'window.innerWidth:', typeof window !== 'undefined' ? window.innerWidth : 'unknown');
+  }, [isMobile]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [connectionStart, setConnectionStart] = useState<{
     nodeId: string;

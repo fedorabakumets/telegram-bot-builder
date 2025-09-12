@@ -46,6 +46,11 @@ export function CanvasSheets({
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
+  
+  // Временное логирование для отладки мобильного состояния
+  useEffect(() => {
+    console.log('📱 CANVAS_SHEETS isMobile state:', isMobile, 'window.innerWidth:', typeof window !== 'undefined' ? window.innerWidth : 'unknown');
+  }, [isMobile]);
 
   // Автофокус при начале переименования
   useEffect(() => {
