@@ -24,8 +24,6 @@ interface TemplateFormData {
   description: string;
   category: string;
   isPublic: boolean;
-  complexity: number;
-  estimatedTime: number;
 }
 
 export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: SaveTemplateModalProps) {
@@ -34,8 +32,6 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     description: '',
     category: 'custom',
     isPublic: false,
-    complexity: 1,
-    estimatedTime: 5,
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -80,11 +76,11 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
         category: data.category,
         tags: [],
         isPublic: data.isPublic ? 1 : 0,
-        difficulty: data.complexity <= 3 ? 'easy' : data.complexity <= 7 ? 'medium' : 'hard',
+        difficulty: 'easy',
         language: 'ru',
         requiresToken: 1,
-        complexity: data.complexity,
-        estimatedTime: data.estimatedTime,
+        complexity: 1,
+        estimatedTime: 5,
         authorName: 'Пользователь',
         featured: 0,
         data: botData,
@@ -115,8 +111,6 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
       description: '',
       category: 'custom',
       isPublic: false,
-      complexity: 1,
-      estimatedTime: 5,
     });
   };
 
@@ -174,53 +168,24 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
             />
           </div>
 
-          {/* Основные настройки */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Категория */}
-            <div className="space-y-2">
-              <Label>Категория</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите категорию" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Сложность (1-10) */}
-            <div className="space-y-2">
-              <Label>Сложность (1-10)</Label>
-              <Input
-                type="number"
-                min="1"
-                max="10"
-                value={formData.complexity}
-                onChange={(e) => setFormData(prev => ({ ...prev, complexity: parseInt(e.target.value) || 1 }))}
-                placeholder="1"
-              />
-            </div>
-
-            {/* Время настройки */}
-            <div className="space-y-2">
-              <Label>Время настройки (минут)</Label>
-              <Input
-                type="number"
-                min="1"
-                max="120"
-                value={formData.estimatedTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, estimatedTime: parseInt(e.target.value) || 5 }))}
-                placeholder="5"
-              />
-            </div>
+          {/* Категория */}
+          <div className="space-y-2">
+            <Label>Категория</Label>
+            <Select
+              value={formData.category}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Выберите категорию" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Публичность */}
