@@ -2272,7 +2272,7 @@ export function PropertiesPanel({
                                                 selectedNode.type === 'kick_user' ? ['кикнуть', 'исключить', 'выгнать'] :
                                                 selectedNode.type === 'promote_user' ? ['повысить', 'назначить админом', 'промоут'] :
                                                 selectedNode.type === 'demote_user' ? ['понизить', 'снять с админки', 'демоут'] :
-                                                selectedNode.type === 'admin_rights' ? ['права админа', 'изменить права', 'админ права'] : [];
+                                                selectedNode.type === 'admin_rights' ? ['права админа', 'изменить права', 'админ права', 'тг права', 'права'] : [];
                         if (defaultSynonyms.length > 0) {
                           setTimeout(() => onNodeUpdate(selectedNode.id, { synonyms: defaultSynonyms }), 0);
                           return defaultSynonyms;
@@ -2301,7 +2301,7 @@ export function PropertiesPanel({
                       selectedNode.type === 'kick_user' ? "кикнуть, исключить, выгнать" :
                       selectedNode.type === 'promote_user' ? "повысить, назначить админом, промоут" :
                       selectedNode.type === 'demote_user' ? "понизить, снять с админки, демоут" :
-                      selectedNode.type === 'admin_rights' ? "права админа, изменить права, админ права" : 
+                      selectedNode.type === 'admin_rights' ? "права админа, изменить права, админ права, тг права, права" : 
                       "команда1, команда2, команда3"
                     }
                   />
