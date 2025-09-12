@@ -1,4 +1,5 @@
 import { Node, Connection } from '@/types/bot';
+import { getIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutNode extends Node {
   level?: number;
@@ -404,16 +405,35 @@ export function applyTemplateLayout(
     return createVProgulkeHierarchicalLayout(nodes, connections);
   }
   
+  // Определяем, мобильное ли это устройство
+  const isMobile = getIsMobile();
+  
   // Для остальных шаблонов используем стандартную иерархическую компоновку
-  console.log('📏 Using standard hierarchical layout with real sizes');
-  return createHierarchicalLayout(nodes, connections, {
+  console.log(isMobile ? '📱 Using mobile-optimized hierarchical layout' : '📏 Using desktop hierarchical layout with real sizes');
+  
+  // Параметры для мобильных устройств - более компактные
+  const mobileOptions = {
+    levelHeight: 120,
+    nodeWidth: 280,
+    nodeHeight: 100,
+    horizontalSpacing: 60, // Значительно уменьшено для мобильных экранов
+    verticalSpacing: 50, // Значительно уменьшено для мобильных экранов
+    startX: 50,
+    startY: 50,
+    nodeSizes
+  };
+  
+  // Параметры для десктопных устройств
+  const desktopOptions = {
     levelHeight: 150,
     nodeWidth: 320,
     nodeHeight: 120,
-    horizontalSpacing: 100, // Уменьшено для более компактного расположения
-    verticalSpacing: 80, // Уменьшено для более компактного расположения
+    horizontalSpacing: 100,
+    verticalSpacing: 80,
     startX: 100,
     startY: 100,
     nodeSizes
-  });
+  };
+  
+  return createHierarchicalLayout(nodes, connections, isMobile ? mobileOptions : desktopOptions);
 }

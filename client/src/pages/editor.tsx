@@ -270,8 +270,8 @@ export default function Editor() {
     // Синхронизируем активный лист с системой редактора
     const activeSheet = SheetsManager.getActiveSheet(updatedData);
     if (activeSheet) {
-      // На мобильных устройствах при переключении листов не перестраиваем layout
-      const shouldSkipLayout = isMobile && nodes.length > 0;
+      // Пропускаем layout только при быстром переключении между листами на мобильных (не при загрузке)
+      const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate;
       setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
     }
   }, [setBotData, currentNodeSizes, isMobile, nodes.length]);
@@ -352,16 +352,16 @@ export default function Editor() {
         // Устанавливаем активный лист для совместимости со старой системой
         const activeSheet = SheetsManager.getActiveSheet(projectData);
         if (activeSheet) {
-          // На мобильных устройствах при возврате к существующему проекту не перестраиваем layout
-          const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate;
+          // Всегда применяем layout при первой загрузке проекта, пропускаем только при повторной загрузке на мобильных
+          const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate && lastLoadedProjectId !== null;
           setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
         }
       } else {
         // Мигрируем старые данные к новому формату
         const migratedData = SheetsManager.migrateLegacyData(projectData as BotData);
         setBotDataWithSheets(migratedData);
-        // На мобильных устройствах при возврате к существующему проекту не перестраиваем layout
-        const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate;
+        // Всегда применяем layout при первой загрузке проекта, пропускаем только при повторной загрузке на мобильных
+        const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate && lastLoadedProjectId !== null;
         setBotData(projectData as BotData, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       
@@ -460,8 +460,8 @@ export default function Editor() {
       // Переключаемся на новый лист
       const newSheet = SheetsManager.getActiveSheet(updatedData);
       if (newSheet) {
-        // На мобильных устройствах при добавлении нового листа не перестраиваем layout
-        const shouldSkipLayout = isMobile && nodes.length > 0;
+        // При добавлении нового листа всегда применяем автоиерархию
+        const shouldSkipLayout = false; // Автоиерархия нужна для правильного расположения новых листов
         setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       
@@ -543,8 +543,8 @@ export default function Editor() {
       // Переключаемся на дублированный лист
       const newSheet = SheetsManager.getActiveSheet(updatedData);
       if (newSheet) {
-        // На мобильных устройствах при дублировании листа не перестраиваем layout
-        const shouldSkipLayout = isMobile && nodes.length > 0;
+        // При дублировании листа всегда применяем автоиерархию
+        const shouldSkipLayout = false; // Автоиерархия нужна для правильного расположения дублированных листов
         setBotData({ nodes: newSheet.nodes, connections: newSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       
@@ -587,8 +587,8 @@ export default function Editor() {
       // Загружаем данные нового активного листа на холст
       const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
       if (newActiveSheet) {
-        // На мобильных устройствах при переключении листа не перестраиваем layout
-        const shouldSkipLayout = isMobile && nodes.length > 0;
+        // При переключении листов применяем автоиерархию для лучшего отображения
+        const shouldSkipLayout = false; // Автоиерархия нужна для правильного отображения
         setBotData({ nodes: newActiveSheet.nodes, connections: newActiveSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       

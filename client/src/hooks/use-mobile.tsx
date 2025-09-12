@@ -3,7 +3,7 @@ import * as React from "react"
 const MOBILE_BREAKPOINT = 768
 
 // Функция для определения мобильного устройства
-function getIsMobile() {
+export function getIsMobile() {
   if (typeof window === 'undefined') return false;
   
   // Используем минимальное значение из innerWidth и clientWidth
