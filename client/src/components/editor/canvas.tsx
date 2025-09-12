@@ -1033,27 +1033,6 @@ export function Canvas({
           <div className={`pointer-events-auto flex items-center canvas-controls overflow-x-auto ${
             isMobile ? 'space-x-1 text-sm' : 'space-x-2'
           }`}>
-            {/* Кнопка-бургер для мобильных устройств */}
-            {isMobile && onOpenMobileSidebar && (
-              <button
-                onClick={onOpenMobileSidebar}
-                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group mr-2"
-                title="Открыть панель компонентов"
-              >
-                <Menu className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-              </button>
-            )}
-
-            {/* Кнопка панели свойств для мобильных устройств */}
-            {isMobile && onOpenMobileProperties && (
-              <button
-                onClick={onOpenMobileProperties}
-                className="p-2.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group mr-2"
-                title="Открыть панель свойств"
-              >
-                <Sliders className="w-4 h-4 text-gray-600 dark:text-gray-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
-              </button>
-            )}
             
             <div className={`flex items-center flex-shrink-0 ${isMobile ? 'space-x-0.5' : 'space-x-1'}`}>
               {/* Кнопки масштаба */}

@@ -32,6 +32,9 @@ interface AdaptiveHeaderProps {
   sidebarVisible?: boolean;
   propertiesVisible?: boolean;
   canvasVisible?: boolean;
+  // Мобильные функции
+  onOpenMobileSidebar?: () => void;
+  onOpenMobileProperties?: () => void;
 }
 
 export function AdaptiveHeader({ 
@@ -51,7 +54,9 @@ export function AdaptiveHeader({
   headerVisible,
   sidebarVisible,
   propertiesVisible,
-  canvasVisible
+  canvasVisible,
+  onOpenMobileSidebar,
+  onOpenMobileProperties
 }: AdaptiveHeaderProps) {
   
   // Состояние для мобильного меню
@@ -88,6 +93,32 @@ export function AdaptiveHeader({
           })()}
         </p>
       </div>
+      
+      {/* Мобильные кнопки компонентов и свойств */}
+      {isMobile && !isVertical && (
+        <div className="flex items-center space-x-1 ml-2">
+          {onOpenMobileSidebar && (
+            <button
+              onClick={onOpenMobileSidebar}
+              className="p-1.5 bg-primary/10 dark:bg-primary/20 rounded-lg border border-primary/20 dark:border-primary/30 hover:bg-primary/20 dark:hover:bg-primary/30 transition-all duration-200 group"
+              title="Открыть панель компонентов"
+              data-testid="button-mobile-components"
+            >
+              <Menu className="w-3.5 h-3.5 text-primary group-hover:text-primary/80 transition-colors" />
+            </button>
+          )}
+          {onOpenMobileProperties && (
+            <button
+              onClick={onOpenMobileProperties}
+              className="p-1.5 bg-primary/10 dark:bg-primary/20 rounded-lg border border-primary/20 dark:border-primary/30 hover:bg-primary/20 dark:hover:bg-primary/30 transition-all duration-200 group"
+              title="Открыть панель свойств"
+              data-testid="button-mobile-properties"
+            >
+              <Sliders className="w-3.5 h-3.5 text-primary group-hover:text-primary/80 transition-colors" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 

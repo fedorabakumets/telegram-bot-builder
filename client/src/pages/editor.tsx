@@ -1004,6 +1004,8 @@ export default function Editor() {
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
         sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
         propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+        onOpenMobileSidebar={() => setShowMobileSidebar(true)}
+        onOpenMobileProperties={() => setShowMobileProperties(true)}
         canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
       />
     );
@@ -1161,6 +1163,8 @@ export default function Editor() {
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
               sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
               propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+              onOpenMobileSidebar={() => setShowMobileSidebar(true)}
+              onOpenMobileProperties={() => setShowMobileProperties(true)}
               canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
             />
           }
@@ -1297,6 +1301,8 @@ export default function Editor() {
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
+              onOpenMobileSidebar={() => setShowMobileSidebar(true)}
+              onOpenMobileProperties={() => setShowMobileProperties(true)}
             />
           }
           sidebarContent={
@@ -1316,6 +1322,8 @@ export default function Editor() {
                   onSaveAsTemplate={handleSaveAsTemplate}
                   onLoadTemplate={handleLoadTemplate}
                   onLayoutSettings={() => setShowLayoutManager(true)}
+                  onOpenMobileSidebar={() => setShowMobileSidebar(true)}
+                  onOpenMobileProperties={() => setShowMobileProperties(true)}
                 />
               }
               sidebarContent={<div>Sidebar</div>}
