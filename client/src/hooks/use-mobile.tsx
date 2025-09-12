@@ -4,35 +4,26 @@ const MOBILE_BREAKPOINT = 768
 
 // Функция для определения мобильного устройства
 function getIsMobile() {
-  if (typeof window === 'undefined') {
-    console.log('📱 getIsMobile: window undefined, returning false');
-    return false;
-  }
-  const result = window.innerWidth < MOBILE_BREAKPOINT;
-  console.log(`📱 getIsMobile: innerWidth=${window.innerWidth}, outerWidth=${window.outerWidth}, screen.width=${window.screen.width}, documentElement.clientWidth=${document.documentElement.clientWidth}, breakpoint=${MOBILE_BREAKPOINT}, isMobile=${result}`);
-  return result;
+  if (typeof window === 'undefined') return false;
+  
+  // Используем минимальное значение из innerWidth и clientWidth
+  // Это поможет корректно работать в режиме эмуляции DevTools
+  const effectiveWidth = Math.min(window.innerWidth, document.documentElement.clientWidth);
+  return effectiveWidth < MOBILE_BREAKPOINT;
 }
 
 export function useIsMobile() {
   // Сразу устанавливаем правильное значение, если window доступен
-  const [isMobile, setIsMobile] = React.useState<boolean>(() => {
-    const result = getIsMobile();
-    console.log(`🔧 useIsMobile INITIAL: ${result}`);
-    return result;
-  })
+  const [isMobile, setIsMobile] = React.useState<boolean>(() => getIsMobile())
 
   React.useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
     const onChange = () => {
-      const newValue = getIsMobile();
-      console.log(`🔧 useIsMobile CHANGE: ${newValue}`);
-      setIsMobile(newValue);
+      setIsMobile(getIsMobile());
     }
     
     // Устанавливаем текущее значение при монтировании
-    const currentValue = getIsMobile();
-    console.log(`🔧 useIsMobile MOUNT: ${currentValue}`);
-    setIsMobile(currentValue);
+    setIsMobile(getIsMobile());
     
     mql.addEventListener("change", onChange)
     return () => mql.removeEventListener("change", onChange)
