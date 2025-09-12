@@ -170,12 +170,12 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
         try {
           const commands = await loadCommands();
           // Используем данные из активного листа или первого листа
-          const nodes = dataToUse.sheets?.[0]?.nodes || dataToUse.nodes || [];
+          const nodes = (dataToUse as any).sheets?.[0]?.nodes || dataToUse.nodes || [];
           console.log('🎯 ExportModal: Генерируем команды для узлов:', nodes);
-          console.log('🎯 ExportModal: Узлы с командами:', nodes.filter(node => 
+          console.log('🎯 ExportModal: Узлы с командами:', nodes.filter((node: any) => 
             (node.type === 'start' || node.type === 'command') && 
-            node.data.showInMenu && 
-            node.data.command
+            node.data?.showInMenu && 
+            node.data?.command
           ));
           const botFatherCmds = commands.generateBotFatherCommands(nodes);
           setBotFatherCommands(botFatherCmds);
@@ -214,7 +214,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
   };
 
   const copyToClipboard = async (content?: string) => {
-    const textToCopy = content || getCurrentContent;
+    const textToCopy = content || getCurrentContent();
     try {
       await navigator.clipboard.writeText(textToCopy);
       toast({
@@ -230,10 +230,10 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     }
   };
 
-  const downloadFile = (format?: ExportFormat) => {
+  const downloadFile = async (format?: ExportFormat) => {
     const formatToDownload = format || selectedFormat;
-    const content = formatToDownload === selectedFormat ? getCurrentContent : 
-      (generateExportContent[formatToDownload] ? generateExportContent[formatToDownload]() : '');
+    const content = formatToDownload === selectedFormat ? getCurrentContent() : 
+      (generateExportContent[formatToDownload] ? await generateExportContent[formatToDownload]() : '');
     const fileName = getFileName(formatToDownload);
     
     const blob = new Blob([content], { type: 'text/plain' });
@@ -275,13 +275,13 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
         </DialogHeader>
 
         <Tabs defaultValue="stats" className="flex flex-col flex-1 mt-2 min-h-0">
-          <TabsList className={`${isMobile ? 'grid w-full grid-cols-2' : 'grid w-full grid-cols-5'} flex-shrink-0`}>
-            <TabsTrigger value="stats" className={`${isMobile ? 'text-xs' : ''}`}>Статистика</TabsTrigger>
-            <TabsTrigger value="validation" className={`${isMobile ? 'text-xs' : ''}`}>Валидация</TabsTrigger>
-            {!isMobile && <TabsTrigger value="files">Файлы</TabsTrigger>}
-            {!isMobile && <TabsTrigger value="code">Код</TabsTrigger>}
-            {!isMobile && <TabsTrigger value="setup">Настройка</TabsTrigger>}
-            {isMobile && <TabsTrigger value="export" className="text-xs">Экспорт</TabsTrigger>}
+          <TabsList className={`${isMobile ? 'grid w-full grid-cols-2 h-auto' : 'grid w-full grid-cols-5'} flex-shrink-0`}>
+            <TabsTrigger value="stats" className={`${isMobile ? 'text-sm py-3 px-2' : ''}`} data-testid="tab-stats">Статистика</TabsTrigger>
+            <TabsTrigger value="validation" className={`${isMobile ? 'text-sm py-3 px-2' : ''}`} data-testid="tab-validation">Валидация</TabsTrigger>
+            {!isMobile && <TabsTrigger value="files" data-testid="tab-files">Файлы</TabsTrigger>}
+            {!isMobile && <TabsTrigger value="code" data-testid="tab-code">Код</TabsTrigger>}
+            {!isMobile && <TabsTrigger value="setup" data-testid="tab-setup">Настройка</TabsTrigger>}
+            {isMobile && <TabsTrigger value="export" className="text-sm py-3 px-2" data-testid="tab-export">Экспорт</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="stats" className="space-y-4 overflow-y-auto flex-1 min-h-0">
@@ -294,53 +294,53 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 <CardDescription>Обзор структуры и компонентов вашего бота</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 md:grid-cols-3 gap-4'}`}>
-                  <div className={`bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-blue-600 dark:text-blue-400`}>{botStats.totalNodes}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-blue-700 dark:text-blue-300`}>Всего узлов</div>
+                <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-2 md:grid-cols-3 gap-4'}`}>
+                  <div className={`bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg ${isMobile ? 'p-4 flex items-center space-x-3' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-2xl' : 'text-2xl'} font-bold text-blue-600 dark:text-blue-400`}>{botStats.totalNodes}</div>
+                    <div className={`${isMobile ? 'text-base font-medium' : 'text-sm'} text-blue-700 dark:text-blue-300`}>Всего узлов</div>
                   </div>
-                  <div className={`bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-green-600 dark:text-green-400`}>{botStats.commandNodes}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-green-700 dark:text-green-300`}>Команд</div>
+                  <div className={`bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg ${isMobile ? 'p-4 flex items-center space-x-3' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-2xl' : 'text-2xl'} font-bold text-green-600 dark:text-green-400`}>{botStats.commandNodes}</div>
+                    <div className={`${isMobile ? 'text-base font-medium' : 'text-sm'} text-green-700 dark:text-green-300`}>Команд</div>
                   </div>
-                  <div className={`bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-purple-600 dark:text-purple-400`}>{botStats.totalButtons}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-purple-700 dark:text-purple-300`}>Кнопок</div>
+                  <div className={`bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg ${isMobile ? 'p-4 flex items-center space-x-3' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-2xl' : 'text-2xl'} font-bold text-purple-600 dark:text-purple-400`}>{botStats.totalButtons}</div>
+                    <div className={`${isMobile ? 'text-base font-medium' : 'text-sm'} text-purple-700 dark:text-purple-300`}>Кнопок</div>
                   </div>
-                  <div className={`bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-amber-600 dark:text-amber-400`}>{botStats.keyboardNodes}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-amber-700 dark:text-amber-300`}>С клавиатурой</div>
+                  <div className={`bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg ${isMobile ? 'p-4 flex items-center space-x-3' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-2xl' : 'text-2xl'} font-bold text-amber-600 dark:text-amber-400`}>{botStats.keyboardNodes}</div>
+                    <div className={`${isMobile ? 'text-base font-medium' : 'text-sm'} text-amber-700 dark:text-amber-300`}>С клавиатурой</div>
                   </div>
-                  <div className={`bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-indigo-600 dark:text-indigo-400`}>{botStats.commandsInMenu}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-indigo-700 dark:text-indigo-300`}>В меню</div>
+                  <div className={`bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg ${isMobile ? 'p-4 flex items-center space-x-3' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-2xl' : 'text-2xl'} font-bold text-indigo-600 dark:text-indigo-400`}>{botStats.commandsInMenu}</div>
+                    <div className={`${isMobile ? 'text-base font-medium' : 'text-sm'} text-indigo-700 dark:text-indigo-300`}>В меню</div>
                   </div>
-                  <div className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg ${isMobile ? 'p-2' : 'p-3'}`}>
-                    <div className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-red-600 dark:text-red-400`}>{botStats.adminOnlyCommands}</div>
-                    <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-red-700 dark:text-red-300`}>Только админ</div>
+                  <div className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg ${isMobile ? 'p-4 flex items-center space-x-3' : 'p-3'}`}>
+                    <div className={`${isMobile ? 'text-2xl' : 'text-2xl'} font-bold text-red-600 dark:text-red-400`}>{botStats.adminOnlyCommands}</div>
+                    <div className={`${isMobile ? 'text-base font-medium' : 'text-sm'} text-red-700 dark:text-red-300`}>Только админ</div>
                   </div>
                 </div>
                 
                 <Separator className="my-4" />
                 
-                <div className="space-y-3">
-                  <h4 className="font-medium">Детальная статистика:</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Текстовые сообщения:</span>
-                      <Badge variant="secondary">{botStats.messageNodes}</Badge>
+                <div className={`space-y-${isMobile ? '4' : '3'}`}>
+                  <h4 className={`${isMobile ? 'font-semibold text-lg' : 'font-medium'}`}>Детальная статистика:</h4>
+                  <div className={`space-y-${isMobile ? '3' : '2'} ${isMobile ? 'text-base' : 'text-sm'}`}>
+                    <div className={`flex justify-between items-center ${isMobile ? 'py-2' : ''}`}>
+                      <span className={`${isMobile ? 'font-medium' : ''}`}>Текстовые сообщения:</span>
+                      <Badge variant="secondary" className={`${isMobile ? 'text-base px-3 py-1' : ''}`}>{botStats.messageNodes}</Badge>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Фото сообщения:</span>
-                      <Badge variant="secondary">{botStats.photoNodes}</Badge>
+                    <div className={`flex justify-between items-center ${isMobile ? 'py-2' : ''}`}>
+                      <span className={`${isMobile ? 'font-medium' : ''}`}>Фото сообщения:</span>
+                      <Badge variant="secondary" className={`${isMobile ? 'text-base px-3 py-1' : ''}`}>{botStats.photoNodes}</Badge>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Приватные команды:</span>
-                      <Badge variant="outline">{botStats.privateOnlyCommands}</Badge>
+                    <div className={`flex justify-between items-center ${isMobile ? 'py-2' : ''}`}>
+                      <span className={`${isMobile ? 'font-medium' : ''}`}>Приватные команды:</span>
+                      <Badge variant="outline" className={`${isMobile ? 'text-base px-3 py-1' : ''}`}>{botStats.privateOnlyCommands}</Badge>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Соединения между узлами:</span>
-                      <Badge variant="outline">{botData?.connections?.length || 0}</Badge>
+                    <div className={`flex justify-between items-center ${isMobile ? 'py-2' : ''}`}>
+                      <span className={`${isMobile ? 'font-medium' : ''}`}>Соединения между узлами:</span>
+                      <Badge variant="outline" className={`${isMobile ? 'text-base px-3 py-1' : ''}`}>{botData?.connections?.length || 0}</Badge>
                     </div>
                   </div>
                 </div>
@@ -399,7 +399,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex items-center justify-between'}`}>
                   <div className={`${isMobile ? 'w-full' : 'flex items-center space-x-4'}`}>
                     <Select value={selectedFormat} onValueChange={(value: ExportFormat) => setSelectedFormat(value)}>
-                      <SelectTrigger className={`${isMobile ? 'w-full' : 'w-[200px]'}`}>
+                      <SelectTrigger className={`${isMobile ? 'w-full h-12 text-base' : 'w-[200px]'}`} data-testid="select-format-files">
                         <SelectValue placeholder="Выберите формат" />
                       </SelectTrigger>
                       <SelectContent>
@@ -432,7 +432,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                 
                 {validationResult.isValid ? (
                   <Textarea
-                    value={getCurrentContent}
+                    value={getCurrentContent()}
                     readOnly
                     className={`${isMobile ? 'min-h-[200px]' : 'min-h-[350px]'} font-mono ${isMobile ? 'text-xs' : 'text-sm'} bg-muted/50 dark:bg-muted/20 border-muted dark:border-muted/40 resize-none`}
                     placeholder="Выберите формат для просмотра..."
