@@ -195,7 +195,7 @@ export function PropertiesPanel({
       admin_rights: {
         command: '/admin_rights',
         description: 'Управление правами администратора',
-        synonyms: ['права админа', 'изменить права', 'админ права'],
+        synonyms: ['права админа', 'изменить права', 'админ права', 'тг права', 'права'],
         adminUserIdSource: 'last_message',
         adminChatIdSource: 'current_chat',
         // Права администратора согласно Telegram Bot API
