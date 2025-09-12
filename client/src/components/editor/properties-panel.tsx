@@ -2374,35 +2374,6 @@ export function PropertiesPanel({
                 </div>
 
 
-                {/* Extended Admin Rights */}
-                <div className="bg-gradient-to-br from-purple-50/50 to-violet-50/30 dark:from-purple-950/20 dark:to-violet-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-                      <i className="fas fa-cogs text-purple-600 dark:text-purple-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-purple-900 dark:text-purple-100">Расширенные права</Label>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { key: 'adminCanManageChat', label: 'Управлять чатом', icon: 'fas fa-tools' },
-                      { key: 'adminCanManageVideoChats', label: 'Управлять видеочатами', icon: 'fas fa-video' },
-                      { key: 'adminCanManageStories', label: 'Управлять историями', icon: 'fas fa-book' },
-                      { key: 'adminCanBeAnonymous', label: 'Может быть анонимным', icon: 'fas fa-mask' }
-                    ].map(({ key, label, icon }) => (
-                      <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
-                        <div className="flex items-center space-x-2">
-                          <i className={`${icon} text-purple-600 dark:text-purple-400 text-xs`}></i>
-                          <Label className="text-xs text-purple-700 dark:text-purple-300">{label}</Label>
-                        </div>
-                        <Switch
-                          checked={(selectedNode.data as any)[key] ?? false}
-                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked } as any)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Synonyms Section for Admin Rights */}
                 <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
