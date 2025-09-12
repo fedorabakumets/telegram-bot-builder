@@ -1022,6 +1022,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Запускаем инициализацию в фоне без блокировки сервера
   initializeComponents();
 
+  // Simple API root endpoint for health checks
+  app.get("/api", (req, res) => {
+    res.json({ status: "ok", ready: isDbReady && areTemplatesReady });
+  });
+
+  app.head("/api", (req, res) => {
+    res.sendStatus(204);
+  });
+
   // API для проверки готовности компонентов
   app.get("/api/health", (req, res) => {
     res.json({
@@ -1030,6 +1039,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       telegram: isTelegramReady,
       ready: isDbReady && areTemplatesReady
     });
+  });
+
+  app.head("/api/health", (req, res) => {
+    res.sendStatus(204);
   });
 
   // Middleware для проверки готовности БД для критически важных операций
