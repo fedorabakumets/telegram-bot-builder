@@ -1454,8 +1454,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           
           if (targetNode) {
             
-            // Handle callback nodes with variable saving
-            if (targetNode.type === 'callback') {
+            // Handle message nodes with variable saving action
+            if (targetNode.type === 'message' && targetNode.data.action === 'save_variable') {
               const action = targetNode.data.action || 'none';
               const variableName = targetNode.data.variableName || '';
               const variableValue = targetNode.data.variableValue || '';
@@ -3771,8 +3771,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    \n';
           
           // Generate response based on node type
-          if (targetNode.type === 'user-input') {
-            // Handle user-input nodes
+          if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
+            // Handle input collection nodes
             const inputPrompt = targetNode.data.messageText || targetNode.data.inputPrompt || "Пожалуйста, введите ваш ответ:";
             const responseType = targetNode.data.responseType || 'text';
             const inputType = targetNode.data.inputType || 'text';
@@ -4192,9 +4192,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   }
 
-  // Добавляем обработчики кнопочных ответов для user-input узлов
+  // Добавляем обработчики кнопочных ответов для узлов сбора ввода
   const userInputNodes = (nodes || []).filter(node => 
-    node.type === 'user-input' && 
+    node.type === 'message' && 
     node.data.responseType === 'buttons' && 
     Array.isArray(node.data.responseOptions) && 
     node.data.responseOptions.length > 0
@@ -5015,7 +5015,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           }
         }
         } // Закрываем блок else для allowMultipleSelection
-      } else if (targetNode.type === 'user-input') {
+      } else if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
         const inputPrompt = formatTextForPython(targetNode.data.messageText || "Введите ваш ответ:");
         code += `                        prompt_text = ${inputPrompt}\n`;
         code += '                        await message.answer(prompt_text)\n';
@@ -5630,7 +5630,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         } else {
           code += '                await message.answer(text, parse_mode=parse_mode)\n';
         }
-      } else if (targetNode.type === 'user-input') {
+      } else if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
         const inputPrompt = formatTextForPython(targetNode.data.messageText || targetNode.data.inputPrompt || "Введите ваш ответ:");
         const responseType = targetNode.data.responseType || 'text';
         const inputType = targetNode.data.inputType || 'text';
