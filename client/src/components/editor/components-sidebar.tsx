@@ -19,7 +19,7 @@ import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 
@@ -628,7 +628,7 @@ export function ComponentsSidebar({
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   // Мобильное меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const isActuallyMobile = useMediaQuery('(max-width: 768px)');
+  const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   

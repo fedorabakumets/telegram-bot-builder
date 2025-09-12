@@ -3,6 +3,7 @@ import { SimpleLayoutConfig } from './simple-layout-customizer';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Navigation, Sidebar, Sliders, Monitor } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FlexibleLayoutProps {
   config: SimpleLayoutConfig;
@@ -27,7 +28,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
 }) => {
   // Определяем мобильное устройство (экраны меньше 1200px для тестирования)
   const isMobile = useMediaQuery('(max-width: 1200px)');
-  const isSmallMobile = useMediaQuery('(max-width: 768px)');
+  const isSmallMobile = useIsMobile();
   
   const layoutStyles = useMemo(() => {
     const visibleElements = config.elements.filter(el => {

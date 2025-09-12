@@ -28,7 +28,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useBotEditor } from '@/hooks/use-bot-editor';
 import { useToast } from '@/hooks/use-toast';
-import { useMediaQuery } from '@/hooks/use-media-query';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { apiRequest } from '@/lib/queryClient';
 import { BotProject, Connection, ComponentDefinition, BotData, BotDataWithSheets, Node } from '@shared/schema';
 import { SheetsManager } from '@/utils/sheets-manager';
@@ -47,7 +47,7 @@ export default function Editor() {
   const [showMobileProperties, setShowMobileProperties] = useState(false);
   
   // Определяем мобильное устройство
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
 
   // Эффект для корректного восстановления мобильного интерфейса при навигации
   useEffect(() => {
