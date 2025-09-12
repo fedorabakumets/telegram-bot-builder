@@ -42,7 +42,6 @@ interface CanvasProps {
   canRedo?: boolean;
   onSave?: () => void;
   isSaving?: boolean;
-  onFullscreen?: () => void;
   onCopyToClipboard?: (nodeIds: string[]) => void;
   onPasteFromClipboard?: () => void;
   hasClipboardData?: boolean;
@@ -91,7 +90,6 @@ export function Canvas({
   canRedo,
   onSave,
   isSaving,
-  onFullscreen,
   onCopyToClipboard,
   onPasteFromClipboard,
   hasClipboardData,
@@ -1117,15 +1115,6 @@ export function Canvas({
                 <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
-              {onFullscreen && (
-                <button 
-                  onClick={onFullscreen}
-                  className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}
-                  title="Полноэкранный режим (F11)"
-                >
-                  <i className="fas fa-expand text-gray-600 dark:text-gray-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
-                </button>
-              )}
 
               <button 
                 onClick={onUndo}

@@ -4,7 +4,6 @@ import { useLocation, useParams, useRoute } from 'wouter';
 import { Header } from '@/components/editor/header';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
-import { FullscreenCanvas } from '@/components/editor/fullscreen-canvas';
 import { PropertiesPanel } from '@/components/editor/properties-panel';
 import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
@@ -42,7 +41,6 @@ export default function Editor() {
   const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
   
@@ -929,32 +927,7 @@ export default function Editor() {
     }
   }, [deleteConnection, selectedConnectionId]);
 
-  const handleEnterFullscreen = useCallback(() => {
-    setIsFullscreen(true);
-  }, []);
 
-  const handleExitFullscreen = useCallback(() => {
-    setIsFullscreen(false);
-  }, []);
-
-  // Handle F11 key for fullscreen toggle
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'F11' && currentTab === 'editor') {
-        event.preventDefault();
-        if (isFullscreen) {
-          handleExitFullscreen();
-        } else {
-          handleEnterFullscreen();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isFullscreen, currentTab, handleEnterFullscreen, handleExitFullscreen]);
 
   // Определяем содержимое панели свойств для переиспользования
   const propertiesContent = currentProject ? (
@@ -1042,7 +1015,6 @@ export default function Editor() {
             canRedo={canRedo}
             onSave={() => updateProjectMutation.mutate({})}
             isSaving={updateProjectMutation.isPending}
-            onFullscreen={handleEnterFullscreen}
             onCopyToClipboard={copyToClipboard}
             onPasteFromClipboard={pasteFromClipboard}
             hasClipboardData={hasClipboardData()}
@@ -1224,7 +1196,6 @@ export default function Editor() {
                   canRedo={canRedo}
                   onSave={() => updateProjectMutation.mutate({})}
                   isSaving={updateProjectMutation.isPending}
-                  onFullscreen={handleEnterFullscreen}
                   onCopyToClipboard={copyToClipboard}
                   onPasteFromClipboard={pasteFromClipboard}
                   hasClipboardData={hasClipboardData()}
@@ -1354,7 +1325,6 @@ export default function Editor() {
                       canRedo={canRedo}
                       onSave={() => updateProjectMutation.mutate({})}
                       isSaving={updateProjectMutation.isPending}
-                      onFullscreen={handleEnterFullscreen}
                       onCopyToClipboard={copyToClipboard}
                       onPasteFromClipboard={pasteFromClipboard}
                       hasClipboardData={hasClipboardData()}
@@ -1414,7 +1384,6 @@ export default function Editor() {
                   canRedo={canRedo}
                   onSave={() => updateProjectMutation.mutate({})}
                   isSaving={updateProjectMutation.isPending}
-                  onFullscreen={handleEnterFullscreen}
                   isNodeBeingDragged={isNodeBeingDragged}
                   setIsNodeBeingDragged={setIsNodeBeingDragged}
                   onToggleHeader={handleToggleHeader}
@@ -1485,31 +1454,6 @@ export default function Editor() {
         projectName={currentProject.name}
       />
 
-      {/* Fullscreen Canvas */}
-      {isFullscreen && (
-        <FullscreenCanvas
-          nodes={nodes}
-          connections={connections}
-          selectedNodeId={selectedNodeId}
-          selectedConnectionId={selectedConnectionId ?? undefined}
-          onNodeSelect={setSelectedNodeId}
-          onNodeAdd={addNode}
-          onNodeDelete={deleteNode}
-          onNodeDuplicate={duplicateNode}
-          onNodeMove={handleNodeMove}
-          onConnectionSelect={setSelectedConnectionId}
-          onConnectionDelete={deleteConnection}
-          onConnectionAdd={addConnection}
-          onNodesUpdate={updateNodes}
-          onUndo={undo}
-          onRedo={redo}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onSave={handleSave}
-          isSaving={updateProjectMutation.isPending}
-          onExitFullscreen={handleExitFullscreen}
-        />
-      )}
 
       {/* Мобильный sidebar */}
       <Sheet open={showMobileSidebar} onOpenChange={setShowMobileSidebar}>
