@@ -14,33 +14,29 @@ function getIsMobile() {
 }
 
 export function useIsMobile() {
-  console.log('🚀 useIsMobile hook: Initializing...');
-  
   // Сразу устанавливаем правильное значение, если window доступен
   const [isMobile, setIsMobile] = React.useState<boolean>(() => {
-    console.log('🚀 useIsMobile hook: Initial state calculation');
-    return getIsMobile();
+    const result = getIsMobile();
+    console.log(`🔧 useIsMobile INITIAL: ${result}`);
+    return result;
   })
 
   React.useEffect(() => {
-    console.log('🚀 useIsMobile hook: useEffect triggered');
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
     const onChange = () => {
-      console.log('📱 useIsMobile: Media query changed, recalculating...');
-      setIsMobile(getIsMobile())
+      const newValue = getIsMobile();
+      console.log(`🔧 useIsMobile CHANGE: ${newValue}`);
+      setIsMobile(newValue);
     }
     
     // Устанавливаем текущее значение при монтировании
-    console.log('🚀 useIsMobile hook: Setting initial value in useEffect');
-    setIsMobile(getIsMobile())
+    const currentValue = getIsMobile();
+    console.log(`🔧 useIsMobile MOUNT: ${currentValue}`);
+    setIsMobile(currentValue);
     
     mql.addEventListener("change", onChange)
-    return () => {
-      console.log('🚀 useIsMobile hook: Cleanup');
-      mql.removeEventListener("change", onChange);
-    }
+    return () => mql.removeEventListener("change", onChange)
   }, [])
 
-  console.log(`📱 useIsMobile hook: Returning ${isMobile}`);
   return isMobile
 }
