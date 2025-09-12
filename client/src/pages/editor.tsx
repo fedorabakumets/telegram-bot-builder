@@ -60,7 +60,8 @@ export default function Editor() {
       setFlexibleLayoutConfig(prev => ({
         ...prev,
         elements: prev.elements.map(element => {
-          // На мобильных устройствах по умолчанию показываем только header и canvas
+          // На мобильных устройствах по умолчанию скрываем sidebar и properties панели,
+          // но оставляем их в конфигурации, чтобы кнопки мобильного доступа работали
           if (element.type === 'sidebar' || element.type === 'properties') {
             return { ...element, visible: false };
           }
@@ -77,7 +78,7 @@ export default function Editor() {
         }))
       }));
     }
-  }, [isMobile, match]); // Добавляем match, чтобы эффект срабатывал при навигации
+  }, [isMobile]); // Убираем match из зависимостей, чтобы эффект не срабатывал при каждой навигации
 
   const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
