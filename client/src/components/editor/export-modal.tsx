@@ -1236,7 +1236,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   </CardTitle>
                   <CardDescription>Выберите формат для экспорта</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6 px-4 py-5">
                   <div className="space-y-3">
                     <Select value={selectedFormat} onValueChange={(value: ExportFormat) => setSelectedFormat(value)}>
                       <SelectTrigger>
@@ -1252,13 +1252,13 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                       </SelectContent>
                     </Select>
                     
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => copyToClipboard()} className="flex-1">
-                        <i className="fas fa-copy mr-2"></i>
+                    <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-2">
+                      <Button variant="outline" size="lg" onClick={() => copyToClipboard()} className="flex-1 h-12 text-base font-medium" data-testid="button-copy-mobile">
+                        <i className="fas fa-copy mr-3 text-lg"></i>
                         Копировать
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => downloadFile()} className="flex-1">
-                        <i className="fas fa-download mr-2"></i>
+                      <Button variant="outline" size="lg" onClick={() => downloadFile()} className="flex-1 h-12 text-base font-medium" data-testid="button-download-mobile">
+                        <i className="fas fa-download mr-3 text-lg"></i>
                         Скачать
                       </Button>
                     </div>
@@ -1267,11 +1267,11 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   <Separator />
                   
                   {validationResult.isValid ? (
-                    <div className="bg-muted/50 dark:bg-muted/20 rounded-lg p-2 border border-muted dark:border-muted/40">
-                      <div className="text-xs text-muted-foreground mb-2">Предварительный просмотр:</div>
-                      <div className="bg-background dark:bg-background/60 rounded p-2 max-h-32 overflow-y-auto border border-muted dark:border-muted/40">
-                        <pre className="text-xs font-mono text-foreground">
-                          {exportContent[selectedFormat].substring(0, 200)}...
+                    <div className="bg-muted/50 dark:bg-muted/20 rounded-lg p-3 border border-muted dark:border-muted/40">
+                      <div className="text-sm text-muted-foreground mb-3 font-medium">Предварительный просмотр:</div>
+                      <div className="bg-background dark:bg-background/60 rounded-lg p-3 max-h-48 overflow-y-auto border border-muted dark:border-muted/40 touch-pan-y">
+                        <pre className="text-sm font-mono text-foreground whitespace-pre-wrap break-words leading-relaxed">
+                          {exportContent[selectedFormat].substring(0, 400)}...
                         </pre>
                       </div>
                     </div>
@@ -1284,10 +1284,10 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
                   
                   <Separator />
                   
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-sm">Быстрый экспорт всех файлов:</h4>
-                    <Button size="sm" onClick={downloadAllFiles} className="w-full">
-                      <i className="fas fa-archive mr-2"></i>
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-base">Быстрый экспорт всех файлов:</h4>
+                    <Button size="lg" onClick={downloadAllFiles} className="w-full h-12 text-base font-medium" data-testid="button-download-all-mobile">
+                      <i className="fas fa-archive mr-3 text-lg"></i>
                       Скачать все файлы
                     </Button>
                   </div>
