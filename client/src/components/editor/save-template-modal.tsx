@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Tag, Save, Loader2 } from 'lucide-react';
+import { Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -23,14 +23,9 @@ interface TemplateFormData {
   name: string;
   description: string;
   category: string;
-  tags: string[];
   isPublic: boolean;
-  difficulty: 'easy' | 'medium' | 'hard';
-  language: string;
-  requiresToken: boolean;
   complexity: number;
   estimatedTime: number;
-  isBaseTemplate: boolean;
 }
 
 export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: SaveTemplateModalProps) {
@@ -38,17 +33,10 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
     name: projectName ? `${projectName} - Шаблон` : 'Новый шаблон',
     description: '',
     category: 'custom',
-    tags: [],
     isPublic: false,
-    difficulty: 'easy',
-    language: 'ru',
-    requiresToken: true,
     complexity: 1,
     estimatedTime: 5,
-    isBaseTemplate: false,
   });
-  const [newTag, setNewTag] = useState('');
-  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -89,31 +77,25 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
       return await apiRequest('POST', '/api/templates', {
         name: data.name,
         description: data.description,
-        category: data.isBaseTemplate ? 'official' : data.category,
-        tags: data.tags,
+        category: data.category,
+        tags: [],
         isPublic: data.isPublic ? 1 : 0,
-        difficulty: data.difficulty,
-        language: data.language,
-        requiresToken: data.requiresToken ? 1 : 0,
+        difficulty: data.complexity <= 3 ? 'easy' : data.complexity <= 7 ? 'medium' : 'hard',
+        language: 'ru',
+        requiresToken: 1,
         complexity: data.complexity,
         estimatedTime: data.estimatedTime,
-        authorName: data.isBaseTemplate ? 'Система' : 'Пользователь',
-        featured: data.isBaseTemplate ? 1 : 0,
+        authorName: 'Пользователь',
+        featured: 0,
         data: botData,
       });
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/templates'] });
       queryClient.invalidateQueries({ queryKey: ['/api/templates/category/custom'] });
-      if (variables.isBaseTemplate) {
-        queryClient.invalidateQueries({ queryKey: ['/api/templates/category/official'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/templates/featured'] });
-      }
       toast({
         title: 'Шаблон сохранен',
-        description: variables.isBaseTemplate 
-          ? 'Ваш шаблон сохранен как базовый и будет отображаться в списке по умолчанию'
-          : 'Ваш шаблон бота успешно сохранен',
+        description: 'Ваш шаблон бота успешно сохранен',
       });
       onClose();
       resetForm();
@@ -132,41 +114,12 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
       name: projectName ? `${projectName} - Шаблон` : 'Новый шаблон',
       description: '',
       category: 'custom',
-      tags: [],
       isPublic: false,
-      difficulty: 'easy',
-      language: 'ru',
-      requiresToken: true,
       complexity: 1,
       estimatedTime: 5,
-      isBaseTemplate: false,
     });
-    setNewTag('');
   };
 
-  const handleAddTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
-      setNewTag('');
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddTag();
-    }
-  };
 
   const handleSave = () => {
     if (!formData.name.trim()) {
@@ -183,8 +136,6 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
   const categories = [
     { value: 'custom', label: 'Пользовательский' },
     { value: 'business', label: 'Бизнес' },
-    { value: 'entertainment', label: 'Развлечения' },
-    { value: 'education', label: 'Образование' },
     { value: 'utility', label: 'Утилиты' },
     { value: 'games', label: 'Игры' },
   ];
@@ -223,105 +174,24 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
             />
           </div>
 
-          {/* Категория */}
-          <div className="space-y-2">
-            <Label>Категория</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите категорию" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Теги */}
-          <div className="space-y-2">
-            <Label>Теги</Label>
-            <div className="flex gap-2">
-              <Input
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Добавить тег"
-                onKeyPress={handleKeyPress}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddTag}
-                disabled={!newTag.trim()}
-              >
-                <Tag className="h-4 w-4" />
-              </Button>
-            </div>
-            {formData.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {formData.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Расширенные настройки */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Сложность */}
+          {/* Основные настройки */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Категория */}
             <div className="space-y-2">
-              <Label>Сложность</Label>
+              <Label>Категория</Label>
               <Select
-                value={formData.difficulty}
-                onValueChange={(value: 'easy' | 'medium' | 'hard') => setFormData(prev => ({ ...prev, difficulty: value }))}
+                value={formData.category}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Выберите сложность" />
+                  <SelectValue placeholder="Выберите категорию" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="easy">Легкий</SelectItem>
-                  <SelectItem value="medium">Средний</SelectItem>
-                  <SelectItem value="hard">Сложный</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Язык */}
-            <div className="space-y-2">
-              <Label>Язык</Label>
-              <Select
-                value={formData.language}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите язык" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ru">Русский</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="de">Deutsch</SelectItem>
-                  <SelectItem value="it">Italiano</SelectItem>
-                  <SelectItem value="pt">Português</SelectItem>
-                  <SelectItem value="zh">中文</SelectItem>
-                  <SelectItem value="ja">日本語</SelectItem>
-                  <SelectItem value="ko">한국어</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.value} value={category.value}>
+                      {category.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -353,46 +223,18 @@ export function SaveTemplateModal({ isOpen, onClose, botData, projectName }: Sav
             </div>
           </div>
 
-          {/* Публичность и токен */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <input
-                id="isPublic"
-                type="checkbox"
-                checked={formData.isPublic}
-                onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))}
-                className="h-4 w-4"
-              />
-              <Label htmlFor="isPublic">
-                Сделать шаблон публичным (другие пользователи смогут его использовать)
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                id="requiresToken"
-                type="checkbox"
-                checked={formData.requiresToken}
-                onChange={(e) => setFormData(prev => ({ ...prev, requiresToken: e.target.checked }))}
-                className="h-4 w-4"
-              />
-              <Label htmlFor="requiresToken">
-                Требует токен бота (пользователю нужно будет указать токен)
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                id="isBaseTemplate"
-                type="checkbox"
-                checked={formData.isBaseTemplate}
-                onChange={(e) => setFormData(prev => ({ ...prev, isBaseTemplate: e.target.checked }))}
-                className="h-4 w-4"
-              />
-              <Label htmlFor="isBaseTemplate">
-                Сделать базовым шаблоном (будет отображаться в списке по умолчанию)
-              </Label>
-            </div>
+          {/* Публичность */}
+          <div className="flex items-center space-x-2">
+            <input
+              id="isPublic"
+              type="checkbox"
+              checked={formData.isPublic}
+              onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="isPublic">
+              Сделать шаблон публичным (другие пользователи смогут его использовать)
+            </Label>
           </div>
 
           {/* Статистика бота */}
