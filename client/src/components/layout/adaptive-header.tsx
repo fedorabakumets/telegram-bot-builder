@@ -403,33 +403,25 @@ export function AdaptiveHeader({
         <Separator />
         {/* Мобильные кнопки компонентов и свойств после разделителя */}
         {isMobile && !isVertical && (
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1">
             {onOpenMobileSidebar && (
               <button
                 onClick={onOpenMobileSidebar}
-                className="group relative flex items-center space-x-1.5 px-3 py-2 bg-gradient-to-r from-blue-500/15 to-cyan-500/15 dark:from-blue-400/20 dark:to-cyan-400/20 rounded-lg border border-blue-200/50 dark:border-blue-600/30 hover:from-blue-500/25 hover:to-cyan-500/25 dark:hover:from-blue-400/30 dark:hover:to-cyan-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 dark:hover:shadow-blue-400/10 hover:scale-105"
+                className="group p-1.5 bg-blue-500/10 dark:bg-blue-400/15 rounded-md border border-blue-300/30 dark:border-blue-500/20 hover:bg-blue-500/20 dark:hover:bg-blue-400/25 hover:border-blue-400/50 dark:hover:border-blue-400/30 transition-all duration-200 hover:shadow-sm hover:shadow-blue-500/20"
                 title="Открыть панель компонентов"
                 data-testid="button-mobile-components"
               >
-                <Menu className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-all duration-300 group-hover:rotate-180" />
-                <span className="text-xs font-medium text-blue-700 dark:text-blue-300 group-hover:text-blue-800 dark:group-hover:text-blue-200 transition-colors duration-300">
-                  Компоненты
-                </span>
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <Menu className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors duration-200" />
               </button>
             )}
             {onOpenMobileProperties && (
               <button
                 onClick={onOpenMobileProperties}
-                className="group relative flex items-center space-x-1.5 px-3 py-2 bg-gradient-to-r from-purple-500/15 to-pink-500/15 dark:from-purple-400/20 dark:to-pink-400/20 rounded-lg border border-purple-200/50 dark:border-purple-600/30 hover:from-purple-500/25 hover:to-pink-500/25 dark:hover:from-purple-400/30 dark:hover:to-pink-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 dark:hover:shadow-purple-400/10 hover:scale-105"
+                className="group p-1.5 bg-purple-500/10 dark:bg-purple-400/15 rounded-md border border-purple-300/30 dark:border-purple-500/20 hover:bg-purple-500/20 dark:hover:bg-purple-400/25 hover:border-purple-400/50 dark:hover:border-purple-400/30 transition-all duration-200 hover:shadow-sm hover:shadow-purple-500/20"
                 title="Открыть панель свойств"
                 data-testid="button-mobile-properties"
               >
-                <Sliders className="w-4 h-4 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-all duration-300 group-hover:scale-110" />
-                <span className="text-xs font-medium text-purple-700 dark:text-purple-300 group-hover:text-purple-800 dark:group-hover:text-purple-200 transition-colors duration-300">
-                  Свойства
-                </span>
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <Sliders className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors duration-200" />
               </button>
             )}
           </div>
