@@ -82,7 +82,7 @@ function calculateOptimalColumns(buttons: any[], nodeData?: any): number {
   const totalButtons = buttons.length;
   
   // Если это множественный выбор, всегда используем 2 колонки для красивого вида
-  if (nodeData?.multiSelectEnabled || nodeData?.allowMultipleSelection) {
+  if (nodeData?.allowMultipleSelection) {
     return 2;
   }
   
@@ -728,13 +728,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (nodes && nodes.length > 0) {
     console.log('🔧 ГЕНЕРАТОР: Анализируем все узлы:');
     nodes.forEach((node, index) => {
-      const hasMultiSelect = node.data.allowMultipleSelection || node.data.multiSelectEnabled;
+      const hasMultiSelect = node.data.allowMultipleSelection;
       const hasButtons = node.data.buttons && node.data.buttons.length > 0;
       const continueTarget = node.data.continueButtonTarget;
       
       console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: "${node.id}" (тип: ${node.type})`);
       console.log(`🔧 ГЕНЕРАТОР:   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
-      console.log(`🔧 ГЕНЕРАТОР:   - multiSelectEnabled: ${node.data.multiSelectEnabled}`);
       console.log(`🔧 ГЕНЕРАТОР:   - hasMultiSelect: ${hasMultiSelect}`);
       console.log(`🔧 ГЕНЕРАТОР:   - кнопок: ${node.data.buttons?.length || 0}`);
       console.log(`🔧 ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
@@ -6463,7 +6462,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += `        logging.info(f"🚀 ГЕНЕРАТОР DEBUG: keyboardType: ${targetNode?.data?.keyboardType || 'нет'}")\n`;
         
         // Специальная обработка для узлов с множественным выбором
-        if (targetNode.data.allowMultipleSelection || targetNode.data.multiSelectEnabled) {
+        if (targetNode.data.allowMultipleSelection) {
           code += `        # Узел ${continueButtonTarget} поддерживает множественный выбор - сохраняем состояние\n`;
           code += `        logging.info(f"🔧 ГЕНЕРАТОР DEBUG: Инициализируем множественный выбор для узла ${targetNode.id}")\n`;
           code += `        if user_id not in user_data:\n`;
