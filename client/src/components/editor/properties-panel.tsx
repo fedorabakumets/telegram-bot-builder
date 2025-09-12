@@ -2315,30 +2315,6 @@ export function PropertiesPanel({
 
 
 
-                {/* Synonyms Section for Admin Rights */}
-                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <i className="fas fa-tags text-green-600 dark:text-green-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Синонимы команды</Label>
-                  </div>
-                  
-                  <SynonymEditor
-                    synonyms={(() => {
-                      if (!selectedNode.data.synonyms || selectedNode.data.synonyms.length === 0) {
-                        const defaultSynonyms = ['права админа', 'изменить права', 'админ права'];
-                        setTimeout(() => onNodeUpdate(selectedNode.id, { synonyms: defaultSynonyms }), 0);
-                        return defaultSynonyms;
-                      }
-                      return selectedNode.data.synonyms || [];
-                    })()} 
-                    onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
-                    title="Альтернативные команды"
-                    description="Команды для управления правами администратора"
-                    placeholder="права админа, изменить права, админ права"
-                  />
-                </div>
               </div>
             )}
 
