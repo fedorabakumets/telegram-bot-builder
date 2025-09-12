@@ -270,8 +270,8 @@ export default function Editor() {
     // Синхронизируем активный лист с системой редактора
     const activeSheet = SheetsManager.getActiveSheet(updatedData);
     if (activeSheet) {
-      // Пропускаем layout только при быстром переключении между листами на мобильных (не при загрузке)
-      const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate;
+      // Всегда применяем автоиерархию при обновлении данных листов для правильного отображения
+      const shouldSkipLayout = false; // Автоиерархия необходима для корректного расположения узлов
       setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
     }
   }, [setBotData, currentNodeSizes, isMobile, nodes.length]);
@@ -667,8 +667,8 @@ export default function Editor() {
           // Устанавливаем первый лист как активный на холсте
           const firstSheet = updatedSheets[0];
           if (firstSheet) {
-            // На мобильных устройствах при возврате к редактору не перестраиваем layout
-            const shouldSkipLayout = isMobile && nodes.length > 0;
+            // Всегда применяем автоиерархию при загрузке шаблонов для правильного расположения
+            const shouldSkipLayout = false; // Автоиерархия необходима при загрузке многолистовых шаблонов
             setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, template.name, currentNodeSizes, shouldSkipLayout);
           }
           
@@ -681,8 +681,8 @@ export default function Editor() {
           console.log('Применяем обычный шаблон и мигрируем к формату с листами');
           const migratedData = SheetsManager.migrateLegacyData(template.data);
           setBotDataWithSheets(migratedData);
-          // На мобильных устройствах при возврате к редактору не перестраиваем layout
-          const shouldSkipLayout = isMobile && nodes.length > 0;
+          // Всегда применяем автоиерархию при загрузке шаблонов для правильного расположения
+          const shouldSkipLayout = false; // Автоиерархия необходима при загрузке обычных шаблонов
           setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия должна работать при загрузке шаблонов
           
           updateProjectMutation.mutate({
