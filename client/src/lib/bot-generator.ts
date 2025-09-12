@@ -1150,6 +1150,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += generatePromoteUserHandler(node);
     } else if (node.type === "demote_user") {
       code += generateDemoteUserHandler(node);
+    } else if (node.type === "admin_rights") {
+      code += generateAdminRightsHandler(node);
     }
     // Note: user-input and message nodes are handled via callback handlers, not as separate command handlers
   });
@@ -1168,7 +1170,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           if (node.type === 'start' || node.type === 'command') {
             code += generateSynonymHandler(node, synonym);
           } else if (node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || node.type === 'unmute_user' || 
-                     node.type === 'kick_user' || node.type === 'promote_user' || node.type === 'demote_user') {
+                     node.type === 'kick_user' || node.type === 'promote_user' || node.type === 'demote_user' || node.type === 'admin_rights') {
             code += generateUserManagementSynonymHandler(node, synonym);
           } else {
             code += generateMessageSynonymHandler(node, synonym);
@@ -9358,11 +9360,103 @@ function generateDemoteUserHandler(node: Node): string {
   return code;
 }
 
+function generateAdminRightsHandler(node: Node): string {
+  let code = `\n# Admin Rights Handler for ${node.id}\n`;
+  
+  const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  const messageText = node.data.messageText || "⚙️ Управление правами администратора";
+  const formattedText = formatTextForPython(messageText);
+  
+  // Создаем callback обработчик для узла admin_rights
+  code += `@dp.callback_query(lambda c: c.data == "${node.id}")\n`;
+  code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+  code += `    """\n`;
+  code += `    Обработчик callback для узла admin_rights: ${node.id}\n`;
+  code += `    Отображает inline клавиатуру с опциями управления админ правами\n`;
+  code += `    """\n`;
+  code += `    await callback_query.answer()\n`;
+  code += `    user_id = callback_query.from_user.id\n`;
+  code += `    chat_id = callback_query.message.chat.id\n`;
+  code += `    \n`;
+  code += `    logging.info(f"Обработка callback admin_rights от пользователя {user_id} в чате {chat_id}")\n`;
+  code += `    \n`;
+  code += `    # Текст сообщения\n`;
+  code += `    text = ${formattedText}\n`;
+  code += `    \n`;
+  
+  // Добавляем универсальную замену переменных
+  code += generateUniversalVariableReplacement('    ');
+  code += `    \n`;
+  
+  // Создаем inline клавиатуру для управления админ правами
+  // Если кнопки не заданы, создаем стандартные кнопки управления правами
+  const adminButtons = node.data.buttons && node.data.buttons.length > 0 
+    ? node.data.buttons 
+    : [
+        { text: "🔧 Изменить информацию", action: "admin_right", target: "can_change_info" },
+        { text: "🗑️ Удалять сообщения", action: "admin_right", target: "can_delete_messages" },
+        { text: "👥 Приглашать пользователей", action: "admin_right", target: "can_invite_users" },
+        { text: "🚫 Ограничивать участников", action: "admin_right", target: "can_restrict_members" },
+        { text: "📌 Закреплять сообщения", action: "admin_right", target: "can_pin_messages" },
+        { text: "⭐ Назначать админов", action: "admin_right", target: "can_promote_members" },
+        { text: "🎥 Управлять видеочатами", action: "admin_right", target: "can_manage_video_chats" },
+        { text: "💬 Управлять темами", action: "admin_right", target: "can_manage_topics" }
+      ];
+  
+  if (adminButtons && adminButtons.length > 0) {
+    code += `    # Создаем inline клавиатуру с опциями админ прав\n`;
+    code += `    builder = InlineKeyboardBuilder()\n`;
+    
+    adminButtons.forEach((button, index) => {
+      if (button.action === "goto" && button.target) {
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))\n`;
+      } else if (button.action === "url" && button.url) {
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url}"))\n`;
+      } else if (button.action === "command" && button.target) {
+        const commandCallback = `cmd_${button.target.replace('/', '')}`;
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
+      } else if (button.action === "selection") {
+        const callbackData = `admin_right_${button.target || button.id || `btn_${index}`}`;
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      } else {
+        const callbackData = button.target || button.id || `action_${index}`;
+        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
+      }
+    });
+    
+    // Автоматическое распределение колонок
+    const columns = calculateOptimalColumns(adminButtons, node.data);
+    code += `    builder.adjust(${columns})\n`;
+    code += `    keyboard = builder.as_markup()\n`;
+    code += `    \n`;
+    code += `    # Отправляем сообщение с клавиатурой\n`;
+    code += `    try:\n`;
+    code += `        await callback_query.message.edit_text(text, reply_markup=keyboard)\n`;
+    code += `    except Exception as e:\n`;
+    code += `        logging.warning(f"Не удалось отредактировать сообщение: {e}")\n`;
+    code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+  } else {
+    // Если нет кнопок, просто отправляем текст
+    code += `    # Отправляем сообщение без клавиатуры\n`;
+    code += `    try:\n`;
+    code += `        await callback_query.message.edit_text(text)\n`;
+    code += `    except Exception as e:\n`;
+    code += `        logging.warning(f"Не удалось отредактировать сообщение: {e}")\n`;
+    code += `        await callback_query.message.answer(text)\n`;
+  }
+  
+  code += `\n`;
+  
+  return code;
+}
+
 function generateUserManagementSynonymHandler(node: Node, synonym: string): string {
   const sanitizedSynonym = synonym.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '_');
   const sanitizedNodeId = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
   
-  let code = `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} ")) and message.chat.type in ['group', 'supergroup'])\n`;
+  // Для admin_rights разрешаем работу в любых чатах, для остальных - только в группах
+  const chatTypeFilter = node.type === 'admin_rights' ? '' : ` and message.chat.type in ['group', 'supergroup']`;
+  let code = `\n@dp.message(lambda message: message.text and (message.text.lower() == "${synonym.toLowerCase()}" or message.text.lower().startswith("${synonym.toLowerCase()} "))${chatTypeFilter})\n`;
   code += `async def ${node.type}_${sanitizedNodeId}_synonym_${sanitizedSynonym}_handler(message: types.Message):\n`;
   code += `    """\n`;
   code += `    Обработчик синонима '${synonym}' для ${node.type}\n`;
@@ -9469,6 +9563,23 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
     code += `        )\n`;
     code += `        await message.answer(f"✅ Права администратора сняты с пользователя {target_user_id}")\n`;
     code += `        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")\n`;
+  } else if (node.type === 'admin_rights') {
+    // Для admin_rights узлов перенаправляем к callback обработчику
+    const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+    code += `        # Создаем Mock callback для эмуляции inline кнопки admin_rights\n`;
+    code += `        class MockCallback:\n`;
+    code += `            def __init__(self, data, user, msg):\n`;
+    code += `                self.data = data\n`;
+    code += `                self.from_user = user\n`;
+    code += `                self.message = msg\n`;
+    code += `            async def answer(self):\n`;
+    code += `                pass  # Mock метод, ничего не делаем\n`;
+    code += `            async def edit_text(self, text, **kwargs):\n`;
+    code += `                return await self.message.answer(text, **kwargs)\n`;
+    code += `        \n`;
+    code += `        mock_callback = MockCallback("${node.id}", message.from_user, message)\n`;
+    code += `        await handle_callback_${safeFunctionName}(mock_callback)\n`;
+    code += `        return  # Завершаем обработку, так как все сделано в callback\n`;
   }
   
   code += `    except TelegramBadRequest as e:\n`;
