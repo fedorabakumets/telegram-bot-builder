@@ -275,14 +275,27 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
         </DialogHeader>
 
         <Tabs defaultValue="stats" className="flex flex-col flex-1 mt-2 min-h-0">
-          <TabsList className={`${isMobile ? 'grid w-full grid-cols-2 h-auto' : 'grid w-full grid-cols-5'} flex-shrink-0`}>
-            <TabsTrigger value="stats" className={`${isMobile ? 'text-sm py-3 px-2' : ''}`} data-testid="tab-stats">Статистика</TabsTrigger>
-            <TabsTrigger value="validation" className={`${isMobile ? 'text-sm py-3 px-2' : ''}`} data-testid="tab-validation">Валидация</TabsTrigger>
-            {!isMobile && <TabsTrigger value="files" data-testid="tab-files">Файлы</TabsTrigger>}
-            {!isMobile && <TabsTrigger value="code" data-testid="tab-code">Код</TabsTrigger>}
-            {!isMobile && <TabsTrigger value="setup" data-testid="tab-setup">Настройка</TabsTrigger>}
-            {isMobile && <TabsTrigger value="export" className="text-sm py-3 px-2" data-testid="tab-export">Экспорт</TabsTrigger>}
-          </TabsList>
+          {isMobile ? (
+            <div className="flex-shrink-0 space-y-2">
+              <TabsList className="grid w-full grid-cols-3 h-auto gap-1">
+                <TabsTrigger value="stats" className="text-xs py-2 px-1" data-testid="tab-stats">Статистика</TabsTrigger>
+                <TabsTrigger value="validation" className="text-xs py-2 px-1" data-testid="tab-validation">Валидация</TabsTrigger>
+                <TabsTrigger value="files" className="text-xs py-2 px-1" data-testid="tab-files">Файлы</TabsTrigger>
+              </TabsList>
+              <TabsList className="grid w-full grid-cols-2 h-auto gap-1">
+                <TabsTrigger value="setup" className="text-xs py-2 px-1" data-testid="tab-setup">Настройка</TabsTrigger>
+                <TabsTrigger value="export" className="text-xs py-2 px-1" data-testid="tab-export">Экспорт</TabsTrigger>
+              </TabsList>
+            </div>
+          ) : (
+            <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
+              <TabsTrigger value="stats" data-testid="tab-stats">Статистика</TabsTrigger>
+              <TabsTrigger value="validation" data-testid="tab-validation">Валидация</TabsTrigger>
+              <TabsTrigger value="files" data-testid="tab-files">Файлы</TabsTrigger>
+              <TabsTrigger value="code" data-testid="tab-code">Код</TabsTrigger>
+              <TabsTrigger value="setup" data-testid="tab-setup">Настройка</TabsTrigger>
+            </TabsList>
+          )}
 
           <TabsContent value="stats" className="space-y-4 overflow-y-auto flex-1 min-h-0">
             <Card>
@@ -1225,76 +1238,63 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
             </Card>
           </TabsContent>
 
-          {/* Мобильная версия объединенного экспорта */}
-          {isMobile && (
-            <TabsContent value="export" className="space-y-4 overflow-y-auto flex-1 min-h-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <i className="fas fa-download text-blue-500"></i>
-                    <span>Экспорт кода</span>
-                  </CardTitle>
-                  <CardDescription>Выберите формат для экспорта</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6 px-4 py-5">
-                  <div className="space-y-3">
-                    <Select value={selectedFormat} onValueChange={(value: ExportFormat) => setSelectedFormat(value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Выберите формат" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="python">Python код (.py)</SelectItem>
-                        <SelectItem value="json">JSON данные (.json)</SelectItem>
-                        <SelectItem value="requirements">Зависимости (.txt)</SelectItem>
-                        <SelectItem value="readme">Документация (.md)</SelectItem>
-                        <SelectItem value="dockerfile">Dockerfile</SelectItem>
-                        <SelectItem value="config">Конфигурация (.yaml)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-2">
-                      <Button variant="outline" size="lg" onClick={() => copyToClipboard()} className="flex-1 h-12 text-base font-medium" data-testid="button-copy-mobile">
-                        <i className="fas fa-copy mr-3 text-lg"></i>
-                        Копировать
-                      </Button>
-                      <Button variant="outline" size="lg" onClick={() => downloadFile()} className="flex-1 h-12 text-base font-medium" data-testid="button-download-mobile">
-                        <i className="fas fa-download mr-3 text-lg"></i>
-                        Скачать
-                      </Button>
-                    </div>
-                  </div>
+          <TabsContent value="export" className="space-y-4 overflow-y-auto flex-1 min-h-0">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <i className="fas fa-download text-blue-500"></i>
+                  <span>Мобильный экспорт</span>
+                </CardTitle>
+                <CardDescription>Быстрые действия для экспорта</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 px-4 py-5">
+                <div className="grid grid-cols-1 gap-4">
+                  <Button size="lg" onClick={async () => { setSelectedFormat('python'); await downloadFile('python'); }} variant="outline" className="h-16 flex-col space-y-1" data-testid="button-download-python">
+                    <i className="fas fa-code text-xl text-blue-500"></i>
+                    <span className="font-medium">Скачать Python код</span>
+                  </Button>
                   
-                  <Separator />
+                  <Button size="lg" onClick={async () => { setSelectedFormat('json'); await downloadFile('json'); }} variant="outline" className="h-16 flex-col space-y-1" data-testid="button-download-json">
+                    <i className="fas fa-database text-xl text-green-500"></i>
+                    <span className="font-medium">Скачать JSON данные</span>
+                  </Button>
                   
-                  {validationResult.isValid ? (
-                    <div className="bg-muted/50 dark:bg-muted/20 rounded-lg p-3 border border-muted dark:border-muted/40">
-                      <div className="text-sm text-muted-foreground mb-3 font-medium">Предварительный просмотр:</div>
-                      <div className="bg-background dark:bg-background/60 rounded-lg p-3 max-h-48 overflow-y-auto border border-muted dark:border-muted/40 touch-pan-y">
-                        <pre className="text-sm font-mono text-foreground whitespace-pre-wrap break-words leading-relaxed">
-                          {exportContent[selectedFormat].substring(0, 400)}...
-                        </pre>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-muted/50 dark:bg-muted/20 rounded-lg text-center text-muted-foreground border border-muted dark:border-muted/40">
-                      <i className="fas fa-exclamation-triangle mb-2 text-yellow-500 dark:text-yellow-400"></i>
-                      <p className="text-sm">Исправьте ошибки валидации для экспорта</p>
-                    </div>
-                  )}
-                  
-                  <Separator />
-                  
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-base">Быстрый экспорт всех файлов:</h4>
-                    <Button size="lg" onClick={downloadAllFiles} className="w-full h-12 text-base font-medium" data-testid="button-download-all-mobile">
-                      <i className="fas fa-archive mr-3 text-lg"></i>
-                      Скачать все файлы
+                  <Button size="lg" onClick={downloadAllFiles} className="h-16 flex-col space-y-1" data-testid="button-download-all">
+                    <i className="fas fa-archive text-xl"></i>
+                    <span className="font-medium">Скачать все файлы</span>
+                  </Button>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-base">Остальные файлы проекта:</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <Button size="sm" variant="ghost" onClick={() => downloadFile('requirements')} className="h-auto p-3 flex-col space-y-1 border border-muted" data-testid="button-download-requirements">
+                      <i className="fas fa-list text-lg text-orange-500"></i>
+                      <span className="font-medium">Зависимости</span>
+                      <span className="text-xs text-muted-foreground">.txt</span>
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => downloadFile('readme')} className="h-auto p-3 flex-col space-y-1 border border-muted" data-testid="button-download-readme">
+                      <i className="fas fa-file-alt text-lg text-purple-500"></i>
+                      <span className="font-medium">Документация</span>
+                      <span className="text-xs text-muted-foreground">.md</span>
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => downloadFile('dockerfile')} className="h-auto p-3 flex-col space-y-1 border border-muted" data-testid="button-download-dockerfile">
+                      <i className="fab fa-docker text-lg text-cyan-500"></i>
+                      <span className="font-medium">Docker</span>
+                      <span className="text-xs text-muted-foreground">Контейнер</span>
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => downloadFile('config')} className="h-auto p-3 flex-col space-y-1 border border-muted" data-testid="button-download-config">
+                      <i className="fas fa-cogs text-lg text-yellow-500"></i>
+                      <span className="font-medium">Конфиг</span>
+                      <span className="text-xs text-muted-foreground">.yaml</span>
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
 
         </Tabs>
