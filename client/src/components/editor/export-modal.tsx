@@ -292,7 +292,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
               <TabsTrigger value="stats" data-testid="tab-stats">Статистика</TabsTrigger>
               <TabsTrigger value="validation" data-testid="tab-validation">Валидация</TabsTrigger>
               <TabsTrigger value="files" data-testid="tab-files">Файлы</TabsTrigger>
-              <TabsTrigger value="code" data-testid="tab-code">Код</TabsTrigger>
+              <TabsTrigger value="export" data-testid="tab-export">Экспорт</TabsTrigger>
               <TabsTrigger value="setup" data-testid="tab-setup">Настройка</TabsTrigger>
             </TabsList>
           )}
