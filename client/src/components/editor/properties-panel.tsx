@@ -2312,66 +2312,6 @@ export function PropertiesPanel({
             {/* Admin Rights Configuration */}
             {selectedNode.type === 'admin_rights' && (
               <div className="space-y-6">
-                {/* Source Configuration */}
-                <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                      <i className="fas fa-link text-blue-600 dark:text-blue-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-blue-900 dark:text-blue-100">Источники данных</Label>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 gap-4">
-                    {/* Admin User ID Source */}
-                    <div>
-                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                        <i className="fas fa-user mr-1"></i>
-                        Источник ID администратора
-                      </Label>
-                      <Select
-                        value={selectedNode.data.adminUserIdSource || 'last_message'}
-                        onValueChange={(value) => onNodeUpdate(selectedNode.id, { adminUserIdSource: value as any })}
-                      >
-                        <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="last_message">Из последнего сообщения</SelectItem>
-                          <SelectItem value="replied_message">Из ответа на сообщение</SelectItem>
-                          <SelectItem value="manual_input">Ручной ввод</SelectItem>
-                          <SelectItem value="user_data">Из сохраненных данных</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                        Откуда брать ID пользователя для изменения прав
-                      </div>
-                    </div>
-
-                    {/* Admin Chat ID Source */}
-                    <div>
-                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
-                        <i className="fas fa-comments mr-1"></i>
-                        Источник ID чата
-                      </Label>
-                      <Select
-                        value={selectedNode.data.adminChatIdSource || 'current_chat'}
-                        onValueChange={(value) => onNodeUpdate(selectedNode.id, { adminChatIdSource: value as any })}
-                      >
-                        <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="current_chat">Текущий чат</SelectItem>
-                          <SelectItem value="manual_input">Ручной ввод</SelectItem>
-                          <SelectItem value="user_data">Из сохраненных данных</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                        В каком чате изменять права администратора
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
 
 
