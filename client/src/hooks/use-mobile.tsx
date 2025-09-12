@@ -9,7 +9,7 @@ function getIsMobile() {
     return false;
   }
   const result = window.innerWidth < MOBILE_BREAKPOINT;
-  console.log(`📱 getIsMobile: window.innerWidth=${window.innerWidth}, breakpoint=${MOBILE_BREAKPOINT}, isMobile=${result}`);
+  console.log(`📱 getIsMobile: innerWidth=${window.innerWidth}, outerWidth=${window.outerWidth}, screen.width=${window.screen.width}, documentElement.clientWidth=${document.documentElement.clientWidth}, breakpoint=${MOBILE_BREAKPOINT}, isMobile=${result}`);
   return result;
 }
 
