@@ -8263,7 +8263,7 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
   code += `            await message.answer("❌ Недостаточно прав для выполнения операции")\n`;
   code += `        else:\n`;
   code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
-  code += `        logging.error(f"Ошибка ${node.type}: {e}")\n`;
+  code += `        logging.error(f"Ошибка {current_node_type}: {e}")\n`;
   code += `    except Exception as e:\n`;
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка в {node.type}: {e}")\n`;
@@ -9361,18 +9361,87 @@ function generateDemoteUserHandler(node: Node): string {
 }
 
 function generateAdminRightsHandler(node: Node): string {
-  let code = `\n# Admin Rights Handler for ${node.id}\n`;
+  let code = `\n# Interactive Admin Rights Handler for ${node.id}\n`;
   
   const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
   const messageText = node.data.messageText || "⚙️ Управление правами администратора";
   const formattedText = formatTextForPython(messageText);
   
-  // Создаем callback обработчик для узла admin_rights
+  // Создаем функцию для получения текущих прав администратора
+  code += `async def get_admin_rights_${safeFunctionName}(bot, chat_id, target_user_id):\n`;
+  code += `    """\n`;
+  code += `    Получает текущие права администратора пользователя в чате\n`;
+  code += `    """\n`;
+  code += `    try:\n`;
+  code += `        member = await bot.get_chat_member(chat_id, target_user_id)\n`;
+  code += `        if hasattr(member, 'status') and member.status in ['administrator', 'creator']:\n`;
+  code += `            # Возвращаем права администратора\n`;
+  code += `            return {\n`;
+  code += `                'can_change_info': getattr(member, 'can_change_info', False),\n`;
+  code += `                'can_delete_messages': getattr(member, 'can_delete_messages', False),\n`;
+  code += `                'can_invite_users': getattr(member, 'can_invite_users', False),\n`;
+  code += `                'can_restrict_members': getattr(member, 'can_restrict_members', False),\n`;
+  code += `                'can_pin_messages': getattr(member, 'can_pin_messages', False),\n`;
+  code += `                'can_promote_members': getattr(member, 'can_promote_members', False),\n`;
+  code += `                'can_manage_video_chats': getattr(member, 'can_manage_video_chats', False),\n`;
+  code += `                'can_manage_topics': getattr(member, 'can_manage_topics', False)\n`;
+  code += `            }\n`;
+  code += `        else:\n`;
+  code += `            # Пользователь не является администратором\n`;
+  code += `            return None\n`;
+  code += `    except Exception as e:\n`;
+  code += `        logging.error(f"Ошибка при получении прав администратора: {e}")\n`;
+  code += `        return None\n`;
+  code += `\n`;
+  
+  // Создаем функцию для генерации интерактивной клавиатуры
+  code += `async def create_admin_rights_keyboard_${safeFunctionName}(bot, chat_id, target_user_id, node_id="${node.id}"):\n`;
+  code += `    """\n`;
+  code += `    Создает интерактивную клавиатуру с кнопками-переключателями прав\n`;
+  code += `    """\n`;
+  code += `    # Получаем текущие права\n`;
+  code += `    current_rights = await get_admin_rights_${safeFunctionName}(bot, chat_id, target_user_id)\n`;
+  code += `    \n`;
+  code += `    builder = InlineKeyboardBuilder()\n`;
+  code += `    \n`;
+  code += `    if current_rights is None:\n`;
+  code += `        # Пользователь не администратор\n`;
+  code += `        builder.add(InlineKeyboardButton(text="❌ Пользователь не является администратором", callback_data="no_admin"))\n`;
+  code += `        return builder.as_markup()\n`;
+  code += `    \n`;
+  code += `    # Список прав для отображения\n`;
+  code += `    admin_rights_list = [\n`;
+  code += `        ('can_change_info', '🔧 Изменить информацию'),\n`;
+  code += `        ('can_delete_messages', '🗑️ Удалять сообщения'),\n`;
+  code += `        ('can_invite_users', '👥 Приглашать пользователей'),\n`;
+  code += `        ('can_restrict_members', '🚫 Ограничивать участников'),\n`;
+  code += `        ('can_pin_messages', '📌 Закреплять сообщения'),\n`;
+  code += `        ('can_promote_members', '⭐ Назначать админов'),\n`;
+  code += `        ('can_manage_video_chats', '🎥 Управлять видеочатами'),\n`;
+  code += `        ('can_manage_topics', '💬 Управлять темами')\n`;
+  code += `    ]\n`;
+  code += `    \n`;
+  code += `    # Создаем кнопки с индикаторами состояния\n`;
+  code += `    for right_key, right_name in admin_rights_list:\n`;
+  code += `        is_enabled = current_rights.get(right_key, False)\n`;
+  code += `        indicator = "✅" if is_enabled else "❌"\n`;
+  code += `        button_text = f"{indicator} {right_name}"\n`;
+  code += `        callback_data = f"toggle_right_{right_key}_{target_user_id}_{node_id}"\n`;
+  code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data=callback_data))\n`;
+  code += `    \n`;
+  code += `    # Кнопка для обновления состояния\n`;
+  code += `    builder.add(InlineKeyboardButton(text="🔄 Обновить", callback_data=f"refresh_rights_{target_user_id}_{node_id}"))\n`;
+  code += `    \n`;
+  code += `    builder.adjust(1)  # Располагаем кнопки в одну колонку для лучшей читаемости\n`;
+  code += `    return builder.as_markup()\n`;
+  code += `\n`;
+  
+  // Главный callback обработчик для узла admin_rights
   code += `@dp.callback_query(lambda c: c.data == "${node.id}")\n`;
-  code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
+  code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery, bot):\n`;
   code += `    """\n`;
   code += `    Обработчик callback для узла admin_rights: ${node.id}\n`;
-  code += `    Отображает inline клавиатуру с опциями управления админ правами\n`;
+  code += `    Отображает интерактивную клавиатуру для управления правами администратора\n`;
   code += `    """\n`;
   code += `    await callback_query.answer()\n`;
   code += `    user_id = callback_query.from_user.id\n`;
@@ -9380,71 +9449,169 @@ function generateAdminRightsHandler(node: Node): string {
   code += `    \n`;
   code += `    logging.info(f"Обработка callback admin_rights от пользователя {user_id} в чате {chat_id}")\n`;
   code += `    \n`;
+  code += `    # Проверяем права текущего пользователя\n`;
+  code += `    try:\n`;
+  code += `        current_user_member = await bot.get_chat_member(chat_id, user_id)\n`;
+  code += `        if current_user_member.status not in ['administrator', 'creator']:\n`;
+  code += `            await callback_query.message.edit_text("❌ У вас нет прав для управления правами администраторов")\n`;
+  code += `            return\n`;
+  code += `        \n`;
+  code += `        # Проверяем, может ли текущий пользователь управлять правами\n`;
+  code += `        if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):\n`;
+  code += `            await callback_query.message.edit_text("❌ У вас нет права на управление правами других администраторов")\n`;
+  code += `            return\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await callback_query.message.edit_text(f"❌ Ошибка при проверке ваших прав: {e}")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    # Получаем target_user_id (пользователя, чьи права будем менять)\n`;
+  code += `    # В данном случае, мы будем управлять правами пользователя, который вызвал команду\n`;
+  code += `    # Но это можно изменить для работы с replied сообщениями\n`;
+  code += `    target_user_id = user_id  # По умолчанию управляем своими правами\n`;
+  code += `    \n`;
+  code += `    # Если это ответ на сообщение, берем пользователя из ответа\n`;
+  code += `    if hasattr(callback_query.message, 'reply_to_message') and callback_query.message.reply_to_message:\n`;
+  code += `        target_user_id = callback_query.message.reply_to_message.from_user.id\n`;
+  code += `        logging.info(f"Управляем правами пользователя {target_user_id} из ответа на сообщение")\n`;
+  code += `    \n`;
   code += `    # Текст сообщения\n`;
   code += `    text = ${formattedText}\n`;
-  code += `    \n`;
   
   // Добавляем универсальную замену переменных
   code += generateUniversalVariableReplacement('    ');
   code += `    \n`;
+  code += `    # Создаем интерактивную клавиатуру\n`;
+  code += `    keyboard = await create_admin_rights_keyboard_${safeFunctionName}(bot, chat_id, target_user_id)\n`;
+  code += `    \n`;
+  code += `    # Отправляем/обновляем сообщение с клавиатурой\n`;
+  code += `    try:\n`;
+  code += `        await callback_query.message.edit_text(text, reply_markup=keyboard)\n`;
+  code += `    except Exception as e:\n`;
+  code += `        logging.warning(f"Не удалось отредактировать сообщение: {e}")\n`;
+  code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
+  code += `\n`;
   
-  // Создаем inline клавиатуру для управления админ правами
-  // Если кнопки не заданы, создаем стандартные кнопки управления правами
-  const adminButtons = node.data.buttons && node.data.buttons.length > 0 
-    ? node.data.buttons 
-    : [
-        { text: "🔧 Изменить информацию", action: "admin_right", target: "can_change_info" },
-        { text: "🗑️ Удалять сообщения", action: "admin_right", target: "can_delete_messages" },
-        { text: "👥 Приглашать пользователей", action: "admin_right", target: "can_invite_users" },
-        { text: "🚫 Ограничивать участников", action: "admin_right", target: "can_restrict_members" },
-        { text: "📌 Закреплять сообщения", action: "admin_right", target: "can_pin_messages" },
-        { text: "⭐ Назначать админов", action: "admin_right", target: "can_promote_members" },
-        { text: "🎥 Управлять видеочатами", action: "admin_right", target: "can_manage_video_chats" },
-        { text: "💬 Управлять темами", action: "admin_right", target: "can_manage_topics" }
-      ];
+  // Добавляем callback обработчики для переключения прав
+  code += generateAdminRightsToggleHandlers(node);
   
-  if (adminButtons && adminButtons.length > 0) {
-    code += `    # Создаем inline клавиатуру с опциями админ прав\n`;
-    code += `    builder = InlineKeyboardBuilder()\n`;
-    
-    adminButtons.forEach((button, index) => {
-      if (button.action === "goto" && button.target) {
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${button.target}"))\n`;
-      } else if (button.action === "url" && button.url) {
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", url="${button.url}"))\n`;
-      } else if (button.action === "command" && button.target) {
-        const commandCallback = `cmd_${button.target.replace('/', '')}`;
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${commandCallback}"))\n`;
-      } else if (button.action === "selection") {
-        const callbackData = `admin_right_${button.target || button.id || `btn_${index}`}`;
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-      } else {
-        const callbackData = button.target || button.id || `action_${index}`;
-        code += `    builder.add(InlineKeyboardButton(text="${button.text}", callback_data="${callbackData}"))\n`;
-      }
-    });
-    
-    // Автоматическое распределение колонок
-    const columns = calculateOptimalColumns(adminButtons, node.data);
-    code += `    builder.adjust(${columns})\n`;
-    code += `    keyboard = builder.as_markup()\n`;
+  return code;
+}
+
+function generateAdminRightsToggleHandlers(node: any): string {
+  const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  let code = '\n';
+  
+  // Список всех админ прав
+  const adminRights = [
+    'can_change_info',
+    'can_delete_messages', 
+    'can_invite_users',
+    'can_restrict_members',
+    'can_pin_messages',
+    'can_promote_members',
+    'can_manage_video_chats',
+    'can_manage_topics'
+  ];
+  
+  // Создаем обработчик для каждого права
+  adminRights.forEach(rightKey => {
+    code += `# Обработчик переключения права: ${rightKey}\n`;
+    code += `@dp.callback_query(lambda c: c.data.startswith("toggle_right_${rightKey}_"))\n`;
+    code += `async def toggle_${rightKey}_${safeFunctionName}(callback_query: types.CallbackQuery, bot):\n`;
+    code += `    """\n`;
+    code += `    Переключает право ${rightKey} для пользователя\n`;
+    code += `    """\n`;
+    code += `    await callback_query.answer()\n`;
     code += `    \n`;
-    code += `    # Отправляем сообщение с клавиатурой\n`;
+    code += `    # Парсим данные из callback_data: toggle_right_<right>_<user_id>_<node_id>\n`;
+    code += `    data_parts = callback_query.data.split('_')\n`;
+    code += `    target_user_id = int(data_parts[3])\n`;
+    code += `    node_id = data_parts[4]\n`;
+    code += `    \n`;
+    code += `    user_id = callback_query.from_user.id\n`;
+    code += `    chat_id = callback_query.message.chat.id\n`;
+    code += `    \n`;
     code += `    try:\n`;
+    code += `        # Проверяем права текущего пользователя\n`;
+    code += `        current_user_member = await bot.get_chat_member(chat_id, user_id)\n`;
+    code += `        if current_user_member.status not in ['administrator', 'creator']:\n`;
+    code += `            await callback_query.message.edit_text("❌ У вас нет прав администратора")\n`;
+    code += `            return\n`;
+    code += `            \n`;
+    code += `        if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):\n`;
+    code += `            await callback_query.message.edit_text("❌ У вас нет права на управление правами других администраторов")\n`;
+    code += `            return\n`;
+    code += `        \n`;
+    code += `        # Получаем текущие права целевого пользователя\n`;
+    code += `        target_member = await bot.get_chat_member(chat_id, target_user_id)\n`;
+    code += `        if target_member.status not in ['administrator', 'creator']:\n`;
+    code += `            await callback_query.message.edit_text("❌ Целевой пользователь не является администратором")\n`;
+    code += `            return\n`;
+    code += `        \n`;
+    code += `        # Получаем текущее состояние права\n`;
+    code += `        current_value = getattr(target_member, '${rightKey}', False)\n`;
+    code += `        new_value = not current_value\n`;
+    code += `        \n`;
+    code += `        # Подготавливаем права для обновления\n`;
+    code += `        permissions = {\n`;
+    adminRights.forEach(right => {
+      code += `            '${right}': getattr(target_member, '${right}', False),\n`;
+    });
+    code += `        }\n`;
+    code += `        permissions['${rightKey}'] = new_value\n`;
+    code += `        \n`;
+    code += `        # Применяем изменения\n`;
+    code += `        await bot.promote_chat_member(\n`;
+    code += `            chat_id=chat_id,\n`;
+    code += `            user_id=target_user_id,\n`;
+    adminRights.forEach(right => {
+      code += `            ${right}=permissions['${right}'],\n`;
+    });
+    code += `        )\n`;
+    code += `        \n`;
+    code += `        # Обновляем клавиатуру с новым состоянием\n`;
+    code += `        keyboard = await create_admin_rights_keyboard_${safeFunctionName}(bot, chat_id, target_user_id)\n`;
+    code += `        \n`;
+    code += `        # Обновляем сообщение\n`;
+    code += `        text = "⚙️ Управление правами администратора"\n`;
     code += `        await callback_query.message.edit_text(text, reply_markup=keyboard)\n`;
+    code += `        \n`;
+    code += `        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право '${rightKey}' для пользователя {target_user_id}")\n`;
+    code += `        \n`;
     code += `    except Exception as e:\n`;
-    code += `        logging.warning(f"Не удалось отредактировать сообщение: {e}")\n`;
-    code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
-  } else {
-    // Если нет кнопок, просто отправляем текст
-    code += `    # Отправляем сообщение без клавиатуры\n`;
-    code += `    try:\n`;
-    code += `        await callback_query.message.edit_text(text)\n`;
-    code += `    except Exception as e:\n`;
-    code += `        logging.warning(f"Не удалось отредактировать сообщение: {e}")\n`;
-    code += `        await callback_query.message.answer(text)\n`;
-  }
+    code += `        logging.error(f"Ошибка при переключении права ${rightKey}: {e}")\n`;
+    code += `        await callback_query.message.edit_text(f"❌ Ошибка при изменении прав: {e}")\n`;
+    code += `\n`;
+  });
   
+  // Обработчик кнопки обновления
+  code += `# Обработчик кнопки обновления прав\n`;
+  code += `@dp.callback_query(lambda c: c.data.startswith("refresh_rights_"))\n`;
+  code += `async def refresh_admin_rights_${safeFunctionName}(callback_query: types.CallbackQuery, bot):\n`;
+  code += `    """\n`;
+  code += `    Обновляет отображение прав администратора\n`;
+  code += `    """\n`;
+  code += `    await callback_query.answer("🔄 Обновляем...")\n`;
+  code += `    \n`;
+  code += `    # Парсим данные: refresh_rights_<user_id>_<node_id>\n`;
+  code += `    data_parts = callback_query.data.split('_')\n`;
+  code += `    target_user_id = int(data_parts[2])\n`;
+  code += `    \n`;
+  code += `    chat_id = callback_query.message.chat.id\n`;
+  code += `    \n`;
+  code += `    try:\n`;
+  code += `        # Создаем обновленную клавиатуру\n`;
+  code += `        keyboard = await create_admin_rights_keyboard_${safeFunctionName}(bot, chat_id, target_user_id)\n`;
+  code += `        \n`;
+  code += `        # Обновляем сообщение\n`;
+  code += `        text = "⚙️ Управление правами администратора"\n`;
+  code += `        await callback_query.message.edit_text(text, reply_markup=keyboard)\n`;
+  code += `        \n`;
+  code += `        logging.info(f"Обновлены права для пользователя {target_user_id}")\n`;
+  code += `        \n`;
+  code += `    except Exception as e:\n`;
+  code += `        logging.error(f"Ошибка при обновлении прав: {e}")\n`;
+  code += `        await callback_query.message.edit_text(f"❌ Ошибка при обновлении: {e}")\n`;
   code += `\n`;
   
   return code;
@@ -9487,6 +9654,8 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
   code += `        return\n`;
   code += `    \n`;
   // Генерируем код в зависимости от типа узла
+  code += `    # Тип текущего узла для логирования\n`;
+  code += `    current_node_type = "${node.type}"\n`;
   code += `    try:\n`;
   if (node.type === 'ban_user') {
     const reason = node.data.reason || 'Нарушение правил группы';
@@ -9578,7 +9747,10 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
     code += `                return await self.message.answer(text, **kwargs)\n`;
     code += `        \n`;
     code += `        mock_callback = MockCallback("${node.id}", message.from_user, message)\n`;
-    code += `        await handle_callback_${safeFunctionName}(mock_callback)\n`;
+    code += `        # Получаем bot из DI\n`;
+    code += `        from aiogram import Bot\n`;
+    code += `        bot = Bot.get_current()\n`;
+    code += `        await handle_callback_${safeFunctionName}(mock_callback, bot)\n`;
     code += `        return  # Завершаем обработку, так как все сделано в callback\n`;
   }
   
@@ -9587,7 +9759,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
   code += `            await message.answer("❌ Недостаточно прав для выполнения операции")\n`;
   code += `        else:\n`;
   code += `            await message.answer(f"❌ Ошибка: {e}")\n`;
-  code += `        logging.error(f"Ошибка ${node.type}: {e}")\n`;
+  code += `        logging.error(f"Ошибка {current_node_type}: {e}")\n`;
   code += `    except Exception as e:\n`;
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
   code += `        logging.error(f"Неожиданная ошибка в {node.type}: {e}")\n`;
