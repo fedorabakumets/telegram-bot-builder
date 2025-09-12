@@ -499,7 +499,7 @@ export const buttonSchema = z.object({
 
 export const nodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user']),
+  type: z.enum(['start', 'message', 'photo', 'video', 'audio', 'document', 'keyboard', 'command', 'sticker', 'voice', 'animation', 'location', 'contact', 'pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights']),
   position: z.object({
     x: z.number(),
     y: z.number(),
@@ -677,7 +677,32 @@ export const nodeSchema = z.object({
     canChangeGroupInfo: z.boolean().default(true), // Может изменять информацию о группе
     canInviteUsers2: z.boolean().default(true), // Может приглашать пользователей (дубликат для restrict)
     canPinMessages2: z.boolean().default(true), // Может закреплять сообщения (дубликат для restrict)
-    untilDate: z.number().optional() // Дата окончания ограничения (Unix timestamp)
+    untilDate: z.number().optional(), // Дата окончания ограничения (Unix timestamp)
+    
+    // Поля для узла admin_rights - управление правами администратора (в соответствии с Telegram Bot API)
+    adminTargetUserId: z.string().optional(), // ID пользователя для изменения прав
+    adminUserIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'), // Источник ID пользователя
+    adminUserVariableName: z.string().optional(), // Имя переменной с ID пользователя
+    // Права администратора согласно Telegram Bot API (promoteChatMember)
+    can_manage_chat: z.boolean().default(false), // Может управлять чатом
+    can_post_messages: z.boolean().default(false), // Может публиковать сообщения (только каналы)
+    can_edit_messages: z.boolean().default(false), // Может редактировать сообщения (только каналы)
+    can_delete_messages: z.boolean().default(false), // Может удалять сообщения
+    can_post_stories: z.boolean().default(false), // Может публиковать истории
+    can_edit_stories: z.boolean().default(false), // Может редактировать истории
+    can_delete_stories: z.boolean().default(false), // Может удалять истории
+    can_manage_video_chats: z.boolean().default(false), // Может управлять видеочатами
+    can_restrict_members: z.boolean().default(false), // Может ограничивать участников
+    can_promote_members: z.boolean().default(false), // Может повышать участников
+    can_change_info: z.boolean().default(false), // Может изменять информацию чата
+    can_invite_users: z.boolean().default(false), // Может приглашать пользователей
+    can_pin_messages: z.boolean().default(false), // Может закреплять сообщения
+    can_manage_topics: z.boolean().default(false), // Может управлять темами (только супергруппы)
+    is_anonymous: z.boolean().default(false), // Может быть анонимным
+    // Связка с конкретным чатом или группой
+    adminChatId: z.string().optional(), // ID чата для применения прав
+    adminChatIdSource: z.enum(['manual', 'variable', 'current_chat']).default('current_chat'), // Источник ID чата
+    adminChatVariableName: z.string().optional() // Имя переменной с ID чата
   }),
 });
 

@@ -191,6 +191,29 @@ export function PropertiesPanel({
       demote_user: {
         command: '/demote_user',
         synonyms: ['понизить', 'снять с админки', 'демоут']
+      },
+      admin_rights: {
+        command: '/admin_rights',
+        description: 'Управление правами администратора',
+        synonyms: ['права админа', 'изменить права', 'админ права'],
+        adminUserIdSource: 'last_message',
+        adminChatIdSource: 'current_chat',
+        // Права администратора согласно Telegram Bot API
+        can_manage_chat: false,
+        can_post_messages: false,
+        can_edit_messages: false,
+        can_delete_messages: true,
+        can_post_stories: false,
+        can_edit_stories: false,
+        can_delete_stories: false,
+        can_manage_video_chats: false,
+        can_restrict_members: false,
+        can_promote_members: false,
+        can_change_info: false,
+        can_invite_users: true,
+        can_pin_messages: true,
+        can_manage_topics: false,
+        is_anonymous: false
       }
     };
     
@@ -578,7 +601,8 @@ export function PropertiesPanel({
     unmute_user: 'Снять ограничения',
     kick_user: 'Исключить пользователя',
     promote_user: 'Назначить администратором',
-    demote_user: 'Снять с администратора'
+    demote_user: 'Снять с администратора',
+    admin_rights: 'Права администратора'
   };
 
   const nodeIcons = {
@@ -604,7 +628,8 @@ export function PropertiesPanel({
     unmute_user: 'fas fa-volume-up',
     kick_user: 'fas fa-door-open',
     promote_user: 'fas fa-user-shield',
-    demote_user: 'fas fa-user-minus'
+    demote_user: 'fas fa-user-minus',
+    admin_rights: 'fas fa-crown'
   };
 
   const nodeColors = {
@@ -630,7 +655,8 @@ export function PropertiesPanel({
     unmute_user: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
     kick_user: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
     promote_user: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-    demote_user: 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400'
+    demote_user: 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400',
+    admin_rights: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
   };
 
   const handleAddButton = () => {
@@ -735,6 +761,7 @@ export function PropertiesPanel({
                   <SelectItem value="kick_user">👢 Исключить пользователя</SelectItem>
                   <SelectItem value="promote_user">👑 Назначить администратором</SelectItem>
                   <SelectItem value="demote_user">👤 Снять с администратора</SelectItem>
+                  <SelectItem value="admin_rights">⚡ Права администратора</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -821,7 +848,7 @@ export function PropertiesPanel({
             {(selectedNode.type === 'pin_message' || selectedNode.type === 'unpin_message' || selectedNode.type === 'delete_message' ||
               selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' || 
               selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' || 
-              selectedNode.type === 'demote_user') && (
+              selectedNode.type === 'demote_user' || selectedNode.type === 'admin_rights') && (
               <div>
                 <Label className="text-xs font-medium text-muted-foreground">Команда</Label>
                 <Input
@@ -838,7 +865,8 @@ export function PropertiesPanel({
                     selectedNode.type === 'unmute_user' ? '/unmute_user' :
                     selectedNode.type === 'kick_user' ? '/kick_user' :
                     selectedNode.type === 'promote_user' ? '/promote_user' :
-                    selectedNode.type === 'demote_user' ? '/demote_user' : '/command'
+                    selectedNode.type === 'demote_user' ? '/demote_user' :
+                    selectedNode.type === 'admin_rights' ? '/admin_rights' : '/command'
                   }
                 />
                 <div className="text-xs text-muted-foreground mt-1">
@@ -2063,7 +2091,7 @@ export function PropertiesPanel({
             {/* User Management Configuration */}
             {(selectedNode.type === 'ban_user' || selectedNode.type === 'unban_user' || selectedNode.type === 'mute_user' || 
               selectedNode.type === 'unmute_user' || selectedNode.type === 'kick_user' || selectedNode.type === 'promote_user' || 
-              selectedNode.type === 'demote_user') && (
+              selectedNode.type === 'demote_user' || selectedNode.type === 'admin_rights') && (
               <div className="space-y-6">
 
                 {/* Reason Section (for ban, mute, kick) */}
@@ -2243,7 +2271,8 @@ export function PropertiesPanel({
                                                 selectedNode.type === 'unmute_user' ? ['размутить', 'разглушить', 'анмут'] :
                                                 selectedNode.type === 'kick_user' ? ['кикнуть', 'исключить', 'выгнать'] :
                                                 selectedNode.type === 'promote_user' ? ['повысить', 'назначить админом', 'промоут'] :
-                                                selectedNode.type === 'demote_user' ? ['понизить', 'снять с админки', 'демоут'] : [];
+                                                selectedNode.type === 'demote_user' ? ['понизить', 'снять с админки', 'демоут'] :
+                                                selectedNode.type === 'admin_rights' ? ['права админа', 'изменить права', 'админ права'] : [];
                         if (defaultSynonyms.length > 0) {
                           setTimeout(() => onNodeUpdate(selectedNode.id, { synonyms: defaultSynonyms }), 0);
                           return defaultSynonyms;
@@ -2260,7 +2289,8 @@ export function PropertiesPanel({
                       selectedNode.type === 'unmute_user' ? "Команды для снятия ограничений" :
                       selectedNode.type === 'kick_user' ? "Команды для исключения пользователя" :
                       selectedNode.type === 'promote_user' ? "Команды для назначения администратором" :
-                      selectedNode.type === 'demote_user' ? "Команды для снятия с должности администратора" : 
+                      selectedNode.type === 'demote_user' ? "Команды для снятия с должности администратора" :
+                      selectedNode.type === 'admin_rights' ? "Команды для управления правами администратора" : 
                       "Альтернативные команды для этого действия"
                     }
                     placeholder={
@@ -2270,9 +2300,168 @@ export function PropertiesPanel({
                       selectedNode.type === 'unmute_user' ? "размутить, разглушить, анмут" :
                       selectedNode.type === 'kick_user' ? "кикнуть, исключить, выгнать" :
                       selectedNode.type === 'promote_user' ? "повысить, назначить админом, промоут" :
-                      selectedNode.type === 'demote_user' ? "понизить, снять с админки, демоут" : 
+                      selectedNode.type === 'demote_user' ? "понизить, снять с админки, демоут" :
+                      selectedNode.type === 'admin_rights' ? "права админа, изменить права, админ права" : 
                       "команда1, команда2, команда3"
                     }
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Admin Rights Configuration */}
+            {selectedNode.type === 'admin_rights' && (
+              <div className="space-y-6">
+                {/* Source Configuration */}
+                <div className="bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-950/20 dark:to-indigo-950/10 border border-blue-200/30 dark:border-blue-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                      <i className="fas fa-link text-blue-600 dark:text-blue-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-blue-900 dark:text-blue-100">Источники данных</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Admin User ID Source */}
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-user mr-1"></i>
+                        Источник ID администратора
+                      </Label>
+                      <Select
+                        value={selectedNode.data.adminUserIdSource || 'last_message'}
+                        onValueChange={(value) => onNodeUpdate(selectedNode.id, { adminUserIdSource: value as any })}
+                      >
+                        <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="last_message">Из последнего сообщения</SelectItem>
+                          <SelectItem value="replied_message">Из ответа на сообщение</SelectItem>
+                          <SelectItem value="manual_input">Ручной ввод</SelectItem>
+                          <SelectItem value="user_data">Из сохраненных данных</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Откуда брать ID пользователя для изменения прав
+                      </div>
+                    </div>
+
+                    {/* Admin Chat ID Source */}
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-comments mr-1"></i>
+                        Источник ID чата
+                      </Label>
+                      <Select
+                        value={selectedNode.data.adminChatIdSource || 'current_chat'}
+                        onValueChange={(value) => onNodeUpdate(selectedNode.id, { adminChatIdSource: value as any })}
+                      >
+                        <SelectTrigger className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="current_chat">Текущий чат</SelectItem>
+                          <SelectItem value="manual_input">Ручной ввод</SelectItem>
+                          <SelectItem value="user_data">Из сохраненных данных</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        В каком чате изменять права администратора
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Basic Admin Rights */}
+                <div className="bg-gradient-to-br from-emerald-50/50 to-green-50/30 dark:from-emerald-950/20 dark:to-green-950/10 border border-emerald-200/30 dark:border-emerald-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                      <i className="fas fa-crown text-emerald-600 dark:text-emerald-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Основные права администратора</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    {[
+                      { key: 'canChangeInfo', label: 'Изменять информацию группы', icon: 'fas fa-edit' },
+                      { key: 'canDeleteMessages', label: 'Удалять сообщения', icon: 'fas fa-trash', default: true },
+                      { key: 'canBanUsers', label: 'Блокировать пользователей', icon: 'fas fa-ban' },
+                      { key: 'canInviteUsers', label: 'Приглашать пользователей', icon: 'fas fa-user-plus', default: true },
+                      { key: 'canPinMessages', label: 'Закреплять сообщения', icon: 'fas fa-thumbtack', default: true },
+                      { key: 'canAddAdmins', label: 'Добавлять администраторов', icon: 'fas fa-user-shield' },
+                      { key: 'canRestrictMembers', label: 'Ограничивать участников', icon: 'fas fa-user-slash' },
+                      { key: 'canPromoteMembers', label: 'Повышать участников', icon: 'fas fa-arrow-up' },
+                      { key: 'canManageVideoChats', label: 'Управлять видеозвонками', icon: 'fas fa-video' },
+                      { key: 'canManageTopics', label: 'Управлять темами', icon: 'fas fa-tags' },
+                      { key: 'isAnonymous', label: 'Анонимный администратор', icon: 'fas fa-user-secret' }
+                    ].map(({ key, label, icon, default: defaultValue }) => (
+                      <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-emerald-200/30 dark:border-emerald-800/30 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-200">
+                        <div className="flex items-center space-x-2">
+                          <i className={`${icon} text-emerald-600 dark:text-emerald-400 text-xs`}></i>
+                          <Label className="text-xs text-emerald-700 dark:text-emerald-300">{label}</Label>
+                        </div>
+                        <Switch
+                          checked={(selectedNode.data as any)[key] ?? (defaultValue || false)}
+                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked } as any)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Extended Admin Rights */}
+                <div className="bg-gradient-to-br from-purple-50/50 to-violet-50/30 dark:from-purple-950/20 dark:to-violet-950/10 border border-purple-200/30 dark:border-purple-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                      <i className="fas fa-cogs text-purple-600 dark:text-purple-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-purple-900 dark:text-purple-100">Расширенные права</Label>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    {[
+                      { key: 'adminCanManageChat', label: 'Управлять чатом', icon: 'fas fa-tools' },
+                      { key: 'adminCanManageVideoChats', label: 'Управлять видеочатами', icon: 'fas fa-video' },
+                      { key: 'adminCanManageStories', label: 'Управлять историями', icon: 'fas fa-book' },
+                      { key: 'adminCanBeAnonymous', label: 'Может быть анонимным', icon: 'fas fa-mask' }
+                    ].map(({ key, label, icon }) => (
+                      <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                        <div className="flex items-center space-x-2">
+                          <i className={`${icon} text-purple-600 dark:text-purple-400 text-xs`}></i>
+                          <Label className="text-xs text-purple-700 dark:text-purple-300">{label}</Label>
+                        </div>
+                        <Switch
+                          checked={(selectedNode.data as any)[key] ?? false}
+                          onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { [key]: checked } as any)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Synonyms Section for Admin Rights */}
+                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                      <i className="fas fa-tags text-green-600 dark:text-green-400 text-xs"></i>
+                    </div>
+                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Синонимы команды</Label>
+                  </div>
+                  
+                  <SynonymEditor
+                    synonyms={(() => {
+                      if (!selectedNode.data.synonyms || selectedNode.data.synonyms.length === 0) {
+                        const defaultSynonyms = ['права админа', 'изменить права', 'админ права'];
+                        setTimeout(() => onNodeUpdate(selectedNode.id, { synonyms: defaultSynonyms }), 0);
+                        return defaultSynonyms;
+                      }
+                      return selectedNode.data.synonyms || [];
+                    })()} 
+                    onUpdate={(synonyms) => onNodeUpdate(selectedNode.id, { synonyms })}
+                    title="Альтернативные команды"
+                    description="Команды для управления правами администратора"
+                    placeholder="права админа, изменить права, админ права"
                   />
                 </div>
               </div>
@@ -2307,7 +2496,7 @@ export function PropertiesPanel({
          selectedNode.type !== 'pin_message' && selectedNode.type !== 'unpin_message' && selectedNode.type !== 'delete_message' &&
          selectedNode.type !== 'ban_user' && selectedNode.type !== 'unban_user' && selectedNode.type !== 'mute_user' && 
          selectedNode.type !== 'unmute_user' && selectedNode.type !== 'kick_user' && selectedNode.type !== 'promote_user' && 
-         selectedNode.type !== 'demote_user' && (
+         selectedNode.type !== 'demote_user' && selectedNode.type !== 'admin_rights' && (
           <div>
             <h3 className="text-sm font-medium text-foreground mb-3">Синонимы</h3>
             <div className="space-y-4">
