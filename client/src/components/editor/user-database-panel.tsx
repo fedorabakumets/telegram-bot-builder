@@ -315,8 +315,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="border-b bg-card">
+    <div className="h-full flex flex-col bg-background min-h-0">
+      <div className="border-b bg-card flex-none">
         <div className="p-4">
           <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'} mb-4`}>
             <div>
@@ -489,17 +489,17 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
       </div>
 
       {/* Tabs */}
-      <div className="flex-1 overflow-hidden">
-        <Tabs defaultValue="users" className="h-full flex flex-col">
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <Tabs defaultValue="users" className="h-full flex flex-col min-h-0">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="users">Пользователи</TabsTrigger>
             <TabsTrigger value="backup">Резервные копии</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="users" className="flex-1 overflow-hidden">
+          <TabsContent value="users" className="flex-1 min-h-0">
             {isMobile ? (
               // Mobile card layout with proper scrolling
-              <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
+              <div className="h-full overflow-y-auto">
                 <div className="p-4 space-y-4">
                   {/* Debug info */}
                   <div className="text-xs text-blue-500 bg-blue-50 p-2 rounded mb-2" data-testid="debug-mobile-info">
