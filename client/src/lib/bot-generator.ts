@@ -8266,7 +8266,7 @@ function generateContentManagementSynonymHandler(node: Node, synonym: string): s
   code += `        logging.error(f"Ошибка {current_node_type}: {e}")\n`;
   code += `    except Exception as e:\n`;
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
-  code += `        logging.error(f"Неожиданная ошибка в {node.type}: {e}")\n`;
+  code += `        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")\n`;
   code += `\n`;
   
   return code;
@@ -9524,9 +9524,9 @@ function generateAdminRightsToggleHandlers(node: any): string {
     code += `    await callback_query.answer()\n`;
     code += `    \n`;
     code += `    # Парсим данные из callback_data: toggle_right_<right>_<user_id>_<node_id>\n`;
-    code += `    data_parts = callback_query.data.split('_')\n`;
-    code += `    target_user_id = int(data_parts[3])\n`;
-    code += `    node_id = data_parts[4]\n`;
+    code += `    data_parts = callback_query.data.rsplit('_', 2)\n`;
+    code += `    target_user_id = int(data_parts[-2])\n`;
+    code += `    node_id = data_parts[-1]\n`;
     code += `    \n`;
     code += `    user_id = callback_query.from_user.id\n`;
     code += `    chat_id = callback_query.message.chat.id\n`;
@@ -9594,8 +9594,8 @@ function generateAdminRightsToggleHandlers(node: any): string {
   code += `    await callback_query.answer("🔄 Обновляем...")\n`;
   code += `    \n`;
   code += `    # Парсим данные: refresh_rights_<user_id>_<node_id>\n`;
-  code += `    data_parts = callback_query.data.split('_')\n`;
-  code += `    target_user_id = int(data_parts[2])\n`;
+  code += `    data_parts = callback_query.data.rsplit('_', 2)\n`;
+  code += `    target_user_id = int(data_parts[-2])\n`;
   code += `    \n`;
   code += `    chat_id = callback_query.message.chat.id\n`;
   code += `    \n`;
@@ -9747,9 +9747,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
     code += `                return await self.message.answer(text, **kwargs)\n`;
     code += `        \n`;
     code += `        mock_callback = MockCallback("${node.id}", message.from_user, message)\n`;
-    code += `        # Получаем bot из DI\n`;
-    code += `        from aiogram import Bot\n`;
-    code += `        bot = Bot.get_current()\n`;
+    code += `        # bot уже определен глобально\n`;
     code += `        await handle_callback_${safeFunctionName}(mock_callback, bot)\n`;
     code += `        return  # Завершаем обработку, так как все сделано в callback\n`;
   }
@@ -9762,7 +9760,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
   code += `        logging.error(f"Ошибка {current_node_type}: {e}")\n`;
   code += `    except Exception as e:\n`;
   code += `        await message.answer("❌ Произошла неожиданная ошибка")\n`;
-  code += `        logging.error(f"Неожиданная ошибка в {node.type}: {e}")\n`;
+  code += `        logging.error(f"Неожиданная ошибка в {current_node_type}: {e}")\n`;
   code += `\n`;
   
   return code;
