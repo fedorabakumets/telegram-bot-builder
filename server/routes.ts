@@ -989,7 +989,7 @@ async function initializeComponents() {
       // После готовности БД запускаем остальные компоненты
       Promise.all([
         // Загрузка шаблонов
-        seedDefaultTemplates(false).then(() => {
+        seedDefaultTemplates(true).then(() => {
           areTemplatesReady = true;
           console.log('✅ Templates ready');
         }).catch(err => console.error('❌ Templates failed:', err)),
