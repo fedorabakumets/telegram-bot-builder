@@ -9593,19 +9593,20 @@ function generateAdminRightsHandler(node: Node): string {
   code += `    \n`;
   code += `    logging.info(f"Обработка callback admin_rights от пользователя {user_id} в чате {chat_id}")\n`;
   code += `    \n`;
-  code += `    # Проверяем права текущего пользователя\n`;
+  code += `    # Проверяем права БОТА (не пользователя) на управление правами администраторов\n`;
   code += `    try:\n`;
-  code += `        current_user_member = await bot.get_chat_member(chat_id, user_id)\n`;
-  code += `        if current_user_member.status not in ['administrator', 'creator']:\n`;
-  code += `            await callback_query.message.edit_text("❌ У вас нет прав для управления правами администраторов")\n`;
+  code += `        bot_member = await bot.get_chat_member(chat_id, bot.id)\n`;
+  code += `        if bot_member.status not in ['administrator', 'creator']:\n`;
+  code += `            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")\n`;
   code += `            return\n`;
   code += `        \n`;
-  code += `        # Проверяем, может ли текущий пользователь управлять правами\n`;
-  code += `        if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):\n`;
-  code += `            await callback_query.message.edit_text("❌ У вас нет права на управление правами других администраторов")\n`;
+  code += `        # Проверяем, может ли бот управлять правами других администраторов\n`;
+  code += `        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):\n`;
+  code += `            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")\n`;
   code += `            return\n`;
   code += `    except Exception as e:\n`;
-  code += `        await safe_edit_or_send(callback_query, f"❌ Ошибка при проверке ваших прав: {e}")\n`;
+  code += `        logging.error(f"Ошибка при проверке прав администратора: {e}")\n`;
+  code += `        await safe_edit_or_send(callback_query, "❌ Не удалось проверить права администратора. Попробуйте позже.")\n`;
   code += `        return\n`;
   code += `    \n`;
   code += `    # Получаем target_user_id (пользователя, чьи права будем менять)\n`;
@@ -9685,14 +9686,14 @@ function generateAdminRightsToggleHandlers(node: any): string {
     code += `    chat_id = callback_query.message.chat.id\n`;
     code += `    \n`;
     code += `    try:\n`;
-    code += `        # Проверяем права текущего пользователя\n`;
-    code += `        current_user_member = await bot.get_chat_member(chat_id, user_id)\n`;
-    code += `        if current_user_member.status not in ['administrator', 'creator']:\n`;
-    code += `            await safe_edit_or_send(callback_query, "❌ У вас нет прав администратора")\n`;
+    code += `        # Проверяем права БОТА на управление правами администраторов\n`;
+    code += `        bot_member = await bot.get_chat_member(chat_id, bot.id)\n`;
+    code += `        if bot_member.status not in ['administrator', 'creator']:\n`;
+    code += `            await safe_edit_or_send(callback_query, "❌ Бот не является администратором этой группы")\n`;
     code += `            return\n`;
     code += `            \n`;
-    code += `        if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):\n`;
-    code += `            await safe_edit_or_send(callback_query, "❌ У вас нет права на управление правами других администраторов")\n`;
+    code += `        if bot_member.status != 'creator' and not getattr(bot_member, 'can_promote_members', False):\n`;
+    code += `            await safe_edit_or_send(callback_query, "❌ У бота нет права на управление правами администраторов")\n`;
     code += `            return\n`;
     code += `        \n`;
     code += `        # Получаем текущие права целевого пользователя\n`;
@@ -9733,7 +9734,7 @@ function generateAdminRightsToggleHandlers(node: any): string {
     code += `        \n`;
     code += `    except Exception as e:\n`;
     code += `        logging.error(f"Ошибка при переключении права ${rightKey}: {e}")\n`;
-    code += `        await safe_edit_or_send(callback_query, f"❌ Ошибка при изменении прав: {e}")\n`;
+    code += `        await safe_edit_or_send(callback_query, "❌ Не удалось изменить права администратора. Попробуйте позже.")\n`;
     code += `\n`;
   });
   
@@ -9764,7 +9765,7 @@ function generateAdminRightsToggleHandlers(node: any): string {
   code += `        \n`;
   code += `    except Exception as e:\n`;
   code += `        logging.error(f"Ошибка при обновлении прав: {e}")\n`;
-  code += `        await safe_edit_or_send(callback_query, f"❌ Ошибка при обновлении: {e}")\n`;
+  code += `        await safe_edit_or_send(callback_query, "❌ Не удалось обновить права. Попробуйте позже.")\n`;
   code += `\n`;
   
   return code;
