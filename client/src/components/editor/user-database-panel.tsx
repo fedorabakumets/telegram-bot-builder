@@ -501,6 +501,10 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               // Mobile card layout with proper scrolling
               <div className="h-full overflow-y-auto">
                 <div className="p-4 space-y-4 pb-20">
+                  {/* Debug info */}
+                  <div className="text-xs text-blue-500 bg-blue-50 p-2 rounded mb-2" data-testid="debug-mobile-info">
+                    DEBUG: isMobile={isMobile.toString()}, users={users.length}, filteredUsers={filteredAndSortedUsers.length}
+                  </div>
                   {filteredAndSortedUsers.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="text-muted-foreground">
@@ -509,13 +513,13 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     </div>
                   ) : (
                     filteredAndSortedUsers.map((user, index) => (
-                      <Card key={user.id || user.user_id || index} className="p-4">
+                      <Card key={user.id || user.userId || index} className="p-4" data-testid={`user-card-mobile-${index}`}>
                         <div className="space-y-3">
                           {/* User Header */}
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="font-medium text-base">{formatUserName(user)}</div>
-                              <div className="text-sm text-muted-foreground">ID: {user.userId || user.user_id}</div>
+                              <div className="text-sm text-muted-foreground">ID: {user.userId}</div>
                             </div>
                             <div className="flex items-center gap-1">
                               <Button
@@ -532,41 +536,41 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleUserStatusToggle(user, 'isActive')}
-                                className={(user.isActive || user.is_active) ? "text-red-600" : "text-green-600"}
+                                className={user.isActive ? "text-red-600" : "text-green-600"}
                               >
-                                {(user.isActive || user.is_active) ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
+                                {user.isActive ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
                               </Button>
                             </div>
                           </div>
 
                           {/* Status Badges */}
                           <div className="flex flex-wrap gap-2">
-                            <Badge variant={(user.isActive || user.is_active) ? "default" : "secondary"}>
-                              {(user.isActive || user.is_active) ? "Активен" : "Неактивен"}
+                            <Badge variant={user.isActive ? "default" : "secondary"}>
+                              {user.isActive ? "Активен" : "Неактивен"}
                             </Badge>
-                            {(user.isPremium || user.is_premium) && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                            {(user.isBlocked || user.is_blocked) && <Badge variant="destructive">Заблокирован</Badge>}
-                            {(user.isBot || user.is_bot) && <Badge variant="outline">Бот</Badge>}
+                            {user.isPremium && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                            {user.isBlocked && <Badge variant="destructive">Заблокирован</Badge>}
+                            {user.isBot && <Badge variant="outline">Бот</Badge>}
                           </div>
 
                           {/* Stats */}
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                               <div className="text-muted-foreground">Сообщений</div>
-                              <div className="font-medium">{user.interactionCount || user.interaction_count || 0}</div>
+                              <div className="font-medium">{user.interactionCount || 0}</div>
                             </div>
                             <div>
                               <div className="text-muted-foreground">Последняя активность</div>
-                              <div className="font-medium text-xs">{formatDate(user.lastInteraction || user.last_interaction)}</div>
+                              <div className="font-medium text-xs">{formatDate(user.lastInteraction)}</div>
                             </div>
                           </div>
 
                           {/* Recent Responses */}
-                          {((user.userData || user.user_data) && Object.keys(user.userData || user.user_data).length > 0) && (
+                          {(user.userData && Object.keys(user.userData).length > 0) && (
                             <div className="border-t pt-3">
                               <div className="text-sm font-medium mb-2">Последние ответы:</div>
                               <div className="space-y-2">
-                                {Object.entries(user.userData || user.user_data).slice(0, 1).map(([key, value]) => {
+                                {Object.entries(user.userData).slice(0, 1).map(([key, value]) => {
                                   let responseData = value;
                                   if (typeof value === 'string') {
                                     try {
@@ -580,17 +584,17 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     <div key={key} className="text-xs bg-muted/50 rounded-lg p-2">
                                       <div className="text-muted-foreground mb-1">{key}:</div>
                                       <div className="font-medium">
-                                        {responseData?.value ? 
-                                          (responseData.value.length > 50 ? `${responseData.value.substring(0, 50)}...` : responseData.value) :
+                                        {(responseData as any)?.value ? 
+                                          ((responseData as any).value.length > 50 ? `${(responseData as any).value.substring(0, 50)}...` : (responseData as any).value) :
                                           (typeof value === 'string' ? (value.length > 50 ? `${value.substring(0, 50)}...` : value) : JSON.stringify(value))
                                         }
                                       </div>
                                     </div>
                                   );
                                 })}
-                                {Object.keys(user.userData || user.user_data).length > 1 && (
+                                {Object.keys(user.userData).length > 1 && (
                                   <div className="text-xs text-muted-foreground">
-                                    +{Object.keys(user.userData || user.user_data).length - 1} еще...
+                                    +{Object.keys(user.userData).length - 1} еще...
                                   </div>
                                 )}
                               </div>
