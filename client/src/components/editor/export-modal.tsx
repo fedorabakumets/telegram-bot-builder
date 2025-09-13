@@ -221,8 +221,8 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
 
           const commandNodes = nodes.filter((node: any) => 
             (node.type === 'start' || node.type === 'command') && 
-            node.data?.showInMenu && 
-            node.data?.command
+            node.data?.command &&
+            (node.data?.showInMenu !== false) // Включаем команды где showInMenu = true, undefined или не установлено
           );
           console.log('🎯 ExportModal: Узлы с командами (после фильтрации):', commandNodes.length);
           console.log('🎯 ExportModal: Команды для меню:', commandNodes.map((node: any) => `${node.data.command} - ${node.data.description || 'Без описания'}`));
