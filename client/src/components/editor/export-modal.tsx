@@ -169,25 +169,34 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
       if (isOpen && dataToUse) {
         try {
           const commands = await loadCommands();
+          console.log('🔍 ExportModal: Полные данные для генерации команд:', dataToUse);
+          
           // Собираем узлы из всех листов проекта
           let nodes: any[] = [];
           if ((dataToUse as any).sheets && Array.isArray((dataToUse as any).sheets)) {
             // Многолистовой проект - собираем узлы из всех листов
-            (dataToUse as any).sheets.forEach((sheet: any) => {
+            console.log('📊 ExportModal: Найдено листов:', (dataToUse as any).sheets.length);
+            (dataToUse as any).sheets.forEach((sheet: any, index: number) => {
+              console.log(`📋 ExportModal: Лист ${index + 1} (${sheet.name || sheet.id}):`, sheet.nodes?.length || 0, 'узлов');
               if (sheet.nodes && Array.isArray(sheet.nodes)) {
                 nodes = nodes.concat(sheet.nodes);
               }
             });
           } else {
+            console.log('📋 ExportModal: Обычный проект, узлов:', dataToUse.nodes?.length || 0);
             // Обычный проект
             nodes = dataToUse.nodes || [];
           }
-          console.log('🎯 ExportModal: Генерируем команды для узлов из всех листов:', nodes.length);
-          console.log('🎯 ExportModal: Узлы с командами:', nodes.filter((node: any) => 
+          
+          console.log('🎯 ExportModal: ИТОГО узлов из всех листов:', nodes.length);
+          const commandNodes = nodes.filter((node: any) => 
             (node.type === 'start' || node.type === 'command') && 
             node.data?.showInMenu && 
             node.data?.command
-          ));
+          );
+          console.log('🎯 ExportModal: Узлы с командами:', commandNodes);
+          console.log('🎯 ExportModal: Команды для меню:', commandNodes.map((node: any) => `${node.data.command} - ${node.data.description || 'Без описания'}`));
+          
           const botFatherCmds = commands.generateBotFatherCommands(nodes);
           setBotFatherCommands(botFatherCmds);
         } catch (error) {
