@@ -209,12 +209,22 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
           }
           
           console.log('🎯 ExportModal: ИТОГО узлов из всех листов:', nodes.length);
+          
+          // Детальная диагностика всех узлов команд
+          const allCommandAndStartNodes = nodes.filter((node: any) => 
+            node.type === 'start' || node.type === 'command'
+          );
+          console.log('📊 ExportModal: ВСЕ узлы start/command (до фильтрации):', allCommandAndStartNodes.length);
+          allCommandAndStartNodes.forEach((node: any, index: number) => {
+            console.log(`  ${index + 1}. ID: "${node.id}", тип: "${node.type}", команда: "${node.data?.command || 'НЕТ'}", showInMenu: ${node.data?.showInMenu}, описание: "${node.data?.description || 'НЕТ'}"`);
+          });
+
           const commandNodes = nodes.filter((node: any) => 
             (node.type === 'start' || node.type === 'command') && 
             node.data?.showInMenu && 
             node.data?.command
           );
-          console.log('🎯 ExportModal: Узлы с командами:', commandNodes);
+          console.log('🎯 ExportModal: Узлы с командами (после фильтрации):', commandNodes.length);
           console.log('🎯 ExportModal: Команды для меню:', commandNodes.map((node: any) => `${node.data.command} - ${node.data.description || 'Без описания'}`));
           
           const botFatherCmds = commands.generateBotFatherCommands(nodes);
