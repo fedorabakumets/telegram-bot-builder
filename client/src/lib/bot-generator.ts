@@ -782,6 +782,30 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'from datetime import datetime, timezone, timedelta\n';
   code += 'import json\n\n';
   
+  // Добавляем safe_edit_or_send helper функцию
+  code += '# Safe helper for editing messages with fallback to new message\n';
+  code += 'async def safe_edit_or_send(cbq, text, **kwargs):\n';
+  code += '    """\n';
+  code += '    Безопасное редактирование сообщения с fallback на новое сообщение\n';
+  code += '    Решает проблему "message can\'t be edited" когда пытаемся редактировать сообщения пользователя\n';
+  code += '    """\n';
+  code += '    try:\n';
+  code += '        # Редактируем только если исходное сообщение от бота\n';
+  code += '        if (hasattr(cbq, "message") and cbq.message and \n';
+  code += '            hasattr(cbq.message, "from_user") and cbq.message.from_user and \n';
+  code += '            cbq.message.from_user.is_bot):\n';
+  code += '            return await cbq.message.edit_text(text, **kwargs)\n';
+  code += '        else:\n';
+  code += '            # Если сообщение не от бота, отправляем новое\n';
+  code += '            return await cbq.message.answer(text, **kwargs)\n';
+  code += '    except TelegramBadRequest as e:\n';
+  code += '        if ("message can\'t be edited" in str(e).lower() or \n';
+  code += '            "MESSAGE_ID_INVALID" in str(e) or \n';
+  code += '            "message is not modified" in str(e).lower()):\n';
+  code += '            logging.warning(f"Не удалось отредактировать сообщение: {e}")\n';
+  code += '            return await cbq.message.answer(text, **kwargs)\n';
+  code += '        raise\n\n';
+  
   code += '# Настройка кодировки для Windows\n';
   code += 'if sys.platform.startswith("win"):\n';
   code += '    # Устанавливаем UTF-8 кодировку для stdout и stderr\n';
@@ -1400,7 +1424,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `            await callback_query.message.edit_text("Переход завершен")\n`;
             } else {
               code += '        # Завершение множественного выбора\n';
-              code += `        await callback_query.message.edit_text("✅ Выбор завершен!")\n`;
+              code += `        await safe_edit_or_send(callback_query, "✅ Выбор завершен!")\n`;
             }
             code += '        return\n';
             code += '    \n';
@@ -1587,9 +1611,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    # Отправляем сообщение\n';
               code += '    try:\n';
               code += '        if keyboard is not None:\n';
-              code += `            await callback_query.message.edit_text(text, reply_markup=keyboard${parseMode})\n`;
+              code += `            await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseMode})\n`;
               code += '        else:\n';
-              code += `            await callback_query.message.edit_text(text${parseMode})\n`;
+              code += `            await safe_edit_or_send(callback_query, text${parseMode})\n`;
               code += '    except Exception:\n';
               code += '        if keyboard is not None:\n';
               code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
@@ -1726,7 +1750,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки фото: {e}")\n';
-              code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить фото\\n{caption}")\n';
+              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить фото\\n{caption}")\n';
               
             } else if (targetNode.type === 'video') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎥 Видео";
@@ -1824,7 +1848,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки видео: {e}")\n';
-              code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить видео\\n{caption}")\n';
+              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить видео\\n{caption}")\n';
               
             } else if (targetNode.type === 'audio') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎵 Аудио";
@@ -1922,7 +1946,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки аудио: {e}")\n';
-              code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить аудио\\n{caption}")\n';
+              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить аудио\\n{caption}")\n';
               
             } else if (targetNode.type === 'document') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📄 Документ";
@@ -1977,7 +2001,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки документа: {e}")\n';
-              code += '        await callback_query.message.edit_text(f"❌ Не удалось загрузить документ\\n{caption}")\n';
+              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить документ\\n{caption}")\n';
               
             } else if (targetNode.type === 'sticker') {
               const stickerUrl = targetNode.data.stickerUrl || "CAACAgIAAxkBAAICGGXm2KvQAAG2X8cxTmZHJkRnYwYlAAJGAANWnb0KmgiEKEZDKVQeBA";
@@ -2022,7 +2046,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки стикера: {e}")\n';
-              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить стикер")\n';
+              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось отправить стикер")\n';
               
             } else if (targetNode.type === 'voice') {
               const voiceUrl = targetNode.data.voiceUrl || "https://www.soundjay.com/misc/beep-07a.wav";
@@ -2069,7 +2093,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки голосового сообщения: {e}")\n';
-              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить голосовое сообщение")\n';
+              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось отправить голосовое сообщение")\n';
               
             } else if (targetNode.type === 'animation') {
               const caption = targetNode.data.mediaCaption || "🎬 Анимация";
@@ -2122,7 +2146,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки анимации: {e}")\n';
-              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить анимацию\\n{caption}")\n';
+              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось отправить анимацию\\n{caption}")\n';
               
             } else if (targetNode.type === 'location') {
               let latitude = targetNode.data.latitude || 55.7558;
@@ -2290,7 +2314,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки контакта: {e}")\n';
-              code += '        await callback_query.message.edit_text(f"❌ Не удалось отправить контакт")\n';
+              code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось отправить контакт")\n';
               
             } else if (targetNode.type === 'user-input') {
               // Handle user-input nodes
@@ -2493,9 +2517,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    # Отправляем сообщение start узла\n';
               code += '    try:\n';
               code += '        if keyboard is not None:\n';
-              code += `            await callback_query.message.edit_text(text, reply_markup=keyboard${parseMode})\n`;
+              code += `            await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseMode})\n`;
               code += '        else:\n';
-              code += `            await callback_query.message.edit_text(text${parseMode})\n`;
+              code += `            await safe_edit_or_send(callback_query, text${parseMode})\n`;
               code += '    except Exception:\n';
               code += '        if keyboard is not None:\n';
               code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
@@ -2539,13 +2563,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    keyboard = builder.as_markup()\n';
                 code += '    # Отправляем сообщение command узла с клавиатурой\n';
                 code += '    try:\n';
-                code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseMode})\n`;
+                code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseMode})\n`;
                 code += '    except Exception:\n';
                 code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
               } else {
                 code += '    # Отправляем сообщение command узла без клавиатуры\n';
                 code += '    try:\n';
-                code += `        await callback_query.message.edit_text(text${parseMode})\n`;
+                code += `        await safe_edit_or_send(callback_query, text${parseMode})\n`;
                 code += '    except Exception:\n';
                 code += `        await callback_query.message.answer(text${parseMode})\n`;
               }
@@ -2684,7 +2708,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   }
                   code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
                   code += `    try:\n`;
-                  code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
+                  code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
                   code += `    except Exception as e:\n`;
                   code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
                   code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
@@ -2720,7 +2744,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   }
                   code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
                   code += `    try:\n`;
-                  code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
+                  code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
                   code += `    except Exception as e:\n`;
                   code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
                   code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
@@ -3086,7 +3110,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `            await callback_query.message.edit_text("Переход завершен")\n`;
             } else {
               code += '        # Завершение множественного выбора\n';
-              code += `        await callback_query.message.edit_text("✅ Выбор завершен!")\n`;
+              code += `        await safe_edit_or_send(callback_query, "✅ Выбор завершен!")\n`;
             }
             code += '        return\n';
             code += '    \n';
@@ -3259,7 +3283,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    # Отправляем сообщение\n';
           code += '    try:\n';
           code += '        if keyboard:\n';
-          code += '            await callback_query.message.edit_text(text, reply_markup=keyboard)\n';
+          code += '            await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n';
           code += '        else:\n';
           code += '            await callback_query.message.edit_text(text)\n';
           code += '    except Exception:\n';
@@ -3927,7 +3951,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 }
                 code += '    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n';
                 code += '    try:\n';
-                code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
+                code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
                 code += '    except Exception as e:\n';
                 code += '        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n';
                 code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
@@ -3969,7 +3993,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 }
                 code += `    # Пытаемся редактировать сообщение, если не получается - отправляем новое\n`;
                 code += `    try:\n`;
-                code += `        await callback_query.message.edit_text(text, reply_markup=keyboard${parseModeTarget})\n`;
+                code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
                 code += `    except Exception as e:\n`;
                 code += `        logging.warning(f"Не удалось редактировать сообщение: {e}. Отправляем новое.")\n`;
                 code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseModeTarget})\n`;
@@ -6163,7 +6187,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Если целевой узел не найден, просто завершаем выбор без перехода
           code += `            # Целевой узел не найден, завершаем выбор\n`;
           code += `            logging.warning(f"⚠️ Целевой узел не найден: ${node.data.continueButtonTarget}")\n`;
-          code += `            await callback_query.message.edit_text("✅ Выбор завершен!")\n`;
+          code += `            await safe_edit_or_send(callback_query, "✅ Выбор завершен!")\n`;
           hasContent = true;
         }
       } else {
@@ -9461,7 +9485,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `            await callback_query.message.edit_text("❌ У вас нет права на управление правами других администраторов")\n`;
   code += `            return\n`;
   code += `    except Exception as e:\n`;
-  code += `        await callback_query.message.edit_text(f"❌ Ошибка при проверке ваших прав: {e}")\n`;
+  code += `        await safe_edit_or_send(callback_query, f"❌ Ошибка при проверке ваших прав: {e}")\n`;
   code += `        return\n`;
   code += `    \n`;
   code += `    # Получаем target_user_id (пользователя, чьи права будем менять)\n`;
@@ -9486,7 +9510,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `    # Отправляем/обновляем сообщение с клавиатурой\n`;
   code += `    try:\n`;
   code += `        # Пробуем отредактировать сообщение (работает для inline callbacks)\n`;
-  code += `        await callback_query.message.edit_text(text, reply_markup=keyboard)\n`;
+  code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n`;
   code += `    except Exception as e:\n`;
   code += `        # Если не удалось отредактировать (например, для text commands), отправляем новое сообщение\n`;
   code += `        logging.info(f"Отправляем новое сообщение admin_rights: {e}")\n`;
@@ -9537,17 +9561,17 @@ function generateAdminRightsToggleHandlers(node: any): string {
     code += `        # Проверяем права текущего пользователя\n`;
     code += `        current_user_member = await bot.get_chat_member(chat_id, user_id)\n`;
     code += `        if current_user_member.status not in ['administrator', 'creator']:\n`;
-    code += `            await callback_query.message.edit_text("❌ У вас нет прав администратора")\n`;
+    code += `            await safe_edit_or_send(callback_query, "❌ У вас нет прав администратора")\n`;
     code += `            return\n`;
     code += `            \n`;
     code += `        if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):\n`;
-    code += `            await callback_query.message.edit_text("❌ У вас нет права на управление правами других администраторов")\n`;
+    code += `            await safe_edit_or_send(callback_query, "❌ У вас нет права на управление правами других администраторов")\n`;
     code += `            return\n`;
     code += `        \n`;
     code += `        # Получаем текущие права целевого пользователя\n`;
     code += `        target_member = await bot.get_chat_member(chat_id, target_user_id)\n`;
     code += `        if target_member.status not in ['administrator', 'creator']:\n`;
-    code += `            await callback_query.message.edit_text("❌ Целевой пользователь не является администратором")\n`;
+    code += `            await safe_edit_or_send(callback_query, "❌ Целевой пользователь не является администратором")\n`;
     code += `            return\n`;
     code += `        \n`;
     code += `        # Получаем текущее состояние права\n`;
@@ -9576,13 +9600,13 @@ function generateAdminRightsToggleHandlers(node: any): string {
     code += `        \n`;
     code += `        # Обновляем сообщение\n`;
     code += `        text = "⚙️ Управление правами администратора"\n`;
-    code += `        await callback_query.message.edit_text(text, reply_markup=keyboard)\n`;
+    code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n`;
     code += `        \n`;
     code += `        logging.info(f"Пользователь {user_id} {'включил' if new_value else 'отключил'} право '${rightKey}' для пользователя {target_user_id}")\n`;
     code += `        \n`;
     code += `    except Exception as e:\n`;
     code += `        logging.error(f"Ошибка при переключении права ${rightKey}: {e}")\n`;
-    code += `        await callback_query.message.edit_text(f"❌ Ошибка при изменении прав: {e}")\n`;
+    code += `        await safe_edit_or_send(callback_query, f"❌ Ошибка при изменении прав: {e}")\n`;
     code += `\n`;
   });
   
@@ -9607,13 +9631,13 @@ function generateAdminRightsToggleHandlers(node: any): string {
   code += `        \n`;
   code += `        # Обновляем сообщение\n`;
   code += `        text = "⚙️ Управление правами администратора"\n`;
-  code += `        await callback_query.message.edit_text(text, reply_markup=keyboard)\n`;
+  code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard)\n`;
   code += `        \n`;
   code += `        logging.info(f"Обновлены права для пользователя {target_user_id}")\n`;
   code += `        \n`;
   code += `    except Exception as e:\n`;
   code += `        logging.error(f"Ошибка при обновлении прав: {e}")\n`;
-  code += `        await callback_query.message.edit_text(f"❌ Ошибка при обновлении: {e}")\n`;
+  code += `        await safe_edit_or_send(callback_query, f"❌ Ошибка при обновлении: {e}")\n`;
   code += `\n`;
   
   return code;
