@@ -9485,9 +9485,11 @@ function generateAdminRightsHandler(node: Node): string {
   code += `    \n`;
   code += `    # Отправляем/обновляем сообщение с клавиатурой\n`;
   code += `    try:\n`;
+  code += `        # Пробуем отредактировать сообщение (работает для inline callbacks)\n`;
   code += `        await callback_query.message.edit_text(text, reply_markup=keyboard)\n`;
   code += `    except Exception as e:\n`;
-  code += `        logging.warning(f"Не удалось отредактировать сообщение: {e}")\n`;
+  code += `        # Если не удалось отредактировать (например, для text commands), отправляем новое сообщение\n`;
+  code += `        logging.info(f"Отправляем новое сообщение admin_rights: {e}")\n`;
   code += `        await callback_query.message.answer(text, reply_markup=keyboard)\n`;
   code += `\n`;
   
