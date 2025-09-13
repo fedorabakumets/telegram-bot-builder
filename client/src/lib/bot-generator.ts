@@ -9527,7 +9527,9 @@ function generateAdminRightsHandler(node: Node): string {
   code += `                'can_invite_users': getattr(member, 'can_invite_users', False),\n`;
   code += `                'can_pin_messages': getattr(member, 'can_pin_messages', False),\n`;
   code += `                'can_manage_video_chats': getattr(member, 'can_manage_video_chats', False),\n`;
-  code += `                'can_manage_stories': getattr(member, 'can_manage_stories', False),\n`;
+  code += `                'can_post_stories': getattr(member, 'can_post_stories', False),\n`;
+  code += `                'can_edit_stories': getattr(member, 'can_edit_stories', False),\n`;
+  code += `                'can_delete_stories': getattr(member, 'can_delete_stories', False),\n`;
   code += `                'is_anonymous': getattr(member, 'is_anonymous', False),\n`;
   code += `                'can_promote_members': getattr(member, 'can_promote_members', False)\n`;
   code += `            }\n`;
@@ -9562,7 +9564,9 @@ function generateAdminRightsHandler(node: Node): string {
   code += `        ('can_invite_users', '📨 Приглашение участников'),\n`;
   code += `        ('can_pin_messages', '📌 Закрепление сообщений'),\n`;
   code += `        ('can_manage_video_chats', '🎥 Управление видеочатами'),\n`;
-  code += `        ('can_manage_stories', '📰 Управление историями'),\n`;
+  code += `        ('can_post_stories', '📰 Публикация историй'),\n`;
+  code += `        ('can_edit_stories', '✏️ Редактирование историй'),\n`;
+  code += `        ('can_delete_stories', '🗑️ Удаление историй'),\n`;
   code += `        ('is_anonymous', '🔒 Анонимность'),\n`;
   code += `        ('can_promote_members', '👑 Назначение администраторов')\n`;
   code += `    ]\n`;
@@ -9661,7 +9665,9 @@ function generateAdminRightsToggleHandlers(node: any): string {
     'can_invite_users',
     'can_pin_messages',
     'can_manage_video_chats',
-    'can_manage_stories',
+    'can_post_stories',
+    'can_edit_stories', 
+    'can_delete_stories',
     'is_anonymous',
     'can_promote_members'
   ];

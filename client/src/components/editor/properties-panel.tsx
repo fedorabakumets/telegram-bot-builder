@@ -2390,7 +2390,7 @@ export function PropertiesPanel({
                   
                   <div className="space-y-3">
                     <div className="text-sm text-violet-800 dark:text-violet-200">
-                      При вызове команды автоматически отправляется сообщение с 9 инлайн кнопками, показывающими текущие права администратора:
+                      При вызове команды автоматически отправляется сообщение с 11 инлайн кнопками, показывающими текущие права администратора:
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 text-xs">
@@ -2400,7 +2400,9 @@ export function PropertiesPanel({
                       <div className="text-violet-600 dark:text-violet-400">• 📨 Приглашение участников</div>
                       <div className="text-violet-600 dark:text-violet-400">• 📌 Закрепление сообщений</div>
                       <div className="text-violet-600 dark:text-violet-400">• 🎥 Управление видеочатами</div>
-                      <div className="text-violet-600 dark:text-violet-400">• 📰 Управление историями</div>
+                      <div className="text-violet-600 dark:text-violet-400">• 📰 Публикация историй</div>
+                      <div className="text-violet-600 dark:text-violet-400">• ✏️ Редактирование историй</div>
+                      <div className="text-violet-600 dark:text-violet-400">• 🗑️ Удаление историй</div>
                       <div className="text-violet-600 dark:text-violet-400">• 🔒 Анонимность</div>
                       <div className="text-violet-600 dark:text-violet-400">• 👑 Назначение администраторов</div>
                     </div>
