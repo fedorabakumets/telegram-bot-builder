@@ -489,17 +489,25 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
       </div>
 
       {/* Tabs */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <Tabs defaultValue="users" className="h-full flex flex-col min-h-0">
+      <div className="w-full">
+        <Tabs defaultValue="users" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="users">Пользователи</TabsTrigger>
             <TabsTrigger value="backup">Резервные копии</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="users" className="flex-1 min-h-0">
+          <TabsContent value="users" className="w-full">
             {isMobile ? (
-              // Mobile card layout with proper scrolling
-              <div className="h-full overflow-y-auto">
+              // Mobile card layout with simple scrolling  
+              <div 
+                className="overflow-y-scroll" 
+                style={{ 
+                  height: '350px', 
+                  overflowY: 'scroll', 
+                  WebkitOverflowScrolling: 'touch',
+                  scrollBehavior: 'smooth'
+                }}
+              >
                 <div className="p-4 space-y-4">
                   {/* Debug info */}
                   <div className="text-xs text-blue-500 bg-blue-50 p-2 rounded mb-2" data-testid="debug-mobile-info">
