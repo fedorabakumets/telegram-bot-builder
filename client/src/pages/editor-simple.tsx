@@ -435,14 +435,14 @@ export default function EditorSimple() {
           setShowExport(false);
           setCurrentTab('editor');
         }}
-        botData={getBotData()}
+        botData={currentProject?.data as any}
         projectName={currentProject.name}
       />
 
       <SaveTemplateModal
         isOpen={showSaveTemplate}
         onClose={() => setShowSaveTemplate(false)}
-        botData={getBotData()}
+        botData={currentProject?.data as any}
         projectName={currentProject.name}
       />
 

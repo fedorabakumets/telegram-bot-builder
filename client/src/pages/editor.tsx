@@ -1443,7 +1443,7 @@ export default function Editor() {
           setShowExport(false);
           setCurrentTab('editor');
         }}
-        botData={getBotData()}
+        botData={(botDataWithSheets || getBotData()) as any}
         projectName={currentProject.name}
       />
 
