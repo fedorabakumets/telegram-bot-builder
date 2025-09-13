@@ -973,10 +973,12 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
             </div>
           </div>
           
-          <div className="bg-slate-800/30 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-600/30 dark:border-slate-700/50">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-              <span className="text-xs font-medium text-slate-300 dark:text-slate-400 uppercase tracking-wider">INLINE КНОПКИ</span>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2 mb-3">
+              <div className="w-1 h-4 bg-amber-500 dark:bg-amber-400 rounded-full"></div>
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                Inline кнопки
+              </span>
             </div>
             
             <div className="grid grid-cols-2 gap-2">
@@ -986,27 +988,24 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                 { key: 'can_restrict_members', name: '🚫 Блокировка' },
                 { key: 'can_invite_users', name: '📨 Приглашения' },
                 { key: 'can_pin_messages', name: '📌 Закрепление' },
-                { key: 'can_manage_video_chats', name: '🎥 Видеочаты' },
-                { key: 'can_post_stories', name: '📰 Публикация' },
-                { key: 'can_edit_stories', name: '✏️ Редактирование' },
-                { key: 'can_delete_stories', name: '🗑️ Удал. историй' },
-                { key: 'is_anonymous', name: '🔒 Анонимность' },
-                { key: 'can_promote_members', name: '👑 Назначение' }
-              ].slice(0, 6).map((right, index) => (
-                <div 
-                  key={right.key} 
-                  className="bg-blue-600/90 hover:bg-blue-500/90 text-white text-xs font-medium py-2 px-3 rounded-lg transition-colors duration-200 text-center border border-blue-500/30 shadow-sm"
-                >
-                  {right.name}
+                { key: 'can_manage_video_chats', name: '🎥 Видеочаты' }
+              ].map((right, index) => (
+                <div key={right.key} className="group relative">
+                  <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm">
+                    <div className="flex items-center justify-center space-x-1">
+                      <span className="truncate">{right.name}</span>
+                      <i className="fas fa-chevron-right text-blue-500 dark:text-blue-400 text-xs opacity-70"></i>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
             
             {/* Показать что есть еще кнопки */}
-            <div className="mt-2 text-center">
-              <div className="text-xs text-slate-400 dark:text-slate-500">
-                +5 ещё кнопок...
-              </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-1 font-medium">
+              <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
+                +5 еще
+              </span>
             </div>
           </div>
           
