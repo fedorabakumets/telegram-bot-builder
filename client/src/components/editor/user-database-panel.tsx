@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { UserBotData } from '@shared/schema';
 import { DatabaseBackupPanel } from './database-backup-panel';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UserDatabasePanelProps {
   projectId: number;
@@ -63,6 +64,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   // Fetch user data
   const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery<UserBotData[]>({
@@ -316,9 +318,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     <div className="h-full flex flex-col bg-background">
       <div className="border-b bg-card">
         <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
+          <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-center justify-between'} mb-4`}>
             <div>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
+              <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold flex items-center gap-2`}>
                 <Users className="w-5 h-5" />
                 База данных пользователей
               </h2>
@@ -326,16 +328,16 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 Управление пользователями бота "{projectName}"
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={handleRefresh} variant="outline" size="sm">
+            <div className={`flex items-center gap-2 ${isMobile ? 'self-stretch' : ''}`}>
+              <Button onClick={handleRefresh} variant="outline" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
                 <RefreshCw className="w-4 h-4 mr-1" />
-                Обновить
+                {isMobile ? 'Обновить' : 'Обновить'}
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm">
+                  <Button variant="destructive" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
                     <Trash2 className="w-4 h-4 mr-1" />
-                    Очистить базу
+                    {isMobile ? 'Очистить' : 'Очистить базу'}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -361,7 +363,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
           {/* Stats Cards */}
           {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-7 gap-3 mb-4">
+            <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-7'} gap-3 mb-4`}>
               <Card className="p-3">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-blue-500" />
@@ -429,19 +431,19 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           )}
 
           {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className={`flex ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'} gap-3`}>
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Поиск по имени, username или ID..."
+                placeholder={isMobile ? "Поиск..." : "Поиск по имени, username или ID..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2">
+            <div className={`flex gap-2 ${isMobile ? 'grid grid-cols-2' : 'flex'}`}>
               <Select value={filterActive?.toString() || 'all'} onValueChange={(value) => setFilterActive(value === 'all' ? null : value === 'true')}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className={isMobile ? 'w-full' : 'w-32'}>
                   <SelectValue placeholder="Статус" />
                 </SelectTrigger>
                 <SelectContent>
@@ -452,7 +454,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               </Select>
 
               <Select value={filterPremium?.toString() || 'all'} onValueChange={(value) => setFilterPremium(value === 'all' ? null : value === 'true')}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className={isMobile ? 'w-full' : 'w-32'}>
                   <SelectValue placeholder="Premium" />
                 </SelectTrigger>
                 <SelectContent>
@@ -467,7 +469,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 setSortField(field);
                 setSortDirection(direction);
               }}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className={isMobile ? 'w-full col-span-2' : 'w-40'}>
                   <SelectValue placeholder="Сортировка" />
                 </SelectTrigger>
                 <SelectContent>
@@ -496,7 +498,112 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           
           <TabsContent value="users" className="flex-1 overflow-hidden">
             <ScrollArea className="h-full">
-              <Table>
+              {isMobile ? (
+                // Mobile card layout
+                <div className="p-4 space-y-4">
+                  {filteredAndSortedUsers.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="text-muted-foreground">
+                        {searchQuery ? 'Пользователи не найдены' : 'Пользователи еще не взаимодействовали с ботом'}
+                      </div>
+                    </div>
+                  ) : (
+                    filteredAndSortedUsers.map((user, index) => (
+                      <Card key={user.id || user.user_id || index} className="p-4">
+                        <div className="space-y-3">
+                          {/* User Header */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="font-medium text-base">{formatUserName(user)}</div>
+                              <div className="text-sm text-muted-foreground">ID: {user.userId || user.user_id}</div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowUserDetails(true);
+                                }}
+                              >
+                                <Eye className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUserStatusToggle(user, 'isActive')}
+                                className={(user.isActive || user.is_active) ? "text-red-600" : "text-green-600"}
+                              >
+                                {(user.isActive || user.is_active) ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Status Badges */}
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant={(user.isActive || user.is_active) ? "default" : "secondary"}>
+                              {(user.isActive || user.is_active) ? "Активен" : "Неактивен"}
+                            </Badge>
+                            {(user.isPremium || user.is_premium) && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                            {(user.isBlocked || user.is_blocked) && <Badge variant="destructive">Заблокирован</Badge>}
+                            {(user.isBot || user.is_bot) && <Badge variant="outline">Бот</Badge>}
+                          </div>
+
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <div className="text-muted-foreground">Сообщений</div>
+                              <div className="font-medium">{user.interactionCount || user.interaction_count || 0}</div>
+                            </div>
+                            <div>
+                              <div className="text-muted-foreground">Последняя активность</div>
+                              <div className="font-medium text-xs">{formatDate(user.lastInteraction || user.last_interaction)}</div>
+                            </div>
+                          </div>
+
+                          {/* Recent Responses */}
+                          {((user.userData || user.user_data) && Object.keys(user.userData || user.user_data).length > 0) && (
+                            <div className="border-t pt-3">
+                              <div className="text-sm font-medium mb-2">Последние ответы:</div>
+                              <div className="space-y-2">
+                                {Object.entries(user.userData || user.user_data).slice(0, 1).map(([key, value]) => {
+                                  let responseData = value;
+                                  if (typeof value === 'string') {
+                                    try {
+                                      responseData = JSON.parse(value);
+                                    } catch {
+                                      responseData = { value: value, type: 'text' };
+                                    }
+                                  }
+                                  
+                                  return (
+                                    <div key={key} className="text-xs bg-muted/50 rounded-lg p-2">
+                                      <div className="text-muted-foreground mb-1">{key}:</div>
+                                      <div className="font-medium">
+                                        {responseData?.value ? 
+                                          (responseData.value.length > 50 ? `${responseData.value.substring(0, 50)}...` : responseData.value) :
+                                          (typeof value === 'string' ? (value.length > 50 ? `${value.substring(0, 50)}...` : value) : JSON.stringify(value))
+                                        }
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                                {Object.keys(user.userData || user.user_data).length > 1 && (
+                                  <div className="text-xs text-muted-foreground">
+                                    +{Object.keys(user.userData || user.user_data).length - 1} еще...
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              ) : (
+                // Desktop table layout
+                <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Пользователь</TableHead>
@@ -666,7 +773,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 ))
               )}
             </TableBody>
-              </Table>
+                </Table>
+              )}
             </ScrollArea>
           </TabsContent>
           
@@ -682,7 +790,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
       {/* User Details Dialog */}
       <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+        <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh]' : 'max-w-3xl max-h-[80vh]'} overflow-auto`}>
           <DialogHeader>
             <DialogTitle>Детали пользователя</DialogTitle>
             <DialogDescription>
@@ -692,7 +800,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           
           {selectedUser && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                 <div>
                   <Label className="text-sm font-medium">Основная информация</Label>
                   <div className="mt-2 space-y-2">
