@@ -1,6 +1,34 @@
 import { BotData, Node, BotGroup } from '@shared/schema';
 import { generateBotFatherCommands } from './commands';
 
+// Функция для сбора всех узлов и связей из всех листов проекта
+function extractNodesAndConnections(botData: BotData) {
+  if (!botData) return { nodes: [], connections: [] };
+  
+  if ((botData as any).sheets && Array.isArray((botData as any).sheets)) {
+    // Многолистовой проект - собираем узлы и связи из всех листов
+    let allNodes: any[] = [];
+    let allConnections: any[] = [];
+    
+    (botData as any).sheets.forEach((sheet: any) => {
+      if (sheet.nodes && Array.isArray(sheet.nodes)) {
+        allNodes = allNodes.concat(sheet.nodes);
+      }
+      if (sheet.connections && Array.isArray(sheet.connections)) {
+        allConnections = allConnections.concat(sheet.connections);
+      }
+    });
+    
+    return { nodes: allNodes, connections: allConnections };
+  } else {
+    // Обычный проект
+    return { 
+      nodes: botData.nodes || [], 
+      connections: botData.connections || [] 
+    };
+  }
+}
+
 // Функция для создания безопасного имени функции Python
 function createSafeFunctionName(nodeId: string): string {
   let safeName = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
@@ -726,7 +754,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
 }
 
 export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = []): string {
-  const { nodes, connections } = botData;
+  const { nodes, connections } = extractNodesAndConnections(botData);
   
   // Собираем все ID узлов для генерации уникальных коротких ID
   const allNodeIds = nodes ? nodes.map(node => node.id) : [];
@@ -10392,7 +10420,7 @@ function generateKeyboard(node: Node): string {
 
 export function validateBotStructure(botData: BotData): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
-  const { nodes, connections } = botData;
+  const { nodes, connections } = extractNodesAndConnections(botData);
 
   // Check if there's a start node
   const startNodes = (nodes || []).filter(node => node.type === 'start');

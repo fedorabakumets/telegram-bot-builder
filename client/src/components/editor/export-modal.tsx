@@ -46,23 +46,43 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     enabled: isOpen
   });
 
-  // Статистика бота
+  // Функция для сбора всех узлов из всех листов проекта
+  const getAllNodes = (data: BotData) => {
+    if (!data) return [];
+    
+    if ((data as any).sheets && Array.isArray((data as any).sheets)) {
+      // Многолистовой проект - собираем узлы из всех листов
+      let allNodes: any[] = [];
+      (data as any).sheets.forEach((sheet: any) => {
+        if (sheet.nodes && Array.isArray(sheet.nodes)) {
+          allNodes = allNodes.concat(sheet.nodes);
+        }
+      });
+      return allNodes;
+    } else {
+      // Обычный проект
+      return data.nodes || [];
+    }
+  };
+
+  // Статистика бота с учетом всех листов проекта
+  const allNodes = getAllNodes(botData);
   const botStats = {
-    totalNodes: botData?.nodes?.length || 0,
-    commandNodes: botData?.nodes?.filter(node => node.type === 'start' || node.type === 'command').length || 0,
-    messageNodes: botData?.nodes?.filter(node => node.type === 'message').length || 0,
-    photoNodes: botData?.nodes?.filter(node => node.type === 'photo').length || 0,
-    keyboardNodes: botData?.nodes?.filter(node => node.data?.keyboardType !== 'none').length || 0,
-    totalButtons: botData?.nodes?.reduce((sum, node) => sum + (node.data?.buttons?.length || 0), 0) || 0,
-    commandsInMenu: botData?.nodes?.filter(node => 
+    totalNodes: allNodes.length,
+    commandNodes: allNodes.filter(node => node.type === 'start' || node.type === 'command').length,
+    messageNodes: allNodes.filter(node => node.type === 'message').length,
+    photoNodes: allNodes.filter(node => node.type === 'photo').length,
+    keyboardNodes: allNodes.filter(node => node.data?.keyboardType !== 'none').length,
+    totalButtons: allNodes.reduce((sum, node) => sum + (node.data?.buttons?.length || 0), 0),
+    commandsInMenu: allNodes.filter(node => 
       (node.type === 'start' || node.type === 'command') && node.data?.showInMenu
-    ).length || 0,
-    adminOnlyCommands: botData?.nodes?.filter(node => 
+    ).length,
+    adminOnlyCommands: allNodes.filter(node => 
       (node.type === 'start' || node.type === 'command') && node.data?.adminOnly
-    ).length || 0,
-    privateOnlyCommands: botData?.nodes?.filter(node => 
+    ).length,
+    privateOnlyCommands: allNodes.filter(node => 
       (node.type === 'start' || node.type === 'command') && node.data?.isPrivateOnly
-    ).length || 0
+    ).length
   };
 
   // Асинхронная ленивая генерация экспорта - только когда нужен конкретный формат
