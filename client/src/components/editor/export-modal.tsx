@@ -169,9 +169,20 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
       if (isOpen && dataToUse) {
         try {
           const commands = await loadCommands();
-          // Используем данные из активного листа или первого листа
-          const nodes = (dataToUse as any).sheets?.[0]?.nodes || dataToUse.nodes || [];
-          console.log('🎯 ExportModal: Генерируем команды для узлов:', nodes);
+          // Собираем узлы из всех листов проекта
+          let nodes: any[] = [];
+          if ((dataToUse as any).sheets && Array.isArray((dataToUse as any).sheets)) {
+            // Многолистовой проект - собираем узлы из всех листов
+            (dataToUse as any).sheets.forEach((sheet: any) => {
+              if (sheet.nodes && Array.isArray(sheet.nodes)) {
+                nodes = nodes.concat(sheet.nodes);
+              }
+            });
+          } else {
+            // Обычный проект
+            nodes = dataToUse.nodes || [];
+          }
+          console.log('🎯 ExportModal: Генерируем команды для узлов из всех листов:', nodes.length);
           console.log('🎯 ExportModal: Узлы с командами:', nodes.filter((node: any) => 
             (node.type === 'start' || node.type === 'command') && 
             node.data?.showInMenu && 
