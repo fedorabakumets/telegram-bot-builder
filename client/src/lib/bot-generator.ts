@@ -9570,11 +9570,14 @@ function generateAdminRightsHandler(node: Node): string {
   code += `        is_enabled = current_rights.get(right_key, False)\n`;
   code += `        indicator = "✅" if is_enabled else "❌"\n`;
   code += `        button_text = f"{indicator} {right_name}"\n`;
-  code += `        callback_data = f"toggle_right_{right_key}_{target_user_id}_{node_id}"\n`;
+  code += `        # Укорачиваем callback_data для соблюдения лимита Telegram (64 байта)\n`;
+  code += `        short_node_id = str(hash(node_id))[-6:]  # Берем последние 6 символов хэша\n`;
+  code += `        callback_data = f"tr_{right_key[:12]}_{target_user_id}_{short_node_id}"\n`;
   code += `        builder.add(InlineKeyboardButton(text=button_text, callback_data=callback_data))\n`;
   code += `    \n`;
-  code += `    # Кнопка для обновления состояния\n`;
-  code += `    builder.add(InlineKeyboardButton(text="🔄 Обновить", callback_data=f"refresh_rights_{target_user_id}_{node_id}"))\n`;
+  code += `    # Кнопка для обновления состояния (с коротким callback_data)\n`;
+  code += `    short_node_id = str(hash(node_id))[-6:]  # Берем последние 6 символов хэша\n`;
+  code += `    builder.add(InlineKeyboardButton(text="🔄 Обновить", callback_data=f"ref_{target_user_id}_{short_node_id}"))\n`;
   code += `    \n`;
   code += `    builder.adjust(1)  # Располагаем кнопки в одну колонку для лучшей читаемости\n`;
   code += `    return builder.as_markup()\n`;
@@ -9662,20 +9665,23 @@ function generateAdminRightsToggleHandlers(node: any): string {
   
   // Создаем обработчик для каждого права
   adminRights.forEach(rightKey => {
+    const shortRightKey = rightKey.substring(0, 12); // Обрезаем ключ права до 12 символов
     code += `# Обработчик переключения права: ${rightKey}\n`;
-    code += `@dp.callback_query(lambda c: c.data.startswith("toggle_right_${rightKey}_"))\n`;
+    code += `@dp.callback_query(lambda c: c.data.startswith("tr_${shortRightKey}_"))\n`;
     code += `async def toggle_${rightKey}_${safeFunctionName}(callback_query: types.CallbackQuery, bot):\n`;
     code += `    """\n`;
     code += `    Переключает право ${rightKey} для пользователя\n`;
     code += `    """\n`;
     code += `    await callback_query.answer()\n`;
     code += `    \n`;
-    code += `    # Парсим данные из callback_data: toggle_right_<right>_<user_id>_<node_id>\n`;
+    code += `    # Парсим данные из callback_data: tr_<right>_<user_id>_<node_hash>\n`;
     code += `    try:\n`;
     code += `        data_parts = callback_query.data.split('_')\n`;
-    code += `        # Формат: ['toggle', 'right', '<right_name>', '<user_id>', '<node_id>']\n`;
+    code += `        # Формат: ['tr', '<right_name>', '<user_id>', '<node_hash>']\n`;
+    code += `        if len(data_parts) < 4:\n`;
+    code += `            raise ValueError("Недостаточно частей в callback_data")\n`;
     code += `        target_user_id = int(data_parts[-2])\n`;
-    code += `        node_id = data_parts[-1]\n`;
+    code += `        node_hash = data_parts[-1]\n`;
     code += `        logging.info(f"Переключаем право ${rightKey} для пользователя {target_user_id}")\n`;
     code += `    except (ValueError, IndexError) as e:\n`;
     code += `        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")\n`;
@@ -9740,15 +9746,15 @@ function generateAdminRightsToggleHandlers(node: any): string {
   
   // Обработчик кнопки обновления
   code += `# Обработчик кнопки обновления прав\n`;
-  code += `@dp.callback_query(lambda c: c.data.startswith("refresh_rights_"))\n`;
+  code += `@dp.callback_query(lambda c: c.data.startswith("ref_"))\n`;
   code += `async def refresh_admin_rights_${safeFunctionName}(callback_query: types.CallbackQuery, bot):\n`;
   code += `    """\n`;
   code += `    Обновляет отображение прав администратора\n`;
   code += `    """\n`;
   code += `    await callback_query.answer("🔄 Обновляем...")\n`;
   code += `    \n`;
-  code += `    # Парсим данные: refresh_rights_<user_id>_<node_id>\n`;
-  code += `    data_parts = callback_query.data.rsplit('_', 2)\n`;
+  code += `    # Парсим данные: ref_<user_id>_<node_hash>\n`;
+  code += `    data_parts = callback_query.data.split('_')\n`;
   code += `    target_user_id = int(data_parts[-2])\n`;
   code += `    \n`;
   code += `    chat_id = callback_query.message.chat.id\n`;
