@@ -1,6 +1,16 @@
 import { BotData, Node, BotGroup } from '@shared/schema';
 import { generateBotFatherCommands } from './commands';
 
+// Функция для создания безопасного имени функции Python
+function createSafeFunctionName(nodeId: string): string {
+  let safeName = nodeId.replace(/[^a-zA-Z0-9_]/g, '_');
+  // Python функции не могут начинаться с цифры
+  if (/^\d/.test(safeName)) {
+    safeName = 'node_' + safeName;
+  }
+  return safeName;
+}
+
 // Функция для правильного экранирования строк в Python коде
 function escapeForPython(text: string): string {
   return text.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t');
@@ -9388,9 +9398,118 @@ function generateDemoteUserHandler(node: Node): string {
 function generateAdminRightsHandler(node: Node): string {
   let code = `\n# Interactive Admin Rights Handler for ${node.id}\n`;
   
-  const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  const safeFunctionName = createSafeFunctionName(node.id);
   const messageText = node.data.messageText || "⚙️ Управление правами администратора";
   const formattedText = formatTextForPython(messageText);
+  const command = node.data.command?.replace('/', '') || 'admin_rights';
+  
+  // Создаем основной command handler с автоматическим определением участника
+  code += `@dp.message(Command("${command}"))\n`;
+  code += `async def ${safeFunctionName}_command_handler(message: types.Message, bot):\n`;
+  code += `    """\n`;
+  code += `    Основной обработчик команды ${node.data.command || '/admin_rights'}\n`;
+  code += `    Автоматически определяет целевого пользователя из контекста\n`;
+  code += `    """\n`;
+  code += `    user_id = message.from_user.id\n`;
+  code += `    chat_id = message.chat.id\n`;
+  code += `    target_user_id = None\n`;
+  code += `    \n`;
+  code += `    logging.info(f"Команда admin_rights вызвана пользователем {user_id} в чате {chat_id}")\n`;
+  code += `    \n`;
+  code += `    # Проверяем права вызывающего пользователя\n`;
+  code += `    try:\n`;
+  code += `        current_user_member = await bot.get_chat_member(chat_id, user_id)\n`;
+  code += `        if current_user_member.status not in ['administrator', 'creator']:\n`;
+  code += `            await message.answer("❌ У вас нет прав администратора для использования этой команды")\n`;
+  code += `            return\n`;
+  code += `        \n`;
+  code += `        if current_user_member.status != 'creator' and not getattr(current_user_member, 'can_promote_members', False):\n`;
+  code += `            await message.answer("❌ У вас нет права на управление правами других администраторов")\n`;
+  code += `            return\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer(f"❌ Ошибка при проверке ваших прав: {e}")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    # Автоматическое определение целевого пользователя\n`;
+  code += `    \n`;
+  code += `    # 1. Проверяем, есть ли ответ на сообщение\n`;
+  code += `    if message.reply_to_message and message.reply_to_message.from_user:\n`;
+  code += `        target_user_id = message.reply_to_message.from_user.id\n`;
+  code += `        logging.info(f"Целевой пользователь определен из ответа на сообщение: {target_user_id}")\n`;
+  code += `    \n`;
+  code += `    # 2. Проверяем, есть ли упоминание в тексте (@username или прямое упоминание)\n`;
+  code += `    elif message.entities:\n`;
+  code += `        for entity in message.entities:\n`;
+  code += `            # Приоритет - прямое упоминание с объектом пользователя\n`;
+  code += `            if entity.type == "text_mention" and hasattr(entity, 'user'):\n`;
+  code += `                target_user_id = entity.user.id\n`;
+  code += `                logging.info(f"Целевой пользователь определен из прямого упоминания: {target_user_id}")\n`;
+  code += `                break\n`;
+  code += `            elif entity.type == "mention":\n`;
+  code += `                # Извлекаем username из упоминания\n`;
+  code += `                username = message.text[entity.offset+1:entity.offset+entity.length]  # +1 чтобы убрать @\n`;
+  code += `                try:\n`;
+  code += `                    # Пытаемся найти пользователя по username через участников чата\n`;
+  code += `                    chat_admins = await bot.get_chat_administrators(chat_id)\n`;
+  code += `                    for member in chat_admins:\n`;
+  code += `                        if member.user.username and member.user.username.lower() == username.lower():\n`;
+  code += `                            target_user_id = member.user.id\n`;
+  code += `                            logging.info(f"Целевой пользователь определен из упоминания @{username}: {target_user_id}")\n`;
+  code += `                            break\n`;
+  code += `                except Exception as e:\n`;
+  code += `                    logging.warning(f"Не удалось найти пользователя @{username}: {e}")\n`;
+  code += `                break\n`;
+  code += `    \n`;
+  code += `    # 3. Проверяем, есть ли ID в тексте команды\n`;
+  code += `    if target_user_id is None:\n`;
+  code += `        # Ищем числовой ID в аргументах команды\n`;
+  code += `        import re\n`;
+  code += `        # Извлекаем все числа из текста команды (исключая сам command)\n`;
+  code += `        command_text = message.text or ""\n`;
+  code += `        numbers = re.findall(r'\\b\\d{6,}\\b', command_text)  # ID обычно 6+ цифр\n`;
+  code += `        \n`;
+  code += `        for number_str in numbers:\n`;
+  code += `            try:\n`;
+  code += `                potential_user_id = int(number_str)\n`;
+  code += `                # Проверяем, что это валидный пользователь в чате\n`;
+  code += `                try:\n`;
+  code += `                    member_check = await bot.get_chat_member(chat_id, potential_user_id)\n`;
+  code += `                    target_user_id = potential_user_id\n`;
+  code += `                    logging.info(f"Целевой пользователь определен из ID в команде: {target_user_id}")\n`;
+  code += `                    break\n`;
+  code += `                except Exception:\n`;
+  code += `                    logging.debug(f"ID {potential_user_id} не найден в чате, попробуем следующий")\n`;
+  code += `                    continue\n`;
+  code += `            except ValueError:\n`;
+  code += `                continue\n`;
+  code += `    \n`;
+  code += `    # Если целевой пользователь не определен, показываем инструкцию\n`;
+  code += `    if target_user_id is None:\n`;
+  code += `        await message.answer(\n`;
+  code += `            "❓ Укажите пользователя для управления правами:\\n"\n`;
+  code += `            "• Ответьте на сообщение пользователя\\n"\n`;
+  code += `            "• Упомяните пользователя: /admin_rights @username\\n"\n`;
+  code += `            "• Укажите ID: /admin_rights 123456789"\n`;
+  code += `        )\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    # Проверяем, что целевой пользователь является администратором\n`;
+  code += `    try:\n`;
+  code += `        target_member = await bot.get_chat_member(chat_id, target_user_id)\n`;
+  code += `        if target_member.status not in ['administrator', 'creator']:\n`;
+  code += `            await message.answer("❌ Указанный пользователь не является администратором")\n`;
+  code += `            return\n`;
+  code += `    except Exception as e:\n`;
+  code += `        await message.answer(f"❌ Не удалось проверить пользователя: {e}")\n`;
+  code += `        return\n`;
+  code += `    \n`;
+  code += `    # Создаем и отправляем интерактивную клавиатуру\n`;
+  code += `    keyboard = await create_admin_rights_keyboard_${safeFunctionName}(bot, chat_id, target_user_id)\n`;
+  code += `    text = ${formattedText}\n`;
+  code += generateUniversalVariableReplacement('    ');
+  code += `    \n`;
+  code += `    await message.answer(text, reply_markup=keyboard)\n`;
+  code += `\n`;
   
   // Создаем функцию для получения текущих прав администратора
   code += `async def get_admin_rights_${safeFunctionName}(bot, chat_id, target_user_id):\n`;
@@ -9400,16 +9519,16 @@ function generateAdminRightsHandler(node: Node): string {
   code += `    try:\n`;
   code += `        member = await bot.get_chat_member(chat_id, target_user_id)\n`;
   code += `        if hasattr(member, 'status') and member.status in ['administrator', 'creator']:\n`;
-  code += `            # Возвращаем права администратора\n`;
+  code += `            # Возвращаем 8 основных прав администратора\n`;
   code += `            return {\n`;
   code += `                'can_change_info': getattr(member, 'can_change_info', False),\n`;
   code += `                'can_delete_messages': getattr(member, 'can_delete_messages', False),\n`;
-  code += `                'can_invite_users': getattr(member, 'can_invite_users', False),\n`;
   code += `                'can_restrict_members': getattr(member, 'can_restrict_members', False),\n`;
+  code += `                'can_invite_users': getattr(member, 'can_invite_users', False),\n`;
   code += `                'can_pin_messages': getattr(member, 'can_pin_messages', False),\n`;
-  code += `                'can_promote_members': getattr(member, 'can_promote_members', False),\n`;
   code += `                'can_manage_video_chats': getattr(member, 'can_manage_video_chats', False),\n`;
-  code += `                'can_manage_topics': getattr(member, 'can_manage_topics', False)\n`;
+  code += `                'is_anonymous': getattr(member, 'is_anonymous', False),\n`;
+  code += `                'can_promote_members': getattr(member, 'can_promote_members', False)\n`;
   code += `            }\n`;
   code += `        else:\n`;
   code += `            # Пользователь не является администратором\n`;
@@ -9434,16 +9553,16 @@ function generateAdminRightsHandler(node: Node): string {
   code += `        builder.add(InlineKeyboardButton(text="❌ Пользователь не является администратором", callback_data="no_admin"))\n`;
   code += `        return builder.as_markup()\n`;
   code += `    \n`;
-  code += `    # Список прав для отображения\n`;
+  code += `    # Список из 8 основных прав администратора (согласно дизайну)\n`;
   code += `    admin_rights_list = [\n`;
-  code += `        ('can_change_info', '🔧 Изменить информацию'),\n`;
-  code += `        ('can_delete_messages', '🗑️ Удалять сообщения'),\n`;
-  code += `        ('can_invite_users', '👥 Приглашать пользователей'),\n`;
-  code += `        ('can_restrict_members', '🚫 Ограничивать участников'),\n`;
-  code += `        ('can_pin_messages', '📌 Закреплять сообщения'),\n`;
-  code += `        ('can_promote_members', '⭐ Назначать админов'),\n`;
-  code += `        ('can_manage_video_chats', '🎥 Управлять видеочатами'),\n`;
-  code += `        ('can_manage_topics', '💬 Управлять темами')\n`;
+  code += `        ('can_change_info', '🏷️ Изменение профиля'),\n`;
+  code += `        ('can_delete_messages', '🗑️ Удаление сообщений'),\n`;
+  code += `        ('can_restrict_members', '🚫 Блокировка участников'),\n`;
+  code += `        ('can_invite_users', '📨 Приглашение участников'),\n`;
+  code += `        ('can_pin_messages', '📌 Закрепление сообщений'),\n`;
+  code += `        ('can_manage_video_chats', '🎥 Управление видеочатами'),\n`;
+  code += `        ('is_anonymous', '🔒 Анонимность'),\n`;
+  code += `        ('can_promote_members', '👑 Назначение администраторов')\n`;
   code += `    ]\n`;
   code += `    \n`;
   code += `    # Создаем кнопки с индикаторами состояния\n`;
@@ -9525,19 +9644,19 @@ function generateAdminRightsHandler(node: Node): string {
 }
 
 function generateAdminRightsToggleHandlers(node: any): string {
-  const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+  const safeFunctionName = createSafeFunctionName(node.id);
   let code = '\n';
   
-  // Список всех админ прав
+  // Список из 8 основных админ прав (согласно дизайну)
   const adminRights = [
     'can_change_info',
     'can_delete_messages', 
-    'can_invite_users',
     'can_restrict_members',
+    'can_invite_users',
     'can_pin_messages',
-    'can_promote_members',
     'can_manage_video_chats',
-    'can_manage_topics'
+    'is_anonymous',
+    'can_promote_members'
   ];
   
   // Создаем обработчик для каждого права
@@ -9551,9 +9670,16 @@ function generateAdminRightsToggleHandlers(node: any): string {
     code += `    await callback_query.answer()\n`;
     code += `    \n`;
     code += `    # Парсим данные из callback_data: toggle_right_<right>_<user_id>_<node_id>\n`;
-    code += `    data_parts = callback_query.data.rsplit('_', 2)\n`;
-    code += `    target_user_id = int(data_parts[-2])\n`;
-    code += `    node_id = data_parts[-1]\n`;
+    code += `    try:\n`;
+    code += `        data_parts = callback_query.data.split('_')\n`;
+    code += `        # Формат: ['toggle', 'right', '<right_name>', '<user_id>', '<node_id>']\n`;
+    code += `        target_user_id = int(data_parts[-2])\n`;
+    code += `        node_id = data_parts[-1]\n`;
+    code += `        logging.info(f"Переключаем право ${rightKey} для пользователя {target_user_id}")\n`;
+    code += `    except (ValueError, IndexError) as e:\n`;
+    code += `        logging.error(f"Ошибка парсинга callback_data: {callback_query.data}, ошибка: {e}")\n`;
+    code += `        await callback_query.answer("❌ Ошибка в данных кнопки")\n`;
+    code += `        return\n`;
     code += `    \n`;
     code += `    user_id = callback_query.from_user.id\n`;
     code += `    chat_id = callback_query.message.chat.id\n`;
@@ -9761,7 +9887,7 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
     code += `        logging.info(f"Права администратора сняты с пользователя {target_user_id} администратором {user_id}")\n`;
   } else if (node.type === 'admin_rights') {
     // Для admin_rights узлов перенаправляем к callback обработчику
-    const safeFunctionName = node.id.replace(/[^a-zA-Z0-9_]/g, '_');
+    const safeFunctionName = createSafeFunctionName(node.id);
     code += `        # Создаем Mock callback для эмуляции inline кнопки admin_rights\n`;
     code += `        class MockCallback:\n`;
     code += `            def __init__(self, data, user, msg):\n`;
