@@ -497,10 +497,10 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           </TabsList>
           
           <TabsContent value="users" className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              {isMobile ? (
-                // Mobile card layout
-                <div className="p-4 space-y-4">
+            {isMobile ? (
+              // Mobile card layout with proper scrolling
+              <div className="h-full overflow-y-auto">
+                <div className="p-4 space-y-4 pb-20">
                   {filteredAndSortedUsers.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="text-muted-foreground">
@@ -601,8 +601,10 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     ))
                   )}
                 </div>
-              ) : (
-                // Desktop table layout
+              </div>
+            ) : (
+              // Desktop table layout
+              <ScrollArea className="h-full">
                 <Table>
             <TableHeader>
               <TableRow>
@@ -773,9 +775,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 ))
               )}
             </TableBody>
-                </Table>
-              )}
-            </ScrollArea>
+              </Table>
+              </ScrollArea>
+            )}
           </TabsContent>
           
           <TabsContent value="backup" className="flex-1 overflow-hidden">
