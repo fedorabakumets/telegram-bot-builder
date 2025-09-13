@@ -9746,7 +9746,11 @@ function generateUserManagementSynonymHandler(node: Node, synonym: string): stri
     code += `            async def answer(self):\n`;
     code += `                pass  # Mock метод, ничего не делаем\n`;
     code += `            async def edit_text(self, text, **kwargs):\n`;
-    code += `                return await self.message.answer(text, **kwargs)\n`;
+    code += `                try:\n`;
+    code += `                    return await self.message.edit_text(text, **kwargs)\n`;
+    code += `                except Exception as e:\n`;
+    code += `                    logging.warning(f"Не удалось отредактировать сообщение: {e}")\n`;
+    code += `                    return await self.message.answer(text, **kwargs)\n`;
     code += `        \n`;
     code += `        mock_callback = MockCallback("${node.id}", message.from_user, message)\n`;
     code += `        # bot уже определен глобально\n`;
@@ -9806,7 +9810,11 @@ function generateMessageSynonymHandler(node: Node, synonym: string): string {
   code += `        async def answer(self):\n`;
   code += `            pass  # Mock метод, ничего не делаем\n`;
   code += `        async def edit_text(self, text, **kwargs):\n`;
-  code += `            return await self.message.answer(text, **kwargs)\n`;
+  code += `            try:\n`;
+  code += `                return await self.message.edit_text(text, **kwargs)\n`;
+  code += `            except Exception as e:\n`;
+  code += `                logging.warning(f"Не удалось отредактировать сообщение: {e}")\n`;
+  code += `                return await self.message.answer(text, **kwargs)\n`;
   code += `    \n`;
   code += `    mock_callback = MockCallback("${node.id}", message.from_user, message)\n`;
   code += `    await handle_callback_${sanitizedNodeId}(mock_callback)\n`;
