@@ -14,7 +14,7 @@ import { pipeline } from "stream/promises";
 import { URL } from "url";
 import dbRoutes from "./db-routes";
 import { Pool } from "pg";
-import { generatePythonCode } from "../client/src/lib/bot-generator";
+// import { generatePythonCode } from "../client/src/lib/bot-generator"; // Убрано - используем динамический импорт с очисткой кеша
 
 // Функция нормализации данных узлов для добавления недостающих полей
 function normalizeNodeData(node: any) {
@@ -1280,7 +1280,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }
 
-      // Generate Python code using the imported function
+      // Generate Python code using dynamic import with cache busting
+      const modUrl = new URL("../client/src/lib/bot-generator.js", import.meta.url);
+      modUrl.searchParams.set("t", Date.now().toString());
+      const { generatePythonCode } = await import(modUrl.href);
       const simpleBotData = convertSheetsToSimpleBotData(project.data);
       const pythonCode = generatePythonCode(simpleBotData as any, project.name);
       res.json({ code: pythonCode });
