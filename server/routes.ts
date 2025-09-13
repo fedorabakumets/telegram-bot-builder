@@ -76,6 +76,7 @@ function normalizeProjectData(projectData: any) {
 }
 import { initializeDatabaseTables } from "./init-db";
 import { telegramClientManager, initializeTelegramManager } from "./telegram-client";
+import { serverCache, getCachedOrExecute } from "./cache";
 
 // Глобальное хранилище активных процессов ботов (ключ: `${projectId}_${tokenId}`)
 const botProcesses = new Map<string, ChildProcess>();
@@ -1063,7 +1064,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all bot projects
   app.get("/api/projects", requireDbReady, async (req, res) => {
     try {
-      const projects = await storage.getAllBotProjects();
+      const projects = await getCachedOrExecute(
+        'all-projects',
+        () => storage.getAllBotProjects(),
+        30000 // Кешируем на 30 секунд
+      );
       res.json(projects);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch projects" });

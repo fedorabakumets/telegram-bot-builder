@@ -46,12 +46,12 @@ function Router() {
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <Switch>
-        <Route path="/" component={Editor} />
-        <Route path="/editor/:id" component={Editor} />
         <Route path="/projects" component={Home} />
-        <Route path="/projects/:id" component={Editor} />
         <Route path="/templates" component={TemplatesPage} />
         <Route path="/database" component={DatabaseManager} />
+        <Route path="/editor/:id" component={Editor} />
+        <Route path="/projects/:id" component={Editor} />
+        <Route path="/" component={Editor} />
         <Route component={NotFound} />
       </Switch>
     </Suspense>

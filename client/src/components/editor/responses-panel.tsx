@@ -64,8 +64,9 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
   // Fetch responses data
   const { data: responsesData = [], isLoading, refetch } = useQuery<ResponsesData[]>({
     queryKey: [`/api/projects/${projectId}/responses`],
-    staleTime: 0, // Always fresh data
-    refetchInterval: 5000, // Refresh every 5 seconds
+    staleTime: 10000, // Кешируем данные на 10 секунд
+    refetchInterval: 30000, // Обновляем каждые 30 секунд вместо 5
+    refetchIntervalInBackground: false, // Не опрашиваем в фоне
   });
 
   // Debug logging
@@ -254,7 +255,7 @@ export function ResponsesPanel({ projectId, projectName }: ResponsesPanelProps) 
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button onClick={refetch} variant="outline" size="sm">
+              <Button onClick={() => refetch()} variant="outline" size="sm">
                 <RefreshCw className="w-4 h-4 mr-1" />
                 Обновить
               </Button>

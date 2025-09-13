@@ -790,7 +790,9 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   // Получаем статус бота
   const { data: botStatus, isLoading: isLoadingStatus } = useQuery<BotStatusResponse>({
     queryKey: [`/api/projects/${projectId}/bot`],
-    refetchInterval: 1000,
+    refetchInterval: 10000, // Уменьшили с 1 секунды до 10 секунд
+    refetchIntervalInBackground: false, // Не опрашиваем в фоне
+    staleTime: 5000, // Считаем данные свежими 5 секунд
   });
 
   // Получаем все токены проекта (боты)
@@ -807,7 +809,9 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const { data: botInfo, refetch: refetchBotInfo } = useQuery<BotInfo>({
     queryKey: [`/api/projects/${projectId}/bot/info`],
     enabled: defaultTokenData?.hasDefault || tokens.length > 0,
-    refetchInterval: botStatus?.status === 'running' ? 30000 : false,
+    refetchInterval: botStatus?.status === 'running' ? 60000 : false, // Увеличили с 30 секунд до 1 минуты
+    refetchIntervalInBackground: false, // Не опрашиваем в фоне
+    staleTime: 30000, // Считаем данные свежими 30 секунд
   });
 
   const isRunning = botStatus?.status === 'running';
