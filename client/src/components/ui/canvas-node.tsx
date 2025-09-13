@@ -973,29 +973,41 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { key: 'can_change_info', name: 'Профиль', icon: '🏷️' },
-              { key: 'can_delete_messages', name: 'Удаление', icon: '🗑️' },
-              { key: 'can_restrict_members', name: 'Блокировка', icon: '🚫' },
-              { key: 'can_invite_users', name: 'Приглашения', icon: '📨' },
-              { key: 'can_pin_messages', name: 'Закрепление', icon: '📌' },
-              { key: 'can_manage_video_chats', name: 'Видеочаты', icon: '🎥' },
-              { key: 'can_post_stories', name: 'Истории+', icon: '📰' },
-              { key: 'can_edit_stories', name: 'Истории✏️', icon: '✏️' },
-              { key: 'can_delete_stories', name: 'Истории🗑️', icon: '🗑️' },
-              { key: 'is_anonymous', name: 'Анонимность', icon: '🔒' },
-              { key: 'can_promote_members', name: 'Назначение', icon: '👑' }
-            ].slice(0, 9).map((right, index) => (
-              <div key={right.key} className="bg-white/60 dark:bg-slate-900/40 rounded-lg border border-violet-100 dark:border-violet-800/30 p-2 text-center">
-                <div className="text-xs font-medium text-violet-700 dark:text-violet-300 mb-1">
-                  {right.icon}
-                </div>
-                <div className="text-xs text-violet-600 dark:text-violet-400 truncate">
+          <div className="bg-slate-800/30 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-600/30 dark:border-slate-700/50">
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span className="text-xs font-medium text-slate-300 dark:text-slate-400 uppercase tracking-wider">INLINE КНОПКИ</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { key: 'can_change_info', name: '🏷️ Профиль' },
+                { key: 'can_delete_messages', name: '🗑️ Удаление' },
+                { key: 'can_restrict_members', name: '🚫 Блокировка' },
+                { key: 'can_invite_users', name: '📨 Приглашения' },
+                { key: 'can_pin_messages', name: '📌 Закрепление' },
+                { key: 'can_manage_video_chats', name: '🎥 Видеочаты' },
+                { key: 'can_post_stories', name: '📰 Публикация' },
+                { key: 'can_edit_stories', name: '✏️ Редактирование' },
+                { key: 'can_delete_stories', name: '🗑️ Удал. историй' },
+                { key: 'is_anonymous', name: '🔒 Анонимность' },
+                { key: 'can_promote_members', name: '👑 Назначение' }
+              ].slice(0, 6).map((right, index) => (
+                <div 
+                  key={right.key} 
+                  className="bg-blue-600/90 hover:bg-blue-500/90 text-white text-xs font-medium py-2 px-3 rounded-lg transition-colors duration-200 text-center border border-blue-500/30 shadow-sm"
+                >
                   {right.name}
                 </div>
+              ))}
+            </div>
+            
+            {/* Показать что есть еще кнопки */}
+            <div className="mt-2 text-center">
+              <div className="text-xs text-slate-400 dark:text-slate-500">
+                +5 ещё кнопок...
               </div>
-            ))}
+            </div>
           </div>
           
           {/* Additional info */}
