@@ -578,6 +578,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                   case 'contact': return !!(node.data.phoneNumber && node.data.firstName);
                   case 'poll': return !!(node.data.question && node.data.options?.length);
                   case 'command': return !!node.data.command;
+                  case 'admin_rights': return true;
                   default: return !!node.data.messageText;
                 }
               })();
@@ -638,6 +639,14 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                     {node.data.command || `/${node.type}`}
                   </span>
                   <span>Действие с пользователем</span>
+                </span>
+              )}
+              {node.type === 'admin_rights' && (
+                <span className="inline-flex items-center">
+                  <span className="text-violet-600 dark:text-violet-400 font-mono text-sm bg-violet-50 dark:bg-violet-900/30 px-2 py-1 rounded-lg border border-violet-200 dark:border-violet-800 mr-2">
+                    {node.data.command || '/admin_rights'}
+                  </span>
+                  <span>Права админа</span>
                 </span>
               )}
             </h3>
@@ -942,6 +951,64 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                   <span>{node.data.phoneNumber}</span>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Admin Rights preview */}
+      {node.type === 'admin_rights' && (
+        <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 dark:from-violet-900/25 dark:to-purple-900/25 border border-violet-200/50 dark:border-violet-800/40 rounded-xl p-4 mb-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/60 flex items-center justify-center">
+                <i className="fas fa-user-shield text-violet-600 dark:text-violet-400 text-sm"></i>
+              </div>
+              <div className="text-sm font-semibold text-violet-800 dark:text-violet-200">
+                Права администратора
+              </div>
+            </div>
+            <div className="text-xs text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/50 px-2 py-1 rounded-full font-medium">
+              11 кнопок
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { key: 'can_change_info', name: 'Профиль', icon: '🏷️' },
+              { key: 'can_delete_messages', name: 'Удаление', icon: '🗑️' },
+              { key: 'can_restrict_members', name: 'Блокировка', icon: '🚫' },
+              { key: 'can_invite_users', name: 'Приглашения', icon: '📨' },
+              { key: 'can_pin_messages', name: 'Закрепление', icon: '📌' },
+              { key: 'can_manage_video_chats', name: 'Видеочаты', icon: '🎥' },
+              { key: 'can_post_stories', name: 'Истории+', icon: '📰' },
+              { key: 'can_edit_stories', name: 'Истории✏️', icon: '✏️' },
+              { key: 'can_delete_stories', name: 'Истории🗑️', icon: '🗑️' },
+              { key: 'is_anonymous', name: 'Анонимность', icon: '🔒' },
+              { key: 'can_promote_members', name: 'Назначение', icon: '👑' }
+            ].slice(0, 9).map((right, index) => (
+              <div key={right.key} className="bg-white/60 dark:bg-slate-900/40 rounded-lg border border-violet-100 dark:border-violet-800/30 p-2 text-center">
+                <div className="text-xs font-medium text-violet-700 dark:text-violet-300 mb-1">
+                  {right.icon}
+                </div>
+                <div className="text-xs text-violet-600 dark:text-violet-400 truncate">
+                  {right.name}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Additional info */}
+          <div className="mt-3 pt-3 border-t border-violet-200/50 dark:border-violet-700/30">
+            <div className="flex items-center justify-center space-x-3 text-xs text-violet-600 dark:text-violet-400">
+              <div className="flex items-center space-x-1">
+                <i className="fas fa-toggle-on"></i>
+                <span>Интерактивные переключатели</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <i className="fas fa-sync-alt"></i>
+                <span>Обновление в реальном времени</span>
+              </div>
             </div>
           </div>
         </div>
