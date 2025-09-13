@@ -200,7 +200,8 @@ const nodeIcons = {
   unmute_user: 'fas fa-volume-up',
   kick_user: 'fas fa-user-times',
   promote_user: 'fas fa-crown',
-  demote_user: 'fas fa-user-minus'
+  demote_user: 'fas fa-user-minus',
+  admin_rights: 'fas fa-user-shield'
 };
 
 const nodeColors = {
@@ -226,7 +227,8 @@ const nodeColors = {
   unmute_user: 'bg-gradient-to-br from-sky-100 to-blue-200 dark:from-sky-900/40 dark:to-blue-800/40 text-sky-700 dark:text-sky-300 border-2 border-sky-300 dark:border-sky-700/50 shadow-lg shadow-sky-500/20',
   kick_user: 'bg-gradient-to-br from-rose-100 to-pink-200 dark:from-rose-900/40 dark:to-pink-800/40 text-rose-700 dark:text-rose-300 border-2 border-rose-300 dark:border-rose-700/50 shadow-lg shadow-rose-500/20',
   promote_user: 'bg-gradient-to-br from-yellow-100 to-amber-200 dark:from-yellow-900/40 dark:to-amber-800/40 text-yellow-700 dark:text-yellow-300 border-2 border-yellow-300 dark:border-yellow-700/50 shadow-lg shadow-yellow-500/20',
-  demote_user: 'bg-gradient-to-br from-slate-100 to-gray-200 dark:from-slate-900/40 dark:to-gray-800/40 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700/50 shadow-lg shadow-slate-500/20'
+  demote_user: 'bg-gradient-to-br from-slate-100 to-gray-200 dark:from-slate-900/40 dark:to-gray-800/40 text-slate-700 dark:text-slate-300 border-2 border-slate-300 dark:border-slate-700/50 shadow-lg shadow-slate-500/20',
+  admin_rights: 'bg-gradient-to-br from-violet-100 to-purple-200 dark:from-violet-900/40 dark:to-purple-800/40 text-violet-800 dark:text-violet-200 border-2 border-violet-300 dark:border-violet-700/50 shadow-xl shadow-violet-500/25 ring-1 ring-violet-400/30 dark:ring-violet-600/30'
 };
 
 export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, onMove, onConnectionStart, connectionStart, zoom = 100, pan = { x: 0, y: 0 }, setIsNodeBeingDragged, onSizeChange }: CanvasNodeProps) {

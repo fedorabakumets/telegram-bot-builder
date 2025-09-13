@@ -9519,7 +9519,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `    try:\n`;
   code += `        member = await bot.get_chat_member(chat_id, target_user_id)\n`;
   code += `        if hasattr(member, 'status') and member.status in ['administrator', 'creator']:\n`;
-  code += `            # Возвращаем 8 основных прав администратора\n`;
+  code += `            # Возвращаем основные права администратора включая управление историями\n`;
   code += `            return {\n`;
   code += `                'can_change_info': getattr(member, 'can_change_info', False),\n`;
   code += `                'can_delete_messages': getattr(member, 'can_delete_messages', False),\n`;
@@ -9527,6 +9527,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `                'can_invite_users': getattr(member, 'can_invite_users', False),\n`;
   code += `                'can_pin_messages': getattr(member, 'can_pin_messages', False),\n`;
   code += `                'can_manage_video_chats': getattr(member, 'can_manage_video_chats', False),\n`;
+  code += `                'can_manage_stories': getattr(member, 'can_manage_stories', False),\n`;
   code += `                'is_anonymous': getattr(member, 'is_anonymous', False),\n`;
   code += `                'can_promote_members': getattr(member, 'can_promote_members', False)\n`;
   code += `            }\n`;
@@ -9553,7 +9554,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `        builder.add(InlineKeyboardButton(text="❌ Пользователь не является администратором", callback_data="no_admin"))\n`;
   code += `        return builder.as_markup()\n`;
   code += `    \n`;
-  code += `    # Список из 8 основных прав администратора (согласно дизайну)\n`;
+  code += `    # Список основных прав администратора включая управление историями\n`;
   code += `    admin_rights_list = [\n`;
   code += `        ('can_change_info', '🏷️ Изменение профиля'),\n`;
   code += `        ('can_delete_messages', '🗑️ Удаление сообщений'),\n`;
@@ -9561,6 +9562,7 @@ function generateAdminRightsHandler(node: Node): string {
   code += `        ('can_invite_users', '📨 Приглашение участников'),\n`;
   code += `        ('can_pin_messages', '📌 Закрепление сообщений'),\n`;
   code += `        ('can_manage_video_chats', '🎥 Управление видеочатами'),\n`;
+  code += `        ('can_manage_stories', '📰 Управление историями'),\n`;
   code += `        ('is_anonymous', '🔒 Анонимность'),\n`;
   code += `        ('can_promote_members', '👑 Назначение администраторов')\n`;
   code += `    ]\n`;
@@ -9651,7 +9653,7 @@ function generateAdminRightsToggleHandlers(node: any): string {
   const safeFunctionName = createSafeFunctionName(node.id);
   let code = '\n';
   
-  // Список из 8 основных админ прав (согласно дизайну)
+  // Список основных админ прав включая управление историями
   const adminRights = [
     'can_change_info',
     'can_delete_messages', 
@@ -9659,6 +9661,7 @@ function generateAdminRightsToggleHandlers(node: any): string {
     'can_invite_users',
     'can_pin_messages',
     'can_manage_video_chats',
+    'can_manage_stories',
     'is_anonymous',
     'can_promote_members'
   ];
