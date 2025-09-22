@@ -6,7 +6,7 @@
 
 1. **Клонируйте репозиторий:**
    ```bash
-   git clone https://github.com/yourusername/telegram-bot-builder.git
+   git clone https://github.com/fedorabakumets/telegram-bot-builder.git
    cd telegram-bot-builder
    ```
 
@@ -196,9 +196,9 @@ MIT License - см. [LICENSE](LICENSE) для подробностей.
 
 ## 🤝 Поддержка
 
-- 📧 **Баги и предложения:** [GitHub Issues](https://github.com/yourusername/telegram-bot-builder/issues)
-- 💬 **Обсуждения:** [GitHub Discussions](https://github.com/yourusername/telegram-bot-builder/discussions)
-- 📖 **Документация:** [Wiki](https://github.com/yourusername/telegram-bot-builder/wiki)
+- 📧 **Баги и предложения:** [GitHub Issues](https://github.com/fedorabakumets/telegram-bot-builder/issues)
+- 💬 **Обсуждения:** [GitHub Discussions](https://github.com/fedorabakumets/telegram-bot-builder/discussions)
+- 📖 **Документация:** [Wiki](https://github.com/fedorabakumets/telegram-bot-builder/wiki)
 
 ---
 
