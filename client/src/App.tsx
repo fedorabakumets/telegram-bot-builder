@@ -12,6 +12,7 @@ import React from "react";
 // Ленивая загрузка страниц для улучшения производительности
 const Home = lazy(() => import("@/pages/home"));
 const Editor = lazy(() => import("@/pages/editor"));
+const BotPreview = lazy(() => import("@/pages/bot-preview"));
 const TemplatesPage = lazy(() => import("@/pages/templates-wrapper"));
 const DatabaseManager = lazy(() => import("@/pages/DatabaseManager"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -49,6 +50,7 @@ function Router() {
         <Route path="/projects" component={Home} />
         <Route path="/templates" component={TemplatesPage} />
         <Route path="/database" component={DatabaseManager} />
+        <Route path="/preview/:id" component={BotPreview} />
         <Route path="/editor/:id" component={Editor} />
         <Route path="/projects/:id" component={Editor} />
         <Route path="/" component={Editor} />

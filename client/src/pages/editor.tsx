@@ -5,7 +5,6 @@ import { Header } from '@/components/editor/header';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
 import { PropertiesPanel } from '@/components/editor/properties-panel';
-import { PreviewModal } from '@/components/editor/preview-modal';
 import { ExportModal } from '@/components/editor/export-modal';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
@@ -38,7 +37,6 @@ export default function Editor() {
   const [match, params] = useRoute('/editor/:id');
   const projectId = params?.id ? parseInt(params.id) : null;
   const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
-  const [showPreview, setShowPreview] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -433,7 +431,9 @@ export default function Editor() {
     if (tab === 'preview') {
       // Auto-save before showing preview
       updateProjectMutation.mutate({});
-      setShowPreview(true);
+      // Navigate to preview page instead of showing modal
+      setLocation(`/preview/${currentProject?.id}`);
+      return;
     } else if (tab === 'export') {
       // Auto-save before showing export modal
       updateProjectMutation.mutate({});
@@ -1426,16 +1426,6 @@ export default function Editor() {
         />
       )}
 
-      <PreviewModal
-        isOpen={showPreview}
-        onClose={() => {
-          setShowPreview(false);
-          setCurrentTab('editor');
-        }}
-        nodes={nodes}
-        connections={connections}
-        projectName={currentProject.name}
-      />
 
       <ExportModal
         isOpen={showExport}
