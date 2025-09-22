@@ -225,12 +225,19 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   }
   
   // Назначаем y позиции с учетом размеров поддеревьев
-  function assignYPositions(node: LayoutNode, startY: number): number {
+  function assignYPositions(node: LayoutNode, startY: number, visited = new Set<string>()): number {
+    // Проверяем на циклы - если узел уже посещен, возвращаем текущую позицию
+    if (visited.has(node.id)) {
+      return startY;
+    }
+    
+    visited.add(node.id);
     const nodeSize = getNodeSize(node.id, options);
     
     if (!node.children || node.children.length === 0) {
       // Листовой узел - присваиваем текущую позицию
       (node as any)._y = startY;
+      visited.delete(node.id); // Убираем из visited после обработки
       return startY + nodeSize.height + options.verticalSpacing;
     }
     
@@ -239,17 +246,25 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     const childCenters: number[] = [];
     
     for (const child of node.children) {
-      childY = assignYPositions(child, childY);
+      // Передаем копию visited сета для каждого дочернего узла
+      const childVisited = new Set(visited);
+      childY = assignYPositions(child, childY, childVisited);
       const childSize = getNodeSize(child.id, options);
       const childCenterY = (child as any)._y + childSize.height / 2;
       childCenters.push(childCenterY);
     }
     
     // Центрируем родительский узел относительно центров дочерних узлов
-    const avgChildCenterY = childCenters.reduce((sum, y) => sum + y, 0) / childCenters.length;
-    const parentSize = getNodeSize(node.id, options);
-    (node as any)._y = avgChildCenterY - parentSize.height / 2;
+    if (childCenters.length > 0) {
+      const avgChildCenterY = childCenters.reduce((sum, y) => sum + y, 0) / childCenters.length;
+      const parentSize = getNodeSize(node.id, options);
+      (node as any)._y = avgChildCenterY - parentSize.height / 2;
+    } else {
+      // Если нет дочерних узлов, используем стартовую позицию
+      (node as any)._y = startY;
+    }
     
+    visited.delete(node.id); // Убираем из visited после обработки
     return childY;
   }
   
