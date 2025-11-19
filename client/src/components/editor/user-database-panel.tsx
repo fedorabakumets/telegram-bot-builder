@@ -382,40 +382,44 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   className="scale-110"
                 />
               </div>
-              <Button onClick={handleRefresh} variant="outline" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
-                <RefreshCw className="w-4 h-4 mr-1" />
-                {isMobile ? 'Обновить' : 'Обновить'}
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    {isMobile ? 'Очистить' : 'Очистить базу'}
+              {isDatabaseEnabled && (
+                <>
+                  <Button onClick={handleRefresh} variant="outline" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
+                    <RefreshCw className="w-4 h-4 mr-1" />
+                    {isMobile ? 'Обновить' : 'Обновить'}
                   </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Удалить все данные пользователей?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Это действие нельзя отменить. Все данные пользователей для этого бота будут удалены навсегда.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Отмена</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteAllUsersMutation.mutate()}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Удалить все
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        {isMobile ? 'Очистить' : 'Очистить базу'}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Удалить все данные пользователей?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Это действие нельзя отменить. Все данные пользователей для этого бота будут удалены навсегда.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Отмена</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteAllUsersMutation.mutate()}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Удалить все
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
             </div>
           </div>
 
           {/* Stats Cards */}
-          {stats && (
+          {isDatabaseEnabled && stats && (
             <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-7'} gap-3 mb-4`}>
               <Card className="p-3">
                 <div className="flex items-center gap-2">
@@ -484,66 +488,97 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           )}
 
           {/* Search and Filters */}
-          <div className={`flex ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'} gap-3`}>
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder={isMobile ? "Поиск..." : "Поиск по имени, username или ID..."}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className={`flex gap-2 ${isMobile ? 'grid grid-cols-2' : 'flex'}`}>
-              <Select value={filterActive?.toString() || 'all'} onValueChange={(value) => setFilterActive(value === 'all' ? null : value === 'true')}>
-                <SelectTrigger className={isMobile ? 'w-full' : 'w-32'}>
-                  <SelectValue placeholder="Статус" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все</SelectItem>
-                  <SelectItem value="true">Активные</SelectItem>
-                  <SelectItem value="false">Неактивные</SelectItem>
-                </SelectContent>
-              </Select>
+          {isDatabaseEnabled && (
+            <div className={`flex ${isMobile ? 'flex-col' : 'flex-col sm:flex-row'} gap-3`}>
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder={isMobile ? "Поиск..." : "Поиск по имени, username или ID..."}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className={`flex gap-2 ${isMobile ? 'grid grid-cols-2' : 'flex'}`}>
+                <Select value={filterActive?.toString() || 'all'} onValueChange={(value) => setFilterActive(value === 'all' ? null : value === 'true')}>
+                  <SelectTrigger className={isMobile ? 'w-full' : 'w-32'}>
+                    <SelectValue placeholder="Статус" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все</SelectItem>
+                    <SelectItem value="true">Активные</SelectItem>
+                    <SelectItem value="false">Неактивные</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={filterPremium?.toString() || 'all'} onValueChange={(value) => setFilterPremium(value === 'all' ? null : value === 'true')}>
-                <SelectTrigger className={isMobile ? 'w-full' : 'w-32'}>
-                  <SelectValue placeholder="Premium" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Все</SelectItem>
-                  <SelectItem value="true">Premium</SelectItem>
-                  <SelectItem value="false">Обычные</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={filterPremium?.toString() || 'all'} onValueChange={(value) => setFilterPremium(value === 'all' ? null : value === 'true')}>
+                  <SelectTrigger className={isMobile ? 'w-full' : 'w-32'}>
+                    <SelectValue placeholder="Premium" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все</SelectItem>
+                    <SelectItem value="true">Premium</SelectItem>
+                    <SelectItem value="false">Обычные</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={`${sortField}-${sortDirection}`} onValueChange={(value) => {
-                const [field, direction] = value.split('-') as [SortField, SortDirection];
-                setSortField(field);
-                setSortDirection(direction);
-              }}>
-                <SelectTrigger className={isMobile ? 'w-full col-span-2' : 'w-40'}>
-                  <SelectValue placeholder="Сортировка" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="lastInteraction-desc">Последняя активность ↓</SelectItem>
-                  <SelectItem value="lastInteraction-asc">Последняя активность ↑</SelectItem>
-                  <SelectItem value="interactionCount-desc">Больше сообщений</SelectItem>
-                  <SelectItem value="interactionCount-asc">Меньше сообщений</SelectItem>
-                  <SelectItem value="createdAt-desc">Новые</SelectItem>
-                  <SelectItem value="createdAt-asc">Старые</SelectItem>
-                  <SelectItem value="firstName-asc">По имени A-Z</SelectItem>
-                  <SelectItem value="firstName-desc">По имени Z-A</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={`${sortField}-${sortDirection}`} onValueChange={(value) => {
+                  const [field, direction] = value.split('-') as [SortField, SortDirection];
+                  setSortField(field);
+                  setSortDirection(direction);
+                }}>
+                  <SelectTrigger className={isMobile ? 'w-full col-span-2' : 'w-40'}>
+                    <SelectValue placeholder="Сортировка" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lastInteraction-desc">Последняя активность ↓</SelectItem>
+                    <SelectItem value="lastInteraction-asc">Последняя активность ↑</SelectItem>
+                    <SelectItem value="interactionCount-desc">Больше сообщений</SelectItem>
+                    <SelectItem value="interactionCount-asc">Меньше сообщений</SelectItem>
+                    <SelectItem value="createdAt-desc">Новые</SelectItem>
+                    <SelectItem value="createdAt-asc">Старые</SelectItem>
+                    <SelectItem value="firstName-asc">По имени A-Z</SelectItem>
+                    <SelectItem value="firstName-desc">По имени Z-A</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
+      {/* Database Disabled Warning */}
+      {!isDatabaseEnabled && (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <Card className="max-w-md w-full border-2 border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/50">
+            <div className="p-8 text-center space-y-4">
+              <div className="flex justify-center">
+                <div className="rounded-full bg-red-100 dark:bg-red-900/50 p-4">
+                  <Database className="w-12 h-12 text-red-600 dark:text-red-400" />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-red-900 dark:text-red-100 mb-2">
+                  База данных выключена
+                </h3>
+                <p className="text-red-700 dark:text-red-300 text-sm">
+                  Включите базу данных с помощью переключателя выше, чтобы начать сохранять данные пользователей и просматривать статистику.
+                </p>
+              </div>
+              <div className="pt-2">
+                <p className="text-xs text-red-600/80 dark:text-red-400/80">
+                  Пока база данных выключена, бот продолжает работать, но данные пользователей не сохраняются.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Tabs */}
-      <div className="w-full">
-        <Tabs defaultValue="users" className="w-full">
+      {isDatabaseEnabled && (
+        <div className="w-full">
+          <Tabs defaultValue="users" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="users">Пользователи</TabsTrigger>
             <TabsTrigger value="backup">Резервные копии</TabsTrigger>
@@ -853,7 +888,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
             </ScrollArea>
           </TabsContent>
         </Tabs>
-      </div>
+        </div>
+      )}
 
       {/* User Details Dialog */}
       <Dialog open={showUserDetails} onOpenChange={setShowUserDetails}>
