@@ -5,7 +5,7 @@ import { Header } from '@/components/editor/header';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
 import { PropertiesPanel } from '@/components/editor/properties-panel';
-import { ExportModal } from '@/components/editor/export-modal';
+import { ExportPanel } from '@/components/editor/export-panel';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
 import { VisibilityControls } from '@/components/editor/visibility-controls';
@@ -37,7 +37,6 @@ export default function Editor() {
   const [match, params] = useRoute('/editor/:id');
   const projectId = params?.id ? parseInt(params.id) : null;
   const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
-  const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
@@ -435,9 +434,8 @@ export default function Editor() {
       setLocation(`/preview/${currentProject?.id}`);
       return;
     } else if (tab === 'export') {
-      // Auto-save before showing export modal
+      // Auto-save before showing export page
       updateProjectMutation.mutate({});
-      setShowExport(true);
     } else if (tab === 'bot') {
       // Auto-save before showing bot controls
       updateProjectMutation.mutate({});
@@ -966,7 +964,7 @@ export default function Editor() {
         projectName={currentProject.name}
         currentTab={currentTab}
         onTabChange={handleTabChange}
-        onExport={() => setShowExport(true)}
+        onExport={() => {}}
         onSaveAsTemplate={handleSaveAsTemplate}
         onLoadTemplate={handleLoadTemplate}
         onLayoutSettings={() => setShowLayoutManager(true)}
@@ -1048,6 +1046,12 @@ export default function Editor() {
               projectName={currentProject.name}
             />
           </div>
+        ) : currentTab === 'export' ? (
+          <ExportPanel
+            botData={(botDataWithSheets || getBotData()) as any}
+            projectName={currentProject.name}
+            projectId={currentProject.id}
+          />
         ) : null}
       </div>
     );
@@ -1124,7 +1128,7 @@ export default function Editor() {
               projectName={currentProject.name}
               currentTab={currentTab}
               onTabChange={handleTabChange}
-              onExport={() => setShowExport(true)}
+              onExport={() => {}}
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
@@ -1232,6 +1236,12 @@ export default function Editor() {
                     projectName={currentProject.name}
                   />
                 </div>
+              ) : currentTab === 'export' ? (
+                <ExportPanel
+                  botData={(botDataWithSheets || getBotData()) as any}
+                  projectName={currentProject.name}
+                  projectId={currentProject.id}
+                />
               ) : null}
             </div>
           }
@@ -1268,7 +1278,7 @@ export default function Editor() {
               projectName={currentProject.name}
               currentTab={currentTab}
               onTabChange={handleTabChange}
-              onExport={() => setShowExport(true)}
+              onExport={() => {}}
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
@@ -1289,7 +1299,7 @@ export default function Editor() {
                   projectName={currentProject.name}
                   currentTab={currentTab}
                   onTabChange={handleTabChange}
-                  onExport={() => setShowExport(true)}
+                  onExport={() => {}}
                   onSaveAsTemplate={handleSaveAsTemplate}
                   onLoadTemplate={handleLoadTemplate}
                   onLayoutSettings={() => setShowLayoutManager(true)}
@@ -1427,15 +1437,6 @@ export default function Editor() {
       )}
 
 
-      <ExportModal
-        isOpen={showExport}
-        onClose={() => {
-          setShowExport(false);
-          setCurrentTab('editor');
-        }}
-        botData={(botDataWithSheets || getBotData()) as any}
-        projectName={currentProject.name}
-      />
 
       <SaveTemplateModal
         isOpen={showSaveTemplate}
