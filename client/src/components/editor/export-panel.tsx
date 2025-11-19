@@ -385,30 +385,6 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                       <div className={`${isMobile ? 'text-base font-medium' : 'text-sm'} text-red-700 dark:text-red-300`}>Только админ</div>
                     </div>
                   </div>
-                  
-                  <Separator className="my-4" />
-                  
-                  <div className={`space-y-${isMobile ? '4' : '3'}`}>
-                    <h4 className={`${isMobile ? 'font-semibold text-lg' : 'font-medium'}`}>Детальная статистика:</h4>
-                    <div className={`space-y-${isMobile ? '3' : '2'} ${isMobile ? 'text-base' : 'text-sm'}`}>
-                      <div className={`flex justify-between items-center ${isMobile ? 'py-2' : ''}`}>
-                        <span className={`${isMobile ? 'font-medium' : ''}`}>Текстовые сообщения:</span>
-                        <Badge variant="secondary" className={`${isMobile ? 'text-base px-3 py-1' : ''}`}>{botStats.messageNodes}</Badge>
-                      </div>
-                      <div className={`flex justify-between items-center ${isMobile ? 'py-2' : ''}`}>
-                        <span className={`${isMobile ? 'font-medium' : ''}`}>Фото сообщения:</span>
-                        <Badge variant="secondary" className={`${isMobile ? 'text-base px-3 py-1' : ''}`}>{botStats.photoNodes}</Badge>
-                      </div>
-                      <div className={`flex justify-between items-center ${isMobile ? 'py-2' : ''}`}>
-                        <span className={`${isMobile ? 'font-medium' : ''}`}>Приватные команды:</span>
-                        <Badge variant="outline" className={`${isMobile ? 'text-base px-3 py-1' : ''}`}>{botStats.privateOnlyCommands}</Badge>
-                      </div>
-                      <div className={`flex justify-between items-center ${isMobile ? 'py-2' : ''}`}>
-                        <span className={`${isMobile ? 'font-medium' : ''}`}>Соединения между узлами:</span>
-                        <Badge variant="outline" className={`${isMobile ? 'text-base px-3 py-1' : ''}`}>{botData?.connections?.length || 0}</Badge>
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
