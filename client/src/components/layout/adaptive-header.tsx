@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LayoutConfig } from './layout-manager';
 
@@ -28,10 +28,12 @@ interface AdaptiveHeaderProps {
   onToggleSidebar?: () => void;
   onToggleProperties?: () => void;
   onToggleCanvas?: () => void;
+  onToggleCode?: () => void;
   headerVisible?: boolean;
   sidebarVisible?: boolean;
   propertiesVisible?: boolean;
   canvasVisible?: boolean;
+  codeVisible?: boolean;
   // Мобильные функции
   onOpenMobileSidebar?: () => void;
   onOpenMobileProperties?: () => void;
@@ -51,10 +53,12 @@ export function AdaptiveHeader({
   onToggleSidebar,
   onToggleProperties,
   onToggleCanvas,
+  onToggleCode,
   headerVisible,
   sidebarVisible,
   propertiesVisible,
   canvasVisible,
+  codeVisible,
   onOpenMobileSidebar,
   onOpenMobileProperties
 }: AdaptiveHeaderProps) {
@@ -155,7 +159,7 @@ export function AdaptiveHeader({
   const MobileActions = () => (
     <div className="flex flex-col space-y-3">
       {/* Кнопки управления макетом */}
-      {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
+      {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
         <div className="grid grid-cols-2 gap-2">
           {onToggleHeader && (
             <Button
@@ -167,6 +171,7 @@ export function AdaptiveHeader({
               }}
               className="flex items-center justify-center"
               title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
+              data-testid="button-mobile-toggle-header"
             >
               <NavigationIcon className="w-3 h-3 mr-1" />
               Шапка
@@ -183,6 +188,7 @@ export function AdaptiveHeader({
               }}
               className="flex items-center justify-center"
               title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
+              data-testid="button-mobile-toggle-sidebar"
             >
               <Sidebar className="w-3 h-3 mr-1" />
               Панель
@@ -199,6 +205,7 @@ export function AdaptiveHeader({
               }}
               className="flex items-center justify-center"
               title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
+              data-testid="button-mobile-toggle-canvas"
             >
               <Monitor className="w-3 h-3 mr-1" />
               Холст
@@ -215,9 +222,27 @@ export function AdaptiveHeader({
               }}
               className="flex items-center justify-center"
               title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
+              data-testid="button-mobile-toggle-properties"
             >
               <Sliders className="w-3 h-3 mr-1" />
               Свойства
+            </Button>
+          )}
+          
+          {onToggleCode && (
+            <Button
+              variant={codeVisible ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                onToggleCode();
+                setIsMobileMenuOpen(false);
+              }}
+              className="flex items-center justify-center"
+              title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
+              data-testid="button-mobile-toggle-code"
+            >
+              <Code className="w-3 h-3 mr-1" />
+              Код
             </Button>
           )}
         </div>
@@ -278,7 +303,7 @@ export function AdaptiveHeader({
     <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-2'}`}>
       
       {/* Кнопки управления макетом */}
-      {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas) && (
+      {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
         <div className="flex items-center space-x-1 bg-background/80 backdrop-blur-sm border border-border rounded-md p-1">
           {onToggleHeader && (
             <Button
@@ -287,6 +312,7 @@ export function AdaptiveHeader({
               onClick={onToggleHeader}
               className="h-7 w-7 p-0"
               title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
+              data-testid="button-toggle-header"
             >
               <NavigationIcon className="w-3 h-3" />
             </Button>
@@ -299,6 +325,7 @@ export function AdaptiveHeader({
               onClick={onToggleSidebar}
               className="h-7 w-7 p-0"
               title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
+              data-testid="button-toggle-sidebar"
             >
               <Sidebar className="w-3 h-3" />
             </Button>
@@ -311,6 +338,7 @@ export function AdaptiveHeader({
               onClick={onToggleCanvas}
               className="h-7 w-7 p-0"
               title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
+              data-testid="button-toggle-canvas"
             >
               <Monitor className="w-3 h-3" />
             </Button>
@@ -323,8 +351,22 @@ export function AdaptiveHeader({
               onClick={onToggleProperties}
               className="h-7 w-7 p-0"
               title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
+              data-testid="button-toggle-properties"
             >
               <Sliders className="w-3 h-3" />
+            </Button>
+          )}
+          
+          {onToggleCode && (
+            <Button
+              variant={codeVisible ? "default" : "outline"}
+              size="sm"
+              onClick={onToggleCode}
+              className="h-7 w-7 p-0"
+              title={`${codeVisible ? 'Скрыть' : 'Показать'} панель кода`}
+              data-testid="button-toggle-code"
+            >
+              <Code className="w-3 h-3" />
             </Button>
           )}
         </div>

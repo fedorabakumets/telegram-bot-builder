@@ -1001,12 +1001,14 @@ export default function Editor() {
         onToggleSidebar={handleToggleSidebar}
         onToggleProperties={handleToggleProperties}
         onToggleCanvas={handleToggleCanvas}
+        onToggleCode={handleToggleCode}
         headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
         sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
         propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+        canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+        codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
         onOpenMobileSidebar={() => setShowMobileSidebar(true)}
         onOpenMobileProperties={() => setShowMobileProperties(true)}
-        canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
       />
     );
 
@@ -1167,12 +1169,14 @@ export default function Editor() {
               onToggleSidebar={handleToggleSidebar}
               onToggleProperties={handleToggleProperties}
               onToggleCanvas={handleToggleCanvas}
+              onToggleCode={handleToggleCode}
               headerVisible={flexibleLayoutConfig.elements.find(el => el.id === 'header')?.visible ?? true}
               sidebarVisible={flexibleLayoutConfig.elements.find(el => el.id === 'sidebar')?.visible ?? true}
               propertiesVisible={flexibleLayoutConfig.elements.find(el => el.id === 'properties')?.visible ?? true}
+              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
+              codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
               onOpenMobileSidebar={() => setShowMobileSidebar(true)}
               onOpenMobileProperties={() => setShowMobileProperties(true)}
-              canvasVisible={flexibleLayoutConfig.elements.find(el => el.id === 'canvas')?.visible ?? true}
             />
           }
           sidebar={
@@ -1314,6 +1318,8 @@ export default function Editor() {
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
+              onToggleCode={handleToggleCode}
+              codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
               onOpenMobileSidebar={() => setShowMobileSidebar(true)}
               onOpenMobileProperties={() => setShowMobileProperties(true)}
             />
@@ -1336,6 +1342,8 @@ export default function Editor() {
                   onSaveAsTemplate={handleSaveAsTemplate}
                   onLoadTemplate={handleLoadTemplate}
                   onLayoutSettings={() => setShowLayoutManager(true)}
+                  onToggleCode={handleToggleCode}
+                  codeVisible={flexibleLayoutConfig.elements.find(el => el.id === 'code')?.visible ?? false}
                   onOpenMobileSidebar={() => setShowMobileSidebar(true)}
                   onOpenMobileProperties={() => setShowMobileProperties(true)}
                 />
