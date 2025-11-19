@@ -360,9 +360,17 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
             </div>
             <div className={`flex items-center gap-2 ${isMobile ? 'self-stretch flex-wrap' : ''}`}>
               {/* Database Toggle */}
-              <div className={`flex items-center gap-2 p-2 border rounded-md ${isMobile ? 'flex-1 min-w-full' : 'bg-muted/30'}`} data-testid="database-toggle-container">
-                <Database className="w-4 h-4 text-muted-foreground" />
-                <Label htmlFor="db-toggle" className="text-sm cursor-pointer flex-1">
+              <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+                isDatabaseEnabled 
+                  ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
+                  : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
+              } ${isMobile ? 'flex-1 min-w-full' : ''}`} data-testid="database-toggle-container">
+                <Database className={`w-5 h-5 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
+                <Label htmlFor="db-toggle" className={`text-base font-bold cursor-pointer flex-1 ${
+                  isDatabaseEnabled 
+                    ? 'text-green-700 dark:text-green-300' 
+                    : 'text-red-700 dark:text-red-300'
+                }`}>
                   {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
                 </Label>
                 <Switch
@@ -371,6 +379,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                   checked={isDatabaseEnabled}
                   onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
                   disabled={toggleDatabaseMutation.isPending}
+                  className="scale-110"
                 />
               </div>
               <Button onClick={handleRefresh} variant="outline" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
