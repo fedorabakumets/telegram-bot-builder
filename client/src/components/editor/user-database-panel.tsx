@@ -111,7 +111,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
 
   // Fetch messages for dialog
   const { data: messages = [], isLoading: messagesLoading } = useQuery<BotMessage[]>({
-    queryKey: [`/api/projects/${projectId}/users`, selectedUserForDialog?.userId, 'messages'],
+    queryKey: [`/api/projects/${projectId}/users/${selectedUserForDialog?.userId}/messages`],
     enabled: showDialog && !!selectedUserForDialog?.userId,
     staleTime: 0,
   });
@@ -244,7 +244,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     },
     onSuccess: () => {
       qClient.invalidateQueries({ 
-        queryKey: [`/api/projects/${projectId}/users`, selectedUserForDialog?.userId, 'messages'] 
+        queryKey: [`/api/projects/${projectId}/users/${selectedUserForDialog?.userId}/messages`] 
       });
       setMessageText('');
       toast({
@@ -280,22 +280,22 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     result = [...result].sort((a, b) => {
       let aValue: any, bValue: any;
       
-      // Map camelCase field names to snake_case if needed
+      // Get field values
       if (sortField === 'lastInteraction') {
-        aValue = a.lastInteraction || a.last_interaction;
-        bValue = b.lastInteraction || b.last_interaction;
+        aValue = a.lastInteraction;
+        bValue = b.lastInteraction;
       } else if (sortField === 'createdAt') {
-        aValue = a.createdAt || a.registered_at;
-        bValue = b.createdAt || b.registered_at;
+        aValue = a.createdAt;
+        bValue = b.createdAt;
       } else if (sortField === 'interactionCount') {
-        aValue = a.interactionCount || a.interaction_count;
-        bValue = b.interactionCount || b.interaction_count;
+        aValue = a.interactionCount;
+        bValue = b.interactionCount;
       } else if (sortField === 'firstName') {
-        aValue = a.firstName || a.first_name;
-        bValue = b.firstName || b.first_name;
+        aValue = a.firstName;
+        bValue = b.firstName;
       } else if (sortField === 'userName') {
-        aValue = a.userName || a.username;
-        bValue = b.userName || b.username;
+        aValue = a.userName;
+        bValue = b.userName;
       } else {
         aValue = a[sortField];
         bValue = b[sortField];
@@ -365,7 +365,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     const firstName = user.firstName;
     const lastName = user.lastName;
     const userName = user.userName;
-    const userId = user.id;
+    const userId = user.userId;
     
     const parts = [firstName, lastName].filter(Boolean);
     if (parts.length > 0) return parts.join(' ');
@@ -687,41 +687,41 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 size="sm"
                                 data-testid={`button-toggle-active-${index}`}
                                 onClick={() => handleUserStatusToggle(user, 'isActive')}
-                                className={(user.isActive || user.is_active) ? "text-red-600" : "text-green-600"}
+                                className={user.isActive ? "text-red-600" : "text-green-600"}
                               >
-                                {(user.isActive || user.is_active) ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
+                                {user.isActive ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
                               </Button>
                             </div>
                           </div>
 
                           {/* Status Badges */}
                           <div className="flex flex-wrap gap-2">
-                            <Badge variant={(user.isActive || user.is_active) ? "default" : "secondary"}>
-                              {(user.isActive || user.is_active) ? "Активен" : "Неактивен"}
+                            <Badge variant={user.isActive ? "default" : "secondary"}>
+                              {user.isActive ? "Активен" : "Неактивен"}
                             </Badge>
-                            {(user.isPremium || user.is_premium) && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                            {(user.isBlocked || user.is_blocked) && <Badge variant="destructive">Заблокирован</Badge>}
-                            {(user.isBot || user.is_bot) && <Badge variant="outline">Бот</Badge>}
+                            {user.isPremium ? <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge> : null}
+                            {user.isBlocked ? <Badge variant="destructive">Заблокирован</Badge> : null}
+                            {user.isBot ? <Badge variant="outline">Бот</Badge> : null}
                           </div>
 
                           {/* Stats */}
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                               <div className="text-muted-foreground">Сообщений</div>
-                              <div className="font-medium">{user.interactionCount || user.interaction_count || 0}</div>
+                              <div className="font-medium">{user.interactionCount || 0}</div>
                             </div>
                             <div>
                               <div className="text-muted-foreground">Последняя активность</div>
-                              <div className="font-medium text-xs">{formatDate(user.lastInteraction || user.last_interaction)}</div>
+                              <div className="font-medium text-xs">{formatDate(user.lastInteraction)}</div>
                             </div>
                           </div>
 
                           {/* Recent Responses */}
-                          {((user.userData || user.user_data) && Object.keys(user.userData || user.user_data).length > 0) && (
+                          {(user.userData && Object.keys(user.userData).length > 0) && (
                             <div className="border-t pt-3">
                               <div className="text-sm font-medium mb-2">Последние ответы:</div>
                               <div className="space-y-2">
-                                {Object.entries(user.userData || user.user_data || {}).slice(0, 1).map(([key, value]) => {
+                                {Object.entries(user.userData || {}).slice(0, 1).map(([key, value]) => {
                                   let responseData = value;
                                   if (typeof value === 'string') {
                                     try {
@@ -743,9 +743,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                     </div>
                                   );
                                 })}
-                                {Object.keys(user.userData || user.user_data || {}).length > 1 && (
+                                {Object.keys(user.userData || {}).length > 1 && (
                                   <div className="text-xs text-muted-foreground">
-                                    +{Object.keys(user.userData || user.user_data || {}).length - 1} еще...
+                                    +{Object.keys(user.userData || {}).length - 1} еще...
                                   </div>
                                 )}
                               </div>
@@ -794,20 +794,20 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        <Badge variant={(user.isActive || user.is_active) ? "default" : "secondary"}>
-                          {(user.isActive || user.is_active) ? "Активен" : "Неактивен"}
+                        <Badge variant={user.isActive ? "default" : "secondary"}>
+                          {user.isActive ? "Активен" : "Неактивен"}
                         </Badge>
-                        {(user.isPremium || user.is_premium) && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
-                        {(user.isBlocked || user.is_blocked) && <Badge variant="destructive">Заблокирован</Badge>}
-                        {(user.isBot || user.is_bot) && <Badge variant="outline">Бот</Badge>}
+                        {user.isPremium && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                        {user.isBlocked && <Badge variant="destructive">Заблокирован</Badge>}
+                        {user.isBot && <Badge variant="outline">Бот</Badge>}
                       </div>
                     </TableCell>
-                    <TableCell>{user.interactionCount || user.interaction_count || 0}</TableCell>
+                    <TableCell>{user.interactionCount || 0}</TableCell>
                     <TableCell>
                       <div className="max-w-xs">
-                        {((user.userData || user.user_data) && Object.keys(user.userData || user.user_data).length > 0) ? (
+                        {(user.userData && Object.keys(user.userData).length > 0) ? (
                           <div className="space-y-1">
-                            {Object.entries(user.userData || user.user_data).slice(0, 2).map(([key, value]) => {
+                            {Object.entries(user.userData).slice(0, 2).map(([key, value]) => {
                               // Parse value if it's a string (from PostgreSQL)
                               let responseData = value;
                               if (typeof value === 'string') {
@@ -819,7 +819,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                               }
                               
                               // Format the question text
-                              const formatQuestionText = (key, responseData) => {
+                              const formatQuestionText = (key: string, responseData: any) => {
                                 if (responseData?.prompt && responseData.prompt.trim()) {
                                   return responseData.prompt;
                                 }
@@ -870,9 +870,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                                 </div>
                               );
                             })}
-                            {Object.keys(user.userData || user.user_data).length > 2 && (
+                            {Object.keys(user.userData).length > 2 && (
                               <div className="text-xs text-muted-foreground">
-                                +{Object.keys(user.userData || user.user_data).length - 2} еще...
+                                +{Object.keys(user.userData).length - 2} еще...
                               </div>
                             )}
                           </div>
@@ -881,8 +881,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm">{formatDate(user.lastInteraction || user.last_interaction)}</TableCell>
-                    <TableCell className="text-sm">{formatDate(user.createdAt || user.registered_at)}</TableCell>
+                    <TableCell className="text-sm">{formatDate(user.lastInteraction)}</TableCell>
+                    <TableCell className="text-sm">{formatDate(user.createdAt)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button
@@ -912,9 +912,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           size="sm"
                           data-testid={`button-toggle-active-${index}`}
                           onClick={() => handleUserStatusToggle(user, 'isActive')}
-                          className={(user.isActive || user.is_active) ? "text-red-600" : "text-green-600"}
+                          className={user.isActive ? "text-red-600" : "text-green-600"}
                         >
-                          {(user.isActive || user.is_active) ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
+                          {user.isActive ? <UserX className="w-3 h-3" /> : <UserCheck className="w-3 h-3" />}
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -980,10 +980,10 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div>
                   <Label className="text-sm font-medium">Основная информация</Label>
                   <div className="mt-2 space-y-2">
-                    <div><span className="text-sm text-muted-foreground">Имя:</span> {selectedUser.firstName || selectedUser.first_name || 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {selectedUser.lastName || selectedUser.last_name || 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Username:</span> {(selectedUser.userName || selectedUser.username) ? `@${selectedUser.userName || selectedUser.username}` : 'Не указано'}</div>
-                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {selectedUser.userId || selectedUser.user_id}</div>
+                    <div><span className="text-sm text-muted-foreground">Имя:</span> {selectedUser.firstName || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Фамилия:</span> {selectedUser.lastName || 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Username:</span> {selectedUser.userName ? `@${selectedUser.userName}` : 'Не указано'}</div>
+                    <div><span className="text-sm text-muted-foreground">Telegram ID:</span> {selectedUser.userId}</div>
                     <div><span className="text-sm text-muted-foreground">Язык:</span> {selectedUser.languageCode || 'Не указано'}</div>
                   </div>
                 </div>
@@ -991,7 +991,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div>
                   <Label className="text-sm font-medium">Статистика</Label>
                   <div className="mt-2 space-y-2">
-                    <div><span className="text-sm text-muted-foreground">Сообщений:</span> {selectedUser.interactionCount || selectedUser.interaction_count || 0}</div>
+                    <div><span className="text-sm text-muted-foreground">Сообщений:</span> {selectedUser.interactionCount || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Сессий:</span> {selectedUser.sessionsCount || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Отправлено:</span> {selectedUser.totalMessagesSent || 0}</div>
                     <div><span className="text-sm text-muted-foreground">Получено:</span> {selectedUser.totalMessagesReceived || 0}</div>
@@ -1005,7 +1005,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 <div className="mt-2">
                   <div className="flex items-center space-x-2">
                     <Switch
-                      checked={Boolean(selectedUser.isActive || selectedUser.is_active)}
+                      checked={Boolean(selectedUser.isActive)}
                       onCheckedChange={(checked) => handleUserStatusToggle(selectedUser, 'isActive')}
                     />
                     <Label>Активен</Label>
@@ -1022,13 +1022,13 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               <div>
                 <Label className="text-sm font-medium">Даты</Label>
                 <div className="mt-2 space-y-2">
-                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {formatDate(selectedUser.createdAt || selectedUser.registered_at)}</div>
+                  <div><span className="text-sm text-muted-foreground">Регистрация:</span> {formatDate(selectedUser.createdAt)}</div>
                   <div><span className="text-sm text-muted-foreground">Последнее обновление:</span> {formatDate(selectedUser.updatedAt)}</div>
-                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {formatDate(selectedUser.lastInteraction || selectedUser.last_interaction)}</div>
+                  <div><span className="text-sm text-muted-foreground">Последняя активность:</span> {formatDate(selectedUser.lastInteraction)}</div>
                 </div>
               </div>
 
-              {selectedUser.tags && selectedUser.tags.length > 0 && (
+              {selectedUser.tags && selectedUser.tags.length > 0 ? (
                 <div>
                   <Label className="text-sm font-medium">Теги</Label>
                   <div className="mt-2 flex flex-wrap gap-1">
@@ -1037,20 +1037,20 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Enhanced user responses section */}
-              {((selectedUser.userData || selectedUser.user_data) && Object.keys(selectedUser.userData || selectedUser.user_data).length > 0) && (
+              {(selectedUser.userData && Object.keys(selectedUser.userData).length > 0) && (
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <MessageSquare className="w-5 h-5 text-primary" />
                     <Label className="text-base font-semibold">Ответы пользователя</Label>
                     <Badge variant="secondary" className="text-xs">
-                      {Object.keys(selectedUser.userData || selectedUser.user_data).length}
+                      {Object.keys(selectedUser.userData).length}
                     </Badge>
                   </div>
                   <div className="space-y-4">
-                    {Object.entries(selectedUser.userData || selectedUser.user_data).map(([key, value]) => {
+                    {Object.entries(selectedUser.userData).map(([key, value]) => {
                       // Parse value if it's a string (from PostgreSQL)
                       let responseData = value;
                       if (typeof value === 'string') {
@@ -1173,7 +1173,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     <Label className="text-sm font-medium">Все данные пользователя (JSON)</Label>
                     <div className="mt-2">
                       <Textarea
-                        value={JSON.stringify(selectedUser.userData || selectedUser.user_data, null, 2)}
+                        value={JSON.stringify(selectedUser.userData, null, 2)}
                         readOnly
                         rows={6}
                         className="text-xs font-mono bg-muted"
