@@ -6590,7 +6590,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
   code += '\n';
   
-  // Генерируем обработчики для кнопок "Готово" многомерного выбора
+  // Генерируем обработчики для кнопок "Готово" многомерного выбора ТОЛЬКО если есть узлы с множественным выбором
   console.log(`🔧 ГЕНЕРАТОР: Создаем обработчик для кнопок завершения множественного выбора`);
   console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ - добавлен return после отправки сообщения для остановки выполнения`);
   console.log(`🔧 ГЕНЕРАТОР: УБРАНЫ ВСЕ АВТОМАТИЧЕСКИЕ ВЫЗОВЫ handle_callback_* после кнопки Готово`);
@@ -6603,6 +6603,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     console.log(`🔧 ГЕНЕРАТОР: Целевой узел кнопки: ${targetNode?.data?.buttons?.length || 0}, keyboardType: ${targetNode?.data?.keyboardType}`);
   });
   
+  if (multiSelectNodes.length > 0) {
   code += '# Обработчик для кнопок завершения множественного выбора\n';
   code += '@dp.callback_query(lambda callback_query: callback_query.data and callback_query.data.startswith("multi_select_done_"))\n';
   code += 'async def handle_multi_select_done(callback_query: types.CallbackQuery):\n';
@@ -6771,6 +6772,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   });
   
   code += '\n';
+  }
 
   // Обработчик для reply кнопок множественного выбора - только если есть узлы с множественным выбором
   if (hasMultiSelectNodes(nodes || [])) {
