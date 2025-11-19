@@ -6281,9 +6281,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   // Добавим переходы для узлов с множественным выбором
   
-  if (multiSelectNodes.length > 0) {
-    console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
-    code += '        # Определяем следующий узел для каждого node_id\n';
+  console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
+  code += '        # Определяем следующий узел для каждого node_id\n';
     multiSelectNodes.forEach(node => {
       console.log(`🔧 ГЕНЕРАТОР: Создаем блок if для узла ${node.id}`);
       console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget: ${node.data.continueButtonTarget}`);
@@ -10222,13 +10221,6 @@ function generateKeyboard(node: Node): string {
     parseMode = ', parse_mode=current_parse_mode if current_parse_mode else None';
   }
   
-  // Инициализируем use_conditional_keyboard для всех случаев
-  if (!node.data.enableConditionalMessages || !node.data.conditionalMessages || node.data.conditionalMessages.length === 0) {
-    code += '    # Инициализируем переменную для проверки условной клавиатуры\n';
-    code += '    use_conditional_keyboard = False\n';
-    code += '    conditional_keyboard = None\n';
-  }
-
   // НОВАЯ ЛОГИКА: Сбор ввода как дополнительная функциональность к обычным кнопкам
   
   // Определяем есть ли обычные кнопки у узла
@@ -10237,10 +10229,25 @@ function generateKeyboard(node: Node): string {
   // Определяем включен ли сбор пользовательского ввода ИЛИ текстовый ввод
   const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true;
   
-  // Добавляем логирование для отладки (используем Python переменные)
-  code += `    has_regular_buttons = ${toPythonBoolean(hasRegularButtons)}\n`;
-  code += `    has_input_collection = ${toPythonBoolean(hasInputCollection)}\n`;
-  code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=${node.data.collectUserInput}, enableTextInput=${node.data.enableTextInput}")\n`;
+  // Проверяем, есть ли условные сообщения
+  const hasConditionalMessages = node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0;
+  
+  // Проверяем, есть ли какие-либо дополнительные функции
+  const hasAnyFeatures = hasRegularButtons || hasInputCollection || hasConditionalMessages;
+  
+  // Инициализируем use_conditional_keyboard только если есть кнопки, сбор ввода или условные сообщения
+  if (hasAnyFeatures && (!node.data.enableConditionalMessages || !node.data.conditionalMessages || node.data.conditionalMessages.length === 0)) {
+    code += '    # Инициализируем переменную для проверки условной клавиатуры\n';
+    code += '    use_conditional_keyboard = False\n';
+    code += '    conditional_keyboard = None\n';
+  }
+  
+  // Генерируем переменные и логирование ТОЛЬКО если есть кнопки, сбор ввода или условные сообщения
+  if (hasRegularButtons || hasInputCollection || hasConditionalMessages) {
+    code += `    has_regular_buttons = ${toPythonBoolean(hasRegularButtons)}\n`;
+    code += `    has_input_collection = ${toPythonBoolean(hasInputCollection)}\n`;
+    code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=${node.data.collectUserInput}, enableTextInput=${node.data.enableTextInput}")\n`;
+  }
   
   // CASE 1: Есть обычные кнопки + сбор ввода = обычные кнопки работают + дополнительно сохраняются как ответы
   if (hasRegularButtons && hasInputCollection) {
