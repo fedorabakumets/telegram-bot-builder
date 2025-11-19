@@ -15,7 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { 
   Users, 
   Search, 
@@ -34,12 +34,17 @@ import {
   Eye,
   UserCheck,
   UserX,
-  Edit
+  Edit,
+  Send,
+  Bot,
+  User,
+  Database
 } from 'lucide-react';
-import { UserBotData, BotProject } from '@shared/schema';
+import { UserBotData, BotProject, BotMessage } from '@shared/schema';
 import { DatabaseBackupPanel } from './database-backup-panel';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Database } from 'lucide-react';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 interface UserDatabasePanelProps {
   projectId: number;
@@ -62,9 +67,12 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const [filterDateRange, setFilterDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedUserForDialog, setSelectedUserForDialog] = useState<UserBotData | null>(null);
+  const [messageText, setMessageText] = useState('');
 
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const qClient = useQueryClient();
   const isMobile = useIsMobile();
 
   // Fetch project data to get userDatabaseEnabled setting
@@ -101,6 +109,13 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     queryFn: () => apiRequest('GET', `/api/projects/${projectId}/users/search?q=${encodeURIComponent(searchQuery)}`),
   });
 
+  // Fetch messages for dialog
+  const { data: messages = [], isLoading: messagesLoading } = useQuery<BotMessage[]>({
+    queryKey: [`/api/projects/${projectId}/users`, selectedUserForDialog?.userId, 'messages'],
+    enabled: showDialog && !!selectedUserForDialog?.userId,
+    staleTime: 0,
+  });
+
   // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: (userId: number) => {
@@ -110,8 +125,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     onSuccess: (data) => {
       console.log("User deletion successful:", data);
       // Force clear cache and refetch
-      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
+      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
       
       // Delay refetch to ensure cache is cleared
       setTimeout(() => {
@@ -140,8 +155,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
       apiRequest('PUT', `/api/users/${userId}`, data),
     onSuccess: () => {
       // Принудительно очищаем кэш и обновляем данные
-      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
+      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
       
       // Принудительно обновляем данные
       setTimeout(() => {
@@ -172,8 +187,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     onSuccess: (data) => {
       console.log("Bulk deletion successful:", data);
       // Force clear cache and refetch
-      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
-      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
+      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users`] });
+      qClient.removeQueries({ queryKey: [`/api/projects/${projectId}/users/stats`] });
       
       // Delay refetch to ensure cache is cleared
       setTimeout(() => {
@@ -202,7 +217,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     mutationFn: (enabled: boolean) => 
       apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
     onSuccess: (data, enabled) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+      qClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
       toast({
         title: enabled ? "База данных включена" : "База данных выключена",
         description: enabled 
@@ -214,6 +229,33 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
       toast({
         title: "Ошибка",
         description: "Не удалось изменить настройку базы данных",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: (data: { messageText: string }) => {
+      if (!selectedUserForDialog?.userId) {
+        throw new Error('User ID is required');
+      }
+      return apiRequest('POST', `/api/projects/${projectId}/users/${selectedUserForDialog.userId}/send-message`, data);
+    },
+    onSuccess: () => {
+      qClient.invalidateQueries({ 
+        queryKey: [`/api/projects/${projectId}/users`, selectedUserForDialog?.userId, 'messages'] 
+      });
+      setMessageText('');
+      toast({
+        title: "Сообщение отправлено",
+        description: "Сообщение успешно отправлено пользователю",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Ошибка отправки",
+        description: error?.message || "Не удалось отправить сообщение",
         variant: "destructive",
       });
     }
@@ -621,6 +663,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                               <Button
                                 variant="outline"
                                 size="sm"
+                                data-testid={`button-view-user-${index}`}
                                 onClick={() => {
                                   setSelectedUser(user);
                                   setShowUserDetails(true);
@@ -631,6 +674,18 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                               <Button
                                 variant="outline"
                                 size="sm"
+                                data-testid={`button-show-dialog-${index}`}
+                                onClick={() => {
+                                  setSelectedUserForDialog(user);
+                                  setShowDialog(true);
+                                }}
+                              >
+                                <MessageSquare className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                data-testid={`button-toggle-active-${index}`}
                                 onClick={() => handleUserStatusToggle(user, 'isActive')}
                                 className={(user.isActive || user.is_active) ? "text-red-600" : "text-green-600"}
                               >
@@ -833,6 +888,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                         <Button
                           variant="outline"
                           size="sm"
+                          data-testid={`button-view-user-${index}`}
                           onClick={() => {
                             setSelectedUser(user);
                             setShowUserDetails(true);
@@ -843,6 +899,18 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                         <Button
                           variant="outline"
                           size="sm"
+                          data-testid={`button-show-dialog-${index}`}
+                          onClick={() => {
+                            setSelectedUserForDialog(user);
+                            setShowDialog(true);
+                          }}
+                        >
+                          <MessageSquare className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          data-testid={`button-toggle-active-${index}`}
                           onClick={() => handleUserStatusToggle(user, 'isActive')}
                           className={(user.isActive || user.is_active) ? "text-red-600" : "text-green-600"}
                         >
@@ -850,7 +918,12 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-red-600">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-red-600"
+                              data-testid={`button-delete-user-${index}`}
+                            >
                               <Trash2 className="w-3 h-3" />
                             </Button>
                           </AlertDialogTrigger>
@@ -1112,6 +1185,148 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Chat Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[90vh]' : 'max-w-2xl max-h-[80vh]'} flex flex-col`}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Диалог с пользователем
+            </DialogTitle>
+            <DialogDescription>
+              {selectedUserForDialog && formatUserName(selectedUserForDialog)}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Messages Area */}
+            <ScrollArea className="flex-1 pr-4" data-testid="messages-scroll-area">
+              {messagesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-muted-foreground">Загрузка сообщений...</span>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="empty-messages-state">
+                  <MessageSquare className="w-12 h-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Нет сообщений</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Начните диалог, отправив первое сообщение
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4 py-4">
+                  {messages.map((message, index) => {
+                    const isBot = message.messageType === 'bot';
+                    const isUser = message.messageType === 'user';
+                    
+                    return (
+                      <div
+                        key={message.id || index}
+                        className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                        data-testid={`message-${message.messageType}-${index}`}
+                      >
+                        <div className={`flex gap-2 max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                          {/* Avatar */}
+                          <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                            isBot ? 'bg-blue-100 dark:bg-blue-900' : 'bg-green-100 dark:bg-green-900'
+                          }`}>
+                            {isBot ? (
+                              <Bot className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            ) : (
+                              <User className="w-4 h-4 text-green-600 dark:text-green-400" />
+                            )}
+                          </div>
+                          
+                          {/* Message Content */}
+                          <div className="flex flex-col gap-1">
+                            <div className={`rounded-lg px-4 py-2 ${
+                              isBot 
+                                ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100' 
+                                : 'bg-green-100 dark:bg-green-900/50 text-green-900 dark:text-green-100'
+                            }`}>
+                              <p className="text-sm whitespace-pre-wrap break-words">
+                                {message.messageText}
+                              </p>
+                            </div>
+                            
+                            {/* Timestamp */}
+                            {message.createdAt && (
+                              <span 
+                                className={`text-xs text-muted-foreground ${isUser ? 'text-right' : 'text-left'}`}
+                                data-testid={`timestamp-${index}`}
+                              >
+                                {format(new Date(message.createdAt), 'dd MMM yyyy, HH:mm', { locale: ru })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </ScrollArea>
+            
+            <Separator className="my-4" />
+            
+            {/* Message Input Form */}
+            <div className="space-y-3">
+              <Label htmlFor="message-input" className="text-sm font-medium">
+                Отправить сообщение
+              </Label>
+              <div className="flex gap-2">
+                <Textarea
+                  id="message-input"
+                  data-testid="textarea-message-input"
+                  placeholder="Введите сообщение..."
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (messageText.trim() && !sendMessageMutation.isPending) {
+                        sendMessageMutation.mutate({ messageText: messageText.trim() });
+                      }
+                    }
+                  }}
+                  rows={3}
+                  disabled={sendMessageMutation.isPending}
+                  className="flex-1 resize-none"
+                />
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-xs text-muted-foreground">
+                  Нажмите Enter для отправки, Shift+Enter для новой строки
+                </p>
+                <Button
+                  data-testid="button-send-message"
+                  onClick={() => {
+                    if (messageText.trim() && !sendMessageMutation.isPending) {
+                      sendMessageMutation.mutate({ messageText: messageText.trim() });
+                    }
+                  }}
+                  disabled={!messageText.trim() || sendMessageMutation.isPending}
+                  size="sm"
+                >
+                  {sendMessageMutation.isPending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Отправка...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Отправить
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

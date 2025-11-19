@@ -8,6 +8,7 @@ import {
   botGroups,
   groupMembers,
   botUsers,
+  botMessages,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
@@ -24,7 +25,9 @@ import {
   type InsertBotGroup,
   type GroupMember,
   type InsertGroupMember,
-  type BotUser
+  type BotUser,
+  type BotMessage,
+  type InsertBotMessage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, like, or, ilike, sql } from "drizzle-orm";
@@ -119,6 +122,12 @@ export interface IStorage {
   createGroupMember(member: InsertGroupMember): Promise<GroupMember>;
   updateGroupMember(id: number, member: Partial<InsertGroupMember>): Promise<GroupMember | undefined>;
   deleteGroupMember(id: number): Promise<boolean>;
+  
+  // Bot messages
+  createBotMessage(message: InsertBotMessage): Promise<BotMessage>;
+  getBotMessages(projectId: number, userId: string, limit?: number): Promise<BotMessage[]>;
+  deleteBotMessages(projectId: number, userId: string): Promise<boolean>;
+  deleteAllBotMessages(projectId: number): Promise<boolean>;
 }
 
 // Legacy Memory Storage - kept for reference
@@ -700,6 +709,23 @@ class MemStorage implements IStorage {
   }
 
   async deleteGroupMember(id: number): Promise<boolean> {
+    return false;
+  }
+
+  // Bot messages stubs
+  async createBotMessage(message: InsertBotMessage): Promise<BotMessage> {
+    throw new Error("MemStorage does not support bot messages");
+  }
+
+  async getBotMessages(projectId: number, userId: string, limit?: number): Promise<BotMessage[]> {
+    return [];
+  }
+
+  async deleteBotMessages(projectId: number, userId: string): Promise<boolean> {
+    return false;
+  }
+
+  async deleteAllBotMessages(projectId: number): Promise<boolean> {
     return false;
   }
 }
@@ -1287,6 +1313,44 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGroupMember(id: number): Promise<boolean> {
     const result = await this.db.delete(groupMembers).where(eq(groupMembers.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Bot messages
+  async createBotMessage(insertMessage: InsertBotMessage): Promise<BotMessage> {
+    const [message] = await this.db
+      .insert(botMessages)
+      .values(insertMessage)
+      .returning();
+    return message;
+  }
+
+  async getBotMessages(projectId: number, userId: string, limit: number = 100): Promise<BotMessage[]> {
+    return await this.db
+      .select()
+      .from(botMessages)
+      .where(and(
+        eq(botMessages.projectId, projectId),
+        eq(botMessages.userId, userId)
+      ))
+      .orderBy(asc(botMessages.createdAt))
+      .limit(limit);
+  }
+
+  async deleteBotMessages(projectId: number, userId: string): Promise<boolean> {
+    const result = await this.db
+      .delete(botMessages)
+      .where(and(
+        eq(botMessages.projectId, projectId),
+        eq(botMessages.userId, userId)
+      ));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async deleteAllBotMessages(projectId: number): Promise<boolean> {
+    const result = await this.db
+      .delete(botMessages)
+      .where(eq(botMessages.projectId, projectId));
     return result.rowCount ? result.rowCount > 0 : false;
   }
 }

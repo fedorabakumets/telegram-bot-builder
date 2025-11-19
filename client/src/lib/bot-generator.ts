@@ -1030,6 +1030,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '                    is_active BOOLEAN DEFAULT TRUE\n';
   code += '                );\n';
   code += '            """)\n';
+  code += '            # Создаем таблицу сообщений если её нет\n';
+  code += '            await conn.execute("""\n';
+  code += '                CREATE TABLE IF NOT EXISTS bot_messages (\n';
+  code += '                    id SERIAL PRIMARY KEY,\n';
+  code += '                    project_id INTEGER,\n';
+  code += '                    user_id TEXT NOT NULL,\n';
+  code += '                    message_type TEXT NOT NULL,\n';
+  code += '                    message_text TEXT,\n';
+  code += '                    message_data JSONB,\n';
+  code += '                    node_id TEXT,\n';
+  code += '                    created_at TIMESTAMP DEFAULT NOW()\n';
+  code += '                );\n';
+  code += '            """)\n';
   code += '        logging.info("✅ База данных инициализирована")\n';
   code += '    except Exception as e:\n';
   code += '        logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")\n';
@@ -1166,6 +1179,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '        return True\n';
     code += '    except Exception as e:\n';
     code += '        logging.error(f"Ошибка сохранения переменной пользователя: {e}")\n';
+    code += '        return False\n\n';
+
+    code += 'async def log_message(user_id: int, message_type: str, message_text: str = None, message_data: dict = None, node_id: str = None):\n';
+    code += '    """Логирует сообщение в базу данных"""\n';
+    code += '    if not db_pool:\n';
+    code += '        return False\n';
+    code += '    try:\n';
+    code += '        import json\n';
+    code += '        async with db_pool.acquire() as conn:\n';
+    code += '            await conn.execute("""\n';
+    code += '                INSERT INTO bot_messages (user_id, message_type, message_text, message_data, node_id)\n';
+    code += '                VALUES ($1, $2, $3, $4, $5)\n';
+    code += '            """, str(user_id), message_type, message_text, json.dumps(message_data) if message_data else None, node_id)\n';
+    code += '        return True\n';
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка логирования сообщения: {e}")\n';
     code += '        return False\n\n';
   }
 

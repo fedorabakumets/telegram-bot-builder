@@ -5,7 +5,7 @@ import { writeFileSync, existsSync, mkdirSync, unlinkSync, createWriteStream } f
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, nodeSchema, connectionSchema, botDataSchema } from "@shared/schema";
+import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, nodeSchema, connectionSchema, botDataSchema, sendMessageSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 import https from "https";
@@ -3430,6 +3430,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "User state updated successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to update user state" });
+    }
+  });
+
+  // Bot Messages endpoints
+  
+  // Get message history for a user
+  app.get("/api/projects/:projectId/users/:userId/messages", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const userId = req.params.userId;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      const messages = await storage.getBotMessages(projectId, userId, limit);
+      res.json(messages);
+    } catch (error) {
+      console.error("Failed to get messages:", error);
+      res.status(500).json({ message: "Failed to get messages" });
+    }
+  });
+
+  // Send message to user from admin panel
+  app.post("/api/projects/:projectId/users/:userId/send-message", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const userId = req.params.userId;
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      // Validate request body with Zod
+      const validationResult = sendMessageSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request body", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const { messageText } = validationResult.data;
+      
+      // Get the default bot token
+      const defaultToken = await storage.getDefaultBotToken(projectId);
+      if (!defaultToken) {
+        return res.status(400).json({ message: "Bot token not found for this project" });
+      }
+      
+      // Send message via Telegram Bot API
+      const telegramApiUrl = `https://api.telegram.org/bot${defaultToken.token}/sendMessage`;
+      const response = await fetch(telegramApiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chat_id: userId,
+          text: messageText.trim()
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        return res.status(400).json({ 
+          message: "Failed to send message", 
+          error: result.description || "Unknown error"
+        });
+      }
+      
+      // Save message to database
+      await storage.createBotMessage({
+        projectId,
+        userId,
+        messageType: "bot",
+        messageText: messageText.trim(),
+        messageData: { sentFromAdmin: true }
+      });
+      
+      res.json({ message: "Message sent successfully", result });
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Delete message history for a user
+  app.delete("/api/projects/:projectId/users/:userId/messages", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const userId = req.params.userId;
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      const success = await storage.deleteBotMessages(projectId, userId);
+      res.json({ message: "Messages deleted successfully", deleted: success });
+    } catch (error) {
+      console.error("Failed to delete messages:", error);
+      res.status(500).json({ message: "Failed to delete messages" });
     }
   });
 

@@ -220,6 +220,18 @@ export const userTelegramSettings = pgTable("user_telegram_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Таблица истории сообщений между ботом и пользователями
+export const botMessages = pgTable("bot_messages", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
+  userId: text("user_id").notNull(), // Telegram user ID
+  messageType: text("message_type").notNull(), // "user" или "bot"
+  messageText: text("message_text"), // Текст сообщения
+  messageData: jsonb("message_data"), // Дополнительные данные (медиа, кнопки и т.д.)
+  nodeId: text("node_id"), // ID узла бота, который отправил сообщение
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
   name: true,
   description: true,
@@ -460,6 +472,23 @@ export const insertUserTelegramSettingsSchema = createInsertSchema(userTelegramS
   isActive: z.number().min(0).max(1).default(1),
 });
 
+// Схема для сообщений бота
+export const insertBotMessageSchema = createInsertSchema(botMessages).pick({
+  projectId: true,
+  userId: true,
+  messageType: true,
+  messageText: true,
+  messageData: true,
+  nodeId: true,
+}).extend({
+  projectId: z.number().positive("ID проекта должен быть положительным числом"),
+  userId: z.string().min(1, "ID пользователя обязателен"),
+  messageType: z.enum(["user", "bot"]),
+  messageText: z.string().optional(),
+  messageData: z.record(z.any()).optional(),
+  nodeId: z.string().optional(),
+});
+
 // Схема для оценки шаблона
 export const rateTemplateSchema = z.object({
   templateId: z.number(),
@@ -486,6 +515,8 @@ export type InsertGroupMember = z.infer<typeof insertGroupMemberSchema>;
 export type GroupMember = typeof groupMembers.$inferSelect;
 export type InsertUserTelegramSettings = z.infer<typeof insertUserTelegramSettingsSchema>;
 export type UserTelegramSettings = typeof userTelegramSettings.$inferSelect;
+export type InsertBotMessage = z.infer<typeof insertBotMessageSchema>;
+export type BotMessage = typeof botMessages.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({
@@ -774,3 +805,10 @@ export interface ComponentDefinition {
   defaultData?: any;
   [key: string]: any; // Allow additional properties for compatibility
 }
+
+// Schema for sending message to user from admin panel
+export const sendMessageSchema = z.object({
+  messageText: z.string().min(1, "Message text is required").max(4096, "Message text is too long"),
+});
+
+export type SendMessage = z.infer<typeof sendMessageSchema>;
