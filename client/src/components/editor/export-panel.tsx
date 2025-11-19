@@ -11,8 +11,20 @@ import { useTheme } from '@/components/theme-provider';
 import { BotData, BotGroup } from '@shared/schema';
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
+import json from 'react-syntax-highlighter/dist/esm/languages/hljs/json';
+import yaml from 'react-syntax-highlighter/dist/esm/languages/hljs/yaml';
+import markdown from 'react-syntax-highlighter/dist/esm/languages/hljs/markdown';
+import dockerfile from 'react-syntax-highlighter/dist/esm/languages/hljs/dockerfile';
+import { vs2015, googlecode } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
+// Регистрируем только нужные языки для оптимизации
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('json', json);
+SyntaxHighlighter.registerLanguage('yaml', yaml);
+SyntaxHighlighter.registerLanguage('markdown', markdown);
+SyntaxHighlighter.registerLanguage('dockerfile', dockerfile);
 
 // Динамический импорт тяжелых генераторов для улучшения производительности
 const loadBotGenerator = () => import('@/lib/bot-generator');
@@ -487,17 +499,18 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                     {getCurrentContent() ? (
                       <SyntaxHighlighter
                         language={getLanguageForHighlighter(selectedFormat)}
-                        style={theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? vscDarkPlus : vs}
+                        style={theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? vs2015 : googlecode}
                         customStyle={{
                           margin: 0,
                           borderRadius: 0,
                           fontSize: isMobile ? '11px' : '12px',
                           maxHeight: isMobile ? '192px' : '400px',
                           height: isMobile ? '192px' : '400px',
-                          overflow: 'auto'
+                          overflow: 'auto',
+                          background: theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? '#1e1e1e' : '#f5f5f5'
                         }}
                         showLineNumbers={true}
-                        wrapLines={true}
+                        wrapLongLines={false}
                         data-testid="syntax-highlighter-preview"
                       >
                         {getCurrentContent()}
