@@ -753,7 +753,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   return code;
 }
 
-export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = []): string {
+export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false): string {
   const { nodes, connections } = extractNodesAndConnections(botData);
   
   // Собираем все ID узлов для генерации уникальных коротких ID
@@ -906,18 +906,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '}\n\n';
   }
   
-  code += '# Настройки базы данных\n';
-  code += 'DATABASE_URL = os.getenv("DATABASE_URL")\n\n';
-  
-  code += '# Пул соединений с базой данных\n';
-  code += 'db_pool = None\n\n';
-  
-  code += '# Хранилище пользователей (резервное для случаев без БД)\n';
+  code += '# Хранилище пользователей\n';
   code += 'user_data = {}\n\n';
 
-  // Добавляем функции для работы с базой данных
-  code += '\n# Функции для работы с базой данных\n';
-  code += 'async def init_database():\n';
+  // Добавляем функции для работы с базой данных только если БД включена
+  if (userDatabaseEnabled) {
+    code += '# Настройки базы данных\n';
+    code += 'DATABASE_URL = os.getenv("DATABASE_URL")\n\n';
+    
+    code += '# Пул соединений с базой данных\n';
+    code += 'db_pool = None\n\n';
+
+    code += '\n# Функции для работы с базой данных\n';
+    code += 'async def init_database():\n';
   code += '    """Инициализация подключения к базе данных и создание таблиц"""\n';
   code += '    global db_pool\n';
   code += '    try:\n';
@@ -1041,32 +1042,56 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '    """Алиас для update_user_data_in_db для обратной совместимости"""\n';
   code += '    return await update_user_data_in_db(user_id, data_key, data_value)\n\n';
 
-  code += 'async def update_user_variable_in_db(user_id: int, variable_name: str, variable_value: str):\n';
-  code += '    """Сохраняет переменную пользователя в базу данных"""\n';
-  code += '    if not db_pool:\n';
-  code += '        return False\n';
-  code += '    try:\n';
-  code += '        import json\n';
-  code += '        async with db_pool.acquire() as conn:\n';
-  code += '            # Сначала создаём или получаем существующую запись\n';
-  code += '            await conn.execute("""\n';
-  code += '                INSERT INTO bot_users (user_id) \n';
-  code += '                VALUES ($1) \n';
-  code += '                ON CONFLICT (user_id) DO NOTHING\n';
-  code += '            """, user_id)\n';
-  code += '            \n';
-  code += '            # Обновляем переменную пользователя\n';
-  code += '            update_data = {variable_name: variable_value}\n';
-  code += '            await conn.execute("""\n';
-  code += '                UPDATE bot_users \n';
-  code += '                SET user_data = COALESCE(user_data, \'{}\'::jsonb) || $2::jsonb,\n';
-  code += '                    last_interaction = NOW()\n';
-  code += '                WHERE user_id = $1\n';
-  code += '            """, user_id, json.dumps(update_data))\n';
-  code += '        return True\n';
-  code += '    except Exception as e:\n';
-  code += '        logging.error(f"Ошибка сохранения переменной пользователя: {e}")\n';
-  code += '        return False\n\n';
+    code += 'async def update_user_variable_in_db(user_id: int, variable_name: str, variable_value: str):\n';
+    code += '    """Сохраняет переменную пользователя в базу данных"""\n';
+    code += '    if not db_pool:\n';
+    code += '        return False\n';
+    code += '    try:\n';
+    code += '        import json\n';
+    code += '        async with db_pool.acquire() as conn:\n';
+    code += '            # Сначала создаём или получаем существующую запись\n';
+    code += '            await conn.execute("""\n';
+    code += '                INSERT INTO bot_users (user_id) \n';
+    code += '                VALUES ($1) \n';
+    code += '                ON CONFLICT (user_id) DO NOTHING\n';
+    code += '            """, user_id)\n';
+    code += '            \n';
+    code += '            # Обновляем переменную пользователя\n';
+    code += '            update_data = {variable_name: variable_value}\n';
+    code += '            await conn.execute("""\n';
+    code += '                UPDATE bot_users \n';
+    code += '                SET user_data = COALESCE(user_data, \'{}\'::jsonb) || $2::jsonb,\n';
+    code += '                    last_interaction = NOW()\n';
+    code += '                WHERE user_id = $1\n';
+    code += '            """, user_id, json.dumps(update_data))\n';
+    code += '        return True\n';
+    code += '    except Exception as e:\n';
+    code += '        logging.error(f"Ошибка сохранения переменной пользователя: {e}")\n';
+    code += '        return False\n\n';
+  } else {
+    // Если БД выключена, создаем заглушки для функций БД
+    code += '\n# База данных пользователей выключена\n';
+    code += '# Функции-заглушки для совместимости\n';
+    code += 'db_pool = None\n\n';
+    code += 'async def init_database():\n';
+    code += '    """База данных выключена"""\n';
+    code += '    pass\n\n';
+    code += 'async def save_user_to_db(*args, **kwargs):\n';
+    code += '    """База данных выключена"""\n';
+    code += '    return False\n\n';
+    code += 'async def get_user_from_db(*args, **kwargs):\n';
+    code += '    """База данных выключена"""\n';
+    code += '    return None\n\n';
+    code += 'async def update_user_data_in_db(*args, **kwargs):\n';
+    code += '    """База данных выключена"""\n';
+    code += '    return False\n\n';
+    code += 'async def save_user_data_to_db(*args, **kwargs):\n';
+    code += '    """База данных выключена"""\n';
+    code += '    return False\n\n';
+    code += 'async def update_user_variable_in_db(*args, **kwargs):\n';
+    code += '    """База данных выключена"""\n';
+    code += '    return False\n\n';
+  }
 
   // Добавляем утилитарные функции
   code += '\n# Утилитарные функции\n';
@@ -1076,12 +1101,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'async def is_private_chat(message: types.Message) -> bool:\n';
   code += '    return message.chat.type == "private"\n\n';
   
-  code += 'async def check_auth(user_id: int) -> bool:\n';
-  code += '    # Проверяем наличие пользователя в БД или локальном хранилище\n';
-  code += '    if db_pool:\n';
-  code += '        user = await get_user_from_db(user_id)\n';
-  code += '        return user is not None\n';
-  code += '    return user_id in user_data\n\n';
+  if (userDatabaseEnabled) {
+    code += 'async def check_auth(user_id: int) -> bool:\n';
+    code += '    # Проверяем наличие пользователя в БД или локальном хранилище\n';
+    code += '    if db_pool:\n';
+    code += '        user = await get_user_from_db(user_id)\n';
+    code += '        return user is not None\n';
+    code += '    return user_id in user_data\n\n';
+  } else {
+    code += 'async def check_auth(user_id: int) -> bool:\n';
+    code += '    # Проверяем наличие пользователя в локальном хранилище\n';
+    code += '    return user_id in user_data\n\n';
+  }
   
   code += 'def is_local_file(url: str) -> bool:\n';
   code += '    """Проверяет, является ли URL локальным загруженным файлом"""\n';
@@ -1175,9 +1206,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += `\n# @@NODE_START:${node.id}@@\n`;
     
     if (node.type === "start") {
-      code += generateStartHandler(node);
+      code += generateStartHandler(node, userDatabaseEnabled);
     } else if (node.type === "command") {
-      code += generateCommandHandler(node);
+      code += generateCommandHandler(node, userDatabaseEnabled);
     } else if (node.type === "photo") {
       code += generatePhotoHandler(node);
     } else if (node.type === "video") {
@@ -6760,7 +6791,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   return code;
 }
 
-function generateStartHandler(node: Node): string {
+function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string {
   let code = '\n@dp.message(CommandStart())\n';
   code += 'async def start_handler(message: types.Message):\n';
 
@@ -6790,55 +6821,85 @@ function generateStartHandler(node: Node): string {
   code += '    first_name = message.from_user.first_name\n';
   code += '    last_name = message.from_user.last_name\n';
   code += '    \n';
-  code += '    # Сохраняем пользователя в базу данных\n';
-  code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
-  code += '    \n';
-  code += '    # Резервное сохранение в локальное хранилище\n';
-  code += '    if not saved_to_db:\n';
-  code += '        user_data[user_id] = {\n';
-  code += '            "username": username,\n';
-  code += '            "first_name": first_name,\n';
-  code += '            "last_name": last_name,\n';
-  code += '            "registered_at": message.date\n';
-  code += '        }\n';
-  code += '        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")\n';
-  code += '    else:\n';
-  code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
+  
+  if (userDatabaseEnabled) {
+    code += '    # Сохраняем пользователя в базу данных\n';
+    code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
+    code += '    \n';
+    code += '    # Резервное сохранение в локальное хранилище\n';
+    code += '    if not saved_to_db:\n';
+    code += '        user_data[user_id] = {\n';
+    code += '            "username": username,\n';
+    code += '            "first_name": first_name,\n';
+    code += '            "last_name": last_name,\n';
+    code += '            "registered_at": message.date\n';
+    code += '        }\n';
+    code += '        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")\n';
+    code += '    else:\n';
+    code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
+  } else {
+    code += '    # Сохраняем пользователя в локальное хранилище (БД отключена)\n';
+    code += '    user_data[user_id] = {\n';
+    code += '        "username": username,\n';
+    code += '        "first_name": first_name,\n';
+    code += '        "last_name": last_name,\n';
+    code += '        "registered_at": message.date\n';
+    code += '    }\n';
+    code += '    logging.info(f"Пользователь {user_id} сохранен в локальное хранилище (БД отключена)")\n\n';
+  }
   
   // КРИТИЧЕСКИ ВАЖНО: ВСЕГДА восстанавливаем состояние множественного выбора
   // Это необходимо для корректной работы кнопок "Изменить выбор" и "Начать заново"
   // УБИРАЕМ условие node.data.allowMultipleSelection, потому что состояние нужно восстанавливать всегда
-  code += '    # ВАЖНО: ВСЕГДА восстанавливаем состояние множественного выбора из БД\n';
-  code += '    # Это критически важно для кнопок "Изменить выбор" и "Начать заново"\n';
-  code += '    user_record = await get_user_from_db(user_id)\n';
   code += '    saved_interests = []\n';
   code += '    \n';
-  code += '    if user_record and isinstance(user_record, dict):\n';
-  code += '        user_data_field = user_record.get("user_data", {})\n';
-  code += '        if isinstance(user_data_field, str):\n';
-  code += '            import json\n';
-  code += '            try:\n';
-  code += '                user_vars = json.loads(user_data_field)\n';
-  code += '            except:\n';
-  code += '                user_vars = {}\n';
-  code += '        elif isinstance(user_data_field, dict):\n';
-  code += '            user_vars = user_data_field\n';
-  code += '        else:\n';
-  code += '            user_vars = {}\n';
-  code += '        \n';
-  code += '        # Ищем сохраненные интересы в любой переменной\n';
-  code += '        for var_name, var_data in user_vars.items():\n';
-  code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
-  code += '                if isinstance(var_data, str) and var_data:\n';
-  code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
-  code += '                    logging.info(f"Восстановлены интересы из переменной {var_name}: {saved_interests}")\n';
-  code += '                    break\n';
+  
+  if (userDatabaseEnabled) {
+    code += '    # ВАЖНО: ВСЕГДА восстанавливаем состояние множественного выбора из БД\n';
+    code += '    # Это критически важно для кнопок "Изменить выбор" и "Начать заново"\n';
+    code += '    user_record = await get_user_from_db(user_id)\n';
+    code += '    \n';
+    code += '    if user_record and isinstance(user_record, dict):\n';
+    code += '        user_data_field = user_record.get("user_data", {})\n';
+    code += '        if isinstance(user_data_field, str):\n';
+    code += '            import json\n';
+    code += '            try:\n';
+    code += '                user_vars = json.loads(user_data_field)\n';
+    code += '            except:\n';
+    code += '                user_vars = {}\n';
+    code += '        elif isinstance(user_data_field, dict):\n';
+    code += '            user_vars = user_data_field\n';
+    code += '        else:\n';
+    code += '            user_vars = {}\n';
+    code += '        \n';
+    code += '        # Ищем сохраненные интересы в любой переменной\n';
+    code += '        for var_name, var_data in user_vars.items():\n';
+    code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
+    code += '                if isinstance(var_data, str) and var_data:\n';
+    code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
+    code += '                    logging.info(f"Восстановлены интересы из переменной {var_name}: {saved_interests}")\n';
+    code += '                    break\n';
+  } else {
+    code += '    # Восстанавливаем состояние из локального хранилища (БД отключена)\n';
+    code += '    if user_id in user_data:\n';
+    code += '        for var_name, var_data in user_data[user_id].items():\n';
+    code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
+    code += '                if isinstance(var_data, str) and var_data:\n';
+    code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
+    code += '                    logging.info(f"Восстановлены интересы из локального хранилища: {saved_interests}")\n';
+    code += '                    break\n';
+    code += '                elif isinstance(var_data, list):\n';
+    code += '                    saved_interests = var_data\n';
+    code += '                    logging.info(f"Восстановлены интересы из локального хранилища: {saved_interests}")\n';
+    code += '                    break\n';
+  }
+  
   code += '    \n';
   code += '    # ВСЕГДА инициализируем состояние множественного выбора с восстановленными интересами\n';
   code += '    if user_id not in user_data:\n';
   code += '        user_data[user_id] = {}\n';
   const multiSelectVariable = node.data.multiSelectVariable || 'user_interests';
-  code += `    user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy()\n`;
+  code += `    user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy() if saved_interests else []\n`;
   code += `    user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
   code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n';
   code += '    \n';
@@ -6952,7 +7013,7 @@ function generateStartHandler(node: Node): string {
   return code + generateKeyboard(node);
 }
 
-function generateCommandHandler(node: Node): string {
+function generateCommandHandler(node: Node, userDatabaseEnabled: boolean): string {
   const command = node.data.command || "/help";
   const functionName = command.replace('/', '').replace(/[^a-zA-Z0-9_]/g, '_');
   
@@ -6988,14 +7049,18 @@ function generateCommandHandler(node: Node): string {
   code += '    first_name = message.from_user.first_name\n';
   code += '    last_name = message.from_user.last_name\n';
   code += '    \n';
-  code += '    # Сохраняем пользователя в базу данных\n';
-  code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
-  code += '    \n';
-  code += '    # Обновляем статистику команд в БД\n';
-  code += `    if saved_to_db:\n`;
-  code += `        await update_user_data_in_db(user_id, "command_${command.replace('/', '')}", datetime.now().isoformat())\n`;
-  code += '    \n';
-  code += '    # Резервное сохранение в локальное хранилище\n';
+  
+  if (userDatabaseEnabled) {
+    code += '    # Сохраняем пользователя в базу данных\n';
+    code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
+    code += '    \n';
+    code += '    # Обновляем статистику команд в БД\n';
+    code += `    if saved_to_db:\n`;
+    code += `        await update_user_data_in_db(user_id, "command_${command.replace('/', '')}", datetime.now().isoformat())\n`;
+    code += '    \n';
+  }
+  
+  code += '    # Сохранение в локальное хранилище\n';
   code += '    if user_id not in user_data:\n';
   code += '        user_data[user_id] = {}\n';
   code += '    if "commands_used" not in user_data[user_id]:\n';
@@ -7013,9 +7078,13 @@ function generateCommandHandler(node: Node): string {
     code += '    text = None\n';
     code += '    \n';
     code += '    # Получаем данные пользователя для проверки условий\n';
-    code += '    user_record = await get_user_from_db(user_id)\n';
-    code += '    if not user_record:\n';
-    code += '        user_record = user_data.get(user_id, {})\n';
+    if (userDatabaseEnabled) {
+      code += '    user_record = await get_user_from_db(user_id)\n';
+      code += '    if not user_record:\n';
+      code += '        user_record = user_data.get(user_id, {})\n';
+    } else {
+      code += '    user_record = user_data.get(user_id, {})\n';
+    }
     code += '    \n';
     code += '    # Безопасно извлекаем user_data\n';
     code += '    if isinstance(user_record, dict):\n';

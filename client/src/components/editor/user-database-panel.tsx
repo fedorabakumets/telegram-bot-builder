@@ -36,9 +36,10 @@ import {
   UserX,
   Edit
 } from 'lucide-react';
-import { UserBotData } from '@shared/schema';
+import { UserBotData, BotProject } from '@shared/schema';
 import { DatabaseBackupPanel } from './database-backup-panel';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Database } from 'lucide-react';
 
 interface UserDatabasePanelProps {
   projectId: number;
@@ -65,6 +66,11 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+
+  // Fetch project data to get userDatabaseEnabled setting
+  const { data: project } = useQuery<BotProject>({
+    queryKey: [`/api/projects/${projectId}`],
+  });
 
   // Fetch user data
   const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery<UserBotData[]>({
@@ -186,6 +192,28 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
       toast({
         title: "Ошибка очистки базы",
         description: "Не удалось очистить базу данных. Проверьте консоль для подробностей.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Toggle user database enabled mutation
+  const toggleDatabaseMutation = useMutation({
+    mutationFn: (enabled: boolean) => 
+      apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
+    onSuccess: (data, enabled) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+      toast({
+        title: enabled ? "База данных включена" : "База данных выключена",
+        description: enabled 
+          ? "Функции работы с базой данных пользователей будут генерироваться в коде бота." 
+          : "Функции работы с базой данных НЕ будут генерироваться в коде бота.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось изменить настройку базы данных",
         variant: "destructive",
       });
     }
@@ -314,6 +342,8 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     );
   }
 
+  const isDatabaseEnabled = project?.userDatabaseEnabled === 1;
+
   return (
     <div className="h-full flex flex-col bg-background min-h-0">
       <div className="border-b bg-card flex-none">
@@ -328,7 +358,21 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 Управление пользователями бота "{projectName}"
               </p>
             </div>
-            <div className={`flex items-center gap-2 ${isMobile ? 'self-stretch' : ''}`}>
+            <div className={`flex items-center gap-2 ${isMobile ? 'self-stretch flex-wrap' : ''}`}>
+              {/* Database Toggle */}
+              <div className={`flex items-center gap-2 p-2 border rounded-md ${isMobile ? 'flex-1 min-w-full' : 'bg-muted/30'}`} data-testid="database-toggle-container">
+                <Database className="w-4 h-4 text-muted-foreground" />
+                <Label htmlFor="db-toggle" className="text-sm cursor-pointer flex-1">
+                  {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
+                </Label>
+                <Switch
+                  id="db-toggle"
+                  data-testid="switch-database-toggle"
+                  checked={isDatabaseEnabled}
+                  onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
+                  disabled={toggleDatabaseMutation.isPending}
+                />
+              </div>
               <Button onClick={handleRefresh} variant="outline" size={isMobile ? "sm" : "sm"} className={isMobile ? 'flex-1' : ''}>
                 <RefreshCw className="w-4 h-4 mr-1" />
                 {isMobile ? 'Обновить' : 'Обновить'}

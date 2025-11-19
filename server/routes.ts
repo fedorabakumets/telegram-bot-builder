@@ -532,7 +532,8 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     // Генерируем код бота через клиентский генератор
     const { generatePythonCode } = await import("../client/src/lib/bot-generator.js");
     const simpleBotData = convertSheetsToSimpleBotData(project.data);
-    const botCode = generatePythonCode(simpleBotData as any, project.name).replace('YOUR_BOT_TOKEN_HERE', token);
+    const userDatabaseEnabled = project.userDatabaseEnabled === 1;
+    const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled).replace('YOUR_BOT_TOKEN_HERE', token);
     
     // Создаем файл бота (уникальный для каждого токена)
     const filePath = createBotFile(botCode, projectId, tokenId);
@@ -1290,7 +1291,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       modUrl.searchParams.set("t", Date.now().toString());
       const { generatePythonCode } = await import(modUrl.href);
       const simpleBotData = convertSheetsToSimpleBotData(project.data);
-      const pythonCode = generatePythonCode(simpleBotData as any, project.name);
+      const userDatabaseEnabled = project.userDatabaseEnabled === 1;
+      const pythonCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled);
       res.json({ code: pythonCode });
     } catch (error) {
       console.error("❌ Ошибка генерации кода:", error);
