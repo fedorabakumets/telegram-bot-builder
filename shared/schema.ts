@@ -486,7 +486,7 @@ export const insertBotMessageSchema = createInsertSchema(botMessages).pick({
   messageType: z.enum(["user", "bot"]),
   messageText: z.string().optional(),
   messageData: z.record(z.any()).optional(),
-  nodeId: z.string().optional(),
+  nodeId: z.string().nullish(),
 });
 
 // Схема для оценки шаблона
