@@ -28,10 +28,6 @@ localPort = 37615
 externalPort = 8081
 
 [[ports]]
-localPort = 37803
-externalPort = 8099
-
-[[ports]]
 localPort = 38333
 externalPort = 5173
 
@@ -50,6 +46,10 @@ externalPort = 9000
 [[ports]]
 localPort = 40943
 externalPort = 8000
+
+[[ports]]
+localPort = 41497
+externalPort = 8099
 
 [[ports]]
 localPort = 42217
@@ -98,4 +98,3 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_database:1.0.0", "javascript_supabase:1.0.0"]
-expertMode = true

@@ -19,7 +19,7 @@ interface AdaptiveHeaderProps {
   botInfo?: BotInfo | null;
   currentTab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups';
   onTabChange: (tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => void;
-  onExport?: () => void;
+  onExport: () => void;
   onSaveAsTemplate?: () => void;
   onLoadTemplate?: () => void;
   onLayoutSettings?: () => void;
@@ -254,19 +254,17 @@ export function AdaptiveHeader({
           </Button>
         )}
         
-        {onExport && (
-          <Button 
-            size="sm"
-            onClick={() => {
-              onExport();
-              setIsMobileMenuOpen(false);
-            }}
-            className="flex items-center justify-center"
-          >
-            <i className="fas fa-download mr-2"></i>
-            Экспорт
-          </Button>
-        )}
+        <Button 
+          size="sm"
+          onClick={() => {
+            onExport();
+            setIsMobileMenuOpen(false);
+          }}
+          className="flex items-center justify-center"
+        >
+          <i className="fas fa-download mr-2"></i>
+          Экспорт
+        </Button>
         
         <div className="flex justify-center pt-2">
           <ThemeToggle />
@@ -358,16 +356,14 @@ export function AdaptiveHeader({
       
 
       
-      {onExport && (
-        <Button 
-          size="sm"
-          onClick={onExport}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
-        >
-          <i className="fas fa-download text-2xs max-sm:mx-auto"></i>
-          <span className="max-sm:hidden ml-1">Экспорт</span>
-        </Button>
-      )}
+      <Button 
+        size="sm"
+        onClick={onExport}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full max-sm:col-span-2`}
+      >
+        <i className="fas fa-download text-2xs max-sm:mx-auto"></i>
+        <span className="max-sm:hidden ml-1">Экспорт</span>
+      </Button>
       
       {isVertical && (
         <div className="h-px w-full bg-border my-2"></div>

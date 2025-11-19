@@ -37,6 +37,7 @@ export default function Editor() {
   const [match, params] = useRoute('/editor/:id');
   const projectId = params?.id ? parseInt(params.id) : null;
   const [currentTab, setCurrentTab] = useState<'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups'>('editor');
+  const [showExport, setShowExport] = useState(false);
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
@@ -434,11 +435,9 @@ export default function Editor() {
       setLocation(`/preview/${currentProject?.id}`);
       return;
     } else if (tab === 'export') {
-      // Auto-save before showing export page
+      // Auto-save before showing export modal
       updateProjectMutation.mutate({});
-      // Navigate to export page instead of showing modal
-      setLocation(`/export/${currentProject?.id}`);
-      return;
+      setShowExport(true);
     } else if (tab === 'bot') {
       // Auto-save before showing bot controls
       updateProjectMutation.mutate({});
@@ -446,7 +445,7 @@ export default function Editor() {
       // Auto-save before showing users panel
       updateProjectMutation.mutate({});
     }
-  }, [updateProjectMutation, setLocation, currentProject]);
+  }, [updateProjectMutation]);
 
   // Функции управления листами
   const handleSheetAdd = useCallback((name: string) => {
@@ -594,10 +593,9 @@ export default function Editor() {
       // Сохраняем изменения
       updateProjectMutation.mutate({});
     } catch (error) {
-      console.error('Ошибка при переключении листа:', error);
       toast({
         title: "Ошибка переключения",
-        description: error instanceof Error ? error.message : "Не удалось переключиться на лист",
+        description: "Не удалось переключиться на лист",
         variant: "destructive",
       });
     }
@@ -968,6 +966,7 @@ export default function Editor() {
         projectName={currentProject.name}
         currentTab={currentTab}
         onTabChange={handleTabChange}
+        onExport={() => setShowExport(true)}
         onSaveAsTemplate={handleSaveAsTemplate}
         onLoadTemplate={handleLoadTemplate}
         onLayoutSettings={() => setShowLayoutManager(true)}
@@ -1125,6 +1124,7 @@ export default function Editor() {
               projectName={currentProject.name}
               currentTab={currentTab}
               onTabChange={handleTabChange}
+              onExport={() => setShowExport(true)}
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
@@ -1268,6 +1268,7 @@ export default function Editor() {
               projectName={currentProject.name}
               currentTab={currentTab}
               onTabChange={handleTabChange}
+              onExport={() => setShowExport(true)}
               onSaveAsTemplate={handleSaveAsTemplate}
               onLoadTemplate={handleLoadTemplate}
               onLayoutSettings={() => setShowLayoutManager(true)}
@@ -1288,6 +1289,7 @@ export default function Editor() {
                   projectName={currentProject.name}
                   currentTab={currentTab}
                   onTabChange={handleTabChange}
+                  onExport={() => setShowExport(true)}
                   onSaveAsTemplate={handleSaveAsTemplate}
                   onLoadTemplate={handleLoadTemplate}
                   onLayoutSettings={() => setShowLayoutManager(true)}
@@ -1424,6 +1426,16 @@ export default function Editor() {
         />
       )}
 
+
+      <ExportModal
+        isOpen={showExport}
+        onClose={() => {
+          setShowExport(false);
+          setCurrentTab('editor');
+        }}
+        botData={(botDataWithSheets || getBotData()) as any}
+        projectName={currentProject.name}
+      />
 
       <SaveTemplateModal
         isOpen={showSaveTemplate}
