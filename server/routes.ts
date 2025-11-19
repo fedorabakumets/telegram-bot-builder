@@ -5,7 +5,7 @@ import { writeFileSync, existsSync, mkdirSync, unlinkSync, createWriteStream } f
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, nodeSchema, connectionSchema, botDataSchema, sendMessageSchema } from "@shared/schema";
+import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, insertBotMessageSchema, nodeSchema, connectionSchema, botDataSchema, sendMessageSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 import https from "https";
@@ -3516,6 +3516,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to send message:", error);
       res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Save message from bot (called by Python bot)
+  app.post("/api/projects/:projectId/messages", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      // Validate request body with Zod
+      const validationResult = insertBotMessageSchema.safeParse({ ...req.body, projectId });
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid message data", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const message = await storage.createBotMessage(validationResult.data);
+      res.json({ message: "Message saved successfully", data: message });
+    } catch (error) {
+      console.error("Failed to save message:", error);
+      res.status(500).json({ message: "Failed to save message" });
     }
   });
 

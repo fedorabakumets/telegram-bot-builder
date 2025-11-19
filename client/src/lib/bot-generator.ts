@@ -926,7 +926,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'from typing import Optional\n';
   code += 'import asyncpg\n';
   code += 'from datetime import datetime, timezone, timedelta\n';
-  code += 'import json\n\n';
+  code += 'import json\n';
+  code += 'import aiohttp\n\n';
   
   // Добавляем safe_edit_or_send только если есть inline кнопки
   if (hasInlineButtons(nodes || [])) {
@@ -965,8 +966,93 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'bot = Bot(token=BOT_TOKEN)\n';
   code += 'dp = Dispatcher()\n\n';
   
+  code += '# Middleware для сохранения входящих сообщений\n';
+  code += '@dp.message.middleware()\n';
+  code += 'async def message_logging_middleware(handler, event: types.Message, data: dict):\n';
+  code += '    """Middleware для автоматического сохранения входящих сообщений от пользователей"""\n';
+  code += '    try:\n';
+  code += '        # Сохраняем входящее сообщение от пользователя\n';
+  code += '        user_id = str(event.from_user.id)\n';
+  code += '        message_text = event.text or event.caption or "[медиа]"\n';
+  code += '        \n';
+  code += '        # Сохраняем асинхронно, не блокируя обработку\n';
+  code += '        asyncio.create_task(save_message_to_api(\n';
+  code += '            user_id=user_id,\n';
+  code += '            message_type="user",\n';
+  code += '            message_text=message_text,\n';
+  code += '            message_data={"message_id": event.message_id}\n';
+  code += '        ))\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка в middleware сохранения сообщений: {e}")\n';
+  code += '    \n';
+  code += '    # Продолжаем обработку сообщения\n';
+  code += '    return await handler(event, data)\n\n';
+  
+  code += '# Обертка для сохранения исходящих сообщений\n';
+  code += 'original_send_message = bot.send_message\n';
+  code += 'async def send_message_with_logging(chat_id, text, *args, node_id=None, **kwargs):\n';
+  code += '    """Обертка для bot.send_message с автоматическим сохранением"""\n';
+  code += '    result = await original_send_message(chat_id, text, *args, **kwargs)\n';
+  code += '    # Сохраняем асинхронно\n';
+  code += '    asyncio.create_task(save_message_to_api(\n';
+  code += '        user_id=str(chat_id),\n';
+  code += '        message_type="bot",\n';
+  code += '        message_text=text,\n';
+  code += '        node_id=node_id,\n';
+  code += '        message_data={"message_id": result.message_id if result else None}\n';
+  code += '    ))\n';
+  code += '    return result\n\n';
+  code += 'bot.send_message = send_message_with_logging\n\n';
+  
+  code += '# Обертка для message.answer с сохранением\n';
+  code += 'original_answer = types.Message.answer\n';
+  code += 'async def answer_with_logging(self, text, *args, node_id=None, **kwargs):\n';
+  code += '    """Обертка для message.answer с автоматическим сохранением"""\n';
+  code += '    result = await original_answer(self, text, *args, **kwargs)\n';
+  code += '    # Сохраняем асинхронно\n';
+  code += '    asyncio.create_task(save_message_to_api(\n';
+  code += '        user_id=str(self.chat.id),\n';
+  code += '        message_type="bot",\n';
+  code += '        message_text=text if isinstance(text, str) else str(text),\n';
+  code += '        node_id=node_id,\n';
+  code += '        message_data={"message_id": result.message_id if result else None}\n';
+  code += '    ))\n';
+  code += '    return result\n\n';
+  code += 'types.Message.answer = answer_with_logging\n\n';
+  
   code += '# Список администраторов (добавьте свой Telegram ID)\n';
   code += 'ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов\n\n';
+  
+  code += '# API configuration для сохранения сообщений\n';
+  code += 'API_BASE_URL = os.getenv("REPLIT_DEV_DOMAIN", "http://localhost:5000")\n';
+  code += 'PROJECT_ID = os.getenv("PROJECT_ID", "1")  # ID проекта в системе\n\n';
+  
+  code += '# Функция для сохранения сообщений в базу данных через API\n';
+  code += 'async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):\n';
+  code += '    """Сохраняет сообщение в базу данных через API"""\n';
+  code += '    try:\n';
+  code += '        # Формируем полный URL для API\n';
+  code += '        if API_BASE_URL.startswith("http"):\n';
+  code += '            api_url = f"{API_BASE_URL}/api/projects/{PROJECT_ID}/messages"\n';
+  code += '        else:\n';
+  code += '            api_url = f"https://{API_BASE_URL}/api/projects/{PROJECT_ID}/messages"\n';
+  code += '        \n';
+  code += '        payload = {\n';
+  code += '            "userId": str(user_id),\n';
+  code += '            "messageType": message_type,\n';
+  code += '            "messageText": message_text,\n';
+  code += '            "nodeId": node_id,\n';
+  code += '            "messageData": message_data or {}\n';
+  code += '        }\n';
+  code += '        \n';
+  code += '        async with aiohttp.ClientSession() as session:\n';
+  code += '            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=5)) as response:\n';
+  code += '                if response.status == 200:\n';
+  code += '                    logging.debug(f"Сообщение сохранено: {message_type} от {user_id}")\n';
+  code += '                else:\n';
+  code += '                    logging.warning(f"Не удалось сохранить сообщение: {response.status}")\n';
+  code += '    except Exception as e:\n';
+  code += '        logging.error(f"Ошибка при сохранении сообщения: {e}")\n\n';
   
   // Добавляем конфигурацию групп
   if (groups && groups.length > 0) {
