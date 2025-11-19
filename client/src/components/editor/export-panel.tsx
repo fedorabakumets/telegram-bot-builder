@@ -7,9 +7,12 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTheme } from '@/components/theme-provider';
 import { BotData, BotGroup } from '@shared/schema';
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 // Динамический импорт тяжелых генераторов для улучшения производительности
 const loadBotGenerator = () => import('@/lib/bot-generator');
@@ -38,6 +41,7 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
   const [botFatherCommands, setBotFatherCommands] = useState('');
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
 
   // Загрузка групп
   const { data: groups = [] } = useQuery<BotGroup[]>({
@@ -145,6 +149,19 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
   // Получение текущего контента
   const getCurrentContent = () => {
     return exportContent[selectedFormat] || '';
+  };
+
+  // Определение языка для подсветки синтаксиса
+  const getLanguageForHighlighter = (format: ExportFormat): string => {
+    const languageMap = {
+      python: 'python',
+      json: 'json',
+      requirements: 'text',
+      readme: 'markdown',
+      dockerfile: 'docker',
+      config: 'yaml'
+    };
+    return languageMap[format];
   };
 
   // Получение свежих данных проекта с нормализацией
@@ -466,13 +483,31 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                     </div>
                   </div>
                   
-                  <Textarea 
-                    value={getCurrentContent()} 
-                    readOnly 
-                    className={`font-mono text-xs ${isMobile ? 'h-48' : 'h-[400px]'}`}
-                    placeholder="Выберите формат для просмотра содержимого..."
-                    data-testid="textarea-export-preview"
-                  />
+                  <div className="rounded-md overflow-hidden border" data-testid="code-preview-container">
+                    {getCurrentContent() ? (
+                      <SyntaxHighlighter
+                        language={getLanguageForHighlighter(selectedFormat)}
+                        style={theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? vscDarkPlus : vs}
+                        customStyle={{
+                          margin: 0,
+                          borderRadius: 0,
+                          fontSize: isMobile ? '11px' : '12px',
+                          maxHeight: isMobile ? '192px' : '400px',
+                          height: isMobile ? '192px' : '400px',
+                          overflow: 'auto'
+                        }}
+                        showLineNumbers={true}
+                        wrapLines={true}
+                        data-testid="syntax-highlighter-preview"
+                      >
+                        {getCurrentContent()}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <div className={`flex items-center justify-center bg-muted/30 ${isMobile ? 'h-48' : 'h-[400px]'} text-muted-foreground`}>
+                        <span>Выберите формат для просмотра содержимого...</span>
+                      </div>
+                    )}
+                  </div>
                   
                   <Separator />
                   
