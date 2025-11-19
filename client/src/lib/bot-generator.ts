@@ -6198,10 +6198,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   code += '\n\n# Запуск бота\n';
   code += 'async def main():\n';
-  code += '    global db_pool\n';
+  if (userDatabaseEnabled) {
+    code += '    global db_pool\n';
+  }
   code += '    try:\n';
-  code += '        # Инициализируем базу данных\n';
-  code += '        await init_database()\n';
+  if (userDatabaseEnabled) {
+    code += '        # Инициализируем базу данных\n';
+    code += '        await init_database()\n';
+  }
   if (menuCommands.length > 0) {
     code += '        await set_bot_commands()\n';
   }
@@ -6213,9 +6217,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        logging.error(f"Критическая ошибка: {e}")\n';
   code += '    finally:\n';
   code += '        # Правильно закрываем все соединения\n';
-  code += '        if db_pool:\n';
-  code += '            await db_pool.close()\n';
-  code += '            print("🔌 Соединение с базой данных закрыто")\n';
+  if (userDatabaseEnabled) {
+    code += '        if db_pool:\n';
+    code += '            await db_pool.close()\n';
+    code += '            print("🔌 Соединение с базой данных закрыто")\n';
+  }
   code += '        \n';
   code += '        # Закрываем сессию бота\n';
   code += '        await bot.session.close()\n';
