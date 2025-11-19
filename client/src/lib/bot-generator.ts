@@ -1045,12 +1045,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '            "messageData": message_data or {}\n';
   code += '        }\n';
   code += '        \n';
+  code += '        logging.debug(f"💾 Отправка сообщения в API: {payload}")\n';
   code += '        async with aiohttp.ClientSession() as session:\n';
   code += '            async with session.post(api_url, json=payload, timeout=aiohttp.ClientTimeout(total=5)) as response:\n';
   code += '                if response.status == 200:\n';
-  code += '                    logging.debug(f"Сообщение сохранено: {message_type} от {user_id}")\n';
+  code += '                    logging.info(f"✅ Сообщение сохранено: {message_type} от {user_id}")\n';
   code += '                else:\n';
-  code += '                    logging.warning(f"Не удалось сохранить сообщение: {response.status}")\n';
+  code += '                    error_text = await response.text()\n';
+  code += '                    logging.error(f"❌ Не удалось сохранить сообщение: {response.status} - {error_text}")\n';
+  code += '                    logging.error(f"Отправленный payload: {payload}")\n';
   code += '    except Exception as e:\n';
   code += '        logging.error(f"Ошибка при сохранении сообщения: {e}")\n\n';
   
