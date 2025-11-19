@@ -6759,7 +6759,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   });
   
   code += '\n';
-  }
 
   // Обработчик для reply кнопок множественного выбора - только если есть узлы с множественным выбором
   if (hasMultiSelectNodes(nodes || [])) {
