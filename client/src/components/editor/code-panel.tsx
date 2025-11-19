@@ -58,8 +58,12 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
   }, [botData, projectName, groups]);
 
   useEffect(() => {
-    async function loadContent() {
+    // Добавляем задержку для оптимизации производительности
+    const timeoutId = setTimeout(async () => {
       if (!generateCodeContent[selectedFormat]) return;
+      
+      // Проверяем, есть ли уже загруженный контент
+      if (codeContent[selectedFormat]) return;
       
       try {
         const content = await generateCodeContent[selectedFormat]();
@@ -67,10 +71,10 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
       } catch (error) {
         console.error('Error loading code content:', error);
       }
-    }
+    }, 500); // Задержка 500мс для debounce
     
-    loadContent();
-  }, [generateCodeContent, selectedFormat]);
+    return () => clearTimeout(timeoutId);
+  }, [generateCodeContent, selectedFormat, codeContent]);
 
   const getCurrentContent = () => {
     return codeContent[selectedFormat] || 'Загрузка...';

@@ -212,7 +212,7 @@ export default function Editor() {
           name: 'Код',
           position: 'right',
           size: 25,
-          visible: true
+          visible: false
         }
       ],
       compactMode: false,
