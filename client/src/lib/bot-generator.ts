@@ -1035,6 +1035,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        logging.warning(f"⚠️ Не удалось подключиться к БД: {e}. Используем локальное хранилище.")\n';
   code += '        db_pool = None\n\n';
 
+  // Добавляем функцию для получения московского времени
+  code += 'def get_moscow_time():\n';
+  code += '    """Возвращает текущее время в московском часовом поясе"""\n';
+  code += '    from datetime import datetime, timezone, timedelta\n';
+  code += '    moscow_tz = timezone(timedelta(hours=3))\n';
+  code += '    return datetime.now(moscow_tz).isoformat()\n\n';
+
   code += 'async def save_user_to_db(user_id: int, username: Optional[str] = None, first_name: Optional[str] = None, last_name: Optional[str] = None):\n';
   code += '    """Сохраняет пользователя в базу данных"""\n';
   code += '    if not db_pool:\n';

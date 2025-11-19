@@ -529,8 +529,10 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
       };
     }
 
-    // Генерируем код бота через клиентский генератор
-    const { generatePythonCode } = await import("../client/src/lib/bot-generator.js");
+    // Генерируем код бота через клиентский генератор (с cache busting)
+    const modUrl = new URL("../client/src/lib/bot-generator.js", import.meta.url);
+    modUrl.searchParams.set("t", Date.now().toString());
+    const { generatePythonCode } = await import(modUrl.href);
     const simpleBotData = convertSheetsToSimpleBotData(project.data);
     const userDatabaseEnabled = project.userDatabaseEnabled === 1;
     const botCode = generatePythonCode(simpleBotData as any, project.name, [], userDatabaseEnabled).replace('YOUR_BOT_TOKEN_HERE', token);
