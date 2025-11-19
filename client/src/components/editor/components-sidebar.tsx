@@ -1255,7 +1255,7 @@ export function ComponentsSidebar({
                               </Button>
                             </div>
                             <div className="space-y-1">
-                              {sheetsInfo.names.slice(0, 3).map((name: string, index: number) => {
+                              {sheetsInfo.names.map((name: string, index: number) => {
                                 const projectData = project.data as any;
                                 const isActive = SheetsManager.isNewFormat(projectData) && 
                                   projectData.sheets && 
@@ -1354,13 +1354,6 @@ export function ComponentsSidebar({
                                   </div>
                                 );
                               })}
-                              {sheetsInfo.names.length > 3 && (
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="secondary" className="text-xs px-2 py-1 h-6">
-                                    +{sheetsInfo.names.length - 3}
-                                  </Badge>
-                                </div>
-                              )}
                             </div>
                           </div>
                         );
