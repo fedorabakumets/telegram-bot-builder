@@ -1087,29 +1087,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    except Exception as e:\n';
     code += '        logging.error(f"Ошибка сохранения переменной пользователя: {e}")\n';
     code += '        return False\n\n';
-  } else {
-    // Если БД выключена, создаем заглушки для функций БД
-    code += '\n# База данных пользователей выключена\n';
-    code += '# Функции-заглушки для совместимости\n';
-    code += 'db_pool = None\n\n';
-    code += 'async def init_database():\n';
-    code += '    """База данных выключена"""\n';
-    code += '    pass\n\n';
-    code += 'async def save_user_to_db(*args, **kwargs):\n';
-    code += '    """База данных выключена"""\n';
-    code += '    return False\n\n';
-    code += 'async def get_user_from_db(*args, **kwargs):\n';
-    code += '    """База данных выключена"""\n';
-    code += '    return None\n\n';
-    code += 'async def update_user_data_in_db(*args, **kwargs):\n';
-    code += '    """База данных выключена"""\n';
-    code += '    return False\n\n';
-    code += 'async def save_user_data_to_db(*args, **kwargs):\n';
-    code += '    """База данных выключена"""\n';
-    code += '    return False\n\n';
-    code += 'async def update_user_variable_in_db(*args, **kwargs):\n';
-    code += '    """База данных выключена"""\n';
-    code += '    return False\n\n';
   }
 
   // Добавляем утилитарные функции
@@ -1128,8 +1105,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '        return user is not None\n';
     code += '    return user_id in user_data\n\n';
   } else {
+    // Простая версия без БД - проверяем только локальное хранилище
     code += 'async def check_auth(user_id: int) -> bool:\n';
-    code += '    # Проверяем наличие пользователя в локальном хранилище\n';
     code += '    return user_id in user_data\n\n';
   }
   
