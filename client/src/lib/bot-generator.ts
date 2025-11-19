@@ -136,6 +136,51 @@ function hasMediaNodes(nodes: Node[]): boolean {
   );
 }
 
+// Функция для проверки наличия условных кнопок с callback_data формата "conditional_"
+function hasConditionalButtons(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  
+  return nodes.some(node => {
+    const conditions = node.data.conditionalMessages;
+    if (!conditions || !Array.isArray(conditions)) return false;
+    
+    return conditions.some((cond: any) => {
+      if (!cond.buttons || !Array.isArray(cond.buttons)) return false;
+      // Проверяем, есть ли кнопки команд в условных сообщениях с переменными
+      return cond.buttons.some((button: any) => 
+        button.action === 'command' && (cond.variableName || cond.variableNames)
+      );
+    });
+  });
+}
+
+// Функция для проверки наличия кнопок команд
+function hasCommandButtons(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  
+  // Проверяем обычные кнопки
+  const hasRegularCommandButtons = nodes.some(node => {
+    if (!node.data.buttons || !Array.isArray(node.data.buttons)) return false;
+    return node.data.buttons.some((button: any) => button.action === 'command');
+  });
+  
+  // Проверяем кнопки в условных сообщениях (но не те, что создают conditional_ callbacks)
+  const hasConditionalCommandButtons = nodes.some(node => {
+    const conditions = node.data.conditionalMessages;
+    if (!conditions || !Array.isArray(conditions)) return false;
+    
+    return conditions.some((cond: any) => {
+      if (!cond.buttons || !Array.isArray(cond.buttons)) return false;
+      // Только кнопки команд БЕЗ переменных (они не создают conditional_ callbacks)
+      return cond.buttons.some((button: any) => 
+        button.action === 'command' && !cond.variableName && !cond.variableNames
+      );
+    });
+  });
+  
+  return hasRegularCommandButtons || hasConditionalCommandButtons;
+}
+
 // Функция для конвертации JavaScript boolean в Python boolean
 function toPythonBoolean(value: any): string {
   return value ? 'True' : 'False';
@@ -5910,7 +5955,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '\n';
   }
 
-  // Добавляем обработчик для условных кнопок (conditional_variableName_value)
+  // Добавляем обработчик для условных кнопок (conditional_variableName_value) ТОЛЬКО если есть условные кнопки
+  if (hasConditionalButtons(nodes)) {
   code += '\n# Обработчик для условных кнопок\n';
   code += '@dp.callback_query(lambda c: c.data.startswith("conditional_"))\n';
   code += 'async def handle_conditional_button(callback_query: types.CallbackQuery):\n';
@@ -5969,6 +6015,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        logging.warning(f"Неверный формат условной кнопки: {callback_query.data}")\n';
   code += '        await callback_query.answer("❌ Ошибка обработки кнопки", show_alert=True)\n';
   code += '\n';
+  }
 
   // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логированием
   const commandButtons = new Set<string>();
@@ -6175,14 +6222,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        print("🔌 Сессия бота закрыта")\n';
   code += '        print("✅ Бот корректно завершил работу")\n\n';
   
-  // Добавляем обработчики для множественного выбора
-  code += '\n# Обработчики для множественного выбора\n';
-  
   // Найдем узлы с множественным выбором для использования в обработчиках
   const multiSelectNodes = (nodes || []).filter(node => 
     node.data.allowMultipleSelection
   );
   console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
+  
+  // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узлы с множественным выбором
+  if (multiSelectNodes.length > 0) {
+  code += '\n# Обработчики для множественного выбора\n';
   
   // Обработчик для inline кнопок множественного выбора
   code += '@dp.callback_query(lambda c: c.data.startswith("ms_") or c.data.startswith("multi_select_"))\n';
@@ -6719,7 +6767,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   });
   
   code += '\n';
-  
+  }
 
   // Обработчик для reply кнопок множественного выбора - только если есть узлы с множественным выбором
   if (hasMultiSelectNodes(nodes || [])) {
