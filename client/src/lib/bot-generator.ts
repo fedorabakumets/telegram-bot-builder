@@ -98,6 +98,44 @@ function hasMultiSelectNodes(nodes: Node[]): boolean {
   return nodes.some(node => node.data.allowMultipleSelection);
 }
 
+// Функция для проверки наличия inline кнопок (callback)
+function hasInlineButtons(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => node.data.keyboardType === 'inline' && node.data.buttons && node.data.buttons.length > 0);
+}
+
+// Функция для проверки наличия узлов со сбором пользовательского ввода
+function hasInputCollection(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  
+  // Проверяем узлы с collectUserInput
+  const hasCollectInput = nodes.some(node => node.data.collectUserInput);
+  
+  // Проверяем узлы с enableTextInput
+  const hasTextInput = nodes.some(node => node.data.enableTextInput);
+  
+  // Проверяем условные сообщения с waitForTextInput
+  const hasConditionalInput = nodes.some(node => {
+    const conditions = node.data.conditionalMessages;
+    if (!conditions || !Array.isArray(conditions)) return false;
+    return conditions.some((cond: any) => cond.waitForTextInput);
+  });
+  
+  return hasCollectInput || hasTextInput || hasConditionalInput;
+}
+
+// Функция для проверки наличия медиа-файлов
+function hasMediaNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => 
+    node.type === 'photo' || 
+    node.type === 'video' || 
+    node.type === 'audio' || 
+    node.type === 'document' ||
+    node.type === 'animation'
+  );
+}
+
 // Функция для конвертации JavaScript boolean в Python boolean
 function toPythonBoolean(value: any): string {
   return value ? 'True' : 'False';
@@ -845,30 +883,32 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'from datetime import datetime, timezone, timedelta\n';
   code += 'import json\n\n';
   
-  // Добавляем safe_edit_or_send helper функцию
-  code += '# Safe helper for editing messages with fallback to new message\n';
-  code += 'async def safe_edit_or_send(cbq, text, **kwargs):\n';
-  code += '    """\n';
-  code += '    Безопасное редактирование сообщения с fallback на новое сообщение\n';
-  code += '    Решает проблему "message can\'t be edited" когда пытаемся редактировать сообщения пользователя\n';
-  code += '    """\n';
-  code += '    try:\n';
-  code += '        # Если у callback объекта есть собственный метод edit_text (например, MockCallback), используем его\n';
-  code += '        if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):\n';
-  code += '            return await cbq.edit_text(text, **kwargs)\n';
-  code += '        # Иначе пробуем стандартный способ\n';
-  code += '        elif (hasattr(cbq, "message") and cbq.message):\n';
-  code += '            return await cbq.message.edit_text(text, **kwargs)\n';
-  code += '        else:\n';
-  code += '            raise Exception("No valid edit method found")\n';
-  code += '    except Exception as e:\n';
-  code += '        # При любой ошибке отправляем новое сообщение\n';
-  code += '        logging.warning(f"Не удалось отредактировать сообщение ({e}), отправляем новое")\n';
-  code += '        if hasattr(cbq, "message") and cbq.message:\n';
-  code += '            return await cbq.message.answer(text, **kwargs)\n';
-  code += '        else:\n';
-  code += '            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")\n';
-  code += '            raise\n\n';
+  // Добавляем safe_edit_or_send только если есть inline кнопки
+  if (hasInlineButtons(nodes || [])) {
+    code += '# Safe helper for editing messages with fallback to new message\n';
+    code += 'async def safe_edit_or_send(cbq, text, **kwargs):\n';
+    code += '    """\n';
+    code += '    Безопасное редактирование сообщения с fallback на новое сообщение\n';
+    code += '    Решает проблему "message can\'t be edited" когда пытаемся редактировать сообщения пользователя\n';
+    code += '    """\n';
+    code += '    try:\n';
+    code += '        # Если у callback объекта есть собственный метод edit_text (например, MockCallback), используем его\n';
+    code += '        if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):\n';
+    code += '            return await cbq.edit_text(text, **kwargs)\n';
+    code += '        # Иначе пробуем стандартный способ\n';
+    code += '        elif (hasattr(cbq, "message") and cbq.message):\n';
+    code += '            return await cbq.message.edit_text(text, **kwargs)\n';
+    code += '        else:\n';
+    code += '            raise Exception("No valid edit method found")\n';
+    code += '    except Exception as e:\n';
+    code += '        # При любой ошибке отправляем новое сообщение\n';
+    code += '        logging.warning(f"Не удалось отредактировать сообщение ({e}), отправляем новое")\n';
+    code += '        if hasattr(cbq, "message") and cbq.message:\n';
+    code += '            return await cbq.message.answer(text, **kwargs)\n';
+    code += '        else:\n';
+    code += '            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")\n';
+    code += '            raise\n\n';
+  }
   
   code += '# Токен вашего бота (получите у @BotFather)\n';
   code += 'BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"\n\n';
@@ -904,8 +944,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '}\n\n';
   }
   
-  code += '# Хранилище пользователей\n';
-  code += 'user_data = {}\n\n';
+  // user_data нужен только если БД выключена И есть функции, которые его используют
+  const needsUserData = !userDatabaseEnabled && (
+    hasMultiSelectNodes(nodes || []) || 
+    hasInputCollection(nodes || []) ||
+    hasInlineButtons(nodes || [])
+  );
+  
+  if (needsUserData) {
+    code += '# Хранилище пользователей\n';
+    code += 'user_data = {}\n\n';
+  }
 
   // Добавляем функции для работы с базой данных только если БД включена
   if (userDatabaseEnabled) {
@@ -1089,15 +1138,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    return user_id in user_data\n\n';
   }
   
-  code += 'def is_local_file(url: str) -> bool:\n';
-  code += '    """Проверяет, является ли URL локальным загруженным файлом"""\n';
-  code += '    return url.startswith("/uploads/") or url.startswith("uploads/")\n\n';
-  
-  code += 'def get_local_file_path(url: str) -> str:\n';
-  code += '    """Получает локальный путь к файлу из URL"""\n';
-  code += '    if url.startswith("/"):\n';
-  code += '        return url[1:]  # Убираем ведущий слеш\n';
-  code += '    return url\n\n';
+  // Функции для работы с файлами - только если есть медиа
+  if (hasMediaNodes(nodes || [])) {
+    code += 'def is_local_file(url: str) -> bool:\n';
+    code += '    """Проверяет, является ли URL локальным загруженным файлом"""\n';
+    code += '    return url.startswith("/uploads/") or url.startswith("uploads/")\n\n';
+    
+    code += 'def get_local_file_path(url: str) -> str:\n';
+    code += '    """Получает локальный путь к файлу из URL"""\n';
+    code += '    if url.startswith("/"):\n';
+    code += '        return url[1:]  # Убираем ведущий слеш\n';
+    code += '    return url\n\n';
+  }
 
   // Добавляем функции для работы с картографическими сервисами только если есть геолокационные элементы
   if (hasLocationFeatures(nodes || [])) {
@@ -4538,10 +4590,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     });
   }
 
-  // Добавляем универсальный обработчик пользовательского ввода
-  code += '\n\n# Универсальный обработчик пользовательского ввода\n';
-  code += '@dp.message(F.text)\n';
-  code += 'async def handle_user_input(message: types.Message):\n';
+  // Добавляем универсальный обработчик пользовательского ввода только если есть сбор данных
+  if (hasInputCollection(nodes || [])) {
+    code += '\n\n# Универсальный обработчик пользовательского ввода\n';
+    code += '@dp.message(F.text)\n';
+    code += 'async def handle_user_input(message: types.Message):\n';
   code += '    user_id = message.from_user.id\n';
   code += '    \n';
   code += '    # Проверяем, ожидаем ли мы ввод для условного сообщения\n';
@@ -5855,6 +5908,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        except Exception as e:\n';
   code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
   code += '\n';
+  }
 
   // Добавляем обработчик для условных кнопок (conditional_variableName_value)
   code += '\n# Обработчик для условных кнопок\n';
