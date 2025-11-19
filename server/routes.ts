@@ -2943,6 +2943,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await pool.query(`
         SELECT 
+          user_id AS id,
           user_id,
           username,
           first_name,
