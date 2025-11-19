@@ -237,10 +237,14 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: (data: { messageText: string }) => {
-      if (!selectedUserForDialog?.userId) {
+      console.log('selectedUserForDialog:', selectedUserForDialog);
+      console.log('userId field:', selectedUserForDialog?.userId);
+      
+      const userId = selectedUserForDialog?.userId;
+      if (!userId) {
         throw new Error('User ID is required');
       }
-      return apiRequest('POST', `/api/projects/${projectId}/users/${selectedUserForDialog.userId}/send-message`, data);
+      return apiRequest('POST', `/api/projects/${projectId}/users/${userId}/send-message`, data);
     },
     onSuccess: () => {
       qClient.invalidateQueries({ 

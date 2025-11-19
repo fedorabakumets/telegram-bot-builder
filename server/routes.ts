@@ -2946,15 +2946,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(`
         SELECT 
           user_id AS id,
-          user_id,
-          username,
-          first_name,
-          last_name,
-          registered_at,
-          last_interaction,
-          interaction_count,
-          user_data,
-          is_active
+          user_id AS "userId",
+          username AS "userName",
+          first_name AS "firstName",
+          last_name AS "lastName",
+          registered_at AS "registeredAt",
+          last_interaction AS "lastInteraction",
+          interaction_count AS "interactionCount",
+          user_data AS "userData",
+          is_active AS "isActive",
+          0 AS "isPremium",
+          0 AS "isBlocked",
+          0 AS "isBot"
         FROM bot_users 
         ORDER BY last_interaction DESC
       `);
