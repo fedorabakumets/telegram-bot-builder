@@ -975,13 +975,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        user_id = str(event.from_user.id)\n';
   code += '        message_text = event.text or event.caption or "[медиа]"\n';
   code += '        \n';
-  code += '        # Сохраняем асинхронно, не блокируя обработку\n';
-  code += '        asyncio.create_task(save_message_to_api(\n';
+  code += '        # Сохраняем синхронно для гарантии доставки\n';
+  code += '        await save_message_to_api(\n';
   code += '            user_id=user_id,\n';
   code += '            message_type="user",\n';
   code += '            message_text=message_text,\n';
   code += '            message_data={"message_id": event.message_id}\n';
-  code += '        ))\n';
+  code += '        )\n';
   code += '    except Exception as e:\n';
   code += '        logging.error(f"Ошибка в middleware сохранения сообщений: {e}")\n';
   code += '    \n';
@@ -993,14 +993,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'async def send_message_with_logging(chat_id, text, *args, node_id=None, **kwargs):\n';
   code += '    """Обертка для bot.send_message с автоматическим сохранением"""\n';
   code += '    result = await original_send_message(chat_id, text, *args, **kwargs)\n';
-  code += '    # Сохраняем асинхронно\n';
-  code += '    asyncio.create_task(save_message_to_api(\n';
+  code += '    # Сохраняем синхронно для гарантии доставки\n';
+  code += '    await save_message_to_api(\n';
   code += '        user_id=str(chat_id),\n';
   code += '        message_type="bot",\n';
   code += '        message_text=text,\n';
   code += '        node_id=node_id,\n';
   code += '        message_data={"message_id": result.message_id if result else None}\n';
-  code += '    ))\n';
+  code += '    )\n';
   code += '    return result\n\n';
   code += 'bot.send_message = send_message_with_logging\n\n';
   
@@ -1009,14 +1009,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'async def answer_with_logging(self, text, *args, node_id=None, **kwargs):\n';
   code += '    """Обертка для message.answer с автоматическим сохранением"""\n';
   code += '    result = await original_answer(self, text, *args, **kwargs)\n';
-  code += '    # Сохраняем асинхронно\n';
-  code += '    asyncio.create_task(save_message_to_api(\n';
+  code += '    # Сохраняем синхронно для гарантии доставки\n';
+  code += '    await save_message_to_api(\n';
   code += '        user_id=str(self.chat.id),\n';
   code += '        message_type="bot",\n';
   code += '        message_text=text if isinstance(text, str) else str(text),\n';
   code += '        node_id=node_id,\n';
   code += '        message_data={"message_id": result.message_id if result else None}\n';
-  code += '    ))\n';
+  code += '    )\n';
   code += '    return result\n\n';
   code += 'types.Message.answer = answer_with_logging\n\n';
   
