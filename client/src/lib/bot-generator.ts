@@ -6280,11 +6280,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        # Переходим к следующему узлу, если указан\n';
   
   // Добавим переходы для узлов с множественным выбором
-  
-  if (multiSelectNodes.length > 0) {
-    console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
-    code += '        # Определяем следующий узел для каждого node_id\n';
-    multiSelectNodes.forEach(node => {
+  console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
+  code += '        # Определяем следующий узел для каждого node_id\n';
+  multiSelectNodes.forEach(node => {
       console.log(`🔧 ГЕНЕРАТОР: Создаем блок if для узла ${node.id}`);
       console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget: ${node.data.continueButtonTarget}`);
       console.log(`🔧 ГЕНЕРАТОР: соединения из узла: ${connections.filter(conn => conn.source === node.id).map(c => c.target).join(', ')}`);
@@ -6767,7 +6765,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   });
   
   code += '\n';
-  }
 
   // Обработчик для reply кнопок множественного выбора - только если есть узлы с множественным выбором
   if (hasMultiSelectNodes(nodes || [])) {
