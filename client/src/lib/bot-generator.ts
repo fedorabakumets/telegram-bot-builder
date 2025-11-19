@@ -92,6 +92,12 @@ function hasLocationFeatures(nodes: Node[]): boolean {
   return hasLocationNode || hasLocationButton;
 }
 
+// Функция для проверки наличия узлов с множественным выбором
+function hasMultiSelectNodes(nodes: Node[]): boolean {
+  if (!nodes || nodes.length === 0) return false;
+  return nodes.some(node => node.data.allowMultipleSelection);
+}
+
 // Функция для конвертации JavaScript boolean в Python boolean
 function toPythonBoolean(value: any): string {
   return value ? 'True' : 'False';
@@ -863,33 +869,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        else:\n';
   code += '            logging.error("Не удалось ни отредактировать, ни отправить новое сообщение")\n';
   code += '            raise\n\n';
-  
-  code += '# Настройка кодировки для Windows\n';
-  code += 'if sys.platform.startswith("win"):\n';
-  code += '    # Устанавливаем UTF-8 кодировку для stdout и stderr\n';
-  code += '    import codecs\n';
-  code += '    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())\n';
-  code += '    sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())\n';
-  code += '    \n';
-  code += '    # Альтернативный способ для старых версий Python\n';
-  code += '    if hasattr(sys.stdout, "reconfigure"):\n';
-  code += '        sys.stdout.reconfigure(encoding="utf-8")\n';
-  code += '        sys.stderr.reconfigure(encoding="utf-8")\n';
-  code += '    \n';
-  code += '    # Устанавливаем locale для корректной работы с UTF-8\n';
-  code += '    try:\n';
-  code += '        locale.setlocale(locale.LC_ALL, "en_US.UTF-8")\n';
-  code += '    except locale.Error:\n';
-  code += '        try:\n';
-  code += '            locale.setlocale(locale.LC_ALL, "C.UTF-8")\n';
-  code += '        except locale.Error:\n';
-  code += '            pass  # Игнорируем ошибки locale на Windows\n\n';
-  
-  code += '# Функция для получения московского времени\n';
-  code += 'def get_moscow_time():\n';
-  code += '    """Возвращает текущее время в московском часовом поясе"""\n';
-  code += '    moscow_tz = timezone(timedelta(hours=3))  # UTC+3 для Москвы\n';
-  code += '    return datetime.now(moscow_tz).isoformat()\n\n';
   
   code += '# Токен вашего бота (получите у @BotFather)\n';
   code += 'BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"\n\n';
@@ -6688,11 +6667,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '\n';
   
 
-  
-  // Обработчик для reply кнопок множественного выбора
-  code += '# Обработчик для reply кнопок множественного выбора\n';
-  code += '@dp.message()\n';
-  code += 'async def handle_multi_select_reply(message: types.Message):\n';
+  // Обработчик для reply кнопок множественного выбора - только если есть узлы с множественным выбором
+  if (hasMultiSelectNodes(nodes || [])) {
+    code += '# Обработчик для reply кнопок множественного выбора\n';
+    code += '@dp.message()\n';
+    code += 'async def handle_multi_select_reply(message: types.Message):\n';
   code += '    user_id = message.from_user.id\n';
   code += '    user_input = message.text\n';
   code += '    \n';
@@ -6778,10 +6757,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   });
   
-  code += '    \n';
-  code += '    # Если не множественный выбор, передаем дальше по цепочке обработчиков\n';
-  code += '    pass\n';
-  code += '\n';
+    code += '    \n';
+    code += '    # Если не множественный выбор, передаем дальше по цепочке обработчиков\n';
+    code += '    pass\n';
+    code += '\n';
+  }
 
   code += 'if __name__ == "__main__":\n';
   code += '    asyncio.run(main())\n';
@@ -6812,95 +6792,92 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
     code += '        return\n';
   }
 
-  // Регистрируем пользователя
-  code += '\n    # Регистрируем пользователя в системе\n';
-  code += '    user_id = message.from_user.id\n';
-  code += '    username = message.from_user.username\n';
-  code += '    first_name = message.from_user.first_name\n';
-  code += '    last_name = message.from_user.last_name\n';
-  code += '    \n';
-  
-  if (userDatabaseEnabled) {
-    code += '    # Сохраняем пользователя в базу данных\n';
-    code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
+  // Регистрируем пользователя только если включена БД или есть множественный выбор
+  if (userDatabaseEnabled || node.data.allowMultipleSelection) {
+    code += '\n    # Регистрируем пользователя в системе\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    username = message.from_user.username\n';
+    code += '    first_name = message.from_user.first_name\n';
+    code += '    last_name = message.from_user.last_name\n';
     code += '    \n';
-    code += '    # Резервное сохранение в локальное хранилище\n';
-    code += '    if not saved_to_db:\n';
-    code += '        user_data[user_id] = {\n';
-    code += '            "username": username,\n';
-    code += '            "first_name": first_name,\n';
-    code += '            "last_name": last_name,\n';
-    code += '            "registered_at": message.date\n';
-    code += '        }\n';
-    code += '        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")\n';
-    code += '    else:\n';
-    code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
-  } else {
-    code += '    # Сохраняем пользователя в локальное хранилище (БД отключена)\n';
-    code += '    user_data[user_id] = {\n';
-    code += '        "username": username,\n';
-    code += '        "first_name": first_name,\n';
-    code += '        "last_name": last_name,\n';
-    code += '        "registered_at": message.date\n';
-    code += '    }\n';
-    code += '    logging.info(f"Пользователь {user_id} сохранен в локальное хранилище (БД отключена)")\n\n';
+    
+    if (userDatabaseEnabled) {
+      code += '    # Сохраняем пользователя в базу данных\n';
+      code += '    saved_to_db = await save_user_to_db(user_id, username, first_name, last_name)\n';
+      code += '    \n';
+      code += '    # Резервное сохранение в локальное хранилище\n';
+      code += '    if not saved_to_db:\n';
+      code += '        user_data[user_id] = {\n';
+      code += '            "username": username,\n';
+      code += '            "first_name": first_name,\n';
+      code += '            "last_name": last_name,\n';
+      code += '            "registered_at": message.date\n';
+      code += '        }\n';
+      code += '        logging.info(f"Пользователь {user_id} сохранен в локальное хранилище")\n';
+      code += '    else:\n';
+      code += '        logging.info(f"Пользователь {user_id} сохранен в базу данных")\n\n';
+    } else {
+      code += '    # Инициализируем user_data для множественного выбора\n';
+      code += '    user_id = message.from_user.id\n';
+      code += '    if user_id not in user_data:\n';
+      code += '        user_data[user_id] = {}\n\n';
+    }
   }
   
-  // КРИТИЧЕСКИ ВАЖНО: ВСЕГДА восстанавливаем состояние множественного выбора
-  // Это необходимо для корректной работы кнопок "Изменить выбор" и "Начать заново"
-  // УБИРАЕМ условие node.data.allowMultipleSelection, потому что состояние нужно восстанавливать всегда
-  code += '    saved_interests = []\n';
-  code += '    \n';
-  
-  if (userDatabaseEnabled) {
-    code += '    # ВАЖНО: ВСЕГДА восстанавливаем состояние множественного выбора из БД\n';
-    code += '    # Это критически важно для кнопок "Изменить выбор" и "Начать заново"\n';
-    code += '    user_record = await get_user_from_db(user_id)\n';
+  // Восстанавливаем состояние множественного выбора ТОЛЬКО если он включен
+  if (node.data.allowMultipleSelection) {
+    code += '    saved_interests = []\n';
     code += '    \n';
-    code += '    if user_record and isinstance(user_record, dict):\n';
-    code += '        user_data_field = user_record.get("user_data", {})\n';
-    code += '        if isinstance(user_data_field, str):\n';
-    code += '            import json\n';
-    code += '            try:\n';
-    code += '                user_vars = json.loads(user_data_field)\n';
-    code += '            except:\n';
-    code += '                user_vars = {}\n';
-    code += '        elif isinstance(user_data_field, dict):\n';
-    code += '            user_vars = user_data_field\n';
-    code += '        else:\n';
-    code += '            user_vars = {}\n';
-    code += '        \n';
-    code += '        # Ищем сохраненные интересы в любой переменной\n';
-    code += '        for var_name, var_data in user_vars.items():\n';
-    code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
-    code += '                if isinstance(var_data, str) and var_data:\n';
-    code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
-    code += '                    logging.info(f"Восстановлены интересы из переменной {var_name}: {saved_interests}")\n';
-    code += '                    break\n';
-  } else {
-    code += '    # Восстанавливаем состояние из локального хранилища (БД отключена)\n';
-    code += '    if user_id in user_data:\n';
-    code += '        for var_name, var_data in user_data[user_id].items():\n';
-    code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
-    code += '                if isinstance(var_data, str) and var_data:\n';
-    code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
-    code += '                    logging.info(f"Восстановлены интересы из локального хранилища: {saved_interests}")\n';
-    code += '                    break\n';
-    code += '                elif isinstance(var_data, list):\n';
-    code += '                    saved_interests = var_data\n';
-    code += '                    logging.info(f"Восстановлены интересы из локального хранилища: {saved_interests}")\n';
-    code += '                    break\n';
+    
+    if (userDatabaseEnabled) {
+      code += '    # Восстанавливаем состояние множественного выбора из БД\n';
+      code += '    user_record = await get_user_from_db(user_id)\n';
+      code += '    \n';
+      code += '    if user_record and isinstance(user_record, dict):\n';
+      code += '        user_data_field = user_record.get("user_data", {})\n';
+      code += '        if isinstance(user_data_field, str):\n';
+      code += '            import json\n';
+      code += '            try:\n';
+      code += '                user_vars = json.loads(user_data_field)\n';
+      code += '            except:\n';
+      code += '                user_vars = {}\n';
+      code += '        elif isinstance(user_data_field, dict):\n';
+      code += '            user_vars = user_data_field\n';
+      code += '        else:\n';
+      code += '            user_vars = {}\n';
+      code += '        \n';
+      code += '        # Ищем сохраненные интересы\n';
+      code += '        for var_name, var_data in user_vars.items():\n';
+      code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
+      code += '                if isinstance(var_data, str) and var_data:\n';
+      code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
+      code += '                    logging.info(f"Восстановлены интересы из переменной {var_name}: {saved_interests}")\n';
+      code += '                    break\n';
+    } else {
+      code += '    # Восстанавливаем состояние из локального хранилища\n';
+      code += '    if user_id in user_data:\n';
+      code += '        for var_name, var_data in user_data[user_id].items():\n';
+      code += '            if "интерес" in var_name.lower() or var_name == "user_interests":\n';
+      code += '                if isinstance(var_data, str) and var_data:\n';
+      code += '                    saved_interests = [interest.strip() for interest in var_data.split(",")]\n';
+      code += '                    logging.info(f"Восстановлены интересы: {saved_interests}")\n';
+      code += '                    break\n';
+      code += '                elif isinstance(var_data, list):\n';
+      code += '                    saved_interests = var_data\n';
+      code += '                    logging.info(f"Восстановлены интересы: {saved_interests}")\n';
+      code += '                    break\n';
+    }
+    
+    code += '    \n';
+    code += '    # Инициализируем состояние множественного выбора\n';
+    code += '    if user_id not in user_data:\n';
+    code += '        user_data[user_id] = {}\n';
+    const multiSelectVariable = node.data.multiSelectVariable || 'user_interests';
+    code += `    user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy() if saved_interests else []\n`;
+    code += `    user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
+    code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n';
+    code += '    \n';
   }
-  
-  code += '    \n';
-  code += '    # ВСЕГДА инициализируем состояние множественного выбора с восстановленными интересами\n';
-  code += '    if user_id not in user_data:\n';
-  code += '        user_data[user_id] = {}\n';
-  const multiSelectVariable = node.data.multiSelectVariable || 'user_interests';
-  code += `    user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy() if saved_interests else []\n`;
-  code += `    user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
-  code += '    logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n';
-  code += '    \n';
   
   // Создаем клавиатуру с восстановленными галочками для множественного выбора
   if (node.data.allowMultipleSelection) {
