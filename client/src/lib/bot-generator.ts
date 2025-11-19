@@ -989,15 +989,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '}\n\n';
   }
   
-  // user_data нужен только если БД выключена И есть функции, которые его используют
-  const needsUserData = !userDatabaseEnabled && (
+  // user_data всегда нужен для временного хранения состояний даже при включенной БД
+  const needsUserData = (
     hasMultiSelectNodes(nodes || []) || 
     hasInputCollection(nodes || []) ||
     hasInlineButtons(nodes || [])
   );
   
   if (needsUserData) {
-    code += '# Хранилище пользователей\n';
+    code += '# Хранилище пользователей (временное состояние)\n';
     code += 'user_data = {}\n\n';
   }
 

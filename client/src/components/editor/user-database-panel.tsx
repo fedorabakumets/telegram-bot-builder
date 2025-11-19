@@ -323,7 +323,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
     const firstName = user.firstName;
     const lastName = user.lastName;
     const userName = user.userName;
-    const userId = user.userId;
+    const userId = user.id;
     
     const parts = [firstName, lastName].filter(Boolean);
     if (parts.length > 0) return parts.join(' ');
@@ -609,13 +609,13 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     </div>
                   ) : (
                     filteredAndSortedUsers.map((user, index) => (
-                      <Card key={user.id || user.user_id || index} className="p-4" data-testid={`user-card-mobile-${index}`}>
+                      <Card key={user.id || index} className="p-4" data-testid={`user-card-mobile-${index}`}>
                         <div className="space-y-3">
                           {/* User Header */}
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <div className="font-medium text-base">{formatUserName(user)}</div>
-                              <div className="text-sm text-muted-foreground">ID: {user.userId || user.user_id}</div>
+                              <div className="text-sm text-muted-foreground">ID: {user.id}</div>
                             </div>
                             <div className="flex items-center gap-1">
                               <Button
@@ -728,12 +728,12 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 </TableRow>
               ) : (
                 filteredAndSortedUsers.map((user, index) => (
-                  <TableRow key={user.id || user.user_id || index}>
+                  <TableRow key={user.id || index}>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div>
                           <div className="font-medium">{formatUserName(user)}</div>
-                          <div className="text-xs text-muted-foreground">ID: {user.userId || user.user_id}</div>
+                          <div className="text-xs text-muted-foreground">ID: {user.id}</div>
                         </div>
                       </div>
                     </TableCell>
@@ -863,7 +863,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Отмена</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteUserMutation.mutate(user.id || user.user_id)}>
+                              <AlertDialogAction onClick={() => deleteUserMutation.mutate(user.id)}>
                                 Удалить
                               </AlertDialogAction>
                             </AlertDialogFooter>
