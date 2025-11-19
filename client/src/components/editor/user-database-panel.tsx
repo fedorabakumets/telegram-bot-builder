@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -110,10 +110,12 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   });
 
   // Fetch messages for dialog
-  const { data: messages = [], isLoading: messagesLoading } = useQuery<BotMessage[]>({
+  const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessage[]>({
     queryKey: [`/api/projects/${projectId}/users/${selectedUserForDialog?.userId}/messages`],
     enabled: showDialog && !!selectedUserForDialog?.userId,
     staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   // Delete user mutation
@@ -264,6 +266,13 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
       });
     }
   });
+
+  // Refetch messages when dialog opens
+  useEffect(() => {
+    if (showDialog && selectedUserForDialog?.userId) {
+      refetchMessages();
+    }
+  }, [showDialog, selectedUserForDialog?.userId, refetchMessages]);
 
   // Filter and sort users
   const filteredAndSortedUsers = useMemo(() => {
