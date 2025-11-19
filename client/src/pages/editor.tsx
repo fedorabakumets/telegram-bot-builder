@@ -969,6 +969,7 @@ export default function Editor() {
       botData={(botDataWithSheets || getBotData()) as any}
       projectName={currentProject.name}
       projectId={currentProject.id}
+      selectedNodeId={selectedNodeId}
     />
   ) : null;
 

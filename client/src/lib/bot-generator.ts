@@ -1171,6 +1171,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // Generate handlers for each node
   (nodes || []).forEach((node: Node) => {
+    // Добавляем маркер начала узла для отслеживания позиции в коде
+    code += `\n# @@NODE_START:${node.id}@@\n`;
+    
     if (node.type === "start") {
       code += generateStartHandler(node);
     } else if (node.type === "command") {
@@ -1217,6 +1220,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += generateAdminRightsHandler(node);
     }
     // Note: user-input and message nodes are handled via callback handlers, not as separate command handlers
+    
+    // Добавляем маркер конца узла
+    code += `# @@NODE_END:${node.id}@@\n`;
   });
 
   // Generate synonym handlers for all nodes
@@ -1230,6 +1236,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     nodesWithSynonyms.forEach(node => {
       if (node.data.synonyms) {
         node.data.synonyms.forEach((synonym: string) => {
+          // Добавляем маркер для синонимов того же узла
+          code += `# @@NODE_START:${node.id}@@\n`;
+          
           if (node.type === 'start' || node.type === 'command') {
             code += generateSynonymHandler(node, synonym);
           } else if (node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || node.type === 'unmute_user' || 
@@ -1238,6 +1247,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           } else {
             code += generateMessageSynonymHandler(node, synonym);
           }
+          
+          code += `# @@NODE_END:${node.id}@@\n`;
         });
       }
     });
@@ -10701,5 +10712,68 @@ export function generateConfigYaml(botName: string): string {
     '  debug: false'
   ];
   return lines.join('\n');
+}
+
+// Типы для карты кода
+export interface CodeNodeRange {
+  nodeId: string;
+  startLine: number;
+  endLine: number;
+}
+
+export interface CodeWithMap {
+  code: string;
+  nodeMap: CodeNodeRange[];
+}
+
+// Функция для парсинга маркеров и создания карты кода
+export function parseCodeMap(code: string): CodeWithMap {
+  const lines = code.split('\n');
+  const nodeMap: CodeNodeRange[] = [];
+  const stack: Array<{ nodeId: string; startLine: number }> = [];
+  
+  lines.forEach((line, index) => {
+    const lineNumber = index + 1;
+    
+    // Проверяем маркер начала
+    const startMatch = line.match(/# @@NODE_START:(.+?)@@/);
+    if (startMatch) {
+      const nodeId = startMatch[1];
+      stack.push({ nodeId, startLine: lineNumber });
+      return;
+    }
+    
+    // Проверяем маркер конца
+    const endMatch = line.match(/# @@NODE_END:(.+?)@@/);
+    if (endMatch) {
+      const nodeId = endMatch[1];
+      const startInfo = stack.pop();
+      
+      if (startInfo && startInfo.nodeId === nodeId) {
+        nodeMap.push({
+          nodeId,
+          startLine: startInfo.startLine,
+          endLine: lineNumber
+        });
+      }
+    }
+  });
+  
+  return { code, nodeMap };
+}
+
+// Функция для удаления маркеров из кода (опционально)
+export function removeCodeMarkers(code: string): string {
+  return code.replace(/# @@NODE_(START|END):.+?@@\n/g, '');
+}
+
+// Обновленная функция генерации с картой
+export function generatePythonCodeWithMap(
+  botData: BotData, 
+  botName: string = "MyBot", 
+  groups: BotGroup[] = []
+): CodeWithMap {
+  const code = generatePythonCode(botData, botName, groups);
+  return parseCodeMap(code);
 }
 

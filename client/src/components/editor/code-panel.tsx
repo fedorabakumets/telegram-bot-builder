@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { BotData, BotGroup } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const loadBotGenerator = () => import('@/lib/bot-generator');
 
@@ -12,11 +14,12 @@ interface CodePanelProps {
   botData: BotData;
   projectName: string;
   projectId: number;
+  selectedNodeId?: string | null;
 }
 
 type CodeFormat = 'python' | 'json' | 'requirements' | 'readme' | 'dockerfile';
 
-export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
+export function CodePanel({ botData, projectName, projectId, selectedNodeId }: CodePanelProps) {
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
   const [codeContent, setCodeContent] = useState<Record<CodeFormat, string>>({
     python: '',
@@ -25,11 +28,33 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
     readme: '',
     dockerfile: ''
   });
+  const [codeMap, setCodeMap] = useState<any[]>([]);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const codeContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const { data: groups = [] } = useQuery<BotGroup[]>({
     queryKey: ['/api/groups'],
   });
+
+  // Определяем тему из DOM
+  useEffect(() => {
+    const checkTheme = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setTheme(isDark ? 'dark' : 'light');
+    };
+    
+    checkTheme();
+    
+    // Наблюдаем за изменениями темы
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const generateCodeContent = useMemo(() => {
     if (!botData) return {};
@@ -38,8 +63,11 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
       python: async () => {
         const botGenerator = await loadBotGenerator();
         const validation = botGenerator.validateBotStructure(botData);
-        if (!validation?.isValid) return '// Ошибка валидации структуры бота';
-        return botGenerator.generatePythonCode(botData, projectName, groups);
+        if (!validation?.isValid) return { code: '// Ошибка валидации структуры бота', nodeMap: [] };
+        
+        const result = botGenerator.generatePythonCodeWithMap(botData, projectName, groups);
+        setCodeMap(result.nodeMap);
+        return result.code;
       },
       json: async () => JSON.stringify(botData, null, 2),
       requirements: async () => {
@@ -55,6 +83,18 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
         return botGenerator.generateDockerfile();
       }
     };
+  }, [botData, projectName, groups]);
+
+  // Сбрасываем кеш кода при изменении данных бота
+  useEffect(() => {
+    setCodeContent({
+      python: '',
+      json: '',
+      requirements: '',
+      readme: '',
+      dockerfile: ''
+    });
+    setCodeMap([]);
   }, [botData, projectName, groups]);
 
   useEffect(() => {
@@ -76,11 +116,59 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
     return () => clearTimeout(timeoutId);
   }, [generateCodeContent, selectedFormat, codeContent]);
 
-  const getCurrentContent = () => {
-    return codeContent[selectedFormat] || 'Загрузка...';
-  };
+  // Вычисляем выделенные строки на основе selectedNodeId (используем Set для производительности)
+  const highlightedLines = useMemo(() => {
+    if (!selectedNodeId || selectedFormat !== 'python' || codeMap.length === 0) {
+      return new Set<number>();
+    }
+    
+    const ranges = codeMap.filter((range: any) => range.nodeId === selectedNodeId);
+    const lines = new Set<number>();
+    
+    ranges.forEach((range: any) => {
+      for (let i = range.startLine; i <= range.endLine; i++) {
+        lines.add(i);
+      }
+    });
+    
+    return lines;
+  }, [selectedNodeId, selectedFormat, codeMap]);
 
-  const copyToClipboard = (text: string) => {
+  // Автопрокрутка к выделенному фрагменту
+  useEffect(() => {
+    if (highlightedLines.size === 0 || !codeContainerRef.current) return;
+    
+    const firstLine = Math.min(...Array.from(highlightedLines));
+    const lineHeight = 20; // Примерная высота строки
+    const scrollPosition = (firstLine - 5) * lineHeight; // Прокручиваем чуть выше для контекста
+    
+    codeContainerRef.current.scrollTo({
+      top: Math.max(0, scrollPosition),
+      behavior: 'smooth'
+    });
+  }, [highlightedLines]);
+
+  const getCurrentContent = async () => {
+    let content = codeContent[selectedFormat] || 'Загрузка...';
+    
+    // Для Python кода удаляем маркеры перед отображением
+    if (selectedFormat === 'python' && content !== 'Загрузка...') {
+      const botGenerator = await loadBotGenerator();
+      content = botGenerator.removeCodeMarkers(content);
+    }
+    
+    return content;
+  };
+  
+  const [displayContent, setDisplayContent] = useState<string>('Загрузка...');
+  
+  // Обновляем отображаемый контент когда меняется формат или контент
+  useEffect(() => {
+    getCurrentContent().then(setDisplayContent);
+  }, [codeContent, selectedFormat]);
+
+  const copyToClipboard = async () => {
+    const text = await getCurrentContent();
     navigator.clipboard.writeText(text);
     toast({
       title: "Скопировано!",
@@ -89,8 +177,13 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
   };
 
   const downloadFile = async (format: CodeFormat) => {
-    const content = codeContent[format] || await generateCodeContent[format]?.();
+    let content = codeContent[format] || await generateCodeContent[format]?.();
     if (!content) return;
+    
+    // Если это объект (для Python с картой), извлекаем строку кода
+    if (typeof content === 'object' && 'code' in content) {
+      content = content.code;
+    }
 
     const fileExtensions: Record<CodeFormat, string> = {
       python: '.py',
@@ -108,7 +201,7 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
       dockerfile: 'Dockerfile'
     };
 
-    const blob = new Blob([content], { type: 'text/plain' });
+    const blob = new Blob([content as string], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -184,10 +277,15 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
                selectedFormat === 'json' ? 'JSON' :
                selectedFormat === 'requirements' ? 'Requirements' :
                selectedFormat === 'readme' ? 'README' : 'Dockerfile'}
+              {selectedNodeId && selectedFormat === 'python' && highlightedLines.size > 0 && (
+                <span className="ml-2 text-blue-600 dark:text-blue-400">
+                  (выделен узел: {selectedNodeId})
+                </span>
+              )}
             </span>
             <div className="flex gap-2">
               <Button
-                onClick={() => copyToClipboard(getCurrentContent())}
+                onClick={copyToClipboard}
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
@@ -209,18 +307,54 @@ export function CodePanel({ botData, projectName, projectId }: CodePanelProps) {
             </div>
           </div>
           
-          <Textarea
-            value={getCurrentContent()}
-            readOnly
-            className="flex-1 font-mono text-xs bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-700 resize-none"
-            style={{
-              lineHeight: '1.5',
-              letterSpacing: '0.02em',
-              tabSize: 4
-            }}
-            placeholder="Выберите формат для просмотра кода..."
-            data-testid="textarea-code-preview"
-          />
+          <div 
+            ref={codeContainerRef}
+            className="flex-1 overflow-auto rounded border border-slate-300 dark:border-slate-700"
+          >
+            {selectedFormat === 'python' ? (
+              <SyntaxHighlighter
+                language="python"
+                style={theme === 'dark' ? vscDarkPlus : vs}
+                showLineNumbers={true}
+                wrapLines={true}
+                lineProps={(lineNumber) => {
+                  const isHighlighted = highlightedLines.has(lineNumber);
+                  return {
+                    style: {
+                      backgroundColor: isHighlighted 
+                        ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)')
+                        : 'transparent',
+                      display: 'block',
+                      width: '100%',
+                      transition: 'background-color 0.3s ease'
+                    }
+                  };
+                }}
+                customStyle={{
+                  margin: 0,
+                  fontSize: '12px',
+                  lineHeight: '1.5',
+                  background: 'transparent'
+                }}
+                data-testid="syntax-highlighter-python"
+              >
+                {displayContent}
+              </SyntaxHighlighter>
+            ) : (
+              <Textarea
+                value={displayContent}
+                readOnly
+                className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
+                style={{
+                  lineHeight: '1.5',
+                  letterSpacing: '0.02em',
+                  tabSize: 4
+                }}
+                placeholder="Выберите формат для просмотра кода..."
+                data-testid="textarea-code-preview"
+              />
+            )}
+          </div>
         </div>
       </div>
     </aside>
