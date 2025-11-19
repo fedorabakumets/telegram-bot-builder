@@ -42,6 +42,7 @@ export async function initializeDatabaseTables() {
         description TEXT,
         data JSONB NOT NULL,
         bot_token TEXT,
+        user_database_enabled INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       );
