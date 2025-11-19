@@ -11,6 +11,7 @@ interface FlexibleLayoutProps {
   sidebarContent: React.ReactNode;
   canvasContent: React.ReactNode;
   propertiesContent: React.ReactNode;
+  codeContent?: React.ReactNode;
   onConfigChange?: (newConfig: SimpleLayoutConfig) => void;
   hideOnMobile?: boolean; // Скрывать боковые панели на маленьких устройствах
   currentTab?: string; // Текущая активная вкладка
@@ -22,6 +23,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
   sidebarContent,
   canvasContent,
   propertiesContent,
+  codeContent,
   onConfigChange,
   hideOnMobile = false,
   currentTab
@@ -92,6 +94,8 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
         return canvasContent;
       case 'properties':
         return propertiesContent;
+      case 'code':
+        return codeContent;
       default:
         return null;
     }
@@ -114,6 +118,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           ${element.type === 'header' ? 'border-b' : ''}
           ${element.type === 'sidebar' ? 'border-r' : ''}
           ${element.type === 'properties' ? 'border-l' : ''}
+          ${element.type === 'code' ? 'border-l' : ''}
           ${config.compactMode ? 'text-sm' : ''}
           border-border bg-background
           ${config.showGrid ? 'relative' : ''}
@@ -258,7 +263,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     const topEl = visibleElements.find(el => el.position === 'top');
     const bottomEl = visibleElements.find(el => el.position === 'bottom');
     const leftEl = visibleElements.find(el => el.position === 'left');
-    const rightEl = visibleElements.find(el => el.position === 'right');
+    const rightElements = visibleElements.filter(el => el.position === 'right');
     const centerEl = visibleElements.find(el => el.position === 'center');
 
     // Простая структура: top / middle / bottom
@@ -280,7 +285,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     if (centerEl) middleArea += 'main ';
     else middleArea += '. ';
     
-    if (rightEl) middleArea += 'properties';
+    if (rightElements.length > 0) middleArea += 'properties';
     else middleArea += '.';
     
     middleArea += '"';
@@ -299,11 +304,12 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     
     columns.push('1fr');
     
-    if (rightEl) columns.push(`${rightEl.size}%`);
+    const totalRightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
+    if (totalRightSize > 0) columns.push(`${totalRightSize}%`);
     else columns.push('0px');
 
     // Если есть только верхняя/нижняя панель и основной контент
-    if (topEl && !leftEl && !rightEl && (centerEl || bottomEl)) {
+    if (topEl && !leftEl && rightElements.length === 0 && (centerEl || bottomEl)) {
       // Скрываем ResizableHandle на мобильных устройствах для вкладки "Бот"
       const hideResizeHandle = isMobile && currentTab === 'bot';
       
@@ -325,9 +331,9 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
     }
 
     // Если есть боковые панели и основной контент
-    if ((leftEl || rightEl) && centerEl && !topEl && !bottomEl) {
+    if ((leftEl || rightElements.length > 0) && centerEl && !topEl && !bottomEl) {
       const leftSize = leftEl?.size || 0;
-      const rightSize = rightEl?.size || 0;
+      const totalRightSize = rightElements.reduce((sum, el) => sum + el.size, 0);
       
       return (
         <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -352,17 +358,31 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
               {getElementContent(centerEl.type)}
             </div>
           </ResizablePanel>
-          {rightEl && (
+          {rightElements.length > 0 && (
             <>
               <ResizableHandle withHandle />
               <ResizablePanel 
-                defaultSize={rightSize} 
+                defaultSize={totalRightSize} 
                 minSize={15} 
                 maxSize={40}
               >
-                <div className="h-full border-l border-border bg-background overflow-hidden">
-                  {getElementContent(rightEl.type)}
-                </div>
+                <ResizablePanelGroup direction="horizontal" className="h-full">
+                  {rightElements.map((rightEl, index) => (
+                    <React.Fragment key={rightEl.id}>
+                      {index > 0 && <ResizableHandle withHandle />}
+                      <ResizablePanel 
+                        key={`panel-${rightEl.id}`}
+                        defaultSize={rightEl.size / rightElements.length * 100}
+                        minSize={10}
+                        maxSize={60}
+                      >
+                        <div className="h-full border-l border-border bg-background overflow-hidden">
+                          {getElementContent(rightEl.type)}
+                        </div>
+                      </ResizablePanel>
+                    </React.Fragment>
+                  ))}
+                </ResizablePanelGroup>
               </ResizablePanel>
             </>
           )}
@@ -401,17 +421,31 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 {centerEl ? getElementContent(centerEl.type) : null}
               </div>
             </ResizablePanel>
-            {rightEl && (
+            {rightElements.length > 0 && (
               <>
                 <ResizableHandle withHandle />
                 <ResizablePanel 
-                  defaultSize={rightEl.size} 
+                  defaultSize={totalRightSize} 
                   minSize={15} 
-                  maxSize={40}
+                  maxSize={60}
                 >
-                  <div className="h-full border-l border-border bg-background overflow-hidden">
-                    {getElementContent(rightEl.type)}
-                  </div>
+                  <ResizablePanelGroup direction="horizontal" className="h-full">
+                    {rightElements.map((rightEl, index) => (
+                      <React.Fragment key={rightEl.id}>
+                        {index > 0 && <ResizableHandle withHandle />}
+                        <ResizablePanel 
+                          key={`panel-${rightEl.id}`}
+                          defaultSize={rightEl.size / rightElements.length * 100}
+                          minSize={10}
+                          maxSize={60}
+                        >
+                          <div className="h-full border-l border-border bg-background overflow-hidden">
+                            {getElementContent(rightEl.type)}
+                          </div>
+                        </ResizablePanel>
+                      </React.Fragment>
+                    ))}
+                  </ResizablePanelGroup>
                 </ResizablePanel>
               </>
             )}

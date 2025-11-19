@@ -5,6 +5,7 @@ import { Header } from '@/components/editor/header';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
 import { PropertiesPanel } from '@/components/editor/properties-panel';
+import { CodePanel } from '@/components/editor/code-panel';
 import { ExportPanel } from '@/components/editor/export-panel';
 import { BotControl } from '@/components/editor/bot-control';
 import { SaveTemplateModal } from '@/components/editor/save-template-modal';
@@ -147,6 +148,17 @@ export default function Editor() {
     }));
   }, []);
 
+  const handleToggleCode = useCallback(() => {
+    setFlexibleLayoutConfig(prev => ({
+      ...prev,
+      elements: prev.elements.map(element =>
+        element.id === 'code'
+          ? { ...element, visible: !element.visible }
+          : element
+      )
+    }));
+  }, []);
+
   const handleOpenMobileSidebar = useCallback(() => {
     setShowMobileSidebar(true);
   }, []);
@@ -183,13 +195,21 @@ export default function Editor() {
           type: 'canvas',
           name: 'Холст',
           position: 'center',
-          size: 55,
+          size: 35,
           visible: true
         },
         {
           id: 'properties',
           type: 'properties',
           name: 'Свойства',
+          position: 'right',
+          size: 20,
+          visible: true
+        },
+        {
+          id: 'code',
+          type: 'code',
+          name: 'Код',
           position: 'right',
           size: 25,
           visible: true
@@ -943,6 +963,15 @@ export default function Editor() {
     />
   ) : null;
 
+  // Определяем содержимое панели кода
+  const codeContent = currentProject ? (
+    <CodePanel
+      botData={(botDataWithSheets || getBotData()) as any}
+      projectName={currentProject.name}
+      projectId={currentProject.id}
+    />
+  ) : null;
+
   if (!currentProject) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1105,6 +1134,7 @@ export default function Editor() {
             sidebarContent={sidebarContent}
             canvasContent={canvasContent}
             propertiesContent={propertiesContent}
+            codeContent={codeContent}
             onConfigChange={setFlexibleLayoutConfig}
             hideOnMobile={isMobile}
             currentTab={currentTab}
