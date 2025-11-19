@@ -28,7 +28,6 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     readme: '',
     dockerfile: ''
   });
-  const [codeMap, setCodeMap] = useState<any[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const codeContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -63,11 +62,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
       python: async () => {
         const botGenerator = await loadBotGenerator();
         const validation = botGenerator.validateBotStructure(botData);
-        if (!validation?.isValid) return { code: '// Ошибка валидации структуры бота', nodeMap: [] };
-        
-        const result = botGenerator.generatePythonCodeWithMap(botData, projectName, groups);
-        setCodeMap(result.nodeMap);
-        return result.code;
+        if (!validation?.isValid) return '// Ошибка валидации структуры бота';
+        return botGenerator.generatePythonCode(botData, projectName, groups);
       },
       json: async () => JSON.stringify(botData, null, 2),
       requirements: async () => {
@@ -94,81 +90,59 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
       readme: '',
       dockerfile: ''
     });
-    setCodeMap([]);
   }, [botData, projectName, groups]);
 
   useEffect(() => {
+    console.log('🔧 useEffect triggered, selectedFormat:', selectedFormat);
+    console.log('🔧 codeContent[selectedFormat]:', codeContent[selectedFormat]?.substring(0, 50) || '<empty>');
+    
     // Добавляем задержку для оптимизации производительности
     const timeoutId = setTimeout(async () => {
-      if (!generateCodeContent[selectedFormat]) return;
+      console.log('🔧 Timeout fired for format:', selectedFormat);
+      
+      if (!generateCodeContent[selectedFormat]) {
+        console.log('⚠️ No generator for format:', selectedFormat);
+        return;
+      }
       
       // Проверяем, есть ли уже загруженный контент
-      if (codeContent[selectedFormat]) return;
+      if (codeContent[selectedFormat]) {
+        console.log('✅ Content already loaded, skipping generation');
+        return;
+      }
       
+      console.log('🚀 Starting code generation for', selectedFormat);
       try {
         const content = await generateCodeContent[selectedFormat]();
+        console.log('✅ Generation complete, setting content');
         setCodeContent(prev => ({ ...prev, [selectedFormat]: content }));
       } catch (error) {
-        console.error('Error loading code content:', error);
+        console.error('❌ Error loading code content:', error);
       }
     }, 500); // Задержка 500мс для debounce
     
-    return () => clearTimeout(timeoutId);
+    return () => {
+      console.log('🧹 Cleanup timeout for', selectedFormat);
+      clearTimeout(timeoutId);
+    };
   }, [generateCodeContent, selectedFormat, codeContent]);
 
-  // Вычисляем выделенные строки на основе selectedNodeId (используем Set для производительности)
-  const highlightedLines = useMemo(() => {
-    if (!selectedNodeId || selectedFormat !== 'python' || codeMap.length === 0) {
-      return new Set<number>();
-    }
-    
-    const ranges = codeMap.filter((range: any) => range.nodeId === selectedNodeId);
-    const lines = new Set<number>();
-    
-    ranges.forEach((range: any) => {
-      for (let i = range.startLine; i <= range.endLine; i++) {
-        lines.add(i);
-      }
-    });
-    
-    return lines;
-  }, [selectedNodeId, selectedFormat, codeMap]);
+  // Подсветка строк убрана для упрощения и производительности
+  const highlightedLines = new Set<number>();
 
-  // Автопрокрутка к выделенному фрагменту
-  useEffect(() => {
-    if (highlightedLines.size === 0 || !codeContainerRef.current) return;
-    
-    const firstLine = Math.min(...Array.from(highlightedLines));
-    const lineHeight = 20; // Примерная высота строки
-    const scrollPosition = (firstLine - 5) * lineHeight; // Прокручиваем чуть выше для контекста
-    
-    codeContainerRef.current.scrollTo({
-      top: Math.max(0, scrollPosition),
-      behavior: 'smooth'
-    });
-  }, [highlightedLines]);
-
-  const getCurrentContent = async () => {
-    let content = codeContent[selectedFormat] || 'Загрузка...';
-    
-    // Для Python кода удаляем маркеры перед отображением
-    if (selectedFormat === 'python' && content !== 'Загрузка...') {
-      const botGenerator = await loadBotGenerator();
-      content = botGenerator.removeCodeMarkers(content);
-    }
-    
-    return content;
+  const getCurrentContent = () => {
+    return codeContent[selectedFormat] || 'Загрузка...';
   };
   
   const [displayContent, setDisplayContent] = useState<string>('Загрузка...');
   
   // Обновляем отображаемый контент когда меняется формат или контент
   useEffect(() => {
-    getCurrentContent().then(setDisplayContent);
+    setDisplayContent(getCurrentContent());
   }, [codeContent, selectedFormat]);
 
-  const copyToClipboard = async () => {
-    const text = await getCurrentContent();
+  const copyToClipboard = () => {
+    const text = getCurrentContent();
     navigator.clipboard.writeText(text);
     toast({
       title: "Скопировано!",
@@ -177,13 +151,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
   };
 
   const downloadFile = async (format: CodeFormat) => {
-    let content = codeContent[format] || await generateCodeContent[format]?.();
+    const content = codeContent[format] || await generateCodeContent[format]?.();
     if (!content) return;
-    
-    // Если это объект (для Python с картой), извлекаем строку кода
-    if (typeof content === 'object' && 'code' in content) {
-      content = content.code;
-    }
 
     const fileExtensions: Record<CodeFormat, string> = {
       python: '.py',
