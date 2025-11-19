@@ -6590,20 +6590,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
   code += '\n';
   
-  // Генерируем обработчики для кнопок "Готово" многомерного выбора ТОЛЬКО если есть узлы с множественным выбором
-  console.log(`🔧 ГЕНЕРАТОР: Создаем обработчик для кнопок завершения множественного выбора`);
-  console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ - добавлен return после отправки сообщения для остановки выполнения`);
-  console.log(`🔧 ГЕНЕРАТОР: УБРАНЫ ВСЕ АВТОМАТИЧЕСКИЕ ВЫЗОВЫ handle_callback_* после кнопки Готово`);
-  console.log(`🔧 ГЕНЕРАТОР: Теперь после Готово - только отправка сообщения и return`);
-  console.log(`🔧 ГЕНЕРАТОР: Количество узлов с множественным выбором: ${multiSelectNodes.length}`);
-  multiSelectNodes.forEach((node, index) => {
-    console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: ${node.id}, continueButtonTarget: ${node.data.continueButtonTarget}`);
-    const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
-    console.log(`🔧 ГЕНЕРАТОР: Целевой узел найден: ${!!targetNode}, тип: ${targetNode?.type}, allowMultipleSelection: ${targetNode?.data?.allowMultipleSelection}`);
-    console.log(`🔧 ГЕНЕРАТОР: Целевой узел кнопки: ${targetNode?.data?.buttons?.length || 0}, keyboardType: ${targetNode?.data?.keyboardType}`);
-  });
-  
-  if (multiSelectNodes.length > 0) {
+  // Генерируем обработчик для кнопок "Готово" многомерного выбора
   code += '# Обработчик для кнопок завершения множественного выбора\n';
   code += '@dp.callback_query(lambda callback_query: callback_query.data and callback_query.data.startswith("multi_select_done_"))\n';
   code += 'async def handle_multi_select_done(callback_query: types.CallbackQuery):\n';
