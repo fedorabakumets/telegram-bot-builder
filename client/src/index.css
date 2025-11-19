@@ -409,24 +409,6 @@ body {
   transform: translateY(-1px);
 }
 
-/* Floating animation for tips */
-.floating-tip {
-  animation: float 3s ease-in-out infinite;
-}
-
-.floating-tip:nth-child(2) {
-  animation-delay: 1.5s;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
-}
-
 /* Gradient text effect for dark theme */
 .dark .gradient-text {
   background: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--muted-foreground)) 100%);
