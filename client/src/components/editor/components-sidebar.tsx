@@ -32,6 +32,7 @@ interface ComponentsSidebarProps {
   onGoToProjects?: () => void;
   onProjectSelect?: (projectId: number) => void;
   currentProjectId?: number;
+  activeSheetId?: string;
   headerContent?: React.ReactNode;
   sidebarContent?: React.ReactNode;
   canvasContent?: React.ReactNode;
@@ -629,6 +630,7 @@ export function ComponentsSidebar({
   onGoToProjects,
   onProjectSelect,
   currentProjectId,
+  activeSheetId,
   headerContent,
   sidebarContent,
   canvasContent,
@@ -1257,11 +1259,8 @@ export function ComponentsSidebar({
                             <div className="space-y-1">
                               {sheetsInfo.names.map((name: string, index: number) => {
                                 const projectData = project.data as any;
-                                const isActive = SheetsManager.isNewFormat(projectData) && 
-                                  projectData.sheets && 
-                                  projectData.sheets[index]?.id === projectData.activeSheetId;
-                                
                                 const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
+                                const isActive = currentProjectId === project.id && sheetId === activeSheetId;
                                 const isEditing = editingSheetId === sheetId;
                                 
                                 return (

@@ -1066,6 +1066,7 @@ export default function Editor() {
         onGoToProjects={handleGoToProjects}
         onProjectSelect={handleProjectSelect}
         currentProjectId={currentProject?.id}
+        activeSheetId={botDataWithSheets?.activeSheetId}
         headerContent={headerContent}
         sidebarContent={<div>Sidebar</div>}
         canvasContent={canvasContent}
@@ -1154,6 +1155,7 @@ export default function Editor() {
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
               currentProjectId={currentProject?.id}
+              activeSheetId={botDataWithSheets?.activeSheetId}
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}
               onToggleProperties={handleToggleProperties}
@@ -1293,6 +1295,7 @@ export default function Editor() {
               onLoadTemplate={handleLoadTemplate}
               onOpenLayoutCustomizer={() => setShowLayoutCustomizer(true)}
               onLayoutChange={updateLayoutConfig}
+              activeSheetId={botDataWithSheets?.activeSheetId}
               headerContent={
                 <AdaptiveHeader
                   config={layoutConfig}
@@ -1462,6 +1465,7 @@ export default function Editor() {
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
               currentProjectId={currentProject?.id}
+              activeSheetId={botDataWithSheets?.activeSheetId}
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}
               onToggleProperties={handleToggleProperties}
