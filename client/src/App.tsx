@@ -13,6 +13,7 @@ import React from "react";
 const Home = lazy(() => import("@/pages/home"));
 const Editor = lazy(() => import("@/pages/editor"));
 const BotPreview = lazy(() => import("@/pages/bot-preview"));
+const ExportPage = lazy(() => import("@/pages/export"));
 const TemplatesPage = lazy(() => import("@/pages/templates-wrapper"));
 const DatabaseManager = lazy(() => import("@/pages/DatabaseManager"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -51,6 +52,7 @@ function Router() {
         <Route path="/templates" component={TemplatesPage} />
         <Route path="/database" component={DatabaseManager} />
         <Route path="/preview/:id" component={BotPreview} />
+        <Route path="/export/:id" component={ExportPage} />
         <Route path="/editor/:id" component={Editor} />
         <Route path="/projects/:id" component={Editor} />
         <Route path="/" component={Editor} />
