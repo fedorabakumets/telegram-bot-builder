@@ -229,6 +229,17 @@ export const botMessages = pgTable("bot_messages", {
   messageText: text("message_text"), // Текст сообщения
   messageData: jsonb("message_data"), // Дополнительные данные (медиа, кнопки и т.д.)
   nodeId: text("node_id"), // ID узла бота, который отправил сообщение
+  primaryMediaId: integer("primary_media_id").references(() => mediaFiles.id, { onDelete: "set null" }), // Основное медиа (фото/видео) для быстрого доступа
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Таблица связи сообщений с медиафайлами (для множественных медиа)
+export const botMessageMedia = pgTable("bot_message_media", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").references(() => botMessages.id, { onDelete: "cascade" }).notNull(),
+  mediaFileId: integer("media_file_id").references(() => mediaFiles.id, { onDelete: "cascade" }).notNull(),
+  mediaKind: text("media_kind").notNull(), // "photo", "video", "audio", "document"
+  orderIndex: integer("order_index").default(0), // Порядок для множественных медиа
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -480,6 +491,7 @@ export const insertBotMessageSchema = createInsertSchema(botMessages).pick({
   messageText: true,
   messageData: true,
   nodeId: true,
+  primaryMediaId: true,
 }).extend({
   projectId: z.number().positive("ID проекта должен быть положительным числом"),
   userId: z.string().min(1, "ID пользователя обязателен"),
@@ -487,6 +499,20 @@ export const insertBotMessageSchema = createInsertSchema(botMessages).pick({
   messageText: z.string().optional(),
   messageData: z.record(z.any()).optional(),
   nodeId: z.string().nullish(),
+  primaryMediaId: z.number().positive().optional(),
+});
+
+// Схема для связи сообщений с медиафайлами
+export const insertBotMessageMediaSchema = createInsertSchema(botMessageMedia).pick({
+  messageId: true,
+  mediaFileId: true,
+  mediaKind: true,
+  orderIndex: true,
+}).extend({
+  messageId: z.number().positive("ID сообщения должен быть положительным числом"),
+  mediaFileId: z.number().positive("ID медиафайла должен быть положительным числом"),
+  mediaKind: z.enum(["photo", "video", "audio", "document"]),
+  orderIndex: z.number().min(0).default(0),
 });
 
 // Схема для оценки шаблона
@@ -517,6 +543,8 @@ export type InsertUserTelegramSettings = z.infer<typeof insertUserTelegramSettin
 export type UserTelegramSettings = typeof userTelegramSettings.$inferSelect;
 export type InsertBotMessage = z.infer<typeof insertBotMessageSchema>;
 export type BotMessage = typeof botMessages.$inferSelect;
+export type InsertBotMessageMedia = z.infer<typeof insertBotMessageMediaSchema>;
+export type BotMessageMedia = typeof botMessageMedia.$inferSelect;
 
 // Bot structure schemas
 export const buttonSchema = z.object({
