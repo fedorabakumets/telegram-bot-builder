@@ -6300,8 +6300,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    else:\n';
     code += '        logging.warning(f"⚠️ Не удалось сохранить фото в БД, данные сохранены локально")\n';
     code += '    \n';
-    code += '    # Отправляем подтверждение\n';
+    code += '    # Отправляем подтверждение и фото обратно\n';
     code += '    await message.answer("✅ Фото получено и сохранено!")\n';
+    code += '    await message.answer_photo(photo_file_id, caption="Ваше фото:")\n';
     code += '    \n';
     code += '    # Очищаем состояние ожидания\n';
     code += '    del user_data[user_id]["waiting_for_photo"]\n';
@@ -6365,8 +6366,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    else:\n';
     code += '        logging.warning(f"⚠️ Не удалось сохранить видео в БД, данные сохранены локально")\n';
     code += '    \n';
-    code += '    # Отправляем подтверждение\n';
+    code += '    # Отправляем подтверждение и видео обратно\n';
     code += '    await message.answer("✅ Видео получено и сохранено!")\n';
+    code += '    await message.answer_video(video_file_id, caption="Ваше видео:")\n';
     code += '    \n';
     code += '    # Очищаем состояние ожидания\n';
     code += '    del user_data[user_id]["waiting_for_video"]\n';
@@ -6436,8 +6438,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    else:\n';
     code += '        logging.warning(f"⚠️ Не удалось сохранить аудио в БД, данные сохранены локально")\n';
     code += '    \n';
-    code += '    # Отправляем подтверждение\n';
+    code += '    # Отправляем подтверждение и аудио обратно\n';
     code += '    await message.answer("✅ Аудио получено и сохранено!")\n';
+    code += '    if message.audio:\n';
+    code += '        await message.answer_audio(audio_file_id, caption="Ваше аудио:")\n';
+    code += '    elif message.voice:\n';
+    code += '        await message.answer_voice(audio_file_id, caption="Ваше голосовое сообщение:")\n';
     code += '    \n';
     code += '    # Очищаем состояние ожидания\n';
     code += '    del user_data[user_id]["waiting_for_audio"]\n';
@@ -6501,8 +6507,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    else:\n';
     code += '        logging.warning(f"⚠️ Не удалось сохранить документ в БД, данные сохранены локально")\n';
     code += '    \n';
-    code += '    # Отправляем подтверждение\n';
+    code += '    # Отправляем подтверждение и документ обратно\n';
     code += '    await message.answer("✅ Документ получен и сохранен!")\n';
+    code += '    await message.answer_document(document_file_id, caption="Ваш документ:")\n';
     code += '    \n';
     code += '    # Очищаем состояние ожидания\n';
     code += '    del user_data[user_id]["waiting_for_document"]\n';
