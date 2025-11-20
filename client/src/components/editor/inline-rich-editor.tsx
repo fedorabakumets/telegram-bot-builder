@@ -19,7 +19,11 @@ import {
   RotateCw,
   Copy,
   Sparkles,
-  Plus
+  Plus,
+  Image,
+  Video,
+  Music,
+  FileText
 } from 'lucide-react';
 import { 
   DropdownMenu,
@@ -36,6 +40,7 @@ interface Variable {
   nodeId: string;
   nodeType: string;
   description?: string;
+  mediaType?: string;
 }
 
 interface InlineRichEditorProps {
@@ -585,32 +590,61 @@ export function InlineRichEditor({
                   Доступные переменные
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {availableVariables.map((variable, index) => (
-                  <DropdownMenuItem
-                    key={`${variable.nodeId}-${variable.name}-${index}`}
-                    onClick={() => insertVariable(variable.name)}
-                    className="cursor-pointer"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                          {`{${variable.name}}`}
-                        </code>
-                        <Badge variant="outline" className="text-xs h-4">
-                          {variable.nodeType === 'user-input' ? 'Ввод' : 
-                           variable.nodeType === 'start' ? 'Команда' :
-                           variable.nodeType === 'command' ? 'Команда' : 
-                           'Другое'}
-                        </Badge>
-                      </div>
-                      {variable.description && (
-                        <div className="text-xs text-muted-foreground">
-                          {variable.description}
+                {availableVariables.map((variable, index) => {
+                  const getMediaIcon = () => {
+                    switch (variable.mediaType) {
+                      case 'photo': return <Image className="h-3 w-3 text-blue-500" />;
+                      case 'video': return <Video className="h-3 w-3 text-purple-500" />;
+                      case 'audio': return <Music className="h-3 w-3 text-green-500" />;
+                      case 'document': return <FileText className="h-3 w-3 text-orange-500" />;
+                      default: return null;
+                    }
+                  };
+
+                  const getBadgeText = () => {
+                    if (variable.mediaType) {
+                      switch (variable.mediaType) {
+                        case 'photo': return 'Фото';
+                        case 'video': return 'Видео';
+                        case 'audio': return 'Аудио';
+                        case 'document': return 'Документ';
+                      }
+                    }
+                    if (variable.nodeType === 'user-input') return 'Ввод';
+                    if (variable.nodeType === 'start') return 'Команда';
+                    if (variable.nodeType === 'command') return 'Команда';
+                    if (variable.nodeType === 'system') return 'Система';
+                    if (variable.nodeType === 'conditional') return 'Условие';
+                    return 'Другое';
+                  };
+
+                  const mediaIcon = getMediaIcon();
+                  
+                  return (
+                    <DropdownMenuItem
+                      key={`${variable.nodeId}-${variable.name}-${index}`}
+                      onClick={() => insertVariable(variable.name)}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex flex-col gap-1 w-full">
+                        <div className="flex items-center gap-2">
+                          {mediaIcon && <span className="flex-shrink-0">{mediaIcon}</span>}
+                          <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                            {`{${variable.name}}`}
+                          </code>
+                          <Badge variant="outline" className="text-xs h-4">
+                            {getBadgeText()}
+                          </Badge>
                         </div>
-                      )}
-                    </div>
-                  </DropdownMenuItem>
-                ))}
+                        {variable.description && (
+                          <div className={`text-xs text-muted-foreground ${mediaIcon ? 'ml-5' : ''}`}>
+                            {variable.description}
+                          </div>
+                        )}
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
                 {availableVariables.length === 0 && (
                   <DropdownMenuItem disabled>
                     <span className="text-xs text-muted-foreground">

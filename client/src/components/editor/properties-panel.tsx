@@ -17,6 +17,7 @@ import { useState, useMemo } from 'react';
 
 import { InlineRichEditor } from './inline-rich-editor';
 import { EmojiPicker } from './emoji-picker';
+import { Image, Video, Music, FileText, X } from 'lucide-react';
 
 // Переиспользуемый компонент для редактирования синонимов
 interface SynonymEditorProps {
@@ -369,15 +370,16 @@ export function PropertiesPanel({
     return uniqueQuestions;
   }, [allNodes]);
 
-  // Extract all available variables for text insertion
-  const availableVariables = useMemo(() => {
-    const variables: Array<{name: string, nodeId: string, nodeType: string, description?: string}> = [];
+  // Extract all available variables and split into text and media
+  const { textVariables, mediaVariables } = useMemo(() => {
+    // Use Map for proper deduplication by variable name
+    const variablesMap = new Map<string, {name: string, nodeId: string, nodeType: string, description?: string, mediaType?: string}>();
     
     allNodes.forEach(node => {
       
       // From any nodes with additional input collection that have inputVariable
-      if (node.data.collectUserInput && node.data.inputVariable) {
-        variables.push({
+      if (node.data.collectUserInput && node.data.inputVariable && !variablesMap.has(node.data.inputVariable)) {
+        variablesMap.set(node.data.inputVariable, {
           name: node.data.inputVariable,
           nodeId: node.id,
           nodeType: node.type,
@@ -385,11 +387,65 @@ export function PropertiesPanel({
         });
       }
 
+      // From nodes with photo input
+      if (node.data.enablePhotoInput && node.data.photoInputVariable && !variablesMap.has(node.data.photoInputVariable)) {
+        variablesMap.set(node.data.photoInputVariable, {
+          name: node.data.photoInputVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          mediaType: 'photo',
+          description: 'File ID фотографии'
+        });
+      }
+
+      // From nodes with video input
+      if (node.data.enableVideoInput && node.data.videoInputVariable && !variablesMap.has(node.data.videoInputVariable)) {
+        variablesMap.set(node.data.videoInputVariable, {
+          name: node.data.videoInputVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          mediaType: 'video',
+          description: 'File ID видео'
+        });
+      }
+
+      // From nodes with audio input
+      if (node.data.enableAudioInput && node.data.audioInputVariable && !variablesMap.has(node.data.audioInputVariable)) {
+        variablesMap.set(node.data.audioInputVariable, {
+          name: node.data.audioInputVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          mediaType: 'audio',
+          description: 'File ID аудио'
+        });
+      }
+
+      // From nodes with document input
+      if (node.data.enableDocumentInput && node.data.documentInputVariable && !variablesMap.has(node.data.documentInputVariable)) {
+        variablesMap.set(node.data.documentInputVariable, {
+          name: node.data.documentInputVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          mediaType: 'document',
+          description: 'File ID документа'
+        });
+      }
+
+      // From nodes with multi-select variable
+      if (node.data.allowMultipleSelection && node.data.multiSelectVariable && !variablesMap.has(node.data.multiSelectVariable)) {
+        variablesMap.set(node.data.multiSelectVariable, {
+          name: node.data.multiSelectVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          description: 'Множественный выбор (список)'
+        });
+      }
+
       // From conditional messages with textInputVariable
       if (node.data.conditionalMessages) {
         node.data.conditionalMessages.forEach((condition: any) => {
-          if (condition.textInputVariable) {
-            variables.push({
+          if (condition.textInputVariable && !variablesMap.has(condition.textInputVariable)) {
+            variablesMap.set(condition.textInputVariable, {
               name: condition.textInputVariable,
               nodeId: node.id,
               nodeType: 'conditional',
@@ -400,7 +456,7 @@ export function PropertiesPanel({
       }
     });
 
-    // Add common bot variables
+    // Add common bot variables (they have priority, so add them last to override)
     const commonVariables = [
       { name: 'user_name', nodeId: 'system', nodeType: 'system', description: 'Имя пользователя' },
       { name: 'user_id', nodeId: 'system', nodeType: 'system', description: 'ID пользователя в Telegram' },
@@ -408,14 +464,18 @@ export function PropertiesPanel({
       { name: 'bot_name', nodeId: 'system', nodeType: 'system', description: 'Имя бота' }
     ];
 
-    variables.push(...commonVariables);
+    commonVariables.forEach(v => {
+      if (!variablesMap.has(v.name)) {
+        variablesMap.set(v.name, v);
+      }
+    });
     
-    // Remove duplicates by variable name
-    const uniqueVariables = variables.filter((variable, index, self) => 
-      index === self.findIndex(v => v.name === variable.name)
-    );
+    // Convert Map to Array and split into text and media variables
+    const allVariables = Array.from(variablesMap.values());
+    const text = allVariables.filter(v => !v.mediaType);
+    const media = allVariables.filter(v => v.mediaType);
     
-    return uniqueVariables;
+    return { textVariables: text, mediaVariables: media };
   }, [allNodes]);
 
   // Function to detect conflicts between conditional message rules
@@ -2429,6 +2489,50 @@ export function PropertiesPanel({
         {/* Message Content */}
         <div>
           <div className="space-y-4">
+            {/* Media Variables Section */}
+            {mediaVariables.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">Прикрепленные медиа</Label>
+                <div className="flex flex-wrap gap-2">
+                  {mediaVariables.map((variable) => {
+                    const getMediaIcon = () => {
+                      switch (variable.mediaType) {
+                        case 'photo': return <Image className="h-3 w-3" />;
+                        case 'video': return <Video className="h-3 w-3" />;
+                        case 'audio': return <Music className="h-3 w-3" />;
+                        case 'document': return <FileText className="h-3 w-3" />;
+                        default: return null;
+                      }
+                    };
+
+                    const getMediaColor = () => {
+                      switch (variable.mediaType) {
+                        case 'photo': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700';
+                        case 'video': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700';
+                        case 'audio': return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700';
+                        case 'document': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-700';
+                        default: return 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={`${variable.nodeId}-${variable.name}`}
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-xs font-medium ${getMediaColor()}`}
+                      >
+                        {getMediaIcon()}
+                        <code className="font-mono">{`{${variable.name}}`}</code>
+                        <span className="text-[10px] opacity-70">{variable.description}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Эти переменные содержат file_id медиафайлов, полученных от пользователей
+                </div>
+              </div>
+            )}
+
             {/* Inline Rich Text Editor */}
             <div className="space-y-3">
               <div>
@@ -2440,7 +2544,7 @@ export function PropertiesPanel({
                   enableMarkdown={selectedNode.data.markdown}
                   onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
                   onFormatModeChange={(formatMode) => onNodeUpdate(selectedNode.id, { formatMode })}
-                  availableVariables={availableVariables}
+                  availableVariables={textVariables}
                 />
               </div>
             </div>
@@ -3499,7 +3603,7 @@ export function PropertiesPanel({
                                   );
                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                 }}
-                                availableVariables={availableVariables}
+                                availableVariables={textVariables}
                               />
                               
 
