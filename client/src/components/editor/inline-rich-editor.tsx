@@ -51,6 +51,7 @@ interface InlineRichEditorProps {
   onMarkdownToggle?: (enabled: boolean) => void;
   onFormatModeChange?: (formatMode: 'html' | 'markdown' | 'none') => void;
   availableVariables?: Variable[];
+  onMediaVariableSelect?: (variableName: string, mediaType: string) => void;
 }
 
 export function InlineRichEditor({
@@ -60,7 +61,8 @@ export function InlineRichEditor({
   enableMarkdown = false,
   onMarkdownToggle,
   onFormatModeChange,
-  availableVariables = []
+  availableVariables = [],
+  onMediaVariableSelect
 }: InlineRichEditorProps) {
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
@@ -456,6 +458,22 @@ export function InlineRichEditor({
 
   // Insert variable at cursor position
   const insertVariable = useCallback((variableName: string) => {
+    // Проверяем, является ли это медиапеременной
+    const variable = availableVariables.find(v => v.name === variableName);
+    const isMediaVariable = variable?.mediaType !== undefined;
+    
+    if (isMediaVariable && onMediaVariableSelect && variable) {
+      // Для медиапеременных вызываем специальный callback
+      onMediaVariableSelect(variableName, variable.mediaType!);
+      toast({
+        title: "Медиа прикреплено",
+        description: `Медиафайл "${variableName}" добавлен в прикрепленные медиа`,
+        variant: "default"
+      });
+      return;
+    }
+    
+    // Для обычных переменных - вставляем в текст
     if (!editorRef.current) return;
     
     saveToUndoStack();
@@ -512,7 +530,7 @@ export function InlineRichEditor({
     }
     
     setTimeout(() => setIsFormatting(false), 100);
-  }, [saveToUndoStack, handleInput, toast]);
+  }, [availableVariables, onMediaVariableSelect, saveToUndoStack, handleInput, toast]);
 
   return (
     <div className="space-y-3">

@@ -13,7 +13,7 @@ import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { validateCommand, getCommandSuggestions, STANDARD_COMMANDS } from '@/lib/commands';
 import { extractCoordinatesFromUrl, formatCoordinates, getLocationInfo } from '@/lib/map-utils';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 import { InlineRichEditor } from './inline-rich-editor';
 import { EmojiPicker } from './emoji-picker';
@@ -477,6 +477,41 @@ export function PropertiesPanel({
     
     return { textVariables: text, mediaVariables: media };
   }, [allNodes]);
+
+  // Получаем список прикрепленных медиапеременных из node.data.attachedMedia
+  const attachedMediaVariables = useMemo(() => {
+    if (!selectedNode?.data.attachedMedia || mediaVariables.length === 0) {
+      return [];
+    }
+    
+    const attachedMediaNames = selectedNode.data.attachedMedia as string[];
+    return mediaVariables.filter(v => attachedMediaNames.includes(v.name));
+  }, [selectedNode?.data.attachedMedia, mediaVariables]);
+  
+  // Обработчик добавления медиапеременной
+  const handleMediaVariableSelect = useCallback((variableName: string, mediaType: string) => {
+    if (!selectedNode) return;
+    
+    const currentAttachedMedia = (selectedNode.data.attachedMedia as string[]) || [];
+    
+    // Проверяем, не добавлена ли уже эта переменная
+    if (currentAttachedMedia.includes(variableName)) {
+      return;
+    }
+    
+    // Добавляем новую медиапеременную
+    const updatedAttachedMedia = [...currentAttachedMedia, variableName];
+    onNodeUpdate(selectedNode.id, { attachedMedia: updatedAttachedMedia });
+  }, [selectedNode, onNodeUpdate]);
+  
+  // Обработчик удаления медиапеременной
+  const handleMediaVariableRemove = useCallback((variableName: string) => {
+    if (!selectedNode) return;
+    
+    const currentAttachedMedia = (selectedNode.data.attachedMedia as string[]) || [];
+    const updatedAttachedMedia = currentAttachedMedia.filter(name => name !== variableName);
+    onNodeUpdate(selectedNode.id, { attachedMedia: updatedAttachedMedia });
+  }, [selectedNode, onNodeUpdate]);
 
   // Function to detect conflicts between conditional message rules
   const detectRuleConflicts = useMemo(() => {
@@ -2490,11 +2525,11 @@ export function PropertiesPanel({
         <div>
           <div className="space-y-4">
             {/* Media Variables Section */}
-            {mediaVariables.length > 0 && (
+            {attachedMediaVariables.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground">Прикрепленные медиа</Label>
                 <div className="flex flex-wrap gap-2">
-                  {mediaVariables.map((variable) => {
+                  {attachedMediaVariables.map((variable) => {
                     const getMediaIcon = () => {
                       switch (variable.mediaType) {
                         case 'photo': return <Image className="h-3 w-3" />;
@@ -2523,6 +2558,13 @@ export function PropertiesPanel({
                         {getMediaIcon()}
                         <code className="font-mono">{`{${variable.name}}`}</code>
                         <span className="text-[10px] opacity-70">{variable.description}</span>
+                        <button
+                          onClick={() => handleMediaVariableRemove(variable.name)}
+                          className="ml-1 text-xs opacity-50 hover:opacity-100 transition-opacity"
+                          title="Удалить медиафайл"
+                        >
+                          ✕
+                        </button>
                       </div>
                     );
                   })}
@@ -2544,7 +2586,8 @@ export function PropertiesPanel({
                   enableMarkdown={selectedNode.data.markdown}
                   onMarkdownToggle={(enabled) => onNodeUpdate(selectedNode.id, { markdown: enabled })}
                   onFormatModeChange={(formatMode) => onNodeUpdate(selectedNode.id, { formatMode })}
-                  availableVariables={textVariables}
+                  availableVariables={[...textVariables, ...mediaVariables]}
+                  onMediaVariableSelect={handleMediaVariableSelect}
                 />
               </div>
             </div>

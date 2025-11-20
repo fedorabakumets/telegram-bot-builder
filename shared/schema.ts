@@ -772,7 +772,10 @@ export const nodeSchema = z.object({
     // Связка с конкретным чатом или группой
     adminChatId: z.string().optional(), // ID чата для применения прав
     adminChatIdSource: z.enum(['manual', 'variable', 'current_chat']).default('current_chat'), // Источник ID чата
-    adminChatVariableName: z.string().optional() // Имя переменной с ID чата
+    adminChatVariableName: z.string().optional(), // Имя переменной с ID чата
+    
+    // Прикрепленные медиапеременные (для отправки медиафайлов)
+    attachedMedia: z.array(z.string()).default([]) // Список имен медиапеременных для прикрепления к сообщению
   }),
 });
 

@@ -193,6 +193,77 @@ function hasCommandButtons(nodes: Node[]): boolean {
   return hasRegularCommandButtons || hasConditionalCommandButtons;
 }
 
+// Функция для сбора всех медиапеременных из узлов
+function collectMediaVariables(nodes: Node[]): Map<string, { type: string; variable: string }> {
+  const mediaVars = new Map<string, { type: string; variable: string }>();
+  
+  if (!nodes || nodes.length === 0) return mediaVars;
+  
+  nodes.forEach(node => {
+    // Собираем переменные из узлов с фото
+    if (node.data.enablePhotoInput && node.data.photoInputVariable) {
+      mediaVars.set(node.data.photoInputVariable, {
+        type: 'photo',
+        variable: node.data.photoInputVariable
+      });
+    }
+    
+    // Собираем переменные из узлов с видео
+    if (node.data.enableVideoInput && node.data.videoInputVariable) {
+      mediaVars.set(node.data.videoInputVariable, {
+        type: 'video',
+        variable: node.data.videoInputVariable
+      });
+    }
+    
+    // Собираем переменные из узлов с аудио
+    if (node.data.enableAudioInput && node.data.audioInputVariable) {
+      mediaVars.set(node.data.audioInputVariable, {
+        type: 'audio',
+        variable: node.data.audioInputVariable
+      });
+    }
+    
+    // Собираем переменные из узлов с документами
+    if (node.data.enableDocumentInput && node.data.documentInputVariable) {
+      mediaVars.set(node.data.documentInputVariable, {
+        type: 'document',
+        variable: node.data.documentInputVariable
+      });
+    }
+  });
+  
+  return mediaVars;
+}
+
+// Функция для поиска медиапеременных в тексте сообщения
+function findMediaVariablesInText(text: string, mediaVariables: Map<string, { type: string; variable: string }>): Array<{ variable: string; type: string }> {
+  if (!text || mediaVariables.size === 0) return [];
+  
+  const foundMedia: Array<{ variable: string; type: string }> = [];
+  
+  // Регулярное выражение для поиска переменных формата {variable_name}
+  const variableRegex = /\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
+  let match;
+  
+  while ((match = variableRegex.exec(text)) !== null) {
+    const variableName = match[1];
+    const mediaInfo = mediaVariables.get(variableName);
+    
+    if (mediaInfo) {
+      // Проверяем, не добавили ли мы уже эту переменную
+      if (!foundMedia.some(m => m.variable === variableName)) {
+        foundMedia.push({
+          variable: variableName,
+          type: mediaInfo.type
+        });
+      }
+    }
+  }
+  
+  return foundMedia;
+}
+
 // Функция для конвертации JavaScript boolean в Python boolean
 function toPythonBoolean(value: any): string {
   return value ? 'True' : 'False';
