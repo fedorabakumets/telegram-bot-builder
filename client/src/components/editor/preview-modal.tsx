@@ -45,6 +45,11 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
   const [currentReplyKeyboard, setCurrentReplyKeyboard] = useState<Array<{ text: string; target?: string; action?: string; }> | null>(null);
   const [textInput, setTextInput] = useState('');
   const [waitingForInput, setWaitingForInput] = useState(false);
+  const [waitingForPhoto, setWaitingForPhoto] = useState(false);
+  const [waitingForVideo, setWaitingForVideo] = useState(false);
+  const [waitingForAudio, setWaitingForAudio] = useState(false);
+  const [waitingForDocument, setWaitingForDocument] = useState(false);
+  const [userVariables, setUserVariables] = useState<Record<string, string>>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const chatAreaRef = useRef<HTMLDivElement>(null);
 
@@ -140,25 +145,156 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
             phoneNumber: node.data.phoneNumber
           }
         };
-      case 'poll':
-        return {
-          mediaType: 'poll' as const,
-          mediaData: {
-            question: node.data.question || 'Вопрос',
-            options: node.data.options || ['Вариант 1', 'Вариант 2'],
-            allowsMultipleAnswers: node.data.allowsMultipleAnswers,
-            anonymousVoting: node.data.anonymousVoting
-          }
-        };
-      case 'dice':
-        return {
-          mediaType: 'dice' as const,
-          mediaData: {
-            emoji: node.data.emoji || '🎲'
-          }
-        };
       default:
         return {};
+    }
+  };
+
+  // Helper function to replace variables in text
+  const replaceVariables = (text: string): string => {
+    let result = text;
+    Object.entries(userVariables).forEach(([key, value]) => {
+      const regex = new RegExp(`\\{${key}\\}`, 'g');
+      result = result.replace(regex, value);
+    });
+    return result;
+  };
+
+  // Helper function to handle media input
+  const handleMediaInput = (mediaType: 'photo' | 'video' | 'audio' | 'document') => {
+    const currentNode = nodes.find(n => n.id === currentNodeId);
+    if (!currentNode) return;
+
+    const mediaConfig = {
+      photo: {
+        emoji: '📷',
+        text: 'Отправил фото',
+        fileIdPrefix: 'simulated_photo_file_id',
+        variableKey: currentNode.data.photoInputVariable
+      },
+      video: {
+        emoji: '🎥',
+        text: 'Отправил видео',
+        fileIdPrefix: 'simulated_video_file_id',
+        variableKey: currentNode.data.videoInputVariable
+      },
+      audio: {
+        emoji: '🎵',
+        text: 'Отправил аудио',
+        fileIdPrefix: 'simulated_audio_file_id',
+        variableKey: currentNode.data.audioInputVariable
+      },
+      document: {
+        emoji: '📄',
+        text: 'Отправил документ',
+        fileIdPrefix: 'simulated_document_file_id',
+        variableKey: currentNode.data.documentInputVariable
+      }
+    };
+
+    const config = mediaConfig[mediaType];
+    const fileId = `${config.fileIdPrefix}_${Math.random().toString(36).substring(2, 15)}`;
+    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+    // Add user message
+    const userMessage = {
+      id: `msg-${Date.now()}-user`,
+      type: 'user' as const,
+      text: `${config.emoji} ${config.text}`,
+      time
+    };
+
+    setMessageHistory(prev => [...prev, userMessage]);
+
+    // Save file_id to user variables if variable key is specified
+    if (config.variableKey) {
+      const varKey = config.variableKey;
+      setUserVariables(prev => ({
+        ...prev,
+        [varKey]: fileId
+      }));
+    }
+
+    // Clear waiting states
+    setWaitingForPhoto(false);
+    setWaitingForVideo(false);
+    setWaitingForAudio(false);
+    setWaitingForDocument(false);
+    setWaitingForInput(false);
+
+    // Navigate to target node if specified
+    if (currentNode.data.inputTargetNodeId) {
+      const targetNode = nodes.find(node => node.id === currentNode.data.inputTargetNodeId);
+      if (targetNode) {
+        setTimeout(() => {
+          setCurrentNodeId(targetNode.id);
+          
+          let responseText = targetNode.data.messageText || '';
+          if (responseText) {
+            responseText = replaceVariables(responseText);
+          }
+
+          const targetMediaInfo = getMediaInfo(targetNode);
+          
+          let buttons;
+          if (targetNode.data.keyboardType !== 'none' && targetNode.data.buttons) {
+            buttons = targetNode.data.buttons.map(btn => ({
+              text: btn.text,
+              target: btn.target,
+              action: btn.action
+            }));
+          }
+
+          const botResponse = {
+            id: `msg-${Date.now()}-bot`,
+            type: 'bot' as const,
+            text: responseText,
+            time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+            buttons,
+            keyboardType: targetNode.data.keyboardType,
+            ...targetMediaInfo
+          };
+
+          setMessageHistory(prev => [...prev, botResponse]);
+          
+          // Update reply keyboard
+          if (targetNode.data.keyboardType === 'reply' && buttons) {
+            setCurrentReplyKeyboard(buttons);
+          } else if (targetNode.data.keyboardType === 'none') {
+            setCurrentReplyKeyboard(null);
+          }
+          
+          // Check if target node expects input
+          checkNodeInputRequirements(targetNode);
+        }, 500);
+      }
+    }
+  };
+
+  // Helper function to check node input requirements and set waiting states
+  const checkNodeInputRequirements = (node: Node) => {
+    setWaitingForInput(false);
+    setWaitingForPhoto(false);
+    setWaitingForVideo(false);
+    setWaitingForAudio(false);
+    setWaitingForDocument(false);
+
+    if (node.data.keyboardType === 'none') {
+      if (node.data.enableTextInput) {
+        setWaitingForInput(true);
+      }
+      if (node.data.enablePhotoInput) {
+        setWaitingForPhoto(true);
+      }
+      if (node.data.enableVideoInput) {
+        setWaitingForVideo(true);
+      }
+      if (node.data.enableAudioInput) {
+        setWaitingForAudio(true);
+      }
+      if (node.data.enableDocumentInput) {
+        setWaitingForDocument(true);
+      }
     }
   };
 
@@ -208,8 +344,7 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
     }
     
     // Check if this node expects input
-    const inputNode = nodes.find(node => node.type === 'input');
-    setWaitingForInput(!!inputNode && startNode.data.keyboardType === 'none');
+    checkNodeInputRequirements(startNode);
   };
 
   const handleButtonClick = (buttonText: string, target?: string, action?: string) => {
@@ -231,7 +366,13 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
     };
 
     setMessageHistory(prev => [...prev, userMessage]);
+    
+    // Clear all waiting states
     setWaitingForInput(false);
+    setWaitingForPhoto(false);
+    setWaitingForVideo(false);
+    setWaitingForAudio(false);
+    setWaitingForDocument(false);
 
     // Navigate to target node if exists
     setTimeout(() => {
@@ -264,23 +405,17 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
           // Get appropriate text and media based on node type
           let responseText = '';
           if (targetNode.data.messageText) {
-            responseText = targetNode.data.messageText;
+            responseText = replaceVariables(targetNode.data.messageText);
           } else if (targetNode.type === 'command') {
             responseText = `Команда: ${targetNode.data.command || 'Неизвестная команда'}`;
           } else if (targetNode.type === 'start') {
             responseText = `Стартовая команда: ${targetNode.data.command || '/start'}`;
-          } else if (targetNode.type === 'input') {
-            responseText = 'Ожидаю ввод...';
           } else if (['photo', 'video', 'audio', 'document', 'sticker', 'voice', 'animation'].includes(targetNode.type)) {
             responseText = targetNode.data.mediaCaption || '';
           } else if (targetNode.type === 'location') {
             responseText = targetNode.data.title || 'Локация';
           } else if (targetNode.type === 'contact') {
             responseText = `${targetNode.data.firstName || 'Имя'} ${targetNode.data.lastName || ''}`.trim();
-          } else if (targetNode.type === 'poll') {
-            responseText = targetNode.data.question || 'Опрос';
-          } else if (targetNode.type === 'dice') {
-            responseText = `Кубик ${targetNode.data.emoji || '🎲'}`;
           } else {
             responseText = 'Сообщение';
           }
@@ -324,9 +459,7 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
           }
           
           // Check if target node expects input
-          const expectsTextInput = targetNode.type === 'input' && 
-                                  targetNode.data.keyboardType === 'none';
-          setWaitingForInput(expectsTextInput);
+          checkNodeInputRequirements(targetNode);
         } else {
           // Node not found - show error
           let errorText = '';
@@ -420,6 +553,11 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
     setCurrentReplyKeyboard(null);
     setTextInput('');
     setWaitingForInput(false);
+    setWaitingForPhoto(false);
+    setWaitingForVideo(false);
+    setWaitingForAudio(false);
+    setWaitingForDocument(false);
+    setUserVariables({});
   };
 
   return (
@@ -776,6 +914,56 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
 
         {/* Text Input Area */}
         <div className="p-4 border-t border-gray-200 bg-white">
+          {/* Media Input Buttons */}
+          {(waitingForPhoto || waitingForVideo || waitingForAudio || waitingForDocument) && (
+            <div className="mb-3">
+              <p className="text-xs text-gray-600 mb-2">Бот ожидает ввод:</p>
+              <div className="grid grid-cols-2 gap-2">
+                {waitingForPhoto && (
+                  <Button
+                    onClick={() => handleMediaInput('photo')}
+                    variant="outline"
+                    className="flex items-center justify-center gap-2"
+                    data-testid="button-send-photo"
+                  >
+                    📷 Отправить фото
+                  </Button>
+                )}
+                {waitingForVideo && (
+                  <Button
+                    onClick={() => handleMediaInput('video')}
+                    variant="outline"
+                    className="flex items-center justify-center gap-2"
+                    data-testid="button-send-video"
+                  >
+                    🎥 Отправить видео
+                  </Button>
+                )}
+                {waitingForAudio && (
+                  <Button
+                    onClick={() => handleMediaInput('audio')}
+                    variant="outline"
+                    className="flex items-center justify-center gap-2"
+                    data-testid="button-send-audio"
+                  >
+                    🎵 Отправить аудио
+                  </Button>
+                )}
+                {waitingForDocument && (
+                  <Button
+                    onClick={() => handleMediaInput('document')}
+                    variant="outline"
+                    className="flex items-center justify-center gap-2"
+                    data-testid="button-send-document"
+                  >
+                    📄 Отправить документ
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Text Input */}
           <div className="flex items-center space-x-2 mb-3">
             <Input
               ref={inputRef}
@@ -785,11 +973,13 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
               placeholder={waitingForInput ? "Бот ожидает ввод..." : "Введите сообщение..."}
               className="flex-1"
               disabled={!messageHistory.length}
+              data-testid="input-message"
             />
             <Button
               onClick={handleSendText}
               disabled={!textInput.trim() || !messageHistory.length}
               size="sm"
+              data-testid="button-send-message"
             >
               <i className="fas fa-paper-plane"></i>
             </Button>

@@ -709,6 +709,14 @@ export const nodeSchema = z.object({
     city: z.string().optional(),
     country: z.string().optional(),
     enableTextInput: z.boolean().optional(),
+    enablePhotoInput: z.boolean().optional(), // Включить ввод фото
+    enableVideoInput: z.boolean().optional(), // Включить ввод видео
+    enableAudioInput: z.boolean().optional(), // Включить ввод аудио
+    enableDocumentInput: z.boolean().optional(), // Включить ввод документа
+    photoInputVariable: z.string().optional(), // Переменная для сохранения file_id фото
+    videoInputVariable: z.string().optional(), // Переменная для сохранения file_id видео
+    audioInputVariable: z.string().optional(), // Переменная для сохранения file_id аудио
+    documentInputVariable: z.string().optional(), // Переменная для сохранения file_id документа
     name: z.string().optional(),
     label: z.string().optional(),
     checkmarkSymbol: z.string().optional(),

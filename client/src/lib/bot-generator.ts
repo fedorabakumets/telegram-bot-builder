@@ -114,6 +114,18 @@ function hasInputCollection(nodes: Node[]): boolean {
   // Проверяем узлы с enableTextInput
   const hasTextInput = nodes.some(node => node.data.enableTextInput);
   
+  // Проверяем узлы с enablePhotoInput
+  const hasPhotoInput = nodes.some(node => node.data.enablePhotoInput);
+  
+  // Проверяем узлы с enableVideoInput
+  const hasVideoInput = nodes.some(node => node.data.enableVideoInput);
+  
+  // Проверяем узлы с enableAudioInput
+  const hasAudioInput = nodes.some(node => node.data.enableAudioInput);
+  
+  // Проверяем узлы с enableDocumentInput
+  const hasDocumentInput = nodes.some(node => node.data.enableDocumentInput);
+  
   // Проверяем условные сообщения с waitForTextInput
   const hasConditionalInput = nodes.some(node => {
     const conditions = node.data.conditionalMessages;
@@ -121,7 +133,7 @@ function hasInputCollection(nodes: Node[]): boolean {
     return conditions.some((cond: any) => cond.waitForTextInput);
   });
   
-  return hasCollectInput || hasTextInput || hasConditionalInput;
+  return hasCollectInput || hasTextInput || hasPhotoInput || hasVideoInput || hasAudioInput || hasDocumentInput || hasConditionalInput;
 }
 
 // Функция для проверки наличия медиа-файлов
@@ -2190,11 +2202,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 const inputTargetNodeId = targetNode.data.inputTargetNodeId;
                 
-                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки И НЕТ текстового ввода, НЕ настраиваем ожидание ввода
-                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0 && !targetNode.data.enableTextInput) {
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки И НЕТ текстового/медиа ввода, НЕ настраиваем ожидание ввода
+                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0 && 
+                    !targetNode.data.enableTextInput && !targetNode.data.enablePhotoInput && 
+                    !targetNode.data.enableVideoInput && !targetNode.data.enableAudioInput && 
+                    !targetNode.data.enableDocumentInput) {
                   code += '    \n';
-                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет кнопки БЕЗ текстового ввода - НЕ настраиваем ожидание ввода")\n`;
-                  code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового ввода\n`;
+                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет кнопки БЕЗ текстового/медиа ввода - НЕ настраиваем ожидание ввода")\n`;
+                  code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового/медиа ввода\n`;
                 } else {
                   code += '    \n';
                   code += `    logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
@@ -2257,6 +2272,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               code += `    photo_url = "${imageUrl}"\n`;
+              code += '    photo_url = replace_variables_in_text(photo_url, user_vars)\n';
               code += '    try:\n';
               code += '        # Проверяем, является ли это локальным файлом\n';
               code += '        if is_local_file(photo_url):\n';
@@ -2355,6 +2371,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               code += `    video_url = "${videoUrl}"\n`;
+              code += '    video_url = replace_variables_in_text(video_url, user_vars)\n';
               code += '    try:\n';
               code += '        # Проверяем, является ли это локальным файлом\n';
               code += '        if is_local_file(video_url):\n';
@@ -2453,6 +2470,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               code += `    audio_url = "${audioUrl}"\n`;
+              code += '    audio_url = replace_variables_in_text(audio_url, user_vars)\n';
               code += '    try:\n';
               code += '        # Проверяем, является ли это локальным файлом\n';
               code += '        if is_local_file(audio_url):\n';
@@ -2524,6 +2542,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               code += `    document_url = "${documentUrl}"\n`;
+              code += '    document_url = replace_variables_in_text(document_url, user_vars)\n';
               const documentName = targetNode.data.documentName || "document.pdf";
               code += `    document_name = "${documentName}"\n`;
               code += '    try:\n';
@@ -3156,6 +3175,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 
                 // Применяем универсальную замену переменных в подписи
                 code += generateUniversalVariableReplacement('    ');
+                code += '    photo_url = replace_variables_in_text(photo_url, user_vars)\n';
                 
                 if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
                   code += '    # Создаем inline клавиатуру для фото\n';
@@ -4084,8 +4104,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '            fake_message.date = callback_query.message.date\n';
                   code += '            fake_message.answer = callback_query.message.answer\n';
                   code += `            await ${handlerName}(fake_message)\n`;
-                } else if (navTargetNode.type === 'keyboard' && navTargetNode.data.enableTextInput) {
-                  // Обрабатываем узлы ввода текста с поддержкой условных сообщений
+                } else if (navTargetNode.type === 'keyboard' && (navTargetNode.data.enableTextInput || 
+                                                                  navTargetNode.data.enablePhotoInput || 
+                                                                  navTargetNode.data.enableVideoInput || 
+                                                                  navTargetNode.data.enableAudioInput || 
+                                                                  navTargetNode.data.enableDocumentInput)) {
+                  // Обрабатываем узлы ввода текста/медиа с поддержкой условных сообщений
                   const messageText = navTargetNode.data.messageText || 'Введите ваш ответ:';
                   const inputVariable = navTargetNode.data.inputVariable || `response_${navTargetNode.id}`;
                   const inputTargetNodeId = navTargetNode.data.inputTargetNodeId || '';
@@ -6025,6 +6049,273 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '    \n';
   code += '    # Если нет активного ожидания ввода, игнорируем сообщение\n';
   code += '    return\n';
+  
+  // Добавляем обработчик для фото
+  const hasPhotoInput = (nodes || []).some(node => node.data.enablePhotoInput);
+  if (hasPhotoInput) {
+    code += '\n\n# Обработчик получения фото от пользователя\n';
+    code += '@dp.message(F.photo)\n';
+    code += 'async def handle_photo_input(message: types.Message):\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    logging.info(f"📸 Получено фото от пользователя {user_id}")\n';
+    code += '    \n';
+    code += '    # Проверяем, ожидаем ли мы ввод фото\n';
+    code += '    if user_id not in user_data or "waiting_for_photo" not in user_data[user_id]:\n';
+    code += '        logging.info(f"Фото от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
+    code += '        return\n';
+    code += '    \n';
+    code += '    # Получаем конфигурацию ожидания\n';
+    code += '    photo_config = user_data[user_id]["waiting_for_photo"]\n';
+    code += '    photo_variable = photo_config.get("variable", "user_photo")\n';
+    code += '    node_id = photo_config.get("node_id", "unknown")\n';
+    code += '    next_node_id = photo_config.get("next_node_id")\n';
+    code += '    \n';
+    code += '    # Получаем file_id фото (берем последнее - лучшее качество)\n';
+    code += '    photo_file_id = message.photo[-1].file_id\n';
+    code += '    logging.info(f"📸 Получен file_id фото: {photo_file_id}")\n';
+    code += '    \n';
+    code += '    # Сохраняем в пользовательские данные\n';
+    code += '    user_data[user_id][photo_variable] = photo_file_id\n';
+    code += '    \n';
+    code += '    # Сохраняем в базу данных\n';
+    code += '    saved_to_db = await update_user_data_in_db(user_id, photo_variable, photo_file_id)\n';
+    code += '    if saved_to_db:\n';
+    code += '        logging.info(f"✅ Фото сохранено в БД: {photo_variable} = {photo_file_id} (пользователь {user_id})")\n';
+    code += '    else:\n';
+    code += '        logging.warning(f"⚠️ Не удалось сохранить фото в БД, данные сохранены локально")\n';
+    code += '    \n';
+    code += '    # Отправляем подтверждение\n';
+    code += '    await message.answer("✅ Фото получено и сохранено!")\n';
+    code += '    \n';
+    code += '    # Очищаем состояние ожидания\n';
+    code += '    del user_data[user_id]["waiting_for_photo"]\n';
+    code += '    \n';
+    code += '    logging.info(f"📸 Фото сохранено: {photo_variable} = {photo_file_id}")\n';
+    code += '    \n';
+    code += '    # Переходим к следующему узлу если указан\n';
+    code += '    if next_node_id:\n';
+    code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+    code += '        try:\n';
+    
+    // Добавляем навигацию для каждого узла
+    if (nodes.length > 0) {
+      nodes.forEach((targetNode, index) => {
+        const condition = index === 0 ? 'if' : 'elif';
+        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+        code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
+        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="photo_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+      });
+      code += '            else:\n';
+      code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    }
+    
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+    code += '    \n';
+    code += '    return\n';
+  }
+  
+  // Добавляем обработчик для видео
+  const hasVideoInput = (nodes || []).some(node => node.data.enableVideoInput);
+  if (hasVideoInput) {
+    code += '\n\n# Обработчик получения видео от пользователя\n';
+    code += '@dp.message(F.video)\n';
+    code += 'async def handle_video_input(message: types.Message):\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    logging.info(f"🎥 Получено видео от пользователя {user_id}")\n';
+    code += '    \n';
+    code += '    # Проверяем, ожидаем ли мы ввод видео\n';
+    code += '    if user_id not in user_data or "waiting_for_video" not in user_data[user_id]:\n';
+    code += '        logging.info(f"Видео от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
+    code += '        return\n';
+    code += '    \n';
+    code += '    # Получаем конфигурацию ожидания\n';
+    code += '    video_config = user_data[user_id]["waiting_for_video"]\n';
+    code += '    video_variable = video_config.get("variable", "user_video")\n';
+    code += '    node_id = video_config.get("node_id", "unknown")\n';
+    code += '    next_node_id = video_config.get("next_node_id")\n';
+    code += '    \n';
+    code += '    # Получаем file_id видео\n';
+    code += '    video_file_id = message.video.file_id\n';
+    code += '    logging.info(f"🎥 Получен file_id видео: {video_file_id}")\n';
+    code += '    \n';
+    code += '    # Сохраняем в пользовательские данные\n';
+    code += '    user_data[user_id][video_variable] = video_file_id\n';
+    code += '    \n';
+    code += '    # Сохраняем в базу данных\n';
+    code += '    saved_to_db = await update_user_data_in_db(user_id, video_variable, video_file_id)\n';
+    code += '    if saved_to_db:\n';
+    code += '        logging.info(f"✅ Видео сохранено в БД: {video_variable} = {video_file_id} (пользователь {user_id})")\n';
+    code += '    else:\n';
+    code += '        logging.warning(f"⚠️ Не удалось сохранить видео в БД, данные сохранены локально")\n';
+    code += '    \n';
+    code += '    # Отправляем подтверждение\n';
+    code += '    await message.answer("✅ Видео получено и сохранено!")\n';
+    code += '    \n';
+    code += '    # Очищаем состояние ожидания\n';
+    code += '    del user_data[user_id]["waiting_for_video"]\n';
+    code += '    \n';
+    code += '    logging.info(f"🎥 Видео сохранено: {video_variable} = {video_file_id}")\n';
+    code += '    \n';
+    code += '    # Переходим к следующему узлу если указан\n';
+    code += '    if next_node_id:\n';
+    code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+    code += '        try:\n';
+    
+    // Добавляем навигацию для каждого узла
+    if (nodes.length > 0) {
+      nodes.forEach((targetNode, index) => {
+        const condition = index === 0 ? 'if' : 'elif';
+        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+        code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
+        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="video_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+      });
+      code += '            else:\n';
+      code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    }
+    
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+    code += '    \n';
+    code += '    return\n';
+  }
+  
+  // Добавляем обработчик для аудио
+  const hasAudioInput = (nodes || []).some(node => node.data.enableAudioInput);
+  if (hasAudioInput) {
+    code += '\n\n# Обработчик получения аудио от пользователя\n';
+    code += '@dp.message(F.audio | F.voice)\n';
+    code += 'async def handle_audio_input(message: types.Message):\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    logging.info(f"🎵 Получено аудио от пользователя {user_id}")\n';
+    code += '    \n';
+    code += '    # Проверяем, ожидаем ли мы ввод аудио\n';
+    code += '    if user_id not in user_data or "waiting_for_audio" not in user_data[user_id]:\n';
+    code += '        logging.info(f"Аудио от пользователя {user_id} проигнорировано - не ожидается ввод")\n';
+    code += '        return\n';
+    code += '    \n';
+    code += '    # Получаем конфигурацию ожидания\n';
+    code += '    audio_config = user_data[user_id]["waiting_for_audio"]\n';
+    code += '    audio_variable = audio_config.get("variable", "user_audio")\n';
+    code += '    node_id = audio_config.get("node_id", "unknown")\n';
+    code += '    next_node_id = audio_config.get("next_node_id")\n';
+    code += '    \n';
+    code += '    # Получаем file_id аудио (поддерживаем и audio, и voice)\n';
+    code += '    if message.audio:\n';
+    code += '        audio_file_id = message.audio.file_id\n';
+    code += '    elif message.voice:\n';
+    code += '        audio_file_id = message.voice.file_id\n';
+    code += '    else:\n';
+    code += '        logging.error("Не удалось получить file_id аудио")\n';
+    code += '        return\n';
+    code += '    logging.info(f"🎵 Получен file_id аудио: {audio_file_id}")\n';
+    code += '    \n';
+    code += '    # Сохраняем в пользовательские данные\n';
+    code += '    user_data[user_id][audio_variable] = audio_file_id\n';
+    code += '    \n';
+    code += '    # Сохраняем в базу данных\n';
+    code += '    saved_to_db = await update_user_data_in_db(user_id, audio_variable, audio_file_id)\n';
+    code += '    if saved_to_db:\n';
+    code += '        logging.info(f"✅ Аудио сохранено в БД: {audio_variable} = {audio_file_id} (пользователь {user_id})")\n';
+    code += '    else:\n';
+    code += '        logging.warning(f"⚠️ Не удалось сохранить аудио в БД, данные сохранены локально")\n';
+    code += '    \n';
+    code += '    # Отправляем подтверждение\n';
+    code += '    await message.answer("✅ Аудио получено и сохранено!")\n';
+    code += '    \n';
+    code += '    # Очищаем состояние ожидания\n';
+    code += '    del user_data[user_id]["waiting_for_audio"]\n';
+    code += '    \n';
+    code += '    logging.info(f"🎵 Аудио сохранено: {audio_variable} = {audio_file_id}")\n';
+    code += '    \n';
+    code += '    # Переходим к следующему узлу если указан\n';
+    code += '    if next_node_id:\n';
+    code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+    code += '        try:\n';
+    
+    // Добавляем навигацию для каждого узла
+    if (nodes.length > 0) {
+      nodes.forEach((targetNode, index) => {
+        const condition = index === 0 ? 'if' : 'elif';
+        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+        code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
+        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="audio_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+      });
+      code += '            else:\n';
+      code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    }
+    
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+    code += '    \n';
+    code += '    return\n';
+  }
+  
+  // Добавляем обработчик для документов
+  const hasDocumentInput = (nodes || []).some(node => node.data.enableDocumentInput);
+  if (hasDocumentInput) {
+    code += '\n\n# Обработчик получения документа от пользователя\n';
+    code += '@dp.message(F.document)\n';
+    code += 'async def handle_document_input(message: types.Message):\n';
+    code += '    user_id = message.from_user.id\n';
+    code += '    logging.info(f"📄 Получен документ от пользователя {user_id}")\n';
+    code += '    \n';
+    code += '    # Проверяем, ожидаем ли мы ввод документа\n';
+    code += '    if user_id not in user_data or "waiting_for_document" not in user_data[user_id]:\n';
+    code += '        logging.info(f"Документ от пользователя {user_id} проигнорирован - не ожидается ввод")\n';
+    code += '        return\n';
+    code += '    \n';
+    code += '    # Получаем конфигурацию ожидания\n';
+    code += '    document_config = user_data[user_id]["waiting_for_document"]\n';
+    code += '    document_variable = document_config.get("variable", "user_document")\n';
+    code += '    node_id = document_config.get("node_id", "unknown")\n';
+    code += '    next_node_id = document_config.get("next_node_id")\n';
+    code += '    \n';
+    code += '    # Получаем file_id документа\n';
+    code += '    document_file_id = message.document.file_id\n';
+    code += '    logging.info(f"📄 Получен file_id документа: {document_file_id}")\n';
+    code += '    \n';
+    code += '    # Сохраняем в пользовательские данные\n';
+    code += '    user_data[user_id][document_variable] = document_file_id\n';
+    code += '    \n';
+    code += '    # Сохраняем в базу данных\n';
+    code += '    saved_to_db = await update_user_data_in_db(user_id, document_variable, document_file_id)\n';
+    code += '    if saved_to_db:\n';
+    code += '        logging.info(f"✅ Документ сохранен в БД: {document_variable} = {document_file_id} (пользователь {user_id})")\n';
+    code += '    else:\n';
+    code += '        logging.warning(f"⚠️ Не удалось сохранить документ в БД, данные сохранены локально")\n';
+    code += '    \n';
+    code += '    # Отправляем подтверждение\n';
+    code += '    await message.answer("✅ Документ получен и сохранен!")\n';
+    code += '    \n';
+    code += '    # Очищаем состояние ожидания\n';
+    code += '    del user_data[user_id]["waiting_for_document"]\n';
+    code += '    \n';
+    code += '    logging.info(f"📄 Документ сохранен: {document_variable} = {document_file_id}")\n';
+    code += '    \n';
+    code += '    # Переходим к следующему узлу если указан\n';
+    code += '    if next_node_id:\n';
+    code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
+    code += '        try:\n';
+    
+    // Добавляем навигацию для каждого узла
+    if (nodes.length > 0) {
+      nodes.forEach((targetNode, index) => {
+        const condition = index === 0 ? 'if' : 'elif';
+        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
+        code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
+        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="document_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+      });
+      code += '            else:\n';
+      code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    }
+    
+    code += '        except Exception as e:\n';
+    code += '            logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+    code += '    \n';
+    code += '    return\n';
+  }
+  
   code += '    # Валидация длины текста\n';
   code += '    min_length = input_config.get("min_length", 0)\n';
   code += '    max_length = input_config.get("max_length", 0)\n';
@@ -6187,6 +6478,62 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `                    "node_id": "${targetNode.id}",\n`;
           code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
           code += '                }\n';
+        }
+        
+        // Проверяем, нужно ли настроить ожидание ввода фото
+        if (targetNode.data.enablePhotoInput) {
+          const photoVariable = targetNode.data.photoInputVariable || `photo_${targetNode.id}`;
+          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
+          
+          code += '                # Настраиваем ожидание ввода фото\n';
+          code += '                user_data[user_id]["waiting_for_photo"] = {\n';
+          code += `                    "variable": "${photoVariable}",\n`;
+          code += `                    "node_id": "${targetNode.id}",\n`;
+          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
+          code += '                }\n';
+          code += `                logging.info(f"✅ Настроено ожидание фото: {photoVariable}")\n`;
+        }
+        
+        // Проверяем, нужно ли настроить ожидание ввода видео
+        if (targetNode.data.enableVideoInput) {
+          const videoVariable = targetNode.data.videoInputVariable || `video_${targetNode.id}`;
+          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
+          
+          code += '                # Настраиваем ожидание ввода видео\n';
+          code += '                user_data[user_id]["waiting_for_video"] = {\n';
+          code += `                    "variable": "${videoVariable}",\n`;
+          code += `                    "node_id": "${targetNode.id}",\n`;
+          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
+          code += '                }\n';
+          code += `                logging.info(f"✅ Настроено ожидание видео: {videoVariable}")\n`;
+        }
+        
+        // Проверяем, нужно ли настроить ожидание ввода аудио
+        if (targetNode.data.enableAudioInput) {
+          const audioVariable = targetNode.data.audioInputVariable || `audio_${targetNode.id}`;
+          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
+          
+          code += '                # Настраиваем ожидание ввода аудио\n';
+          code += '                user_data[user_id]["waiting_for_audio"] = {\n';
+          code += `                    "variable": "${audioVariable}",\n`;
+          code += `                    "node_id": "${targetNode.id}",\n`;
+          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
+          code += '                }\n';
+          code += `                logging.info(f"✅ Настроено ожидание аудио: {audioVariable}")\n`;
+        }
+        
+        // Проверяем, нужно ли настроить ожидание ввода документа
+        if (targetNode.data.enableDocumentInput) {
+          const documentVariable = targetNode.data.documentInputVariable || `document_${targetNode.id}`;
+          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
+          
+          code += '                # Настраиваем ожидание ввода документа\n';
+          code += '                user_data[user_id]["waiting_for_document"] = {\n';
+          code += `                    "variable": "${documentVariable}",\n`;
+          code += `                    "node_id": "${targetNode.id}",\n`;
+          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
+          code += '                }\n';
+          code += `                logging.info(f"✅ Настроено ожидание документа: {documentVariable}")\n`;
         }
       } else if (targetNode.type === 'message') {
         // Добавляем поддержку условных сообщений для узлов сообщений
@@ -7716,6 +8063,7 @@ function generatePhotoHandler(node: Node): string {
     code += '    \n';
     
     code += `    photo_url = "${imageUrl}"\n`;
+    code += '    photo_url = replace_variables_in_text(photo_url, user_vars)\n';
     code += '    \n';
     code += '    try:\n';
     code += '        # Проверяем, является ли это локальным файлом\n';
@@ -7804,6 +8152,12 @@ function generateVideoHandler(node: Node): string {
     }
     
     code += `    video_url = "${videoUrl}"\n`;
+    
+    // Добавляем замену переменных для видео URL
+    code += '    \n';
+    code += generateUniversalVariableReplacement('    ');
+    code += '    video_url = replace_variables_in_text(video_url, user_vars)\n';
+    
     if (duration > 0) code += `    duration = ${duration}\n`;
     if (fileSize > 0) code += `    file_size = ${fileSize * 1024 * 1024}\n`;  // Convert MB to bytes
     code += '    \n';
@@ -7884,6 +8238,12 @@ function generateAudioHandler(node: Node): string {
     }
     
     code += `    audio_url = "${audioUrl}"\n`;
+    
+    // Добавляем замену переменных для аудио URL
+    code += '    \n';
+    code += generateUniversalVariableReplacement('    ');
+    code += '    audio_url = replace_variables_in_text(audio_url, user_vars)\n';
+    
     if (duration > 0) code += `    duration = ${duration}\n`;
     if (performer) code += `    performer = "${performer}"\n`;
     if (title) code += `    title = "${title}"\n`;
@@ -7977,6 +8337,12 @@ function generateDocumentHandler(node: Node): string {
     }
     
     code += `    document_url = "${documentUrl}"\n`;
+    
+    // Добавляем замену переменных для document URL
+    code += '    \n';
+    code += generateUniversalVariableReplacement('    ');
+    code += '    document_url = replace_variables_in_text(document_url, user_vars)\n';
+    
     code += `    document_name = "${documentName}"\n`;
     if (fileSize > 0) code += `    file_size = ${fileSize * 1024 * 1024}\n`;  // Convert MB to bytes
     if (mimeType) code += `    mime_type = "${mimeType}"\n`;
@@ -10706,13 +11072,15 @@ function generateKeyboard(node: Node): string {
   // Определяем есть ли обычные кнопки у узла
   const hasRegularButtons = node.data.keyboardType !== "none" && node.data.buttons && node.data.buttons.length > 0;
   
-  // Определяем включен ли сбор пользовательского ввода ИЛИ текстовый ввод
-  const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true;
+  // Определяем включен ли сбор пользовательского ввода ИЛИ текстовый/медиа ввод
+  const hasInputCollection = node.data.collectUserInput === true || node.data.enableTextInput === true || 
+                             node.data.enablePhotoInput === true || node.data.enableVideoInput === true || 
+                             node.data.enableAudioInput === true || node.data.enableDocumentInput === true;
   
   // Добавляем логирование для отладки (используем Python переменные)
   code += `    has_regular_buttons = ${toPythonBoolean(hasRegularButtons)}\n`;
   code += `    has_input_collection = ${toPythonBoolean(hasInputCollection)}\n`;
-  code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=${node.data.collectUserInput}, enableTextInput=${node.data.enableTextInput}")\n`;
+  code += `    logging.info(f"DEBUG: generateKeyboard для узла ${node.id} - hasRegularButtons={has_regular_buttons}, hasInputCollection={has_input_collection}, collectUserInput=${node.data.collectUserInput}, enableTextInput=${node.data.enableTextInput}, enablePhotoInput=${node.data.enablePhotoInput}, enableVideoInput=${node.data.enableVideoInput}, enableAudioInput=${node.data.enableAudioInput}, enableDocumentInput=${node.data.enableDocumentInput}")\n`;
   
   // CASE 1: Есть обычные кнопки + сбор ввода = обычные кнопки работают + дополнительно сохраняются как ответы
   if (hasRegularButtons && hasInputCollection) {

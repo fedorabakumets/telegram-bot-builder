@@ -3953,6 +3953,158 @@ export function PropertiesPanel({
                   </div>
                 </div>
 
+                {/* Photo Input Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                  <div className="flex-1">
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                      <i className="fas fa-image mr-1"></i>
+                      Ввод фото
+                    </Label>
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      Бот будет ожидать фото от пользователя и сохранит file_id в переменную
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <Switch
+                      checked={selectedNode.data.enablePhotoInput ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enablePhotoInput: checked })}
+                    />
+                  </div>
+                </div>
+
+                {/* Photo Input Variable */}
+                {selectedNode.data.enablePhotoInput && (
+                  <div>
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                      <i className="fas fa-tag mr-1"></i>
+                      Переменная для фото
+                    </Label>
+                    <Input
+                      value={selectedNode.data.photoInputVariable || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { photoInputVariable: e.target.value })}
+                      className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                      placeholder="user_photo"
+                    />
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      В эту переменную сохранится file_id фото для использования в последующих сообщениях
+                    </div>
+                  </div>
+                )}
+
+                {/* Video Input Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                  <div className="flex-1">
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                      <i className="fas fa-video mr-1"></i>
+                      Ввод видео
+                    </Label>
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      Бот будет ожидать видео от пользователя и сохранит file_id в переменную
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <Switch
+                      checked={selectedNode.data.enableVideoInput ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableVideoInput: checked })}
+                    />
+                  </div>
+                </div>
+
+                {/* Video Input Variable */}
+                {selectedNode.data.enableVideoInput && (
+                  <div>
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                      <i className="fas fa-tag mr-1"></i>
+                      Переменная для видео
+                    </Label>
+                    <Input
+                      value={selectedNode.data.videoInputVariable || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { videoInputVariable: e.target.value })}
+                      className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                      placeholder="user_video"
+                    />
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      В эту переменную сохранится file_id видео для использования в последующих сообщениях
+                    </div>
+                  </div>
+                )}
+
+                {/* Audio Input Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                  <div className="flex-1">
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                      <i className="fas fa-music mr-1"></i>
+                      Ввод аудио
+                    </Label>
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      Бот будет ожидать аудио от пользователя и сохранит file_id в переменную
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <Switch
+                      checked={selectedNode.data.enableAudioInput ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAudioInput: checked })}
+                    />
+                  </div>
+                </div>
+
+                {/* Audio Input Variable */}
+                {selectedNode.data.enableAudioInput && (
+                  <div>
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                      <i className="fas fa-tag mr-1"></i>
+                      Переменная для аудио
+                    </Label>
+                    <Input
+                      value={selectedNode.data.audioInputVariable || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { audioInputVariable: e.target.value })}
+                      className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                      placeholder="user_audio"
+                    />
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      В эту переменную сохранится file_id аудио для использования в последующих сообщениях
+                    </div>
+                  </div>
+                )}
+
+                {/* Document Input Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                  <div className="flex-1">
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                      <i className="fas fa-file mr-1"></i>
+                      Ввод документа
+                    </Label>
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      Бот будет ожидать документ от пользователя и сохранит file_id в переменную
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <Switch
+                      checked={selectedNode.data.enableDocumentInput ?? false}
+                      onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableDocumentInput: checked })}
+                    />
+                  </div>
+                </div>
+
+                {/* Document Input Variable */}
+                {selectedNode.data.enableDocumentInput && (
+                  <div>
+                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
+                      <i className="fas fa-tag mr-1"></i>
+                      Переменная для документа
+                    </Label>
+                    <Input
+                      value={selectedNode.data.documentInputVariable || ''}
+                      onChange={(e) => onNodeUpdate(selectedNode.id, { documentInputVariable: e.target.value })}
+                      className="border-purple-200 dark:border-purple-700 focus:border-purple-500 focus:ring-purple-200"
+                      placeholder="user_document"
+                    />
+                    <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                      В эту переменную сохранится file_id документа для использования в последующих сообщениях
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
                     <i className="fas fa-code mr-1"></i>
@@ -4111,7 +4263,141 @@ export function PropertiesPanel({
                     </div>
                   </div>
 
+                  {/* Photo Input Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-blue-200/30 dark:border-blue-800/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        <i className="fas fa-image mr-1"></i>
+                        Ввод фото
+                      </Label>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Бот будет ожидать фото от пользователя и сохранит file_id в переменную
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.enablePhotoInput ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enablePhotoInput: checked })}
+                      />
+                    </div>
+                  </div>
 
+                  {selectedNode.data.enablePhotoInput && (
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-tag mr-1"></i>
+                        Переменная для фото
+                      </Label>
+                      <Input
+                        value={selectedNode.data.photoInputVariable || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { photoInputVariable: e.target.value })}
+                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                        placeholder="user_photo"
+                      />
+                    </div>
+                  )}
+
+                  {/* Video Input Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-blue-200/30 dark:border-blue-800/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        <i className="fas fa-video mr-1"></i>
+                        Ввод видео
+                      </Label>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Бот будет ожидать видео от пользователя и сохранит file_id в переменную
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.enableVideoInput ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableVideoInput: checked })}
+                      />
+                    </div>
+                  </div>
+
+                  {selectedNode.data.enableVideoInput && (
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-tag mr-1"></i>
+                        Переменная для видео
+                      </Label>
+                      <Input
+                        value={selectedNode.data.videoInputVariable || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { videoInputVariable: e.target.value })}
+                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                        placeholder="user_video"
+                      />
+                    </div>
+                  )}
+
+                  {/* Audio Input Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-blue-200/30 dark:border-blue-800/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        <i className="fas fa-music mr-1"></i>
+                        Ввод аудио
+                      </Label>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Бот будет ожидать аудио от пользователя и сохранит file_id в переменную
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.enableAudioInput ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableAudioInput: checked })}
+                      />
+                    </div>
+                  </div>
+
+                  {selectedNode.data.enableAudioInput && (
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-tag mr-1"></i>
+                        Переменная для аудио
+                      </Label>
+                      <Input
+                        value={selectedNode.data.audioInputVariable || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { audioInputVariable: e.target.value })}
+                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                        placeholder="user_audio"
+                      />
+                    </div>
+                  )}
+
+                  {/* Document Input Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-blue-200/30 dark:border-blue-800/30 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        <i className="fas fa-file mr-1"></i>
+                        Ввод документа
+                      </Label>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Бот будет ожидать документ от пользователя и сохранит file_id в переменную
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <Switch
+                        checked={selectedNode.data.enableDocumentInput ?? false}
+                        onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableDocumentInput: checked })}
+                      />
+                    </div>
+                  </div>
+
+                  {selectedNode.data.enableDocumentInput && (
+                    <div>
+                      <Label className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2 block">
+                        <i className="fas fa-tag mr-1"></i>
+                        Переменная для документа
+                      </Label>
+                      <Input
+                        value={selectedNode.data.documentInputVariable || ''}
+                        onChange={(e) => onNodeUpdate(selectedNode.id, { documentInputVariable: e.target.value })}
+                        className="border-blue-200 dark:border-blue-700 focus:border-blue-500 focus:ring-blue-200"
+                        placeholder="user_document"
+                      />
+                    </div>
+                  )}
 
                   {/* Button Type for button responses */}
                   {selectedNode.data.responseType === 'buttons' && (
