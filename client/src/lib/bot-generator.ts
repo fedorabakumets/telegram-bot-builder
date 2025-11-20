@@ -2457,7 +2457,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `        "min_length": ${targetNode.data.minLength || 0},\n`;
                   code += `        "max_length": ${targetNode.data.maxLength || 0},\n`;
                   code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-                  code += '        "success_message": "✅ Спасибо за ваш ответ!"\n`;
+                  code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
                   code += '    }\n';
                   code += `    logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable}")\n`;
                 }
