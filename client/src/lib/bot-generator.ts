@@ -269,6 +269,53 @@ function toPythonBoolean(value: any): string {
   return value ? 'True' : 'False';
 }
 
+// Функция для генерации кода установки состояния ожидания ввода
+// Автоматически определяет правильное состояние (waiting_for_photo, waiting_for_video и т.д.)
+function generateWaitingStateCode(node: any, indentLevel: string = '    '): string {
+  // Определяем тип ввода и соответствующее состояние
+  let waitingStateKey = 'waiting_for_input';
+  let inputType = node.data.inputType || 'text';
+  let inputVariable = node.data.inputVariable || `response_${node.id}`;
+  
+  // Проверяем медиа-типы и устанавливаем правильное состояние
+  if (node.data.enablePhotoInput) {
+    waitingStateKey = 'waiting_for_photo';
+    inputType = 'photo';
+    inputVariable = node.data.photoInputVariable || 'user_photo';
+  } else if (node.data.enableVideoInput) {
+    waitingStateKey = 'waiting_for_video';
+    inputType = 'video';
+    inputVariable = node.data.videoInputVariable || 'user_video';
+  } else if (node.data.enableAudioInput) {
+    waitingStateKey = 'waiting_for_audio';
+    inputType = 'audio';
+    inputVariable = node.data.audioInputVariable || 'user_audio';
+  } else if (node.data.enableDocumentInput) {
+    waitingStateKey = 'waiting_for_document';
+    inputType = 'document';
+    inputVariable = node.data.documentInputVariable || 'user_document';
+  }
+  
+  const inputTargetNodeId = node.data.inputTargetNodeId || '';
+  
+  let code = '';
+  code += `${indentLevel}user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
+  code += `${indentLevel}user_data[message.from_user.id]["${waitingStateKey}"] = {\n`;
+  code += `${indentLevel}    "type": "${inputType}",\n`;
+  code += `${indentLevel}    "variable": "${inputVariable}",\n`;
+  code += `${indentLevel}    "save_to_database": True,\n`;
+  code += `${indentLevel}    "node_id": "${node.id}",\n`;
+  code += `${indentLevel}    "next_node_id": "${inputTargetNodeId}",\n`;
+  code += `${indentLevel}    "min_length": ${node.data.minLength || 0},\n`;
+  code += `${indentLevel}    "max_length": ${node.data.maxLength || 0},\n`;
+  code += `${indentLevel}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
+  code += `${indentLevel}    "success_message": "✅ Спасибо за ваш ответ!"\n`;
+  code += `${indentLevel}}\n`;
+  code += `${indentLevel}logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable} (узел ${node.id})")\n`;
+  
+  return code;
+}
+
 // Функция для создания уникальных коротких ID для узлов
 function generateUniqueShortId(nodeId: string, allNodeIds: string[]): string {
   if (!nodeId) return 'node';
@@ -3419,26 +3466,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла (основной цикл)
               if (targetNode.data.collectUserInput === true) {
                 // Настраиваем сбор пользовательского ввода
-                const inputType = targetNode.data.inputType || 'text';
-                const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                const saveToDatabase = targetNode.data.saveToDatabase !== false; // По умолчанию true для collectUserInput
-                const inputTargetNodeId = targetNode.data.inputTargetNodeId;
-                
                 code += '    # Активируем сбор пользовательского ввода (основной цикл)\n';
                 code += '    if callback_query.from_user.id not in user_data:\n';
                 code += '        user_data[callback_query.from_user.id] = {}\n';
                 code += '    \n';
-                code += '    user_data[callback_query.from_user.id]["waiting_for_input"] = {\n';
-                code += `        "type": "${inputType}",\n`;
-                code += `        "variable": "${inputVariable}",\n`;
-                code += `        "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
-                code += `        "node_id": "${targetNode.id}",\n`;
-                code += `        "next_node_id": "${inputTargetNodeId || ''}",\n`;
-                code += `        "min_length": ${targetNode.data.minLength || 0},\n`;
-                code += `        "max_length": ${targetNode.data.maxLength || 0},\n`;
-                code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-                code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
-                code += '    }\n';
+                // Используем helper функцию, но нужно заменить message на callback_query.from_user
+                const waitingCode = generateWaitingStateCode(targetNode, '    ');
+                code += waitingCode.replace(/message\.from_user\.id/g, 'callback_query.from_user.id');
                 code += '    \n';
                 
                 // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок с проверкой условной клавиатуры
@@ -11315,22 +11349,7 @@ function generateKeyboard(node: Node): string {
     // Дополнительно настраиваем сбор ответов с полной структурой ожидания ввода
     code += '    \n';
     code += '    # Дополнительно: настраиваем полную структуру ожидания ввода для узла с кнопками\n';
-    code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
-    const inputType = node.data.inputType || 'text';
-    const inputVariable = node.data.inputVariable || `response_${node.id}`;
-    const inputTargetNodeId = node.data.inputTargetNodeId || '';
-    code += `    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
-    code += `        "type": "${inputType}",\n`;
-    code += `        "variable": "${inputVariable}",\n`;
-    code += '        "save_to_database": True,\n';
-    code += `        "node_id": "${node.id}",\n`;
-    code += `        "next_node_id": "${inputTargetNodeId}",\n`;
-    code += `        "min_length": ${node.data.minLength || 0},\n`;
-    code += `        "max_length": ${node.data.maxLength || 0},\n`;
-    code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-    code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
-    code += '    }\n';
-    code += `    logging.info(f"✅ Состояние ожидания настроено для узла с кнопками: ${inputType} ввод для переменной ${inputVariable} (узел ${node.id})")\n`;
+    code += generateWaitingStateCode(node, '    ');
     
     return code;
   }
@@ -11379,22 +11398,7 @@ function generateKeyboard(node: Node): string {
     // Устанавливаем состояние ожидания ввода
     code += '    \n';
     code += '    # Устанавливаем состояние ожидания ввода с полной структурой\n';
-    code += '    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
-    const inputType = node.data.inputType || 'text';
-    const inputVariable = node.data.inputVariable || `response_${node.id}`;
-    const inputTargetNodeId = node.data.inputTargetNodeId || '';
-    code += `    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
-    code += `        "type": "${inputType}",\n`;
-    code += `        "variable": "${inputVariable}",\n`;
-    code += '        "save_to_database": True,\n';
-    code += `        "node_id": "${node.id}",\n`;
-    code += `        "next_node_id": "${inputTargetNodeId}",\n`;
-    code += `        "min_length": ${node.data.minLength || 0},\n`;
-    code += `        "max_length": ${node.data.maxLength || 0},\n`;
-    code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-    code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
-    code += '    }\n';
-    code += `    logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable} (узел ${node.id})")\n`;
+    code += generateWaitingStateCode(node, '    ');
     
     return code;
   }
