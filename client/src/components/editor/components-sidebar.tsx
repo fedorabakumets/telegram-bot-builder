@@ -1256,8 +1256,9 @@ export function ComponentsSidebar({
                                 <Plus className="h-3 w-3" />
                               </Button>
                             </div>
-                            <div className="space-y-1">
-                              {sheetsInfo.names.map((name: string, index: number) => {
+                            {sheetsInfo.names.length > 0 && (
+                              <div className="space-y-1.5 mt-2">
+                                {sheetsInfo.names.map((name: string, index: number) => {
                                 const projectData = project.data as any;
                                 const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
                                 const isActive = currentProjectId === project.id && sheetId === activeSheetId;
@@ -1353,7 +1354,8 @@ export function ComponentsSidebar({
                                   </div>
                                 );
                               })}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })()}
