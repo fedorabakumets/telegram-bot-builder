@@ -4035,14 +4035,9 @@ export function PropertiesPanel({
                           
                           return (
                             <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
-                              <div className="flex items-center gap-2">
-                                <i className={`${iconClass} text-xs`}></i>
-                                <span>{nodeName}</span>
-                                {sheetId !== currentSheetId && (
-                                  <span className="text-xs text-muted-foreground bg-purple-100 dark:bg-purple-900/30 px-1 rounded">
-                                    📋 {sheetName}
-                                  </span>
-                                )}
+                              <div className="flex items-center gap-1">
+                                <span>{nodeName} ({node.id})</span>
+                                <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                               </div>
                             </SelectItem>
                           );
