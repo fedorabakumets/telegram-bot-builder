@@ -2945,22 +2945,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await pool.query(`
         SELECT 
-          user_id AS id,
-          user_id AS "userId",
-          username AS "userName",
-          first_name AS "firstName",
-          last_name AS "lastName",
-          registered_at AS "registeredAt",
-          last_interaction AS "lastInteraction",
-          interaction_count AS "interactionCount",
-          user_data AS "userData",
-          is_active AS "isActive",
+          bu.user_id AS id,
+          bu.user_id AS "userId",
+          bu.username AS "userName",
+          bu.first_name AS "firstName",
+          bu.last_name AS "lastName",
+          bu.registered_at AS "registeredAt",
+          bu.last_interaction AS "lastInteraction",
+          COALESCE(COUNT(bm.id), 0)::integer AS "interactionCount",
+          bu.user_data AS "userData",
+          bu.is_active AS "isActive",
           0 AS "isPremium",
           0 AS "isBlocked",
           0 AS "isBot"
-        FROM bot_users 
-        ORDER BY last_interaction DESC
-      `);
+        FROM bot_users bu
+        LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
+        GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active
+        HAVING COUNT(bm.id) > 0
+        ORDER BY bu.last_interaction DESC
+      `, [projectId]);
       
       await pool.end();
       
