@@ -38,6 +38,7 @@ Preferred communication style: Simple, everyday language.
     - **Conditional Messaging**: Advanced logic for conditional messages based on user data, with intelligent variable replacement and dynamic next node navigation.
     - **Text Formatting**: Works like Telegram Web, with hotkeys and toggle functionality for Markdown and HTML formatting. Auto-detects and applies `ParseMode`.
     - **User Database & Analytics**: Automatically collects user data (username, first_name, last_name, registration) and command statistics in PostgreSQL. Provides a UI for viewing user responses and stats.
+    - **Message History & Media Persistence**: Complete message tracking system with photo/video/audio/document persistence. Uses junction table (bot_message_media) for many-to-many relationships, downloads Telegram media via Bot API, stores in uploads/{projectId}/ with path traversal protection. Universal @dp.message(F.photo) handler catches all photos regardless of flow design. API returns enriched messages with media[] arrays.
     - **Undo/Redo System**: Comprehensive undo/redo system with 50-state history limit, canvas toolbar integration, and keyboard shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z).
 
 ### Data Flow

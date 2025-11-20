@@ -46,6 +46,16 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
+type BotMessageWithMedia = BotMessage & {
+  media?: Array<{
+    id: number;
+    url: string;
+    type: string;
+    width?: number;
+    height?: number;
+  }>;
+};
+
 interface UserDatabasePanelProps {
   projectId: number;
   projectName: string;
@@ -110,7 +120,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
   });
 
   // Fetch messages for dialog
-  const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessage[]>({
+  const { data: messages = [], isLoading: messagesLoading, refetch: refetchMessages } = useQuery<BotMessageWithMedia[]>({
     queryKey: [`/api/projects/${projectId}/users/${selectedUserForDialog?.userId}/messages`],
     enabled: showDialog && !!selectedUserForDialog?.userId,
     staleTime: 0,
@@ -712,9 +722,9 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                             <Badge variant={user.isActive ? "default" : "secondary"}>
                               {user.isActive ? "Активен" : "Неактивен"}
                             </Badge>
-                            {user.isPremium ? <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge> : null}
-                            {user.isBlocked ? <Badge variant="destructive">Заблокирован</Badge> : null}
-                            {user.isBot ? <Badge variant="outline">Бот</Badge> : null}
+                            {user.isPremium && <Badge variant="outline" className="text-yellow-600"><Crown className="w-3 h-3 mr-1" />Premium</Badge>}
+                            {user.isBlocked && <Badge variant="destructive">Заблокирован</Badge>}
+                            {user.isBot && <Badge variant="outline">Бот</Badge>}
                           </div>
 
                           {/* Stats */}
@@ -1041,7 +1051,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                 </div>
               </div>
 
-              {selectedUser.tags && selectedUser.tags.length > 0 ? (
+              {selectedUser.tags && selectedUser.tags.length > 0 && (
                 <div>
                   <Label className="text-sm font-medium">Теги</Label>
                   <div className="mt-2 flex flex-wrap gap-1">
@@ -1050,7 +1060,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                     ))}
                   </div>
                 </div>
-              ) : null}
+              )}
 
               {/* Enhanced user responses section */}
               {(selectedUser.userData && Object.keys(selectedUser.userData).length > 0) && (
@@ -1256,46 +1266,21 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           
                           {/* Message Content */}
                           <div className="flex flex-col gap-1">
-                            {/* Фото если есть */}
-                            {message.messageData && typeof message.messageData === 'object' && ('photo' in message.messageData || 'photo_url' in message.messageData) && (
-                              <div className="rounded-lg overflow-hidden max-w-xs">
-                                {(() => {
-                                  const photoData = message.messageData as any;
-                                  const photoUrl = photoData.photo_url;
-                                  const fileId = photoData.photo?.file_id;
-                                  
-                                  // Для фото от бота используем photo_url если есть
-                                  if (photoUrl) {
-                                    return (
-                                      <img 
-                                        src={photoUrl} 
-                                        alt="Фото" 
-                                        className="w-full h-auto rounded-lg"
-                                        onError={(e) => {
-                                          (e.target as HTMLImageElement).style.display = 'none';
-                                        }}
-                                      />
-                                    );
-                                  }
-                                  
-                                  // Для фото от пользователя показываем заглушку с file_id
-                                  if (fileId) {
-                                    return (
-                                      <div className={`p-4 rounded-lg border-2 border-dashed ${
-                                        isBot ? 'border-blue-300 dark:border-blue-700' : 'border-green-300 dark:border-green-700'
-                                      }`}>
-                                        <div className="flex items-center gap-2 text-sm">
-                                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                          </svg>
-                                          <span>📷 Фото</span>
-                                        </div>
-                                      </div>
-                                    );
-                                  }
-                                  
-                                  return null;
-                                })()}
+                            {/* Медиа-файлы если есть */}
+                            {message.media && Array.isArray(message.media) && message.media.length > 0 && (
+                              <div className="rounded-lg overflow-hidden max-w-xs space-y-2">
+                                {message.media.map((m: any, idx: number) => (
+                                  <img 
+                                    key={idx}
+                                    src={m.url} 
+                                    alt="Photo" 
+                                    className="w-full h-auto rounded-lg"
+                                    data-testid={`photo-${message.id}-${idx}`}
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                ))}
                               </div>
                             )}
                             

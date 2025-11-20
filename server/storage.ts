@@ -9,6 +9,7 @@ import {
   groupMembers,
   botUsers,
   botMessages,
+  botMessageMedia,
   type BotProject, 
   type InsertBotProject,
   type BotInstance,
@@ -27,7 +28,9 @@ import {
   type InsertGroupMember,
   type BotUser,
   type BotMessage,
-  type InsertBotMessage
+  type InsertBotMessage,
+  type BotMessageMedia,
+  type InsertBotMessageMedia
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, like, or, ilike, sql } from "drizzle-orm";
@@ -126,8 +129,13 @@ export interface IStorage {
   // Bot messages
   createBotMessage(message: InsertBotMessage): Promise<BotMessage>;
   getBotMessages(projectId: number, userId: string, limit?: number): Promise<BotMessage[]>;
+  getBotMessagesWithMedia(projectId: number, userId: string, limit?: number): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]>;
   deleteBotMessages(projectId: number, userId: string): Promise<boolean>;
   deleteAllBotMessages(projectId: number): Promise<boolean>;
+  
+  // Bot message media
+  createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia>;
+  getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>>;
 }
 
 // Legacy Memory Storage - kept for reference
@@ -722,12 +730,24 @@ class MemStorage implements IStorage {
     return [];
   }
 
+  async getBotMessagesWithMedia(projectId: number, userId: string, limit?: number): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]> {
+    return [];
+  }
+
   async deleteBotMessages(projectId: number, userId: string): Promise<boolean> {
     return false;
   }
 
   async deleteAllBotMessages(projectId: number): Promise<boolean> {
     return false;
+  }
+
+  async createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia> {
+    throw new Error("MemStorage does not support bot message media");
+  }
+
+  async getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>> {
+    return [];
   }
 }
 
@@ -1353,6 +1373,71 @@ export class DatabaseStorage implements IStorage {
       .delete(botMessages)
       .where(eq(botMessages.projectId, projectId));
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Bot message media
+  async createBotMessageMedia(data: InsertBotMessageMedia): Promise<BotMessageMedia> {
+    const [media] = await this.db
+      .insert(botMessageMedia)
+      .values(data)
+      .returning();
+    return media;
+  }
+
+  async getMessageMedia(messageId: number): Promise<Array<MediaFile & { mediaKind: string; orderIndex: number }>> {
+    const result = await this.db
+      .select({
+        id: mediaFiles.id,
+        projectId: mediaFiles.projectId,
+        fileName: mediaFiles.fileName,
+        fileType: mediaFiles.fileType,
+        filePath: mediaFiles.filePath,
+        fileSize: mediaFiles.fileSize,
+        mimeType: mediaFiles.mimeType,
+        url: mediaFiles.url,
+        description: mediaFiles.description,
+        tags: mediaFiles.tags,
+        isPublic: mediaFiles.isPublic,
+        usageCount: mediaFiles.usageCount,
+        createdAt: mediaFiles.createdAt,
+        updatedAt: mediaFiles.updatedAt,
+        mediaKind: botMessageMedia.mediaKind,
+        orderIndex: botMessageMedia.orderIndex,
+      })
+      .from(botMessageMedia)
+      .innerJoin(mediaFiles, eq(botMessageMedia.mediaFileId, mediaFiles.id))
+      .where(eq(botMessageMedia.messageId, messageId))
+      .orderBy(asc(botMessageMedia.orderIndex));
+    
+    return result;
+  }
+
+  async getBotMessagesWithMedia(
+    projectId: number, 
+    userId: string, 
+    limit: number = 100
+  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]> {
+    const messages = await this.db
+      .select()
+      .from(botMessages)
+      .where(and(
+        eq(botMessages.projectId, projectId),
+        eq(botMessages.userId, userId)
+      ))
+      .orderBy(asc(botMessages.createdAt))
+      .limit(limit);
+
+    const messagesWithMedia = await Promise.all(
+      messages.map(async (message) => {
+        const media = await this.getMessageMedia(message.id);
+        return {
+          ...message,
+          media: media.length > 0 ? media : undefined,
+        };
+      })
+    );
+
+    return messagesWithMedia;
   }
 }
 
@@ -2024,6 +2109,60 @@ export class EnhancedDatabaseStorage extends DatabaseStorage {
   async deleteBotGroup(id: number): Promise<boolean> {
     const result = await this.db.delete(botGroups).where(eq(botGroups.id, id));
     return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async getBotMessagesWithMedia(
+    projectId: number, 
+    userId: string, 
+    limit: number = 100
+  ): Promise<(BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> })[]> {
+    const results = await this.db
+      .select({
+        message: botMessages,
+        mediaFile: mediaFiles,
+        mediaKind: botMessageMedia.mediaKind,
+        orderIndex: botMessageMedia.orderIndex,
+      })
+      .from(botMessages)
+      .leftJoin(botMessageMedia, eq(botMessages.id, botMessageMedia.messageId))
+      .leftJoin(mediaFiles, eq(botMessageMedia.mediaFileId, mediaFiles.id))
+      .where(and(
+        eq(botMessages.projectId, projectId),
+        eq(botMessages.userId, userId)
+      ))
+      .orderBy(asc(botMessages.createdAt), asc(botMessageMedia.orderIndex))
+      .limit(limit * 10);
+
+    const messagesMap = new Map<number, BotMessage & { media?: Array<MediaFile & { mediaKind: string; orderIndex: number }> }>();
+
+    for (const row of results) {
+      const messageId = row.message.id;
+      
+      if (!messagesMap.has(messageId)) {
+        messagesMap.set(messageId, {
+          ...row.message,
+          media: []
+        });
+      }
+
+      if (row.mediaFile && row.mediaKind !== null && row.orderIndex !== null) {
+        const message = messagesMap.get(messageId)!;
+        message.media!.push({
+          ...row.mediaFile,
+          mediaKind: row.mediaKind,
+          orderIndex: row.orderIndex
+        });
+      }
+    }
+
+    const messagesArray = Array.from(messagesMap.values())
+      .slice(0, limit)
+      .map(msg => ({
+        ...msg,
+        media: msg.media && msg.media.length > 0 ? msg.media : undefined
+      }));
+
+    return messagesArray;
   }
 }
 

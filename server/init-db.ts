@@ -250,6 +250,52 @@ export async function initializeDatabaseTables() {
       );
     `, "Создание таблицы user_telegram_settings");
 
+    await executeWithRetry(db, sql`
+      CREATE TABLE IF NOT EXISTS bot_messages (
+        id SERIAL PRIMARY KEY,
+        project_id INTEGER REFERENCES bot_projects(id) ON DELETE CASCADE NOT NULL,
+        user_id TEXT NOT NULL,
+        message_type TEXT NOT NULL,
+        message_text TEXT,
+        message_data JSONB,
+        node_id TEXT,
+        primary_media_id INTEGER REFERENCES media_files(id) ON DELETE SET NULL,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `, "Создание таблицы bot_messages");
+
+    await executeWithRetry(db, sql`
+      CREATE TABLE IF NOT EXISTS bot_message_media (
+        id SERIAL PRIMARY KEY,
+        message_id INTEGER REFERENCES bot_messages(id) ON DELETE CASCADE NOT NULL,
+        media_file_id INTEGER REFERENCES media_files(id) ON DELETE CASCADE NOT NULL,
+        media_kind TEXT NOT NULL,
+        order_index INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `, "Создание таблицы bot_message_media");
+
+    // Миграция: добавление primary_media_id в bot_messages если его нет
+    try {
+      const columnCheck = await db.execute(sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'bot_messages' 
+        AND column_name = 'primary_media_id';
+      `);
+      
+      if (columnCheck.rows.length === 0) {
+        console.log('🔄 Добавляем колонку primary_media_id в таблицу bot_messages...');
+        await executeWithRetry(db, sql`
+          ALTER TABLE bot_messages 
+          ADD COLUMN primary_media_id INTEGER REFERENCES media_files(id) ON DELETE SET NULL;
+        `, "Миграция: добавление primary_media_id");
+        console.log('✅ Колонка primary_media_id успешно добавлена');
+      }
+    } catch (error) {
+      console.log('⚠️ Ошибка при проверке/добавлении колонки primary_media_id:', error);
+    }
+
     console.log('✅ Database tables initialized successfully!');
     return true;
   } catch (error) {

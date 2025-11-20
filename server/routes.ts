@@ -5,7 +5,7 @@ import { writeFileSync, existsSync, mkdirSync, unlinkSync, createWriteStream } f
 import { join } from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, insertBotMessageSchema, nodeSchema, connectionSchema, botDataSchema, sendMessageSchema } from "@shared/schema";
+import { insertBotProjectSchema, insertBotInstanceSchema, insertBotTemplateSchema, insertBotTokenSchema, insertMediaFileSchema, insertUserBotDataSchema, insertBotGroupSchema, insertBotMessageSchema, insertBotMessageMediaSchema, nodeSchema, connectionSchema, botDataSchema, sendMessageSchema } from "@shared/schema";
 import { seedDefaultTemplates } from "./seed-templates";
 import { z } from "zod";
 import https from "https";
@@ -14,6 +14,7 @@ import { pipeline } from "stream/promises";
 import { URL } from "url";
 import dbRoutes from "./db-routes";
 import { Pool } from "pg";
+import { downloadTelegramPhoto, downloadTelegramVideo, downloadTelegramAudio, downloadTelegramDocument } from "./telegram-media";
 // import { generatePythonCode } from "../client/src/lib/bot-generator"; // Убрано - используем динамический импорт с очисткой кеша
 
 // Функция нормализации данных узлов для добавления недостающих полей
@@ -3442,7 +3443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Bot Messages endpoints
   
-  // Get message history for a user
+  // Get message history for a user with media
   app.get("/api/projects/:projectId/users/:userId/messages", async (req, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
@@ -3453,7 +3454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid project ID" });
       }
       
-      const messages = await storage.getBotMessages(projectId, userId, limit);
+      const messages = await storage.getBotMessagesWithMedia(projectId, userId, limit);
       res.json(messages);
     } catch (error) {
       console.error("Failed to get messages:", error);
@@ -3567,6 +3568,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to delete messages:", error);
       res.status(500).json({ message: "Failed to delete messages" });
+    }
+  });
+
+  // Register Telegram media (photo/video/audio/document) and link to message
+  app.post("/api/projects/:projectId/media/register-telegram-photo", async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      
+      if (isNaN(projectId)) {
+        return res.status(400).json({ message: "Invalid project ID" });
+      }
+      
+      const { messageId, fileId, botToken, mediaType = 'photo', originalFileName } = req.body;
+      
+      if (!messageId || !fileId || !botToken) {
+        return res.status(400).json({ 
+          message: "Missing required fields: messageId, fileId, botToken" 
+        });
+      }
+
+      // Download media from Telegram based on type
+      let downloadedFile;
+      switch (mediaType) {
+        case 'video':
+          downloadedFile = await downloadTelegramVideo(botToken, fileId, projectId);
+          break;
+        case 'audio':
+          downloadedFile = await downloadTelegramAudio(botToken, fileId, projectId);
+          break;
+        case 'document':
+          downloadedFile = await downloadTelegramDocument(botToken, fileId, projectId, originalFileName);
+          break;
+        case 'photo':
+        default:
+          downloadedFile = await downloadTelegramPhoto(botToken, fileId, projectId);
+          break;
+      }
+
+      // Generate URL for the file (relative from public root)
+      const fileUrl = `/${downloadedFile.filePath}`;
+
+      // Determine file type based on media type
+      let fileType: 'photo' | 'video' | 'audio' | 'document';
+      if (mediaType === 'video') {
+        fileType = 'video';
+      } else if (mediaType === 'audio') {
+        fileType = 'audio';
+      } else if (mediaType === 'document') {
+        fileType = 'document';
+      } else {
+        fileType = 'photo';
+      }
+
+      // Create media file record in database
+      const mediaFile = await storage.createMediaFile({
+        projectId,
+        fileName: downloadedFile.fileName,
+        fileType,
+        filePath: downloadedFile.filePath,
+        fileSize: downloadedFile.fileSize,
+        mimeType: downloadedFile.mimeType,
+        url: fileUrl,
+        description: `Telegram ${mediaType} from user`,
+        tags: [],
+        isPublic: 0,
+      });
+
+      // Link media file to message
+      await storage.createBotMessageMedia({
+        messageId: parseInt(messageId),
+        mediaFileId: mediaFile.id,
+        mediaKind: fileType,
+        orderIndex: 0,
+      });
+
+      res.json({ 
+        message: "Media registered successfully", 
+        mediaFile,
+        url: fileUrl
+      });
+    } catch (error) {
+      console.error("Failed to register Telegram media:", error);
+      res.status(500).json({ 
+        message: "Failed to register media",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
