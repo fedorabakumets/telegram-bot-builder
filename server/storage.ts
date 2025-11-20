@@ -186,6 +186,7 @@ class MemStorage implements IStorage {
         connections: []
       },
       botToken: null,
+      userDatabaseEnabled: 1,
       createdAt: new Date(),
       updatedAt: new Date()
     };
