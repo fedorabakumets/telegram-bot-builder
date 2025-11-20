@@ -6043,6 +6043,131 @@ async function seedDefaultTemplates(force = false) {
     });
 
     console.log('✅ Объединенный шаблон ВПрогулке + Админ панель создан');
+
+    // Создаем простой шаблон "Котик"
+    await storage.createBotTemplate({
+      name: "🐱 Котик - Простой бот",
+      description: "Простой и милый бот про котиков. Идеален для начинающих!",
+      category: "entertainment",
+      tags: ["котик", "простой", "развлечение", "животные", "милый"],
+      isPublic: 1,
+      difficulty: "easy",
+      authorName: "Система",
+      version: "1.0.0",
+      featured: 1,
+      language: "ru",
+      complexity: 2,
+      estimatedTime: 5,
+      data: {
+        nodes: [
+          {
+            id: "start",
+            type: "start",
+            position: { x: 100, y: 100 },
+            data: {
+              command: "/start",
+              description: "Приветствие от котика",
+              messageText: "🐱 Мяу! Привет, я котик!\n\nЧто ты хочешь узнать?",
+              synonyms: ["старт", "начать", "привет"],
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-fact",
+                  text: "Факт о котах 📚",
+                  action: "goto",
+                  target: "cat_fact",
+                  buttonType: "normal"
+                },
+                {
+                  id: "btn-sound",
+                  text: "Звук котика 🔊",
+                  action: "goto",
+                  target: "cat_sound",
+                  buttonType: "normal"
+                },
+                {
+                  id: "btn-photo",
+                  text: "Фото котика 📸",
+                  action: "goto",
+                  target: "cat_photo",
+                  buttonType: "normal"
+                }
+              ],
+              markdown: false,
+              oneTimeKeyboard: false,
+              resizeKeyboard: true
+            }
+          },
+          {
+            id: "cat_fact",
+            type: "message",
+            position: { x: 100, y: 300 },
+            data: {
+              messageText: "📚 Интересный факт о котах:\n\nКоты спят 70% своей жизни! Это около 13-16 часов в день. 😴\n\nУ котов есть специальная кость в горле, которая позволяет им мурлыкать! 💕",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-back1",
+                  text: "⬅️ Назад",
+                  action: "goto",
+                  target: "start",
+                  buttonType: "normal"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "cat_sound",
+            type: "message",
+            position: { x: 400, y: 300 },
+            data: {
+              messageText: "🔊 Мяяяу! Мурр-мурр! 🐱\n\nКоты используют более 100 различных звуков для общения!\n\nМяуканье - это способ общения только с людьми, между собой коты почти не мяукают! 😺",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-back2",
+                  text: "⬅️ Назад",
+                  action: "goto",
+                  target: "start",
+                  buttonType: "normal"
+                }
+              ],
+              markdown: false
+            }
+          },
+          {
+            id: "cat_photo",
+            type: "message",
+            position: { x: 700, y: 300 },
+            data: {
+              messageText: "📸 Котики - самые фотогеничные создания!\n\nВ интернете более 2 миллионов фотографий котов! 🎉\n\nПервое видео с котом на YouTube было загружено в 2005 году! 🎬",
+              keyboardType: "inline",
+              buttons: [
+                {
+                  id: "btn-back3",
+                  text: "⬅️ Назад",
+                  action: "goto",
+                  target: "start",
+                  buttonType: "normal"
+                }
+              ],
+              markdown: false
+            }
+          }
+        ],
+        connections: [
+          { id: "conn-1", source: "start", target: "cat_fact", sourceHandle: "source", targetHandle: "target" },
+          { id: "conn-2", source: "start", target: "cat_sound", sourceHandle: "source", targetHandle: "target" },
+          { id: "conn-3", source: "start", target: "cat_photo", sourceHandle: "source", targetHandle: "target" },
+          { id: "conn-4", source: "cat_fact", target: "start", sourceHandle: "source", targetHandle: "target" },
+          { id: "conn-5", source: "cat_sound", target: "start", sourceHandle: "source", targetHandle: "target" },
+          { id: "conn-6", source: "cat_photo", target: "start", sourceHandle: "source", targetHandle: "target" }
+        ]
+      }
+    });
+
+    console.log('✅ Шаблон Котик создан');
     console.log('✅ Системные шаблоны созданы');
 
   } catch (error) {
