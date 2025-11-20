@@ -3849,7 +3849,28 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     const messageText = navTargetNode.data.messageText || 'Сообщение';
                     const formattedText = formatTextForPython(messageText);
                     code += `            nav_text = ${formattedText}\n`;
-                    code += '            await callback_query.message.edit_text(nav_text)\n';
+                    
+                    // Проверяем, есть ли reply кнопки
+                    if (navTargetNode.data.keyboardType === 'reply' && navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
+                      code += '            # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
+                      code += '            await callback_query.message.delete()\n';
+                      code += '            builder = ReplyKeyboardBuilder()\n';
+                      navTargetNode.data.buttons.forEach((button: any) => {
+                        if (button.action === "contact" && button.requestContact) {
+                          code += `            builder.add(KeyboardButton(text="${button.text}", request_contact=True))\n`;
+                        } else if (button.action === "location" && button.requestLocation) {
+                          code += `            builder.add(KeyboardButton(text="${button.text}", request_location=True))\n`;
+                        } else {
+                          code += `            builder.add(KeyboardButton(text="${button.text}"))\n`;
+                        }
+                      });
+                      const resizeKeyboard = toPythonBoolean(navTargetNode.data.resizeKeyboard);
+                      const oneTimeKeyboard = toPythonBoolean(navTargetNode.data.oneTimeKeyboard);
+                      code += `            keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                      code += '            await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)\n';
+                    } else {
+                      code += '            await callback_query.message.edit_text(nav_text)\n';
+                    }
                   }
                   
                   // Если узел message собирает ввод, настраиваем ожидание
