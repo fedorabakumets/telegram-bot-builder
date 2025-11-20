@@ -8,7 +8,7 @@ export const botProjects = pgTable("bot_projects", {
   description: text("description"),
   data: jsonb("data").notNull(),
   botToken: text("bot_token"), // Сохраненный токен бота
-  userDatabaseEnabled: integer("user_database_enabled").default(0), // 0 = выключена, 1 = включена
+  userDatabaseEnabled: integer("user_database_enabled").default(1), // 0 = выключена, 1 = включена
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
