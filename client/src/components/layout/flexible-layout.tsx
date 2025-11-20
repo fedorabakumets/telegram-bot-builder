@@ -367,21 +367,19 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 maxSize={40}
               >
                 <ResizablePanelGroup direction="horizontal" className="h-full">
-                  {rightElements.map((rightEl, index) => (
-                    <React.Fragment key={rightEl.id}>
-                      {index > 0 && <ResizableHandle withHandle />}
-                      <ResizablePanel 
-                        key={`panel-${rightEl.id}`}
-                        defaultSize={rightEl.size / rightElements.length * 100}
-                        minSize={10}
-                        maxSize={60}
-                      >
-                        <div className="h-full border-l border-border bg-background overflow-hidden">
-                          {getElementContent(rightEl.type)}
-                        </div>
-                      </ResizablePanel>
-                    </React.Fragment>
-                  ))}
+                  {rightElements.flatMap((rightEl, index) => [
+                    ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle />] : []),
+                    <ResizablePanel 
+                      key={`panel-${rightEl.id}`}
+                      defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
+                      minSize={10}
+                      maxSize={100}
+                    >
+                      <div className="h-full border-l border-border bg-background overflow-hidden">
+                        {getElementContent(rightEl.type)}
+                      </div>
+                    </ResizablePanel>
+                  ])}
                 </ResizablePanelGroup>
               </ResizablePanel>
             </>
@@ -430,21 +428,19 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   maxSize={60}
                 >
                   <ResizablePanelGroup direction="horizontal" className="h-full">
-                    {rightElements.map((rightEl, index) => (
-                      <React.Fragment key={rightEl.id}>
-                        {index > 0 && <ResizableHandle withHandle />}
-                        <ResizablePanel 
-                          key={`panel-${rightEl.id}`}
-                          defaultSize={rightEl.size / rightElements.length * 100}
-                          minSize={10}
-                          maxSize={60}
-                        >
-                          <div className="h-full border-l border-border bg-background overflow-hidden">
-                            {getElementContent(rightEl.type)}
-                          </div>
-                        </ResizablePanel>
-                      </React.Fragment>
-                    ))}
+                    {rightElements.flatMap((rightEl, index) => [
+                      ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle />] : []),
+                      <ResizablePanel 
+                        key={`panel-${rightEl.id}`}
+                        defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
+                        minSize={10}
+                        maxSize={100}
+                      >
+                        <div className="h-full border-l border-border bg-background overflow-hidden">
+                          {getElementContent(rightEl.type)}
+                        </div>
+                      </ResizablePanel>
+                    ])}
                   </ResizablePanelGroup>
                 </ResizablePanel>
               </>

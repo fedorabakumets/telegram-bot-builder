@@ -36,6 +36,41 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     queryKey: ['/api/groups'],
   });
 
+  // Refs для стабильного доступа к данным в генераторах
+  const botDataRef = useRef(botData);
+  const projectNameRef = useRef(projectName);
+  const groupsRef = useRef(groups);
+  
+  // Обновляем refs при изменении данных
+  useEffect(() => {
+    botDataRef.current = botData;
+    projectNameRef.current = projectName;
+    groupsRef.current = groups;
+  }, [botData, projectName, groups]);
+
+  // Создаем стабильную версию данных для отслеживания изменений
+  const [dataVersion, setDataVersion] = useState(0);
+  const lastGeneratedVersionRef = useRef<Record<CodeFormat, number>>({
+    python: -1,
+    json: -1,
+    requirements: -1,
+    readme: -1,
+    dockerfile: -1
+  });
+
+  // Обновляем версию данных при изменении входных данных
+  useEffect(() => {
+    setDataVersion(prev => prev + 1);
+    // Сбрасываем кеш при изменении данных
+    setCodeContent({
+      python: '',
+      json: '',
+      requirements: '',
+      readme: '',
+      dockerfile: ''
+    });
+  }, [botData, projectName, groups]);
+
   // Определяем тему из DOM
   useEffect(() => {
     const checkTheme = () => {
@@ -55,77 +90,53 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     return () => observer.disconnect();
   }, []);
 
-  const generateCodeContent = useMemo(() => {
-    if (!botData) return {};
-    
-    return {
-      python: async () => {
-        const botGenerator = await loadBotGenerator();
-        const validation = botGenerator.validateBotStructure(botData);
-        if (!validation?.isValid) return '// Ошибка валидации структуры бота';
-        return botGenerator.generatePythonCode(botData, projectName, groups);
-      },
-      json: async () => JSON.stringify(botData, null, 2),
-      requirements: async () => {
-        const botGenerator = await loadBotGenerator();
-        return botGenerator.generateRequirementsTxt();
-      },
-      readme: async () => {
-        const botGenerator = await loadBotGenerator();
-        return botGenerator.generateReadme(botData, projectName);
-      },
-      dockerfile: async () => {
-        const botGenerator = await loadBotGenerator();
-        return botGenerator.generateDockerfile();
-      }
-    };
-  }, [botData, projectName, groups]);
+  // Стабильные функции-генераторы, читающие из refs
+  const generateCodeContent = useRef({
+    python: async () => {
+      const botGenerator = await loadBotGenerator();
+      const validation = botGenerator.validateBotStructure(botDataRef.current);
+      if (!validation?.isValid) return '// Ошибка валидации структуры бота';
+      return botGenerator.generatePythonCode(botDataRef.current, projectNameRef.current, groupsRef.current);
+    },
+    json: async () => JSON.stringify(botDataRef.current, null, 2),
+    requirements: async () => {
+      const botGenerator = await loadBotGenerator();
+      return botGenerator.generateRequirementsTxt();
+    },
+    readme: async () => {
+      const botGenerator = await loadBotGenerator();
+      return botGenerator.generateReadme(botDataRef.current, projectNameRef.current);
+    },
+    dockerfile: async () => {
+      const botGenerator = await loadBotGenerator();
+      return botGenerator.generateDockerfile();
+    }
+  });
 
-  // Сбрасываем кеш кода при изменении данных бота
+  // Генерируем код только когда нужно
   useEffect(() => {
-    setCodeContent({
-      python: '',
-      json: '',
-      requirements: '',
-      readme: '',
-      dockerfile: ''
-    });
-  }, [botData, projectName, groups]);
+    // Проверяем, была ли уже генерация для этой версии и формата
+    if (lastGeneratedVersionRef.current[selectedFormat] === dataVersion && codeContent[selectedFormat]) {
+      console.log('✅ Content already generated for version', dataVersion);
+      return;
+    }
 
-  useEffect(() => {
-    console.log('🔧 useEffect triggered, selectedFormat:', selectedFormat);
-    console.log('🔧 codeContent[selectedFormat]:', codeContent[selectedFormat]?.substring(0, 50) || '<empty>');
-    
-    // Добавляем задержку для оптимизации производительности
+    // Добавляем задержку для debounce
     const timeoutId = setTimeout(async () => {
-      console.log('🔧 Timeout fired for format:', selectedFormat);
+      console.log('🚀 Starting code generation for', selectedFormat, 'version', dataVersion);
       
-      if (!generateCodeContent[selectedFormat]) {
-        console.log('⚠️ No generator for format:', selectedFormat);
-        return;
-      }
-      
-      // Проверяем, есть ли уже загруженный контент
-      if (codeContent[selectedFormat]) {
-        console.log('✅ Content already loaded, skipping generation');
-        return;
-      }
-      
-      console.log('🚀 Starting code generation for', selectedFormat);
       try {
-        const content = await generateCodeContent[selectedFormat]();
-        console.log('✅ Generation complete, setting content');
+        const content = await generateCodeContent.current[selectedFormat]();
+        console.log('✅ Generation complete for', selectedFormat);
         setCodeContent(prev => ({ ...prev, [selectedFormat]: content }));
+        lastGeneratedVersionRef.current[selectedFormat] = dataVersion;
       } catch (error) {
         console.error('❌ Error loading code content:', error);
       }
-    }, 500); // Задержка 500мс для debounce
+    }, 300);
     
-    return () => {
-      console.log('🧹 Cleanup timeout for', selectedFormat);
-      clearTimeout(timeoutId);
-    };
-  }, [generateCodeContent, selectedFormat, codeContent]);
+    return () => clearTimeout(timeoutId);
+  }, [selectedFormat, dataVersion]);
 
   // Подсветка строк убрана для упрощения и производительности
   const highlightedLines = new Set<number>();
@@ -151,7 +162,7 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
   };
 
   const downloadFile = async (format: CodeFormat) => {
-    const content = codeContent[format] || await generateCodeContent[format]?.();
+    const content = codeContent[format] || await generateCodeContent.current[format]?.();
     if (!content) return;
 
     const fileExtensions: Record<CodeFormat, string> = {
