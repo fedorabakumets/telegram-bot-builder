@@ -2431,17 +2431,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
                 const inputTargetNodeId = targetNode.data.inputTargetNodeId;
                 
-                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки И НЕТ текстового/медиа ввода, НЕ настраиваем ожидание ввода
-                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0 && 
-                    !targetNode.data.enableTextInput && !targetNode.data.enablePhotoInput && 
-                    !targetNode.data.enableVideoInput && !targetNode.data.enableAudioInput && 
-                    !targetNode.data.enableDocumentInput) {
+                // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть inline кнопки И НЕТ текстового/медиа ввода, НЕ настраиваем ожидание ввода
+                // Для reply кнопок ВСЕГДА настраиваем ожидание ввода если enableTextInput === true
+                const hasInputEnabled = targetNode.data.enableTextInput || targetNode.data.enablePhotoInput || 
+                                         targetNode.data.enableVideoInput || targetNode.data.enableAudioInput || 
+                                         targetNode.data.enableDocumentInput;
+                
+                if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0 && !hasInputEnabled) {
                   code += '    \n';
-                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет кнопки БЕЗ текстового/медиа ввода - НЕ настраиваем ожидание ввода")\n`;
+                  code += `    logging.info(f"✅ Узел ${targetNode.id} имеет inline кнопки БЕЗ текстового/медиа ввода - НЕ настраиваем ожидание ввода")\n`;
                   code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового/медиа ввода\n`;
                 } else {
                   code += '    \n';
-                  code += `    logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
+                  code += `    logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id} (callback обработчик), переменная ${inputVariable}")\n`;
                   code += '    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput\n';
                   code += '    # Инициализируем user_data для пользователя если не существует\n';
                   code += '    if user_id not in user_data:\n';
@@ -2455,7 +2457,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `        "min_length": ${targetNode.data.minLength || 0},\n`;
                   code += `        "max_length": ${targetNode.data.maxLength || 0},\n`;
                   code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-                  code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
+                  code += '        "success_message": "✅ Спасибо за ваш ответ!"\n`;
                   code += '    }\n';
                   code += `    logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable}")\n`;
                 }
@@ -5855,6 +5857,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
             code += '                        await message.answer(text, reply_markup=keyboard)\n';
             code += `                        logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
+            
+            // ИСПРАВЛЕНИЕ: Если включен сбор текстового ввода, настраиваем ожидание даже при наличии кнопок
+            if (targetNode.data.enableTextInput === true) {
+              code += `                        logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id} (с reply кнопками), переменная ${inputVariable}")\n`;
+              code += '                        # Настраиваем ожидание ввода для message узла с reply кнопками\n';
+              code += '                        user_data[user_id]["waiting_for_input"] = {\n';
+              code += `                            "type": "${inputType}",\n`;
+              code += `                            "variable": "${inputVariable}",\n`;
+              code += '                            "save_to_database": True,\n';
+              code += `                            "node_id": "${targetNode.id}",\n`;
+              code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
+              code += `                            "min_length": ${targetNode.data.minLength || 0},\n`;
+              code += `                            "max_length": ${targetNode.data.maxLength || 0},\n`;
+              code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
+              code += '                            "success_message": "✅ Спасибо за ваш ответ!"\n';
+              code += '                        }\n';
+            }
           } else {
             code += '                        await message.answer(text)\n';
             
