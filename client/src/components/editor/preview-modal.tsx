@@ -222,6 +222,24 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
     setWaitingForDocument(false);
     setWaitingForInput(false);
 
+    // Send confirmation message with media echo
+    setTimeout(() => {
+      const confirmationMessage = {
+        id: `msg-${Date.now()}-bot-confirm`,
+        type: 'bot' as const,
+        text: `✅ ${mediaType === 'photo' ? 'Фото' : mediaType === 'video' ? 'Видео' : mediaType === 'audio' ? 'Аудио' : 'Документ'} получено и сохранено!`,
+        time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+        mediaType: mediaType,
+        mediaUrl: mediaType === 'photo' ? 'https://picsum.photos/400/300?random=' + Math.random() : 
+                  mediaType === 'video' ? 'https://sample-videos.com/zip/10/mp4/SampleVideo_640x360_1mb.mp4' :
+                  mediaType === 'audio' ? 'https://www.soundjay.com/misc/beep-07a.wav' :
+                  'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        mediaCaption: `✅ ${mediaType === 'photo' ? 'Фото' : mediaType === 'video' ? 'Видео' : mediaType === 'audio' ? 'Аудио' : 'Документ'} получено и сохранено!`
+      };
+      
+      setMessageHistory(prev => [...prev, confirmationMessage]);
+    }, 300);
+
     // Navigate to target node if specified
     if (currentNode.data.inputTargetNodeId) {
       const targetNode = nodes.find(node => node.id === currentNode.data.inputTargetNodeId);
