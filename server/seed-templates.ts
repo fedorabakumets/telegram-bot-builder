@@ -6044,126 +6044,328 @@ async function seedDefaultTemplates(force = false) {
 
     console.log('✅ Объединенный шаблон ВПрогулке + Админ панель создан');
 
-    // Создаем простой шаблон "Котик"
+    // Создаем шаблон "Котик" - простая анкета знакомств
     await storage.createBotTemplate({
-      name: "🐱 Котик - Простой бот",
-      description: "Простой и милый бот про котиков. Идеален для начинающих!",
-      category: "entertainment",
-      tags: ["котик", "простой", "развлечение", "животные", "милый"],
+      name: "🐱 Котик - Простая анкета",
+      description: "Простой бот-анкета для знакомств: возраст, пол, интересы, город, имя и описание. Идеален для начинающих!",
+      category: "community",
+      tags: ["котик", "анкета", "знакомства", "простой", "начинающие"],
       isPublic: 1,
       difficulty: "easy",
       authorName: "Система",
       version: "1.0.0",
       featured: 1,
       language: "ru",
-      complexity: 2,
-      estimatedTime: 5,
+      complexity: 3,
+      estimatedTime: 10,
       data: {
-        nodes: [
+        sheets: [
           {
-            id: "start",
-            type: "start",
-            position: { x: 100, y: 100 },
-            data: {
-              command: "/start",
-              description: "Приветствие от котика",
-              messageText: "🐱 Мяу! Привет, я котик!\n\nЧто ты хочешь узнать?",
-              synonyms: ["старт", "начать", "привет"],
-              keyboardType: "inline",
-              buttons: [
-                {
-                  id: "btn-fact",
-                  text: "Факт о котах 📚",
-                  action: "goto",
-                  target: "cat_fact",
-                  buttonType: "normal"
-                },
-                {
-                  id: "btn-sound",
-                  text: "Звук котика 🔊",
-                  action: "goto",
-                  target: "cat_sound",
-                  buttonType: "normal"
-                },
-                {
-                  id: "btn-photo",
-                  text: "Фото котика 📸",
-                  action: "goto",
-                  target: "cat_photo",
-                  buttonType: "normal"
+            id: "main_sheet",
+            name: "Основной поток",
+            nodes: [
+              {
+                id: "start",
+                type: "start",
+                position: { x: 100, y: 100 },
+                data: {
+                  command: "/start",
+                  description: "Запустить бота",
+                  messageText: "Сколько тебе лет?",
+                  keyboardType: "none",
+                  buttons: [],
+                  collectUserInput: true,
+                  enableTextInput: true,
+                  inputVariable: "age",
+                  inputTargetNodeId: "f90r9k3FSLu2Tjn74cBn_",
+                  markdown: false,
+                  oneTimeKeyboard: false,
+                  resizeKeyboard: true,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  enableStatistics: true
                 }
-              ],
-              markdown: false,
-              oneTimeKeyboard: false,
-              resizeKeyboard: true
-            }
-          },
-          {
-            id: "cat_fact",
-            type: "message",
-            position: { x: 100, y: 300 },
-            data: {
-              messageText: "📚 Интересный факт о котах:\n\nКоты спят 70% своей жизни! Это около 13-16 часов в день. 😴\n\nУ котов есть специальная кость в горле, которая позволяет им мурлыкать! 💕",
-              keyboardType: "inline",
-              buttons: [
-                {
-                  id: "btn-back1",
-                  text: "⬅️ Назад",
-                  action: "goto",
-                  target: "start",
-                  buttonType: "normal"
+              },
+              {
+                id: "f90r9k3FSLu2Tjn74cBn_",
+                type: "message",
+                position: { x: 100, y: 380 },
+                data: {
+                  messageText: "Теперь определимся с полом",
+                  keyboardType: "reply",
+                  buttons: [
+                    {
+                      id: "iIkbMb2jlZRJOxGHMNl1a",
+                      text: "Я девушка",
+                      action: "goto",
+                      target: "RFTgm4KzC6dI39AMTPcmo",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    },
+                    {
+                      id: "0dBjAkcTa9rEsjEP48XzB",
+                      text: "Я парень",
+                      action: "goto",
+                      target: "RFTgm4KzC6dI39AMTPcmo",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    }
+                  ],
+                  markdown: false,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  resizeKeyboard: true,
+                  oneTimeKeyboard: false,
+                  enableStatistics: true
                 }
-              ],
-              markdown: false
-            }
-          },
-          {
-            id: "cat_sound",
-            type: "message",
-            position: { x: 400, y: 300 },
-            data: {
-              messageText: "🔊 Мяяяу! Мурр-мурр! 🐱\n\nКоты используют более 100 различных звуков для общения!\n\nМяуканье - это способ общения только с людьми, между собой коты почти не мяукают! 😺",
-              keyboardType: "inline",
-              buttons: [
-                {
-                  id: "btn-back2",
-                  text: "⬅️ Назад",
-                  action: "goto",
-                  target: "start",
-                  buttonType: "normal"
+              },
+              {
+                id: "RFTgm4KzC6dI39AMTPcmo",
+                type: "message",
+                position: { x: 100, y: 660 },
+                data: {
+                  messageText: "Кто тебе интересен?",
+                  keyboardType: "reply",
+                  buttons: [
+                    {
+                      id: "6bA3YPgWd20pCqPAeyuLe",
+                      text: "Девушки",
+                      action: "goto",
+                      target: "sIh3xXKEtb_TtrhHqZQzX",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    },
+                    {
+                      id: "hI7nsCdodrcUnft1SXYpg",
+                      text: "Парни",
+                      action: "goto",
+                      target: "sIh3xXKEtb_TtrhHqZQzX",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    },
+                    {
+                      id: "VhOGaPeyFpFV9a7QDBfzo",
+                      text: "Все равно",
+                      action: "goto",
+                      target: "sIh3xXKEtb_TtrhHqZQzX",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    }
+                  ],
+                  markdown: false,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  resizeKeyboard: true,
+                  oneTimeKeyboard: false,
+                  enableStatistics: true
                 }
-              ],
-              markdown: false
-            }
-          },
-          {
-            id: "cat_photo",
-            type: "message",
-            position: { x: 700, y: 300 },
-            data: {
-              messageText: "📸 Котики - самые фотогеничные создания!\n\nВ интернете более 2 миллионов фотографий котов! 🎉\n\nПервое видео с котом на YouTube было загружено в 2005 году! 🎬",
-              keyboardType: "inline",
-              buttons: [
-                {
-                  id: "btn-back3",
-                  text: "⬅️ Назад",
-                  action: "goto",
-                  target: "start",
-                  buttonType: "normal"
+              },
+              {
+                id: "sIh3xXKEtb_TtrhHqZQzX",
+                type: "message",
+                position: { x: 100, y: 940 },
+                data: {
+                  messageText: "Из какого ты города?",
+                  keyboardType: "none",
+                  buttons: [],
+                  collectUserInput: true,
+                  enableTextInput: true,
+                  inputVariable: "city",
+                  markdown: false,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  resizeKeyboard: true,
+                  oneTimeKeyboard: false,
+                  enableStatistics: true
                 }
-              ],
-              markdown: false
-            }
+              },
+              {
+                id: "tS2XGL2Mn4LkE63SnxhPy",
+                type: "message",
+                position: { x: 100, y: 1220 },
+                data: {
+                  messageText: "Как мне тебя называть?",
+                  keyboardType: "none",
+                  buttons: [],
+                  collectUserInput: true,
+                  enableTextInput: true,
+                  inputVariable: "name",
+                  markdown: false,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  resizeKeyboard: true,
+                  oneTimeKeyboard: false,
+                  enableStatistics: true
+                }
+              },
+              {
+                id: "lBPy3gcGVLla0NGdSYb35",
+                type: "message",
+                position: { x: 100, y: 1500 },
+                data: {
+                  messageText: "Расскажи о себе и кого хочешь найти, чем предлагаешь заняться. Это поможет лучше подобрать тебе компанию.",
+                  keyboardType: "reply",
+                  buttons: [
+                    {
+                      id: "g9KWWguVciHEUMMeyZ-WN",
+                      text: "Пропустить",
+                      action: "goto",
+                      target: "",
+                      buttonType: "normal",
+                      skipDataCollection: true
+                    }
+                  ],
+                  collectUserInput: true,
+                  enableTextInput: true,
+                  inputVariable: "info",
+                  markdown: false,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  resizeKeyboard: true,
+                  oneTimeKeyboard: false,
+                  enableStatistics: true
+                }
+              },
+              {
+                id: "Y9zLRp1BLpVhm-HcsNkJV",
+                type: "message",
+                position: { x: 100, y: 1780 },
+                data: {
+                  messageText: "Теперь пришли фото или запиши видео 👍 (до 15 сек), его будут видеть другие пользователи",
+                  keyboardType: "none",
+                  buttons: [],
+                  markdown: false,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  resizeKeyboard: true,
+                  oneTimeKeyboard: false,
+                  enableStatistics: true
+                }
+              },
+              {
+                id: "8xSJaWAJNz7Hz_54mjFTF",
+                type: "message",
+                position: { x: 100, y: 2060 },
+                data: {
+                  messageText: "Так выглядит твоя анкета:",
+                  keyboardType: "none",
+                  buttons: [],
+                  markdown: false,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  resizeKeyboard: true,
+                  oneTimeKeyboard: false,
+                  enableStatistics: true
+                }
+              },
+              {
+                id: "KE-8sR9elPEefApjXtBxC",
+                type: "message",
+                position: { x: 100, y: 2340 },
+                data: {
+                  messageText: "Все верно?",
+                  keyboardType: "reply",
+                  buttons: [
+                    {
+                      id: "Y6DFar0NH2ejdlKLTFgwC",
+                      text: "Да",
+                      action: "goto",
+                      target: "",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    },
+                    {
+                      id: "e1ZTOjUMpLqjln0LWH3JD",
+                      text: "Изменить анкету",
+                      action: "goto",
+                      target: "",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    }
+                  ],
+                  markdown: false,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  resizeKeyboard: true,
+                  oneTimeKeyboard: false,
+                  enableStatistics: true
+                }
+              },
+              {
+                id: "yrsc8v81qQa5oQx538Dzn",
+                type: "message",
+                position: { x: 100, y: 2620 },
+                data: {
+                  messageText: "1. Смотреть анкеты.\n2. Заполнить анкету заново.\n3. Изменить фото/видео.\n4. Изменить текст анкеты.",
+                  keyboardType: "reply",
+                  buttons: [
+                    {
+                      id: "kfzexViyPfMpgOffuWXY3",
+                      text: "1",
+                      action: "goto",
+                      target: "",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    },
+                    {
+                      id: "YqVio9545knVkcQWVLbgT",
+                      text: "2",
+                      action: "goto",
+                      target: "",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    },
+                    {
+                      id: "vMzKMEg84JLzu6EEnrQ5W",
+                      text: "3",
+                      action: "goto",
+                      target: "",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    },
+                    {
+                      id: "En0QBjOLWkcEpIGLqy6EQ",
+                      text: "4",
+                      action: "goto",
+                      target: "",
+                      buttonType: "normal",
+                      skipDataCollection: false
+                    }
+                  ],
+                  markdown: false,
+                  adminOnly: false,
+                  showInMenu: true,
+                  requiresAuth: false,
+                  isPrivateOnly: false,
+                  resizeKeyboard: true,
+                  oneTimeKeyboard: false,
+                  enableStatistics: true
+                }
+              }
+            ],
+            connections: []
           }
         ],
-        connections: [
-          { id: "conn-1", source: "start", target: "cat_fact", sourceHandle: "source", targetHandle: "target" },
-          { id: "conn-2", source: "start", target: "cat_sound", sourceHandle: "source", targetHandle: "target" },
-          { id: "conn-3", source: "start", target: "cat_photo", sourceHandle: "source", targetHandle: "target" },
-          { id: "conn-4", source: "cat_fact", target: "start", sourceHandle: "source", targetHandle: "target" },
-          { id: "conn-5", source: "cat_sound", target: "start", sourceHandle: "source", targetHandle: "target" },
-          { id: "conn-6", source: "cat_photo", target: "start", sourceHandle: "source", targetHandle: "target" }
-        ]
+        version: 2,
+        activeSheetId: "main_sheet"
       }
     });
 
