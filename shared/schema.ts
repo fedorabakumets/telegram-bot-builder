@@ -240,7 +240,7 @@ export const insertBotProjectSchema = createInsertSchema(botProjects).pick({
   userDatabaseEnabled: true,
 }).extend({
   botToken: z.string().nullish(),
-  userDatabaseEnabled: z.number().min(0).max(1).default(0),
+  userDatabaseEnabled: z.number().min(0).max(1).default(1),
 });
 
 export const insertBotInstanceSchema = createInsertSchema(botInstances).pick({
