@@ -1256,6 +1256,49 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                           
                           {/* Message Content */}
                           <div className="flex flex-col gap-1">
+                            {/* Фото если есть */}
+                            {message.messageData && typeof message.messageData === 'object' && ('photo' in message.messageData || 'photo_url' in message.messageData) && (
+                              <div className="rounded-lg overflow-hidden max-w-xs">
+                                {(() => {
+                                  const photoData = message.messageData as any;
+                                  const photoUrl = photoData.photo_url;
+                                  const fileId = photoData.photo?.file_id;
+                                  
+                                  // Для фото от бота используем photo_url если есть
+                                  if (photoUrl) {
+                                    return (
+                                      <img 
+                                        src={photoUrl} 
+                                        alt="Фото" 
+                                        className="w-full h-auto rounded-lg"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).style.display = 'none';
+                                        }}
+                                      />
+                                    );
+                                  }
+                                  
+                                  // Для фото от пользователя показываем заглушку с file_id
+                                  if (fileId) {
+                                    return (
+                                      <div className={`p-4 rounded-lg border-2 border-dashed ${
+                                        isBot ? 'border-blue-300 dark:border-blue-700' : 'border-green-300 dark:border-green-700'
+                                      }`}>
+                                        <div className="flex items-center gap-2 text-sm">
+                                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                          </svg>
+                                          <span>📷 Фото</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  return null;
+                                })()}
+                              </div>
+                            )}
+                            
                             <div className={`rounded-lg px-4 py-2 ${
                               isBot 
                                 ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100' 
