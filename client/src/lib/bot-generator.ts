@@ -5787,7 +5787,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки, показываем их ВМЕСТО ожидания текста
           if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            code += '                        # ИСПРАВЛЕНИЕ: У узла есть кнопки - показываем их вместо ожидания текста\n';
+            code += '                        # ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания текста\n';
             code += '                        builder = InlineKeyboardBuilder()\n';
             
             // Добавляем кнопки для узла с collectUserInput + buttons
@@ -5807,7 +5807,27 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                        builder.adjust(${columns})\n`;
             code += '                        keyboard = builder.as_markup()\n';
             code += '                        await message.answer(text, reply_markup=keyboard)\n';
-            code += `                        logging.info(f"✅ Показаны кнопки для узла ${targetNode.id} с collectUserInput")\n`;
+            code += `                        logging.info(f"✅ Показаны inline кнопки для узла ${targetNode.id} с collectUserInput")\n`;
+          } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += '                        # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n';
+            code += '                        builder = ReplyKeyboardBuilder()\n';
+            
+            // Добавляем кнопки для reply клавиатуры
+            targetNode.data.buttons.forEach((btn) => {
+              if (btn.action === "contact" && btn.requestContact) {
+                code += `                        builder.add(KeyboardButton(text="${btn.text}", request_contact=True))\n`;
+              } else if (btn.action === "location" && btn.requestLocation) {
+                code += `                        builder.add(KeyboardButton(text="${btn.text}", request_location=True))\n`;
+              } else {
+                code += `                        builder.add(KeyboardButton(text="${btn.text}"))\n`;
+              }
+            });
+            
+            const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+            const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+            code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+            code += '                        await message.answer(text, reply_markup=keyboard)\n';
+            code += `                        logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
           } else {
             code += '                        await message.answer(text)\n';
             
