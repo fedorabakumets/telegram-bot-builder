@@ -5723,6 +5723,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '                user_data[user_id]["processed_inputs"] = set()\n';
   code += '            user_data[user_id]["processed_inputs"].add(waiting_node_id)\n';
   code += '            \n';
+  code += '            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем старое состояние ожидания перед навигацией\n';
+  code += '            if "waiting_for_input" in user_data[user_id]:\n';
+  code += '                del user_data[user_id]["waiting_for_input"]\n';
+  code += '            \n';
   code += '            logging.info(f"✅ Переход к следующему узлу выполнен успешно")\n';
   code += '            logging.info(f"Получен пользовательский ввод: {variable_name} = {user_text}")\n';
   code += '            \n';
