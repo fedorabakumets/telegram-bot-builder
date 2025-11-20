@@ -1266,6 +1266,35 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
                               </p>
                             </div>
                             
+                            {/* Кнопки для сообщений бота */}
+                            {isBot && message.messageData && typeof message.messageData === 'object' && 'buttons' in message.messageData && Array.isArray(message.messageData.buttons) && message.messageData.buttons.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {message.messageData.buttons.map((button: any, btnIndex: number) => (
+                                  <div
+                                    key={btnIndex}
+                                    className="inline-flex items-center px-3 py-1 text-xs rounded-md border bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300"
+                                    data-testid={`button-preview-${index}-${btnIndex}`}
+                                  >
+                                    {button.text}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {/* Информация о нажатой кнопке для сообщений пользователя */}
+                            {isUser && message.messageData && typeof message.messageData === 'object' && 'button_clicked' in message.messageData && message.messageData.button_clicked && (
+                              <div className="mt-1">
+                                <div className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200">
+                                  <span>✓</span>
+                                  <span>
+                                    {'button_text' in message.messageData && message.messageData.button_text 
+                                      ? `Нажата: ${message.messageData.button_text}` 
+                                      : 'Нажата кнопка'}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            
                             {/* Timestamp */}
                             {message.createdAt && (
                               <span 
