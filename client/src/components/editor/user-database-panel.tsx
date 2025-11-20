@@ -1216,7 +1216,7 @@ export function UserDatabasePanel({ projectId, projectName }: UserDatabasePanelP
           
           <div className="flex-1 flex flex-col min-h-0">
             {/* Messages Area */}
-            <ScrollArea className="flex-1 pr-4" data-testid="messages-scroll-area">
+            <ScrollArea className="h-[400px] pr-4" data-testid="messages-scroll-area">
               {messagesLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
