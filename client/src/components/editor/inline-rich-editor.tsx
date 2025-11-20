@@ -92,7 +92,7 @@ export function InlineRichEditor({
         .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
         .replace(/__(.*?)__/g, '<u>$1</u>')
         .replace(/~~(.*?)~~/g, '<s>$1</s>')
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/`([^`]+)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs font-mono">$1</code>')
         .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
         .replace(/^# (.+)$/gm, '<h3>$1</h3>')
         .replace(/^## (.+)$/gm, '<h4>$1</h4>')
