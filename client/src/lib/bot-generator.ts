@@ -6080,12 +6080,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                await message.answer(text)\n`;
           }
           
-          code += `                # Очищаем состояние ожидания ввода после успешного перехода\n`;
-          code += `                if "waiting_for_input" in user_data[user_id]:\n`;
-          code += `                    del user_data[user_id]["waiting_for_input"]\n`;
-          if (node.data.inputType) {
-            code += `                if "input_type" in user_data[user_id]:\n`;
-            code += `                    del user_data[user_id]["input_type"]\n`;
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем состояние ТОЛЬКО если целевой узел НЕ собирает ввод
+          if (!targetNode.data.collectUserInput) {
+            code += `                # Очищаем состояние ожидания ввода после успешного перехода\n`;
+            code += `                if "waiting_for_input" in user_data[user_id]:\n`;
+            code += `                    del user_data[user_id]["waiting_for_input"]\n`;
+            if (node.data.inputType) {
+              code += `                if "input_type" in user_data[user_id]:\n`;
+              code += `                    del user_data[user_id]["input_type"]\n`;
+            }
           }
           code += `                \n`;
           code += `                logging.info("✅ Переход к следующему узлу выполнен успешно")\n`;
