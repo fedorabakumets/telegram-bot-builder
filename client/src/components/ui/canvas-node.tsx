@@ -1514,7 +1514,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                     {isMultiSelect ? (
                       <>
                         <div className="grid grid-cols-2 gap-2">
-                          {node.data.buttons.filter((button: any) => button.buttonType === 'option').slice(0, 6).map((button: any) => (
+                          {node.data.buttons.filter((button: any) => button.buttonType === 'option').map((button: any) => (
                             <div key={button.id} className="group relative">
                               <div className="p-3 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-lg text-xs font-medium text-green-700 dark:text-green-300 text-center border border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 transition-all duration-200 shadow-sm relative">
                               <div className="flex items-center justify-center space-x-1">
@@ -1537,20 +1537,11 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                             </div>
                           </div>
                         </div>
-                        
-                        {/* Show count of remaining option buttons */}
-                        {node.data.buttons.filter((button: any) => button.buttonType === 'option').length > 6 && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-1 font-medium">
-                            <span className="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-800 rounded-full">
-                              +{node.data.buttons.filter((button: any) => button.buttonType === 'option').length - 6} опций
-                            </span>
-                          </div>
-                        )}
                       </>
                     ) : (
                       /* Regular inline buttons */
                       <div className="grid grid-cols-2 gap-2">
-                        {node.data.buttons.slice(0, 4).map((button: any) => (
+                        {node.data.buttons.map((button: any) => (
                           <div key={button.id} className="group relative">
                             <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200 shadow-sm">
                               <div className="flex items-center justify-center space-x-1">
@@ -1577,7 +1568,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                 ) : (
                   /* Reply keyboard buttons */
                   <div className="space-y-2">
-                    {node.data.buttons.slice(0, 2).map((button: any) => (
+                    {node.data.buttons.map((button: any) => (
                       <div key={button.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
                         <div className="flex items-center space-x-1 ml-2">
@@ -1596,15 +1587,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                         </div>
                       </div>
                     ))}
-                  </div>
-                )}
-                
-                {/* Show remaining buttons count for non-multi-select */}
-                {!isMultiSelect && node.data.buttons && node.data.buttons.length > (node.data.keyboardType === 'inline' ? 4 : 2) && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-2 font-medium">
-                    <span className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full">
-                      +{node.data.buttons.length - (node.data.keyboardType === 'inline' ? 4 : 2)} еще
-                    </span>
                   </div>
                 )}
               </>
