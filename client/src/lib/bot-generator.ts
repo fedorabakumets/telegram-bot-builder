@@ -489,6 +489,81 @@ function generateUniversalVariableReplacement(indentLevel: string): string {
   return code;
 }
 
+// Функция для генерации кода отправки медиа из attachedMedia
+function generateAttachedMediaSendCode(
+  attachedMedia: string[],
+  mediaVariablesMap: Map<string, { type: string; variable: string }>,
+  text: string,
+  parseMode: string,
+  keyboard: string,
+  nodeId: string,
+  indentLevel: string
+): string {
+  if (!attachedMedia || attachedMedia.length === 0) {
+    return '';
+  }
+
+  // Пока поддерживаем только первую медиапеременную
+  const firstMediaVar = attachedMedia[0];
+  const mediaInfo = mediaVariablesMap.get(firstMediaVar);
+  
+  if (!mediaInfo) {
+    console.log(`⚠️ ГЕНЕРАТОР: Медиапеременная ${firstMediaVar} не найдена в mediaVariablesMap`);
+    return '';
+  }
+
+  const { type: mediaType, variable: mediaVariable } = mediaInfo;
+  
+  let code = '';
+  code += `${indentLevel}# Проверяем наличие прикрепленного медиа из переменной ${mediaVariable}\n`;
+  code += `${indentLevel}attached_media = None\n`;
+  code += `${indentLevel}if user_vars and "${mediaVariable}" in user_vars:\n`;
+  code += `${indentLevel}    media_data = user_vars["${mediaVariable}"]\n`;
+  code += `${indentLevel}    if isinstance(media_data, dict) and "value" in media_data:\n`;
+  code += `${indentLevel}        attached_media = media_data["value"]\n`;
+  code += `${indentLevel}    elif isinstance(media_data, str):\n`;
+  code += `${indentLevel}        attached_media = media_data\n`;
+  code += `${indentLevel}\n`;
+  code += `${indentLevel}# Если медиа найдено, отправляем с медиа, иначе обычное сообщение\n`;
+  code += `${indentLevel}if attached_media and str(attached_media).strip():\n`;
+  code += `${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")\n`;
+  code += `${indentLevel}    try:\n`;
+  code += `${indentLevel}        await callback_query.message.delete()\n`;
+  
+  // Генерируем код отправки в зависимости от типа медиа
+  const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
+  const parseModeParam = parseMode ? `, parse_mode=ParseMode.${parseMode.toUpperCase()}` : '';
+  
+  switch (mediaType) {
+    case 'photo':
+      code += `${indentLevel}        await bot.send_photo(callback_query.from_user.id, attached_media, caption=text${parseModeParam}${keyboardParam})\n`;
+      break;
+    case 'video':
+      code += `${indentLevel}        await bot.send_video(callback_query.from_user.id, attached_media, caption=text${parseModeParam}${keyboardParam})\n`;
+      break;
+    case 'audio':
+      code += `${indentLevel}        await bot.send_audio(callback_query.from_user.id, attached_media, caption=text${parseModeParam}${keyboardParam})\n`;
+      break;
+    case 'document':
+      code += `${indentLevel}        await bot.send_document(callback_query.from_user.id, attached_media, caption=text${parseModeParam}${keyboardParam})\n`;
+      break;
+    default:
+      code += `${indentLevel}        # Неизвестный тип медиа: ${mediaType}, fallback на обычное сообщение\n`;
+      code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${parseMode})\n`;
+  }
+  
+  code += `${indentLevel}    except Exception as e:\n`;
+  code += `${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")\n`;
+  code += `${indentLevel}        # Fallback на обычное сообщение при ошибке\n`;
+  code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${parseMode})\n`;
+  code += `${indentLevel}else:\n`;
+  code += `${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение\n`;
+  code += `${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")\n`;
+  code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${parseMode})\n`;
+  
+  return code;
+}
+
 // Функция для генерации клавиатуры для условного сообщения
 function generateConditionalKeyboard(condition: any, indentLevel: string, nodeData?: any): string {
   if (!condition.keyboardType || condition.keyboardType === 'none' || !condition.buttons || condition.buttons.length === 0) {
@@ -949,6 +1024,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   // Собираем все ID узлов для генерации уникальных коротких ID
   const allNodeIds = nodes ? nodes.map(node => node.id) : [];
+  
+  // Собираем все медиапеременные из узлов для поддержки attachedMedia
+  const mediaVariablesMap = collectMediaVariables(nodes || []);
+  console.log(`🔧 ГЕНЕРАТОР: Собрано медиапеременных: ${mediaVariablesMap.size}`);
+  if (mediaVariablesMap.size > 0) {
+    console.log('🔧 ГЕНЕРАТОР: Медиапеременные:', Array.from(mediaVariablesMap.entries()));
+  }
   
   // ЛОГИРОВАНИЕ ГЕНЕРАТОРА: Подробная информация о данных бота
   console.log(`🔧 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
@@ -2264,8 +2346,37 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               // Отправляем сообщение с учетом всех условий
-              code += '    # Отправляем сообщение\n';
-              code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${parseMode})\n`;
+              // Проверяем наличие прикрепленных медиа
+              const attachedMedia = targetNode.data.attachedMedia || [];
+              
+              if (attachedMedia.length > 0) {
+                console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} имеет attachedMedia:`, attachedMedia);
+                // Генерируем код отправки с медиа
+                const parseModeStr = targetNode.data.formatMode || '';
+                const keyboardStr = 'keyboard if keyboard is not None else None';
+                const mediaCode = generateAttachedMediaSendCode(
+                  attachedMedia,
+                  mediaVariablesMap,
+                  'text',
+                  parseModeStr,
+                  keyboardStr,
+                  targetNode.id,
+                  '    '
+                );
+                
+                if (mediaCode) {
+                  code += '    # Отправляем сообщение (с проверкой прикрепленного медиа)\n';
+                  code += mediaCode;
+                } else {
+                  // Fallback если не удалось сгенерировать код медиа
+                  code += '    # Отправляем сообщение (обычное)\n';
+                  code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${parseMode})\n`;
+                }
+              } else {
+                // Обычное сообщение без медиа
+                code += '    # Отправляем сообщение\n';
+                code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${parseMode})\n`;
+              }
               
               // КРИТИЧЕСКИ ВАЖНАЯ ЛОГИКА: Если этот узел имеет collectUserInput, настраиваем состояние ожидания
               if (targetNode.data.collectUserInput === true) {
