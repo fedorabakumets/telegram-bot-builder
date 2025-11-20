@@ -5417,7 +5417,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '                        }\n';
           }
         } else {
-          // Если узел не собирает ввод, проверяем есть ли inline кнопки
+          // Если узел не собирает ввод, проверяем есть ли inline или reply кнопки
           if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             code += '                        # Создаем inline клавиатуру\n';
             code += '                        builder = InlineKeyboardBuilder()\n';
@@ -5442,6 +5442,26 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                        builder.adjust(${columns})\n`;
             code += '                        keyboard = builder.as_markup()\n';
             code += '                        await message.answer(text, reply_markup=keyboard)\n';
+          } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += '                        # Создаем reply клавиатуру\n';
+            code += '                        builder = ReplyKeyboardBuilder()\n';
+            
+            // Добавляем кнопки для reply клавиатуры
+            targetNode.data.buttons.forEach((btn) => {
+              if (btn.action === "contact" && btn.requestContact) {
+                code += `                        builder.add(KeyboardButton(text="${btn.text}", request_contact=True))\n`;
+              } else if (btn.action === "location" && btn.requestLocation) {
+                code += `                        builder.add(KeyboardButton(text="${btn.text}", request_location=True))\n`;
+              } else {
+                code += `                        builder.add(KeyboardButton(text="${btn.text}"))\n`;
+              }
+            });
+            
+            const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+            const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+            code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+            code += '                        await message.answer(text, reply_markup=keyboard)\n';
+            code += `                        logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id}")\n`;
           } else {
             code += '                        await message.answer(text)\n';
           }
