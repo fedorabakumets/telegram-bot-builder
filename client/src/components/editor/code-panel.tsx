@@ -7,6 +7,7 @@ import { BotData, BotGroup } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Loader2 } from 'lucide-react';
 
 const loadBotGenerator = () => import('@/lib/bot-generator');
 
@@ -28,48 +29,23 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     readme: '',
     dockerfile: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const codeContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const { data: groups = [] } = useQuery<BotGroup[]>({
     queryKey: ['/api/groups'],
   });
 
-  // Refs для стабильного доступа к данным в генераторах
-  const botDataRef = useRef(botData);
-  const projectNameRef = useRef(projectName);
-  const groupsRef = useRef(groups);
-  
-  // Обновляем refs при изменении данных
-  useEffect(() => {
-    botDataRef.current = botData;
-    projectNameRef.current = projectName;
-    groupsRef.current = groups;
-  }, [botData, projectName, groups]);
-
-  // Создаем стабильную версию данных для отслеживания изменений
-  const [dataVersion, setDataVersion] = useState(0);
-  const lastGeneratedVersionRef = useRef<Record<CodeFormat, number>>({
-    python: -1,
-    json: -1,
-    requirements: -1,
-    readme: -1,
-    dockerfile: -1
+  // Отслеживаем предыдущие значения для обнаружения реальных изменений  
+  const prevDataRef = useRef({ 
+    botDataStr: JSON.stringify(botData), 
+    projectName,
+    groupsStr: JSON.stringify(groups)
   });
-
-  // Обновляем версию данных при изменении входных данных
-  useEffect(() => {
-    setDataVersion(prev => prev + 1);
-    // Сбрасываем кеш при изменении данных
-    setCodeContent({
-      python: '',
-      json: '',
-      requirements: '',
-      readme: '',
-      dockerfile: ''
-    });
-  }, [botData, projectName, groups]);
+  
+  // Отслеживаем, какие форматы уже загружены
+  const loadedFormatsRef = useRef(new Set<CodeFormat>());
 
   // Определяем тему из DOM
   useEffect(() => {
@@ -80,7 +56,6 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     
     checkTheme();
     
-    // Наблюдаем за изменениями темы
     const observer = new MutationObserver(checkTheme);
     observer.observe(document.documentElement, {
       attributes: true,
@@ -90,67 +65,107 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     return () => observer.disconnect();
   }, []);
 
-  // Стабильные функции-генераторы, читающие из refs
-  const generateCodeContent = useRef({
-    python: async () => {
-      const botGenerator = await loadBotGenerator();
-      const validation = botGenerator.validateBotStructure(botDataRef.current);
-      if (!validation?.isValid) return '// Ошибка валидации структуры бота';
-      return botGenerator.generatePythonCode(botDataRef.current, projectNameRef.current, groupsRef.current);
-    },
-    json: async () => JSON.stringify(botDataRef.current, null, 2),
-    requirements: async () => {
-      const botGenerator = await loadBotGenerator();
-      return botGenerator.generateRequirementsTxt();
-    },
-    readme: async () => {
-      const botGenerator = await loadBotGenerator();
-      return botGenerator.generateReadme(botDataRef.current, projectNameRef.current);
-    },
-    dockerfile: async () => {
-      const botGenerator = await loadBotGenerator();
-      return botGenerator.generateDockerfile();
-    }
-  });
-
-  // Генерируем код только когда нужно
+  // Объединенная логика: сброс кеша при изменении данных + загрузка контента
   useEffect(() => {
-    // Проверяем, была ли уже генерация для этой версии и формата
-    if (lastGeneratedVersionRef.current[selectedFormat] === dataVersion && codeContent[selectedFormat]) {
-      console.log('✅ Content already generated for version', dataVersion);
+    // Проверяем, изменились ли данные (сравниваем по значению, а не по ссылке)
+    const prev = prevDataRef.current;
+    const currentBotDataStr = JSON.stringify(botData);
+    const currentGroupsStr = JSON.stringify(groups);
+    const dataChanged = prev.botDataStr !== currentBotDataStr || 
+                       prev.projectName !== projectName || 
+                       prev.groupsStr !== currentGroupsStr;
+    
+    if (dataChanged) {
+      console.log('🔄 CodePanel: Данные изменились, сбрасываем весь кеш');
+      setCodeContent({
+        python: '',
+        json: '',
+        requirements: '',
+        readme: '',
+        dockerfile: ''
+      });
+      loadedFormatsRef.current.clear(); // Очищаем отслеживание загруженных форматов
+      prevDataRef.current = { 
+        botDataStr: currentBotDataStr, 
+        projectName, 
+        groupsStr: currentGroupsStr 
+      };
+    }
+    
+    if (!botData) {
+      console.warn('⚠️ CodePanel: Нет данных бота');
       return;
     }
-
-    // Добавляем задержку для debounce
-    const timeoutId = setTimeout(async () => {
-      console.log('🚀 Starting code generation for', selectedFormat, 'version', dataVersion);
+    
+    // Проверяем, был ли уже загружен этот формат (используем ref для проверки без ререндера)
+    if (loadedFormatsRef.current.has(selectedFormat)) {
+      console.log('✅ CodePanel: Контент уже загружен для', selectedFormat, '- пропускаем');
+      return;
+    }
+    
+    // Генерируем контент
+    async function loadContent() {
+      console.log('🔄 CodePanel: Генерация контента для', selectedFormat);
+      setIsLoading(true);
       
       try {
-        const content = await generateCodeContent.current[selectedFormat]();
-        console.log('✅ Generation complete for', selectedFormat);
+        const content = await generateContent(selectedFormat);
+        
+        console.log('✅ CodePanel: Контент загружен для', selectedFormat);
         setCodeContent(prev => ({ ...prev, [selectedFormat]: content }));
-        lastGeneratedVersionRef.current[selectedFormat] = dataVersion;
+        loadedFormatsRef.current.add(selectedFormat); // Отмечаем как загруженный
       } catch (error) {
-        console.error('❌ Error loading code content:', error);
+        console.error('❌ CodePanel: Ошибка загрузки:', error);
+        toast({
+          title: "Ошибка генерации",
+          description: "Не удалось сгенерировать код.",
+          variant: "destructive",
+        });
+        setCodeContent(prev => ({ 
+          ...prev, 
+          [selectedFormat]: `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}` 
+        }));
+      } finally {
+        setIsLoading(false);
       }
-    }, 300);
+    }
     
-    return () => clearTimeout(timeoutId);
-  }, [selectedFormat, dataVersion]);
+    loadContent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFormat, botData, projectName, groups, toast]);
 
-  // Подсветка строк убрана для упрощения и производительности
   const highlightedLines = new Set<number>();
 
   const getCurrentContent = () => {
-    return codeContent[selectedFormat] || 'Загрузка...';
+    if (isLoading) {
+      return 'Генерация кода...';
+    }
+    return codeContent[selectedFormat] || 'Выберите формат для просмотра кода...';
   };
-  
-  const [displayContent, setDisplayContent] = useState<string>('Загрузка...');
-  
-  // Обновляем отображаемый контент когда меняется формат или контент
-  useEffect(() => {
-    setDisplayContent(getCurrentContent());
-  }, [codeContent, selectedFormat]);
+
+  // Вспомогательная функция для генерации контента (используется в useEffect и downloadFile)
+  const generateContent = async (format: CodeFormat): Promise<string> => {
+    const botGenerator = await loadBotGenerator();
+    
+    switch (format) {
+      case 'python':
+        const validation = botGenerator.validateBotStructure(botData);
+        if (!validation?.isValid) {
+          return '# Ошибка валидации структуры бота';
+        }
+        return botGenerator.generatePythonCode(botData, projectName, groups || []);
+      case 'json':
+        return JSON.stringify(botData, null, 2);
+      case 'requirements':
+        return botGenerator.generateRequirementsTxt();
+      case 'readme':
+        return botGenerator.generateReadme(botData, projectName);
+      case 'dockerfile':
+        return botGenerator.generateDockerfile();
+      default:
+        return '';
+    }
+  };
 
   const copyToClipboard = () => {
     const text = getCurrentContent();
@@ -162,7 +177,24 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
   };
 
   const downloadFile = async (format: CodeFormat) => {
-    const content = codeContent[format] || await generateCodeContent.current[format]?.();
+    let content = codeContent[format];
+    // Если контента нет, генерируем его
+    if (!content) {
+      try {
+        content = await generateContent(format);
+        // Сохраняем в кеш и отмечаем как загруженный
+        setCodeContent(prev => ({ ...prev, [format]: content }));
+        loadedFormatsRef.current.add(format);
+      } catch (error) {
+        console.error('❌ downloadFile: Ошибка генерации:', error);
+        toast({
+          title: "Ошибка генерации",
+          description: "Не удалось сгенерировать файл для скачивания.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
     if (!content) return;
 
     const fileExtensions: Record<CodeFormat, string> = {
@@ -288,10 +320,16 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
           </div>
           
           <div 
-            ref={codeContainerRef}
             className="flex-1 overflow-auto rounded border border-slate-300 dark:border-slate-700"
           >
-            {selectedFormat === 'python' ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">Генерация кода...</p>
+                </div>
+              </div>
+            ) : selectedFormat === 'python' ? (
               <SyntaxHighlighter
                 language="python"
                 style={theme === 'dark' ? vscDarkPlus : vs}
@@ -318,11 +356,11 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
                 }}
                 data-testid="syntax-highlighter-python"
               >
-                {displayContent}
+                {getCurrentContent()}
               </SyntaxHighlighter>
             ) : (
               <Textarea
-                value={displayContent}
+                value={getCurrentContent()}
                 readOnly
                 className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
                 style={{

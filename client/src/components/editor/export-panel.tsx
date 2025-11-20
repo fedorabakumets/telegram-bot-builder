@@ -10,6 +10,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { BotData, BotGroup } from '@shared/schema';
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 // Динамический импорт тяжелых генераторов для улучшения производительности
 const loadBotGenerator = () => import('@/lib/bot-generator');
@@ -36,8 +38,27 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
   });
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
   const [botFatherCommands, setBotFatherCommands] = useState('');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  // Определяем тему из DOM
+  useEffect(() => {
+    const checkTheme = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setTheme(isDark ? 'dark' : 'light');
+    };
+    
+    checkTheme();
+    
+    const observer = new MutationObserver(checkTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   // Загрузка групп
   const { data: groups = [] } = useQuery<BotGroup[]>({
@@ -467,18 +488,39 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                   </div>
                   
                   <div className="relative">
-                    <Textarea 
-                      value={getCurrentContent()} 
-                      readOnly 
-                      className={`font-mono text-xs ${isMobile ? 'h-48' : 'h-[400px]'} bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-700 resize-none scrollbar-thin`}
-                      style={{
-                        lineHeight: '1.5',
-                        letterSpacing: '0.02em',
-                        tabSize: 4
-                      }}
-                      placeholder="Выберите формат для просмотра содержимого..."
-                      data-testid="textarea-export-preview"
-                    />
+                    <div className={`${isMobile ? 'h-48' : 'h-[400px]'} overflow-auto rounded border border-slate-300 dark:border-slate-700`}>
+                      {selectedFormat === 'python' ? (
+                        <SyntaxHighlighter
+                          language="python"
+                          style={theme === 'dark' ? vscDarkPlus : vs}
+                          showLineNumbers={true}
+                          wrapLines={true}
+                          customStyle={{
+                            margin: 0,
+                            fontSize: '12px',
+                            lineHeight: '1.5',
+                            background: 'transparent',
+                            height: '100%'
+                          }}
+                          data-testid="syntax-highlighter-export-python"
+                        >
+                          {getCurrentContent()}
+                        </SyntaxHighlighter>
+                      ) : (
+                        <Textarea 
+                          value={getCurrentContent()} 
+                          readOnly 
+                          className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
+                          style={{
+                            lineHeight: '1.5',
+                            letterSpacing: '0.02em',
+                            tabSize: 4
+                          }}
+                          placeholder="Выберите формат для просмотра содержимого..."
+                          data-testid="textarea-export-preview"
+                        />
+                      )}
+                    </div>
                   </div>
                   
                   <Separator />
