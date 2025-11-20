@@ -2951,17 +2951,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bu.first_name AS "firstName",
           bu.last_name AS "lastName",
           bu.registered_at AS "registeredAt",
+          bu.registered_at AS "createdAt",
           bu.last_interaction AS "lastInteraction",
           COALESCE(COUNT(bm.id), 0)::integer AS "interactionCount",
           bu.user_data AS "userData",
-          bu.is_active AS "isActive",
-          0 AS "isPremium",
-          0 AS "isBlocked",
-          0 AS "isBot"
+          CASE WHEN bu.is_active = 1 THEN TRUE ELSE FALSE END AS "isActive",
+          FALSE AS "isPremium",
+          FALSE AS "isBlocked",
+          FALSE AS "isBot"
         FROM bot_users bu
         LEFT JOIN bot_messages bm ON bm.user_id = bu.user_id::text AND bm.project_id = $1
         GROUP BY bu.user_id, bu.username, bu.first_name, bu.last_name, bu.registered_at, bu.last_interaction, bu.user_data, bu.is_active
-        HAVING COUNT(bm.id) > 0
         ORDER BY bu.last_interaction DESC
       `, [projectId]);
       
