@@ -96,6 +96,10 @@ export default function TemplatesPageWrapper() {
       if (!response.ok) throw new Error('Failed to increment use count');
       return response.json();
     },
+    onSuccess: () => {
+      // Инвалидируем кеш проектов, чтобы данные обновились на странице "Проекты"
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+    }
   });
 
   const handleUseTemplate = (template: BotTemplate) => {

@@ -706,6 +706,10 @@ export default function Editor() {
           });
         }
         
+        // Принудительно инвалидируем кеш проектов после применения шаблона
+        // чтобы на странице "Проекты" отображалось правильное количество листов
+        queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+        
         toast({
           title: 'Шаблон применен',
           description: `Шаблон "${template.name}" успешно загружен`,
@@ -724,7 +728,7 @@ export default function Editor() {
         setIsLoadingTemplate(false); // Убираем флаг при ошибке
       }
     }
-  }, [currentProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast]);
+  }, [currentProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
 
   // Enhanced onNodeUpdate that auto-saves changes
   const handleNodeUpdate = useCallback((nodeId: string, updates: any) => {
