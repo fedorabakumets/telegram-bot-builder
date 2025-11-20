@@ -2443,23 +2443,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `    # ИСПРАВЛЕНИЕ: У узла есть inline кнопки без текстового/медиа ввода\n`;
                 } else {
                   code += '    \n';
-                  code += `    logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id} (callback обработчик), переменная ${inputVariable}")\n`;
                   code += '    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput\n';
-                  code += '    # Инициализируем user_data для пользователя если не существует\n';
-                  code += '    if user_id not in user_data:\n';
-                  code += '        user_data[user_id] = {}\n';
-                  code += '    user_data[user_id]["waiting_for_input"] = {\n';
-                  code += `        "type": "${inputType}",\n`;
-                  code += `        "variable": "${inputVariable}",\n`;
-                  code += '        "save_to_database": True,\n';
-                  code += `        "node_id": "${targetNode.id}",\n`;
-                  code += `        "next_node_id": "${inputTargetNodeId || ''}",\n`;
-                  code += `        "min_length": ${targetNode.data.minLength || 0},\n`;
-                  code += `        "max_length": ${targetNode.data.maxLength || 0},\n`;
-                  code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-                  code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
-                  code += '    }\n';
-                  code += `    logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable}")\n`;
+                  code += '    # Используем универсальную функцию для определения правильного типа ввода (text/photo/video/audio/document)\n';
+                  // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode вместо встроенной генерации
+                  code += generateWaitingStateCode(targetNode, '    ');
                 }
               }
             }
@@ -4294,19 +4281,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += '                user_data[user_id] = {}\n';
                     code += `            # Проверяем, не была ли переменная ${inputVariable} уже сохранена\n`;
                     code += `            if "${inputVariable}" not in user_data[user_id] or not user_data[user_id]["${inputVariable}"]:\n`;
-                    code += '                # Переменная не сохранена - настраиваем ожидание ввода\n';
-                    code += '                user_data[user_id]["waiting_for_input"] = {\n';
-                    code += `                    "type": "${inputType}",\n`;
-                    code += `                    "variable": "${inputVariable}",\n`;
-                    code += '                    "save_to_database": True,\n';
-                    code += `                    "node_id": "${navTargetNode.id}",\n`;
-                    code += `                    "next_node_id": "${inputTargetNodeId || ''}",\n`;
-                    code += `                    "min_length": ${navTargetNode.data.minLength || 0},\n`;
-                    code += `                    "max_length": ${navTargetNode.data.maxLength || 0},\n`;
-                    code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-                    code += '                    "success_message": "✅ Спасибо за ваш ответ!"\n';
-                    code += '                }\n';
-                    code += `                logging.info(f"🔧 Настроено ожидание ввода для переменной: ${inputVariable} (узел ${navTargetNode.id})")\n`;
+                    code += '                # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода\n';
+                    // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode вместо встроенной генерации
+                    code += generateWaitingStateCode(navTargetNode, '                ').split('\n').map(line => line ? '            ' + line : '').join('\n');
                     code += '            else:\n';
                     code += `                logging.info(f"⏭️ Переменная ${inputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
                   }
@@ -6740,88 +6717,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         }
         
         // Проверяем, нужно ли настроить ожидание текстового ввода
-        if (targetNode.data.enableTextInput) {
-          const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
-          
-          code += '                # Настраиваем ожидание текстового ввода\n';
-          code += '                user_data[user_id]["waiting_for_input"] = {\n';
-          code += '                    "type": "text",\n';
-          code += `                    "variable": "${inputVariable}",\n`;
-          code += '                    "save_to_database": True,\n';
-          code += `                    "node_id": "${targetNode.id}",\n`;
-          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
-          code += '                }\n';
-        } else if (targetNode.data.collectUserInput) {
-          // ИСПРАВЛЕНИЕ: Настраиваем ожидание текстового ввода только если включен collectUserInput
-          const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-          const nextConnection = connections.find(conn => conn.source === targetNode.id);
-          const inputTargetNodeId = nextConnection ? nextConnection.target : '';
-          
-          code += '                # Настраиваем ожидание текстового ввода (collectUserInput)\n';
-          code += '                user_data[user_id]["waiting_for_input"] = {\n';
-          code += '                    "type": "text",\n';
-          code += `                    "variable": "${inputVariable}",\n`;
-          code += '                    "save_to_database": True,\n';
-          code += `                    "node_id": "${targetNode.id}",\n`;
-          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
-          code += '                }\n';
-        }
-        
-        // Проверяем, нужно ли настроить ожидание ввода фото
-        if (targetNode.data.enablePhotoInput) {
-          const photoVariable = targetNode.data.photoInputVariable || `photo_${targetNode.id}`;
-          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
-          
-          code += '                # Настраиваем ожидание ввода фото\n';
-          code += '                user_data[user_id]["waiting_for_photo"] = {\n';
-          code += `                    "variable": "${photoVariable}",\n`;
-          code += `                    "node_id": "${targetNode.id}",\n`;
-          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
-          code += '                }\n';
-          code += `                logging.info(f"✅ Настроено ожидание фото: {photoVariable}")\n`;
-        }
-        
-        // Проверяем, нужно ли настроить ожидание ввода видео
-        if (targetNode.data.enableVideoInput) {
-          const videoVariable = targetNode.data.videoInputVariable || `video_${targetNode.id}`;
-          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
-          
-          code += '                # Настраиваем ожидание ввода видео\n';
-          code += '                user_data[user_id]["waiting_for_video"] = {\n';
-          code += `                    "variable": "${videoVariable}",\n`;
-          code += `                    "node_id": "${targetNode.id}",\n`;
-          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
-          code += '                }\n';
-          code += `                logging.info(f"✅ Настроено ожидание видео: {videoVariable}")\n`;
-        }
-        
-        // Проверяем, нужно ли настроить ожидание ввода аудио
-        if (targetNode.data.enableAudioInput) {
-          const audioVariable = targetNode.data.audioInputVariable || `audio_${targetNode.id}`;
-          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
-          
-          code += '                # Настраиваем ожидание ввода аудио\n';
-          code += '                user_data[user_id]["waiting_for_audio"] = {\n';
-          code += `                    "variable": "${audioVariable}",\n`;
-          code += `                    "node_id": "${targetNode.id}",\n`;
-          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
-          code += '                }\n';
-          code += `                logging.info(f"✅ Настроено ожидание аудио: {audioVariable}")\n`;
-        }
-        
-        // Проверяем, нужно ли настроить ожидание ввода документа
-        if (targetNode.data.enableDocumentInput) {
-          const documentVariable = targetNode.data.documentInputVariable || `document_${targetNode.id}`;
-          const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
-          
-          code += '                # Настраиваем ожидание ввода документа\n';
-          code += '                user_data[user_id]["waiting_for_document"] = {\n';
-          code += `                    "variable": "${documentVariable}",\n`;
-          code += `                    "node_id": "${targetNode.id}",\n`;
-          code += `                    "next_node_id": "${inputTargetNodeId}"\n`;
-          code += '                }\n';
-          code += `                logging.info(f"✅ Настроено ожидание документа: {documentVariable}")\n`;
+        // ИСПРАВЛЕНИЕ: Используем универсальную функцию для настройки ожидания ввода
+        if (targetNode.data.enableTextInput || targetNode.data.collectUserInput || 
+            targetNode.data.enablePhotoInput || targetNode.data.enableVideoInput || 
+            targetNode.data.enableAudioInput || targetNode.data.enableDocumentInput) {
+          code += generateWaitingStateCode(targetNode, '                ');
         }
       } else if (targetNode.type === 'message') {
         // Добавляем поддержку условных сообщений для узлов сообщений
