@@ -280,6 +280,17 @@ export default function BotPreview() {
       }
     }, 100);
 
+    // Check for auto transition first
+    if (node.data.autoTransitionTo) {
+      console.log(`⚡ Автопереход от ${node.id} к ${node.data.autoTransitionTo}`);
+      const autoTransitionNode = nodes.find(n => n.id === node.data.autoTransitionTo);
+      if (autoTransitionNode) {
+        setTimeout(() => processNode(autoTransitionNode), 800);
+        setCurrentNodeId(node.id);
+        return;
+      }
+    }
+    
     // If not an input node and not a node with buttons, automatically proceed to next
     if (!(node.type === 'keyboard' && node.data.action === 'input') && (!botMessage.buttons || botMessage.buttons.length === 0)) {
       const nextNode = findNextNode(node.id);
@@ -289,7 +300,7 @@ export default function BotPreview() {
     }
 
     setCurrentNodeId(node.id);
-  }, [connections, findNextNode]);
+  }, [connections, findNextNode, nodes]);
 
   // Handle button click
   const handleButtonClick = (button: { text: string; target?: string; action?: string; }) => {

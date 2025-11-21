@@ -5779,14 +5779,25 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '            # Навигация к следующему узлу для нового формата\n';
   code += '            if next_node_id:\n';
   code += '                try:\n';
-  code += '                    logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
-  code += '                    # Проверяем навигацию к узлам\n';
+  code += '                    # Цикл для поддержки автопереходов\n';
+  code += '                    while next_node_id:\n';
+  code += '                        logging.info(f"🚀 Переходим к узлу: {next_node_id}")\n';
+  code += '                        current_node_id = next_node_id\n';
+  code += '                        next_node_id = None  # Сбрасываем, будет установлен при автопереходе\n';
+  code += '                        # Проверяем навигацию к узлам\n';
+  
+  // Функция для генерации отступов (решение архитектора)
+  const indent = (level: number) => '    '.repeat(level);
+  const BASE_INDENT_LEVEL = 6; // Базовый уровень (внутри try блока)
+  const whileIndent = indent(BASE_INDENT_LEVEL);      // 24 пробела - уровень while
+  const conditionIndent = indent(BASE_INDENT_LEVEL);  // 24 пробела - уровень if/elif
+  const bodyIndent = indent(BASE_INDENT_LEVEL + 1);   // 28 пробелов - тело if/elif
   
   // Добавляем навигацию для каждого узла
   if (nodes.length > 0) {
     nodes.forEach((targetNode, index) => {
       const condition = index === 0 ? 'if' : 'elif';
-      code += `                    ${condition} next_node_id == "${targetNode.id}":\n`;
+      code += `${conditionIndent}${condition} current_node_id == "${targetNode.id}":\n`;
       
       if (targetNode.type === 'message') {
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, имеет ли узел множественный выбор
@@ -5794,40 +5805,40 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Для узлов с множественным выбором создаем прямую навигацию
           const messageText = targetNode.data.messageText || 'Сообщение';
           const formattedText = formatTextForPython(messageText);
-          code += `                        # Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
-          code += `                        logging.info(f"🔧 Переходим к узлу с множественным выбором: ${targetNode.id}")\n`;
-          code += `                        text = ${formattedText}\n`;
+          code += `${bodyIndent}# Прямая навигация к узлу с множественным выбором ${targetNode.id}\n`;
+          code += `${bodyIndent}logging.info(f"🔧 Переходим к узлу с множественным выбором: ${targetNode.id}")\n`;
+          code += `${bodyIndent}text = ${formattedText}\n`;
           
           // Замена переменных
-          code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
-          code += generateUniversalVariableReplacement('                        ');
+          code += `${bodyIndent}user_data[user_id] = user_data.get(user_id, {})\n`;
+          code += generateUniversalVariableReplacement(bodyIndent);
           
           // Инициализируем состояние множественного выбора
-          code += `                        # Инициализируем состояние множественного выбора\n`;
-          code += `                        user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
-          code += `                        user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
-          code += `                        user_data[user_id]["multi_select_type"] = "selection"\n`;
+          code += `${bodyIndent}# Инициализируем состояние множественного выбора\n`;
+          code += `${bodyIndent}user_data[user_id]["multi_select_${targetNode.id}"] = []\n`;
+          code += `${bodyIndent}user_data[user_id]["multi_select_node"] = "${targetNode.id}"\n`;
+          code += `${bodyIndent}user_data[user_id]["multi_select_type"] = "selection"\n`;
           if (targetNode.data.multiSelectVariable) {
-            code += `                        user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
+            code += `${bodyIndent}user_data[user_id]["multi_select_variable"] = "${targetNode.data.multiSelectVariable}"\n`;
           }
           
           // Создаем inline клавиатуру с кнопками выбора
           if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
-            code += `                        await message.answer(text, reply_markup=keyboard)\n`;
+            code += generateInlineKeyboardCode(targetNode.data.buttons, bodyIndent, targetNode.id, targetNode.data, allNodeIds);
+            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
           } else {
-            code += `                        await message.answer(text)\n`;
+            code += `${bodyIndent}await message.answer(text)\n`;
           }
-          code += `                        logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
+          code += `${bodyIndent}logging.info(f"✅ Прямая навигация к узлу множественного выбора ${targetNode.id} выполнена")\n`;
         } else {
           const messageText = targetNode.data.messageText || 'Сообщение';
           const cleanedMessageText = stripHtmlTags(messageText);
           const formattedText = formatTextForPython(cleanedMessageText);
-          code += `                        text = ${formattedText}\n`;
+          code += `${bodyIndent}text = ${formattedText}\n`;
           
           // Применяем замену переменных
-          code += '                        # Замена переменных в тексте\n';
-          code += generateUniversalVariableReplacement('                        ');
+          code += `${bodyIndent}# Замена переменных в тексте\n`;
+          code += generateUniversalVariableReplacement(bodyIndent);
           
           // Если узел message собирает ввод, настраиваем ожидание
           if (targetNode.data.collectUserInput === true) {
@@ -5837,170 +5848,186 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Если у узла есть кнопки, показываем их ВМЕСТО ожидания текста
           if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            code += '                        # ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания текста\n';
-            code += '                        builder = InlineKeyboardBuilder()\n';
+            code += `${bodyIndent}# ИСПРАВЛЕНИЕ: У узла есть inline кнопки - показываем их вместо ожидания текста\n`;
+            code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
             
             // Добавляем кнопки для узла с collectUserInput + buttons
             targetNode.data.buttons.forEach((btn, btnIndex) => {
               if (btn.action === "goto" && btn.target) {
                 const callbackData = `${btn.target}`;
-                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
               } else if (btn.action === "url" && btn.url) {
-                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url}"))\n`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url}"))\n`;
               } else if (btn.action === "command" && btn.target) {
                 const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
               }
             });
             
             const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data, allNodeIds);
-            code += `                        builder.adjust(${columns})\n`;
-            code += '                        keyboard = builder.as_markup()\n';
-            code += '                        await message.answer(text, reply_markup=keyboard)\n';
-            code += `                        logging.info(f"✅ Показаны inline кнопки для узла ${targetNode.id} с collectUserInput")\n`;
+            code += `${bodyIndent}builder.adjust(${columns})\n`;
+            code += `${bodyIndent}keyboard = builder.as_markup()\n`;
+            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+            code += `${bodyIndent}logging.info(f"✅ Показаны inline кнопки для узла ${targetNode.id} с collectUserInput")\n`;
           } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            code += '                        # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n';
-            code += '                        builder = ReplyKeyboardBuilder()\n';
+            code += `${bodyIndent}# ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n`;
+            code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
             
             // Добавляем кнопки для reply клавиатуры
             targetNode.data.buttons.forEach((btn) => {
               if (btn.action === "contact" && btn.requestContact) {
-                code += `                        builder.add(KeyboardButton(text="${btn.text}", request_contact=True))\n`;
+                code += `${bodyIndent}builder.add(KeyboardButton(text="${btn.text}", request_contact=True))\n`;
               } else if (btn.action === "location" && btn.requestLocation) {
-                code += `                        builder.add(KeyboardButton(text="${btn.text}", request_location=True))\n`;
+                code += `${bodyIndent}builder.add(KeyboardButton(text="${btn.text}", request_location=True))\n`;
               } else {
-                code += `                        builder.add(KeyboardButton(text="${btn.text}"))\n`;
+                code += `${bodyIndent}builder.add(KeyboardButton(text="${btn.text}"))\n`;
               }
             });
             
             const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
             const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-            code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-            code += '                        await message.answer(text, reply_markup=keyboard)\n';
-            code += `                        logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
+            code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+            code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
             
             // ИСПРАВЛЕНИЕ: Если включен сбор ввода, настраиваем ожидание даже при наличии кнопок
             if (targetNode.data.enableTextInput === true || targetNode.data.enablePhotoInput === true || 
                 targetNode.data.enableVideoInput === true || targetNode.data.enableAudioInput === true || 
                 targetNode.data.enableDocumentInput === true || targetNode.data.collectUserInput === true) {
-              code += '                        # Настраиваем ожидание ввода для message узла с reply кнопками (используем универсальную функцию)\n';
-              code += generateWaitingStateCode(targetNode, '                        ');
+              code += `${bodyIndent}# Настраиваем ожидание ввода для message узла с reply кнопками (используем универсальную функцию)\n`;
+              code += generateWaitingStateCode(targetNode, bodyIndent);
             }
           } else {
-            code += '                        await message.answer(text)\n';
+            code += `${bodyIndent}await message.answer(text)\n`;
             
             // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок (используем универсальную функцию)
-            code += '                        # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)\n';
-            code += generateWaitingStateCode(targetNode, '                        ');
+            code += `${bodyIndent}# Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)\n`;
+            code += generateWaitingStateCode(targetNode, bodyIndent);
           }
         } else {
           // Если узел не собирает ввод, проверяем есть ли inline или reply кнопки
           if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            code += '                        # Создаем inline клавиатуру\n';
-            code += '                        builder = InlineKeyboardBuilder()\n';
+            code += `${bodyIndent}# Создаем inline клавиатуру\n`;
+            code += `${bodyIndent}builder = InlineKeyboardBuilder()\n`;
             
             // Добавляем кнопки
             targetNode.data.buttons.forEach((btn, btnIndex) => {
               if (btn.action === "goto" && btn.target) {
                 const callbackData = `${btn.target}`;
-                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${callbackData}"))\n`;
               } else if (btn.action === "url" && btn.url) {
-                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url}"))\n`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text="${btn.text}", url="${btn.url}"))\n`;
               } else if (btn.action === "command" && btn.target) {
                 // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд
                 const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                code += `                        logging.info(f"Создана кнопка команды: ${btn.text} -> ${commandCallback}")\n`;
-                code += `                        builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
+                code += `${bodyIndent}logging.info(f"Создана кнопка команды: ${btn.text} -> ${commandCallback}")\n`;
+                code += `${bodyIndent}builder.add(InlineKeyboardButton(text="${btn.text}", callback_data="${commandCallback}"))\n`;
               }
             });
             
             // ВОССТАНОВЛЕНИЕ: Добавляем умное расположение кнопок по колонкам
             const columns = calculateOptimalColumns(targetNode.data.buttons, targetNode.data, allNodeIds);
-            code += `                        builder.adjust(${columns})\n`;
-            code += '                        keyboard = builder.as_markup()\n';
-            code += '                        await message.answer(text, reply_markup=keyboard)\n';
+            code += `${bodyIndent}builder.adjust(${columns})\n`;
+            code += `${bodyIndent}keyboard = builder.as_markup()\n`;
+            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
           } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            code += '                        # Создаем reply клавиатуру\n';
-            code += '                        builder = ReplyKeyboardBuilder()\n';
+            code += `${bodyIndent}# Создаем reply клавиатуру\n`;
+            code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
             
             // Добавляем кнопки для reply клавиатуры
             targetNode.data.buttons.forEach((btn) => {
               if (btn.action === "contact" && btn.requestContact) {
-                code += `                        builder.add(KeyboardButton(text="${btn.text}", request_contact=True))\n`;
+                code += `${bodyIndent}builder.add(KeyboardButton(text="${btn.text}", request_contact=True))\n`;
               } else if (btn.action === "location" && btn.requestLocation) {
-                code += `                        builder.add(KeyboardButton(text="${btn.text}", request_location=True))\n`;
+                code += `${bodyIndent}builder.add(KeyboardButton(text="${btn.text}", request_location=True))\n`;
               } else {
-                code += `                        builder.add(KeyboardButton(text="${btn.text}"))\n`;
+                code += `${bodyIndent}builder.add(KeyboardButton(text="${btn.text}"))\n`;
               }
             });
             
             const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
             const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-            code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-            code += '                        await message.answer(text, reply_markup=keyboard)\n`;
-            code += `                        logging.info(f"✅ Показана reply клавиатура для переходного узла")\n`;
+            code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+            code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для переходного узла")\n`;
           } else {
-            code += '                        await message.answer(text)\n';
+            code += `${bodyIndent}await message.answer(text)\n`;
           }
           
           // Очищаем состояние ожидания ввода после успешного перехода для message узлов без сбора ввода
           if (!targetNode.data.collectUserInput) {
-            code += '                        # НЕ отправляем сообщение об успехе здесь - это делается в старом формате\n';
-            code += '                        # Очищаем состояние ожидания ввода после успешного перехода\n';
-            code += '                        if "waiting_for_input" in user_data[user_id]:\n';
-            code += '                            del user_data[user_id]["waiting_for_input"]\n';
-            code += '                        \n';
-            code += '                        logging.info("✅ Переход к следующему узлу выполнен успешно")\n';
+            code += `${bodyIndent}# НЕ отправляем сообщение об успехе здесь - это делается в старом формате\n`;
+            code += `${bodyIndent}# Очищаем состояние ожидания ввода после успешного перехода\n`;
+            code += `${bodyIndent}if "waiting_for_input" in user_data[user_id]:\n`;
+            code += `${bodyIndent}    del user_data[user_id]["waiting_for_input"]\n`;
+            code += `${bodyIndent}\n`;
+            code += `${bodyIndent}logging.info("✅ Переход к следующему узлу выполнен успешно")\n`;
+          }
+          
+          // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+          if (targetNode.data.autoTransitionTo) {
+            code += `${bodyIndent}\n`;
+            code += `${bodyIndent}# ⚡ Автопереход к узлу ${targetNode.data.autoTransitionTo}\n`;
+            code += `${bodyIndent}logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${targetNode.data.autoTransitionTo}")\n`;
+            code += `${bodyIndent}next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
+            code += `${bodyIndent}# Продолжаем цикл для обработки следующего узла\n`;
+          } else {
+            code += `${bodyIndent}break  # Нет автоперехода, завершаем цикл\n`;
           }
         }
         } // Закрываем блок else для allowMultipleSelection
       } else if (targetNode.type === 'message' && (targetNode.data.inputVariable || targetNode.data.responseType)) {
         const inputPrompt = formatTextForPython(targetNode.data.messageText || "Введите ваш ответ:");
-        code += `                        prompt_text = ${inputPrompt}\n`;
-        code += '                        await message.answer(prompt_text)\n';
-        code += '                        # Устанавливаем новое ожидание ввода\n';
-        code += '                        user_data[user_id]["waiting_for_input"] = {\n';
-        code += `                            "type": "${targetNode.data.inputType || 'text'}",\n`;
-        code += `                            "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
-        code += `                            "save_to_database": True,\n`;
-        code += `                            "node_id": "${targetNode.id}",\n`;
+        code += `${bodyIndent}prompt_text = ${inputPrompt}\n`;
+        code += `${bodyIndent}await message.answer(prompt_text)\n`;
+        code += `${bodyIndent}# Устанавливаем новое ожидание ввода\n`;
+        code += `${bodyIndent}user_data[user_id]["waiting_for_input"] = {\n`;
+        code += `${bodyIndent}    "type": "${targetNode.data.inputType || 'text'}",\n`;
+        code += `${bodyIndent}    "variable": "${targetNode.data.inputVariable || 'user_response'}",\n`;
+        code += `${bodyIndent}    "save_to_database": True,\n`;
+        code += `${bodyIndent}    "node_id": "${targetNode.id}",\n`;
         const nextConnection = connections.find(conn => conn.source === targetNode.id);
         if (nextConnection) {
-          code += `                            "next_node_id": "${nextConnection.target}",\n`;
+          code += `${bodyIndent}    "next_node_id": "${nextConnection.target}",\n`;
         } else {
-          code += '                            "next_node_id": None,\n';
+          code += `${bodyIndent}    "next_node_id": None,\n`;
         }
-        code += `                            "min_length": ${targetNode.data.minLength || 0},\n`;
-        code += `                            "max_length": ${targetNode.data.maxLength || 0},\n`;
-        code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-        code += '                            "success_message": "✅ Спасибо за ваш ответ!"\n';
-        code += '                        }\n';
+        code += `${bodyIndent}    "min_length": ${targetNode.data.minLength || 0},\n`;
+        code += `${bodyIndent}    "max_length": ${targetNode.data.maxLength || 0},\n`;
+        code += `${bodyIndent}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
+        code += `${bodyIndent}    "success_message": "✅ Спасибо за ваш ответ!"\n`;
+        code += `${bodyIndent}}\n`;
+        code += `${bodyIndent}break  # Выходим из цикла после настройки ожидания ввода\n`;
       } else if (targetNode.type === 'command') {
         // Для узлов команд вызываем соответствующий обработчик
         const commandName = targetNode.data.command?.replace('/', '') || 'unknown';
         const handlerName = `${commandName}_handler`;
-        code += `                        # Выполняем команду ${targetNode.data.command}\n`;
-        code += '                        from types import SimpleNamespace\n';
-        code += '                        fake_message = SimpleNamespace()\n';
-        code += '                        fake_message.from_user = message.from_user\n';
-        code += '                        fake_message.chat = message.chat\n';
-        code += '                        fake_message.date = message.date\n';
-        code += '                        fake_message.answer = message.answer\n';
-        code += `                        await ${handlerName}(fake_message)\n`;
+        code += `${bodyIndent}# Выполняем команду ${targetNode.data.command}\n`;
+        code += `${bodyIndent}from types import SimpleNamespace\n`;
+        code += `${bodyIndent}fake_message = SimpleNamespace()\n`;
+        code += `${bodyIndent}fake_message.from_user = message.from_user\n`;
+        code += `${bodyIndent}fake_message.chat = message.chat\n`;
+        code += `${bodyIndent}fake_message.date = message.date\n`;
+        code += `${bodyIndent}fake_message.answer = message.answer\n`;
+        code += `${bodyIndent}await ${handlerName}(fake_message)\n`;
+        code += `${bodyIndent}break  # Выходим из цикла после выполнения команды\n`;
       } else {
-        code += `                        logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
+        code += `${bodyIndent}logging.info(f"Переход к узлу ${targetNode.id} типа ${targetNode.type}")\n`;
+        code += `${bodyIndent}break  # Выходим из цикла для неизвестного типа узла\n`;
       }
     });
     
-    code += '                    else:\n';
-    code += '                        logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
+    code += '                        else:\n';
+    code += '                            logging.warning(f"Неизвестный узел: {current_node_id}")\n';
+    code += '                            break  # Выходим из цикла при неизвестном узле\n';
   } else {
-    code += '                    # No nodes available for navigation\n';
-    code += '                    logging.warning(f"Нет доступных узлов для навигации к {next_node_id}")\n';
+    code += '                        # No nodes available for navigation\n';
+    code += '                        logging.warning(f"Нет доступных узлов для навигации")\n';
+    code += '                        break\n';
   }
   
   code += '                except Exception as e:\n';
-  code += '                    logging.error(f"Ошибка при переходе к следующему узлу {next_node_id}: {e}")\n';
+  code += '                    logging.error(f"Ошибка при переходе к узлу: {e}")\n';
   code += '            \n';
   code += '            return  # Завершаем обработку для нового формата\n';
   code += '        \n';
