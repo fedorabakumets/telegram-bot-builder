@@ -6492,21 +6492,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               if (autoKeyboardType === 'reply') {
                 // Reply клавиатура
                 code += '                # Создаем reply клавиатуру для автоперехода\n';
-                code += '                auto_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)\n';
+                code += '                auto_builder = ReplyKeyboardBuilder()\n';
                 autoButtons.forEach((btn) => {
                   const btnText = formatTextForPython(btn.text || 'Button');
-                  code += `                auto_keyboard.add(KeyboardButton(text=${btnText}))\n`;
+                  code += `                auto_builder.add(KeyboardButton(text=${btnText}))\n`;
                 });
+                code += '                auto_keyboard = auto_builder.as_markup(resize_keyboard=True)\n';
                 code += '                await message.answer(auto_text, reply_markup=auto_keyboard)\n';
               } else if (autoKeyboardType === 'inline') {
                 // Inline клавиатура
                 code += '                # Создаем inline клавиатуру для автоперехода\n';
-                code += '                auto_keyboard = InlineKeyboardMarkup()\n';
+                code += '                auto_builder = InlineKeyboardBuilder()\n';
                 autoButtons.forEach((btn) => {
                   const btnText = formatTextForPython(btn.text || 'Button');
                   const callbackData = btn.id || 'callback';
-                  code += `                auto_keyboard.add(InlineKeyboardButton(text=${btnText}, callback_data="${callbackData}"))\n`;
+                  code += `                auto_builder.add(InlineKeyboardButton(text=${btnText}, callback_data="${callbackData}"))\n`;
                 });
+                code += '                auto_keyboard = auto_builder.as_markup()\n';
                 code += '                await message.answer(auto_text, reply_markup=auto_keyboard)\n';
               }
             } else {
