@@ -663,7 +663,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
           )}
           
           {/* Синонимы */}
-          {node.data.synonyms && node.data.synonyms.length > 0 && !['pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'restrict_user', 'unrestrict_user', 'promote_member', 'demote_member', 'kick_user', 'admin_rights'].includes(node.type) && (
+          {node.data.synonyms && node.data.synonyms.length > 0 && (
             <div className="mt-2">
               <div className="flex flex-wrap gap-1">
                 {node.data.synonyms.map((synonym, index) => (
