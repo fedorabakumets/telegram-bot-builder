@@ -772,10 +772,14 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
     let messageToUse = condition.messageText || '';
     const cleanedConditionText = stripHtmlTags(messageToUse).trim();
     // Если после очистки текст пустой, используем основной текст узла
+    let finalMessageText = '';
     if (!cleanedConditionText) {
-      messageToUse = nodeData?.messageText || 'Сообщение';
+      // Используем основной текст узла если условное сообщение пустое
+      finalMessageText = nodeData?.messageText || '';
+    } else {
+      finalMessageText = cleanedConditionText;
     }
-    const conditionText = formatTextForPython(cleanedConditionText || stripHtmlTags(messageToUse));
+    const conditionText = formatTextForPython(finalMessageText);
     const conditionKeyword = i === 0 ? 'if' : 'elif';
     
     // Get variable names - support both new array format and legacy single variable
