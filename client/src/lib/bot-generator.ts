@@ -5676,9 +5676,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 const shouldWaitForInput = condition.waitForTextInput === true;
                 
                 if (shouldWaitForInput) {
-                  // Показываем условное сообщение и настраиваем ожидание ввода
-                  code += `                            # Показываем условное сообщение и ждем ввода\n`;
-                  code += `                            await message.answer(text)\n`;
+                  // Показываем сообщение и настраиваем ожидание ввода
+                  code += `                            # waitForTextInput=true: показываем сообщение и ждем ввода\n`;
+                  code += `                            # Если условный текст пустой, используем основное сообщение узла\n`;
+                  code += `                            if text and text.strip():\n`;
+                  code += `                                await message.answer(text)\n`;
+                  code += `                            else:\n`;
+                  
+                  // Используем основное сообщение узла
+                  const mainMessageText = targetNode.data.messageText || 'Введите данные';
+                  const mainFormattedText = formatTextForPython(mainMessageText);
+                  code += `                                main_text = ${mainFormattedText}\n`;
+                  code += `                                await message.answer(main_text)\n`;
+                  code += `                            \n`;
                   
                   const inputVariable = condition.textInputVariable || targetNode.data.inputVariable || `response_${targetNode.id}`;
                   const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
