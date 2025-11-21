@@ -19,11 +19,11 @@ interface HierarchicalLayoutOptions {
 }
 
 const DEFAULT_OPTIONS: HierarchicalLayoutOptions = {
-  levelHeight: 150,
+  levelHeight: 100,
   nodeWidth: 320,
-  nodeHeight: 120, // Добавлена типичная высота узла
-  horizontalSpacing: 150, // Увеличено до 150 для лучшего избежания пересечений
-  verticalSpacing: 120, // Увеличено до 120 для лучшего избежания пересечений
+  nodeHeight: 120,
+  horizontalSpacing: 80,
+  verticalSpacing: 60,
   startX: 50,
   startY: 50
 };
