@@ -5083,27 +5083,16 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               code += `    await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
               
-              // CRITICAL FIX: Если целевой узел требует пользовательского ввода, устанавливаем waiting_for_input
-              if (targetNode.data.collectUserInput === true && targetNode.data.enableTextInput === true) {
-                const inputVariable = targetNode.data.inputVariable || `response_${targetNode.id}`;
-                const inputTargetNodeId = targetNode.data.inputTargetNodeId || '';
-                
+              // CRITICAL FIX: Если целевой узел требует пользовательского ввода (любого типа: text/photo/video/audio/document), устанавливаем состояние ожидания
+              if (targetNode.data.collectUserInput === true || 
+                  targetNode.data.enableTextInput === true || 
+                  targetNode.data.enablePhotoInput === true || 
+                  targetNode.data.enableVideoInput === true || 
+                  targetNode.data.enableAudioInput === true || 
+                  targetNode.data.enableDocumentInput === true) {
                 code += '    \n';
-                code += '    # Устанавливаем состояние ожидания ввода для ' + inputVariable + '\n';
-                code += '    if user_id not in user_data:\n';
-                code += '        user_data[user_id] = {}\n';
-                code += '    user_data[user_id]["waiting_for_input"] = {\n';
-                code += '        "type": "text",\n';
-                code += `        "variable": "${inputVariable}",\n`;
-                code += '        "save_to_database": True,\n';
-                code += `        "node_id": "${targetNode.id}",\n`;
-                code += `        "next_node_id": "${inputTargetNodeId}",\n`;
-                code += `        "min_length": ${targetNode.data.minLength || 0},\n`;
-                code += `        "max_length": ${targetNode.data.maxLength || 0},\n`;
-                code += '        "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-                code += '        "success_message": "✅ Спасибо за ваш ответ!"\n';
-                code += '    }\n';
-                code += `    logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
+                code += '    # Настраиваем ожидание ввода для целевого узла (универсальная функция определит тип: text/photo/video/audio/document)\n';
+                code += generateWaitingStateCode(targetNode, '    ', 'message.from_user.id');
               }
             }
           }
