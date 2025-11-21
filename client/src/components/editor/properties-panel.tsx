@@ -3779,7 +3779,7 @@ export function PropertiesPanel({
 
                               
                               <div className="text-xs text-muted-foreground mt-1">
-                                Это сообщение увидит пользователь вместо основного текста
+                                Если не указано, будет использоваться основной текст узла
                               </div>
                             </div>
 

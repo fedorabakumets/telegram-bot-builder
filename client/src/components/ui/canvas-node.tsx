@@ -1271,17 +1271,19 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                       </div>
                     </div>
                     
-                    {condition.messageText && (
-                      <div className="bg-slate-50/70 dark:bg-slate-800/50 rounded p-2 border border-slate-200/50 dark:border-slate-700/50">
-                        <div className="text-xs text-slate-600 dark:text-slate-400 mb-1 flex items-center space-x-1">
-                          <i className="fas fa-comment text-xs"></i>
-                          <span className="font-medium">Сообщение:</span>
-                        </div>
-                        <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-2">
-                          {condition.messageText}
-                        </div>
+                    <div className="bg-slate-50/70 dark:bg-slate-800/50 rounded p-2 border border-slate-200/50 dark:border-slate-700/50">
+                      <div className="text-xs text-slate-600 dark:text-slate-400 mb-1 flex items-center space-x-1">
+                        <i className="fas fa-comment text-xs"></i>
+                        <span className="font-medium">Сообщение:</span>
                       </div>
-                    )}
+                      <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-2">
+                        {condition.messageText || (
+                          <span className="italic text-slate-500 dark:text-slate-400">
+                            Основной текст узла: {node.data.messageText?.slice(0, 50) || '(не указан)'}...
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     
                     {/* Кнопки условного сообщения */}
                     {(condition as any).buttons && (condition as any).buttons.length > 0 && (condition as any).keyboardType !== 'none' && (
