@@ -695,9 +695,8 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   let code = '';
   const sortedConditions = [...conditionalMessages].sort((a, b) => (b.priority || 0) - (a.priority || 0));
   
-  // Add variables to track conditional parse mode and keyboard
-  code += `${indentLevel}conditional_parse_mode = None\n`;
-  code += `${indentLevel}conditional_keyboard = None\n`;
+  // НЕ инициализируем conditional_parse_mode и conditional_keyboard здесь
+  // Они должны быть инициализированы вызывающей функцией ПЕРЕД вызовом generateConditionalMessageLogic
   
   // Получаем user_vars для подстановки в кнопки условных сообщений
   code += `${indentLevel}# Подставляем все доступные переменные пользователя в текст кнопок\n`;
@@ -815,7 +814,14 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
           code += `${indentLevel}    _, variable_values["${varName}"] = check_user_variable("${varName}", user_data_dict)\n`;
         }
         
-        code += `${indentLevel}    text = ${conditionText}\n`;
+        // Только переопределяем text если условное сообщение не пустое
+        const conditionTextValue = finalMessageText.trim();
+        if (conditionTextValue) {
+          code += `${indentLevel}    text = ${conditionText}\n`;
+        } else {
+          code += `${indentLevel}    # Условное сообщение пустое, используем основной текст узла (text уже инициализирован)\n`;
+        }
+        
         // Устанавливаем parse_mode для условного сообщения
         const parseMode1 = getParseMode(condition.formatMode || 'text');
         if (parseMode1) {
@@ -2376,6 +2382,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений\n';
+                code += '    conditional_parse_mode = None\n';
+                code += '    conditional_keyboard = None\n';
                 code += '    user_record = await get_user_from_db(user_id)\n';
                 code += '    if not user_record:\n';
                 code += '        user_record = user_data.get(user_id, {})\n';
@@ -2550,6 +2558,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений для фото\n';
+                code += '    conditional_parse_mode = None\n';
+                code += '    conditional_keyboard = None\n';
                 code += '    user_record = await get_user_from_db(user_id)\n';
                 code += '    if not user_record:\n';
                 code += '        user_record = user_data.get(user_id, {})\n';
@@ -2660,6 +2670,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений для видео\n';
+                code += '    conditional_parse_mode = None\n';
+                code += '    conditional_keyboard = None\n';
                 code += '    user_record = await get_user_from_db(user_id)\n';
                 code += '    if not user_record:\n';
                 code += '        user_record = user_data.get(user_id, {})\n';
@@ -2770,6 +2782,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
                 code += '    \n';
                 code += '    # Проверка условных сообщений для аудио\n';
+                code += '    conditional_parse_mode = None\n';
+                code += '    conditional_keyboard = None\n';
                 code += '    user_record = await get_user_from_db(user_id)\n';
                 code += '    if not user_record:\n';
                 code += '        user_record = user_data.get(user_id, {})\n';
@@ -4034,6 +4048,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '    \n';
           code += generateUniversalVariableReplacement('    ');
           
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем поддержку условных сообщений
+          if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+            code += '    \n';
+            code += '    # Проверка условных сообщений для навигации\n';
+            code += '    conditional_parse_mode = None\n';
+            code += '    conditional_keyboard = None\n';
+            code += '    user_record = await get_user_from_db(user_id)\n';
+            code += '    if not user_record:\n';
+            code += '        user_record = user_data.get(user_id, {})\n';
+            code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+            code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+            code += '    \n';
+          }
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, есть ли условная клавиатура
+          // Не оборачиваем код в if - вместо этого просто используем условную клавиатуру при отправке
+          
           // ИСПРАВЛЕНИЕ: Добавляем специальную обработку для узлов с множественным выбором
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Все узлы с кнопками selection обрабатываются как множественный выбор
           const hasSelectionButtons = targetNode.data.buttons && targetNode.data.buttons.some(btn => btn.action === 'selection');
@@ -4176,6 +4207,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           } else {
             code += '    keyboard = None\n';
           }
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем условную клавиатуру и используем её если есть
+          code += '    \n';
+          code += '    # Проверяем, есть ли условная клавиатура для использования\n';
+          code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+          code += '        keyboard = conditional_keyboard\n';
+          code += '        logging.info("✅ Используем условную клавиатуру для навигации")\n';
+          code += '    \n';
           
           // Send message with keyboard
           code += '    # Отправляем сообщение\n';
@@ -5077,7 +5116,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '        logging.info(f"Reply кнопка сохранена: {input_variable}_button = ${buttonText} (пользователь {user_id})")\n';
             
             } else {
-              code += '    # Удаляем предыдущие reply клавиатуры если они были\n';
+              // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем проверку условных сообщений для узлов без кнопок
+              if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+                code += '    # Проверка условных сообщений для целевого узла\n';
+                code += '    conditional_parse_mode = None\n';
+                code += '    conditional_keyboard = None\n';
+                code += '    user_record = await get_user_from_db(user_id)\n';
+                code += '    if not user_record:\n';
+                code += '        user_record = user_data.get(user_id, {})\n';
+                code += '    user_data_dict = user_record if user_record else user_data.get(user_id, {})\n';
+                code += generateConditionalMessageLogic(targetNode.data.conditionalMessages, '    ');
+                code += '    \n';
+              }
+              
+              code += '    # Отправляем сообщение с учетом условной клавиатуры\n';
+              code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+              code += '        # Используем условную клавиатуру\n';
               // Определяем режим форматирования для целевого узла
               let parseModeTarget = '';
               if (targetNode.data.formatMode === 'markdown' || targetNode.data.markdown === true) {
@@ -5085,7 +5139,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               } else if (targetNode.data.formatMode === 'html') {
                 parseModeTarget = ', parse_mode=ParseMode.HTML';
               }
-              code += `    await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
+              code += `        await message.answer(text, reply_markup=conditional_keyboard${parseModeTarget})\n`;
+              code += '    else:\n';
+              code += '        # Удаляем предыдущие reply клавиатуры если они были\n';
+              code += `        await message.answer(text, reply_markup=ReplyKeyboardRemove()${parseModeTarget})\n`;
               
               // CRITICAL FIX: Если целевой узел требует пользовательского ввода (любого типа: text/photo/video/audio/document), устанавливаем состояние ожидания
               if (targetNode.data.collectUserInput === true || 
@@ -8356,8 +8413,11 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
   const formattedText = formatTextForPython(messageText);
   
   if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
+    // Инициализируем text основным сообщением ПЕРЕД проверкой условий
     code += '    # Проверяем условные сообщения\n';
-    code += '    text = None\n';
+    code += `    text = ${formattedText}  # Основной текст узла как fallback\n`;
+    code += '    conditional_parse_mode = None\n';
+    code += '    conditional_keyboard = None\n';
     code += '    \n';
     code += '    # Получаем данные пользователя для проверки условий\n';
     code += '    user_record = await get_user_from_db(user_id)\n';
@@ -8374,21 +8434,10 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
     code += '        user_data_dict = {}\n';
     code += '    \n';
     
-    // Generate conditional logic using helper function
-    code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ');
+    // Generate conditional logic using helper function - условия теперь переопределят text если нужно
+    code += generateConditionalMessageLogic(node.data.conditionalMessages, '    ', node.data);
     
-    // Add fallback
-    code += '    else:\n';
-    
-    if (node.data.fallbackMessage) {
-      const fallbackText = formatTextForPython(node.data.fallbackMessage);
-      code += `        text = ${fallbackText}\n`;
-      code += '        logging.info("Используется запасное сообщение")\n';
-    } else {
-      code += `        text = ${formattedText}\n`;
-      code += '        logging.info("Используется основное сообщение узла")\n';
-    }
-    
+    // Не нужен else блок - text уже инициализирован основным сообщением
     code += '    \n';
   } else {
     code += `    text = ${formattedText}\n`;
