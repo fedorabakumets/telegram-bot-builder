@@ -5627,8 +5627,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `        chat=aiogram_types.SimpleNamespace(id=message.from_user.id),\n`;
           code += `        message_id=message.message_id,\n`;
           code += `        delete=fake_noop,\n`;
-          code += `        edit_text=fake_send,\n`;
-          code += `        answer=fake_send\n`;
+          code += `        edit_text=fake_noop,\n`;
+          code += `        answer=fake_noop\n`;
           code += `    )\n`;
           code += `    fake_callback = aiogram_types.SimpleNamespace(\n`;
           code += `        id="reply_button_nav",\n`;
