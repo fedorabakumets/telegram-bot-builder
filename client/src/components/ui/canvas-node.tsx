@@ -624,11 +624,11 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               {node.type === 'location' && 'Геолокация'}
               {node.type === 'contact' && 'Контакт'}
               {(node.type === 'pin_message' || node.type === 'unpin_message' || node.type === 'delete_message') && (
-                <span className="inline-flex items-center">
-                  <span className="text-cyan-600 dark:text-cyan-400 font-mono text-sm bg-cyan-50 dark:bg-cyan-900/30 px-2 py-1 rounded-lg border border-cyan-200 dark:border-cyan-800 mr-2">
+                <span className="flex flex-col gap-2">
+                  <span className="text-cyan-600 dark:text-cyan-400 font-mono text-sm bg-cyan-50 dark:bg-cyan-900/30 px-2 py-1 rounded-lg border border-cyan-200 dark:border-cyan-800 inline-block w-fit">
                     {node.data.command || `/${node.type}`}
                   </span>
-                  <span>Управление контентом</span>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-tight">Управление контентом</span>
                 </span>
               )}
               {(node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || 
