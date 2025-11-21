@@ -638,7 +638,15 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                   <span className="text-rose-600 dark:text-rose-400 font-mono text-sm bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 mr-2">
                     {node.data.command || `/${node.type}`}
                   </span>
-                  <span>Действие с пользователем</span>
+                  <span>
+                    {node.type === 'ban_user' && 'Заблокировать пользователя'}
+                    {node.type === 'unban_user' && 'Разблокировать пользователя'}
+                    {node.type === 'kick_user' && 'Исключить пользователя'}
+                    {node.type === 'mute_user' && 'Заглушить пользователя'}
+                    {node.type === 'unmute_user' && 'Разрешить говорить'}
+                    {node.type === 'promote_user' && 'Назначить администратором'}
+                    {node.type === 'demote_user' && 'Снять с администратора'}
+                  </span>
                 </span>
               )}
               {node.type === 'admin_rights' && (
