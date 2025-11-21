@@ -5556,8 +5556,28 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Добавляем замену переменных
           code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
           code += generateUniversalVariableReplacement('                        ');
-          code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
-          code += '                        await message.answer(text)\n';
+          
+          // Проверяем, есть ли reply кнопки
+          if (targetNode.data.keyboardType === 'reply' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += '                        # Создаем reply клавиатуру\n';
+            code += '                        builder = ReplyKeyboardBuilder()\n';
+            targetNode.data.buttons.forEach((btn: any) => {
+              code += `                        builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+            });
+            const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+            const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+            code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+            code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
+            code += '                        await message.answer(text, reply_markup=keyboard)\n';
+          } else if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
+            code += '                        # Создаем inline клавиатуру\n';
+            code += generateInlineKeyboardCode(targetNode.data.buttons, '                        ', targetNode.id, targetNode.data, allNodeIds);
+            code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
+            code += '                        await message.answer(text, reply_markup=keyboard)\n';
+          } else {
+            code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
+            code += '                        await message.answer(text)\n';
+          }
         }
       }
     });
