@@ -1111,29 +1111,6 @@ export function PropertiesPanel({
                     <span>JPG, PNG, GIF, WebP • Макс. 20MB</span>
                   </div>
                 </div>
-
-                {/* Caption Section */}
-                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <i className="fas fa-comment-alt text-green-600 dark:text-green-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Подпись к изображению</Label>
-                  </div>
-                  
-                  <Textarea
-                    value={selectedNode.data.mediaCaption || ''}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { mediaCaption: e.target.value })}
-                    className="resize-none border-green-200 dark:border-green-700 focus:border-green-500 focus:ring-green-200 transition-all duration-200"
-                    rows={3}
-                    placeholder="Опишите изображение для пользователей..."
-                  />
-                  
-                  <div className="flex items-center space-x-2 text-xs text-green-600 dark:text-green-400 mt-2">
-                    <i className="fas fa-info-circle"></i>
-                    <span>Если не указана, будет использоваться основной текст сообщения</span>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -1163,24 +1140,6 @@ export function PropertiesPanel({
                       <span>MP4, AVI, MOV, WebM • Макс. 50MB</span>
                     </div>
                   </div>
-                </div>
-
-                {/* Caption Section */}
-                <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 border border-green-200/30 dark:border-green-800/30 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-                      <i className="fas fa-comment-alt text-green-600 dark:text-green-400 text-xs"></i>
-                    </div>
-                    <Label className="text-sm font-semibold text-green-900 dark:text-green-100">Подпись к видео</Label>
-                  </div>
-                  
-                  <Textarea
-                    value={selectedNode.data.mediaCaption || ''}
-                    onChange={(e) => onNodeUpdate(selectedNode.id, { mediaCaption: e.target.value })}
-                    className="resize-none border-green-200 dark:border-green-700 focus:border-green-500 focus:ring-green-200 transition-all duration-200"
-                    rows={3}
-                    placeholder="Опишите видеоконтент для пользователей..."
-                  />
                 </div>
 
                 {/* Metadata Section */}
