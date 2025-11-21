@@ -5615,17 +5615,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Для обычных message узлов создаём fake callback и вызываем callback обработчик
           code += `    # Создаём fake callback для вызова callback обработчика\n`;
           code += `    import types as aiogram_types\n`;
-          code += `    # Async no-op функция\n`;
-          code += `    async def noop(*args, **kwargs):\n`;
+          code += `    \n`;
+          code += `    # Функции для fake сообщения\n`;
+          code += `    async def fake_send(*args, **kwargs):\n`;
+          code += `        return await bot.send_message(message.from_user.id, *args, **kwargs)\n`;
+          code += `    async def fake_noop(*args, **kwargs):\n`;
           code += `        return None\n`;
           code += `    \n`;
-          code += `    # Создаём минимальный message объект для bot.send_message\n`;
+          code += `    # Создаём минимальный message объект\n`;
           code += `    fake_message = aiogram_types.SimpleNamespace(\n`;
           code += `        chat=aiogram_types.SimpleNamespace(id=message.from_user.id),\n`;
           code += `        message_id=message.message_id,\n`;
-          code += `        delete=noop,\n`;
-          code += `        edit_text=noop,\n`;
-          code += `        answer=lambda text, **kwargs: bot.send_message(message.from_user.id, text, **kwargs)\n`;
+          code += `        delete=fake_noop,\n`;
+          code += `        edit_text=fake_send,\n`;
+          code += `        answer=fake_send\n`;
           code += `    )\n`;
           code += `    fake_callback = aiogram_types.SimpleNamespace(\n`;
           code += `        id="reply_button_nav",\n`;
@@ -5633,7 +5636,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `        chat_instance="",\n`;
           code += `        data="${button.target}",\n`;
           code += `        message=fake_message,\n`;
-          code += `        answer=noop\n`;
+          code += `        answer=fake_noop\n`;
           code += `    )\n`;
           code += `    \n`;
           code += `    # Вызываем callback обработчик целевого узла\n`;
