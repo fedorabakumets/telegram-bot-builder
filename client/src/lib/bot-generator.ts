@@ -5724,8 +5724,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += `                            main_text = ${mainFormattedText}\n`;
                     code += `                            await message.answer(main_text, reply_markup=keyboard)\n`;
                     
-                    // НЕ устанавливаем ожидание ввода - пользователь должен нажать кнопку
-                    // Кнопки уже настроены на переход к nextNodeAfterCondition
+                    // Устанавливаем ожидание ввода, даже если есть клавиатура
+                    // Пользователь может ввести текст вместо нажатия кнопки
+                    code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
+                    code += `                                "type": "text",\n`;
+                    code += `                                "variable": "${inputVariable}",\n`;
+                    code += `                                "save_to_database": True,\n`;
+                    code += `                                "node_id": "${targetNode.id}",\n`;
+                    code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                    code += `                            }\n`;
                     code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}")\n`;
                   } else {
                     // Нет кнопок - показываем сообщение и ждем текстового ввода
