@@ -354,9 +354,9 @@ export function PropertiesPanel({
     }
   };
 
-  // Extract all available questions from keyboard and user-input nodes
+  // Extract all available questions from keyboard and user-input nodes (including media variables)
   const availableQuestions = useMemo(() => {
-    const questions: Array<{name: string, nodeId: string, nodeType: string}> = [];
+    const questions: Array<{name: string, nodeId: string, nodeType: string, mediaType?: string}> = [];
     
     allNodes.forEach(node => {
       
@@ -366,6 +366,46 @@ export function PropertiesPanel({
           name: node.data.inputVariable,
           nodeId: node.id,
           nodeType: node.type
+        });
+      }
+
+      // From nodes with photo input
+      if (node.data.enablePhotoInput && node.data.photoInputVariable) {
+        questions.push({
+          name: node.data.photoInputVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          mediaType: 'photo'
+        });
+      }
+
+      // From nodes with video input
+      if (node.data.enableVideoInput && node.data.videoInputVariable) {
+        questions.push({
+          name: node.data.videoInputVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          mediaType: 'video'
+        });
+      }
+
+      // From nodes with audio input
+      if (node.data.enableAudioInput && node.data.audioInputVariable) {
+        questions.push({
+          name: node.data.audioInputVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          mediaType: 'audio'
+        });
+      }
+
+      // From nodes with document input
+      if (node.data.enableDocumentInput && node.data.documentInputVariable) {
+        questions.push({
+          name: node.data.documentInputVariable,
+          nodeId: node.id,
+          nodeType: node.type,
+          mediaType: 'document'
         });
       }
     });
@@ -3546,9 +3586,19 @@ export function PropertiesPanel({
                                                 htmlFor={`question-${condition.id}-${question.name}`}
                                                 className="flex items-center space-x-2 cursor-pointer flex-1"
                                               >
-                                                <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
-                                                  {question.nodeType}
-                                                </span>
+                                                {question.mediaType ? (
+                                                  <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                    {question.mediaType === 'photo' && '📷'}
+                                                    {question.mediaType === 'video' && '🎥'}
+                                                    {question.mediaType === 'audio' && '🎵'}
+                                                    {question.mediaType === 'document' && '📄'}
+                                                    {question.mediaType}
+                                                  </span>
+                                                ) : (
+                                                  <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                                                    {question.nodeType}
+                                                  </span>
+                                                )}
                                                 <span className="text-xs">{question.name}</span>
                                               </label>
                                             </div>
