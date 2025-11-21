@@ -1481,43 +1481,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
           })()}
         </div>
       )}
-      {/* Connection points */}
-      <button
-        className={cn(
-          "absolute -left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 rounded-full border-2 border-white dark:border-slate-900 shadow-lg hover:scale-125 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10",
-          connectionStart?.nodeId === node.id && connectionStart?.handle === 'target'
-            ? "bg-gradient-to-br from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 animate-pulse shadow-2xl shadow-emerald-500/50 opacity-100"
-            : connectionStart && connectionStart.nodeId !== node.id && connectionStart.handle === 'source'
-            ? "bg-gradient-to-br from-emerald-300 to-green-400 hover:from-emerald-400 hover:to-green-500 animate-bounce shadow-xl shadow-emerald-400/40 opacity-100"
-            : "bg-gradient-to-br from-gray-400 to-gray-500 hover:from-blue-400 hover:to-blue-500 hover:shadow-blue-500/30"
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          onConnectionStart?.(node.id, 'target');
-        }}
-        title="Входящее соединение"
-      >
-        <div className="absolute inset-1 rounded-full bg-white/30 dark:bg-slate-800/30 opacity-0 hover:opacity-100 transition-opacity duration-200" />
-        <div className="absolute inset-0 rounded-full bg-current opacity-0 hover:opacity-10 transition-opacity duration-300 animate-ping" />
-      </button>
-      <button
-        className={cn(
-          "absolute -right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 rounded-full border-2 border-white dark:border-slate-900 shadow-lg hover:scale-125 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10",
-          connectionStart?.nodeId === node.id && connectionStart?.handle === 'source'
-            ? "bg-gradient-to-br from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 animate-pulse shadow-2xl shadow-emerald-500/50 opacity-100"
-            : connectionStart && connectionStart.nodeId !== node.id && connectionStart.handle === 'target'
-            ? "bg-gradient-to-br from-emerald-300 to-green-400 hover:from-emerald-400 hover:to-green-500 animate-bounce shadow-xl shadow-emerald-400/40 opacity-100"
-            : "bg-gradient-to-br from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 hover:shadow-blue-500/30"
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          onConnectionStart?.(node.id, 'source');
-        }}
-        title="Исходящее соединение"
-      >
-        <div className="absolute inset-1 rounded-full bg-white/30 dark:bg-slate-800/30 opacity-0 hover:opacity-100 transition-opacity duration-200" />
-        <div className="absolute inset-0 rounded-full bg-current opacity-0 hover:opacity-10 transition-opacity duration-300 animate-ping" />
-      </button>
     </div>
   );
 }
