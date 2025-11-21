@@ -3233,7 +3233,9 @@ export function PropertiesPanel({
                                   return (
                                     <SelectItem key={node.id} value={node.id}>
                                       <div className="flex items-center gap-2">
-                                        <span>{nodeName} ({node.id})</span>
+                                        <span className="text-xs text-muted-foreground">{node.type}</span>
+                                        <span className="text-xs font-mono text-muted-foreground">{node.id}</span>
+                                        <span>{nodeName}</span>
                                         <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                       </div>
                                     </SelectItem>
@@ -3855,6 +3857,7 @@ export function PropertiesPanel({
                                               <SelectItem key={node.id} value={node.id}>
                                                 <div className="flex items-center gap-2">
                                                   <span className="text-xs text-muted-foreground">{node.type}</span>
+                                                  <span className="text-xs font-mono text-muted-foreground">{node.id}</span>
                                                   <span>{nodeLabel}</span>
                                                   <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                                 </div>
