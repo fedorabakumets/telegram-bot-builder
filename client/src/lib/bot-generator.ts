@@ -6439,13 +6439,83 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
           code += '                        media_file_id = media_file_id["value"]\n';
           code += '                    await message.answer_photo(media_file_id, caption=text)\n';
-          code += `                    logging.info(f"✅ Отправлено фото из переменной ${attachedMedia[0]} с текстом узла {targetNode.id}")\n`;
+          code += `                    logging.info(f"✅ Отправлено фото из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
           code += '                else:\n';
           code += '                    await message.answer(text)\n';
           code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
         } else {
           // Обычное сообщение
           code += '                await message.answer(text)\n';
+        }
+        
+        // Проверяем автопереход
+        if (targetNode.data.autoTransitionTo) {
+          code += `                \n`;
+          code += `                # Автопереход к следующему узлу\n`;
+          code += `                auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
+          code += `                logging.info(f"⚡ Автопереход от {next_node_id} к {{auto_next_node_id}}")\n`;
+          
+          // Находим целевой узел автоперехода
+          const autoTargetNode = nodes.find(n => n.id === targetNode.data.autoTransitionTo);
+          if (autoTargetNode) {
+            const autoMessageText = autoTargetNode.data.messageText || autoTargetNode.data.text || '';
+            const autoFormattedText = formatTextForPython(autoMessageText);
+            code += `                auto_text = ${autoFormattedText}\n`;
+            code += '                # Замена переменных для автоперехода\n';
+            code += '                auto_user_vars = await get_user_from_db(user_id)\n';
+            code += '                if not auto_user_vars:\n';
+            code += '                    auto_user_vars = user_data.get(user_id, {})\n';
+            code += '                if not isinstance(auto_user_vars, dict):\n';
+            code += '                    auto_user_vars = {}\n';
+            code += '                import re\n';
+            code += '                def replace_variables_in_text(text_content, variables_dict):\n';
+            code += '                    if not text_content or not variables_dict:\n';
+            code += '                        return text_content\n';
+            code += '                    for var_name, var_data in variables_dict.items():\n';
+            code += '                        placeholder = "{" + var_name + "}"\n';
+            code += '                        if placeholder in text_content:\n';
+            code += '                            if isinstance(var_data, dict) and "value" in var_data:\n';
+            code += '                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name\n';
+            code += '                            elif var_data is not None:\n';
+            code += '                                var_value = str(var_data)\n';
+            code += '                            else:\n';
+            code += '                                var_value = var_name\n';
+            code += '                            text_content = text_content.replace(placeholder, var_value)\n';
+            code += '                    return text_content\n';
+            code += '                auto_text = replace_variables_in_text(auto_text, auto_user_vars)\n';
+            
+            // Генерируем клавиатуру для автоперехода
+            const autoButtons = autoTargetNode.data.buttons || [];
+            const autoKeyboardType = autoTargetNode.data.keyboardType || 'none';
+            
+            if (autoButtons.length > 0 && autoKeyboardType !== 'none') {
+              if (autoKeyboardType === 'reply') {
+                // Reply клавиатура
+                code += '                # Создаем reply клавиатуру для автоперехода\n';
+                code += '                auto_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)\n';
+                autoButtons.forEach((btn) => {
+                  const btnText = formatTextForPython(btn.text || 'Button');
+                  code += `                auto_keyboard.add(KeyboardButton(text=${btnText}))\n`;
+                });
+                code += '                await message.answer(auto_text, reply_markup=auto_keyboard)\n';
+              } else if (autoKeyboardType === 'inline') {
+                // Inline клавиатура
+                code += '                # Создаем inline клавиатуру для автоперехода\n';
+                code += '                auto_keyboard = InlineKeyboardMarkup()\n';
+                autoButtons.forEach((btn) => {
+                  const btnText = formatTextForPython(btn.text || 'Button');
+                  const callbackData = btn.id || 'callback';
+                  code += `                auto_keyboard.add(InlineKeyboardButton(text=${btnText}, callback_data="${callbackData}"))\n`;
+                });
+                code += '                await message.answer(auto_text, reply_markup=auto_keyboard)\n';
+              }
+            } else {
+              // Нет кнопок
+              code += `                await message.answer(auto_text)\n`;
+            }
+            
+            code += `                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {{auto_next_node_id}}")\n`;
+          }
         }
       });
       code += '            else:\n';
@@ -6534,7 +6604,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
           code += '                        media_file_id = media_file_id["value"]\n';
           code += '                    await message.answer_video(media_file_id, caption=text)\n';
-          code += `                    logging.info(f"✅ Отправлено видео из переменной ${attachedMedia[0]} с текстом узла {targetNode.id}")\n`;
+          code += `                    logging.info(f"✅ Отправлено видео из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
           code += '                else:\n';
           code += '                    await message.answer(text)\n';
           code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
@@ -6635,7 +6705,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
           code += '                        media_file_id = media_file_id["value"]\n';
           code += '                    await message.answer_audio(media_file_id, caption=text)\n';
-          code += `                    logging.info(f"✅ Отправлено аудио из переменной ${attachedMedia[0]} с текстом узла {targetNode.id}")\n`;
+          code += `                    logging.info(f"✅ Отправлено аудио из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
           code += '                else:\n';
           code += '                    await message.answer(text)\n';
           code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
@@ -6730,7 +6800,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
           code += '                        media_file_id = media_file_id["value"]\n';
           code += '                    await message.answer_document(media_file_id, caption=text)\n';
-          code += `                    logging.info(f"✅ Отправлен документ из переменной ${attachedMedia[0]} с текстом узла {targetNode.id}")\n`;
+          code += `                    logging.info(f"✅ Отправлен документ из переменной ${attachedMedia[0]} с текстом узла {next_node_id}")\n`;
           code += '                else:\n';
           code += '                    await message.answer(text)\n';
           code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
