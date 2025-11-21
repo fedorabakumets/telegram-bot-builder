@@ -4570,7 +4570,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       const formattedText = formatTextForPython(messageText);
                       code += `                # Прямая навигация к узлу с множественным выбором ${navTargetNode.id}\n`;
                       code += `                logging.info(f"🔧 Fallback переход к узлу с множественным выбором: ${navTargetNode.id}")\n`;
-                      code += `                nav_text = ${formattedText}\n`;
+                      code += `                text = ${formattedText}\n`;
                       
                       // Замена переменных
                       code += '                user_data[user_id] = user_data.get(user_id, {})\n';
@@ -4588,9 +4588,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       // Создаем inline клавиатуру с кнопками выбора
                       if (navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                         code += generateInlineKeyboardCode(navTargetNode.data.buttons, '                ', navTargetNode.id, navTargetNode.data, allNodeIds);
-                        code += `                await bot.send_message(user_id, nav_text, reply_markup=keyboard)\n`;
+                        code += `                await bot.send_message(user_id, text, reply_markup=keyboard)\n`;
                       } else {
-                        code += `                await bot.send_message(user_id, nav_text)\n`;
+                        code += `                await bot.send_message(user_id, text)\n`;
                       }
                       code += `                logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполнена")\n`;
                     } else {
@@ -5551,13 +5551,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           const messageText = targetNode.data.messageText || 'Сообщение';
           const formattedText = formatTextForPython(messageText);
           code += `                        # Обычный узел - отправляем сообщение\n`;
-          code += `                        nav_text = ${formattedText}\n`;
+          code += `                        text = ${formattedText}\n`;
           
           // Добавляем замену переменных
           code += '                        user_data[user_id] = user_data.get(user_id, {})\n';
           code += generateUniversalVariableReplacement('                        ');
           code += `                        logging.info(f"Условная навигация к обычному узлу: ${targetNode.id}")\n`;
-          code += '                        await message.answer(nav_text)\n';
+          code += '                        await message.answer(text)\n';
         }
       }
     });
@@ -6253,7 +6253,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             const messageText = targetNode.data.messageText || 'Сообщение';
             const formattedText = formatTextForPython(messageText);
             code += `                # Обычный узел - отправляем сообщение\n`;
-            code += `                nav_text = ${formattedText}\n`;
+            code += `                text = ${formattedText}\n`;
             
             // Добавляем замену переменных
             code += '                user_data[user_id] = user_data.get(user_id, {})\n';
@@ -6262,9 +6262,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Создаем inline клавиатуру если есть кнопки
             if (targetNode.data.keyboardType === 'inline' && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
               code += generateInlineKeyboardCode(targetNode.data.buttons, '                ', targetNode.id, targetNode.data, allNodeIds);
-              code += `                await message.answer(nav_text, reply_markup=keyboard)\n`;
+              code += `                await message.answer(text, reply_markup=keyboard)\n`;
             } else {
-              code += '                await message.answer(nav_text)\n';
+              code += '                await message.answer(text)\n';
             }
             code += `                logging.info(f"✅ Ввод навигация к обычному узлу: ${targetNode.id}")\n`;
           }
