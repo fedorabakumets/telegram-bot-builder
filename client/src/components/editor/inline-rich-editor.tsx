@@ -676,14 +676,6 @@ export function InlineRichEditor({
         )}
         
         <div className="flex-1" />
-        
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={enableMarkdown}
-            onCheckedChange={onMarkdownToggle}
-            className="scale-75"
-          />
-        </div>
       </div>
 
       {/* Editor */}
