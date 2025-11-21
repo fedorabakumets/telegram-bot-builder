@@ -3221,21 +3221,21 @@ export function PropertiesPanel({
                               {getAllNodesFromAllSheets
                                 .filter(n => n.node.id !== selectedNode.id)
                                 .map(({node, sheetName}) => {
-                                  const nodeName = 
+                                  const nodeContent = 
                                     node.type === 'start' ? node.data.command :
                                     node.type === 'command' ? node.data.command :
-                                    node.type === 'message' ? 'Сообщение' :
-                                    node.type === 'photo' ? 'Фото' :
-                                    node.type === 'keyboard' ? 'Клавиатура' :
-                                    node.type === 'condition' ? 'Условие' :
-                                    'Узел';
+                                    node.type === 'message' ? (node.data.messageText || '').slice(0, 50) :
+                                    node.type === 'photo' ? (node.data.photoCaption || '').slice(0, 50) :
+                                    node.type === 'keyboard' ? (node.data.keyboardText || '').slice(0, 50) :
+                                    node.type === 'condition' ? (node.data.conditionText || '').slice(0, 50) :
+                                    '';
                                   
                                   return (
                                     <SelectItem key={node.id} value={node.id}>
                                       <div className="flex items-center gap-2">
                                         <span className="text-xs text-muted-foreground">{node.type}</span>
                                         <span className="text-xs font-mono text-muted-foreground">{node.id}</span>
-                                        <span>{nodeName}</span>
+                                        <span>{nodeContent}</span>
                                         <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                       </div>
                                     </SelectItem>
@@ -3849,16 +3849,19 @@ export function PropertiesPanel({
                                         <SelectContent>
                                           <SelectItem value="no-transition">Не переходить</SelectItem>
                                           {getAllNodesFromAllSheets.filter(n => n.node.id !== selectedNode.id).map(({node, sheetName}) => {
-                                            const nodeLabel = node.data.label || 
-                                              (node.type === 'command' ? `Команда: ${node.data.command}` : 
-                                               node.type === 'message' ? `Сообщение: ${(node.data.messageText || '').slice(0, 30)}...` :
-                                               `${node.type} (${node.id.slice(-8)})`);
+                                            const nodeContent = 
+                                              node.type === 'command' ? node.data.command :
+                                              node.type === 'message' ? (node.data.messageText || '').slice(0, 50) :
+                                              node.type === 'photo' ? (node.data.photoCaption || '').slice(0, 50) :
+                                              node.type === 'keyboard' ? (node.data.keyboardText || '').slice(0, 50) :
+                                              node.type === 'condition' ? (node.data.conditionText || '').slice(0, 50) :
+                                              (node.data.label || '').slice(0, 50);
                                             return (
                                               <SelectItem key={node.id} value={node.id}>
                                                 <div className="flex items-center gap-2">
                                                   <span className="text-xs text-muted-foreground">{node.type}</span>
                                                   <span className="text-xs font-mono text-muted-foreground">{node.id}</span>
-                                                  <span>{nodeLabel}</span>
+                                                  <span>{nodeContent}</span>
                                                   <span className="text-xs text-blue-600 dark:text-blue-400">({sheetName})</span>
                                                 </div>
                                               </SelectItem>
