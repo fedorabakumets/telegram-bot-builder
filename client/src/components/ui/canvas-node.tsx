@@ -1282,6 +1282,47 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                         </div>
                       </div>
                     )}
+                    
+                    {/* Кнопки условного сообщения */}
+                    {(condition as any).buttons && (condition as any).buttons.length > 0 && (condition as any).keyboardType !== 'none' && (
+                      <div className="mt-2 space-y-1">
+                        <div className="flex items-center space-x-1 mb-1.5">
+                          <i className="fas fa-keyboard text-xs text-amber-600 dark:text-amber-400"></i>
+                          <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                            {(condition as any).keyboardType === 'inline' ? 'Inline' : 'Reply'} кнопки
+                          </span>
+                        </div>
+                        
+                        {(condition as any).keyboardType === 'inline' ? (
+                          <div className="grid grid-cols-2 gap-1">
+                            {(condition as any).buttons.slice(0, 4).map((button: any, btnIndex: number) => (
+                              <div key={button.id || btnIndex} className="p-1.5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200/50 dark:border-blue-800/30 truncate">
+                                {button.text}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {(condition as any).buttons.slice(0, 3).map((button: any, btnIndex: number) => (
+                              <div key={button.id || btnIndex} className="flex items-center justify-between p-1.5 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/30 dark:to-slate-800/30 rounded border border-gray-200/50 dark:border-gray-700/30">
+                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
+                                {button.action === 'goto' && <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70 ml-1" title="Переход"></i>}
+                                {button.action === 'command' && <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70 ml-1" title="Команда"></i>}
+                                {button.action === 'url' && <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70 ml-1" title="Ссылка"></i>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {(condition as any).buttons.length > ((condition as any).keyboardType === 'inline' ? 4 : 3) && (
+                          <div className="text-center">
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              +{(condition as any).buttons.length - ((condition as any).keyboardType === 'inline' ? 4 : 3)} еще
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
