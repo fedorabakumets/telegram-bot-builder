@@ -6053,7 +6053,7 @@ async function seedDefaultTemplates(force = false) {
       isPublic: 1,
       difficulty: "easy",
       authorName: "Система",
-      version: "1.0.0",
+      version: "2.0.0",
       featured: 1,
       language: "ru",
       complexity: 3,
@@ -6061,7 +6061,7 @@ async function seedDefaultTemplates(force = false) {
       data: {
         sheets: [
           {
-            id: "main_sheet",
+            id: "yT2j2y10tJ4e2ej6BFbVY",
             name: "Основной поток",
             nodes: [
               {
@@ -6085,7 +6085,34 @@ async function seedDefaultTemplates(force = false) {
                   showInMenu: true,
                   requiresAuth: false,
                   isPrivateOnly: false,
-                  enableStatistics: true
+                  enableStatistics: true,
+                  enableConditionalMessages: true,
+                  conditionalMessages: [
+                    {
+                      id: "condition-1763692642023",
+                      priority: 10,
+                      condition: "user_data_exists",
+                      variableName: "age",
+                      variableNames: ["age"],
+                      logicOperator: "AND",
+                      messageText: "Сколько тебе лет?",
+                      formatMode: "text",
+                      keyboardType: "reply",
+                      waitForTextInput: true,
+                      nextNodeAfterInput: "f90r9k3FSLu2Tjn74cBn_",
+                      buttons: [
+                        {
+                          id: "b5XNyuzu_-YIFk3yfUfpj",
+                          text: "Новая кнопка",
+                          action: "goto",
+                          target: "f90r9k3FSLu2Tjn74cBn_",
+                          buttonType: "normal",
+                          skipDataCollection: false,
+                          url: ""
+                        }
+                      ]
+                    }
+                  ]
                 }
               },
               {
@@ -6373,11 +6400,11 @@ async function seedDefaultTemplates(force = false) {
           }
         ],
         version: 2,
-        activeSheetId: "main_sheet"
+        activeSheetId: "yT2j2y10tJ4e2ej6BFbVY"
       }
     });
 
-    console.log('✅ Шаблон Котик создан');
+    console.log('✅ Шаблон Котик v2.0 создан (с условными сообщениями)');
     console.log('✅ Системные шаблоны созданы');
 
   } catch (error) {
