@@ -768,7 +768,9 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   // Создаем единую if/elif/else структуру для всех условий
   for (let i = 0; i < sortedConditions.length; i++) {
     const condition = sortedConditions[i];
-    const cleanedConditionText = stripHtmlTags(condition.messageText);
+    // Если текст условного сообщения не указан, используем основной текст узла
+    const messageToUse = condition.messageText || (nodeData?.messageText || '');
+    const cleanedConditionText = stripHtmlTags(messageToUse);
     const conditionText = formatTextForPython(cleanedConditionText);
     const conditionKeyword = i === 0 ? 'if' : 'elif';
     
