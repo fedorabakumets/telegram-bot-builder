@@ -666,7 +666,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
           {node.data.synonyms && node.data.synonyms.length > 0 && (
             <div className="mt-2">
               <div className="flex flex-wrap gap-1">
-                {node.data.synonyms.slice(0, 3).map((synonym, index) => (
+                {node.data.synonyms.map((synonym, index) => (
                   <span
                     key={index}
                     className="inline-flex items-center px-2 py-1 rounded-md bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-700 dark:text-indigo-300 text-xs font-medium border border-indigo-200 dark:border-indigo-700/50"
@@ -676,14 +676,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                     {synonym}
                   </span>
                 ))}
-                {node.data.synonyms.length > 3 && (
-                  <span
-                    className="inline-flex items-center px-2 py-1 rounded-md bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 text-gray-600 dark:text-gray-400 text-xs font-medium border border-gray-200 dark:border-gray-700/50"
-                    title={`Ещё синонимов: ${node.data.synonyms.slice(3).join(', ')}`}
-                  >
-                    +{node.data.synonyms.length - 3}
-                  </span>
-                )}
               </div>
             </div>
           )}
