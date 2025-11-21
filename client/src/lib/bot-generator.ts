@@ -4287,11 +4287,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `    logging.info(f"Переменная ${variableName} сохранена: " + str(${variableValue}) + f" (пользователь {user_id})")\n`;
           code += '    \n';
           
-          // КРИТИЧЕСКИ ВАЖНО: Добавляем показ сообщения "✅ Спасибо за ваш ответ! Обрабатываю..." для кнопок
-          code += '    # Показываем сообщение об обработке\n';
-          code += '    await callback_query.answer("✅ Спасибо за ваш ответ! Обрабатываю...")\n';
-          code += '    \n';
-          
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Для узлов с множественным выбором НЕ делаем автоматической переадресации
           const currentNode = nodes.find(n => n.id === nodeId);
           
@@ -5441,9 +5436,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '            logging.info(f"✅ Условный ответ сохранен в БД: {variable_name} = {user_text} (пользователь {user_id})")\n';
   code += '        else:\n';
   code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
-  code += '        \n';
-  code += '        # Отправляем подтверждение\n';
-  code += '        await message.answer("✅ Спасибо за ваш ответ! Обрабатываю...")\n';
   code += '        \n';
   code += '        # Очищаем состояние ожидания\n';
   code += '        del user_data[user_id]["waiting_for_conditional_input"]\n';
