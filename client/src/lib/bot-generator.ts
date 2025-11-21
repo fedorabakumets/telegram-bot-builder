@@ -4422,26 +4422,68 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       const formattedText = formatTextForPython(messageText);
                       code += `            nav_text = ${formattedText}\n`;
                       
-                      // Проверяем, есть ли reply кнопки
-                      if (navTargetNode.data.keyboardType === 'reply' && navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
-                        code += '            # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
-                        code += '            await callback_query.message.delete()\n';
-                        code += '            builder = ReplyKeyboardBuilder()\n';
-                        navTargetNode.data.buttons.forEach((button: any) => {
-                          if (button.action === "contact" && button.requestContact) {
-                            code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
-                          } else if (button.action === "location" && button.requestLocation) {
-                            code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
-                          } else {
-                            code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
-                          }
-                        });
-                        const resizeKeyboard = toPythonBoolean(navTargetNode.data.resizeKeyboard);
-                        const oneTimeKeyboard = toPythonBoolean(navTargetNode.data.oneTimeKeyboard);
-                        code += `            keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-                        code += '            await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)\n';
+                      // Добавляем замену переменных в nav_text
+                      code += '            # Подставляем переменные пользователя в текст\n';
+                      code += '            nav_user_vars = await get_user_from_db(callback_query.from_user.id)\n';
+                      code += '            if not nav_user_vars:\n';
+                      code += '                nav_user_vars = user_data.get(callback_query.from_user.id, {})\n';
+                      code += '            if not isinstance(nav_user_vars, dict):\n';
+                      code += '                nav_user_vars = {}\n';
+                      code += '            # Заменяем переменные в nav_text\n';
+                      code += '            for var_name, var_data in nav_user_vars.items():\n';
+                      code += '                placeholder = "{" + var_name + "}"\n';
+                      code += '                if placeholder in nav_text:\n';
+                      code += '                    if isinstance(var_data, dict) and "value" in var_data:\n';
+                      code += '                        var_value = str(var_data["value"]) if var_data["value"] is not None else var_name\n';
+                      code += '                    elif var_data is not None:\n';
+                      code += '                        var_value = str(var_data)\n';
+                      code += '                    else:\n';
+                      code += '                        var_value = var_name\n';
+                      code += '                    nav_text = nav_text.replace(placeholder, var_value)\n';
+                      
+                      // Проверяем, есть ли прикрепленные медиа
+                      const hasAttachedMedia = navTargetNode.data.attachedMedia && navTargetNode.data.attachedMedia.length > 0;
+                      
+                      if (hasAttachedMedia) {
+                        // Генерируем код для отправки медиа
+                        const attachedMedia = navTargetNode.data.attachedMedia;
+                        code += '            # Проверяем наличие прикрепленного медиа\n';
+                        code += `            nav_attached_media = None\n`;
+                        code += `            if nav_user_vars and "${attachedMedia[0]}" in nav_user_vars:\n`;
+                        code += `                media_data = nav_user_vars["${attachedMedia[0]}"]\n`;
+                        code += `                if isinstance(media_data, dict) and "value" in media_data:\n`;
+                        code += `                    nav_attached_media = media_data["value"]\n`;
+                        code += `                elif isinstance(media_data, str):\n`;
+                        code += `                    nav_attached_media = media_data\n`;
+                        code += `            if nav_attached_media and str(nav_attached_media).strip():\n`;
+                        code += `                logging.info(f"📎 Отправка фото из переменной ${attachedMedia[0]}: {nav_attached_media}")\n`;
+                        code += `                await callback_query.message.delete()\n`;
+                        code += `                await bot.send_photo(callback_query.from_user.id, nav_attached_media, caption=nav_text)\n`;
+                        code += `            else:\n`;
+                        code += `                logging.info("📝 Медиа не найдено, отправка текстового сообщения")\n`;
+                        code += `                await callback_query.message.edit_text(nav_text)\n`;
                       } else {
-                        code += '            await callback_query.message.edit_text(nav_text)\n';
+                        // Проверяем, есть ли reply кнопки
+                        if (navTargetNode.data.keyboardType === 'reply' && navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
+                          code += '            # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
+                          code += '            await callback_query.message.delete()\n';
+                          code += '            builder = ReplyKeyboardBuilder()\n';
+                          navTargetNode.data.buttons.forEach((button: any) => {
+                            if (button.action === "contact" && button.requestContact) {
+                              code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
+                            } else if (button.action === "location" && button.requestLocation) {
+                              code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
+                            } else {
+                              code += `            builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+                            }
+                          });
+                          const resizeKeyboard = toPythonBoolean(navTargetNode.data.resizeKeyboard);
+                          const oneTimeKeyboard = toPythonBoolean(navTargetNode.data.oneTimeKeyboard);
+                          code += `            keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                          code += '            await bot.send_message(callback_query.from_user.id, nav_text, reply_markup=keyboard)\n';
+                        } else {
+                          code += '            await callback_query.message.edit_text(nav_text)\n';
+                        }
                       }
                       
                       // Если узел message собирает ввод, настраиваем ожидание
@@ -5488,6 +5530,118 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += '    del user_data[user_id]["button_response_config"]\n';
         code += '    \n';
         code += '    logging.info(f"Пользователь {user_id} пропустил кнопочный ответ")\n';
+      }
+    });
+  }
+
+  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем reply button обработчики ПЕРЕД универсальным обработчиком текста
+  // Это гарантирует, что специфичные обработчики кнопок срабатывают раньше общего обработчика
+  const replyGotoButtons: Array<{text: string, target: string, nodeId: string, keyboardType: string}> = [];
+  console.log('🔍 НАЧИНАЕМ СБОР REPLY КНОПОК С GOTO из', nodes.length, 'узлов');
+  
+  nodes.forEach(node => {
+    // Обычные кнопки узла
+    if (node.data.buttons) {
+      node.data.buttons.forEach((button: any) => {
+        if (button.action === 'goto' && button.target && node.data.keyboardType === 'reply') {
+          console.log(`✅ НАЙДЕНА reply goto кнопка: "${button.text}" -> ${button.target} в узле ${node.id}`);
+          replyGotoButtons.push({
+            text: button.text,
+            target: button.target,
+            nodeId: node.id,
+            keyboardType: node.data.keyboardType
+          });
+        }
+      });
+    }
+    
+    // Кнопки в условных сообщениях
+    if (node.data.conditionalMessages) {
+      node.data.conditionalMessages.forEach((condition: any) => {
+        if (condition.buttons) {
+          condition.buttons.forEach((button: any) => {
+            // Для conditional messages берем keyboardType из самой кнопки или condition
+            const keyboardType = condition.keyboardType || button.keyboardType || node.data.keyboardType || 'inline';
+            if (button.action === 'goto' && button.target && keyboardType === 'reply') {
+              console.log(`✅ НАЙДЕНА reply goto кнопка в conditional message: "${button.text}" -> ${button.target} в узле ${node.id}`);
+              replyGotoButtons.push({
+                text: button.text,
+                target: button.target,
+                nodeId: node.id,
+                keyboardType: keyboardType
+              });
+            }
+          });
+        }
+      });
+    }
+  });
+  
+  console.log(`🎯 ИТОГО найдено reply goto кнопок: ${replyGotoButtons.length}`);
+  
+  if (replyGotoButtons.length > 0) {
+    code += '\n# Обработчики для reply кнопок с переходами (goto)\n';
+    code += `# Найдено ${replyGotoButtons.length} reply goto кнопок\n`;
+    code += '# ВАЖНО: Эти обработчики должны быть ВЫШЕ универсального обработчика текста\n';
+    
+    // Группируем по тексту, чтобы избежать дубликатов
+    const uniqueButtons = new Map<string, typeof replyGotoButtons[0]>();
+    replyGotoButtons.forEach(btn => {
+      if (!uniqueButtons.has(btn.text)) {
+        uniqueButtons.set(btn.text, btn);
+      }
+    });
+    
+    uniqueButtons.forEach((button, buttonText) => {
+      const safeFunctionName = button.text.replace(/[^a-zA-Z0-9_а-яА-Я]/g, '_');
+      const safeNodeFunctionName = button.target.replace(/[^a-zA-Z0-9_]/g, '_');
+      
+      code += `\n@dp.message(lambda message: message.text == ${formatTextForPython(button.text)})\n`;
+      code += `async def handle_reply_button_${safeFunctionName}_${safeNodeFunctionName}(message: types.Message):\n`;
+      code += `    user_id = message.from_user.id\n`;
+      code += `    logging.info(f"📱 Получена reply кнопка: ${button.text} от {{user_id}}, переход к узлу ${button.target}")\n`;
+      code += `    \n`;
+      
+      const targetNode = nodes.find(n => n.id === button.target);
+      if (targetNode) {
+        if (targetNode.type === 'start') {
+          code += `    # Вызываем start handler напрямую\n`;
+          code += `    await start_handler(message)\n`;
+        } else if (targetNode.type === 'command') {
+          const commandName = targetNode.data.command?.replace('/', '') || 'unknown';
+          code += `    # Вызываем command handler напрямую\n`;
+          code += `    await ${commandName}_handler(message)\n`;
+        } else {
+          // Для обычных message узлов создаём fake callback и вызываем callback обработчик
+          code += `    # Создаём fake callback для вызова callback обработчика\n`;
+          code += `    import types as aiogram_types\n`;
+          code += `    # Создаём минимальный message объект для bot.send_message\n`;
+          code += `    fake_message = aiogram_types.SimpleNamespace(\n`;
+          code += `        chat=aiogram_types.SimpleNamespace(id=message.from_user.id),\n`;
+          code += `        message_id=message.message_id,\n`;
+          code += `        delete=lambda: asyncio.sleep(0),\n`;
+          code += `        edit_text=lambda *args, **kwargs: asyncio.sleep(0),\n`;
+          code += `        answer=lambda text, **kwargs: bot.send_message(message.from_user.id, text, **kwargs)\n`;
+          code += `    )\n`;
+          code += `    fake_callback = aiogram_types.SimpleNamespace(\n`;
+          code += `        id="reply_button_nav",\n`;
+          code += `        from_user=message.from_user,\n`;
+          code += `        chat_instance="",\n`;
+          code += `        data="${button.target}",\n`;
+          code += `        message=fake_message,\n`;
+          code += `        answer=lambda text="", show_alert=False: asyncio.sleep(0)\n`;
+          code += `    )\n`;
+          code += `    \n`;
+          code += `    # Вызываем callback обработчик целевого узла\n`;
+          code += `    try:\n`;
+          code += `        await handle_callback_${safeNodeFunctionName}(fake_callback)\n`;
+          code += `    except Exception as e:\n`;
+          code += `        logging.error(f"Ошибка при вызове обработчика узла ${button.target}: {{e}}")\n`;
+          code += `        await message.answer("Произошла ошибка при обработке кнопки")\n`;
+        }
+      } else {
+        code += `    logging.warning(f"Целевой узел ${button.target} не найден")\n`;
+        code += `    await message.answer("Ошибка: узел не найден")\n`;
       }
     });
   }
@@ -6786,7 +6940,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `                \n`;
           code += `                # Автопереход к следующему узлу\n`;
           code += `                auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
-          code += `                logging.info(f"⚡ Автопереход от {next_node_id} к {{auto_next_node_id}}")\n`;
+          code += `                logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")\n`;
           
           // Находим целевой узел автоперехода
           const autoTargetNode = nodes.find(n => n.id === targetNode.data.autoTransitionTo);
@@ -6849,7 +7003,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `                await message.answer(auto_text)\n`;
             }
             
-            code += `                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {{auto_next_node_id}}")\n`;
+            code += `                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")\n`;
           }
         }
       });
@@ -7674,7 +7828,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     });
   }
 
-  // УДАЛЕН универсальный profile_handler - он конфликтует с основным обработчиком команды из узла
+  // Reply button обработчики уже добавлены выше, перед универсальным обработчиком текста
   code += '\n';
 
   // Добавляем обработчики для групп
