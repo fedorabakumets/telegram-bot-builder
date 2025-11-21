@@ -5835,39 +5835,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '                        await message.answer(text, reply_markup=keyboard)\n';
             code += `                        logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
             
-            // ИСПРАВЛЕНИЕ: Если включен сбор текстового ввода, настраиваем ожидание даже при наличии кнопок
-            if (targetNode.data.enableTextInput === true) {
-              code += `                        logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id} (с reply кнопками), переменная ${inputVariable}")\n`;
-              code += '                        # Настраиваем ожидание ввода для message узла с reply кнопками\n';
-              code += '                        user_data[user_id]["waiting_for_input"] = {\n';
-              code += `                            "type": "${inputType}",\n`;
-              code += `                            "variable": "${inputVariable}",\n`;
-              code += '                            "save_to_database": True,\n';
-              code += `                            "node_id": "${targetNode.id}",\n`;
-              code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
-              code += `                            "min_length": ${targetNode.data.minLength || 0},\n`;
-              code += `                            "max_length": ${targetNode.data.maxLength || 0},\n`;
-              code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-              code += '                            "success_message": "✅ Спасибо за ваш ответ!"\n';
-              code += '                        }\n';
+            // ИСПРАВЛЕНИЕ: Если включен сбор ввода, настраиваем ожидание даже при наличии кнопок
+            if (targetNode.data.enableTextInput === true || targetNode.data.enablePhotoInput === true || 
+                targetNode.data.enableVideoInput === true || targetNode.data.enableAudioInput === true || 
+                targetNode.data.enableDocumentInput === true || targetNode.data.collectUserInput === true) {
+              code += '                        # Настраиваем ожидание ввода для message узла с reply кнопками (используем универсальную функцию)\n';
+              code += generateWaitingStateCode(targetNode, '                        ');
             }
           } else {
             code += '                        await message.answer(text)\n';
             
-            // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок
-            code += `                        logging.info(f"DEBUG: Настраиваем ожидание ввода для узла ${targetNode.id}, переменная ${inputVariable}")\n`;
-            code += '                        # Настраиваем ожидание ввода для message узла\n';
-            code += '                        user_data[user_id]["waiting_for_input"] = {\n';
-            code += `                            "type": "${inputType}",\n`;
-            code += `                            "variable": "${inputVariable}",\n`;
-            code += '                            "save_to_database": True,\n';
-            code += `                            "node_id": "${targetNode.id}",\n`;
-            code += `                            "next_node_id": "${inputTargetNodeId || ''}",\n`;
-            code += `                            "min_length": ${targetNode.data.minLength || 0},\n`;
-            code += `                            "max_length": ${targetNode.data.maxLength || 0},\n`;
-            code += '                            "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-            code += '                            "success_message": "✅ Спасибо за ваш ответ!"\n';
-            code += '                        }\n';
+            // Настраиваем ожидание ввода ТОЛЬКО если нет кнопок (используем универсальную функцию)
+            code += '                        # Настраиваем ожидание ввода для message узла (универсальная функция определит тип: text/photo/video/audio/document)\n';
+            code += generateWaitingStateCode(targetNode, '                        ');
           }
         } else {
           // Если узел не собирает ввод, проверяем есть ли inline или reply кнопки
