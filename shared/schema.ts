@@ -687,6 +687,9 @@ export const nodeSchema = z.object({
     collectUserInput: z.boolean().default(false), // Включить сбор пользовательского ввода
     inputTargetNodeId: z.string().optional(), // ID узла, к которому переходить после сбора ввода
     inputButtonType: z.enum(['inline', 'reply']).default('inline'), // Тип кнопок для ответов
+    
+    // Автопереход - отправка сообщения и автоматический переход к следующему узлу без ожидания ввода
+    autoTransitionTo: z.string().optional(), // ID узла для автоматического перехода после отправки сообщения
     minLength: z.number().optional(), // Минимальная длина текста
     maxLength: z.number().optional(), // Максимальная длина текста
     placeholder: z.string().optional(), // Подсказка для ввода

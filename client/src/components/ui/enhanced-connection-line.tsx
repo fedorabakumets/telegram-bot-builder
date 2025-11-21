@@ -114,6 +114,11 @@ export function EnhancedConnectionLine({
   };
 
   const getConnectionType = () => {
+    const sourceNode = nodes.find(n => n.id === connection.source);
+    // Проверяем автопереход
+    if (sourceNode?.data.autoTransitionTo === connection.target) {
+      return 'auto-transition';
+    }
     if (hasButton) return 'button';
     return 'direct';
   };
@@ -138,21 +143,25 @@ export function EnhancedConnectionLine({
         stroke={
           isSelected 
             ? "hsl(var(--primary))" 
-            : connectionType === 'button' 
-              ? "hsl(var(--green-500))" 
-              : "hsl(var(--muted-foreground))"
+            : connectionType === 'auto-transition'
+              ? "#10b981"
+              : connectionType === 'button' 
+                ? "hsl(var(--green-500))" 
+                : "hsl(var(--muted-foreground))"
         }
         strokeWidth={isSelected ? "3" : "2"}
         fill="none"
         strokeDasharray={
-          connectionType === 'button' 
-            ? "none" 
-            : "5,5"
+          connectionType === 'auto-transition'
+            ? "8,4"
+            : connectionType === 'button' 
+              ? "none" 
+              : "5,5"
         }
         className={`
           transition-all duration-300
           ${isSelected ? 'drop-shadow-md' : ''}
-          ${connectionType === 'button' ? 'opacity-100' : 'opacity-70'}
+          ${connectionType === 'button' || connectionType === 'auto-transition' ? 'opacity-100' : 'opacity-70'}
         `}
         markerEnd="url(#arrowhead)"
       />
@@ -172,15 +181,17 @@ export function EnhancedConnectionLine({
             fill={
               isSelected 
                 ? "hsl(var(--primary))" 
-                : connectionType === 'button' 
-                  ? "hsl(var(--green-500))" 
-                  : "hsl(var(--muted-foreground))"
+                : connectionType === 'auto-transition'
+                  ? "#10b981"
+                  : connectionType === 'button' 
+                    ? "hsl(var(--green-500))" 
+                    : "hsl(var(--muted-foreground))"
             }
           />
         </marker>
       </defs>
 
-      {/* Информация о кнопке */}
+      {/* Информация о кнопке или автопереходе */}
       {showButtonInfo && (
         <foreignObject
           x={midPoint.x - 60}
@@ -190,7 +201,15 @@ export function EnhancedConnectionLine({
           className="pointer-events-none"
         >
           <div className="flex items-center justify-center h-full">
-            {buttonInfo ? (
+            {connectionType === 'auto-transition' ? (
+              <Badge 
+                variant="secondary" 
+                className="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 flex items-center gap-1"
+              >
+                <ArrowRight className="h-3 w-3" />
+                <span>Авто</span>
+              </Badge>
+            ) : buttonInfo ? (
               <Badge 
                 variant="secondary" 
                 className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 flex items-center gap-1"
@@ -239,9 +258,11 @@ export function EnhancedConnectionLine({
         cy={midPoint.y}
         r="4"
         fill={
-          connectionType === 'button' 
-            ? "hsl(var(--green-500))" 
-            : "hsl(var(--yellow-500))"
+          connectionType === 'auto-transition'
+            ? "#10b981"
+            : connectionType === 'button' 
+              ? "hsl(var(--green-500))" 
+              : "hsl(var(--yellow-500))"
         }
         stroke="white"
         strokeWidth="2"

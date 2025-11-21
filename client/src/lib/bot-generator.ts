@@ -2425,6 +2425,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${parseMode})\n`;
               }
               
+              // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+              if (targetNode.data.autoTransitionTo) {
+                const autoTargetId = targetNode.data.autoTransitionTo;
+                const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
+                code += '    \n';
+                code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                code += `    return\n`;
+              }
+              
               // КРИТИЧЕСКИ ВАЖНАЯ ЛОГИКА: Если этот узел имеет collectUserInput, настраиваем состояние ожидания
               if (targetNode.data.collectUserInput === true) {
                 const inputType = targetNode.data.inputType || 'text';
@@ -2550,6 +2561,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '        logging.error(f"Ошибка отправки фото: {e}")\n';
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить фото\\n{caption}")\n';
               
+              // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+              if (targetNode.data.autoTransitionTo) {
+                const autoTargetId = targetNode.data.autoTransitionTo;
+                const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
+                code += '    \n';
+                code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                code += `    return\n`;
+              }
+              
             } else if (targetNode.type === 'video') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎥 Видео";
               const videoUrl = targetNode.data.videoUrl || "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4";
@@ -2649,6 +2671,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '        logging.error(f"Ошибка отправки видео: {e}")\n';
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить видео\\n{caption}")\n';
               
+              // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+              if (targetNode.data.autoTransitionTo) {
+                const autoTargetId = targetNode.data.autoTransitionTo;
+                const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
+                code += '    \n';
+                code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                code += `    return\n`;
+              }
+              
             } else if (targetNode.type === 'audio') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "🎵 Аудио";
               const audioUrl = targetNode.data.audioUrl || "https://www.soundjay.com/misc/beep-07a.wav";
@@ -2747,6 +2780,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    except Exception as e:\n';
               code += '        logging.error(f"Ошибка отправки аудио: {e}")\n';
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить аудио\\n{caption}")\n';
+              
+              // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+              if (targetNode.data.autoTransitionTo) {
+                const autoTargetId = targetNode.data.autoTransitionTo;
+                const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
+                code += '    \n';
+                code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                code += `    return\n`;
+              }
               
             } else if (targetNode.type === 'document') {
               const caption = targetNode.data.mediaCaption || targetNode.data.messageText || "📄 Документ";
@@ -5893,8 +5937,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
             const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
             code += `                        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-            code += '                        await message.answer(text, reply_markup=keyboard)\n';
-            code += `                        logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id}")\n`;
+            code += '                        await message.answer(text, reply_markup=keyboard)\n`;
+            code += `                        logging.info(f"✅ Показана reply клавиатура для переходного узла")\n`;
           } else {
             code += '                        await message.answer(text)\n';
           }

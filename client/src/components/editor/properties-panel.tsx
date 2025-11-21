@@ -4362,6 +4362,81 @@ export function PropertiesPanel({
           </div>
         )}
 
+        {/* Auto Transition Section - показывать только когда нет кнопок и нет сбора данных */}
+        {selectedNode.type !== 'input' && 
+         !selectedNode.data.collectUserInput && 
+         (!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
+         selectedNode.data.keyboardType === 'none' && (
+          <div>
+            <h3 className="text-sm font-medium text-foreground mb-3">⚡ Автопереход</h3>
+            <div className="space-y-4 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 dark:from-emerald-950/20 dark:to-teal-950/10 border border-emerald-200/30 dark:border-emerald-800/30 rounded-lg p-4">
+              <div className="text-xs text-muted-foreground mb-3">
+                Сообщение будет отправлено, и бот автоматически перейдёт к следующему узлу без ожидания ответа от пользователя.
+              </div>
+              
+              <div>
+                <Label className="text-xs font-medium text-emerald-700 dark:text-emerald-300 mb-2 block">
+                  <i className="fas fa-arrow-right mr-1"></i>
+                  Следующий узел
+                </Label>
+                <Select
+                  value={selectedNode.data.autoTransitionTo || ''}
+                  onValueChange={(value) => onNodeUpdate(selectedNode.id, { autoTransitionTo: value })}
+                >
+                  <SelectTrigger className="border-emerald-200 dark:border-emerald-700 focus:border-emerald-500">
+                    <SelectValue placeholder="Выберите узел для перехода" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAllNodesFromAllSheets
+                      .filter(({ node }) => node.id !== selectedNode.id)
+                      .map(({ node, sheetId, sheetName }) => {
+                        const nodeName = 
+                          node.type === 'start' ? node.data.command :
+                          node.type === 'command' ? node.data.command :
+                          node.type === 'message' ? 'Сообщение' :
+                          node.type === 'photo' ? 'Фото' :
+                          node.type === 'video' ? 'Видео' :
+                          node.type === 'audio' ? 'Аудио' :
+                          node.type === 'document' ? 'Документ' : 'Узел';
+                        
+                        return (
+                          <SelectItem key={`${sheetId}-${node.id}`} value={node.id}>
+                            <div className="flex items-center gap-1">
+                              <span>{nodeName} ({node.id})</span>
+                              {sheetId !== currentSheetId && (
+                                <span className="text-xs text-emerald-600 dark:text-emerald-400">({sheetName})</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    
+                    {(!getAllNodesFromAllSheets || getAllNodesFromAllSheets.filter(({ node }) => node.id !== selectedNode.id).length === 0) && (
+                      <SelectItem value="no-nodes" disabled>
+                        Создайте другие части бота для выбора
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                
+                <Input
+                  value={selectedNode.data.autoTransitionTo || ''}
+                  onChange={(e) => onNodeUpdate(selectedNode.id, { autoTransitionTo: e.target.value })}
+                  className="mt-2 text-xs border-emerald-200 dark:border-emerald-700 focus:border-emerald-500 focus:ring-emerald-200"
+                  placeholder="Или введите ID узла вручную"
+                />
+                
+                {selectedNode.data.autoTransitionTo && (
+                  <div className="mt-2 p-2 bg-emerald-100/50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded text-xs text-emerald-700 dark:text-emerald-300">
+                    <i className="fas fa-info-circle mr-1"></i>
+                    Бот автоматически перейдёт к узлу <strong>{selectedNode.data.autoTransitionTo}</strong> сразу после отправки этого сообщения
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Universal User Input Collection */}
         {selectedNode.type !== 'input' && !selectedNode.data.collectUserInput && (
           <div>
