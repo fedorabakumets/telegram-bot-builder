@@ -11617,8 +11617,13 @@ function generateKeyboard(node: Node): string {
       }
       
     } else {
-      // Текстовый ввод
-      code += `    await message.answer(text${parseMode})\n`;
+      // Текстовый ввод - проверяем условную клавиатуру
+      code += '    \n';
+      code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+      code += '    if use_conditional_keyboard:\n';
+      code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+      code += '    else:\n';
+      code += `        await message.answer(text${parseMode})\n`;
     }
     
     // Устанавливаем состояние ожидания ввода
