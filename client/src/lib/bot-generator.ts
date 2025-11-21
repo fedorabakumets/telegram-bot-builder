@@ -322,7 +322,7 @@ function generateWaitingStateCode(node: any, indentLevel: string = '    ', userI
   code += `${indentLevel}    "min_length": ${node.data.minLength || 0},\n`;
   code += `${indentLevel}    "max_length": ${node.data.maxLength || 0},\n`;
   code += `${indentLevel}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
-  code += `${indentLevel}    "success_message": "✅ Спасибо за ваш ответ!"\n`;
+  code += `${indentLevel}    "success_message": ""\n`;
   code += `${indentLevel}}\n`;
   code += `${indentLevel}logging.info(f"✅ Состояние ожидания настроено: ${inputType} ввод для переменной ${inputVariable} (узел ${node.id})")\n`;
   
@@ -3279,7 +3279,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const allowSkip = targetNode.data.allowSkip || false;
               const saveToDatabase = targetNode.data.saveToDatabase || false;
               const inputRetryMessage = targetNode.data.inputRetryMessage || "Пожалуйста, попробуйте еще раз.";
-              const inputSuccessMessage = targetNode.data.inputSuccessMessage || "✅ Спасибо за ваш ответ!";
+              const inputSuccessMessage = targetNode.data.inputSuccessMessage || "";
               const placeholder = targetNode.data.placeholder || "";
               
               code += '    # Удаляем старое сообщение\n';
@@ -6110,11 +6110,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '                else:\n';
   code += '                    logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
   code += '            \n';
-  code += '            # ИСПРАВЛЕНО: Отправляем подтверждающее сообщение\n';
-  code += '            success_message = waiting_config.get("success_message", "✅ Спасибо за ваш ответ!")\n';
-  code += '            logging.info(f"DEBUG: Отправляем подтверждение с текстом: {success_message}")\n';
-  code += '            await message.answer(success_message)\n';
-  code += '            logging.info(f"✅ Отправлено подтверждение: {success_message}")\n';
+  code += '            # Отправляем подтверждающее сообщение только если оно задано\n';
+  code += '            success_message = waiting_config.get("success_message", "")\n';
+  code += '            if success_message:\n';
+  code += '                logging.info(f"DEBUG: Отправляем подтверждение с текстом: {success_message}")\n';
+  code += '                await message.answer(success_message)\n';
+  code += '                logging.info(f"✅ Отправлено подтверждение: {success_message}")\n';
   code += '            \n';
   code += '            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем старое состояние ожидания перед навигацией\n';
   code += '            if "waiting_for_input" in user_data[user_id]:\n';
@@ -6342,7 +6343,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += `${bodyIndent}    "min_length": ${targetNode.data.minLength || 0},\n`;
         code += `${bodyIndent}    "max_length": ${targetNode.data.maxLength || 0},\n`;
         code += `${bodyIndent}    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
-        code += `${bodyIndent}    "success_message": "✅ Спасибо за ваш ответ!"\n`;
+        code += `${bodyIndent}    "success_message": ""\n`;
         code += `${bodyIndent}}\n`;
         code += `${bodyIndent}break  # Выходим из цикла после настройки ожидания ввода\n`;
       } else if (targetNode.type === 'command') {
@@ -6447,9 +6448,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += `            \n`;
     
     code += `            \n`;
-    code += `            # Отправляем сообщение об успехе с галочкой\n`;
-    code += `            await message.answer("✅ Спасибо за ваш ответ!")\n`;
-    code += `            \n`;
     code += `            logging.info(f"Получен пользовательский ввод: ${variableName} = {user_text}")\n`;
     code += `            \n`;
     
@@ -6484,7 +6482,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `                    "min_length": 0,\n`;
             code += `                    "max_length": 0,\n`;
             code += `                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
-            code += `                    "success_message": "✅ Спасибо за ваш ответ!"\n`;
+            code += `                    "success_message": ""\n`;
             code += `                }\n`;
             code += `                \n`;
           }
@@ -6605,9 +6603,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '                logging.info(f"✅ Данные сохранены в БД: {input_variable} = {user_text} (пользователь {user_id})")\n';
   code += '            else:\n';
   code += '                logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
-  code += '            \n';
-  code += '            # Уведомляем пользователя об успешном сохранении\n';
-  code += '            await message.answer("✅ Спасибо за ваш ответ!")\n';
   code += '            \n';
   code += '            logging.info(f"Получен основной пользовательский ввод: {input_variable} = {user_text}")\n';
   code += '            \n';
@@ -7228,9 +7223,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        else:\n';
   code += '            logging.warning(f"⚠️ Не удалось сохранить в БД, данные сохранены локально")\n';
   code += '    \n';
-  code += '    # Отправляем сообщение об успехе\n';
-  code += '    success_message = input_config.get("success_message", "✅ Спасибо за ваш ответ!")\n';
-  code += '    await message.answer(success_message)\n';
+  code += '    # Отправляем сообщение об успехе только если оно задано\n';
+  code += '    success_message = input_config.get("success_message", "")\n';
+  code += '    if success_message:\n';
+  code += '        await message.answer(success_message)\n';
   code += '    \n';
   code += '    # Очищаем состояние ожидания ввода\n';
   code += '    del user_data[user_id]["waiting_for_input"]\n';
@@ -7440,7 +7436,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `                    "allow_multiple": ${toPythonBoolean(allowMultipleSelection)},\n`;
           code += `                    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
           code += '                    "selected": [],\n';
-          code += '                    "success_message": "✅ Спасибо за ваш ответ!",\n';
+          code += '                    "success_message": "",\n';
           code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
           code += '                    "options": [\n';
           
@@ -7491,7 +7487,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '                    "allow_skip": False,\n';
           code += `                    "save_to_database": ${toPythonBoolean(saveToDatabase)},\n`;
           code += '                    "retry_message": "Пожалуйста, попробуйте еще раз.",\n';
-          code += '                    "success_message": "✅ Спасибо за ваш ответ!",\n';
+          code += '                    "success_message": "",\n';
           code += `                    "prompt": "${escapeForJsonString(inputPrompt)}",\n`;
           code += `                    "node_id": "${targetNode.id}",\n`;
           
