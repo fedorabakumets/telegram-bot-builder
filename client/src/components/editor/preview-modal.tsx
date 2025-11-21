@@ -332,7 +332,7 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
     });
 
     const buttons = startNode.data.keyboardType !== 'none' && startNode.data.buttons ? startNode.data.buttons.map(btn => ({
-      text: btn.text,
+      text: replaceVariables(btn.text),
       target: btn.target,
       action: btn.action
     })) : undefined;
@@ -445,7 +445,7 @@ export function PreviewModal({ isOpen, onClose, nodes, connections, projectName 
           if (targetNode.data.keyboardType !== 'none' && targetNode.data.buttons) {
             // Regular buttons for other node types
             buttons = targetNode.data.buttons.map(btn => ({
-              text: btn.text,
+              text: replaceVariables(btn.text),
               target: btn.target,
               action: btn.action
             }));

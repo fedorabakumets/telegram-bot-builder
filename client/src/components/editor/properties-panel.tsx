@@ -2834,14 +2834,30 @@ export function PropertiesPanel({
                   
                   {(selectedNode.data.buttons || []).map((button) => (
                     <div key={button.id} className="bg-muted/50 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <Input
-                          value={button.text}
-                          onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { text: e.target.value })}
-                          className="flex-1 text-sm font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary"
-                          placeholder="Текст кнопки"
-                        />
-                        <div className="flex items-center gap-2">
+                      <div className="mb-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Input
+                            value={button.text}
+                            onChange={(e) => onButtonUpdate(selectedNode.id, button.id, { text: e.target.value })}
+                            className="flex-1 text-sm font-medium"
+                            placeholder="Текст кнопки"
+                          />
+                          <UIButton
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const currentText = button.text || '';
+                              const newText = currentText + '{переменная}';
+                              onButtonUpdate(selectedNode.id, button.id, { text: newText });
+                            }}
+                            className="px-2 py-1 h-8 text-xs shrink-0"
+                            title="Вставить переменную"
+                          >
+                            <i className="fas fa-plus mr-1"></i>
+                            Переменная
+                          </UIButton>
+                        </div>
+                        <div className="flex items-center justify-end gap-2">
                           {/* Button Type Indicator */}
                           {selectedNode.data.allowMultipleSelection && (
                             <>
@@ -2872,6 +2888,9 @@ export function PropertiesPanel({
                               <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                             </svg>
                           </UIButton>
+                        </div>
+                        <div className="text-xs text-muted-foreground px-1 mt-1">
+                          Переменные в тексте заменятся на значения: {'{возраст}'} → "25"
                         </div>
                       </div>
                       
@@ -3828,41 +3847,71 @@ export function PropertiesPanel({
                                   <div className="space-y-2 max-h-40 overflow-y-auto">
                                     {(condition.buttons || []).map((button, buttonIndex) => (
                                       <div key={button.id} className="bg-white/50 dark:bg-gray-900/30 rounded-lg p-2 border border-purple-200/30 dark:border-purple-800/30">
-                                        <div className="flex items-center justify-between mb-2">
-                                          <Input
-                                            value={button.text}
-                                            onChange={(e) => {
-                                              const currentConditions = selectedNode.data.conditionalMessages || [];
-                                              const updatedConditions = currentConditions.map(c => 
-                                                c.id === condition.id ? {
-                                                  ...c,
-                                                  buttons: (c.buttons || []).map((b, i) => 
-                                                    i === buttonIndex ? { ...b, text: e.target.value } : b
-                                                  )
-                                                } : c
-                                              );
-                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                            }}
-                                            className="flex-1 text-xs mr-2"
-                                            placeholder="Текст кнопки"
-                                          />
-                                          <UIButton
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => {
-                                              const currentConditions = selectedNode.data.conditionalMessages || [];
-                                              const updatedConditions = currentConditions.map(c => 
-                                                c.id === condition.id ? {
-                                                  ...c,
-                                                  buttons: (c.buttons || []).filter((_, i) => i !== buttonIndex)
-                                                } : c
-                                              );
-                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                            }}
-                                            className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                                          >
-                                            <i className="fas fa-trash"></i>
-                                          </UIButton>
+                                        <div className="mb-2">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <Input
+                                              value={button.text}
+                                              onChange={(e) => {
+                                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                const updatedConditions = currentConditions.map(c => 
+                                                  c.id === condition.id ? {
+                                                    ...c,
+                                                    buttons: (c.buttons || []).map((b, i) => 
+                                                      i === buttonIndex ? { ...b, text: e.target.value } : b
+                                                    )
+                                                  } : c
+                                                );
+                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                              }}
+                                              className="flex-1 text-xs"
+                                              placeholder="Текст кнопки"
+                                            />
+                                            <UIButton
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => {
+                                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                const currentText = button.text || '';
+                                                const newText = currentText + '{переменная}';
+                                                const updatedConditions = currentConditions.map(c => 
+                                                  c.id === condition.id ? {
+                                                    ...c,
+                                                    buttons: (c.buttons || []).map((b, i) => 
+                                                      i === buttonIndex ? { ...b, text: newText } : b
+                                                    )
+                                                  } : c
+                                                );
+                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                              }}
+                                              className="px-2 py-1 h-7 text-xs shrink-0"
+                                              title="Вставить переменную"
+                                            >
+                                              <i className="fas fa-plus mr-1"></i>
+                                              Переменная
+                                            </UIButton>
+                                          </div>
+                                          <div className="flex items-center justify-end gap-2">
+                                            <UIButton
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => {
+                                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                const updatedConditions = currentConditions.map(c => 
+                                                  c.id === condition.id ? {
+                                                    ...c,
+                                                    buttons: (c.buttons || []).filter((_, i) => i !== buttonIndex)
+                                                  } : c
+                                                );
+                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                              }}
+                                              className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                                            >
+                                              <i className="fas fa-trash"></i>
+                                            </UIButton>
+                                          </div>
+                                          <div className="text-xs text-muted-foreground px-1 mt-1">
+                                            Переменные в тексте заменятся на значения: {'{возраст}'} → "25"
+                                          </div>
                                         </div>
 
                                         {/* Button Action Configuration */}
