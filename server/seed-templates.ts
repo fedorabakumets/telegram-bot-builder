@@ -6230,6 +6230,7 @@ async function seedDefaultTemplates(force = false) {
                   collectUserInput: true,
                   enableTextInput: true,
                   inputVariable: "info",
+                  inputTargetNodeId: "Y9zLRp1BLpVhm-HcsNkJV",
                   markdown: false,
                   adminOnly: false,
                   showInMenu: true,
@@ -6267,7 +6268,7 @@ async function seedDefaultTemplates(force = false) {
                 type: "message",
                 position: { x: 100, y: 2060 },
                 data: {
-                  messageText: "Так выглядит твоя анкета:",
+                  messageText: "Так выглядит твоя анкета:\n{name}, {age}, {city} - {info}\n",
                   keyboardType: "none",
                   buttons: [],
                   attachedMedia: ["photo"],
