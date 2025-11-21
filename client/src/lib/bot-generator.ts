@@ -284,7 +284,7 @@ function toPythonBoolean(value: any): string {
 
 // Функция для генерации кода установки состояния ожидания ввода
 // Автоматически определяет правильное состояние (waiting_for_photo, waiting_for_video и т.д.)
-function generateWaitingStateCode(node: any, indentLevel: string = '    '): string {
+function generateWaitingStateCode(node: any, indentLevel: string = '    ', userIdSource: string = 'message.from_user.id'): string {
   // Определяем тип ввода и соответствующее состояние
   let waitingStateKey = 'waiting_for_input';
   let inputType = node.data.inputType || 'text';
@@ -312,8 +312,8 @@ function generateWaitingStateCode(node: any, indentLevel: string = '    '): stri
   const inputTargetNodeId = node.data.inputTargetNodeId || '';
   
   let code = '';
-  code += `${indentLevel}user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
-  code += `${indentLevel}user_data[message.from_user.id]["${waitingStateKey}"] = {\n`;
+  code += `${indentLevel}user_data[${userIdSource}] = user_data.get(${userIdSource}, {})\n`;
+  code += `${indentLevel}user_data[${userIdSource}]["${waitingStateKey}"] = {\n`;
   code += `${indentLevel}    "type": "${inputType}",\n`;
   code += `${indentLevel}    "variable": "${inputVariable}",\n`;
   code += `${indentLevel}    "save_to_database": True,\n`;
@@ -2518,8 +2518,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '    \n';
                   code += '    # КРИТИЧЕСКИ ВАЖНО: Настраиваем ожидание ввода для message узла с collectUserInput\n';
                   code += '    # Используем универсальную функцию для определения правильного типа ввода (text/photo/video/audio/document)\n';
-                  // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode вместо встроенной генерации
-                  code += generateWaitingStateCode(targetNode, '    ');
+                  // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode с правильным контекстом callback_query
+                  code += generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
                 }
               }
             }
@@ -3565,9 +3565,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    if callback_query.from_user.id not in user_data:\n';
                 code += '        user_data[callback_query.from_user.id] = {}\n';
                 code += '    \n';
-                // Используем helper функцию, но нужно заменить message на callback_query.from_user
-                const waitingCode = generateWaitingStateCode(targetNode, '    ');
-                code += waitingCode.replace(/message\.from_user\.id/g, 'callback_query.from_user.id');
+                // Используем helper функцию с правильным контекстом callback_query
+                code += generateWaitingStateCode(targetNode, '    ', 'callback_query.from_user.id');
                 code += '    \n';
                 
                 // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок с проверкой условной клавиатуры
@@ -4383,8 +4382,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     code += `            # Проверяем, не была ли переменная ${inputVariable} уже сохранена\n`;
                     code += `            if "${inputVariable}" not in user_data[user_id] or not user_data[user_id]["${inputVariable}"]:\n`;
                     code += '                # Переменная не сохранена - используем универсальную функцию для настройки ожидания ввода\n';
-                    // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode вместо встроенной генерации
-                    code += generateWaitingStateCode(navTargetNode, '                ').split('\n').map(line => line ? '            ' + line : '').join('\n');
+                    // ИСПРАВЛЕНИЕ: Используем generateWaitingStateCode с правильным контекстом callback_query
+                    code += generateWaitingStateCode(navTargetNode, '                ', 'callback_query.from_user.id').split('\n').map(line => line ? '            ' + line : '').join('\n');
                     code += '            else:\n';
                     code += `                logging.info(f"⏭️ Переменная ${inputVariable} уже сохранена, пропускаем ожидание ввода")\n`;
                   }
