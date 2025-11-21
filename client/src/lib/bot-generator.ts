@@ -6326,9 +6326,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    else:\n';
     code += '        logging.warning(f"⚠️ Не удалось сохранить фото в БД, данные сохранены локально")\n';
     code += '    \n';
-    code += '    # Отправляем фото обратно\n';
-    code += '    await message.answer_photo(photo_file_id, caption="✅ Фото получено и сохранено!")\n';
-    code += '    \n';
     code += '    # Очищаем состояние ожидания\n';
     code += '    del user_data[user_id]["waiting_for_photo"]\n';
     code += '    \n';
@@ -6390,9 +6387,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '        logging.info(f"✅ Видео сохранено в БД: {video_variable} = {video_file_id} (пользователь {user_id})")\n';
     code += '    else:\n';
     code += '        logging.warning(f"⚠️ Не удалось сохранить видео в БД, данные сохранены локально")\n';
-    code += '    \n';
-    code += '    # Отправляем видео обратно\n';
-    code += '    await message.answer_video(video_file_id, caption="✅ Видео получено и сохранено!")\n';
     code += '    \n';
     code += '    # Очищаем состояние ожидания\n';
     code += '    del user_data[user_id]["waiting_for_video"]\n';
@@ -6462,12 +6456,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    else:\n';
     code += '        logging.warning(f"⚠️ Не удалось сохранить аудио в БД, данные сохранены локально")\n';
     code += '    \n';
-    code += '    # Отправляем аудио обратно\n';
-    code += '    if message.audio:\n';
-    code += '        await message.answer_audio(audio_file_id, caption="✅ Аудио получено и сохранено!")\n';
-    code += '    elif message.voice:\n';
-    code += '        await message.answer_voice(audio_file_id, caption="✅ Голосовое сообщение получено и сохранено!")\n';
-    code += '    \n';
     code += '    # Очищаем состояние ожидания\n';
     code += '    del user_data[user_id]["waiting_for_audio"]\n';
     code += '    \n';
@@ -6529,9 +6517,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '        logging.info(f"✅ Документ сохранен в БД: {document_variable} = {document_file_id} (пользователь {user_id})")\n';
     code += '    else:\n';
     code += '        logging.warning(f"⚠️ Не удалось сохранить документ в БД, данные сохранены локально")\n';
-    code += '    \n';
-    code += '    # Отправляем документ обратно\n';
-    code += '    await message.answer_document(document_file_id, caption="✅ Документ получен и сохранен!")\n';
     code += '    \n';
     code += '    # Очищаем состояние ожидания\n';
     code += '    del user_data[user_id]["waiting_for_document"]\n';
