@@ -4385,7 +4385,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} с множественным выбором - НЕ делаем автоматическую переадресацию`);
           }
           
-          if (shouldRedirect && redirectTarget) {
+          if (shouldRedirect && redirectTarget && redirectTarget !== nodeId) {
             code += '    # ПЕРЕАДРЕСАЦИЯ: Переходим к следующему узлу после сохранения данных\n';
             code += `    next_node_id = "${redirectTarget}"\n`;
             code += '    try:\n';
