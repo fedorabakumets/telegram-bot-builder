@@ -634,11 +634,11 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               {(node.type === 'ban_user' || node.type === 'unban_user' || node.type === 'mute_user' || 
                 node.type === 'unmute_user' || node.type === 'kick_user' || node.type === 'promote_user' || 
                 node.type === 'demote_user') && (
-                <span className="inline-flex items-center">
-                  <span className="text-rose-600 dark:text-rose-400 font-mono text-sm bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 mr-2">
+                <span className="flex flex-col gap-2">
+                  <span className="text-rose-600 dark:text-rose-400 font-mono text-sm bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 inline-block w-fit">
                     {node.data.command || `/${node.type}`}
                   </span>
-                  <span>
+                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-tight">
                     {node.type === 'ban_user' && 'Заблокировать пользователя'}
                     {node.type === 'unban_user' && 'Разблокировать пользователя'}
                     {node.type === 'kick_user' && 'Исключить пользователя'}
