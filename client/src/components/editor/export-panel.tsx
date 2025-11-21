@@ -39,6 +39,7 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
   const [botFatherCommands, setBotFatherCommands] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [showFullCode, setShowFullCode] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -167,6 +168,28 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
   const getCurrentContent = () => {
     return exportContent[selectedFormat] || '';
   };
+
+  // Оптимизированное отображение контента с ограничением линий для больших объемов кода
+  const displayContent = useMemo(() => {
+    const content = getCurrentContent();
+    const lines = content.split('\n');
+    const MAX_VISIBLE_LINES = 1000;
+    
+    if (!showFullCode && lines.length > MAX_VISIBLE_LINES) {
+      return lines.slice(0, MAX_VISIBLE_LINES).join('\n');
+    }
+    return content;
+  }, [getCurrentContent(), showFullCode]);
+
+  // Информация о размере кода
+  const codeStats = useMemo(() => {
+    const content = getCurrentContent();
+    const lines = content.split('\n');
+    return {
+      totalLines: lines.length,
+      truncated: !showFullCode && lines.length > 1000
+    };
+  }, [getCurrentContent(), showFullCode]);
 
   // Получение свежих данных проекта с нормализацией
   const [freshBotData, setFreshBotData] = useState<BotData | null>(null);
@@ -487,7 +510,25 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                     </div>
                   </div>
                   
-                  <div className="relative">
+                  <div className="space-y-2">
+                    {codeStats.totalLines > 0 && (
+                      <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
+                        <span>Строк: {codeStats.totalLines}</span>
+                        {codeStats.truncated && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-yellow-600 dark:text-yellow-500">⚠️ Показано первые 1000 строк</span>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => setShowFullCode(true)}
+                              data-testid="button-show-full-code"
+                            >
+                              Показать всё ({codeStats.totalLines})
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className={`${isMobile ? 'h-48' : 'h-[400px]'} overflow-auto rounded border border-slate-300 dark:border-slate-700`}>
                       {selectedFormat === 'python' ? (
                         <SyntaxHighlighter
@@ -504,11 +545,11 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                           }}
                           data-testid="syntax-highlighter-export-python"
                         >
-                          {getCurrentContent()}
+                          {displayContent}
                         </SyntaxHighlighter>
                       ) : (
                         <Textarea 
-                          value={getCurrentContent()} 
+                          value={displayContent} 
                           readOnly 
                           className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
                           style={{
