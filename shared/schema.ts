@@ -674,6 +674,8 @@ export const nodeSchema = z.object({
       formatMode: z.enum(['text', 'markdown', 'html']).default('text'), // Режим форматирования текста условного сообщения
       keyboardType: z.enum(['reply', 'inline', 'none']).default('none'), // Тип клавиатуры для условного сообщения
       buttons: z.array(buttonSchema).default([]), // Кнопки для условного сообщения
+      resizeKeyboard: z.boolean().default(true).optional(), // Автоматически подбирать размер клавиатуры
+      oneTimeKeyboard: z.boolean().default(false).optional(), // Скрыть клавиатуру после использования
       waitForTextInput: z.boolean().default(false), // Ожидание текстового ввода после показа сообщения
       textInputVariable: z.string().optional(), // Переменная для сохранения текстового ввода
       nextNodeAfterInput: z.string().optional(), // ID узла, к которому перейти после получения ввода

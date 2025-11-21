@@ -3868,14 +3868,14 @@ export function PropertiesPanel({
 
                               {/* Buttons Configuration */}
                               {condition.keyboardType && condition.keyboardType !== 'none' && (
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                   <div className="flex items-center justify-between">
-                                    <span className="text-xs text-purple-600 dark:text-purple-400">
+                                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
                                       Кнопки ({(condition.buttons || []).length})
                                     </span>
                                     <UIButton
                                       size="sm"
-                                      variant="ghost"
+                                      variant="outline"
                                       onClick={() => {
                                         const newButton = {
                                           id: nanoid(),
@@ -3895,47 +3895,36 @@ export function PropertiesPanel({
                                         );
                                         onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                       }}
-                                      className="text-xs text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-200"
+                                      className="text-sm"
                                     >
-                                      + Добавить кнопку
+                                      <i className="fas fa-plus mr-2"></i>
+                                      Добавить кнопку
                                     </UIButton>
                                   </div>
 
                                   {/* Buttons List */}
-                                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                                  <div className="space-y-3">
                                     {(condition.buttons || []).map((button, buttonIndex) => (
-                                      <div key={button.id} className="bg-white/50 dark:bg-gray-900/30 rounded-lg p-2 border border-purple-200/30 dark:border-purple-800/30">
-                                        <div className="mb-2">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <Input
-                                              value={button.text}
-                                              onChange={(e) => {
-                                                const currentConditions = selectedNode.data.conditionalMessages || [];
-                                                const updatedConditions = currentConditions.map(c => 
-                                                  c.id === condition.id ? {
-                                                    ...c,
-                                                    buttons: (c.buttons || []).map((b, i) => 
-                                                      i === buttonIndex ? { ...b, text: e.target.value } : b
-                                                    )
-                                                  } : c
-                                                );
-                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                              }}
-                                              className="flex-1 text-xs"
-                                              placeholder="Текст кнопки"
-                                            />
-                                            <DropdownMenu>
-                                              <DropdownMenuTrigger asChild>
-                                                <UIButton
-                                                  size="sm"
-                                                  variant="outline"
-                                                  className="px-2 py-1 h-7 text-xs shrink-0 gap-1"
-                                                  title="Вставить переменную"
-                                                >
-                                                  <Plus className="h-3 w-3" />
-                                                  <span>Переменная</span>
-                                                </UIButton>
-                                              </DropdownMenuTrigger>
+                                      <div key={button.id} className="bg-white dark:bg-gray-900/50 rounded-lg p-4 border-2 border-purple-200/40 dark:border-purple-800/40 shadow-sm">
+                                        <div className="space-y-3">
+                                          <div className="space-y-2">
+                                            <div className="flex items-center justify-between gap-2">
+                                              <Label className="text-sm font-medium text-foreground">
+                                                Текст кнопки
+                                              </Label>
+                                              <div className="flex items-center gap-1">
+                                                <DropdownMenu>
+                                                  <DropdownMenuTrigger asChild>
+                                                    <UIButton
+                                                      size="sm"
+                                                      variant="outline"
+                                                      className="h-7 text-xs gap-1"
+                                                      title="Вставить переменную"
+                                                    >
+                                                      <Plus className="h-3 w-3" />
+                                                      <span className="hidden sm:inline">Переменная</span>
+                                                    </UIButton>
+                                                  </DropdownMenuTrigger>
                                               <DropdownMenuContent align="end" className="w-56">
                                                 <DropdownMenuLabel className="text-xs">
                                                   Доступные переменные
@@ -3996,79 +3985,99 @@ export function PropertiesPanel({
                                                   </DropdownMenuItem>
                                                 )}
                                               </DropdownMenuContent>
-                                            </DropdownMenu>
-                                          </div>
-                                          <div className="flex items-center justify-end gap-2">
-                                            <UIButton
-                                              size="sm"
-                                              variant="ghost"
-                                              onClick={() => {
-                                                const currentConditions = selectedNode.data.conditionalMessages || [];
-                                                const updatedConditions = currentConditions.map(c => 
-                                                  c.id === condition.id ? {
-                                                    ...c,
-                                                    buttons: (c.buttons || []).filter((_, i) => i !== buttonIndex)
-                                                  } : c
-                                                );
-                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                              }}
-                                              className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
-                                            >
-                                              <i className="fas fa-trash"></i>
-                                            </UIButton>
-                                          </div>
-                                          <div className="text-xs text-muted-foreground px-1 mt-1">
-                                            Переменные в тексте заменятся на значения: {'{возраст}'} → "25"
-                                          </div>
-                                        </div>
-
-                                        {/* Button Action Configuration */}
-                                        <div className="space-y-2">
-                                          <Select
-                                            value={button.action || 'goto'}
-                                            onValueChange={(value: 'goto' | 'url' | 'command') => {
-                                              const currentConditions = selectedNode.data.conditionalMessages || [];
-                                              const updatedConditions = currentConditions.map(c => 
-                                                c.id === condition.id ? {
-                                                  ...c,
-                                                  buttons: (c.buttons || []).map((b, i) => 
-                                                    i === buttonIndex ? { ...b, action: value } : b
-                                                  )
-                                                } : c
-                                              );
-                                              onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                            }}
-                                          >
-                                            <SelectTrigger className="text-xs h-7">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="goto">Перейти к узлу</SelectItem>
-                                              <SelectItem value="url">Открыть ссылку</SelectItem>
-                                              <SelectItem value="command">Выполнить команду</SelectItem>
-                                              <SelectItem value="selection">Выбор опции</SelectItem>
-                                            </SelectContent>
-                                          </Select>
-
-                                          {button.action === 'goto' && (
-                                            <Select
-                                              value={button.target || ''}
-                                              onValueChange={(value) => {
+                                                </DropdownMenu>
+                                                <UIButton
+                                                  size="sm"
+                                                  variant="ghost"
+                                                  onClick={() => {
+                                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                    const updatedConditions = currentConditions.map(c => 
+                                                      c.id === condition.id ? {
+                                                        ...c,
+                                                        buttons: (c.buttons || []).filter((_, i) => i !== buttonIndex)
+                                                      } : c
+                                                    );
+                                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                  }}
+                                                  className="h-7 text-destructive hover:text-destructive/80"
+                                                  title="Удалить кнопку"
+                                                >
+                                                  <i className="fas fa-trash text-xs"></i>
+                                                </UIButton>
+                                              </div>
+                                            </div>
+                                            <Input
+                                              value={button.text}
+                                              onChange={(e) => {
                                                 const currentConditions = selectedNode.data.conditionalMessages || [];
                                                 const updatedConditions = currentConditions.map(c => 
                                                   c.id === condition.id ? {
                                                     ...c,
                                                     buttons: (c.buttons || []).map((b, i) => 
-                                                      i === buttonIndex ? { ...b, target: value } : b
+                                                      i === buttonIndex ? { ...b, text: e.target.value } : b
+                                                    )
+                                                  } : c
+                                                );
+                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                              }}
+                                              className="h-10"
+                                              placeholder="Введите текст кнопки"
+                                            />
+                                            <div className="text-sm text-muted-foreground">
+                                              Переменные в тексте заменятся на значения: {'{возраст}'} → "25"
+                                            </div>
+                                          </div>
+
+                                          {/* Button Action Configuration */}
+                                          <div className="space-y-2">
+                                            <Label className="text-sm font-medium text-foreground">
+                                              Действие кнопки
+                                            </Label>
+                                            <Select
+                                              value={button.action || 'goto'}
+                                              onValueChange={(value: 'goto' | 'url' | 'command' | 'selection') => {
+                                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                const updatedConditions = currentConditions.map(c => 
+                                                  c.id === condition.id ? {
+                                                    ...c,
+                                                    buttons: (c.buttons || []).map((b, i) => 
+                                                      i === buttonIndex ? { ...b, action: value } : b
                                                     )
                                                   } : c
                                                 );
                                                 onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                               }}
                                             >
-                                              <SelectTrigger className="text-xs h-7">
-                                                <SelectValue placeholder="Выберите узел" />
+                                              <SelectTrigger className="h-10">
+                                                <SelectValue />
                                               </SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="goto">Перейти к узлу</SelectItem>
+                                                <SelectItem value="url">Открыть ссылку</SelectItem>
+                                                <SelectItem value="command">Выполнить команду</SelectItem>
+                                                <SelectItem value="selection">Выбор опции</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+
+                                            {button.action === 'goto' && (
+                                              <Select
+                                                value={button.target || ''}
+                                                onValueChange={(value) => {
+                                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                  const updatedConditions = currentConditions.map(c => 
+                                                    c.id === condition.id ? {
+                                                      ...c,
+                                                      buttons: (c.buttons || []).map((b, i) => 
+                                                        i === buttonIndex ? { ...b, target: value } : b
+                                                      )
+                                                    } : c
+                                                  );
+                                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                }}
+                                              >
+                                                <SelectTrigger className="h-10">
+                                                  <SelectValue placeholder="Выберите узел" />
+                                                </SelectTrigger>
                                               <SelectContent>
                                                 {getAllNodesFromAllSheets
                                                   .filter(n => n.node.id !== selectedNode.id)
@@ -4090,45 +4099,46 @@ export function PropertiesPanel({
                                             </Select>
                                           )}
 
-                                          {button.action === 'url' && (
-                                            <Input
-                                              value={button.url || ''}
-                                              onChange={(e) => {
-                                                const currentConditions = selectedNode.data.conditionalMessages || [];
-                                                const updatedConditions = currentConditions.map(c => 
-                                                  c.id === condition.id ? {
-                                                    ...c,
-                                                    buttons: (c.buttons || []).map((b, i) => 
-                                                      i === buttonIndex ? { ...b, url: e.target.value } : b
-                                                    )
-                                                  } : c
-                                                );
-                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                              }}
-                                              className="text-xs"
-                                              placeholder="https://example.com"
-                                            />
-                                          )}
+                                            {button.action === 'url' && (
+                                              <Input
+                                                value={button.url || ''}
+                                                onChange={(e) => {
+                                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                  const updatedConditions = currentConditions.map(c => 
+                                                    c.id === condition.id ? {
+                                                      ...c,
+                                                      buttons: (c.buttons || []).map((b, i) => 
+                                                        i === buttonIndex ? { ...b, url: e.target.value } : b
+                                                      )
+                                                    } : c
+                                                  );
+                                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                }}
+                                                className="h-10"
+                                                placeholder="https://example.com"
+                                              />
+                                            )}
 
-                                          {button.action === 'command' && (
-                                            <Input
-                                              value={button.target || ''}
-                                              onChange={(e) => {
-                                                const currentConditions = selectedNode.data.conditionalMessages || [];
-                                                const updatedConditions = currentConditions.map(c => 
-                                                  c.id === condition.id ? {
-                                                    ...c,
-                                                    buttons: (c.buttons || []).map((b, i) => 
-                                                      i === buttonIndex ? { ...b, target: e.target.value } : b
-                                                    )
-                                                  } : c
-                                                );
-                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                              }}
-                                              className="text-xs"
-                                              placeholder="/help"
-                                            />
-                                          )}
+                                            {button.action === 'command' && (
+                                              <Input
+                                                value={button.target || ''}
+                                                onChange={(e) => {
+                                                  const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                  const updatedConditions = currentConditions.map(c => 
+                                                    c.id === condition.id ? {
+                                                      ...c,
+                                                      buttons: (c.buttons || []).map((b, i) => 
+                                                        i === buttonIndex ? { ...b, target: e.target.value } : b
+                                                      )
+                                                    } : c
+                                                  );
+                                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                                }}
+                                                className="h-10"
+                                                placeholder="/help"
+                                              />
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
                                     ))}
