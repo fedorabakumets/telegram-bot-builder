@@ -17,7 +17,15 @@ import { useState, useMemo, useCallback } from 'react';
 
 import { InlineRichEditor } from './inline-rich-editor';
 import { EmojiPicker } from './emoji-picker';
-import { Image, Video, Music, FileText, X } from 'lucide-react';
+import { Image, Video, Music, FileText, X, Plus } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
 
 // Переиспользуемый компонент для редактирования синонимов
 interface SynonymEditorProps {
@@ -2842,20 +2850,70 @@ export function PropertiesPanel({
                             className="flex-1 text-sm font-medium"
                             placeholder="Текст кнопки"
                           />
-                          <UIButton
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const currentText = button.text || '';
-                              const newText = currentText + '{переменная}';
-                              onButtonUpdate(selectedNode.id, button.id, { text: newText });
-                            }}
-                            className="px-2 py-1 h-8 text-xs shrink-0"
-                            title="Вставить переменную"
-                          >
-                            <i className="fas fa-plus mr-1"></i>
-                            Переменная
-                          </UIButton>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <UIButton
+                                size="sm"
+                                variant="outline"
+                                className="px-2 py-1 h-8 text-xs shrink-0 gap-1"
+                                title="Вставить переменную"
+                              >
+                                <Plus className="h-3 w-3" />
+                                <span>Переменная</span>
+                              </UIButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuLabel className="text-xs">
+                                Доступные переменные
+                              </DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {textVariables.map((variable, index) => {
+                                const getBadgeText = () => {
+                                  if (variable.nodeType === 'user-input') return 'Ввод';
+                                  if (variable.nodeType === 'start') return 'Команда';
+                                  if (variable.nodeType === 'command') return 'Команда';
+                                  if (variable.nodeType === 'system') return 'Система';
+                                  if (variable.nodeType === 'conditional') return 'Условие';
+                                  return 'Другое';
+                                };
+                                
+                                return (
+                                  <DropdownMenuItem
+                                    key={`${variable.nodeId}-${variable.name}-${index}`}
+                                    onClick={() => {
+                                      const currentText = button.text || '';
+                                      const newText = currentText + `{${variable.name}}`;
+                                      onButtonUpdate(selectedNode.id, button.id, { text: newText });
+                                    }}
+                                    className="cursor-pointer"
+                                  >
+                                    <div className="flex flex-col gap-1 w-full">
+                                      <div className="flex items-center gap-2">
+                                        <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                                          {`{${variable.name}}`}
+                                        </code>
+                                        <Badge variant="outline" className="text-xs h-4">
+                                          {getBadgeText()}
+                                        </Badge>
+                                      </div>
+                                      {variable.description && (
+                                        <div className="text-xs text-muted-foreground">
+                                          {variable.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                              {textVariables.length === 0 && (
+                                <DropdownMenuItem disabled>
+                                  <span className="text-xs text-muted-foreground">
+                                    Нет доступных переменных
+                                  </span>
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                         <div className="flex items-center justify-end gap-2">
                           {/* Button Type Indicator */}
