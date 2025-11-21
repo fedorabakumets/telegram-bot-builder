@@ -6335,14 +6335,47 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    if next_node_id:\n';
     code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
     code += '        try:\n';
+    code += '            # Получаем данные пользователя для замены переменных\n';
+    code += '            user_record = await get_user_from_db(user_id)\n';
+    code += '            if user_record and "user_data" in user_record:\n';
+    code += '                user_vars = user_record["user_data"]\n';
+    code += '            else:\n';
+    code += '                user_vars = user_data.get(user_id, {})\n';
+    code += '            \n';
     
-    // Добавляем навигацию для каждого узла
+    // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
       nodes.forEach((targetNode, index) => {
         const condition = index === 0 ? 'if' : 'elif';
-        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="photo_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+        
+        // Получаем текст сообщения
+        const messageText = targetNode.data.messageText || targetNode.data.text || '';
+        const formattedText = formatTextForPython(messageText);
+        code += `                text = ${formattedText}\n`;
+        
+        // Добавляем замену переменных
+        code += '                # Замена переменных\n';
+        code += generateUniversalVariableReplacement('                ');
+        
+        // Проверяем attachedMedia
+        const attachedMedia = targetNode.data.attachedMedia || [];
+        if (attachedMedia.length > 0 && attachedMedia.includes('photo')) {
+          // Отправляем фото с текстом
+          code += '                # Отправляем сохраненное фото с текстом узла\n';
+          code += `                if "${attachedMedia[0]}" in user_vars:\n`;
+          code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
+          code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
+          code += '                        media_file_id = media_file_id["value"]\n';
+          code += '                    await message.answer_photo(media_file_id, caption=text)\n';
+          code += `                    logging.info(f"✅ Отправлено фото из переменной ${attachedMedia[0]} с текстом узла {targetNode.id}")\n`;
+          code += '                else:\n';
+          code += '                    await message.answer(text)\n';
+          code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
+        } else {
+          // Обычное сообщение
+          code += '                await message.answer(text)\n';
+        }
       });
       code += '            else:\n';
       code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
@@ -6397,14 +6430,47 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    if next_node_id:\n';
     code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
     code += '        try:\n';
+    code += '            # Получаем данные пользователя для замены переменных\n';
+    code += '            user_record = await get_user_from_db(user_id)\n';
+    code += '            if user_record and "user_data" in user_record:\n';
+    code += '                user_vars = user_record["user_data"]\n';
+    code += '            else:\n';
+    code += '                user_vars = user_data.get(user_id, {})\n';
+    code += '            \n';
     
-    // Добавляем навигацию для каждого узла
+    // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
       nodes.forEach((targetNode, index) => {
         const condition = index === 0 ? 'if' : 'elif';
-        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="video_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+        
+        // Получаем текст сообщения
+        const messageText = targetNode.data.messageText || targetNode.data.text || '';
+        const formattedText = formatTextForPython(messageText);
+        code += `                text = ${formattedText}\n`;
+        
+        // Добавляем замену переменных
+        code += '                # Замена переменных\n';
+        code += generateUniversalVariableReplacement('                ');
+        
+        // Проверяем attachedMedia
+        const attachedMedia = targetNode.data.attachedMedia || [];
+        if (attachedMedia.length > 0 && attachedMedia.includes('video')) {
+          // Отправляем видео с текстом
+          code += '                # Отправляем сохраненное видео с текстом узла\n';
+          code += `                if "${attachedMedia[0]}" in user_vars:\n`;
+          code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
+          code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
+          code += '                        media_file_id = media_file_id["value"]\n';
+          code += '                    await message.answer_video(media_file_id, caption=text)\n';
+          code += `                    logging.info(f"✅ Отправлено видео из переменной ${attachedMedia[0]} с текстом узла {targetNode.id}")\n`;
+          code += '                else:\n';
+          code += '                    await message.answer(text)\n';
+          code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
+        } else {
+          // Обычное сообщение
+          code += '                await message.answer(text)\n';
+        }
       });
       code += '            else:\n';
       code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
@@ -6465,14 +6531,47 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    if next_node_id:\n';
     code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
     code += '        try:\n';
+    code += '            # Получаем данные пользователя для замены переменных\n';
+    code += '            user_record = await get_user_from_db(user_id)\n';
+    code += '            if user_record and "user_data" in user_record:\n';
+    code += '                user_vars = user_record["user_data"]\n';
+    code += '            else:\n';
+    code += '                user_vars = user_data.get(user_id, {})\n';
+    code += '            \n';
     
-    // Добавляем навигацию для каждого узла
+    // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
       nodes.forEach((targetNode, index) => {
         const condition = index === 0 ? 'if' : 'elif';
-        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="audio_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+        
+        // Получаем текст сообщения
+        const messageText = targetNode.data.messageText || targetNode.data.text || '';
+        const formattedText = formatTextForPython(messageText);
+        code += `                text = ${formattedText}\n`;
+        
+        // Добавляем замену переменных
+        code += '                # Замена переменных\n';
+        code += generateUniversalVariableReplacement('                ');
+        
+        // Проверяем attachedMedia
+        const attachedMedia = targetNode.data.attachedMedia || [];
+        if (attachedMedia.length > 0 && attachedMedia.includes('audio')) {
+          // Отправляем аудио с текстом
+          code += '                # Отправляем сохраненное аудио с текстом узла\n';
+          code += `                if "${attachedMedia[0]}" in user_vars:\n`;
+          code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
+          code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
+          code += '                        media_file_id = media_file_id["value"]\n';
+          code += '                    await message.answer_audio(media_file_id, caption=text)\n';
+          code += `                    logging.info(f"✅ Отправлено аудио из переменной ${attachedMedia[0]} с текстом узла {targetNode.id}")\n`;
+          code += '                else:\n';
+          code += '                    await message.answer(text)\n';
+          code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
+        } else {
+          // Обычное сообщение
+          code += '                await message.answer(text)\n';
+        }
       });
       code += '            else:\n';
       code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
@@ -6527,14 +6626,47 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '    if next_node_id:\n';
     code += '        logging.info(f"🚀 Переходим к следующему узлу: {next_node_id}")\n';
     code += '        try:\n';
+    code += '            # Получаем данные пользователя для замены переменных\n';
+    code += '            user_record = await get_user_from_db(user_id)\n';
+    code += '            if user_record and "user_data" in user_record:\n';
+    code += '                user_vars = user_record["user_data"]\n';
+    code += '            else:\n';
+    code += '                user_vars = user_data.get(user_id, {})\n';
+    code += '            \n';
     
-    // Добавляем навигацию для каждого узла
+    // Добавляем навигацию для каждого узла - отправляем сообщение напрямую
     if (nodes.length > 0) {
       nodes.forEach((targetNode, index) => {
         const condition = index === 0 ? 'if' : 'elif';
-        const safeFunctionName = targetNode.id.replace(/[^a-zA-Z0-9_]/g, '_');
         code += `            ${condition} next_node_id == "${targetNode.id}":\n`;
-        code += `                await handle_callback_${safeFunctionName}(types.CallbackQuery(id="document_nav", from_user=message.from_user, chat_instance="", data=next_node_id, message=message))\n`;
+        
+        // Получаем текст сообщения
+        const messageText = targetNode.data.messageText || targetNode.data.text || '';
+        const formattedText = formatTextForPython(messageText);
+        code += `                text = ${formattedText}\n`;
+        
+        // Добавляем замену переменных
+        code += '                # Замена переменных\n';
+        code += generateUniversalVariableReplacement('                ');
+        
+        // Проверяем attachedMedia
+        const attachedMedia = targetNode.data.attachedMedia || [];
+        if (attachedMedia.length > 0 && attachedMedia.includes('document')) {
+          // Отправляем документ с текстом
+          code += '                # Отправляем сохраненный документ с текстом узла\n';
+          code += `                if "${attachedMedia[0]}" in user_vars:\n`;
+          code += `                    media_file_id = user_vars["${attachedMedia[0]}"]\n`;
+          code += '                    if isinstance(media_file_id, dict) and "value" in media_file_id:\n';
+          code += '                        media_file_id = media_file_id["value"]\n';
+          code += '                    await message.answer_document(media_file_id, caption=text)\n';
+          code += `                    logging.info(f"✅ Отправлен документ из переменной ${attachedMedia[0]} с текстом узла {targetNode.id}")\n`;
+          code += '                else:\n';
+          code += '                    await message.answer(text)\n';
+          code += `                    logging.warning(f"⚠️ Переменная ${attachedMedia[0]} не найдена, отправлен только текст")\n`;
+        } else {
+          // Обычное сообщение
+          code += '                await message.answer(text)\n';
+        }
       });
       code += '            else:\n';
       code += '                logging.warning(f"Неизвестный следующий узел: {next_node_id}")\n';
