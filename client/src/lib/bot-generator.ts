@@ -849,15 +849,17 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
         
-        // Добавляем код для активации состояния условного ввода
+        // ИСПРАВЛЕНИЕ: Проверяем, нужно ли ждать ввода ДАЖЕ ЕСЛИ переменная существует
+        code += `${indentLevel}    # Настраиваем ожидание ввода для условного сообщения с waitForTextInput\n`;
         if (condition.waitForTextInput) {
-          code += `${indentLevel}    \n`;
-          code += `${indentLevel}    # Если есть условное сообщение с ожиданием ввода\n`;
           code += `${indentLevel}    if conditional_message_config and conditional_message_config.get("wait_for_input"):\n`;
           code += `${indentLevel}        if user_id not in user_data:\n`;
           code += `${indentLevel}            user_data[user_id] = {}\n`;
           code += `${indentLevel}        user_data[user_id]["waiting_for_conditional_input"] = conditional_message_config\n`;
-          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода: {conditional_message_config}")\n`;
+          code += `${indentLevel}        logging.info(f"Активировано ожидание условного ввода (переменная существует, но ждём новое значение): {conditional_message_config}")\n`;
+          code += `${indentLevel}        # ВАЖНО: Переменная существует, но waitForTextInput=true, поэтому НЕ делаем автопереход\n`;
+          code += `${indentLevel}        # Сбрасываем флаг условия чтобы fallback показал сообщение и дождался ввода\n`;
+          code += `${indentLevel}        # НО мы уже установили waiting_for_conditional_input, так что НЕ нужно делать break\n`;
         }
         
         code += `${indentLevel}    logging.info(f"Условие выполнено: переменные {variable_values} (${logicOperator})")\n`;
@@ -2500,14 +2502,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
               if (targetNode.data.autoTransitionTo) {
                 const autoTargetId = targetNode.data.autoTransitionTo;
                 const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                 code += '    \n';
-                code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
-                code += `    return\n`;
+                code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
+                code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
+                code += '        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
+                code += '    else:\n';
+                code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                code += `        return\n`;
               }
               
               // КРИТИЧЕСКИ ВАЖНАЯ ЛОГИКА: Если этот узел имеет collectUserInput, настраиваем состояние ожидания
@@ -2638,14 +2645,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить фото\\n{caption}")\n';
               
               // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
               if (targetNode.data.autoTransitionTo) {
                 const autoTargetId = targetNode.data.autoTransitionTo;
                 const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                 code += '    \n';
-                code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
-                code += `    return\n`;
+                code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
+                code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
+                code += '        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
+                code += '    else:\n';
+                code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                code += `        return\n`;
               }
               
             } else if (targetNode.type === 'video') {
@@ -2750,14 +2762,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить видео\\n{caption}")\n';
               
               // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
               if (targetNode.data.autoTransitionTo) {
                 const autoTargetId = targetNode.data.autoTransitionTo;
                 const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                 code += '    \n';
-                code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
-                code += `    return\n`;
+                code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
+                code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
+                code += '        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
+                code += '    else:\n';
+                code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                code += `        return\n`;
               }
               
             } else if (targetNode.type === 'audio') {
@@ -2862,14 +2879,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '        await safe_edit_or_send(callback_query, f"❌ Не удалось загрузить аудио\\n{caption}")\n';
               
               // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
               if (targetNode.data.autoTransitionTo) {
                 const autoTargetId = targetNode.data.autoTransitionTo;
                 const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
                 code += '    \n';
-                code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
-                code += `    return\n`;
+                code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
+                code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
+                code += '        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
+                code += '    else:\n';
+                code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                code += `        return\n`;
               }
               
             } else if (targetNode.type === 'document') {
