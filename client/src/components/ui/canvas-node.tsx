@@ -694,7 +694,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         <div className="rounded-xl p-4 mb-4 bg-gradient-to-br from-blue-50/80 to-sky-50/80 dark:from-blue-900/20 dark:to-sky-900/20 border border-blue-100 dark:border-blue-800/30">
           <div className="flex items-start space-x-2">
             <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 mt-1.5 flex-shrink-0"></div>
-            <div className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed line-clamp-3 font-medium">
+            <div className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed line-clamp-8 font-medium">
               {parseFormattedText(node.data.messageText, node.data.formatMode, node.data.markdown)}
             </div>
           </div>
