@@ -5678,30 +5678,79 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 if (shouldWaitForInput) {
                   // Показываем сообщение и настраиваем ожидание ввода
                   code += `                            # waitForTextInput=true: показываем сообщение и ждем ввода\n`;
-                  code += `                            # Если условный текст пустой, используем основное сообщение узла\n`;
-                  code += `                            if text and text.strip():\n`;
-                  code += `                                await message.answer(text)\n`;
-                  code += `                            else:\n`;
-                  
-                  // Используем основное сообщение узла
-                  const mainMessageText = targetNode.data.messageText || 'Введите данные';
-                  const mainFormattedText = formatTextForPython(mainMessageText);
-                  code += `                                main_text = ${mainFormattedText}\n`;
-                  code += `                                await message.answer(main_text)\n`;
-                  code += `                            \n`;
                   
                   const inputVariable = condition.textInputVariable || targetNode.data.inputVariable || `response_${targetNode.id}`;
                   const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
                   
-                  code += `                            # Настраиваем ожидание ввода для условного сообщения\n`;
-                  code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
-                  code += `                                "type": "text",\n`;
-                  code += `                                "variable": "${inputVariable}",\n`;
-                  code += `                                "save_to_database": True,\n`;
-                  code += `                                "node_id": "${targetNode.id}",\n`;
-                  code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
-                  code += `                            }\n`;
-                  code += `                            logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (условное сообщение, узел ${targetNode.id})")\n`;
+                  // Проверяем, есть ли кнопки в условном сообщении
+                  const hasConditionalButtons = condition.buttons && condition.buttons.length > 0;
+                  
+                  if (hasConditionalButtons) {
+                    // Генерируем клавиатуру с кнопками из условного сообщения
+                    code += `                            # Генерируем клавиатуру с кнопками из условного сообщения\n`;
+                    code += `                            builder = ReplyKeyboardBuilder()\n`;
+                    
+                    for (const button of condition.buttons) {
+                      let buttonText = button.text || 'Кнопка';
+                      const safeButtonId = button.id.replace(/[^a-zA-Z0-9]/g, '_');
+                      
+                      // Заменяем переменные в тексте кнопки
+                      let hasVariable = false;
+                      for (const varName of variableNames) {
+                        if (buttonText.includes(`{${varName}}`)) {
+                          code += `                            btn_text_${safeButtonId} = "${buttonText}"\n`;
+                          code += `                            _, btn_var_value = check_user_variable_inline("${varName}", user_data_dict)\n`;
+                          code += `                            if btn_var_value is not None:\n`;
+                          code += `                                btn_text_${safeButtonId} = btn_text_${safeButtonId}.replace("{${varName}}", btn_var_value)\n`;
+                          buttonText = `btn_text_${safeButtonId}`;
+                          hasVariable = true;
+                          break;
+                        }
+                      }
+                      
+                      if (!hasVariable) {
+                        buttonText = `"${buttonText}"`;
+                      }
+                      
+                      code += `                            builder.add(KeyboardButton(text=${buttonText}))\n`;
+                    }
+                    
+                    code += `                            builder.adjust(1)\n`;
+                    code += `                            keyboard = builder.as_markup(resize_keyboard=True, one_time_keyboard=False)\n`;
+                    
+                    // Отправляем сообщение с клавиатурой
+                    const mainMessageText = targetNode.data.messageText || 'Выберите действие';
+                    const mainFormattedText = formatTextForPython(mainMessageText);
+                    code += `                            main_text = ${mainFormattedText}\n`;
+                    code += `                            await message.answer(main_text, reply_markup=keyboard)\n`;
+                    
+                    // НЕ устанавливаем ожидание ввода - пользователь должен нажать кнопку
+                    // Кнопки уже настроены на переход к nextNodeAfterCondition
+                    code += `                            logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}")\n`;
+                  } else {
+                    // Нет кнопок - показываем сообщение и ждем текстового ввода
+                    code += `                            # Если условный текст пустой, используем основное сообщение узла\n`;
+                    code += `                            if text and text.strip():\n`;
+                    code += `                                await message.answer(text)\n`;
+                    code += `                            else:\n`;
+                    
+                    // Используем основное сообщение узла
+                    const mainMessageText = targetNode.data.messageText || 'Введите данные';
+                    const mainFormattedText = formatTextForPython(mainMessageText);
+                    code += `                                main_text = ${mainFormattedText}\n`;
+                    code += `                                await message.answer(main_text)\n`;
+                    code += `                            \n`;
+                    
+                    code += `                            # Настраиваем ожидание ввода для условного сообщения\n`;
+                    code += `                            user_data[user_id]["waiting_for_input"] = {\n`;
+                    code += `                                "type": "text",\n`;
+                    code += `                                "variable": "${inputVariable}",\n`;
+                    code += `                                "save_to_database": True,\n`;
+                    code += `                                "node_id": "${targetNode.id}",\n`;
+                    code += `                                "next_node_id": "${nextNodeAfterCondition || ''}"\n`;
+                    code += `                            }\n`;
+                    code += `                            logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (условное сообщение, узел ${targetNode.id})")\n`;
+                  }
                 } else {
                   // Автоматически переходим к следующему узлу только если НЕ ждем ввода
                   const nextNodeAfterCondition = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
