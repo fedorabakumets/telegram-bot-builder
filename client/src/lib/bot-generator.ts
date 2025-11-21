@@ -6029,13 +6029,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        if not waiting_config:\n';
   code += '            return  # Состояние ожидания пустое, игнорируем\n';
   code += '        \n';
-  code += '        # Проверяем, был ли уже обработан ввод для данного узла\n';
-  code += '        current_node_id = waiting_config.get("node_id") if isinstance(waiting_config, dict) else waiting_config\n';
-  code += '        processed_inputs = user_data[user_id].get("processed_inputs", set())\n';
-  code += '        if current_node_id in processed_inputs and current_node_id != "name_input":\n';
-  code += '            logging.info(f"Ввод для узла {current_node_id} уже был обработан, игнорируем")\n';
-  code += '            return  # Ввод для этого узла уже был обработан\n';
-  code += '        \n';
   code += '        # ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: если переменная уже сохранена inline кнопкой, не перезаписываем\n';
   code += '        variable_name_preview = waiting_config.get("variable") if isinstance(waiting_config, dict) else user_data[user_id].get("input_variable", "user_response")\n';
   code += '        if variable_name_preview in user_data[user_id] and user_data[user_id][variable_name_preview]:\n';
@@ -6122,11 +6115,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '            logging.info(f"DEBUG: Отправляем подтверждение с текстом: {success_message}")\n';
   code += '            await message.answer(success_message)\n';
   code += '            logging.info(f"✅ Отправлено подтверждение: {success_message}")\n';
-  code += '            \n';
-  code += '            # ИСПРАВЛЕНИЕ: Добавляем маркер, что ввод был обработан для этого узла\n';
-  code += '            if "processed_inputs" not in user_data[user_id]:\n';
-  code += '                user_data[user_id]["processed_inputs"] = set()\n';
-  code += '            user_data[user_id]["processed_inputs"].add(waiting_node_id)\n';
   code += '            \n';
   code += '            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Очищаем старое состояние ожидания перед навигацией\n';
   code += '            if "waiting_for_input" in user_data[user_id]:\n';
