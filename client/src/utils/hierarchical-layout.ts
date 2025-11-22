@@ -215,13 +215,29 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
  * С горизонтальным размещением цепочек автопереходов
  */
 function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayoutOptions): Node[] {
-  console.log('📋 arrangeNodesByLevel вызван, levels:', levels.length, 'всего узлов:', levels.flat().length);
-  const result: Node[] = [];
+  console.log('📋 arrangeNodesByLevel вызван');
   
-  // Создаем карту узлов для быстрого доступа
-  const nodeMap = new Map<string, LayoutNode>();
-  levels.flat().forEach(node => nodeMap.set(node.id, node));
-  console.log('🗺️ Карта узлов создана, размер:', nodeMap.size);
+  try {
+    console.log('  levels:', levels.length);
+    console.log('  levels содержимое:', levels.map((l, i) => `Level ${i}: ${l?.length || 0} nodes`));
+    
+    const flatNodes = levels.flat().filter(Boolean);
+    console.log('  всего узлов после flat:', flatNodes.length);
+    
+    const result: Node[] = [];
+    
+    // Создаем карту узлов для быстрого доступа
+    const nodeMap = new Map<string, LayoutNode>();
+    flatNodes.forEach(node => {
+      if (node && node.id) {
+        nodeMap.set(node.id, node);
+      }
+    });
+    console.log('🗺️ Карта узлов создана, размер:', nodeMap.size);
+  } catch (error) {
+    console.error('❌ ОШИБКА в начале arrangeNodesByLevel:', error);
+    throw error;
+  }
   
   // Находим цепочки автопереходов
   function findAutoTransitionChains(nodes: LayoutNode[]): Set<string>[] {
