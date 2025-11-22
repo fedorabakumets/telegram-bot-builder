@@ -47,6 +47,9 @@ export function CanvasSheets({
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
+  // Отладка: проверяем, что приходит в компонент
+  console.log('📋 CanvasSheets: sheets =', sheets, 'count:', sheets?.length, 'activeSheetId:', activeSheetId);
+
   // Автофокус при начале переименования
   useEffect(() => {
     if (isRenaming && inputRef.current) {
@@ -208,29 +211,29 @@ export function CanvasSheets({
       {/* Контейнер вкладок */}
       <div 
         ref={tabsContainerRef}
-        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 justify-start items-center"
-        style={{ 
-          minWidth: '200px',
-          maxWidth: 'calc(100% - 120px)'
-        }}
+        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 items-center"
+        style={{ minWidth: '0', flex: '1 1 auto' }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className={`flex flex-shrink-0 ${isMobile ? 'gap-2' : 'gap-2'}`}>
+        <div className={`flex gap-2`} style={{ minWidth: 'max-content', flexShrink: 0 }}>
           {sheets.map((sheet) => (
             <div
               key={sheet.id}
               data-sheet-id={sheet.id}
               className={cn(
-                "group flex items-center cursor-pointer transition-all duration-300 relative backdrop-blur-sm select-none touch-manipulation",
-                isMobile 
-                  ? "min-w-[120px] max-w-[200px] min-h-[44px] h-11 px-4 active:scale-[0.98] rounded-lg" 
-                  : "min-w-[140px] max-w-[240px] h-11 px-4 transform hover:scale-[1.02] rounded-lg",
+                "group flex items-center cursor-pointer select-none",
+                "px-4 h-11 rounded-lg",
+                "min-w-[140px]",
                 activeSheetId === sheet.id
-                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 z-20 ring-2 ring-blue-300/50 dark:ring-blue-600/50"
-                  : "bg-white/90 dark:bg-slate-800/90 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-md border border-gray-200/50 dark:border-slate-600/50"
+                  ? "bg-blue-600 dark:bg-blue-600 text-white dark:text-white shadow-lg"
+                  : "bg-slate-800 dark:bg-slate-800 text-slate-100 dark:text-slate-100 hover:bg-slate-700 dark:hover:bg-slate-700 border border-slate-600 dark:border-slate-600"
               )}
+              style={{
+                backgroundColor: activeSheetId === sheet.id ? 'rgb(37, 99, 235)' : 'rgb(30, 41, 59)',
+                color: 'white'
+              }}
               onClick={() => onSheetSelect(sheet.id)}
             >
               {!isMobile && (
