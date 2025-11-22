@@ -447,7 +447,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
     let currentY = (firstNode as any)._y || options.startY;
     const chainX = options.startX;
 
-    // Располагаем узлы цепочки ВЕРТИКАЛЬНО
+    // Располагаем узлы цепочки СТРОГО ВЕРТИКАЛЬНО (без центрирования)
     chain.forEach((nodeId, index) => {
       const node = nodeMap.get(nodeId);
       if (!node) {
@@ -457,49 +457,18 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
 
       const nodeSize = getNodeSize(nodeId, options);
 
-      // ЦЕНТРИРОВАНИЕ: если у узла несколько родителей, центрируем его между ними
-      let finalY = currentY;
-      const parents = incomingConnections.get(nodeId);
-      if (parents && parents.length > 1) {
-        // Находим позиции всех родительских узлов
-        const parentPositions = parents
-          .map(parentId => {
-            // Ищем родителя в уже обработанных узлах
-            const parentInResult = result.find(n => n.id === parentId);
-            if (parentInResult) {
-              const parentSize = getNodeSize(parentId, options);
-              return parentInResult.position.y + parentSize.height / 2;
-            }
-            return null;
-          })
-          .filter(pos => pos !== null) as number[];
-
-        if (parentPositions.length > 0) {
-          // Вычисляем среднюю Y-позицию родителей
-          const avgParentY = parentPositions.reduce((sum, py) => sum + py, 0) / parentPositions.length;
-          // Центрируем узел относительно средней позиции родителей
-          finalY = avgParentY - nodeSize.height / 2;
-          console.log(`📍 Центрирование узла ${nodeId} (в цепочке) между ${parents.length} родителями: y=${finalY}`);
-        }
-      }
-
-      console.log(`  ⬇️ Узел ${index + 1}/${chain.length} (${nodeId}): x=${chainX}, y=${finalY}`);
+      console.log(`  ⬇️ Узел ${index + 1}/${chain.length} (${nodeId}): x=${chainX}, y=${currentY}`);
 
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
       result.push({
         ...cleanNode,
-        position: { x: chainX, y: finalY }
+        position: { x: chainX, y: currentY }
       });
 
       processedNodes.add(nodeId);
-      // Переходим к следующей позиции по вертикали (только если не было центрирования)
-      if (finalY === currentY) {
-        currentY += nodeSize.height + options.verticalSpacing;
-      } else {
-        // Если было центрирование, используем новую позицию
-        currentY = finalY + nodeSize.height + options.verticalSpacing;
-      }
+      // Переходим к следующей позиции по вертикали
+      currentY += nodeSize.height + options.verticalSpacing;
     });
   });
 
