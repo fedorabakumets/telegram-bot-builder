@@ -208,6 +208,7 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
 
 /**
  * Располагает узлы в правильной вертикальной древовидной иерархии
+ * С горизонтальным размещением цепочек автопереходов
  */
 function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayoutOptions): Node[] {
   const result: Node[] = [];
@@ -216,12 +217,46 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   const nodeMap = new Map<string, LayoutNode>();
   levels.flat().forEach(node => nodeMap.set(node.id, node));
   
-  // Вычисляем размер поддерева (количество листьев) для каждого узла
-  function computeLeafCount(node: LayoutNode): number {
-    if (!node.children || node.children.length === 0) {
-      return 1;
-    }
-    return node.children.reduce((sum, child) => sum + computeLeafCount(child), 0);
+  // Находим цепочки автопереходов
+  function findAutoTransitionChains(nodes: LayoutNode[]): Set<string>[] {
+    const chains: Set<string>[] = [];
+    const visited = new Set<string>();
+    
+    nodes.forEach(node => {
+      if (visited.has(node.id)) return;
+      
+      // Проверяем, есть ли у узла автопереход
+      if ((node as any).data?.autoTransitionTo) {
+        const chain = new Set<string>();
+        let currentNode: LayoutNode | undefined = node;
+        
+        // Идем по цепочке автопереходов
+        while (currentNode && !visited.has(currentNode.id)) {
+          chain.add(currentNode.id);
+          visited.add(currentNode.id);
+          
+          const nextNodeId = (currentNode as any).data?.autoTransitionTo;
+          if (nextNodeId) {
+            currentNode = nodeMap.get(nextNodeId);
+          } else {
+            break;
+          }
+        }
+        
+        if (chain.size > 1) {
+          chains.push(chain);
+        }
+      }
+    });
+    
+    return chains;
+  }
+  
+  const autoTransitionChains = findAutoTransitionChains(levels.flat());
+  
+  // Проверяем, является ли узел частью цепочки автопереходов
+  function isInAutoChain(nodeId: string): boolean {
+    return autoTransitionChains.some(chain => chain.has(nodeId));
   }
   
   // Назначаем y позиции с учетом размеров поддеревьев
@@ -279,25 +314,50 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   });
   
   // Создаем результат с правильными позициями
+  // Для узлов с автопереходами размещаем их горизонтально
   levels.forEach((levelNodes, levelIndex) => {
     // Вычисляем X позицию с учетом максимальной ширины узлов на предыдущих уровнях
-    let x = options.startX;
+    let baseX = options.startX;
     for (let i = 0; i < levelIndex; i++) {
       const prevLevel = levels[i] || [];
       const prevLevelMaxWidth = prevLevel.length > 0 
         ? Math.max(...prevLevel.map(n => getNodeSize(n.id, options).width))
-        : 0; // Исправляем проблему с пустыми уровнями
-      x += prevLevelMaxWidth + options.horizontalSpacing;
+        : 0;
+      baseX += prevLevelMaxWidth + options.horizontalSpacing;
     }
     
     levelNodes.forEach((node) => {
       const y = (node as any)._y || (options.startY + result.length * options.verticalSpacing);
       
+      // Проверяем, является ли этот узел частью цепочки автопереходов
+      let x = baseX;
+      if (isInAutoChain(node.id)) {
+        // Находим позицию в цепочке
+        const chain = autoTransitionChains.find(c => c.has(node.id));
+        if (chain) {
+          const chainArray = Array.from(chain);
+          const nodeIndex = chainArray.indexOf(node.id);
+          
+          // Размещаем горизонтально с учетом позиции в цепочке
+          if (nodeIndex > 0) {
+            // Находим предыдущий узел в цепочке
+            const prevNodeId = chainArray[nodeIndex - 1];
+            const prevNodeResult = result.find(n => n.id === prevNodeId);
+            if (prevNodeResult) {
+              const prevNodeSize = getNodeSize(prevNodeId, options);
+              x = prevNodeResult.position.x + prevNodeSize.width + options.horizontalSpacing;
+              // Используем ту же Y координату, что и у предыдущего узла
+              (node as any)._y = prevNodeResult.position.y;
+            }
+          }
+        }
+      }
+      
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
       result.push({
         ...cleanNode,
-        position: { x, y }
+        position: { x, y: (node as any)._y }
       });
     });
   });
