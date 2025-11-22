@@ -299,13 +299,19 @@ export function useBotEditor(initialData?: BotData) {
     // Нормализуем узлы перед применением компоновки
     const normalizedNodes = (botData.nodes || []).map(normalizeNodeData);
     
+    // ИСПРАВЛЕНИЕ: Генерируем автопереходы ДО применения layout
+    const connectionsWithAuto = generateAutoTransitionConnections(
+      normalizedNodes, 
+      botData.connections || []
+    );
+    
     // Применяем иерархическую компоновку только если не отключена
     const finalNodes = skipLayout 
       ? normalizedNodes 
-      : applyTemplateLayout(normalizedNodes, botData.connections || [], templateName, nodeSizes);
+      : applyTemplateLayout(normalizedNodes, connectionsWithAuto, templateName, nodeSizes);
     
     setNodes(finalNodes);
-    setConnections(botData.connections || []);
+    setConnections(connectionsWithAuto);
     setSelectedNodeId(null); // Сбрасываем выбранный узел
     
     // setBotData завершен
