@@ -325,20 +325,19 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     let minLevel = Infinity;
     let chainY = options.startY;
     
-    // Сначала находим правильную Y координату
-    for (const nodeId of chainArray) {
-      for (let levelIndex = 0; levelIndex < levels.length; levelIndex++) {
-        const found = levels[levelIndex].find(n => n.id === nodeId);
-        if (found) {
-          if (levelIndex < minLevel) {
-            minLevel = levelIndex;
-          }
-          // Берем Y координату из узла, если она определена
-          if ((found as any)._y !== undefined) {
-            chainY = (found as any)._y;
-          }
-          break;
+    // Находим первый узел в цепочке (тот который в самом начале)
+    const firstNodeId = chainArray[0];
+    
+    // Находим правильную Y координату от первого узла цепочки
+    for (let levelIndex = 0; levelIndex < levels.length; levelIndex++) {
+      const found = levels[levelIndex].find(n => n.id === firstNodeId);
+      if (found) {
+        minLevel = levelIndex;
+        // Берем Y координату из первого узла
+        if ((found as any)._y !== undefined) {
+          chainY = (found as any)._y;
         }
+        break;
       }
     }
     
