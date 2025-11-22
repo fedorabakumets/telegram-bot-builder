@@ -288,13 +288,15 @@ export default function Editor() {
   // Load current project directly by ID (much faster than loading all projects)
   const { data: currentProject, isLoading: isProjectLoading } = useQuery<BotProject>({
     queryKey: ['/api/projects', projectId],
-    enabled: !!projectId,
+    enabled: !!projectId, // Всегда загружаем если есть ID в URL
+    staleTime: 30000, // Кешируем на 30 секунд
   });
 
   // If no projectId in URL, load project list to get first project ID
   const { data: projectsList, isLoading: isListLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
     queryKey: ['/api/projects/list'],
-    enabled: !projectId,
+    enabled: !projectId, // Загружаем список только если нет ID в URL
+    staleTime: 30000,
   });
 
   // Get effective project ID (from URL or first in list)
@@ -303,11 +305,26 @@ export default function Editor() {
   // Load first project if no projectId in URL and we have the ID from list
   const { data: firstProject, isLoading: isFirstProjectLoading } = useQuery<BotProject>({
     queryKey: ['/api/projects', effectiveProjectId],
-    enabled: !projectId && !!effectiveProjectId,
+    enabled: !projectId && !!effectiveProjectId, // Загружаем только если нет ID в URL, но есть в списке
+    staleTime: 30000,
   });
 
   // Use the appropriate project
   const activeProject = projectId ? currentProject : firstProject;
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 Project Loading State:', {
+      projectId,
+      hasCurrentProject: !!currentProject,
+      hasFirstProject: !!firstProject,
+      hasActiveProject: !!activeProject,
+      isProjectLoading,
+      isListLoading,
+      isFirstProjectLoading,
+      projectsListLength: projectsList?.length
+    });
+  }, [projectId, currentProject, firstProject, activeProject, isProjectLoading, isListLoading, isFirstProjectLoading, projectsList]);
 
   const {
     nodes,
