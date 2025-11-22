@@ -321,33 +321,38 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   autoTransitionChains.forEach(chain => {
     const chainArray = Array.from(chain);
     
-    // Находим первый узел цепочки в levels
-    let firstNode: LayoutNode | null = null;
-    let firstNodeLevel = -1;
+    // Находим ВСЕ узлы цепочки в levels и определяем минимальный уровень
+    let minLevel = Infinity;
+    let chainY = options.startY;
     
-    for (let levelIndex = 0; levelIndex < levels.length; levelIndex++) {
-      const found = levels[levelIndex].find(n => n.id === chainArray[0]);
-      if (found) {
-        firstNode = found;
-        firstNodeLevel = levelIndex;
-        break;
+    // Сначала находим правильную Y координату
+    for (const nodeId of chainArray) {
+      for (let levelIndex = 0; levelIndex < levels.length; levelIndex++) {
+        const found = levels[levelIndex].find(n => n.id === nodeId);
+        if (found) {
+          if (levelIndex < minLevel) {
+            minLevel = levelIndex;
+          }
+          // Берем Y координату из узла, если она определена
+          if ((found as any)._y !== undefined) {
+            chainY = (found as any)._y;
+          }
+          break;
+        }
       }
     }
     
-    if (!firstNode) return;
+    if (minLevel === Infinity) return;
     
-    // Вычисляем базовую X позицию для первого узла
+    // Вычисляем базовую X позицию для минимального уровня
     let baseX = options.startX;
-    for (let i = 0; i < firstNodeLevel; i++) {
+    for (let i = 0; i < minLevel; i++) {
       const prevLevel = levels[i] || [];
       const prevLevelMaxWidth = prevLevel.length > 0 
         ? Math.max(...prevLevel.map(n => getNodeSize(n.id, options).width))
         : 0;
       baseX += prevLevelMaxWidth + options.horizontalSpacing;
     }
-    
-    // Y координата для всей цепочки (из первого узла)
-    const chainY = (firstNode as any)._y || options.startY;
     
     // Размещаем все узлы цепочки горизонтально
     let currentX = baseX;
