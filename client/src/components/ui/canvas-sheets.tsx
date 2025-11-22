@@ -221,7 +221,14 @@ export function CanvasSheets({
             <div
               key={sheet.id}
               data-sheet-id={sheet.id}
-              className="group flex items-center cursor-pointer select-none transition-all duration-200 px-4 h-11 rounded-xl gap-2 min-w-[160px] max-w-[240px] bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-105 text-[12px]"
+              className={cn(
+                "group flex items-center cursor-pointer select-none transition-all duration-200",
+                "px-3 h-9 rounded-lg gap-2",
+                "min-w-[130px] max-w-[200px]",
+                activeSheetId === sheet.id
+                  ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-100"
+                  : "bg-slate-800/80 text-slate-200 hover:bg-slate-700/90 border border-slate-600/50 hover:border-slate-500/70 hover:shadow-md"
+              )}
               style={{
                 backgroundColor: activeSheetId === sheet.id ? undefined : 'rgba(30, 41, 59, 0.8)',
                 color: 'white'
@@ -250,7 +257,7 @@ export function CanvasSheets({
                 <span 
                   className={cn(
                     "flex-1 cursor-text transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis",
-                    "text-sm font-medium",
+                    "text-xs font-medium",
                     activeSheetId === sheet.id
                       ? "text-white font-semibold drop-shadow-sm"
                       : "text-slate-200 group-hover:text-white"
@@ -272,8 +279,8 @@ export function CanvasSheets({
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "p-0 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95",
-                    "h-6 w-6",
+                    "p-0 rounded-md transition-all duration-200 hover:scale-110 active:scale-95",
+                    "h-5 w-5",
                     activeSheetId === sheet.id
                       ? "hover:bg-white/20 active:bg-white/30 text-white/80 hover:text-white"
                       : "hover:bg-blue-500/20 active:bg-blue-500/30 text-blue-400 hover:text-blue-300 border border-blue-500/30"
@@ -284,7 +291,7 @@ export function CanvasSheets({
                   }}
                   title="Дублировать лист"
                 >
-                  <Copy className="h-3.5 w-3.5" />
+                  <Copy className="h-3 w-3" />
                 </Button>
                 
                 {sheets.length > 1 && (
@@ -292,8 +299,8 @@ export function CanvasSheets({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "p-0 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95",
-                      "h-6 w-6",
+                      "p-0 rounded-md transition-all duration-200 hover:scale-110 active:scale-95",
+                      "h-5 w-5",
                       activeSheetId === sheet.id
                         ? "hover:bg-red-500/20 active:bg-red-500/30 text-red-200 hover:text-white"
                         : "hover:bg-red-500/20 active:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30"
@@ -304,7 +311,7 @@ export function CanvasSheets({
                     }}
                     title="Удалить лист"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" />
                   </Button>
                 )}
               </div>
@@ -329,10 +336,10 @@ export function CanvasSheets({
         variant="ghost"
         size="sm"
         onClick={addNewSheet}
-        className="flex-shrink-0 p-0 h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-600/20 hover:from-emerald-500/30 hover:to-green-600/30 active:from-emerald-500/40 active:to-green-600/40 transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-emerald-500/30 border border-emerald-500/30 hover:border-emerald-400/50"
+        className="flex-shrink-0 p-0 h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-600/20 hover:from-emerald-500/30 hover:to-green-600/30 active:from-emerald-500/40 active:to-green-600/40 transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-emerald-500/30 border border-emerald-500/30 hover:border-emerald-400/50"
         title="Добавить новый лист"
       >
-        <Plus className="h-5 w-5 text-emerald-400 drop-shadow-sm" />
+        <Plus className="h-4 w-4 text-emerald-400 drop-shadow-sm" />
       </Button>
       {/* Диалог убран - создание листа теперь происходит одним кликом */}
     </div>
