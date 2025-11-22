@@ -216,7 +216,7 @@ export function CanvasSheets({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className={`flex ${isMobile ? 'gap-2' : 'gap-2'}`}>
+        <div className={`flex ${isMobile ? 'gap-1.5' : 'gap-1.5'}`}>
           {sheets.map((sheet) => (
             <div
               key={sheet.id}
@@ -224,8 +224,8 @@ export function CanvasSheets({
               className={cn(
                 "group flex items-center cursor-pointer transition-all duration-300 relative backdrop-blur-sm select-none touch-manipulation",
                 isMobile 
-                  ? "min-w-[120px] max-w-[180px] min-h-[44px] h-12 px-3 active:scale-[0.98] rounded-xl" 
-                  : "min-w-[140px] max-w-[200px] h-10 px-3 transform hover:scale-[1.02] rounded-lg",
+                  ? "min-w-[110px] max-w-[160px] min-h-[40px] h-10 px-2.5 active:scale-[0.98] rounded-lg" 
+                  : "min-w-[120px] max-w-[180px] h-9 px-2.5 transform hover:scale-[1.02] rounded-lg",
                 activeSheetId === sheet.id
                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 z-20 ring-2 ring-blue-300/50 dark:ring-blue-600/50"
                   : "bg-white/70 dark:bg-slate-800/70 text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-700/90 shadow-sm hover:shadow-md border border-gray-200/50 dark:border-slate-600/50"
@@ -234,7 +234,7 @@ export function CanvasSheets({
             >
               {!isMobile && (
                 <FileText className={cn(
-                  "h-4 w-4 mr-3 transition-all duration-200",
+                  "h-3.5 w-3.5 mr-2 transition-all duration-200",
                   activeSheetId === sheet.id
                     ? "text-white/90 drop-shadow-sm"
                     : "text-gray-500 dark:text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400"
@@ -257,8 +257,8 @@ export function CanvasSheets({
                   className={cn(
                     "flex-1 cursor-text transition-all duration-200 truncate",
                     isMobile 
-                      ? "text-sm font-semibold" 
-                      : "text-sm font-semibold",
+                      ? "text-xs font-semibold" 
+                      : "text-xs font-semibold",
                     activeSheetId === sheet.id
                       ? "text-white drop-shadow-sm"
                       : "text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400"
@@ -271,17 +271,17 @@ export function CanvasSheets({
               )}
 
               {/* Отдельные кнопки действий */}
-              <div className={`flex items-center transition-all duration-200 ${
+              <div className={`flex items-center transition-all duration-200 gap-0.5 ${
                 isMobile 
-                  ? 'ml-2 opacity-90' 
-                  : 'ml-2 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0'
+                  ? 'ml-1 opacity-90' 
+                  : 'ml-1 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0'
               }`}>
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(
                     "p-0 rounded-full transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation",
-                    isMobile ? "h-8 w-8" : "h-6 w-6",
+                    isMobile ? "h-7 w-7" : "h-5 w-5",
                     activeSheetId === sheet.id
                       ? "hover:bg-white/20 active:bg-white/30 text-white/90 hover:text-white"
                       : "hover:bg-blue-100 active:bg-blue-200 dark:hover:bg-blue-900/50 dark:active:bg-blue-800/50 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
@@ -292,7 +292,7 @@ export function CanvasSheets({
                   }}
                   title="Дублировать лист"
                 >
-                  <Copy className={isMobile ? "h-4 w-4" : "h-3 w-3"} />
+                  <Copy className={isMobile ? "h-3.5 w-3.5" : "h-3 w-3"} />
                 </Button>
                 
                 {sheets.length > 1 && (
@@ -301,7 +301,7 @@ export function CanvasSheets({
                     size="sm"
                     className={cn(
                       "p-0 rounded-full transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation",
-                      isMobile ? "h-8 w-8 ml-1" : "h-6 w-6 ml-1",
+                      isMobile ? "h-7 w-7" : "h-5 w-5",
                       activeSheetId === sheet.id
                         ? "hover:bg-red-500/20 active:bg-red-500/30 text-red-200 hover:text-white"
                         : "hover:bg-red-100 active:bg-red-200 dark:hover:bg-red-900/50 dark:active:bg-red-800/50 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
@@ -312,7 +312,7 @@ export function CanvasSheets({
                     }}
                     title="Удалить лист"
                   >
-                    <X className={isMobile ? "h-4 w-4" : "h-3 w-3"} />
+                    <X className={isMobile ? "h-3.5 w-3.5" : "h-3 w-3"} />
                   </Button>
                 )}
               </div>
