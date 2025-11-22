@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Node } from '@/types/bot';
 
 interface TemporaryConnectionProps {
@@ -7,10 +8,6 @@ interface TemporaryConnectionProps {
 }
 
 export function TemporaryConnection({ startNode, endPosition, handle }: TemporaryConnectionProps) {
-  // ВРЕМЕННО ОТКЛЮЧЕНО: Визуализация временных связей при создании
-  return null;
-  
-  /* АРХИВ: Оригинальная визуализация временных связей (временно отключена)
   const path = useMemo(() => {
     const baseWidth = 320;
     const baseHeight = 200;
@@ -59,6 +56,7 @@ export function TemporaryConnection({ startNode, endPosition, handle }: Temporar
         </marker>
       </defs>
 
+      {/* Временная линия соединения */}
       <path
         d={path}
         stroke="hsl(var(--primary))"
@@ -72,6 +70,7 @@ export function TemporaryConnection({ startNode, endPosition, handle }: Temporar
         markerEnd="url(#temp-arrowhead)"
       />
 
+      {/* Анимированный эффект */}
       <path
         d={path}
         stroke="hsl(var(--primary))"
@@ -85,5 +84,4 @@ export function TemporaryConnection({ startNode, endPosition, handle }: Temporar
       />
     </svg>
   );
-  */
 }

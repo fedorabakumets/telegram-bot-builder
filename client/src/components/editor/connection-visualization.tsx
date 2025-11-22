@@ -214,9 +214,9 @@ export function ConnectionVisualization({
     }
   }, []);
 
+  // ВРЕМЕННО ОТКЛЮЧЕНО: Визуализация и анализ связей
   return (
     <div className="space-y-4">
-      {/* Панель управления */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -224,227 +224,33 @@ export function ConnectionVisualization({
             Визуализация связей
           </CardTitle>
           <CardDescription>
-            Анализ и управление связями между узлами бота
+            Временно отключена
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Фильтры */}
-          <div className="flex gap-2 mb-4">
-            <UIButton
-              variant={viewMode === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('all')}
-            >
-              Все связи
-            </UIButton>
-            <UIButton
-              variant={viewMode === 'strong' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('strong')}
-            >
-              Сильные
-            </UIButton>
-            <UIButton
-              variant={viewMode === 'weak' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('weak')}
-            >
-              Слабые
-            </UIButton>
-            <UIButton
-              variant={viewMode === 'problematic' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('problematic')}
-            >
-              Проблемные
-            </UIButton>
-          </div>
-
-          {/* Легенда */}
-          <div className="flex flex-wrap gap-4 mb-4 p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-1 bg-green-500 rounded"></div>
-              <span className="text-sm">Сильная связь</span>
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+              <i className="fas fa-link-slash text-3xl text-amber-600 dark:text-amber-400"></i>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-1 bg-blue-500 rounded"></div>
-              <span className="text-sm">Средняя связь</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-1 bg-yellow-500 rounded"></div>
-              <span className="text-sm">Слабая связь</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-1 bg-red-500 rounded"></div>
-              <span className="text-sm">Проблемная связь</span>
-            </div>
-          </div>
-
-          {/* Метрики */}
-          {showMetrics && (
-            <div className="grid grid-cols-4 gap-4 mb-4">
-              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {filteredConnections.length}
-                </div>
-                <div className="text-sm text-muted-foreground">Показано связей</div>
-              </div>
-              <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {filteredConnections.filter(({ metrics }) => metrics.isValid).length}
-                </div>
-                <div className="text-sm text-muted-foreground">Валидных</div>
-              </div>
-              <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                  {filteredConnections.filter(({ metrics }) => metrics.hasButton).length}
-                </div>
-                <div className="text-sm text-muted-foreground">С кнопками</div>
-              </div>
-              <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {Math.round(filteredConnections.reduce((sum, { metrics }) => sum + metrics.strength, 0) / filteredConnections.length * 100) || 0}%
-                </div>
-                <div className="text-sm text-muted-foreground">Средняя сила</div>
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Визуализация связей временно отключена
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 max-w-md">
+                Связи между узлами сохраняются в данных проекта, но их визуализация и анализ временно недоступны
+              </p>
+              <div className="pt-2">
+                <Badge variant="outline" className="text-xs">
+                  {connections.length} {connections.length === 1 ? 'связь' : connections.length > 1 && connections.length < 5 ? 'связи' : 'связей'} в проекте
+                </Badge>
               </div>
             </div>
-          )}
-
-          {/* Список связей */}
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            <TooltipProvider>
-              {filteredConnections.map(({ connection, metrics }) => (
-                <Tooltip key={connection.id}>
-                  <TooltipTrigger asChild>
-                    <div
-                      className={cn(
-                        "p-3 border rounded-lg transition-all duration-200",
-                        interactive && "cursor-pointer hover:bg-accent",
-                        selectedConnectionId === connection.id && "bg-accent border-primary",
-                        hoveredConnectionId === connection.id && "shadow-md",
-                        !metrics.isValid && "border-red-200 bg-red-50 dark:bg-red-900/10"
-                      )}
-                      onClick={() => interactive && onConnectionSelect?.(connection)}
-                      onMouseEnter={() => setHoveredConnectionId(connection.id)}
-                      onMouseLeave={() => setHoveredConnectionId(null)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {/* Иконка типа связи */}
-                          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted">
-                            {getConnectionIcon(metrics)}
-                          </div>
-                          
-                          {/* Информация о связи */}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm">
-                                {getNodeName(connection.source)} → {getNodeName(connection.target)}
-                              </span>
-                              
-                              {/* Индикатор валидности */}
-                              {metrics.isValid ? (
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                              ) : (
-                                <XCircle className="h-4 w-4 text-red-500" />
-                              )}
-                            </div>
-                            
-                            {/* Прогресс-бар силы связи */}
-                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                              <div
-                                className="h-2 rounded-full transition-all duration-300"
-                                style={{
-                                  width: `${metrics.strength * 100}%`,
-                                  backgroundColor: getConnectionColor(metrics)
-                                }}
-                              />
-                            </div>
-                            
-                            {/* Метрики */}
-                            <div className="flex gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                Сила: {Math.round(metrics.strength * 100)}%
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                Важность: {Math.round(metrics.importance * 100)}%
-                              </Badge>
-                              {metrics.hasButton && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {metrics.buttonType === 'goto' ? 'Переход' : 
-                                   metrics.buttonType === 'command' ? 'Команда' : 'Ссылка'}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Действия */}
-                        {interactive && (
-                          <div className="flex gap-1">
-                            <UIButton
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onConnectionEdit?.(connection);
-                              }}
-                            >
-                              <Edit3 className="h-4 w-4" />
-                            </UIButton>
-                            <UIButton
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onConnectionDelete?.(connection.id);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </UIButton>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Ошибки и предложения */}
-                      {(!metrics.isValid && metrics.errors.length > 0) && (
-                        <div className="mt-2 space-y-1">
-                          {metrics.errors.map((error, idx) => (
-                            <div key={idx} className="flex items-center gap-2 text-xs text-red-600">
-                              <AlertTriangle className="h-3 w-3" />
-                              {error}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {metrics.suggestions.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {metrics.suggestions.map((suggestion, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              💡 {suggestion}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="space-y-1">
-                      <p className="font-medium">Связь {connection.id}</p>
-                      <p className="text-sm">Сила: {Math.round(metrics.strength * 100)}%</p>
-                      <p className="text-sm">Важность: {Math.round(metrics.importance * 100)}%</p>
-                      {metrics.hasButton && (
-                        <p className="text-sm">Тип кнопки: {metrics.buttonType}</p>
-                      )}
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </TooltipProvider>
           </div>
         </CardContent>
       </Card>
     </div>
   );
+  
+  // АРХИВ: Оригинальная визуализация связей (временно отключена)
+  // Код сохранен в client/src/components/_archive/connection-visualization.tsx.bak
 }
