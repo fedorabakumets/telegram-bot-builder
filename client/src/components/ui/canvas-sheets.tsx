@@ -191,7 +191,7 @@ export function CanvasSheets({
   };
 
   return (
-    <div className={`flex items-center justify-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-gray-200 dark:border-slate-700 rounded-lg shadow-lg relative transition-all duration-300 hover:shadow-xl z-50 ${isMobile ? 'px-3 py-3' : 'px-4 py-3'}`}>
+    <div className={`flex items-center justify-center gap-2 relative transition-all duration-300 z-50 ${isMobile ? 'px-3 py-3' : 'px-4 py-3'}`}>
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
       {(canScrollLeft || (isMobile && sheets.length > 1)) && (
         <Button
