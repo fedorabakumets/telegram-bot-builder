@@ -224,8 +224,8 @@ export function CanvasSheets({
               className={cn(
                 "group flex items-center cursor-pointer transition-all duration-300 relative backdrop-blur-sm select-none touch-manipulation",
                 isMobile 
-                  ? "min-w-[90px] max-w-[140px] min-h-[36px] h-9 px-2 active:scale-[0.98] rounded-lg" 
-                  : "min-w-[100px] max-w-[150px] h-8 px-2 transform hover:scale-[1.02] rounded-lg",
+                  ? "min-w-[90px] max-w-none min-h-[36px] h-9 px-2 active:scale-[0.98] rounded-lg" 
+                  : "min-w-[100px] max-w-none h-8 px-2 transform hover:scale-[1.02] rounded-lg",
                 activeSheetId === sheet.id
                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 z-20 ring-2 ring-blue-300/50 dark:ring-blue-600/50"
                   : "bg-white/70 dark:bg-slate-800/70 text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-700/90 shadow-sm hover:shadow-md border border-gray-200/50 dark:border-slate-600/50"
@@ -255,7 +255,7 @@ export function CanvasSheets({
               ) : (
                 <span 
                   className={cn(
-                    "flex-1 cursor-text transition-all duration-200 truncate",
+                    "flex-1 cursor-text transition-all duration-200 whitespace-nowrap",
                     isMobile 
                       ? "text-xs font-semibold" 
                       : "text-xs font-semibold",
