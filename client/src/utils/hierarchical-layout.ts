@@ -432,7 +432,7 @@ export function applyTemplateLayout(
     nodeWidth: 280,
     nodeHeight: 100,
     horizontalSpacing: 60, // Значительно уменьшено для мобильных экранов
-    verticalSpacing: 50, // Значительно уменьшено для мобильных экранов
+    verticalSpacing: 25, // Уменьшено в 2 раза
     startX: 50,
     startY: 50,
     nodeSizes
@@ -444,7 +444,7 @@ export function applyTemplateLayout(
     nodeWidth: 320,
     nodeHeight: 120,
     horizontalSpacing: 100,
-    verticalSpacing: 80,
+    verticalSpacing: 40, // Уменьшено в 2 раза
     startX: 100,
     startY: 100,
     nodeSizes
