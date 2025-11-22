@@ -176,21 +176,40 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
 /**
  * Присваивает уровни узлам в дереве
  * УЛУЧШЕНИЕ: Узлы с несколькими родителями размещаются на уровне самого глубокого родителя + 1
+ * ИСПРАВЛЕНИЕ: Защита от бесконечной рекурсии при циклических связях
  */
-function assignLevels(startNode: LayoutNode, level = 0) {
-  // Если узел уже посещен, обновляем его уровень только если новый уровень глубже
+function assignLevels(startNode: LayoutNode, level = 0, visitedInPath = new Set<string>()) {
+  // Проверяем, не находимся ли мы в цикле (узел уже в текущем пути обхода)
+  if (visitedInPath.has(startNode.id)) {
+    console.warn(`🔄 Обнаружен цикл на узле ${startNode.id}, прерываем рекурсию`);
+    return;
+  }
+
+  // Добавляем узел в текущий путь обхода
+  const newVisitedInPath = new Set(visitedInPath);
+  newVisitedInPath.add(startNode.id);
+
+  // Если узел уже посещен глобально, обновляем его уровень только если новый уровень глубже
   if (startNode.visited) {
     if (level > (startNode.level || 0)) {
       startNode.level = level;
+      // Обновляем уровни детей с новым уровнем
+      if (startNode.children) {
+        startNode.children.forEach(child => {
+          assignLevels(child, level + 1, newVisitedInPath);
+        });
+      }
     }
-  } else {
-    startNode.level = level;
-    startNode.visited = true;
+    return;
   }
+
+  // Первое посещение узла
+  startNode.level = level;
+  startNode.visited = true;
 
   if (startNode.children) {
     startNode.children.forEach(child => {
-      assignLevels(child, level + 1);
+      assignLevels(child, level + 1, newVisitedInPath);
     });
   }
 }
@@ -352,6 +371,12 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   function assignYPositions(node: LayoutNode, startY: number, visited = new Set<string>()): number {
     // Проверяем на циклы - если узел уже посещен, возвращаем текущую позицию
     if (visited.has(node.id)) {
+      // Если Y позиция уже назначена, используем её
+      const existingY = (node as any)._y;
+      if (existingY !== undefined) {
+        const nodeSize = getNodeSize(node.id, options);
+        return existingY + nodeSize.height + options.verticalSpacing;
+      }
       return startY;
     }
 
@@ -361,7 +386,6 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     if (!node.children || node.children.length === 0) {
       // Листовой узел - присваиваем текущую позицию
       (node as any)._y = startY;
-      visited.delete(node.id); // Убираем из visited после обработки
       return startY + nodeSize.height + options.verticalSpacing;
     }
 
@@ -374,8 +398,10 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
       const childVisited = new Set(visited);
       childY = assignYPositions(child, childY, childVisited);
       const childSize = getNodeSize(child.id, options);
-      const childCenterY = (child as any)._y + childSize.height / 2;
-      childCenters.push(childCenterY);
+      const childCenterY = (child as any)._y;
+      if (childCenterY !== undefined) {
+        childCenters.push(childCenterY + childSize.height / 2);
+      }
     }
 
     // Центрируем родительский узел относительно центров дочерних узлов
@@ -388,7 +414,6 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
       (node as any)._y = startY;
     }
 
-    visited.delete(node.id); // Убираем из visited после обработки
     return childY;
   }
 
