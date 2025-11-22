@@ -95,7 +95,7 @@ export default function Editor() {
   // Флаг для предотвращения перезаписи при локальных изменениях
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
   
-  // Track the last loaded project ID to prevent unnecessary reloads
+  // Track the last loaded activeProject ID to prevent unnecessary reloads
   const [lastLoadedProjectId, setLastLoadedProjectId] = useState<number | null>(null);
   
   // Callback для получения размеров узлов из Canvas
@@ -231,13 +231,29 @@ export default function Editor() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Load all projects
-  const { data: projects } = useQuery<BotProject[]>({
-    queryKey: ['/api/projects'],
+  // Load current project directly by ID (much faster than loading all projects)
+  const { data: currentProject, isLoading: isProjectLoading } = useQuery<BotProject>({
+    queryKey: ['/api/projects', projectId],
+    enabled: !!projectId,
   });
 
-  // Find current project by ID from URL
-  const currentProject = projects?.find(p => p.id === projectId) || projects?.[0];
+  // If no projectId in URL, load project list to get first project ID
+  const { data: projectsList, isLoading: isListLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
+    queryKey: ['/api/projects/list'],
+    enabled: !projectId,
+  });
+
+  // Get effective project ID (from URL or first in list)
+  const effectiveProjectId = projectId || projectsList?.[0]?.id;
+
+  // Load first project if no projectId in URL and we have the ID from list
+  const { data: firstProject, isLoading: isFirstProjectLoading } = useQuery<BotProject>({
+    queryKey: ['/api/projects', effectiveProjectId],
+    enabled: !projectId && !!effectiveProjectId,
+  });
+
+  // Use the appropriate project
+  const activeProject = projectId ? currentProject : firstProject;
 
   const {
     nodes,
@@ -269,14 +285,14 @@ export default function Editor() {
     hasClipboardData,
     isNodeBeingDragged,
     setIsNodeBeingDragged
-  } = useBotEditor(currentProject?.data as BotData);
+  } = useBotEditor(activeProject?.data as BotData);
 
-  // Reset hasLocalChanges when project changes
+  // Reset hasLocalChanges when activeProject changes
   useEffect(() => {
-    if (currentProject?.id !== lastLoadedProjectId && lastLoadedProjectId !== null) {
+    if (activeProject?.id !== lastLoadedProjectId && lastLoadedProjectId !== null) {
       setHasLocalChanges(false);
     }
-  }, [currentProject?.id, lastLoadedProjectId]);
+  }, [activeProject?.id, lastLoadedProjectId]);
 
   // Обработчик обновления данных листов
   const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
@@ -350,16 +366,16 @@ export default function Editor() {
   // Обновляем данные бота при смене проекта - only when truly switching projects
   useEffect(() => {
     
-    // Only load project data when:
-    // 1. We have a project with data
+    // Only load activeProject data when:
+    // 1. We have a activeProject with data
     // 2. We're not loading a template  
     // 3. We don't have local changes in progress
-    // 4. This is truly a new project (ID changed) OR initial load (lastLoadedProjectId is null)
-    if (currentProject?.data && !isLoadingTemplate && !hasLocalChanges && 
-        (lastLoadedProjectId !== currentProject?.id)) {
+    // 4. This is truly a new activeProject (ID changed) OR initial load (lastLoadedProjectId is null)
+    if (activeProject?.data && !isLoadingTemplate && !hasLocalChanges && 
+        (lastLoadedProjectId !== activeProject?.id)) {
       
-      console.log('📂 Loading project data for project ID:', currentProject.id);
-      const projectData = currentProject.data as any;
+      console.log('📂 Loading activeProject data for activeProject ID:', activeProject.id);
+      const projectData = activeProject.data as any;
       
       // Проверяем, новый ли это формат с листами
       if (SheetsManager.isNewFormat(projectData)) {
@@ -390,17 +406,17 @@ export default function Editor() {
         setBotData(projectData as BotData, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       
-      // Update the last loaded project ID
-      setLastLoadedProjectId(currentProject.id);
+      // Update the last loaded activeProject ID
+      setLastLoadedProjectId(activeProject.id);
       
       // Сохраняем ID текущего проекта для возврата со страницы шаблонов
-      localStorage.setItem('lastProjectId', currentProject.id.toString());
+      localStorage.setItem('lastProjectId', activeProject.id.toString());
     }
-  }, [currentProject?.id, currentProject?.data, setBotData, currentNodeSizes, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId, isMobile, nodes.length]);
+  }, [activeProject?.id, activeProject?.data, setBotData, currentNodeSizes, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId, isMobile, nodes.length]);
 
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
-      if (!currentProject) return;
+      if (!activeProject) return;
       
       // Всегда используем текущие данные с холста для сохранения
       let projectData;
@@ -424,7 +440,7 @@ export default function Editor() {
         projectData = getBotData();
       }
       
-      return apiRequest('PUT', `/api/projects/${currentProject.id}`, {
+      return apiRequest('PUT', `/api/projects/${activeProject.id}`, {
         data: projectData
       });
     },
@@ -461,7 +477,7 @@ export default function Editor() {
       // Auto-save before showing preview
       updateProjectMutation.mutate({});
       // Navigate to preview page instead of showing modal
-      setLocation(`/preview/${currentProject?.id}`);
+      setLocation(`/preview/${activeProject?.id}`);
       return;
     } else if (tab === 'export') {
       // Auto-save before showing export page
@@ -632,7 +648,7 @@ export default function Editor() {
   // Проверяем, есть ли выбранный шаблон при загрузке страницы
   useEffect(() => {
     const selectedTemplateData = localStorage.getItem('selectedTemplate');
-    if (selectedTemplateData && currentProject) {
+    if (selectedTemplateData && activeProject) {
       try {
         setIsLoadingTemplate(true); // Устанавливаем флаг загрузки шаблона
         const template = JSON.parse(selectedTemplateData);
@@ -738,7 +754,7 @@ export default function Editor() {
         setIsLoadingTemplate(false); // Убираем флаг при ошибке
       }
     }
-  }, [currentProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
+  }, [activeProject?.id, setBotData, setBotDataWithSheets, updateProjectMutation, toast, queryClient]);
 
   // Enhanced onNodeUpdate that auto-saves changes
   const handleNodeUpdate = useCallback((nodeId: string, updates: any) => {
@@ -962,9 +978,9 @@ export default function Editor() {
 
 
   // Определяем содержимое панели свойств для переиспользования
-  const propertiesContent = currentProject ? (
+  const propertiesContent = activeProject ? (
     <PropertiesPanel
-      projectId={currentProject.id}
+      projectId={activeProject.id}
       selectedNode={selectedNode}
       allNodes={nodes}
       allSheets={botDataWithSheets?.sheets || []}
@@ -978,16 +994,16 @@ export default function Editor() {
   ) : null;
 
   // Определяем содержимое панели кода
-  const codeContent = currentProject ? (
+  const codeContent = activeProject ? (
     <CodePanel
       botData={(botDataWithSheets || getBotData()) as any}
-      projectName={currentProject.name}
-      projectId={currentProject.id}
+      projectName={activeProject.name}
+      projectId={activeProject.id}
       selectedNodeId={selectedNodeId}
     />
   ) : null;
 
-  if (!currentProject) {
+  if (!activeProject) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -1005,7 +1021,7 @@ export default function Editor() {
     const headerContent = (
       <AdaptiveHeader
         config={layoutConfig}
-        projectName={currentProject.name}
+        projectName={activeProject.name}
         currentTab={currentTab}
         onTabChange={handleTabChange}
         onExport={() => {}}
@@ -1031,8 +1047,8 @@ export default function Editor() {
       <div className="h-full">
         {currentTab === 'groups' ? (
           <GroupsPanel
-            projectId={currentProject.id}
-            projectName={currentProject.name}
+            projectId={activeProject.id}
+            projectName={activeProject.name}
           />
         ) : currentTab === 'editor' ? (
           <Canvas
@@ -1080,23 +1096,23 @@ export default function Editor() {
           <div className="h-full p-6 bg-background overflow-auto">
             <div className="max-w-2xl mx-auto">
               <BotControl
-                projectId={currentProject.id}
-                projectName={currentProject.name}
+                projectId={activeProject.id}
+                projectName={activeProject.name}
               />
             </div>
           </div>
         ) : currentTab === 'users' ? (
           <div className="h-full">
             <UserDatabasePanel
-              projectId={currentProject.id}
-              projectName={currentProject.name}
+              projectId={activeProject.id}
+              projectName={activeProject.name}
             />
           </div>
         ) : currentTab === 'export' ? (
           <ExportPanel
             botData={(botDataWithSheets || getBotData()) as any}
-            projectName={currentProject.name}
-            projectId={currentProject.id}
+            projectName={activeProject.name}
+            projectId={activeProject.id}
           />
         ) : null}
       </div>
@@ -1111,7 +1127,7 @@ export default function Editor() {
         onLayoutChange={updateLayoutConfig}
         onGoToProjects={handleGoToProjects}
         onProjectSelect={handleProjectSelect}
-        currentProjectId={currentProject?.id}
+        projectId={activeProject?.id}
         activeSheetId={botDataWithSheets?.activeSheetId}
         headerContent={headerContent}
         sidebarContent={<div>Sidebar</div>}
@@ -1173,7 +1189,7 @@ export default function Editor() {
           header={
             <AdaptiveHeader
               config={layoutConfig}
-              projectName={currentProject.name}
+              projectName={activeProject.name}
               currentTab={currentTab}
               onTabChange={handleTabChange}
               onExport={() => {}}
@@ -1203,7 +1219,7 @@ export default function Editor() {
               onLayoutChange={updateLayoutConfig}
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
-              currentProjectId={currentProject?.id}
+              projectId={activeProject?.id}
               activeSheetId={botDataWithSheets?.activeSheetId}
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}
@@ -1268,37 +1284,37 @@ export default function Editor() {
                 <div className="h-full p-6 bg-background overflow-auto">
                   <div className="max-w-2xl mx-auto">
                     <BotControl
-                      projectId={currentProject.id}
-                      projectName={currentProject.name}
+                      projectId={activeProject.id}
+                      projectName={activeProject.name}
                     />
                   </div>
                 </div>
               ) : currentTab === 'users' ? (
                 <div className="h-full">
                   <UserDatabasePanel
-                    projectId={currentProject.id}
-                    projectName={currentProject.name}
+                    projectId={activeProject.id}
+                    projectName={activeProject.name}
                   />
                 </div>
               ) : currentTab === 'groups' ? (
                 <div className="h-full">
                   <GroupsPanel
-                    projectId={currentProject.id}
-                    projectName={currentProject.name}
+                    projectId={activeProject.id}
+                    projectName={activeProject.name}
                   />
                 </div>
               ) : currentTab === 'export' ? (
                 <ExportPanel
                   botData={(botDataWithSheets || getBotData()) as any}
-                  projectName={currentProject.name}
-                  projectId={currentProject.id}
+                  projectName={activeProject.name}
+                  projectId={activeProject.id}
                 />
               ) : null}
             </div>
           }
           properties={
             <PropertiesPanel
-              projectId={currentProject.id}
+              projectId={activeProject.id}
               selectedNode={selectedNode}
               allNodes={nodes}
               allSheets={botDataWithSheets?.sheets || []}
@@ -1326,7 +1342,7 @@ export default function Editor() {
           headerContent={
             <AdaptiveHeader
               config={layoutConfig}
-              projectName={currentProject.name}
+              projectName={activeProject.name}
               currentTab={currentTab}
               onTabChange={handleTabChange}
               onExport={() => {}}
@@ -1350,7 +1366,7 @@ export default function Editor() {
               headerContent={
                 <AdaptiveHeader
                   config={layoutConfig}
-                  projectName={currentProject.name}
+                  projectName={activeProject.name}
                   currentTab={currentTab}
                   onTabChange={handleTabChange}
                   onExport={() => {}}
@@ -1406,7 +1422,7 @@ export default function Editor() {
               }
               propertiesContent={
                 <PropertiesPanel
-                  projectId={currentProject.id}
+                  projectId={activeProject.id}
                   selectedNode={selectedNode}
                   allNodes={nodes}
                   allSheets={botDataWithSheets?.sheets || []}
@@ -1474,7 +1490,7 @@ export default function Editor() {
           }
           propertiesContent={
             <PropertiesPanel
-              projectId={currentProject.id}
+              projectId={activeProject.id}
               selectedNode={selectedNode}
               allNodes={nodes}
               allSheets={botDataWithSheets?.sheets || []}
@@ -1498,7 +1514,7 @@ export default function Editor() {
         isOpen={showSaveTemplate}
         onClose={() => setShowSaveTemplate(false)}
         botData={(botDataWithSheets || getBotData()) as any}
-        projectName={currentProject.name}
+        projectName={activeProject.name}
       />
 
 
@@ -1517,7 +1533,7 @@ export default function Editor() {
               onLayoutChange={updateLayoutConfig}
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
-              currentProjectId={currentProject?.id}
+              projectId={activeProject?.id}
               activeSheetId={botDataWithSheets?.activeSheetId}
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}

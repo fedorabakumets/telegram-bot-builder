@@ -39,9 +39,9 @@ export default function Home() {
     },
   });
 
-  // Загрузка списка проектов
-  const { data: projects = [], isLoading } = useQuery({
-    queryKey: ['/api/projects'],
+  // Загрузка списка проектов (только метаданные, без data)
+  const { data: projects = [], isLoading } = useQuery<Array<Omit<BotProject, 'data'>>>({
+    queryKey: ['/api/projects/list'],
   });
 
   // Создание нового проекта
@@ -63,6 +63,7 @@ export default function Home() {
       }
     }),
     onSuccess: (newProject: BotProject) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       toast({
         title: "Проект создан",

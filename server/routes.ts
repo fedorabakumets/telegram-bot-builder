@@ -1067,7 +1067,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register database management routes
   app.use("/api/database", dbRoutes);
   
-  // Get all bot projects
+  // Get all bot projects (lightweight - without data field)
+  app.get("/api/projects/list", requireDbReady, async (req, res) => {
+    try {
+      const projects = await getCachedOrExecute(
+        'all-projects-list',
+        async () => {
+          const allProjects = await storage.getAllBotProjects();
+          // Возвращаем только метаданные, без поля data
+          return allProjects.map(({ data, ...metadata }) => metadata);
+        },
+        30000 // Кешируем на 30 секунд
+      );
+      res.json(projects);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch projects list" });
+    }
+  });
+  
+  // Get all bot projects (legacy - includes data field, used for compatibility)
   app.get("/api/projects", requireDbReady, async (req, res) => {
     try {
       const projects = await getCachedOrExecute(
