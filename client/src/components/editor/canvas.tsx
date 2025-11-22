@@ -119,7 +119,7 @@ export function Canvas({
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [showAutoPanel, setShowAutoPanel] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [pan, setPan] = useState({ x: 100000, y: 100000 }); // Центрируем на середине холста
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
@@ -242,7 +242,7 @@ export function Canvas({
 
   const resetZoom = useCallback(() => {
     setZoom(100);
-    setPan({ x: 100000, y: 100000 }); // Возврат к центру холста
+    setPan({ x: 0, y: 0 });
   }, []);
 
   const setZoomLevel = useCallback((level: number) => {
@@ -870,9 +870,8 @@ export function Canvas({
             `,
             backgroundSize: `${24 * zoom / 100}px ${24 * zoom / 100}px`,
             backgroundPosition: `${pan.x}px ${pan.y}px`,
-            minHeight: '200000px',
-            minWidth: '200000px',
-            position: 'relative',
+            minHeight: '2000vh',
+            minWidth: '2000vw',
             cursor: isPanning ? 'grabbing' : 'grab'
           }}
           data-drag-over={isDragOver}
@@ -1297,7 +1296,11 @@ export function Canvas({
       
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && onBotDataUpdate && (
-        <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-auto transition-all">
+        <div className="absolute bottom-0 z-50 pointer-events-auto transition-all" style={{
+          left: isMobile ? '12px' : (sidebarVisible ? '270px' : '16px'),
+          right: isMobile ? '12px' : (propertiesVisible ? '310px' : '16px'),
+          paddingBottom: '16px'
+        }}>
           <CanvasSheets
             sheets={botData.sheets}
             activeSheetId={botData.activeSheetId || null}
