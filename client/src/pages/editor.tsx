@@ -278,6 +278,15 @@ export default function Editor() {
     }
   }, [currentProject?.id, lastLoadedProjectId]);
 
+  // Initialize botDataWithSheets from project data
+  useEffect(() => {
+    if (currentProject?.data) {
+      const migratedData = SheetsManager.migrateLegacyData(currentProject.data as BotData);
+      setBotDataWithSheets(migratedData);
+      setLastLoadedProjectId(currentProject.id);
+    }
+  }, [currentProject?.id, currentProject?.data]);
+
   // Обработчик обновления данных листов
   const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
     setBotDataWithSheets(updatedData);
