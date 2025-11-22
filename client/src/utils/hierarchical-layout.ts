@@ -140,7 +140,7 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
         graph.get(node.id)!.unshift(autoTransitionTarget);
       }
     }
-    
+
     // УЛУЧШЕНИЕ: Добавляем переходы через кнопки в граф
     if (node.data.buttons && Array.isArray(node.data.buttons)) {
       // Сортируем кнопки по порядку для стабильного расположения
@@ -149,7 +149,7 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
         const orderB = b.order !== undefined ? b.order : 999;
         return orderA - orderB;
       });
-      
+
       sortedButtons.forEach((button: any) => {
         if (button.target && button.action === 'goto') {
           if (!graph.has(node.id)) {
@@ -188,7 +188,7 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
 function assignLevels(startNode: LayoutNode, level = 0, visitedInPath = new Set<string>()) {
   // Проверяем, не находимся ли мы в цикле (узел уже в текущем пути обхода)
   if (visitedInPath.has(startNode.id)) {
-    console.warn(`🔄 Обнаружен цикл на узле ${startNode.id}, прерываем рекурсию`);
+    console.warn(`🔄 Обнаружен цикл: узел ${startNode.id} уже обработан. Цепочка:`, Array.from(visitedInPath).join(' -> ') + ' -> ' + startNode.id);
     return;
   }
 
@@ -326,14 +326,14 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
     // Начинаем цепочки только с узлов, которые не являются целями автопереходов
     nodes.forEach(node => {
       if (visited.has(node.id)) return;
-      
+
       // Пропускаем узлы, которые являются целями АВТОПЕРЕХОДОВ
       // Узлы, связанные только через кнопки, НЕ пропускаем
       if (isAutoTransitionTarget.has(node.id)) return;
 
       // Проверяем, есть ли у узла автопереход или inputTargetNodeId
       const hasAutoTransition = (node as any).data?.autoTransitionTo || (node as any).data?.inputTargetNodeId;
-      
+
       if (hasAutoTransition) {
         const chain: string[] = [];
         let currentNode: LayoutNode | undefined = node;
@@ -380,23 +380,23 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
 
   // Создаем карту входящих соединений для каждого узла
   const incomingConnections = new Map<string, string[]>();
-  
+
   // Собираем все соединения (обычные + из кнопок + автопереходы)
   const flatNodes = levels.flat();
   flatNodes.forEach(node => {
     // Обычные соединения
     const regularConnections = connections.filter((c: Connection) => c.target === node.id).map((c: Connection) => c.source);
-    
+
     // Соединения через кнопки
     const buttonConnections = flatNodes
       .filter(n => n.data.buttons?.some((b: any) => b.action === 'goto' && b.target === node.id))
       .map(n => n.id);
-    
+
     // Автопереходы
     const autoConnections = flatNodes
       .filter(n => (n.data as any).autoTransitionTo === node.id || (n.data as any).inputTargetNodeId === node.id)
       .map(n => n.id);
-    
+
     const allParents = Array.from(new Set([...regularConnections, ...buttonConnections, ...autoConnections]));
     if (allParents.length > 0) {
       incomingConnections.set(node.id, allParents);
@@ -405,7 +405,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
 
   // Назначаем Y позиции строго по уровням (сверху вниз)
   let currentY = options.startY;
-  
+
   levels.forEach((levelNodes, levelIndex) => {
     levelNodes.forEach(node => {
       currentY = assignYPositions(levelIndex, node, currentY);
@@ -441,7 +441,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
       }
 
       const nodeSize = getNodeSize(nodeId, options);
-      
+
       // ЦЕНТРИРОВАНИЕ: если у узла несколько родителей, центрируем его между ними
       let finalY = currentY;
       const parents = incomingConnections.get(nodeId);
@@ -467,7 +467,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
           console.log(`📍 Центрирование узла ${nodeId} (в цепочке) между ${parents.length} родителями: y=${finalY}`);
         }
       }
-      
+
       console.log(`  ⬇️ Узел ${index + 1}/${chain.length} (${nodeId}): x=${chainX}, y=${finalY}`);
 
       // Убираем циклические свойства перед добавлением в результат
@@ -505,7 +505,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
       if (processedNodes.has(node.id)) return;
 
       let y = (node as any)._y || (options.startY + result.length * options.verticalSpacing);
-      
+
       // ЦЕНТРИРОВАНИЕ: если у узла несколько родителей, центрируем его между ними
       const parents = incomingConnections.get(node.id);
       if (parents && parents.length > 1) {
