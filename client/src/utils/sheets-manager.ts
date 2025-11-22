@@ -122,10 +122,21 @@ export class SheetsManager {
       throw new Error('Нельзя удалить последний лист');
     }
 
+    const deleteSheetIndex = data.sheets.findIndex(sheet => sheet.id === sheetId);
     const filteredSheets = data.sheets.filter(sheet => sheet.id !== sheetId);
-    const newActiveSheetId = data.activeSheetId === sheetId 
-      ? filteredSheets[0].id 
-      : data.activeSheetId;
+    
+    let newActiveSheetId = data.activeSheetId;
+    
+    if (data.activeSheetId === sheetId) {
+      // Если удаляемый лист активный, переходим на ближайший
+      if (deleteSheetIndex < data.sheets.length - 1) {
+        // Если это не последний лист, берем следующий
+        newActiveSheetId = data.sheets[deleteSheetIndex + 1].id;
+      } else {
+        // Если это последний лист, берем предыдущий
+        newActiveSheetId = data.sheets[deleteSheetIndex - 1].id;
+      }
+    }
 
     return {
       ...data,
