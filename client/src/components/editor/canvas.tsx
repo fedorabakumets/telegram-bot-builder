@@ -21,7 +21,7 @@ interface CanvasProps {
   // Новая система листов (опциональные для совместимости)
   botData?: BotDataWithSheets;
   onBotDataUpdate?: (data: BotDataWithSheets) => void;
-  
+
   // Существующие пропсы для совместимости
   nodes: Node[];
   connections: Connection[];
@@ -45,11 +45,11 @@ interface CanvasProps {
   onCopyToClipboard?: (nodeIds: string[]) => void;
   onPasteFromClipboard?: () => void;
   hasClipboardData?: boolean;
-  
+
   // Глобальное состояние перетаскивания узлов
   isNodeBeingDragged?: boolean;
   setIsNodeBeingDragged?: (isDragging: boolean) => void;
-  
+
   // Кнопки управления интерфейсом
   onToggleHeader?: () => void;
   onToggleSidebar?: () => void;
@@ -59,11 +59,11 @@ interface CanvasProps {
   sidebarVisible?: boolean;
   propertiesVisible?: boolean;
   canvasVisible?: boolean;
-  
+
   // Мобильные функции
   onOpenMobileSidebar?: () => void;
   onOpenMobileProperties?: () => void;
-  
+
   // Передача размеров узлов для иерархического макета
   onNodeSizesChange?: (nodeSizes: Map<string, { width: number; height: number }>) => void;
 }
@@ -123,14 +123,14 @@ export function Canvas({
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
-  
+
   // Touch состояние для мобильного управления
   const [isTouchPanning, setIsTouchPanning] = useState(false);
   const [touchStart, setTouchStart] = useState({ x: 0, y: 0 });
   const [lastTouchPosition, setLastTouchPosition] = useState({ x: 0, y: 0 });
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
   const [initialPinchZoom, setInitialPinchZoom] = useState(100);
-  
+
   // Состояние для хранения реальных размеров узлов
   const [nodeSizes, setNodeSizes] = useState<Map<string, { width: number; height: number }>>(new Map());
 
@@ -159,7 +159,7 @@ export function Canvas({
   // Обработчики для работы с листами
   const handleSheetSelect = useCallback((sheetId: string) => {
     if (!botData || !onBotDataUpdate) return;
-    
+
     // ВАЖНО: Сначала сохраняем текущее состояние редактора в активный лист
     let dataWithCurrentSheetSaved = botData;
     if (botData.activeSheetId) {
@@ -170,7 +170,7 @@ export function Canvas({
         connections
       );
     }
-    
+
     // Затем переключаемся на новый лист
     const updatedData = SheetsManager.setActiveSheet(dataWithCurrentSheetSaved, sheetId);
     onBotDataUpdate(updatedData);
@@ -178,7 +178,7 @@ export function Canvas({
 
   const handleSheetAdd = useCallback((name: string) => {
     if (!botData || !onBotDataUpdate) return;
-    
+
     // Сохраняем текущее состояние перед добавлением нового листа
     let dataWithCurrentSheetSaved = botData;
     if (botData.activeSheetId) {
@@ -189,7 +189,7 @@ export function Canvas({
         connections
       );
     }
-    
+
     const updatedData = SheetsManager.addSheet(dataWithCurrentSheetSaved, name);
     onBotDataUpdate(updatedData);
   }, [botData, onBotDataUpdate, nodes, connections]);
@@ -223,7 +223,7 @@ export function Canvas({
           connections
         );
       }
-      
+
       const updatedData = SheetsManager.duplicateSheetInProject(dataWithCurrentSheetSaved, sheetId);
       onBotDataUpdate(updatedData);
     } catch (error) {
@@ -255,16 +255,16 @@ export function Canvas({
       const scrollContainer = canvasRef.current.parentElement;
       const containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64;
       const containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
-      
+
       // Вычисляем центр в координатах canvas (с учетом текущего pan и zoom)
       const centerX = (containerWidth / 2 - pan.x) / (zoom / 100);
       const centerY = (containerHeight / 2 - pan.y) / (zoom / 100);
-      
+
       const position = { 
         x: Math.max(50, centerX - 160), // -160 чтобы центрировать узел (половина ширины узла)
         y: Math.max(50, centerY - 50)   // -50 чтобы центрировать узел (половина высоты узла)
       };
-      
+
       console.log('getCenterPosition:', { containerWidth, containerHeight, pan, zoom, centerX, centerY, position });
       return position;
     }
@@ -274,14 +274,14 @@ export function Canvas({
 
   const fitToContent = useCallback(() => {
     if (nodes.length === 0) return;
-    
+
     // Вычисляем границы всех узлов
     const nodeBounds = nodes.reduce((bounds, node) => {
       const left = node.position.x;
       const right = node.position.x + 320; // Approximate node width
       const top = node.position.y;
       const bottom = node.position.y + 100; // Approximate node height
-      
+
       return {
         left: Math.min(bounds.left, left),
         right: Math.max(bounds.right, right),
@@ -289,55 +289,55 @@ export function Canvas({
         bottom: Math.max(bounds.bottom, bottom)
       };
     }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
-    
+
     // Проверяем валидность границ
     if (!isFinite(nodeBounds.left) || !isFinite(nodeBounds.right) || 
         !isFinite(nodeBounds.top) || !isFinite(nodeBounds.bottom)) {
       return;
     }
-    
+
     const contentWidth = nodeBounds.right - nodeBounds.left;
     const contentHeight = nodeBounds.bottom - nodeBounds.top;
-    
+
     // Проверяем размеры контента
     if (contentWidth <= 0 || contentHeight <= 0) {
       return;
     }
-    
+
     if (canvasRef.current) {
       // Получаем размеры видимой области (родительского контейнера с overflow)
       const scrollContainer = canvasRef.current.parentElement;
       const containerWidth = scrollContainer ? scrollContainer.clientWidth - 64 : window.innerWidth - 64; // -64 для padding
       const containerHeight = scrollContainer ? scrollContainer.clientHeight - 64 : window.innerHeight - 64;
-      
+
       // Проверяем размеры контейнера
       if (containerWidth <= 0 || containerHeight <= 0) {
         return;
       }
-      
+
       // Вычисляем масштаб с отступами
       const scaleX = (containerWidth * 0.8) / contentWidth;
       const scaleY = (containerHeight * 0.8) / contentHeight;
       const scale = Math.min(scaleX, scaleY, 1.5); // Ограничиваем max zoom до 150%
-      
+
       // Ограничиваем zoom разумными пределами
       const newZoom = Math.max(Math.min(scale * 100, 150), 50); // min 50%, max 150%
-      
+
       // Вычисляем центр контента
       const centerX = (nodeBounds.left + nodeBounds.right) / 2;
       const centerY = (nodeBounds.top + nodeBounds.bottom) / 2;
       const containerCenterX = containerWidth / 2;
       const containerCenterY = containerHeight / 2;
-      
+
       // Вычисляем новые значения pan
       const newPanX = containerCenterX - centerX * (newZoom / 100);
       const newPanY = containerCenterY - centerY * (newZoom / 100);
-      
+
       // Проверяем валидность pan значений
       if (!isFinite(newPanX) || !isFinite(newPanY)) {
         return;
       }
-      
+
       // Применяем изменения
       setZoom(newZoom);
       setPan({
@@ -353,20 +353,20 @@ export function Canvas({
       e.preventDefault();
       const delta = e.deltaY;
       const zoomFactor = delta > 0 ? 0.9 : 1.1;
-      
+
       const rect = canvasRef.current?.getBoundingClientRect();
       if (rect) {
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
-        
+
         const newZoom = Math.max(Math.min(zoom * zoomFactor, 200), 1);
         const zoomRatio = newZoom / zoom;
-        
+
         setPan(prev => ({
           x: mouseX - (mouseX - prev.x) * zoomRatio,
           y: mouseY - (mouseY - prev.y) * zoomRatio
         }));
-        
+
         setZoom(newZoom);
       }
     }
@@ -378,7 +378,7 @@ export function Canvas({
     const target = e.target as HTMLElement;
     const isEmptyCanvas = target.classList.contains('canvas-grid-modern') || 
                           target.closest('.canvas-grid-modern') === target;
-    
+
     if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) || 
         (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
       e.preventDefault();
@@ -392,7 +392,7 @@ export function Canvas({
     if (isPanning) {
       const deltaX = e.clientX - panStart.x;
       const deltaY = e.clientY - panStart.y;
-      
+
       setPan({
         x: lastPanPosition.x + deltaX,
         y: lastPanPosition.y + deltaY
@@ -428,17 +428,17 @@ export function Canvas({
     // Проверяем, не происходит ли касание на узле или перетаскивается ли уже узел
     const target = e.target as HTMLElement;
     const isOnNode = target.closest('[data-canvas-node]');
-    
+
     // Если касание на узле или уже перетаскивается узел, не начинаем панорамирование холста
     if (isOnNode || isNodeBeingDragged) {
       return;
     }
-    
+
     // Предотвращаем default действия браузера
     e.preventDefault();
-    
+
     const touches = e.touches;
-    
+
     if (touches.length === 1) {
       // Одно касание - панорамирование
       const touch = touches[0];
@@ -458,22 +458,22 @@ export function Canvas({
     // Проверяем, не происходит ли касание на узле или перетаскивается ли узел
     const target = e.target as HTMLElement;
     const isOnNode = target.closest('[data-canvas-node]');
-    
+
     // Если касание на узле или перетаскивается узел, не панорамируем холст
     if (isOnNode || isNodeBeingDragged) {
       return;
     }
-    
+
     e.preventDefault();
-    
+
     const touches = e.touches;
-    
+
     if (touches.length === 1 && isTouchPanning) {
       // Панорамирование одним пальцем
       const touch = touches[0];
       const deltaX = touch.clientX - touchStart.x;
       const deltaY = touch.clientY - touchStart.y;
-      
+
       setPan({
         x: lastTouchPosition.x + deltaX,
         y: lastTouchPosition.y + deltaY
@@ -482,24 +482,24 @@ export function Canvas({
       // Pinch zoom двумя пальцами
       const currentDistance = getTouchDistance(touches);
       const center = getTouchCenter(touches);
-      
+
       if (lastPinchDistance > 0) {
         const scaleFactor = currentDistance / lastPinchDistance;
         const newZoom = Math.max(Math.min(initialPinchZoom * scaleFactor, 200), 10);
-        
+
         // Масштабирование относительно центра касания
         const rect = canvasRef.current?.getBoundingClientRect();
         if (rect) {
           const centerX = center.x - rect.left;
           const centerY = center.y - rect.top;
-          
+
           const zoomRatio = newZoom / zoom;
-          
+
           setPan(prev => ({
             x: centerX - (centerX - prev.x) * zoomRatio,
             y: centerY - (centerY - prev.y) * zoomRatio
           }));
-          
+
           setZoom(newZoom);
         }
       }
@@ -508,7 +508,7 @@ export function Canvas({
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
-    
+
     if (e.touches.length === 0) {
       // Все касания завершены
       setIsTouchPanning(false);
@@ -534,7 +534,7 @@ export function Canvas({
       // Проверяем, что фокус не находится на input или textarea
       const target = e.target as HTMLElement;
       const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true';
-      
+
       if (!isInputField) {
         // Обработка клавиши Delete для удаления выбранного узла
         if (e.key === 'Delete' && selectedNodeId && onNodeDelete) {
@@ -622,7 +622,7 @@ export function Canvas({
       if (isPanning) {
         const deltaX = e.clientX - panStart.x;
         const deltaY = e.clientY - panStart.y;
-        
+
         setPan({
           x: lastPanPosition.x + deltaX,
           y: lastPanPosition.y + deltaY
@@ -648,24 +648,24 @@ export function Canvas({
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     const componentData = e.dataTransfer.getData('application/json');
     if (!componentData) return;
-    
+
     const component: ComponentDefinition = JSON.parse(componentData);
     const rect = canvasRef.current?.getBoundingClientRect();
-    
+
     let nodePosition;
-    
+
     if (rect) {
       // Transform screen coordinates to canvas coordinates
       const screenX = e.clientX - rect.left - 160; // Adjust for node width  
       const screenY = e.clientY - rect.top - 50;   // Adjust for node height
-      
+
       // Apply inverse transformation to get canvas coordinates
       const canvasX = (screenX - pan.x) / (zoom / 100);
       const canvasY = (screenY - pan.y) / (zoom / 100);
-      
+
       // Если координаты разумные (не слишком близко к краю), используем их
       if (canvasX > 20 && canvasY > 20 && canvasX < 10000 && canvasY < 10000) {
         nodePosition = { x: Math.max(50, canvasX), y: Math.max(50, canvasY) };
@@ -677,7 +677,7 @@ export function Canvas({
       // Если не удалось получить rect, используем центр
       nodePosition = getCenterPosition();
     }
-    
+
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
@@ -691,7 +691,7 @@ export function Canvas({
         ...component.defaultData
       }
     };
-    
+
     onNodeAdd(newNode);
   }, [onNodeAdd, pan, zoom, getCenterPosition]);
 
@@ -699,33 +699,33 @@ export function Canvas({
   const handleCanvasDrop = useCallback((e: CustomEvent) => {
     console.log('Canvas drop event received:', e.detail);
     const { component, position } = e.detail;
-    
+
     if (!component) {
       console.error('Invalid drop data: no component');
       return;
     }
-    
+
     let nodePosition;
-    
+
     if (position) {
       // Transform screen coordinates to canvas coordinates
       const canvasX = (position.x - pan.x) / (zoom / 100);
       const canvasY = (position.y - pan.y) / (zoom / 100);
-      
+
       console.log('Drop position calculation:', {
         screenPos: position,
         pan,
         zoom,
         canvasPos: { x: canvasX, y: canvasY }
       });
-      
+
       nodePosition = { x: Math.max(0, canvasX - 80), y: Math.max(0, canvasY - 25) };
     } else {
       // Если нет позиции drop, используем центр видимой области
       nodePosition = getCenterPosition();
       console.log('Using center position:', nodePosition);
     }
-    
+
     const newNode: Node = {
       id: nanoid(),
       type: component.type,
@@ -739,7 +739,7 @@ export function Canvas({
         ...component.defaultData
       }
     };
-    
+
     console.log('Creating new node:', newNode);
     onNodeAdd(newNode);
   }, [onNodeAdd, pan, zoom, getCenterPosition]);
@@ -806,19 +806,19 @@ export function Canvas({
       if (connectionStart.nodeId !== nodeId) {
         const sourceId = connectionStart.handle === 'source' ? connectionStart.nodeId : nodeId;
         const targetId = connectionStart.handle === 'source' ? nodeId : connectionStart.nodeId;
-        
+
         // Используем ConnectionManager для создания соединения
         const connectionManager = new ConnectionManager({
           nodes,
           connections,
           autoButtonCreation
         });
-        
+
         try {
           const { connection, updatedNodes } = connectionManager.createConnection(sourceId, targetId, {
             autoCreateButton: autoButtonCreation
           });
-          
+
           onConnectionAdd?.(connection);
           if (onNodesUpdate) {
             onNodesUpdate(updatedNodes);
@@ -849,7 +849,7 @@ export function Canvas({
   const handleAutoConnect = useCallback(() => {
     const suggestions = generateAutoConnections(nodes, connections);
     const bestSuggestion = suggestions.find(s => s.confidence > 0.8);
-    
+
     if (bestSuggestion) {
       handleCreateSuggestedConnection(bestSuggestion.source, bestSuggestion.target);
     } else {
@@ -857,10 +857,19 @@ export function Canvas({
     }
   }, [nodes, connections, handleCreateSuggestedConnection]);
 
+  // Обновленные обработчики для ConnectionsLayer
+  const handleConnectionClick = useCallback((connectionId: string) => {
+    onConnectionSelect?.(connectionId);
+  }, [onConnectionSelect]);
+
+  const handleDeleteConnection = useCallback((connectionId: string) => {
+    onConnectionDelete?.(connectionId);
+  }, [onConnectionDelete]);
+
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
       <div className="absolute inset-0 overflow-auto">
-        
+
         {/* Enhanced Canvas Grid */}
         <div 
           ref={canvasRef}
@@ -903,9 +912,18 @@ export function Canvas({
               connections={connections}
               nodes={nodes}
               selectedConnectionId={selectedConnectionId}
-              onConnectionSelect={onConnectionSelect}
-              onConnectionDelete={onConnectionDelete}
+              onConnectionSelect={handleConnectionClick}
+              onConnectionDelete={handleDeleteConnection}
             />
+
+            {/* Debug: показываем количество соединений */}
+            <foreignObject x="10" y="10" width="200" height="60" className="pointer-events-none">
+              <div className="bg-black/50 text-white text-xs p-2 rounded">
+                <div>Всего: {connections.length}</div>
+                <div>Автопереходов: {connections.filter(c => c.isAutoGenerated).length}</div>
+                <div>Ручных: {connections.filter(c => !c.isAutoGenerated).length}</div>
+              </div>
+            </foreignObject>
 
             {/* Temporary connection preview */}
             {connectionStart && (
@@ -918,7 +936,7 @@ export function Canvas({
                 handle={connectionStart.handle}
               />
             )}
-            
+
             {/* Nodes */}
             {nodes.map((node) => (
               <CanvasNode
@@ -938,7 +956,7 @@ export function Canvas({
               />
             ))}
           </div>
-          
+
           {/* Drop Zone Hint */}
           {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">
@@ -1022,7 +1040,7 @@ export function Canvas({
         </div>
 
       </div>
-      
+
       {/* Панель инструментов - фиксированная панель вверху */}
       <div className="absolute top-0 z-40 pointer-events-none transition-all duration-300" style={{
         left: isMobile ? '10px' : (sidebarVisible ? '100px' : '20px'),
@@ -1032,7 +1050,7 @@ export function Canvas({
           <div className={`pointer-events-auto flex items-center canvas-controls overflow-x-auto ${
             isMobile ? 'space-x-1 text-sm' : 'space-x-2'
           }`}>
-            
+
             <div className={`flex items-center flex-shrink-0 ${isMobile ? 'space-x-0.5' : 'space-x-1'}`}>
               {/* Кнопки масштаба */}
               <button 
@@ -1043,7 +1061,7 @@ export function Canvas({
               >
                 <i className="fas fa-search-minus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
-              
+
               <Popover>
                 <PopoverTrigger asChild>
                   <button
@@ -1098,7 +1116,7 @@ export function Canvas({
                   </div>
                 </PopoverContent>
               </Popover>
-              
+
               <button 
                 onClick={zoomIn}
                 disabled={zoom >= 200}
@@ -1187,7 +1205,7 @@ export function Canvas({
                       <Navigation className="w-4 h-4" />
                     </button>
                   )}
-                  
+
                   {onToggleSidebar && (
                     <button
                       onClick={onToggleSidebar}
@@ -1201,7 +1219,7 @@ export function Canvas({
                       <Sidebar className="w-4 h-4" />
                     </button>
                   )}
-                  
+
                   {onToggleCanvas && (
                     <button
                       onClick={onToggleCanvas}
@@ -1215,7 +1233,7 @@ export function Canvas({
                       <Monitor className="w-4 h-4" />
                     </button>
                   )}
-                  
+
                   {onToggleProperties && (
                     <button
                       onClick={onToggleProperties}
@@ -1233,7 +1251,7 @@ export function Canvas({
               )}
 
             </div>
-            
+
             {/* Zoom Info and Help */}
             <div className="flex items-center space-x-2">
               {zoom !== 100 && (
@@ -1248,7 +1266,7 @@ export function Canvas({
                   </div>
                 </div>
               )}
-              
+
               {/* Zoom Help */}
               <Popover>
                 <PopoverTrigger asChild>
@@ -1294,7 +1312,7 @@ export function Canvas({
           </div>
         </div>
       </div>
-      
+
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
         <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-auto">
