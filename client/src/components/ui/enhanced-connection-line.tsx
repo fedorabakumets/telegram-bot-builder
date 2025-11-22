@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { Connection, Node } from '@/types/bot';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +7,8 @@ import {
   Mouse, 
   Terminal, 
   ExternalLink, 
-  AlertCircle 
+  AlertCircle,
+  Zap
 } from 'lucide-react';
 
 interface EnhancedConnectionLineProps {
@@ -115,7 +117,6 @@ export function EnhancedConnectionLine({
 
   const getConnectionType = () => {
     const sourceNode = nodes.find(n => n.id === connection.source);
-    // Проверяем автопереход
     if (sourceNode?.data.autoTransitionTo === connection.target) {
       return 'auto-transition';
     }
@@ -125,106 +126,159 @@ export function EnhancedConnectionLine({
 
   const connectionType = getConnectionType();
 
+  // Цвета для разных типов связей
+  const getConnectionColors = () => {
+    if (isSelected) {
+      return {
+        stroke: '#3b82f6',
+        gradient1: '#60a5fa',
+        gradient2: '#3b82f6',
+        shadow: 'rgba(59, 130, 246, 0.3)'
+      };
+    }
+    
+    switch (connectionType) {
+      case 'auto-transition':
+        return {
+          stroke: '#10b981',
+          gradient1: '#34d399',
+          gradient2: '#10b981',
+          shadow: 'rgba(16, 185, 129, 0.2)'
+        };
+      case 'button':
+        return {
+          stroke: '#8b5cf6',
+          gradient1: '#a78bfa',
+          gradient2: '#8b5cf6',
+          shadow: 'rgba(139, 92, 246, 0.2)'
+        };
+      default:
+        return {
+          stroke: '#f59e0b',
+          gradient1: '#fbbf24',
+          gradient2: '#f59e0b',
+          shadow: 'rgba(245, 158, 11, 0.2)'
+        };
+    }
+  };
+
+  const colors = getConnectionColors();
+
   return (
     <g className="connection-line">
+      {/* Определения градиентов и фильтров */}
+      <defs>
+        {/* Градиент для линии */}
+        <linearGradient id={`gradient-${connection.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={colors.gradient1} stopOpacity="0.8" />
+          <stop offset="100%" stopColor={colors.gradient2} stopOpacity="1" />
+        </linearGradient>
+
+        {/* Свечение */}
+        <filter id={`glow-${connection.id}`}>
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+
+        {/* Современная стрелка */}
+        <marker
+          id={`arrow-${connection.id}`}
+          markerWidth="12"
+          markerHeight="12"
+          refX="11"
+          refY="6"
+          orient="auto"
+          markerUnits="strokeWidth"
+        >
+          <path
+            d="M 0 0 L 12 6 L 0 12 L 3 6 Z"
+            fill={colors.stroke}
+            className="transition-all duration-300"
+          />
+        </marker>
+      </defs>
+
       {/* Невидимая толстая линия для кликов */}
       <path
         d={path}
         stroke="transparent"
-        strokeWidth="20"
+        strokeWidth="24"
         fill="none"
         className="cursor-pointer"
         onClick={onClick}
       />
       
-      {/* Основная линия */}
+      {/* Тень линии */}
+      {isSelected && (
+        <path
+          d={path}
+          stroke={colors.shadow}
+          strokeWidth="8"
+          fill="none"
+          className="opacity-40 blur-sm"
+        />
+      )}
+
+      {/* Основная линия с градиентом */}
       <path
         d={path}
-        stroke={
-          isSelected 
-            ? "hsl(var(--primary))" 
-            : connectionType === 'auto-transition'
-              ? "#10b981"
-              : connectionType === 'button' 
-                ? "hsl(var(--green-500))" 
-                : "hsl(var(--muted-foreground))"
-        }
-        strokeWidth={isSelected ? "3" : "2"}
+        stroke={`url(#gradient-${connection.id})`}
+        strokeWidth={isSelected ? "3" : "2.5"}
         fill="none"
-        strokeDasharray={
-          connectionType === 'auto-transition'
-            ? "8,4"
-            : connectionType === 'button' 
-              ? "none" 
-              : "5,5"
-        }
-        className={`
-          transition-all duration-300
-          ${isSelected ? 'drop-shadow-md' : ''}
-          ${connectionType === 'button' || connectionType === 'auto-transition' ? 'opacity-100' : 'opacity-70'}
-        `}
-        markerEnd="url(#arrowhead)"
+        strokeDasharray={connectionType === 'auto-transition' ? "8,4" : "none"}
+        className="transition-all duration-300"
+        markerEnd={`url(#arrow-${connection.id})`}
+        filter={isSelected ? `url(#glow-${connection.id})` : undefined}
+        style={{
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round'
+        }}
       />
-      
-      {/* Стрелка */}
-      <defs>
-        <marker
-          id="arrowhead"
-          markerWidth="10"
-          markerHeight="7"
-          refX="9"
-          refY="3.5"
-          orient="auto"
-        >
-          <polygon
-            points="0 0, 10 3.5, 0 7"
-            fill={
-              isSelected 
-                ? "hsl(var(--primary))" 
-                : connectionType === 'auto-transition'
-                  ? "#10b981"
-                  : connectionType === 'button' 
-                    ? "hsl(var(--green-500))" 
-                    : "hsl(var(--muted-foreground))"
-            }
-          />
-        </marker>
-      </defs>
+
+      {/* Анимированная пунктирная линия для автоперехода */}
+      {connectionType === 'auto-transition' && (
+        <path
+          d={path}
+          stroke={colors.gradient1}
+          strokeWidth="1.5"
+          fill="none"
+          strokeDasharray="4,8"
+          className="opacity-60"
+          style={{
+            animation: 'dash 20s linear infinite',
+            strokeLinecap: 'round'
+          }}
+        />
+      )}
 
       {/* Информация о кнопке или автопереходе */}
       {showButtonInfo && (
         <foreignObject
-          x={midPoint.x - 60}
-          y={midPoint.y - 15}
-          width="120"
-          height="30"
-          className="pointer-events-none"
+          x={midPoint.x - 75}
+          y={midPoint.y - 18}
+          width="150"
+          height="36"
+          className="pointer-events-none overflow-visible"
         >
           <div className="flex items-center justify-center h-full">
             {connectionType === 'auto-transition' ? (
-              <Badge 
-                variant="secondary" 
-                className="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200 flex items-center gap-1"
-              >
-                <ArrowRight className="h-3 w-3" />
-                <span>Авто</span>
-              </Badge>
+              <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg flex items-center gap-1.5 text-xs font-medium">
+                <Zap className="h-3.5 w-3.5" />
+                <span>Автопереход</span>
+              </div>
             ) : buttonInfo ? (
-              <Badge 
-                variant="secondary" 
-                className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 flex items-center gap-1"
-              >
+              <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg flex items-center gap-1.5 text-xs font-medium max-w-full">
                 {getActionIcon(buttonInfo.action)}
-                <span className="truncate max-w-16">{buttonInfo.text}</span>
-              </Badge>
+                <span className="truncate">{buttonInfo.text}</span>
+              </div>
             ) : (
-              <Badge 
-                variant="outline" 
-                className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 flex items-center gap-1"
-              >
-                <AlertCircle className="h-3 w-3" />
-                <span>Нет кнопки</span>
-              </Badge>
+              <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg flex items-center gap-1.5 text-xs font-medium">
+                <AlertCircle className="h-3.5 w-3.5" />
+                <span>Без кнопки</span>
+              </div>
             )}
           </div>
         </foreignObject>
@@ -233,46 +287,35 @@ export function EnhancedConnectionLine({
       {/* Кнопка удаления */}
       {isSelected && onDelete && (
         <foreignObject
-          x={midPoint.x + 65}
-          y={midPoint.y - 12}
-          width="24"
-          height="24"
-          className="pointer-events-auto"
+          x={midPoint.x + 80}
+          y={midPoint.y - 14}
+          width="28"
+          height="28"
+          className="pointer-events-auto overflow-visible"
         >
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
             }}
-            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs transition-colors"
+            className="w-7 h-7 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-full flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110"
             title="Удалить соединение"
           >
-            ×
+            <i className="fas fa-times text-sm"></i>
           </button>
         </foreignObject>
       )}
 
-      {/* Индикатор типа соединения */}
-      <circle
-        cx={midPoint.x}
-        cy={midPoint.y}
-        r="4"
-        fill={
-          connectionType === 'auto-transition'
-            ? "#10b981"
-            : connectionType === 'button' 
-              ? "hsl(var(--green-500))" 
-              : "hsl(var(--yellow-500))"
-        }
-        stroke="white"
-        strokeWidth="2"
-        className={`
-          transition-all duration-300
-          ${isSelected ? 'r-6' : 'r-4'}
-          cursor-pointer
+      {/* CSS для анимации */}
+      <style>
+        {`
+          @keyframes dash {
+            to {
+              stroke-dashoffset: -1000;
+            }
+          }
         `}
-        onClick={onClick}
-      />
+      </style>
     </g>
   );
 }
