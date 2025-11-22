@@ -15,6 +15,7 @@ import { BotDataWithSheets, CanvasSheet } from '@shared/schema';
 import { generateAutoConnections } from '@/utils/auto-connection';
 import { ConnectionManager } from '@/utils/connection-manager';
 import { SheetsManager } from '@/utils/sheets-manager';
+import { applyTemplateLayout } from '@/utils/hierarchical-layout';
 import { nanoid } from 'nanoid';
 
 interface CanvasProps {
@@ -271,6 +272,27 @@ export function Canvas({
     console.log('getCenterPosition: using fallback');
     return { x: 400, y: 300 }; // fallback если canvas не найден
   }, [pan, zoom]);
+
+  // Функция автоматической раскладки узлов
+  const autoArrange = useCallback(() => {
+    if (nodes.length === 0) return;
+    
+    console.log('🎯 Применяем автоматическую раскладку для', nodes.length, 'узлов');
+    
+    // Применяем иерархическую раскладку с центрированием узлов
+    const arrangedNodes = applyTemplateLayout(
+      nodes,
+      connections,
+      undefined, // templateName не используется для общей раскладки
+      nodeSizes
+    );
+    
+    // Обновляем позиции узлов
+    if (onNodesUpdate) {
+      onNodesUpdate(arrangedNodes);
+      console.log('✅ Автоматическая раскладка применена');
+    }
+  }, [nodes, connections, nodeSizes, onNodesUpdate]);
 
   const fitToContent = useCallback(() => {
     if (nodes.length === 0) return;
@@ -1134,6 +1156,15 @@ export function Canvas({
                 <i className="fas fa-expand-arrows-alt text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
+              {/* Кнопка автоматической раскладки */}
+              <button 
+                onClick={autoArrange}
+                disabled={nodes.length === 0}
+                className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
+                title="Автоматическая раскладка (центрирует узлы между родителями)"
+              >
+                <i className="fas fa-magic text-gray-600 dark:text-gray-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
+              </button>
 
               <button 
                 onClick={onUndo}
