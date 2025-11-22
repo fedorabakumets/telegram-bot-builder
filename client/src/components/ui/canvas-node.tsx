@@ -1104,38 +1104,22 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       {((node.data as any).enableTextInput || (node.data as any).inputType) && (
         <div className="bg-gradient-to-br from-purple-50/70 to-indigo-50/70 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-xl p-4 mb-4 border border-purple-200 dark:border-purple-800/30">
           <div className="space-y-3">
-            {/* Input type and variable display */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-                  <i className="fas fa-edit text-purple-600 dark:text-purple-400 text-xs"></i>
+            {/* Variable display */}
+            {(node.data as any).variableName && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                    <i className="fas fa-edit text-purple-600 dark:text-purple-400 text-xs"></i>
+                  </div>
+                  <div className="text-sm font-medium text-purple-800 dark:text-purple-200">
+                    Сохранение ввода
+                  </div>
                 </div>
-                <div className="text-sm font-medium text-purple-800 dark:text-purple-200">
-                  {node.data.inputType ? (
-                    <span className="capitalize">
-                      {node.data.inputType === 'text' && 'Текст'}
-                      {node.data.inputType === 'number' && 'Число'}
-                      {node.data.inputType === 'email' && 'Email'}
-                      {node.data.inputType === 'phone' && 'Телефон'}
-                      {node.data.inputType === 'photo' && 'Фото'}
-                      {node.data.inputType === 'video' && 'Видео'}
-                      {node.data.inputType === 'audio' && 'Аудио'}
-                      {node.data.inputType === 'document' && 'Документ'}
-                      {node.data.inputType === 'location' && 'Местоположение'}
-                      {node.data.inputType === 'contact' && 'Контакт'}
-                      {node.data.inputType === 'any' && 'Любой тип'}
-                    </span>
-                  ) : (
-                    'Тип ввода'
-                  )}
-                </div>
-              </div>
-              {(node.data as any).variableName && (
                 <div className="text-xs font-mono text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded">
                   ${(node.data as any).variableName}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Response type indicator */}
             {node.data.responseType && (
