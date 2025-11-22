@@ -208,7 +208,7 @@ export function CanvasSheets({
       {/* Контейнер вкладок */}
       <div 
         ref={tabsContainerRef}
-        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 justify-center overflow-visible"
+        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 justify-start"
         style={{ 
           minWidth: '0'
         }}
@@ -224,8 +224,8 @@ export function CanvasSheets({
               className={cn(
                 "group flex items-center cursor-pointer transition-all duration-300 relative backdrop-blur-sm select-none touch-manipulation",
                 isMobile 
-                  ? "min-w-[110px] max-w-[160px] min-h-[40px] h-10 px-2.5 active:scale-[0.98] rounded-lg" 
-                  : "min-w-[120px] max-w-[180px] h-9 px-2.5 transform hover:scale-[1.02] rounded-lg",
+                  ? "min-w-[90px] max-w-[140px] min-h-[36px] h-9 px-2 active:scale-[0.98] rounded-lg" 
+                  : "min-w-[100px] max-w-[150px] h-8 px-2 transform hover:scale-[1.02] rounded-lg",
                 activeSheetId === sheet.id
                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 z-20 ring-2 ring-blue-300/50 dark:ring-blue-600/50"
                   : "bg-white/70 dark:bg-slate-800/70 text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-700/90 shadow-sm hover:shadow-md border border-gray-200/50 dark:border-slate-600/50"
@@ -234,7 +234,7 @@ export function CanvasSheets({
             >
               {!isMobile && (
                 <FileText className={cn(
-                  "h-3.5 w-3.5 mr-2 transition-all duration-200",
+                  "h-3 w-3 mr-1.5 transition-all duration-200",
                   activeSheetId === sheet.id
                     ? "text-white/90 drop-shadow-sm"
                     : "text-gray-500 dark:text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400"
