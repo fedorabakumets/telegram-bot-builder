@@ -192,20 +192,11 @@ function assignLevels(startNode: LayoutNode, level = 0, visitedInPath = new Set<
     return;
   }
 
-  // Добавляем узел в текущий путь обхода
-  const newVisitedInPath = new Set(visitedInPath);
-  newVisitedInPath.add(startNode.id);
-
   // Если узел уже посещен глобально, обновляем его уровень только если новый уровень глубже
+  // НО НЕ ОБХОДИМ ДЕТЕЙ СНОВА - они уже были обработаны
   if (startNode.visited) {
     if (level > (startNode.level || 0)) {
       startNode.level = level;
-      // Обновляем уровни детей с новым уровнем
-      if (startNode.children) {
-        startNode.children.forEach(child => {
-          assignLevels(child, level + 1, newVisitedInPath);
-        });
-      }
     }
     return;
   }
@@ -213,6 +204,10 @@ function assignLevels(startNode: LayoutNode, level = 0, visitedInPath = new Set<
   // Первое посещение узла
   startNode.level = level;
   startNode.visited = true;
+
+  // Добавляем узел в путь для отслеживания циклов
+  const newVisitedInPath = new Set(visitedInPath);
+  newVisitedInPath.add(startNode.id);
 
   if (startNode.children) {
     startNode.children.forEach(child => {
