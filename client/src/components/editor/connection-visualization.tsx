@@ -165,7 +165,7 @@ export function ConnectionVisualization({
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return 'Неизвестный узел';
     
-    const typeNames = {
+    const typeNames: Record<string, string> = {
       start: 'Старт',
       command: node.data.command || 'Команда',
       message: 'Сообщение',
@@ -183,7 +183,18 @@ export function ConnectionVisualization({
       location: 'Геолокация',
       contact: 'Контакт',
       poll: 'Опрос',
-      dice: 'Кубик'
+      dice: 'Кубик',
+      pin_message: 'Закрепить сообщение',
+      unpin_message: 'Открепить сообщение',
+      delete_message: 'Удалить сообщение',
+      ban_user: 'Забанить пользователя',
+      unban_user: 'Разбанить пользователя',
+      mute_user: 'Замутить пользователя',
+      unmute_user: 'Размутить пользователя',
+      kick_user: 'Кикнуть пользователя',
+      promote_user: 'Повысить пользователя',
+      demote_user: 'Понизить пользователя',
+      admin_rights: 'Права администратора'
     };
     
     return typeNames[node.type] || node.type;

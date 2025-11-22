@@ -1004,12 +1004,20 @@ export default function Editor() {
   }, []);
 
   const handleConnectionDelete = useCallback((connectionId: string) => {
-    deleteConnection(connectionId);
+    const wasDeleted = deleteConnection(connectionId);
+    if (!wasDeleted) {
+      toast({
+        title: "Невозможно удалить соединение",
+        description: "Это автоматическое соединение создано на основе свойства autoTransitionTo. Измените настройки узла, чтобы удалить его.",
+        variant: "default",
+      });
+      return;
+    }
     if (selectedConnectionId === connectionId) {
       setSelectedConnectionId(null);
       setSelectedConnection(null);
     }
-  }, [deleteConnection, selectedConnectionId]);
+  }, [deleteConnection, selectedConnectionId, toast]);
 
 
 
