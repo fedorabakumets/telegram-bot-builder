@@ -44,21 +44,21 @@ function getNodeSize(nodeId: string, options: HierarchicalLayoutOptions): { widt
  * @returns обновленные узлы с новыми позициями
  */
 export function createHierarchicalLayout(
-  nodes: Node[], 
-  connections: Connection[], 
+  nodes: Node[],
+  connections: Connection[],
   options: Partial<HierarchicalLayoutOptions> = {}
 ): Node[] {
   console.log('🔄 Hierarchical layout called with', nodes.length, 'nodes, nodeSizes:', !!options.nodeSizes);
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  
+
   if (nodes.length === 0) return nodes;
 
   // Создаем копию узлов для обработки
-  const layoutNodes: LayoutNode[] = nodes.map(node => ({ 
-    ...node, 
-    level: 0, 
-    children: [], 
-    visited: false 
+  const layoutNodes: LayoutNode[] = nodes.map(node => ({
+    ...node,
+    level: 0,
+    children: [],
+    visited: false
   }));
 
   // Находим стартовый узел (обычно с типом 'start' или без входящих соединений)
@@ -70,14 +70,14 @@ export function createHierarchicalLayout(
 
   // Строим дерево зависимостей
   buildDependencyTree(layoutNodes, connections, startNode);
-  
+
   // Вычисляем уровни для каждого узла
   assignLevels(startNode);
 
   // Группируем узлы по уровням
   const levels = groupNodesByLevel(layoutNodes);
   console.log('📊 Levels grouped:', levels.length, 'levels, содержимое:', levels.map((level, i) => `Level ${i}: ${level.length} nodes`));
-  
+
   // Располагаем узлы по уровням
   console.log('🚀 Вызываем arrangeNodesByLevel...');
   const result = arrangeNodesByLevel(levels, opts);
@@ -96,7 +96,7 @@ function findStartNode(nodes: LayoutNode[], connections: Connection[]): LayoutNo
 
   // Собираем все целевые узлы (и из connections, и из автопереходов)
   const targetIds = new Set(connections.map(c => c.target));
-  
+
   // УЛУЧШЕНИЕ: Добавляем цели автопереходов
   nodes.forEach(node => {
     const autoTarget = (node as any).data?.autoTransitionTo;
@@ -104,7 +104,7 @@ function findStartNode(nodes: LayoutNode[], connections: Connection[]): LayoutNo
       targetIds.add(autoTarget);
     }
   });
-  
+
   // Ищем узел без входящих соединений (ни обычных, ни автопереходов)
   const rootNodes = nodes.filter(node => !targetIds.has(node.id));
   return rootNodes.length > 0 ? rootNodes[0] : nodes[0];
@@ -116,10 +116,10 @@ function findStartNode(nodes: LayoutNode[], connections: Connection[]): LayoutNo
  */
 function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], startNode: LayoutNode) {
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
-  
+
   // Создаем граф соединений
   const graph = new Map<string, string[]>();
-  
+
   // Добавляем обычные соединения
   connections.forEach(connection => {
     if (!graph.has(connection.source)) {
@@ -127,7 +127,7 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
     }
     graph.get(connection.source)!.push(connection.target);
   });
-  
+
   // УЛУЧШЕНИЕ: Добавляем автопереходы в граф
   nodes.forEach(node => {
     const autoTransitionTarget = (node as any).data?.autoTransitionTo;
@@ -146,12 +146,12 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
   function buildTree(node: LayoutNode, visited = new Set<string>()) {
     if (visited.has(node.id)) return; // Избегаем циклов
     visited.add(node.id);
-    
+
     const children = graph.get(node.id) || [];
     node.children = children
       .map(childId => nodeMap.get(childId))
       .filter(Boolean) as LayoutNode[];
-    
+
     node.children.forEach(child => buildTree(child, visited));
   }
 
@@ -164,7 +164,7 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
 function assignLevels(startNode: LayoutNode, level = 0) {
   startNode.level = level;
   startNode.visited = true;
-  
+
   if (startNode.children) {
     startNode.children.forEach(child => {
       if (!child.visited) {
@@ -179,7 +179,7 @@ function assignLevels(startNode: LayoutNode, level = 0) {
  */
 function groupNodesByLevel(nodes: LayoutNode[]): LayoutNode[][] {
   const levels: LayoutNode[][] = [];
-  
+
   nodes.forEach(node => {
     const level = node.level || 0;
     if (!levels[level]) {
@@ -187,7 +187,7 @@ function groupNodesByLevel(nodes: LayoutNode[]): LayoutNode[][] {
     }
     levels[level].push(node);
   });
-  
+
   return levels;
 }
 
@@ -198,7 +198,7 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
   // Группируем узлы по уровням (приблизительно по X координатам)
   const levelGroups = new Map<number, Node[]>();
   const levelWidth = options.nodeWidth + options.horizontalSpacing;
-  
+
   nodes.forEach(node => {
     // Округляем X координату до ближайшего уровня
     const level = Math.round((node.position.x - options.startX) / levelWidth);
@@ -207,23 +207,23 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
     }
     levelGroups.get(level)!.push(node);
   });
-  
+
   // Для каждого уровня проверяем коллизии и корректируем позиции
   levelGroups.forEach((levelNodes) => {
     // Сортируем узлы по Y координате
     levelNodes.sort((a, b) => a.position.y - b.position.y);
-    
+
     // Проверяем и исправляем перекрытия
     for (let i = 1; i < levelNodes.length; i++) {
       const currentNode = levelNodes[i];
       const prevNode = levelNodes[i - 1];
-      
+
       const currentSize = getNodeSize(currentNode.id, options);
       const prevSize = getNodeSize(prevNode.id, options);
-      
+
       const prevBottom = prevNode.position.y + prevSize.height;
       const currentTop = currentNode.position.y;
-      
+
       // Если есть перекрытие или недостаточное расстояние
       const minSpacing = options.verticalSpacing;
       if (currentTop < prevBottom + minSpacing) {
@@ -232,7 +232,7 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
       }
     }
   });
-  
+
   return nodes;
 }
 
@@ -242,17 +242,17 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
  */
 function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayoutOptions): Node[] {
   console.log('📋 arrangeNodesByLevel вызван');
-  
+
   const result: Node[] = [];
   let nodeMap: Map<string, LayoutNode>;
-  
+
   try {
     console.log('  levels:', levels.length);
     console.log('  levels содержимое:', levels.map((l, i) => `Level ${i}: ${l?.length || 0} nodes`));
-    
+
     const flatNodes = levels.flat().filter(Boolean);
     console.log('  всего узлов после flat:', flatNodes.length);
-    
+
     // Создаем карту узлов для быстрого доступа
     nodeMap = new Map<string, LayoutNode>();
     flatNodes.forEach(node => {
@@ -265,12 +265,12 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     console.error('❌ ОШИБКА в начале arrangeNodesByLevel:', error);
     throw error;
   }
-  
+
   // Находим цепочки автопереходов
   function findAutoTransitionChains(nodes: LayoutNode[]): Set<string>[] {
     const chains: Set<string>[] = [];
     const visited = new Set<string>();
-    
+
     // Сначала находим все узлы, которые являются целями автопереходов
     const autoTransitionTargets = new Set<string>();
     nodes.forEach(node => {
@@ -279,24 +279,24 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
         autoTransitionTargets.add(targetId);
       }
     });
-    
+
     nodes.forEach(node => {
       if (visited.has(node.id)) return;
-      
+
       // Проверяем, есть ли у узла автопереход
       if ((node as any).data?.autoTransitionTo) {
         // Если этот узел сам является целью автоперехода, пропускаем
         // (его обработает узел, который на него ссылается)
         if (autoTransitionTargets.has(node.id)) return;
-        
+
         const chain = new Set<string>();
         let currentNode: LayoutNode | undefined = node;
-        
+
         // Идем по цепочке автопереходов
         while (currentNode && !visited.has(currentNode.id)) {
           chain.add(currentNode.id);
           visited.add(currentNode.id);
-          
+
           const nextNodeId = (currentNode as any).data?.autoTransitionTo;
           if (nextNodeId) {
             currentNode = nodeMap.get(nextNodeId);
@@ -304,48 +304,48 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
             break;
           }
         }
-        
+
         if (chain.size > 1) {
           chains.push(chain);
         }
       }
     });
-    
+
     return chains;
   }
-  
+
   const autoTransitionChains = findAutoTransitionChains(levels.flat());
   console.log('⛓️ Найдено цепочек автопереходов:', autoTransitionChains.length);
   autoTransitionChains.forEach((chain, index) => {
     console.log(`  Цепочка ${index}:`, Array.from(chain));
   });
-  
+
   // Проверяем, является ли узел частью цепочки автопереходов
   function isInAutoChain(nodeId: string): boolean {
     return autoTransitionChains.some(chain => chain.has(nodeId));
   }
-  
+
   // Назначаем y позиции с учетом размеров поддеревьев
   function assignYPositions(node: LayoutNode, startY: number, visited = new Set<string>()): number {
     // Проверяем на циклы - если узел уже посещен, возвращаем текущую позицию
     if (visited.has(node.id)) {
       return startY;
     }
-    
+
     visited.add(node.id);
     const nodeSize = getNodeSize(node.id, options);
-    
+
     if (!node.children || node.children.length === 0) {
       // Листовой узел - присваиваем текущую позицию
       (node as any)._y = startY;
       visited.delete(node.id); // Убираем из visited после обработки
       return startY + nodeSize.height + options.verticalSpacing;
     }
-    
+
     // Сначала назначаем позиции детям
     let childY = startY;
     const childCenters: number[] = [];
-    
+
     for (const child of node.children) {
       // Передаем копию visited сета для каждого дочернего узла
       const childVisited = new Set(visited);
@@ -354,7 +354,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
       const childCenterY = (child as any)._y + childSize.height / 2;
       childCenters.push(childCenterY);
     }
-    
+
     // Центрируем родительский узел относительно центров дочерних узлов
     if (childCenters.length > 0) {
       const avgChildCenterY = childCenters.reduce((sum, y) => sum + y, 0) / childCenters.length;
@@ -364,119 +364,79 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
       // Если нет дочерних узлов, используем стартовую позицию
       (node as any)._y = startY;
     }
-    
+
     visited.delete(node.id); // Убираем из visited после обработки
     return childY;
   }
-  
+
   // Находим корневые узлы (уровень 0)
   const rootNodes = levels[0] || [];
   let currentY = options.startY;
-  
+
   // Назначаем позиции для каждого корневого узла
   rootNodes.forEach(rootNode => {
     currentY = assignYPositions(rootNode, currentY);
     currentY += options.verticalSpacing; // Полный отступ между корневыми деревьями
   });
-  
+
   // Создаем результат с правильными позициями
-  // Сначала обрабатываем узлы в цепочках автопереходов отдельно
   const processedNodes = new Set<string>();
-  
-  // Обрабатываем цепочки автопереходов
-  autoTransitionChains.forEach((chain, chainIndex) => {
-    const chainArray = Array.from(chain);
-    console.log(`🔗 Обработка цепочки ${chainIndex}:`, chainArray);
-    
-    // Находим ВСЕ узлы цепочки в levels и определяем минимальный уровень
-    let minLevel = Infinity;
-    let chainY = options.startY;
-    
-    // Находим реальный первый узел в цепочке (который не является целью автоперехода)
-    const chainNodes = chainArray.map(nodeId => levels.flat().find(n => n.id === nodeId)).filter(Boolean) as LayoutNode[];
-    console.log(`  📦 Найдено узлов в цепочке:`, chainNodes.length);
-    
-    const autoTransitionTargets = new Set(chainNodes.map(n => (n.data as any).autoTransitionTo).filter(Boolean));
-    console.log(`  🎯 Цели автопереходов:`, Array.from(autoTransitionTargets));
-    
-    const firstNode = chainNodes.find(n => !autoTransitionTargets.has(n.id));
-    console.log(`  🥇 Первый узел цепочки:`, firstNode?.id, firstNode ? `(type: ${firstNode.type})` : 'НЕ НАЙДЕН');
-    
-    if (firstNode) {
-      // Находим уровень и Y координату первого узла
-      for (let levelIndex = 0; levelIndex < levels.length; levelIndex++) {
-        const found = levels[levelIndex].find(n => n.id === firstNode.id);
-        if (found) {
-          minLevel = levelIndex;
-          // Берем Y координату из первого узла
-          if ((found as any)._y !== undefined) {
-            chainY = (found as any)._y;
-            console.log(`  📍 Найден на уровне ${levelIndex}, Y координата: ${chainY}`);
-          }
-          break;
-        }
-      }
-    }
-    
-    if (minLevel === Infinity) {
-      console.log(`  ⚠️ MinLevel = Infinity, пропускаем цепочку`);
-      return;
-    }
-    
-    // Вычисляем базовую X позицию для минимального уровня
-    let baseX = options.startX;
-    for (let i = 0; i < minLevel; i++) {
-      const prevLevel = levels[i] || [];
-      const prevLevelMaxWidth = prevLevel.length > 0 
-        ? Math.max(...prevLevel.map(n => getNodeSize(n.id, options).width))
-        : 0;
-      baseX += prevLevelMaxWidth + options.horizontalSpacing;
-    }
-    
-    // Размещаем все узлы цепочки горизонтально
-    let currentX = baseX;
-    console.log(`  📐 Начальная X позиция: ${baseX}, Y позиция: ${chainY}`);
-    
+
+  // Обрабатываем цепочки автопереходов отдельно
+  autoTransitionChains.forEach((chainArray, levelIndex) => {
+    console.log(`🔗 Обрабатываем цепочку автопереходов уровня ${levelIndex}:`, chainArray);
+
+    // Вычисляем Y позицию для этой цепочки - смещаем на 40px ниже обычных узлов
+    const baseY = options.startY + levelIndex * (options.nodeHeight + options.verticalSpacing);
+    const chainY = baseY + 40; // Смещение вниз на 40px
+
+    let currentX = options.startX;
+
     chainArray.forEach((nodeId, index) => {
-      const node = levels.flat().find(n => n.id === nodeId);
+      const node = nodeMap.get(nodeId);
       if (!node) {
-        console.log(`  ❌ Узел ${nodeId} не найден в levels`);
+        console.warn(`  ⚠️ Узел ${nodeId} не найден в nodeMap`);
         return;
       }
-      
+
+      if (!levels[node.level || 0]) {
+        console.warn(`  ⚠️ Уровень ${node.level} не найден в levels`);
+        return;
+      }
+
       const nodeSize = getNodeSize(nodeId, options);
       console.log(`  ➡️ Узел ${index + 1}/${chainArray.length} (${nodeId}): x=${currentX}, y=${chainY}`);
-      
+
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
       result.push({
         ...cleanNode,
         position: { x: currentX, y: chainY }
       });
-      
+
       processedNodes.add(nodeId);
       currentX += nodeSize.width + options.horizontalSpacing;
     });
   });
-  
+
   // Обрабатываем остальные узлы (не в цепочках автопереходов)
   levels.forEach((levelNodes, levelIndex) => {
     // Вычисляем X позицию с учетом максимальной ширины узлов на предыдущих уровнях
     let baseX = options.startX;
     for (let i = 0; i < levelIndex; i++) {
       const prevLevel = levels[i] || [];
-      const prevLevelMaxWidth = prevLevel.length > 0 
+      const prevLevelMaxWidth = prevLevel.length > 0
         ? Math.max(...prevLevel.map(n => getNodeSize(n.id, options).width))
         : 0;
       baseX += prevLevelMaxWidth + options.horizontalSpacing;
     }
-    
+
     levelNodes.forEach((node) => {
       // Пропускаем узлы, которые уже обработаны в цепочках
       if (processedNodes.has(node.id)) return;
-      
+
       const y = (node as any)._y || (options.startY + result.length * options.verticalSpacing);
-      
+
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
       result.push({
@@ -485,10 +445,10 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
       });
     });
   });
-  
+
   // Проверка коллизий на одном уровне и корректировка позиций
   const resultWithCollisionFix = fixCollisions(result, options);
-  
+
   return resultWithCollisionFix;
 }
 
@@ -516,11 +476,11 @@ export function createVProgulkeHierarchicalLayout(nodes: Node[], connections: Co
   // Определяем последовательность узлов для VProgulke бота
   const nodeSequence = [
     'start',
-    'join_request', 
+    'join_request',
     'decline_response',
     'gender_selection',
     'name_input',
-    'age_input', 
+    'age_input',
     'metro_selection',
     'interests_categories',
     'hobby_interests',
@@ -536,35 +496,35 @@ export function createVProgulkeHierarchicalLayout(nodes: Node[], connections: Co
 
   // Создаем карту узлов для быстрого доступа
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
-  
+
   // Специальные позиции для узлов VProgulke
   const specialPositions: Record<string, {x: number, y: number}> = {
     // Уровень 1: Старт
     'start': { x: 100, y: 50 },
-    
+
     // Уровень 2: Выбор участия
     'join_request': { x: 100, y: 250 },
     'decline_response': { x: 450, y: 250 },
-    
+
     // Уровень 3: Основные данные
     'gender_selection': { x: 100, y: 450 },
     'name_input': { x: 450, y: 450 },
     'age_input': { x: 800, y: 450 },
-    
+
     // Уровень 4: Локация и интересы
     'metro_selection': { x: 100, y: 650 },
     'interests_categories': { x: 450, y: 650 },
     'hobby_interests': { x: 800, y: 650 },
-    
+
     // Уровень 5: Дополнительная информация
     'relationship_status': { x: 100, y: 850 },
     'sexual_orientation': { x: 450, y: 850 },
     'telegram_channel_ask': { x: 800, y: 850 },
-    
+
     // Уровень 6: Дополнительные данные
     'telegram_channel_input': { x: 100, y: 1050 },
     'additional_info': { x: 450, y: 1050 },
-    
+
     // Уровень 7: Завершение
     'profile_complete': { x: 100, y: 1250 },
     'chat_link': { x: 450, y: 1250 },
@@ -573,11 +533,11 @@ export function createVProgulkeHierarchicalLayout(nodes: Node[], connections: Co
 
   // Применяем позиции к узлам
   const layoutNodes = nodes.map(node => {
-    const position = specialPositions[node.id] || { 
-      x: Math.random() * 800 + 100, 
-      y: Math.random() * 600 + 100 
+    const position = specialPositions[node.id] || {
+      x: Math.random() * 800 + 100,
+      y: Math.random() * 600 + 100
     };
-    
+
     return {
       ...node,
       position
@@ -591,25 +551,25 @@ export function createVProgulkeHierarchicalLayout(nodes: Node[], connections: Co
  * Автоматически определяет тип шаблона и применяет соответствующую компоновку
  */
 export function applyTemplateLayout(
-  nodes: Node[], 
-  connections: Connection[], 
-  templateName?: string, 
+  nodes: Node[],
+  connections: Connection[],
+  templateName?: string,
   nodeSizes?: Map<string, { width: number; height: number }>
 ): Node[] {
   console.log('🎯 ApplyTemplateLayout called:', templateName, 'nodes:', nodes.length, 'nodeSizes:', !!nodeSizes);
-  
+
   // Проверяем, это шаблон VProgulke
   if (templateName?.toLowerCase().includes('vprogulke') || templateName?.toLowerCase().includes('знакомства')) {
     console.log('🌟 Using VProgulke layout');
     return createVProgulkeHierarchicalLayout(nodes, connections);
   }
-  
+
   // Определяем, мобильное ли это устройство
   const isMobile = getIsMobile();
-  
+
   // Для остальных шаблонов используем стандартную иерархическую компоновку
   console.log(isMobile ? '📱 Using mobile-optimized hierarchical layout' : '📏 Using desktop hierarchical layout with real sizes');
-  
+
   // Параметры для мобильных устройств - более компактные
   const mobileOptions = {
     levelHeight: 120,
@@ -621,7 +581,7 @@ export function applyTemplateLayout(
     startY: 50,
     nodeSizes
   };
-  
+
   // Параметры для десктопных устройств
   const desktopOptions = {
     levelHeight: 150,
@@ -633,6 +593,6 @@ export function applyTemplateLayout(
     startY: 100,
     nodeSizes
   };
-  
+
   return createHierarchicalLayout(nodes, connections, isMobile ? mobileOptions : desktopOptions);
 }
