@@ -192,17 +192,20 @@ function assignLevels(startNode: LayoutNode, level = 0, visitedInPath = new Set<
     return;
   }
 
-  // Если узел уже посещен глобально, обновляем его уровень только если новый уровень глубже
-  // НО НЕ ОБХОДИМ ДЕТЕЙ СНОВА - они уже были обработаны
-  if (startNode.visited) {
-    if (level > (startNode.level || 0)) {
-      startNode.level = level;
-    }
+  // ИСПРАВЛЕНИЕ: Всегда обновляем уровень, если новый уровень глубже
+  // Это позволяет узлам с несколькими родителями получить правильный уровень
+  const currentLevel = startNode.level ?? -1;
+  if (level > currentLevel) {
+    startNode.level = level;
+  }
+
+  // Если узел уже был полностью обработан с этого или более глубокого уровня,
+  // не обходим детей снова (избегаем бесконечной рекурсии)
+  if (startNode.visited && level <= currentLevel) {
     return;
   }
 
-  // Первое посещение узла
-  startNode.level = level;
+  // Отмечаем узел как посещенный
   startNode.visited = true;
 
   // Добавляем узел в путь для отслеживания циклов
