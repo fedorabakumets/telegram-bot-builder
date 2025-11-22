@@ -1402,7 +1402,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: mediaFiles.createdAt,
         updatedAt: mediaFiles.updatedAt,
         mediaKind: botMessageMedia.mediaKind,
-        orderIndex: botMessageMedia.orderIndex,
+        orderIndex: sql<number>`COALESCE(${botMessageMedia.orderIndex}, 0)`.as('orderIndex'),
       })
       .from(botMessageMedia)
       .innerJoin(mediaFiles, eq(botMessageMedia.mediaFileId, mediaFiles.id))

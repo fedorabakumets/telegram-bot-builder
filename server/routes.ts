@@ -643,7 +643,7 @@ async function stopBot(projectId: number, tokenId: number): Promise<{ success: b
 
 // Функция для поиска активного процесса для проекта
 function findActiveProcessForProject(projectId: number): { processKey: string; process: ChildProcess } | null {
-  for (const [key, process] of botProcesses.entries()) {
+  for (const [key, process] of Array.from(botProcesses.entries())) {
     if (key.startsWith(`${projectId}_`) && process && !process.killed && process.exitCode === null) {
       return { processKey: key, process };
     }
@@ -950,6 +950,7 @@ async function ensureDefaultProject() {
       const defaultProject = {
         name: "Мой первый бот",
         description: "Базовый бот с приветствием",
+        userDatabaseEnabled: 1,
         data: {
           nodes: [
             {
@@ -1160,7 +1161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (botInstance && botInstance.status === 'running') {
           console.log(`🛑 Останавливаем бота ${id} перед удалением проекта...`);
-          await stopBot(id);
+          await stopBot(id, botInstance.tokenId);
           console.log(`✅ Бот ${id} остановлен`);
         }
       } catch (stopError) {
@@ -1385,7 +1386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } as any;
             
             // Восстанавливаем отслеживание процесса
-            botProcesses.set(projectId, mockProcess);
+            botProcesses.set(`${projectId}_${instance.tokenId}`, mockProcess);
             actualStatus = 'running';
           }
         } catch (error) {
@@ -1434,7 +1435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 } as any;
                 
                 // Восстанавливаем отслеживание процесса
-                botProcesses.set(projectId, mockProcess);
+                botProcesses.set(`${projectId}_${instance.tokenId}`, mockProcess);
                 actualStatus = 'running';
                 break;
               }
@@ -1551,8 +1552,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const projectId = parseInt(req.params.id);
       
+      // Получаем текущий инстанс для получения tokenId
+      const instance = await storage.getBotInstance(projectId);
+      if (!instance) {
+        return res.status(404).json({ message: "Bot instance not found" });
+      }
+      
       // Сначала останавливаем бота
-      const stopResult = await stopBot(projectId);
+      const stopResult = await stopBot(projectId, instance.tokenId);
       if (!stopResult.success) {
         return res.status(500).json({ message: stopResult.error || "Failed to stop bot" });
       }
