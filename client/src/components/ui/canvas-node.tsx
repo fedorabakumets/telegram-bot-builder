@@ -1226,12 +1226,13 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                   }
                 };
 
-                const conditionName = {
+                const conditionNames: Record<string, string> = {
                   'user_data_equals': 'Точное совпадение',
                   'user_data_contains': 'Содержит текст',
                   'user_data_exists': 'Имя введено ранее',
                   'user_data_not_exists': 'Имя не введено'
-                }[condition.condition] || 'Условие';
+                };
+                const conditionName = conditionNames[condition.condition] || 'Условие';
 
                 return (
                   <div key={condition.id || index} className="bg-white/60 dark:bg-slate-900/40 rounded-lg border border-purple-100 dark:border-purple-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
