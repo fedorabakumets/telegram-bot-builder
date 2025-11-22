@@ -6,7 +6,8 @@ export class SheetsManager {
   // Миграция старых данных к новому формату с листами
   static migrateLegacyData(legacyData: BotData): BotDataWithSheets {
     // Если нет узлов, создаем стартовый узел по умолчанию
-    const nodes = legacyData.nodes && legacyData.nodes.length > 0 ? legacyData.nodes : [{
+    const hasNodes = legacyData.nodes && legacyData.nodes.length > 0;
+    const nodes = hasNodes ? legacyData.nodes : [{
       id: 'start',
       type: 'start' as const,
       position: { x: 100, y: 100 },
@@ -44,11 +45,21 @@ export class SheetsManager {
       updatedAt: new Date()
     };
 
-    return {
+    const migratedData = {
       sheets: [defaultSheet],
       activeSheetId: defaultSheet.id,
       version: 2
     };
+
+    console.log('🔄 Мигрированы данные:', {
+      hasOriginalNodes: hasNodes,
+      originalNodesCount: legacyData.nodes?.length || 0,
+      migratedNodesCount: nodes.length,
+      sheetsCount: migratedData.sheets.length,
+      activeSheetId: migratedData.activeSheetId
+    });
+
+    return migratedData;
   }
 
   // Проверка, является ли данные новым форматом с листами
