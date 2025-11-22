@@ -445,7 +445,7 @@ export default function Editor() {
     if (activeProject?.data && !isLoadingTemplate && !hasLocalChanges && 
         (lastLoadedProjectId !== activeProject?.id)) {
       
-      console.log('📂 Loading activeProject data for activeProject ID:', activeProject.id);
+      console.log('📂 Loading project data for project ID:', activeProject.id);
       const projectData = activeProject.data as any;
       
       // Проверяем, новый ли это формат с листами
@@ -458,13 +458,8 @@ export default function Editor() {
         const activeSheet = SheetsManager.getActiveSheet(projectData);
         if (activeSheet) {
           console.log('📄 Активный лист:', activeSheet.name, 'узлов:', activeSheet.nodes?.length);
-          // Проверяем, есть ли у узлов уже расставленные позиции
-          const hasValidPositions = activeSheet.nodes?.length > 0 && 
-            activeSheet.nodes.every((n: any) => n.position && typeof n.position.x === 'number' && typeof n.position.y === 'number');
-          
-          // Пропускаем layout если узлы уже имеют позиции (загрузка существующего проекта)
-          const shouldSkipLayout = hasValidPositions;
-          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
+          // Всегда пропускаем layout при загрузке существующего проекта для скорости
+          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, undefined, true);
         }
       } else {
         console.log('🔄 Старый формат, мигрируем к листам. Узлов:', (projectData as BotData).nodes?.length);
@@ -475,14 +470,8 @@ export default function Editor() {
         // ВАЖНО: Сначала устанавливаем данные листов для отображения панели
         setBotDataWithSheets(migratedData);
         
-        // Проверяем, есть ли у узлов уже расставленные позиции
-        const dataNodes = (projectData as BotData).nodes || [];
-        const hasValidPositions = dataNodes.length > 0 && 
-          dataNodes.every((n: any) => n.position && typeof n.position.x === 'number' && typeof n.position.y === 'number');
-        
-        // Пропускаем layout если узлы уже имеют позиции (загрузка существующего проекта)
-        const shouldSkipLayout = hasValidPositions;
-        setBotData(projectData as BotData, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
+        // Пропускаем layout для быстрой загрузки
+        setBotData(projectData as BotData, undefined, undefined, true);
         
         // ВАЖНО: Сохраняем мигрированные данные сразу в БД
         console.log('💾 Сохраняем мигрированные данные в БД');
@@ -495,7 +484,7 @@ export default function Editor() {
       // Сохраняем ID текущего проекта для возврата со страницы шаблонов
       localStorage.setItem('lastProjectId', activeProject.id.toString());
     }
-  }, [activeProject?.id, activeProject?.data, setBotData, currentNodeSizes, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId, isMobile, nodes.length, updateProjectMutation]);
+  }, [activeProject?.id, activeProject?.data, setBotData, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId, updateProjectMutation]);
 
   const handleSave = useCallback(() => {
     updateProjectMutation.mutate({});
