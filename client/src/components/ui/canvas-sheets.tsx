@@ -210,11 +210,9 @@ export function CanvasSheets({
       {/* Контейнер вкладок */}
       <div 
         ref={tabsContainerRef}
-        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 justify-center"
+        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 justify-center overflow-visible"
         style={{ 
-          maxWidth: isMobile 
-            ? `calc(100vw - 140px)` 
-            : `min(${maxVisibleTabs * 180}px, calc(100vw - 280px))` 
+          minWidth: '0'
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
