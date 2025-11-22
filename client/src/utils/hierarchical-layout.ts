@@ -245,11 +245,24 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     const chains: Set<string>[] = [];
     const visited = new Set<string>();
     
+    // Сначала находим все узлы, которые являются целями автопереходов
+    const autoTransitionTargets = new Set<string>();
+    nodes.forEach(node => {
+      const targetId = (node as any).data?.autoTransitionTo;
+      if (targetId) {
+        autoTransitionTargets.add(targetId);
+      }
+    });
+    
     nodes.forEach(node => {
       if (visited.has(node.id)) return;
       
       // Проверяем, есть ли у узла автопереход
       if ((node as any).data?.autoTransitionTo) {
+        // Если этот узел сам является целью автоперехода, пропускаем
+        // (его обработает узел, который на него ссылается)
+        if (autoTransitionTargets.has(node.id)) return;
+        
         const chain = new Set<string>();
         let currentNode: LayoutNode | undefined = node;
         
