@@ -1211,8 +1211,8 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               </div>
             )}
 
-            {/* Configuration status */}
-            {!((node.data as any).inputType && (node.data as any).variableName) && (
+            {/* Configuration status - только если НЕТ inputTargetNodeId */}
+            {!((node.data as any).inputType && (node.data as any).variableName) && !(node.data as any).inputTargetNodeId && (
               <div className="flex items-center space-x-2 text-orange-600 dark:text-orange-400">
                 <i className="fas fa-exclamation-triangle text-xs"></i>
                 <div className="text-xs">Требуется настройка</div>
