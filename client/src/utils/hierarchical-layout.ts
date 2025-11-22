@@ -316,28 +316,21 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
     const chains: string[][] = [];
     const visited = new Set<string>();
 
-    // Находим все узлы, которые являются целями автопереходов или переходов через кнопки
-    const isTransitionTarget = new Set<string>();
+    // Находим все узлы, которые являются целями ТОЛЬКО автопереходов/inputTarget (не кнопок)
+    const isAutoTransitionTarget = new Set<string>();
     nodes.forEach(node => {
       const autoTarget = (node as any).data?.autoTransitionTo;
       const inputTarget = (node as any).data?.inputTargetNodeId;
-      if (autoTarget) isTransitionTarget.add(autoTarget);
-      if (inputTarget) isTransitionTarget.add(inputTarget);
-      
-      // Также добавляем цели переходов через кнопки
-      if (node.data.buttons && Array.isArray(node.data.buttons)) {
-        node.data.buttons.forEach((button: any) => {
-          if (button.target && button.action === 'goto') {
-            isTransitionTarget.add(button.target);
-          }
-        });
-      }
+      if (autoTarget) isAutoTransitionTarget.add(autoTarget);
+      if (inputTarget) isAutoTransitionTarget.add(inputTarget);
     });
 
-    // Начинаем цепочки только с узлов, которые не являются целями переходов
+    // Начинаем цепочки с узлов, которые:
+    // 1. Не являются целями автопереходов/inputTarget
+    // 2. Или являются стартовыми узлами (type === 'start')
     nodes.forEach(node => {
       if (visited.has(node.id)) return;
-      if (isTransitionTarget.has(node.id)) return;
+      if (isAutoTransitionTarget.has(node.id) && node.type !== 'start') return;
 
       // Проверяем, есть ли у узла любой тип перехода
       const autoTarget = (node as any).data?.autoTransitionTo;
