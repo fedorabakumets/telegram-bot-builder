@@ -858,7 +858,7 @@ export function Canvas({
 
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
-      <div className="absolute inset-0 overflow-auto p-8">
+      <div className="absolute inset-0 overflow-auto">
         
         {/* Enhanced Canvas Grid */}
         <div 
