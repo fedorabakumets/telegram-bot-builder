@@ -231,6 +231,60 @@ export default function Editor() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Define updateProjectMutation early so it can be used in callbacks
+  const updateProjectMutation = useMutation({
+    mutationFn: async (data: any) => {
+      if (!activeProject) return;
+      
+      // Всегда используем текущие данные с холста для сохранения
+      let projectData;
+      
+      if (botDataWithSheets) {
+        // Обновляем активный лист текущими данными холста
+        const currentCanvasData = getBotData();
+        const activeSheetId = botDataWithSheets.activeSheetId;
+        const updatedSheets = botDataWithSheets.sheets.map(sheet => 
+          sheet.id === activeSheetId 
+            ? { ...sheet, nodes: currentCanvasData.nodes, connections: currentCanvasData.connections, updatedAt: new Date() }
+            : sheet
+        );
+        
+        projectData = {
+          ...botDataWithSheets,
+          sheets: updatedSheets
+        };
+      } else {
+        // Если нет формата с листами, используем текущие данные холста
+        projectData = getBotData();
+      }
+      
+      return apiRequest('PUT', `/api/projects/${activeProject.id}`, {
+        data: projectData
+      });
+    },
+    onSuccess: (updatedProject) => {
+      console.log('Проект сохранен, обновляем кеш проектов');
+      
+      // Reset local changes flag only after successful save
+      setHasLocalChanges(false);
+      
+      // Обновляем кеш проектов
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
+      toast({
+        title: "Проект сохранен",
+        description: "Изменения успешно сохранены",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка сохранения",
+        description: "Не удалось сохранить проект",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Load current project directly by ID (much faster than loading all projects)
   const { data: currentProject, isLoading: isProjectLoading } = useQuery<BotProject>({
     queryKey: ['/api/projects', projectId],
@@ -421,59 +475,6 @@ export default function Editor() {
       localStorage.setItem('lastProjectId', activeProject.id.toString());
     }
   }, [activeProject?.id, activeProject?.data, setBotData, currentNodeSizes, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId, isMobile, nodes.length, updateProjectMutation]);
-
-  const updateProjectMutation = useMutation({
-    mutationFn: async (data: any) => {
-      if (!activeProject) return;
-      
-      // Всегда используем текущие данные с холста для сохранения
-      let projectData;
-      
-      if (botDataWithSheets) {
-        // Обновляем активный лист текущими данными холста
-        const currentCanvasData = getBotData();
-        const activeSheetId = botDataWithSheets.activeSheetId;
-        const updatedSheets = botDataWithSheets.sheets.map(sheet => 
-          sheet.id === activeSheetId 
-            ? { ...sheet, nodes: currentCanvasData.nodes, connections: currentCanvasData.connections, updatedAt: new Date() }
-            : sheet
-        );
-        
-        projectData = {
-          ...botDataWithSheets,
-          sheets: updatedSheets
-        };
-      } else {
-        // Если нет формата с листами, используем текущие данные холста
-        projectData = getBotData();
-      }
-      
-      return apiRequest('PUT', `/api/projects/${activeProject.id}`, {
-        data: projectData
-      });
-    },
-    onSuccess: (updatedProject) => {
-      console.log('Проект сохранен, обновляем кеш проектов');
-      
-      // Reset local changes flag only after successful save
-      setHasLocalChanges(false);
-      
-      // Обновляем кеш проектов
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      
-      toast({
-        title: "Проект сохранен",
-        description: "Изменения успешно сохранены",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Ошибка сохранения",
-        description: "Не удалось сохранить проект",
-        variant: "destructive",
-      });
-    }
-  });
 
   const handleSave = useCallback(() => {
     updateProjectMutation.mutate({});
