@@ -221,7 +221,7 @@ export function CanvasSheets({
             <div
               key={sheet.id}
               data-sheet-id={sheet.id}
-              className="group flex items-center cursor-pointer select-none transition-all duration-200 px-4 h-11 rounded-xl gap-2 min-w-[160px] max-w-[240px] bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-105 text-[14px]"
+              className="group flex items-center cursor-pointer select-none transition-all duration-200 px-4 h-11 rounded-xl gap-2 min-w-[160px] max-w-[240px] bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-105 text-[12px]"
               style={{
                 backgroundColor: activeSheetId === sheet.id ? undefined : 'rgba(30, 41, 59, 0.8)',
                 color: 'white'
