@@ -76,9 +76,13 @@ export function createHierarchicalLayout(
 
   // Группируем узлы по уровням
   const levels = groupNodesByLevel(layoutNodes);
+  console.log('📊 Levels grouped:', levels.length, 'levels, содержимое:', levels.map((level, i) => `Level ${i}: ${level.length} nodes`));
   
   // Располагаем узлы по уровням
-  return arrangeNodesByLevel(levels, opts);
+  console.log('🚀 Вызываем arrangeNodesByLevel...');
+  const result = arrangeNodesByLevel(levels, opts);
+  console.log('✅ arrangeNodesByLevel завершен, результат:', result.length, 'nodes');
+  return result;
 }
 
 /**
