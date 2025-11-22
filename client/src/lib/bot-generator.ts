@@ -12264,6 +12264,11 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
 
   // Validate each node
   nodes.forEach(node => {
+    // Пропускаем валидацию для стартовых узлов без команды
+    if (node.type === 'start' && !node.data.command) {
+      return; // это просто стартовый узел, не требуется команда
+    }
+
     // Для узлов command требуем текст, для остальных это опционально
     if (!node.data.messageText && node.type === 'command') {
       errors.push(`Узел "${node.id}" должен содержать текст сообщения`);

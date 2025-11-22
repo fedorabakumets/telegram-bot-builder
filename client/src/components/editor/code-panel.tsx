@@ -156,7 +156,9 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
         case 'python':
           const validation = botGenerator.validateBotStructure(botData);
           if (!validation?.isValid) {
-            return '# Ошибка валидации структуры бота';
+            const errorMsg = validation?.errors?.join('\n') || 'Неизвестная ошибка';
+            console.warn('Validation errors:', errorMsg);
+            return `# Ошибка валидации структуры бота\n# ${errorMsg}`;
           }
           const pythonCode = botGenerator.generatePythonCode(botData, projectName, groups || []);
           return pythonCode || '# Ошибка генерации Python кода';
