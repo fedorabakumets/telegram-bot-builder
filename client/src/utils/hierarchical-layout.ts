@@ -80,7 +80,7 @@ export function createHierarchicalLayout(
 
   // Располагаем узлы по уровням
   console.log('🚀 Вызываем arrangeNodesByLevel...');
-  const result = arrangeNodesByLevel(levels, opts);
+  const result = arrangeNodesByLevel(levels, connections, opts);
   console.log('✅ arrangeNodesByLevel завершен, результат:', result.length, 'nodes');
   return result;
 }
@@ -287,7 +287,7 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
  * Располагает узлы в правильной вертикальной древовидной иерархии
  * С горизонтальным размещением цепочек автопереходов
  */
-function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayoutOptions): Node[] {
+function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], options: HierarchicalLayoutOptions): Node[] {
   console.log('📋 arrangeNodesByLevel вызван');
 
   const result: Node[] = [];
@@ -383,6 +383,31 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     return yPosition + nodeSize.height + options.verticalSpacing;
   }
 
+  // Создаем карту входящих соединений для каждого узла
+  const incomingConnections = new Map<string, string[]>();
+  
+  // Собираем все соединения (обычные + из кнопок + автопереходы)
+  const flatNodes = levels.flat();
+  flatNodes.forEach(node => {
+    // Обычные соединения
+    const regularConnections = connections.filter((c: Connection) => c.target === node.id).map((c: Connection) => c.source);
+    
+    // Соединения через кнопки
+    const buttonConnections = flatNodes
+      .filter(n => n.data.buttons?.some((b: any) => b.action === 'goto' && b.target === node.id))
+      .map(n => n.id);
+    
+    // Автопереходы
+    const autoConnections = flatNodes
+      .filter(n => (n.data as any).autoTransitionTo === node.id || (n.data as any).inputTargetNodeId === node.id)
+      .map(n => n.id);
+    
+    const allParents = Array.from(new Set([...regularConnections, ...buttonConnections, ...autoConnections]));
+    if (allParents.length > 0) {
+      incomingConnections.set(node.id, allParents);
+    }
+  });
+
   // Назначаем Y позиции строго по уровням (сверху вниз)
   let currentY = options.startY;
   
@@ -452,7 +477,33 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
       // Пропускаем узлы, которые уже обработаны в цепочках
       if (processedNodes.has(node.id)) return;
 
-      const y = (node as any)._y || (options.startY + result.length * options.verticalSpacing);
+      let y = (node as any)._y || (options.startY + result.length * options.verticalSpacing);
+      
+      // ЦЕНТРИРОВАНИЕ: если у узла несколько родителей, центрируем его между ними
+      const parents = incomingConnections.get(node.id);
+      if (parents && parents.length > 1) {
+        // Находим позиции всех родительских узлов
+        const parentPositions = parents
+          .map(parentId => {
+            // Ищем родителя в уже обработанных узлах
+            const parentInResult = result.find(n => n.id === parentId);
+            if (parentInResult) {
+              const parentSize = getNodeSize(parentId, options);
+              return parentInResult.position.y + parentSize.height / 2;
+            }
+            return null;
+          })
+          .filter(pos => pos !== null) as number[];
+
+        if (parentPositions.length > 0) {
+          // Вычисляем среднюю Y-позицию родителей
+          const avgParentY = parentPositions.reduce((sum, py) => sum + py, 0) / parentPositions.length;
+          const nodeSize = getNodeSize(node.id, options);
+          // Центрируем узел относительно средней позиции родителей
+          y = avgParentY - nodeSize.height / 2;
+          console.log(`📍 Центрирование узла ${node.id} между ${parents.length} родителями: y=${y}`);
+        }
+      }
 
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
