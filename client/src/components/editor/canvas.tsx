@@ -1296,14 +1296,13 @@ export function Canvas({
       
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && onBotDataUpdate && (
-        <div className="absolute bottom-0 z-50 pointer-events-none transition-all duration-300 overflow-visible" style={{
-          left: isMobile ? '10px' : (sidebarVisible ? '260px' : '20px'),
-          right: isMobile ? '10px' : (propertiesVisible ? '320px' : '20px')
+        <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none transition-all duration-300 overflow-visible px-4 md:px-8" style={{
+          paddingLeft: isMobile ? '16px' : (sidebarVisible ? '280px' : '40px'),
+          paddingRight: isMobile ? '16px' : (propertiesVisible ? '340px' : '40px')
         }}>
           <div className="flex justify-center pb-4 overflow-visible">
-            <div className="pointer-events-auto w-full overflow-visible" style={{
-              minWidth: isMobile ? '300px' : '600px',
-              maxWidth: isMobile ? '100%' : '1000px'
+            <div className="pointer-events-auto overflow-visible" style={{
+              minWidth: isMobile ? '300px' : '600px'
             }}>
               <CanvasSheets
                 sheets={botData.sheets}
