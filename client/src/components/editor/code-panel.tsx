@@ -342,49 +342,85 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
                   <p className="text-sm text-muted-foreground">Генерация кода...</p>
                 </div>
               </div>
-            ) : selectedFormat === 'python' ? (
-              <SyntaxHighlighter
-                language="python"
-                style={theme === 'dark' ? vscDarkPlus : vs}
-                showLineNumbers={true}
-                wrapLines={true}
-                lineProps={(lineNumber) => {
-                  const isHighlighted = highlightedLines.has(lineNumber);
-                  return {
-                    style: {
-                      backgroundColor: isHighlighted 
-                        ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)')
-                        : 'transparent',
-                      display: 'block',
-                      width: '100%',
-                      transition: 'background-color 0.3s ease'
-                    }
-                  };
-                }}
-                customStyle={{
-                  margin: 0,
-                  fontSize: '12px',
-                  lineHeight: '1.5',
-                  background: 'transparent'
-                }}
-                data-testid="syntax-highlighter-python"
-              >
-                {getCurrentContent()}
-              </SyntaxHighlighter>
-            ) : (
-              <Textarea
-                value={getCurrentContent()}
-                readOnly
-                className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
-                style={{
-                  lineHeight: '1.5',
-                  letterSpacing: '0.02em',
-                  tabSize: 4
-                }}
-                placeholder="Выберите формат для просмотра кода..."
-                data-testid="textarea-code-preview"
-              />
-            )}
+            ) : (() => {
+              const content = getCurrentContent();
+              const lineCount = content.split('\n').length;
+              const isLargeFile = lineCount > 1000;
+              
+              // Для большого Python кода используем Textarea (быстрее, чем SyntaxHighlighter)
+              if (selectedFormat === 'python' && isLargeFile) {
+                return (
+                  <div className="flex flex-col h-full">
+                    <div className="px-3 py-2 bg-yellow-50 dark:bg-yellow-950/20 border-b border-yellow-200 dark:border-yellow-900/30">
+                      <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                        Большой файл ({lineCount} строк). Синтаксис отключен для производительности.
+                      </p>
+                    </div>
+                    <Textarea
+                      value={content}
+                      readOnly
+                      className="flex-1 font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
+                      style={{
+                        lineHeight: '1.5',
+                        letterSpacing: '0.02em',
+                        tabSize: 4
+                      }}
+                      data-testid="textarea-code-preview"
+                    />
+                  </div>
+                );
+              }
+              
+              // Для малых файлов или других форматов используем SyntaxHighlighter
+              if (selectedFormat === 'python') {
+                return (
+                  <SyntaxHighlighter
+                    language="python"
+                    style={theme === 'dark' ? vscDarkPlus : vs}
+                    showLineNumbers={true}
+                    wrapLines={true}
+                    lineProps={(lineNumber) => {
+                      const isHighlighted = highlightedLines.has(lineNumber);
+                      return {
+                        style: {
+                          backgroundColor: isHighlighted 
+                            ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)')
+                            : 'transparent',
+                          display: 'block',
+                          width: '100%',
+                          transition: 'background-color 0.3s ease'
+                        }
+                      };
+                    }}
+                    customStyle={{
+                      margin: 0,
+                      fontSize: '12px',
+                      lineHeight: '1.5',
+                      background: 'transparent'
+                    }}
+                    data-testid="syntax-highlighter-python"
+                  >
+                    {content}
+                  </SyntaxHighlighter>
+                );
+              }
+              
+              // Для других форматов
+              return (
+                <Textarea
+                  value={content}
+                  readOnly
+                  className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
+                  style={{
+                    lineHeight: '1.5',
+                    letterSpacing: '0.02em',
+                    tabSize: 4
+                  }}
+                  placeholder="Выберите формат для просмотра кода..."
+                  data-testid="textarea-code-preview"
+                />
+              );
+            })()}
           </div>
         </div>
       </div>
