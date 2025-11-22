@@ -204,7 +204,6 @@ export function CanvasSheets({
           <ChevronLeft className="h-5 w-5 text-slate-300" />
         </Button>
       )}
-
       {/* Контейнер вкладок */}
       <div 
         ref={tabsContainerRef}
@@ -222,14 +221,7 @@ export function CanvasSheets({
             <div
               key={sheet.id}
               data-sheet-id={sheet.id}
-              className={cn(
-                "group flex items-center cursor-pointer select-none transition-all duration-200",
-                "px-4 h-11 rounded-xl gap-2",
-                "min-w-[160px] max-w-[240px]",
-                activeSheetId === sheet.id
-                  ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-105"
-                  : "bg-slate-800/80 text-slate-200 hover:bg-slate-700/90 border border-slate-600/50 hover:border-slate-500/70 hover:shadow-md hover:scale-102"
-              )}
+              className="group flex items-center cursor-pointer select-none transition-all duration-200 px-4 h-11 rounded-xl gap-2 min-w-[160px] max-w-[240px] bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-105 text-[14px]"
               style={{
                 backgroundColor: activeSheetId === sheet.id ? undefined : 'rgba(30, 41, 59, 0.8)',
                 color: 'white'
@@ -320,7 +312,6 @@ export function CanvasSheets({
           ))}
         </div>
       </div>
-
       {/* Кнопка прокрутки вправо - для мобильных переключает листы */}
       {(canScrollRight || (isMobile && sheets.length > 1)) && (
         <Button
@@ -333,7 +324,6 @@ export function CanvasSheets({
           <ChevronRight className="h-5 w-5 text-slate-300" />
         </Button>
       )}
-
       {/* Кнопка добавления нового листа */}
       <Button
         variant="ghost"
@@ -344,7 +334,6 @@ export function CanvasSheets({
       >
         <Plus className="h-5 w-5 text-emerald-400 drop-shadow-sm" />
       </Button>
-
       {/* Диалог убран - создание листа теперь происходит одним кликом */}
     </div>
   );
