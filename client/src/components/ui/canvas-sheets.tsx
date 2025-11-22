@@ -191,7 +191,7 @@ export function CanvasSheets({
   };
 
   return (
-    <div className={`flex items-center justify-start gap-2 relative transition-all duration-300 z-50 ${isMobile ? 'px-3 py-3' : 'px-3 py-3'}`}>
+    <div className={`flex items-center justify-start gap-2 relative transition-all duration-300 z-50 w-full ${isMobile ? 'px-3 py-3' : 'px-3 py-3'}`}>
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
       {(canScrollLeft || (isMobile && sheets.length > 1)) && (
         <Button
@@ -208,9 +208,9 @@ export function CanvasSheets({
       {/* Контейнер вкладок */}
       <div 
         ref={tabsContainerRef}
-        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 justify-start items-center min-w-0"
+        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 justify-start items-center"
         style={{ 
-          minWidth: '0'
+          minWidth: '100px'
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
