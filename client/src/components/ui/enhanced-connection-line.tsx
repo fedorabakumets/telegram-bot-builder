@@ -275,9 +275,9 @@ export function EnhancedConnectionLine({
                 <span className="truncate">{buttonInfo.text}</span>
               </div>
             ) : (
-              <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg flex items-center gap-1.5 text-xs font-medium">
-                <AlertCircle className="h-3.5 w-3.5" />
-                <span>Без кнопки</span>
+              <div className="px-2.5 py-1 rounded-md bg-slate-700/90 backdrop-blur-sm border border-slate-600/50 text-slate-300 shadow-sm flex items-center gap-1.5 text-xs font-medium">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                <span className="opacity-80">Прямая связь</span>
               </div>
             )}
           </div>
