@@ -992,30 +992,31 @@ async function initializeComponents() {
       isDbReady = true;
       console.log('✅ Database ready');
       
-      // После готовности БД запускаем остальные компоненты
-      Promise.all([
-        // Загрузка шаблонов
-        seedDefaultTemplates(true).then(() => {
-          areTemplatesReady = true;
-          console.log('✅ Templates ready');
-        }).catch(err => console.error('❌ Templates failed:', err)),
-        
-        // Создание проекта по умолчанию
+      // После готовности БД запускаем критически важные компоненты сначала
+      await Promise.all([
+        // Создание проекта по умолчанию (быстро)
         ensureDefaultProject().then(() => {
           console.log('✅ Default project ready');
         }).catch(err => console.error('❌ Default project failed:', err)),
         
-        // Очистка состояний ботов
+        // Очистка состояний ботов (быстро)
         cleanupBotStates().then(() => {
           console.log('✅ Bot states cleaned');
         }).catch(err => console.error('❌ Bot cleanup failed:', err)),
         
-        // Инициализация Telegram клиентов
+        // Инициализация Telegram клиентов (быстро)
         initializeTelegramManager().then(() => {
           isTelegramReady = true;
           console.log('✅ Telegram clients ready');
         }).catch(err => console.error('❌ Telegram initialization failed:', err))
       ]).catch(err => console.error('❌ Component initialization failed:', err));
+      
+      // Загрузка шаблонов в фоне (не блокирует готовность API)
+      // Используем force=false чтобы не пересоздавать шаблоны каждый раз
+      seedDefaultTemplates(false).then(() => {
+        areTemplatesReady = true;
+        console.log('✅ Templates ready');
+      }).catch(err => console.error('❌ Templates failed:', err));
     } else {
       console.error('❌ Database initialization failed');
     }
@@ -1030,7 +1031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Simple API root endpoint for health checks
   app.get("/api", (req, res) => {
-    res.json({ status: "ok", ready: isDbReady && areTemplatesReady });
+    res.json({ status: "ok", ready: isDbReady });
   });
 
   app.head("/api", (req, res) => {
@@ -1043,7 +1044,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       database: isDbReady,
       templates: areTemplatesReady,
       telegram: isTelegramReady,
-      ready: isDbReady && areTemplatesReady
+      ready: isDbReady  // API готово когда готова БД
     });
   });
 

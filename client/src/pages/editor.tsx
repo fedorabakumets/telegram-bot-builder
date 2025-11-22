@@ -367,16 +367,26 @@ export default function Editor() {
         // Устанавливаем активный лист для совместимости со старой системой
         const activeSheet = SheetsManager.getActiveSheet(projectData);
         if (activeSheet) {
-          // Всегда применяем layout при первой загрузке проекта, пропускаем только при повторной загрузке на мобильных
-          const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate && lastLoadedProjectId !== null;
+          // Проверяем, есть ли у узлов уже расставленные позиции
+          const hasValidPositions = activeSheet.nodes?.length > 0 && 
+            activeSheet.nodes.every((n: any) => n.position && typeof n.position.x === 'number' && typeof n.position.y === 'number');
+          
+          // Пропускаем layout если узлы уже имеют позиции (загрузка существующего проекта)
+          const shouldSkipLayout = hasValidPositions;
           setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
         }
       } else {
         // Мигрируем старые данные к новому формату
         const migratedData = SheetsManager.migrateLegacyData(projectData as BotData);
         setBotDataWithSheets(migratedData);
-        // Всегда применяем layout при первой загрузке проекта, пропускаем только при повторной загрузке на мобильных
-        const shouldSkipLayout = isMobile && nodes.length > 0 && !isLoadingTemplate && lastLoadedProjectId !== null;
+        
+        // Проверяем, есть ли у узлов уже расставленные позиции
+        const dataNodes = (projectData as BotData).nodes || [];
+        const hasValidPositions = dataNodes.length > 0 && 
+          dataNodes.every((n: any) => n.position && typeof n.position.x === 'number' && typeof n.position.y === 'number');
+        
+        // Пропускаем layout если узлы уже имеют позиции (загрузка существующего проекта)
+        const shouldSkipLayout = hasValidPositions;
         setBotData(projectData as BotData, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
       }
       

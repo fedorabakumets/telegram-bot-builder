@@ -61,7 +61,22 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: 10 * 60 * 1000, // 10 минут кеш для всех данных (увеличено для лучшей производительности)
       gcTime: 30 * 60 * 1000, // 30 минут в garbage collection
-      retry: 1, // Одна попытка пересылки при ошибке
+      retry: (failureCount, error: any) => {
+        // Для 503 ошибок (сервер загружается) - делаем больше попыток
+        if (error?.message?.includes('503') || error?.message?.includes('загружается')) {
+          return failureCount < 5; // До 5 попыток при загрузке сервера
+        }
+        // Для остальных ошибок - 1 попытка
+        return failureCount < 1;
+      },
+      retryDelay: (attemptIndex, error: any) => {
+        // Для 503 ошибок - быстрые повторные попытки
+        if (error?.message?.includes('503') || error?.message?.includes('загружается')) {
+          return Math.min(1000 * Math.pow(1.5, attemptIndex), 3000); // 1с, 1.5с, 2.25с, 3с
+        }
+        // Для остальных - стандартная задержка
+        return Math.min(1000 * Math.pow(2, attemptIndex), 30000);
+      },
     },
     mutations: {
       retry: false,
