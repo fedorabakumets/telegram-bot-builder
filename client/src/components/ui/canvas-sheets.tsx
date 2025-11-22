@@ -47,9 +47,6 @@ export function CanvasSheets({
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
-  // Отладка: проверяем, что приходит в компонент
-  console.log('📋 CanvasSheets: sheets =', sheets, 'count:', sheets?.length, 'activeSheetId:', activeSheetId);
-
   // Автофокус при начале переименования
   useEffect(() => {
     if (isRenaming && inputRef.current) {
@@ -194,24 +191,28 @@ export function CanvasSheets({
   };
 
   return (
-    <div className={`flex items-center gap-2 relative transition-all duration-300 z-50 w-full ${isMobile ? 'py-3' : 'py-3'} bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700`}>
+    <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-slate-900/95 via-slate-800/95 to-slate-900/95 dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-t border-slate-700/50 dark:border-slate-600/50 shadow-2xl shadow-black/20">
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
       {(canScrollLeft || (isMobile && sheets.length > 1)) && (
         <Button
           variant="ghost"
           size="sm"
           onClick={isMobile ? switchToPrevSheet : scrollLeft}
-          className={`flex-shrink-0 p-0 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 active:from-blue-500/30 active:to-blue-600/30 dark:from-blue-400/10 dark:to-blue-500/10 dark:hover:from-blue-400/20 dark:hover:to-blue-500/20 dark:active:from-blue-400/30 dark:active:to-blue-500/30 transition-all duration-200 hover:scale-110 active:scale-95 relative z-10 touch-manipulation ${isMobile ? 'h-11 w-11' : 'h-10 w-10'}`}
+          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-700/50 hover:bg-slate-600/70 border border-slate-600/50 hover:border-slate-500/70 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
           disabled={isMobile ? (activeSheetId ? sheets.findIndex(s => s.id === activeSheetId) === 0 : true) : false}
         >
-          <ChevronLeft className={`text-blue-600 dark:text-blue-400 ${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
+          <ChevronLeft className="h-5 w-5 text-slate-300" />
         </Button>
       )}
 
       {/* Контейнер вкладок */}
       <div 
         ref={tabsContainerRef}
-        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 items-center"
+        className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 items-center scrollbar-hide"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -222,27 +223,25 @@ export function CanvasSheets({
               key={sheet.id}
               data-sheet-id={sheet.id}
               className={cn(
-                "group flex items-center cursor-pointer select-none",
-                "px-4 h-11 rounded-lg",
-                "min-w-[140px]",
+                "group flex items-center cursor-pointer select-none transition-all duration-200",
+                "px-4 h-11 rounded-xl gap-2",
+                "min-w-[160px] max-w-[240px]",
                 activeSheetId === sheet.id
-                  ? "bg-blue-600 dark:bg-blue-600 text-white dark:text-white shadow-lg"
-                  : "bg-slate-800 dark:bg-slate-800 text-slate-100 dark:text-slate-100 hover:bg-slate-700 dark:hover:bg-slate-700 border border-slate-600 dark:border-slate-600"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-105"
+                  : "bg-slate-800/80 text-slate-200 hover:bg-slate-700/90 border border-slate-600/50 hover:border-slate-500/70 hover:shadow-md hover:scale-102"
               )}
               style={{
-                backgroundColor: activeSheetId === sheet.id ? 'rgb(37, 99, 235)' : 'rgb(30, 41, 59)',
+                backgroundColor: activeSheetId === sheet.id ? undefined : 'rgba(30, 41, 59, 0.8)',
                 color: 'white'
               }}
               onClick={() => onSheetSelect(sheet.id)}
             >
-              {!isMobile && (
-                <FileText className={cn(
-                  "h-3 w-3 mr-1.5 transition-all duration-200",
-                  activeSheetId === sheet.id
-                    ? "text-white/90 drop-shadow-sm"
-                    : "text-gray-500 dark:text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400"
-                )} />
-              )}
+              <FileText className={cn(
+                "h-4 w-4 flex-shrink-0 transition-all duration-200",
+                activeSheetId === sheet.id
+                  ? "text-white drop-shadow-sm"
+                  : "text-slate-400 group-hover:text-blue-400"
+              )} />
               
               {isRenaming === sheet.id ? (
                 <Input
@@ -258,36 +257,34 @@ export function CanvasSheets({
               ) : (
                 <span 
                   className={cn(
-                    "flex-1 cursor-text transition-all duration-200 whitespace-nowrap",
-                    isMobile 
-                      ? "text-xs font-semibold" 
-                      : "text-xs font-semibold",
+                    "flex-1 cursor-text transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis",
+                    "text-sm font-medium",
                     activeSheetId === sheet.id
-                      ? "text-white drop-shadow-sm"
-                      : "text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                      ? "text-white font-semibold drop-shadow-sm"
+                      : "text-slate-200 group-hover:text-white"
                   )}
                   onDoubleClick={() => handleRename(sheet.id)}
-                  title={isMobile ? sheet.name : "Двойной клик для переименования"}
+                  title={sheet.name}
                 >
                   {sheet.name}
                 </span>
               )}
 
               {/* Отдельные кнопки действий */}
-              <div className={`flex items-center transition-all duration-200 gap-0.5 ${
+              <div className={`flex items-center transition-all duration-200 gap-1 ${
                 isMobile 
-                  ? 'ml-1 opacity-90' 
-                  : 'ml-1 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0'
+                  ? 'ml-1 opacity-100' 
+                  : 'ml-1 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0'
               }`}>
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(
-                    "p-0 rounded-full transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation",
-                    isMobile ? "h-7 w-7" : "h-5 w-5",
+                    "p-0 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95",
+                    "h-6 w-6",
                     activeSheetId === sheet.id
-                      ? "hover:bg-white/20 active:bg-white/30 text-white/90 hover:text-white"
-                      : "hover:bg-blue-100 active:bg-blue-200 dark:hover:bg-blue-900/50 dark:active:bg-blue-800/50 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                      ? "hover:bg-white/20 active:bg-white/30 text-white/80 hover:text-white"
+                      : "hover:bg-blue-500/20 active:bg-blue-500/30 text-blue-400 hover:text-blue-300 border border-blue-500/30"
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -295,7 +292,7 @@ export function CanvasSheets({
                   }}
                   title="Дублировать лист"
                 >
-                  <Copy className={isMobile ? "h-3.5 w-3.5" : "h-3 w-3"} />
+                  <Copy className="h-3.5 w-3.5" />
                 </Button>
                 
                 {sheets.length > 1 && (
@@ -303,11 +300,11 @@ export function CanvasSheets({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "p-0 rounded-full transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation",
-                      isMobile ? "h-7 w-7" : "h-5 w-5",
+                      "p-0 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95",
+                      "h-6 w-6",
                       activeSheetId === sheet.id
                         ? "hover:bg-red-500/20 active:bg-red-500/30 text-red-200 hover:text-white"
-                        : "hover:bg-red-100 active:bg-red-200 dark:hover:bg-red-900/50 dark:active:bg-red-800/50 text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                        : "hover:bg-red-500/20 active:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30"
                     )}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -315,7 +312,7 @@ export function CanvasSheets({
                     }}
                     title="Удалить лист"
                   >
-                    <X className={isMobile ? "h-3.5 w-3.5" : "h-3 w-3"} />
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 )}
               </div>
@@ -330,10 +327,10 @@ export function CanvasSheets({
           variant="ghost"
           size="sm"
           onClick={isMobile ? switchToNextSheet : scrollRight}
-          className={`flex-shrink-0 p-0 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 active:from-blue-500/30 active:to-blue-600/30 dark:from-blue-400/10 dark:to-blue-500/10 dark:hover:from-blue-400/20 dark:hover:to-blue-500/20 dark:active:from-blue-400/30 dark:active:to-blue-500/30 transition-all duration-200 hover:scale-110 active:scale-95 relative z-10 touch-manipulation ${isMobile ? 'h-11 w-11' : 'h-10 w-10'}`}
+          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-700/50 hover:bg-slate-600/70 border border-slate-600/50 hover:border-slate-500/70 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
           disabled={isMobile ? (activeSheetId ? sheets.findIndex(s => s.id === activeSheetId) === sheets.length - 1 : true) : false}
         >
-          <ChevronRight className={`text-blue-600 dark:text-blue-400 ${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
+          <ChevronRight className="h-5 w-5 text-slate-300" />
         </Button>
       )}
 
@@ -342,10 +339,10 @@ export function CanvasSheets({
         variant="ghost"
         size="sm"
         onClick={addNewSheet}
-        className={`flex-shrink-0 p-0 rounded-full bg-gradient-to-br from-green-500/10 to-emerald-600/10 hover:from-green-500/20 hover:to-emerald-600/20 active:from-green-500/30 active:to-emerald-600/30 dark:from-green-400/10 dark:to-emerald-500/10 dark:hover:from-green-400/20 dark:hover:to-emerald-500/20 dark:active:from-green-400/30 dark:active:to-emerald-500/30 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-green-500/20 active:shadow-green-500/30 relative z-10 ring-2 ring-transparent hover:ring-green-300/30 dark:hover:ring-green-600/30 touch-manipulation ${isMobile ? 'h-11 w-11' : 'h-10 w-10'}`}
+        className="flex-shrink-0 p-0 h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-600/20 hover:from-emerald-500/30 hover:to-green-600/30 active:from-emerald-500/40 active:to-green-600/40 transition-all duration-200 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-emerald-500/30 border border-emerald-500/30 hover:border-emerald-400/50"
         title="Добавить новый лист"
       >
-        <Plus className={`text-green-600 dark:text-green-400 drop-shadow-sm ${isMobile ? 'h-5 w-5' : 'h-5 w-5'}`} />
+        <Plus className="h-5 w-5 text-emerald-400 drop-shadow-sm" />
       </Button>
 
       {/* Диалог убран - создание листа теперь происходит одним кликом */}

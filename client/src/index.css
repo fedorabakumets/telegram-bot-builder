@@ -121,6 +121,16 @@
     overflow: hidden;
   }
 
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Grid background patterns */
   .bg-grid-small {
     background-image: radial-gradient(circle, hsl(var(--muted-foreground) / 0.3) 1px, transparent 1px);
