@@ -1296,10 +1296,7 @@ export function Canvas({
       
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && onBotDataUpdate && (
-        <div className="absolute bottom-0 z-50 pointer-events-auto transition-all" style={{
-          left: isMobile ? '0' : (sidebarVisible ? '270px' : '0'),
-          right: isMobile ? '0' : (propertiesVisible ? '310px' : '0')
-        }}>
+        <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-auto">
           <CanvasSheets
             sheets={botData.sheets}
             activeSheetId={botData.activeSheetId || null}
