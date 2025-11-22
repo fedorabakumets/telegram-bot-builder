@@ -136,34 +136,47 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
 
   const highlightedLines = new Set<number>();
 
-  const getCurrentContent = () => {
+  const getCurrentContent = (): string => {
     if (isLoading) {
       return 'Генерация кода...';
     }
-    return codeContent[selectedFormat] || 'Выберите формат для просмотра кода...';
+    const content = codeContent?.[selectedFormat];
+    if (content === undefined || content === null) {
+      return 'Выберите формат для просмотра кода...';
+    }
+    return content;
   };
 
   // Вспомогательная функция для генерации контента (используется в useEffect и downloadFile)
   const generateContent = async (format: CodeFormat): Promise<string> => {
-    const botGenerator = await loadBotGenerator();
-    
-    switch (format) {
-      case 'python':
-        const validation = botGenerator.validateBotStructure(botData);
-        if (!validation?.isValid) {
-          return '# Ошибка валидации структуры бота';
-        }
-        return botGenerator.generatePythonCode(botData, projectName, groups || []);
-      case 'json':
-        return JSON.stringify(botData, null, 2);
-      case 'requirements':
-        return botGenerator.generateRequirementsTxt();
-      case 'readme':
-        return botGenerator.generateReadme(botData, projectName);
-      case 'dockerfile':
-        return botGenerator.generateDockerfile();
-      default:
-        return '';
+    try {
+      const botGenerator = await loadBotGenerator();
+      
+      switch (format) {
+        case 'python':
+          const validation = botGenerator.validateBotStructure(botData);
+          if (!validation?.isValid) {
+            return '# Ошибка валидации структуры бота';
+          }
+          const pythonCode = botGenerator.generatePythonCode(botData, projectName, groups || []);
+          return pythonCode || '# Ошибка генерации Python кода';
+        case 'json':
+          return JSON.stringify(botData, null, 2);
+        case 'requirements':
+          const reqContent = botGenerator.generateRequirementsTxt();
+          return reqContent || '';
+        case 'readme':
+          const readmeContent = botGenerator.generateReadme(botData, projectName);
+          return readmeContent || '';
+        case 'dockerfile':
+          const dockerfileContent = botGenerator.generateDockerfile();
+          return dockerfileContent || '';
+        default:
+          return '';
+      }
+    } catch (error) {
+      console.error('Error generating content:', error);
+      return `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`;
     }
   };
 
