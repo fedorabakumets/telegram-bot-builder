@@ -224,7 +224,7 @@ export function CanvasSheets({
               className={cn(
                 "group flex items-center cursor-pointer select-none transition-all duration-200",
                 "px-3 h-9 rounded-lg gap-2",
-                "min-w-[130px] max-w-[200px]",
+                "min-w-max",
                 activeSheetId === sheet.id
                   ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-100"
                   : "bg-slate-800/80 text-slate-200 hover:bg-slate-700/90 border border-slate-600/50 hover:border-slate-500/70 hover:shadow-md"
@@ -256,7 +256,7 @@ export function CanvasSheets({
               ) : (
                 <span 
                   className={cn(
-                    "flex-1 cursor-text transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis",
+                    "cursor-text transition-all duration-200 whitespace-nowrap",
                     "text-xs font-medium",
                     activeSheetId === sheet.id
                       ? "text-white font-semibold drop-shadow-sm"
