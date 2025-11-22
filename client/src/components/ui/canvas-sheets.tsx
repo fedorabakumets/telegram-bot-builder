@@ -191,7 +191,7 @@ export function CanvasSheets({
   };
 
   return (
-    <div className={`flex items-center justify-start gap-2 relative transition-all duration-300 z-50 w-full ${isMobile ? 'px-3 py-3' : 'px-3 py-3'}`}>
+    <div className={`flex items-center justify-start gap-2 relative transition-all duration-300 z-50 w-full ${isMobile ? 'px-3 py-3' : 'px-4 py-3'} bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700`}>
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
       {(canScrollLeft || (isMobile && sheets.length > 1)) && (
         <Button
@@ -210,13 +210,14 @@ export function CanvasSheets({
         ref={tabsContainerRef}
         className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 justify-start items-center"
         style={{ 
-          minWidth: '100px'
+          minWidth: '200px',
+          maxWidth: 'calc(100% - 120px)'
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className={`flex flex-shrink-0 ${isMobile ? 'gap-1.5' : 'gap-1.5'}`}>
+        <div className={`flex flex-shrink-0 ${isMobile ? 'gap-2' : 'gap-2'}`}>
           {sheets.map((sheet) => (
             <div
               key={sheet.id}
@@ -224,11 +225,11 @@ export function CanvasSheets({
               className={cn(
                 "group flex items-center cursor-pointer transition-all duration-300 relative backdrop-blur-sm select-none touch-manipulation",
                 isMobile 
-                  ? "min-w-[90px] max-w-none min-h-[40px] h-10 px-3 active:scale-[0.98] rounded-lg" 
-                  : "min-w-[100px] max-w-none h-10 px-3 transform hover:scale-[1.02] rounded-lg",
+                  ? "min-w-[120px] max-w-[200px] min-h-[44px] h-11 px-4 active:scale-[0.98] rounded-lg" 
+                  : "min-w-[140px] max-w-[240px] h-11 px-4 transform hover:scale-[1.02] rounded-lg",
                 activeSheetId === sheet.id
                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 z-20 ring-2 ring-blue-300/50 dark:ring-blue-600/50"
-                  : "bg-white/70 dark:bg-slate-800/70 text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-700/90 shadow-sm hover:shadow-md border border-gray-200/50 dark:border-slate-600/50"
+                  : "bg-white/90 dark:bg-slate-800/90 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-slate-700 shadow-sm hover:shadow-md border border-gray-200/50 dark:border-slate-600/50"
               )}
               onClick={() => onSheetSelect(sheet.id)}
             >
