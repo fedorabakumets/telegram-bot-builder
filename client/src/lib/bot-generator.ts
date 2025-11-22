@@ -12356,14 +12356,16 @@ export function generateRequirementsTxt(): string {
 }
 
 export function generateReadme(botData: BotData, botName: string): string {
-  const commandNodes = (botData.nodes || []).filter(node => 
-    (node.type === 'start' || node.type === 'command') && node.data.command
+  const nodes = botData?.nodes || [];
+  const connections = botData?.connections || [];
+  const commandNodes = nodes.filter(node => 
+    (node.type === 'start' || node.type === 'command') && node.data?.command
   );
   
   let readme = '# ' + botName + '\n\n';
   readme += 'Telegram бот, созданный с помощью TelegramBot Builder.\n\n';
   readme += '## Описание\n\n';
-  readme += 'Этот бот содержит ' + botData.nodes.length + ' узлов и ' + botData.connections.length + ' соединений.\n\n';
+  readme += 'Этот бот содержит ' + nodes.length + ' узлов и ' + connections.length + ' соединений.\n\n';
   readme += '### Команды бота\n\n';
 
   commandNodes.forEach(node => {
@@ -12415,7 +12417,8 @@ export function generateReadme(botData: BotData, botName: string): string {
   readme += '2. Выберите своего бота\n';
   readme += '3. Скопируйте и отправьте следующие команды:\n\n';
   readme += '```\n';
-  readme += generateBotFatherCommands(botData.nodes);
+  const botFatherCommands = generateBotFatherCommands(nodes);
+  readme += botFatherCommands || '';
   readme += '\n```\n\n';
   
   readme += '## Структура проекта\n\n';
@@ -12427,11 +12430,11 @@ export function generateReadme(botData: BotData, botName: string): string {
   
   readme += '## Функциональность\n\n';
   readme += '### Статистика\n\n';
-  readme += '- **Всего узлов**: ' + botData.nodes.length + '\n';
+  readme += '- **Всего узлов**: ' + nodes.length + '\n';
   readme += '- **Команд**: ' + commandNodes.length + '\n';
-  readme += '- **Сообщений**: ' + (botData.nodes || []).filter(n => n.type === 'message').length + '\n';
-  readme += '- **Фото**: ' + (botData.nodes || []).filter(n => n.type === 'photo').length + '\n';
-  readme += '- **Кнопок**: ' + botData.nodes.reduce((sum, node) => sum + node.data.buttons.length, 0) + '\n\n';
+  readme += '- **Сообщений**: ' + nodes.filter(n => n.type === 'message').length + '\n';
+  readme += '- **Фото**: ' + nodes.filter(n => n.type === 'photo').length + '\n';
+  readme += '- **Кнопок**: ' + (nodes.reduce((sum: number, node: any) => sum + (node.data?.buttons?.length || 0), 0) as number) + '\n\n';
   
   readme += '### Безопасность\n\n';
   readme += 'Бот включает следующие функции безопасности:\n';
