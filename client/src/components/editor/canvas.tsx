@@ -1295,11 +1295,11 @@ export function Canvas({
       </div>
       
       {/* Компонент листов холста - фиксированная панель внизу */}
-      {botData && onBotDataUpdate && (
+      {botData && botData.sheets && botData.sheets.length > 0 && onBotDataUpdate && (
         <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-auto">
           <CanvasSheets
             sheets={botData.sheets}
-            activeSheetId={botData.activeSheetId || null}
+            activeSheetId={botData.activeSheetId || botData.sheets[0]?.id || null}
             onSheetSelect={handleSheetSelect}
             onSheetAdd={handleSheetAdd}
             onSheetDelete={handleSheetDelete}

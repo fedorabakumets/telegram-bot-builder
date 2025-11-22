@@ -5,10 +5,36 @@ export class SheetsManager {
   
   // Миграция старых данных к новому формату с листами
   static migrateLegacyData(legacyData: BotData): BotDataWithSheets {
+    // Если нет узлов, создаем стартовый узел по умолчанию
+    const nodes = legacyData.nodes && legacyData.nodes.length > 0 ? legacyData.nodes : [{
+      id: 'start',
+      type: 'start' as const,
+      position: { x: 100, y: 100 },
+      data: {
+        messageText: 'Привет! Я ваш новый бот. Нажмите /help для получения помощи.',
+        keyboardType: 'none' as const,
+        buttons: [],
+        resizeKeyboard: true,
+        oneTimeKeyboard: false,
+        markdown: false,
+        formatMode: 'none' as const,
+        synonyms: [],
+        isPrivateOnly: false,
+        adminOnly: false,
+        requiresAuth: false,
+        showInMenu: true,
+        enableStatistics: true,
+        customParameters: [],
+        options: [],
+        command: '/start',
+        description: 'Запустить бота'
+      }
+    }];
+
     const defaultSheet: CanvasSheet = {
       id: nanoid(),
       name: 'Основной поток',
-      nodes: legacyData.nodes || [],
+      nodes: nodes,
       connections: legacyData.connections || [],
       viewState: {
         pan: { x: 0, y: 0 },
