@@ -112,7 +112,7 @@ function findStartNode(nodes: LayoutNode[], connections: Connection[]): LayoutNo
 
 /**
  * Строит дерево зависимостей на основе соединений
- * УЛУЧШЕНИЕ: теперь учитывает автопереходы
+ * УЛУЧШЕНИЕ: теперь учитывает автопереходы и правильно обрабатывает порядок для вертикального расположения
  */
 function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], startNode: LayoutNode) {
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
@@ -128,22 +128,29 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
     graph.get(connection.source)!.push(connection.target);
   });
 
-  // УЛУЧШЕНИЕ: Добавляем автопереходы в граф
+  // УЛУЧШЕНИЕ: Добавляем автопереходы в граф (они имеют приоритет)
   nodes.forEach(node => {
     const autoTransitionTarget = (node as any).data?.autoTransitionTo;
     if (autoTransitionTarget) {
       if (!graph.has(node.id)) {
         graph.set(node.id, []);
       }
-      // Добавляем автопереход только если его еще нет
+      // Добавляем автопереход в начало списка для приоритета
       if (!graph.get(node.id)!.includes(autoTransitionTarget)) {
-        graph.get(node.id)!.push(autoTransitionTarget);
+        graph.get(node.id)!.unshift(autoTransitionTarget);
       }
     }
     
     // УЛУЧШЕНИЕ: Добавляем переходы через кнопки в граф
     if (node.data.buttons && Array.isArray(node.data.buttons)) {
-      node.data.buttons.forEach((button: any) => {
+      // Сортируем кнопки по порядку для стабильного расположения
+      const sortedButtons = [...node.data.buttons].sort((a: any, b: any) => {
+        const orderA = a.order !== undefined ? a.order : 999;
+        const orderB = b.order !== undefined ? b.order : 999;
+        return orderA - orderB;
+      });
+      
+      sortedButtons.forEach((button: any) => {
         if (button.target && button.action === 'goto') {
           if (!graph.has(node.id)) {
             graph.set(node.id, []);
@@ -430,13 +437,13 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   // Создаем результат с правильными позициями
   const processedNodes = new Set<string>();
 
-  // Обрабатываем цепочки автопереходов отдельно
+  // Обрабатываем цепочки автопереходов - ВЕРТИКАЛЬНО для линейных цепочек
   autoTransitionChains.forEach((chain, chainIndex) => {
     console.log(`🔗 Обрабатываем цепочку автопереходов ${chainIndex}:`, chain);
 
     if (chain.length === 0) return;
 
-    // Находим первый узел цепочки для определения Y позиции
+    // Находим первый узел цепочки для определения начальной позиции
     const firstNode = nodeMap.get(chain[0]);
     if (!firstNode) {
       console.warn(`  ⚠️ Первый узел цепочки ${chain[0]} не найден`);
@@ -444,11 +451,10 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     }
 
     // Используем Y позицию первого узла (уже вычисленную в assignYPositions)
-    const chainY = (firstNode as any)._y || options.startY;
-    
-    let currentX = options.startX;
+    let currentY = (firstNode as any)._y || options.startY;
+    const chainX = options.startX;
 
-    // Располагаем узлы цепочки горизонтально
+    // Располагаем узлы цепочки ВЕРТИКАЛЬНО
     chain.forEach((nodeId, index) => {
       const node = nodeMap.get(nodeId);
       if (!node) {
@@ -457,17 +463,18 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
       }
 
       const nodeSize = getNodeSize(nodeId, options);
-      console.log(`  ➡️ Узел ${index + 1}/${chain.length} (${nodeId}): x=${currentX}, y=${chainY}`);
+      console.log(`  ⬇️ Узел ${index + 1}/${chain.length} (${nodeId}): x=${chainX}, y=${currentY}`);
 
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
       result.push({
         ...cleanNode,
-        position: { x: currentX, y: chainY }
+        position: { x: chainX, y: currentY }
       });
 
       processedNodes.add(nodeId);
-      currentX += nodeSize.width + options.horizontalSpacing;
+      // Переходим к следующей позиции по вертикали
+      currentY += nodeSize.height + options.verticalSpacing;
     });
   });
 
