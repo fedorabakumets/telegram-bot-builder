@@ -374,64 +374,20 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     return autoTransitionChains.some(chain => chain.includes(nodeId));
   }
 
-  // Назначаем y позиции с учетом размеров поддеревьев
-  function assignYPositions(node: LayoutNode, startY: number, visited = new Set<string>()): number {
-    // Проверяем на циклы - если узел уже посещен, возвращаем текущую позицию
-    if (visited.has(node.id)) {
-      // Если Y позиция уже назначена, используем её
-      const existingY = (node as any)._y;
-      if (existingY !== undefined) {
-        const nodeSize = getNodeSize(node.id, options);
-        return existingY + nodeSize.height + options.verticalSpacing;
-      }
-      return startY;
-    }
-
-    visited.add(node.id);
-    const nodeSize = getNodeSize(node.id, options);
-
-    if (!node.children || node.children.length === 0) {
-      // Листовой узел - присваиваем текущую позицию
-      (node as any)._y = startY;
-      return startY + nodeSize.height + options.verticalSpacing;
-    }
-
-    // Сначала назначаем позиции детям
-    let childY = startY;
-    const childCenters: number[] = [];
-
-    for (const child of node.children) {
-      // Передаем копию visited сета для каждого дочернего узла
-      const childVisited = new Set(visited);
-      childY = assignYPositions(child, childY, childVisited);
-      const childSize = getNodeSize(child.id, options);
-      const childCenterY = (child as any)._y;
-      if (childCenterY !== undefined) {
-        childCenters.push(childCenterY + childSize.height / 2);
-      }
-    }
-
-    // Центрируем родительский узел относительно центров дочерних узлов
-    if (childCenters.length > 0) {
-      const avgChildCenterY = childCenters.reduce((sum, y) => sum + y, 0) / childCenters.length;
-      const parentSize = getNodeSize(node.id, options);
-      (node as any)._y = avgChildCenterY - parentSize.height / 2;
-    } else {
-      // Если нет дочерних узлов, используем стартовую позицию
-      (node as any)._y = startY;
-    }
-
-    return childY;
+  // Назначаем y позиции строго по порядку уровней (сверху вниз)
+  function assignYPositions(levelIndex: number, nodeInLevel: LayoutNode, yPosition: number): number {
+    const nodeSize = getNodeSize(nodeInLevel.id, options);
+    (nodeInLevel as any)._y = yPosition;
+    return yPosition + nodeSize.height + options.verticalSpacing;
   }
 
-  // Находим корневые узлы (уровень 0)
-  const rootNodes = levels[0] || [];
+  // Назначаем Y позиции строго по уровням (сверху вниз)
   let currentY = options.startY;
-
-  // Назначаем позиции для каждого корневого узла
-  rootNodes.forEach(rootNode => {
-    currentY = assignYPositions(rootNode, currentY);
-    currentY += options.verticalSpacing; // Полный отступ между корневыми деревьями
+  
+  levels.forEach((levelNodes, levelIndex) => {
+    levelNodes.forEach(node => {
+      currentY = assignYPositions(levelIndex, node, currentY);
+    });
   });
 
   // Создаем результат с правильными позициями
