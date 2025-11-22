@@ -140,6 +140,21 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
         graph.get(node.id)!.push(autoTransitionTarget);
       }
     }
+    
+    // УЛУЧШЕНИЕ: Добавляем переходы через кнопки в граф
+    if (node.data.buttons && Array.isArray(node.data.buttons)) {
+      node.data.buttons.forEach((button: any) => {
+        if (button.target && button.action === 'goto') {
+          if (!graph.has(node.id)) {
+            graph.set(node.id, []);
+          }
+          // Добавляем переход через кнопку только если его еще нет
+          if (!graph.get(node.id)!.includes(button.target)) {
+            graph.get(node.id)!.push(button.target);
+          }
+        }
+      });
+    }
   });
 
   // Рекурсивно строим дерево
