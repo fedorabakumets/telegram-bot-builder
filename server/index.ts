@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { stopCleanup } from "./cache";
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -74,5 +75,14 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+  });
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    log('SIGTERM signal received: closing HTTP server');
+    stopCleanup();
+    server.close(() => {
+      log('HTTP server closed');
+    });
   });
 })();

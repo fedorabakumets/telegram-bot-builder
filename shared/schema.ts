@@ -13,9 +13,13 @@ export const botProjects = pgTable("bot_projects", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// MIGRATION REQUIRED: После изменения этой схемы необходимо применить миграцию к базе данных!
+// Выполните вручную: ALTER TABLE bot_instances DROP CONSTRAINT bot_instances_project_id_bot_projects_id_fk; 
+// ALTER TABLE bot_instances ADD CONSTRAINT bot_instances_project_id_bot_projects_id_fk FOREIGN KEY (project_id) REFERENCES bot_projects(id) ON DELETE CASCADE;
+// ИЛИ пересоздайте базу данных (с потерей данных).
 export const botInstances = pgTable("bot_instances", {
   id: serial("id").primaryKey(),
-  projectId: integer("project_id").references(() => botProjects.id).notNull(),
+  projectId: integer("project_id").references(() => botProjects.id, { onDelete: "cascade" }).notNull(),
   tokenId: integer("token_id").references(() => botTokens.id, { onDelete: "cascade" }).notNull(),
   status: text("status").notNull(), // "running", "stopped", "error"
   token: text("token").notNull(),
@@ -604,6 +608,7 @@ export const nodeSchema = z.object({
     targetUserId: z.string().optional(), // ID пользователя для модерации
     userIdSource: z.enum(['manual', 'variable', 'last_message']).default('last_message'), // Источник ID пользователя
     userVariableName: z.string().optional(), // Имя переменной с ID пользователя
+    targetGroupId: z.string().optional(), // ID группы для отправки сообщений
     // Дополнительные поля для новых типов узлов
     stickerUrl: z.string().optional(),
     stickerFileId: z.string().optional(),

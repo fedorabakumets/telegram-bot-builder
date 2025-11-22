@@ -1,6 +1,7 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions';
 import { Api } from 'telegram/tl';
+import { CustomFile } from 'telegram/client/uploads';
 import { db } from './db';
 import { userTelegramSettings } from '@shared/schema';
 import { eq } from 'drizzle-orm';
@@ -132,8 +133,8 @@ class TelegramClientManager {
         return true;
       }
       return false;
-    } catch (error) {
-      console.error(`Ошибка восстановления сессии для ${userId}:`, error);
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
       return false;
     }
   }
@@ -189,7 +190,7 @@ class TelegramClientManager {
       };
 
     } catch (error: any) {
-      console.error('Ошибка отправки кода:', error);
+      console.error('Detailed error:', error?.message, error?.stack);
       return {
         success: false,
         error: error.message || 'Неизвестная ошибка при отправке кода'
@@ -231,7 +232,7 @@ class TelegramClientManager {
       return { success: true };
 
     } catch (error: any) {
-      console.error('Ошибка проверки кода:', error);
+      console.error('Detailed error:', error?.message, error?.stack);
 
       // Проверяем, нужен ли пароль для 2FA
       if (error.message && error.message.includes('SESSION_PASSWORD_NEEDED')) {
@@ -307,7 +308,7 @@ class TelegramClientManager {
       return { success: true };
 
     } catch (error: any) {
-      console.error('Ошибка проверки пароля:', error);
+      console.error('Detailed error:', error?.message, error?.stack);
       return {
         success: false,
         error: error.message === 'PASSWORD_HASH_INVALID' ? 'Неверный пароль' : (error.message || 'Ошибка авторизации')
@@ -326,7 +327,7 @@ class TelegramClientManager {
     try {
 
       const result = await db.select().from(userTelegramSettings).where(eq(userTelegramSettings.userId, userId)).limit(1);
-      const hasCredentials = result.length > 0 && result[0].apiId && result[0].apiHash;
+      const hasCredentials = !!(result.length > 0 && result[0].apiId && result[0].apiHash);
       
       return { ...status, hasCredentials };
     } catch (error) {
@@ -423,7 +424,7 @@ class TelegramClientManager {
         // Если ID начинается с -100, это супергруппа
         if (typeof chatId === 'string' && chatId.startsWith('-100')) {
           const channelId = chatId.slice(4);
-          chatEntity = new Api.PeerChannel({ channelId: BigInt(channelId) });
+          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
         } else {
           throw new Error(`Не удалось найти чат с ID: ${chatId}`);
         }
@@ -435,7 +436,7 @@ class TelegramClientManager {
           filter: new Api.ChannelParticipantsRecent(),
           offset: 0,
           limit: 200,
-          hash: BigInt(0),
+          hash: 0 as any,
         })
       );
 
@@ -468,8 +469,8 @@ class TelegramClientManager {
 
       return [];
     } catch (error: any) {
-      console.error('Failed to get group members:', error);
-      throw new Error(`Failed to get group members: ${error.message || 'Unknown error'}`);
+      console.error('Detailed error:', error?.message, error?.stack);
+      throw new Error(`Failed to get group members: ${error?.message || 'Unknown error'}`);
     }
   }
 
@@ -509,8 +510,8 @@ class TelegramClientManager {
         chatPhoto: (result.chats[0] as any)?.photo || null,
       };
     } catch (error: any) {
-      console.error('Failed to get chat info:', error);
-      throw new Error(`Failed to get chat info: ${error.message || 'Unknown error'}`);
+      console.error('Detailed error:', error?.message, error?.stack);
+      throw new Error(`Failed to get chat info: ${error?.message || 'Unknown error'}`);
     }
   }
 
@@ -531,7 +532,8 @@ class TelegramClientManager {
   async saveSession(userId: string): Promise<string | null> {
     const client = this.clients.get(userId);
     if (client && client.session) {
-      return client.session.save() as string;
+      const sessionData = client.session.save();
+      return typeof sessionData === 'string' ? sessionData : String(sessionData);
     }
     return null;
   }
@@ -554,8 +556,8 @@ class TelegramClientManager {
         chatEntity = await client.getEntity(chatId);
       } catch (entityError) {
         if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = BigInt(chatId.slice(4));
-          chatEntity = new Api.PeerChannel({ channelId });
+          const channelId = chatId.slice(4);
+          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
         } else {
           throw new Error(`Не удалось найти чат с ID: ${chatId}`);
         }
@@ -590,11 +592,16 @@ class TelegramClientManager {
     try {
       // Читаем файл
       const fs = await import('fs');
+      const path = await import('path');
       const photoBuffer = fs.readFileSync(photoPath);
+      const fileName = path.basename(photoPath);
+
+      // Создаем CustomFile из Buffer
+      const customFile = new CustomFile(fileName, photoBuffer.length, '', photoBuffer);
 
       // Загружаем файл в Telegram
       const file = await client.uploadFile({
-        file: photoBuffer,
+        file: customFile,
         workers: 1,
       });
 
@@ -604,8 +611,8 @@ class TelegramClientManager {
         chatEntity = await client.getEntity(chatId);
       } catch (entityError) {
         if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = BigInt(chatId.slice(4));
-          chatEntity = new Api.PeerChannel({ channelId });
+          const channelId = chatId.slice(4);
+          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
         } else {
           throw new Error(`Не удалось найти чат с ID: ${chatId}`);
         }
@@ -615,7 +622,7 @@ class TelegramClientManager {
       const result = await client.invoke(
         new Api.channels.EditPhoto({
           channel: chatEntity,
-          photo: file,
+          photo: new Api.InputChatUploadedPhoto({ file }),
         })
       );
 
@@ -640,8 +647,8 @@ class TelegramClientManager {
         chatEntity = await client.getEntity(chatId);
       } catch (entityError) {
         if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = BigInt(chatId.slice(4));
-          chatEntity = new Api.PeerChannel({ channelId });
+          const channelId = chatId.slice(4);
+          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
         } else {
           throw new Error(`Не удалось найти чат с ID: ${chatId}`);
         }
@@ -695,8 +702,8 @@ class TelegramClientManager {
         chatEntity = await client.getEntity(chatId);
       } catch (entityError) {
         if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = BigInt(chatId.slice(4));
-          chatEntity = new Api.PeerChannel({ channelId });
+          const channelId = chatId.slice(4);
+          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
         } else {
           throw new Error(`Не удалось найти чат с ID: ${chatId}`);
         }
@@ -750,8 +757,8 @@ class TelegramClientManager {
         chatEntity = await client.getEntity(chatId);
       } catch (entityError) {
         if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = BigInt(chatId.slice(4));
-          chatEntity = new Api.PeerChannel({ channelId });
+          const channelId = chatId.slice(4);
+          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
         } else {
           throw new Error(`Не удалось найти чат с ID: ${chatId}`);
         }
@@ -805,8 +812,8 @@ class TelegramClientManager {
         chatEntity = await client.getEntity(chatId);
       } catch (entityError) {
         if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = BigInt(chatId.slice(4));
-          chatEntity = new Api.PeerChannel({ channelId });
+          const channelId = chatId.slice(4);
+          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
         } else {
           throw new Error(`Не удалось найти чат с ID: ${chatId}`);
         }
@@ -861,8 +868,8 @@ class TelegramClientManager {
         chatEntity = await client.getEntity(chatId);
       } catch (entityError) {
         if (typeof chatId === 'string' && chatId.startsWith('-100')) {
-          const channelId = BigInt(chatId.slice(4));
-          chatEntity = new Api.PeerChannel({ channelId });
+          const channelId = chatId.slice(4);
+          chatEntity = new Api.PeerChannel({ channelId: channelId as any });
         } else {
           throw new Error(`Не удалось найти чат с ID: ${chatId}`);
         }

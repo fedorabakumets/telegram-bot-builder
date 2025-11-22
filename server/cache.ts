@@ -61,9 +61,18 @@ class SimpleCache {
 export const serverCache = new SimpleCache();
 
 // Запускаем очистку кеша каждые 5 минут
-setInterval(() => {
+let cleanupInterval: NodeJS.Timeout | null = null;
+cleanupInterval = setInterval(() => {
   serverCache.cleanup();
 }, 5 * 60 * 1000);
+
+// Экспорт функции для остановки очистки
+export function stopCleanup(): void {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
+}
 
 // Хелпер для кеширования с проверкой
 export function getCachedOrExecute<T>(

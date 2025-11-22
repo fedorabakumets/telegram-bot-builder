@@ -196,6 +196,12 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
   
   useEffect(() => {
     async function loadFreshProjectData() {
+      if (!projectId) {
+        console.log('ExportPanel: using botData from props (no projectId yet)');
+        setFreshBotData(botData); // Используем данные из пропсов
+        return;
+      }
+      
       try {
         console.log('🔄 ExportPanel: Загружаем свежие данные проекта из API...');
         const response = await fetch(`/api/projects/${projectId}`);
@@ -216,7 +222,7 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
     }
     
     loadFreshProjectData();
-  }, [projectId]);
+  }, [projectId, botData]);
 
   // Генерация команд BotFather с использованием свежих данных
   useEffect(() => {

@@ -234,7 +234,10 @@ export default function Editor() {
   // Define updateProjectMutation early so it can be used in callbacks
   const updateProjectMutation = useMutation({
     mutationFn: async (data: any) => {
-      if (!activeProject) return;
+      if (!activeProject?.id) {
+        console.warn('Cannot save: activeProject or ID is undefined');
+        return;
+      }
       
       // Всегда используем текущие данные с холста для сохранения
       let projectData;
@@ -258,7 +261,13 @@ export default function Editor() {
         projectData = getBotData();
       }
       
-      return apiRequest('PUT', `/api/projects/${activeProject.id}`, {
+      // Additional safety check before making the API request
+      const projectId = activeProject.id;
+      if (!projectId) {
+        throw new Error('Project ID is required for update');
+      }
+      
+      return apiRequest('PUT', `/api/projects/${projectId}`, {
         data: projectData
       });
     },
@@ -305,7 +314,7 @@ export default function Editor() {
   // Load first project if no projectId in URL and we have the ID from list
   const { data: firstProject, isLoading: isFirstProjectLoading } = useQuery<BotProject>({
     queryKey: ['/api/projects', effectiveProjectId],
-    enabled: !projectId && !!effectiveProjectId, // Загружаем только если нет ID в URL, но есть в списке
+    enabled: !projectId && !!effectiveProjectId && typeof effectiveProjectId === 'number', // Добавить проверку типа
     staleTime: 30000,
   });
 
@@ -475,7 +484,9 @@ export default function Editor() {
         
         // ВАЖНО: Сохраняем мигрированные данные сразу в БД
         console.log('💾 Сохраняем мигрированные данные в БД');
-        updateProjectMutation.mutate({ data: migratedData });
+        if (activeProject?.id) {
+          updateProjectMutation.mutate({ data: migratedData });
+        }
       }
       
       // Update the last loaded activeProject ID
@@ -487,28 +498,38 @@ export default function Editor() {
   }, [activeProject?.id, activeProject?.data, setBotData, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId, updateProjectMutation]);
 
   const handleSave = useCallback(() => {
-    updateProjectMutation.mutate({});
-  }, [updateProjectMutation]);
+    if (activeProject?.id) {
+      updateProjectMutation.mutate({});
+    }
+  }, [updateProjectMutation, activeProject]);
 
   const handleTabChange = useCallback((tab: 'editor' | 'preview' | 'export' | 'bot' | 'users' | 'groups') => {
     setCurrentTab(tab);
     if (tab === 'preview') {
       // Auto-save before showing preview
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
       // Navigate to preview page instead of showing modal
       setLocation(`/preview/${activeProject?.id}`);
       return;
     } else if (tab === 'export') {
       // Auto-save before showing export page
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
     } else if (tab === 'bot') {
       // Auto-save before showing bot controls
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
     } else if (tab === 'users') {
       // Auto-save before showing users panel
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
     }
-  }, [updateProjectMutation]);
+  }, [updateProjectMutation, activeProject, setLocation]);
 
   // Функции управления листами
   const handleSheetAdd = useCallback((name: string) => {
@@ -527,7 +548,9 @@ export default function Editor() {
       }
       
       // Сохраняем изменения
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
       
       toast({
         title: "Лист создан",
@@ -556,7 +579,9 @@ export default function Editor() {
       }
       
       // Сохраняем изменения
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
       
       toast({
         title: "Лист удален",
@@ -579,7 +604,9 @@ export default function Editor() {
       setBotDataWithSheets(updatedData);
       
       // Сохраняем изменения
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
       
       toast({
         title: "Лист переименован",
@@ -610,7 +637,9 @@ export default function Editor() {
       }
       
       // Сохраняем изменения
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
       
       toast({
         title: "Лист дублирован",
@@ -654,7 +683,9 @@ export default function Editor() {
       }
       
       // Сохраняем изменения
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
     } catch (error) {
       toast({
         title: "Ошибка переключения",
@@ -662,7 +693,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes]);
+  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject]);
 
   // Проверяем, есть ли выбранный шаблон при загрузке страницы
   useEffect(() => {
@@ -733,10 +764,12 @@ export default function Editor() {
             setBotData({ nodes: firstSheet.nodes, connections: firstSheet.connections }, template.name, currentNodeSizes, shouldSkipLayout);
           }
           
-          // Сохраняем в проект
-          updateProjectMutation.mutate({
-            data: templateDataWithSheets
-          });
+          // Сохраняем в проект только если activeProject загружен
+          if (activeProject?.id) {
+            updateProjectMutation.mutate({
+              data: templateDataWithSheets
+            });
+          }
         } else {
           // Обычный шаблон без листов - мигрируем к формату с листами
           console.log('Применяем обычный шаблон и мигрируем к формату с листами');
@@ -746,9 +779,12 @@ export default function Editor() {
           const shouldSkipLayout = false; // Автоиерархия необходима при загрузке обычных шаблонов
           setBotData(template.data, template.name, currentNodeSizes, shouldSkipLayout); // автоиерархия должна работать при загрузке шаблонов
           
-          updateProjectMutation.mutate({
-            data: migratedData
-          });
+          // Сохраняем в проект только если activeProject загружен
+          if (activeProject?.id) {
+            updateProjectMutation.mutate({
+              data: migratedData
+            });
+          }
         }
         
         // Принудительно инвалидируем кеш проектов после применения шаблона
@@ -783,9 +819,11 @@ export default function Editor() {
     setHasLocalChanges(true);
     // Then auto-save to database with a small delay
     setTimeout(() => {
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
     }, 500); // 500ms delay to allow for rapid typing
-  }, [updateNodeData, updateProjectMutation]);
+  }, [updateNodeData, updateProjectMutation, activeProject]);
 
   const handleNodeMove = useCallback((nodeId: string, position: { x: number; y: number }) => {
     updateNode(nodeId, { position });
@@ -818,9 +856,11 @@ export default function Editor() {
     
     // Auto-save after a short delay to persist the new node
     setTimeout(() => {
-      updateProjectMutation.mutate({});
+      if (activeProject?.id) {
+        updateProjectMutation.mutate({});
+      }
     }, 1000);
-  }, [addNode, isLoadingTemplate, updateProjectMutation]);
+  }, [addNode, isLoadingTemplate, updateProjectMutation, activeProject]);
 
   const handleSaveAsTemplate = useCallback(() => {
     setShowSaveTemplate(true);
@@ -907,10 +947,12 @@ export default function Editor() {
           console.log('Применили первый лист, связей:', firstSheet.connections.length);
         }
         
-        // Сохраняем в проект
-        updateProjectMutation.mutate({
-          data: templateDataWithSheets
-        });
+        // Сохраняем в проект только если activeProject загружен
+        if (activeProject?.id) {
+          updateProjectMutation.mutate({
+            data: templateDataWithSheets
+          });
+        }
       } else {
         // Обычный шаблон без листов
         console.log('Применяем обычный шаблон');
@@ -931,9 +973,11 @@ export default function Editor() {
         
         // Сохраняем изменения в базе данных сразу с новыми данными
         console.log('Сохраняем шаблон в БД, узлов:', migratedData.sheets?.[0]?.nodes?.length || templateData.nodes?.length);
-        updateProjectMutation.mutate({
-          data: migratedData
-        });
+        if (activeProject?.id) {
+          updateProjectMutation.mutate({
+            data: migratedData
+          });
+        }
       }
       
       // Обновляем кеш проектов для синхронизации панели компонентов  
@@ -967,13 +1011,15 @@ export default function Editor() {
   const handleConnectionsChange = useCallback((newConnections: Connection[]) => {
     // Обновляем связи через существующий механизм
     const currentData = getBotData();
-    updateProjectMutation.mutate({
-      data: {
-        ...currentData,
-        connections: newConnections
-      }
-    });
-  }, [getBotData, updateProjectMutation]);
+    if (activeProject?.id) {
+      updateProjectMutation.mutate({
+        data: {
+          ...currentData,
+          connections: newConnections
+        }
+      });
+    }
+  }, [getBotData, updateProjectMutation, activeProject]);
 
   const handleConnectionSelect = useCallback((connection: Connection | null) => {
     setSelectedConnection(connection);
@@ -1146,7 +1192,7 @@ export default function Editor() {
         onLayoutChange={updateLayoutConfig}
         onGoToProjects={handleGoToProjects}
         onProjectSelect={handleProjectSelect}
-        projectId={activeProject?.id}
+        currentProjectId={activeProject?.id}
         activeSheetId={botDataWithSheets?.activeSheetId}
         headerContent={headerContent}
         sidebarContent={<div>Sidebar</div>}
@@ -1238,7 +1284,7 @@ export default function Editor() {
               onLayoutChange={updateLayoutConfig}
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
-              projectId={activeProject?.id}
+              currentProjectId={activeProject?.id}
               activeSheetId={botDataWithSheets?.activeSheetId}
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}
@@ -1552,7 +1598,7 @@ export default function Editor() {
               onLayoutChange={updateLayoutConfig}
               onGoToProjects={handleGoToProjects}
               onProjectSelect={handleProjectSelect}
-              projectId={activeProject?.id}
+              currentProjectId={activeProject?.id}
               activeSheetId={botDataWithSheets?.activeSheetId}
               onToggleCanvas={handleToggleCanvas}
               onToggleHeader={handleToggleHeader}

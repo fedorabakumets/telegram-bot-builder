@@ -86,9 +86,9 @@ export class DatabaseBackup {
 
       console.log(`Backup created successfully: ${filepath}`);
       return filepath;
-    } catch (error) {
-      console.error('Failed to create backup:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
+      throw new Error(`Backup operation failed: ${error?.message || 'Unknown error'}`);
     }
   }
 
@@ -146,9 +146,9 @@ export class DatabaseBackup {
       }
 
       console.log('Database restore completed successfully');
-    } catch (error) {
-      console.error('Failed to restore backup:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
+      throw new Error(`Restore operation failed: ${error?.message || 'Unknown error'}`);
     }
   }
 
@@ -189,9 +189,9 @@ export class DatabaseBackup {
         default:
           console.warn(`Unknown table: ${tableName}`);
       }
-    } catch (error) {
-      console.error(`Failed to restore table ${tableName}:`, error);
-      throw error;
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
+      throw new Error(`Failed to restore table ${tableName}: ${error?.message || 'Unknown error'}`);
     }
   }
 
@@ -231,8 +231,8 @@ export class DatabaseBackup {
             break;
         }
         console.log(`Cleared table: ${tableName}`);
-      } catch (error) {
-        console.error(`Failed to clear table ${tableName}:`, error);
+      } catch (error: any) {
+        console.error('Detailed error:', error?.message, error?.stack);
       }
     }
   }
@@ -261,8 +261,8 @@ export class DatabaseBackup {
           try {
             const backupData: BackupData = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
             metadata = backupData.metadata;
-          } catch (error) {
-            console.warn(`Failed to read metadata from ${file}:`, error);
+          } catch (error: any) {
+            console.warn(`Failed to read metadata from ${file}: ${error?.message}`);
           }
 
           return {
@@ -276,8 +276,8 @@ export class DatabaseBackup {
         .sort((a, b) => b.created.getTime() - a.created.getTime());
 
       return files;
-    } catch (error) {
-      console.error('Failed to list backups:', error);
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
       return [];
     }
   }
@@ -293,9 +293,9 @@ export class DatabaseBackup {
       const fs = await import('fs');
       fs.unlinkSync(filepath);
       console.log(`Deleted backup: ${filename}`);
-    } catch (error) {
-      console.error('Failed to delete backup:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
+      throw new Error(`Failed to delete backup: ${error?.message || 'Unknown error'}`);
     }
   }
 
@@ -366,9 +366,9 @@ export class DatabaseBackup {
         totalRecords,
         estimatedSize: 'N/A'
       };
-    } catch (error) {
-      console.error('Failed to get database stats:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
+      throw new Error(`Failed to get database stats: ${error?.message || 'Unknown error'}`);
     }
   }
 }

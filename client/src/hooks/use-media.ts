@@ -5,6 +5,7 @@ import type { MediaFile, InsertMediaFile } from "@shared/schema";
 export function useMediaFiles(projectId: number, fileType?: string) {
   return useQuery({
     queryKey: ["/api/media/project", projectId, fileType],
+    enabled: !!projectId && typeof projectId === 'number',
     queryFn: async (): Promise<MediaFile[]> => {
       const url = fileType 
         ? `/api/media/project/${projectId}?type=${fileType}`
@@ -251,6 +252,6 @@ export function useSearchMedia(projectId: number, query: string) {
       }
       return response.json();
     },
-    enabled: !!query.trim(),
+    enabled: !!query.trim() && !!projectId && typeof projectId === 'number',
   });
 }

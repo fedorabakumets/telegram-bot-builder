@@ -62,8 +62,8 @@ export class DatabaseManager {
       this.connectionStats.lastHealthCheck = new Date();
 
       return true;
-    } catch (error) {
-      console.error('Health check failed:', error);
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
       this.connectionStats.errors++;
       return false;
     }
@@ -105,8 +105,8 @@ export class DatabaseManager {
       if (slowQueries.rows.length > 0) {
         console.log('Found slow queries:', slowQueries.rows);
       }
-    } catch (error) {
-      console.warn('Could not optimize connections:', error);
+    } catch (error: any) {
+      console.warn('Detailed error:', error?.message, error?.stack);
     }
   }
 
@@ -145,9 +145,9 @@ export class DatabaseManager {
       try {
         const result = await operation(tx);
         return result;
-      } catch (error) {
-        console.error('Transaction failed, rolling back:', error);
-        throw error;
+      } catch (error: any) {
+        console.error('Detailed error:', error?.message, error?.stack);
+        throw new Error(`Transaction failed: ${error?.message || 'Unknown error'}`);
       }
     });
   }
@@ -167,9 +167,9 @@ export class DatabaseManager {
       
       console.log(`Backup created: ${backupName}`);
       return backupName;
-    } catch (error) {
-      console.error('Backup failed:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
+      throw new Error(`Backup operation failed: ${error?.message || 'Unknown error'}`);
     }
   }
 
@@ -193,9 +193,9 @@ export class DatabaseManager {
         WHERE is_active = 0 AND updated_at < ${cutoffDate}
       `);
 
-    } catch (error) {
-      console.error('Cleanup failed:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
+      throw new Error(`Cleanup operation failed: ${error?.message || 'Unknown error'}`);
     }
   }
 
@@ -216,8 +216,8 @@ export class DatabaseManager {
       `);
 
       return metrics.rows;
-    } catch (error) {
-      console.error('Failed to get database metrics:', error);
+    } catch (error: any) {
+      console.error('Detailed error:', error?.message, error?.stack);
       return [];
     }
   }

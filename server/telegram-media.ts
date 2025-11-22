@@ -28,7 +28,7 @@ export async function downloadTelegramPhoto(
     const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
     
     const fileInfo = await new Promise<any>((resolve, reject) => {
-      https.get(getFileUrl, (res) => {
+      const request = https.get(getFileUrl, { timeout: 30000 }, (res) => {
         let data = '';
         res.on('data', (chunk) => data += chunk);
         res.on('end', () => {
@@ -44,6 +44,11 @@ export async function downloadTelegramPhoto(
           }
         });
       }).on('error', reject);
+
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Request timeout'));
+      });
     });
 
     const filePath = fileInfo.file_path;
@@ -95,7 +100,7 @@ export async function downloadTelegramPhoto(
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
     
     await new Promise<void>((resolve, reject) => {
-      https.get(downloadUrl, (res) => {
+      const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
         if (res.statusCode !== 200) {
           reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
           return;
@@ -106,6 +111,11 @@ export async function downloadTelegramPhoto(
           .then(() => resolve())
           .catch(reject);
       }).on('error', reject);
+
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Request timeout'));
+      });
     });
 
     // Возвращаем относительный путь от корня проекта
@@ -139,7 +149,7 @@ export async function downloadTelegramVideo(
     const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
     
     const fileInfo = await new Promise<any>((resolve, reject) => {
-      https.get(getFileUrl, (res) => {
+      const request = https.get(getFileUrl, { timeout: 30000 }, (res) => {
         let data = '';
         res.on('data', (chunk) => data += chunk);
         res.on('end', () => {
@@ -155,6 +165,11 @@ export async function downloadTelegramVideo(
           }
         });
       }).on('error', reject);
+
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Request timeout'));
+      });
     });
 
     const filePath = fileInfo.file_path;
@@ -201,7 +216,7 @@ export async function downloadTelegramVideo(
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
     
     await new Promise<void>((resolve, reject) => {
-      https.get(downloadUrl, (res) => {
+      const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
         if (res.statusCode !== 200) {
           reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
           return;
@@ -212,6 +227,11 @@ export async function downloadTelegramVideo(
           .then(() => resolve())
           .catch(reject);
       }).on('error', reject);
+
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Request timeout'));
+      });
     });
 
     const relativeFilePath = join('uploads', String(projectId), date, fileName);
@@ -244,7 +264,7 @@ export async function downloadTelegramAudio(
     const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
     
     const fileInfo = await new Promise<any>((resolve, reject) => {
-      https.get(getFileUrl, (res) => {
+      const request = https.get(getFileUrl, { timeout: 30000 }, (res) => {
         let data = '';
         res.on('data', (chunk) => data += chunk);
         res.on('end', () => {
@@ -260,6 +280,11 @@ export async function downloadTelegramAudio(
           }
         });
       }).on('error', reject);
+
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Request timeout'));
+      });
     });
 
     const filePath = fileInfo.file_path;
@@ -306,7 +331,7 @@ export async function downloadTelegramAudio(
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
     
     await new Promise<void>((resolve, reject) => {
-      https.get(downloadUrl, (res) => {
+      const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
         if (res.statusCode !== 200) {
           reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
           return;
@@ -317,6 +342,11 @@ export async function downloadTelegramAudio(
           .then(() => resolve())
           .catch(reject);
       }).on('error', reject);
+
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Request timeout'));
+      });
     });
 
     const relativeFilePath = join('uploads', String(projectId), date, fileName);
@@ -351,7 +381,7 @@ export async function downloadTelegramDocument(
     const getFileUrl = `https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`;
     
     const fileInfo = await new Promise<any>((resolve, reject) => {
-      https.get(getFileUrl, (res) => {
+      const request = https.get(getFileUrl, { timeout: 30000 }, (res) => {
         let data = '';
         res.on('data', (chunk) => data += chunk);
         res.on('end', () => {
@@ -367,6 +397,11 @@ export async function downloadTelegramDocument(
           }
         });
       }).on('error', reject);
+
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Request timeout'));
+      });
     });
 
     const filePath = fileInfo.file_path;
@@ -394,7 +429,10 @@ export async function downloadTelegramDocument(
 
     const timestamp = Date.now();
     const randomSuffix = Math.round(Math.random() * 1E9);
-    const fileName = originalFileName || `${timestamp}-${randomSuffix}-${safeFileId}.${extension}`;
+    
+    // Санитизация originalFileName
+    const sanitizedFileName = originalFileName?.replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 255);
+    const fileName = sanitizedFileName || `${timestamp}-${randomSuffix}-${safeFileId}.${extension}`;
     const localFilePath = join(uploadDir, fileName);
     
     // Валидировать путь (защита от directory traversal)
@@ -407,7 +445,7 @@ export async function downloadTelegramDocument(
     const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
     
     await new Promise<void>((resolve, reject) => {
-      https.get(downloadUrl, (res) => {
+      const request = https.get(downloadUrl, { timeout: 30000 }, (res) => {
         if (res.statusCode !== 200) {
           reject(new Error(`Failed to download file: HTTP ${res.statusCode}`));
           return;
@@ -418,6 +456,11 @@ export async function downloadTelegramDocument(
           .then(() => resolve())
           .catch(reject);
       }).on('error', reject);
+
+      request.on('timeout', () => {
+        request.destroy();
+        reject(new Error('Request timeout'));
+      });
     });
 
     const relativeFilePath = join('uploads', String(projectId), date, fileName);

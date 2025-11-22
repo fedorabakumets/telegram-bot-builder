@@ -1103,6 +1103,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects/:id", requireDbReady, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      if (isNaN(id) || !id) {
+        return res.status(400).json({ 
+          message: 'Invalid project ID', 
+          error: 'Project ID must be a valid number' 
+        });
+      }
+      
       const project = await storage.getBotProject(id);
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
@@ -1134,19 +1142,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update bot project
   app.put("/api/projects/:id", requireDbReady, async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const projectId = parseInt(req.params.id);
+      
+      if (isNaN(projectId) || !projectId) {
+        return res.status(400).json({ 
+          message: 'Invalid project ID', 
+          error: 'Project ID must be a valid number' 
+        });
+      }
+      
       const validatedData = insertBotProjectSchema.partial().parse(req.body);
-      const project = await storage.updateBotProject(id, validatedData);
+      const project = await storage.updateBotProject(projectId, validatedData);
       if (!project) {
         return res.status(404).json({ message: "Project not found" });
       }
       
       // Если обновляется data (структура бота), перезапускаем бота если он запущен
       if (validatedData.data) {
-        console.log(`Проект ${id} обновлен, проверяем необходимость перезапуска бота...`);
-        const restartResult = await restartBotIfRunning(id);
+        console.log(`Проект ${projectId} обновлен, проверяем необходимость перезапуска бота...`);
+        const restartResult = await restartBotIfRunning(projectId);
         if (!restartResult.success) {
-          console.error(`Ошибка перезапуска бота ${id}:`, restartResult.error);
+          console.error(`Ошибка перезапуска бота ${projectId}:`, restartResult.error);
         }
       }
       
