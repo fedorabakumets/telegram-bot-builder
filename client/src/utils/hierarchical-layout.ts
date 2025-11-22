@@ -386,9 +386,9 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   autoTransitionChains.forEach((chainArray, levelIndex) => {
     console.log(`🔗 Обрабатываем цепочку автопереходов уровня ${levelIndex}:`, chainArray);
 
-    // Вычисляем Y позицию для этой цепочки - смещаем на 40px ниже обычных узлов
+    // Вычисляем Y позицию для этой цепочки - смещаем на 15px ниже обычных узлов
     const baseY = options.startY + levelIndex * (options.nodeHeight + options.verticalSpacing);
-    const chainY = baseY + 40; // Смещение вниз на 40px
+    const chainY = baseY + 15; // Смещение вниз на 15px
 
     let currentX = options.startX;
 
