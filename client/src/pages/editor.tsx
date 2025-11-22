@@ -278,14 +278,20 @@ export default function Editor() {
     }
   }, [currentProject?.id, lastLoadedProjectId]);
 
-  // Initialize botDataWithSheets from project data
+  // Initialize botDataWithSheets from project data when it changes
   useEffect(() => {
-    if (currentProject?.data) {
-      const migratedData = SheetsManager.migrateLegacyData(currentProject.data as BotData);
-      setBotDataWithSheets(migratedData);
-      setLastLoadedProjectId(currentProject.id);
+    if (currentProject?.data && currentProject.id !== lastLoadedProjectId) {
+      console.log('🎯 Initializing botDataWithSheets for project:', currentProject.id);
+      try {
+        const migratedData = SheetsManager.migrateLegacyData(currentProject.data as BotData);
+        console.log('✅ Successfully migrated data to sheets format:', migratedData);
+        setBotDataWithSheets(migratedData);
+        setLastLoadedProjectId(currentProject.id);
+      } catch (error) {
+        console.error('❌ Error migrating data:', error);
+      }
     }
-  }, [currentProject?.id, currentProject?.data]);
+  }, [currentProject?.id, lastLoadedProjectId, currentProject?.data]);
 
   // Обработчик обновления данных листов
   const handleBotDataUpdate = useCallback((updatedData: BotDataWithSheets) => {
