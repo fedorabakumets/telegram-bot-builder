@@ -318,21 +318,23 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     const chains: string[][] = [];
     const visited = new Set<string>();
 
-    // Находим все узлы, которые НЕ являются целями (это начала цепочек)
-    const isTarget = new Set<string>();
+    // Находим все узлы, которые являются целями ТОЛЬКО автопереходов
+    // (не включаем связи через кнопки)
+    const isAutoTransitionTarget = new Set<string>();
     nodes.forEach(node => {
       const autoTarget = (node as any).data?.autoTransitionTo;
       const inputTarget = (node as any).data?.inputTargetNodeId;
-      if (autoTarget) isTarget.add(autoTarget);
-      if (inputTarget) isTarget.add(inputTarget);
+      if (autoTarget) isAutoTransitionTarget.add(autoTarget);
+      if (inputTarget) isAutoTransitionTarget.add(inputTarget);
     });
 
-    // Начинаем цепочки только с узлов, которые не являются целями
+    // Начинаем цепочки только с узлов, которые не являются целями автопереходов
     nodes.forEach(node => {
       if (visited.has(node.id)) return;
       
-      // Пропускаем узлы, которые являются целями - они будут обработаны в составе цепочек
-      if (isTarget.has(node.id)) return;
+      // Пропускаем узлы, которые являются целями АВТОПЕРЕХОДОВ
+      // Узлы, связанные только через кнопки, НЕ пропускаем
+      if (isAutoTransitionTarget.has(node.id)) return;
 
       // Проверяем, есть ли у узла автопереход или inputTargetNodeId
       const hasAutoTransition = (node as any).data?.autoTransitionTo || (node as any).data?.inputTargetNodeId;
