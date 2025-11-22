@@ -1062,8 +1062,27 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         </div>
       )}
       
+      {/* Auto Transition Indicator */}
+      {node.data.autoTransitionTo && (
+        <div className="bg-gradient-to-br from-emerald-50/70 to-green-50/70 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl p-3 mb-4 border border-emerald-200 dark:border-emerald-800/30">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+              <i className="fas fa-arrow-right text-emerald-600 dark:text-emerald-400 text-sm"></i>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-1">
+                Автопереход
+              </div>
+              <div className="text-xs text-emerald-600 dark:text-emerald-400">
+                Автоматически переходит к следующему узлу
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* User Input preview */}
-      {false && (
+      {((node.data as any).enableTextInput || (node.data as any).inputType) && (
         <div className="bg-gradient-to-br from-purple-50/70 to-indigo-50/70 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-xl p-4 mb-4 border border-purple-200 dark:border-purple-800/30">
           <div className="space-y-3">
             {/* Input type and variable display */}
@@ -1357,7 +1376,13 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                 {(node.data as any).inputTargetNodeId && (
                   <div className="flex items-center space-x-1">
                     <i className="fas fa-arrow-right text-xs"></i>
-                    <span>Следующий узел: {(node.data as any).inputTargetNodeId}</span>
+                    <span>Автопереход после ввода</span>
+                  </div>
+                )}
+                {!(node.data as any).inputTargetNodeId && (
+                  <div className="flex items-center space-x-1 text-orange-600 dark:text-orange-400">
+                    <i className="fas fa-exclamation-triangle text-xs"></i>
+                    <span>Не указан следующий узел</span>
                   </div>
                 )}
               </div>
