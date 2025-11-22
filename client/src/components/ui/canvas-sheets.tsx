@@ -191,7 +191,7 @@ export function CanvasSheets({
   };
 
   return (
-    <div className={`flex items-center justify-start gap-2 relative transition-all duration-300 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 ${isMobile ? 'px-1 py-1' : 'px-2 py-2'}`}>
+    <div className={`flex items-center justify-start gap-2 relative transition-all duration-300 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700 ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'}`}>
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
       {(canScrollLeft || (isMobile && sheets.length > 1)) && (
         <Button
