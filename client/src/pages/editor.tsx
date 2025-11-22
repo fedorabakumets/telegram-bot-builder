@@ -296,7 +296,7 @@ export default function Editor() {
 
   // Load current project directly by ID (much faster than loading all projects)
   const { data: currentProject, isLoading: isProjectLoading } = useQuery<BotProject>({
-    queryKey: ['/api/projects', projectId],
+    queryKey: [`/api/projects/${projectId}`],
     enabled: !!projectId, // Всегда загружаем если есть ID в URL
     staleTime: 30000, // Кешируем на 30 секунд
   });
@@ -313,27 +313,19 @@ export default function Editor() {
 
   // Load first project if no projectId in URL and we have the ID from list
   const { data: firstProject, isLoading: isFirstProjectLoading } = useQuery<BotProject>({
-    queryKey: ['/api/projects', effectiveProjectId],
+    queryKey: [`/api/projects/${effectiveProjectId}`],
     enabled: !projectId && !!effectiveProjectId && typeof effectiveProjectId === 'number', // Добавить проверку типа
     staleTime: 30000,
   });
 
+
   // Use the appropriate project
   const activeProject = projectId ? currentProject : firstProject;
 
-  // Debug logging
-  useEffect(() => {
-    console.log('🔍 Project Loading State:', {
-      projectId,
-      hasCurrentProject: !!currentProject,
-      hasFirstProject: !!firstProject,
-      hasActiveProject: !!activeProject,
-      isProjectLoading,
-      isListLoading,
-      isFirstProjectLoading,
-      projectsListLength: projectsList?.length
-    });
-  }, [projectId, currentProject, firstProject, activeProject, isProjectLoading, isListLoading, isFirstProjectLoading, projectsList]);
+  // Determine if we're still loading
+  const isLoadingProject = projectId ? isProjectLoading : (isListLoading || isFirstProjectLoading);
+
+
 
   const {
     nodes,
@@ -443,59 +435,38 @@ export default function Editor() {
     }
   }, [updateNode, botDataWithSheets]);
 
-  // Обновляем данные бота при смене проекта - only when truly switching projects
+  // Обновляем данные бота при смене проекта
   useEffect(() => {
-    
-    // Only load activeProject data when:
-    // 1. We have a activeProject with data
-    // 2. We're not loading a template  
-    // 3. We don't have local changes in progress
-    // 4. This is truly a new activeProject (ID changed) OR initial load (lastLoadedProjectId is null)
     if (activeProject?.data && !isLoadingTemplate && !hasLocalChanges && 
         (lastLoadedProjectId !== activeProject?.id)) {
       
-      console.log('📂 Loading project data for project ID:', activeProject.id);
       const projectData = activeProject.data as any;
       
-      // Проверяем, новый ли это формат с листами
+      // Проверяем формат и мигрируем если нужно
+      let sheetsData: BotDataWithSheets;
       if (SheetsManager.isNewFormat(projectData)) {
-        console.log('✅ Новый формат с листами, листов:', projectData.sheets?.length);
-        // ВАЖНО: Сначала устанавливаем данные листов для отображения панели
-        setBotDataWithSheets(projectData);
-        
-        // Затем устанавливаем активный лист для совместимости со старой системой
-        const activeSheet = SheetsManager.getActiveSheet(projectData);
-        if (activeSheet) {
-          console.log('📄 Активный лист:', activeSheet.name, 'узлов:', activeSheet.nodes?.length);
-          // Всегда пропускаем layout при загрузке существующего проекта для скорости
-          setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, undefined, true);
-        }
+        sheetsData = projectData;
       } else {
-        console.log('🔄 Старый формат, мигрируем к листам. Узлов:', (projectData as BotData).nodes?.length);
-        // Мигрируем старые данные к новому формату
-        const migratedData = SheetsManager.migrateLegacyData(projectData as BotData);
-        console.log('✅ Миграция завершена, листов:', migratedData.sheets?.length);
-        
-        // ВАЖНО: Сначала устанавливаем данные листов для отображения панели
-        setBotDataWithSheets(migratedData);
-        
-        // Пропускаем layout для быстрой загрузки
-        setBotData(projectData as BotData, undefined, undefined, true);
-        
-        // ВАЖНО: Сохраняем мигрированные данные сразу в БД
-        console.log('💾 Сохраняем мигрированные данные в БД');
-        if (activeProject?.id) {
-          updateProjectMutation.mutate({ data: migratedData });
-        }
+        sheetsData = SheetsManager.migrateLegacyData(projectData as BotData);
+        // Сохраняем мигрированные данные
+        updateProjectMutation.mutate({ data: sheetsData });
       }
       
-      // Update the last loaded activeProject ID
-      setLastLoadedProjectId(activeProject.id);
+      // Устанавливаем данные листов для отображения панели
+      setBotDataWithSheets(sheetsData);
       
-      // Сохраняем ID текущего проекта для возврата со страницы шаблонов
+      // Устанавливаем активный лист в редактор
+      const activeSheet = SheetsManager.getActiveSheet(sheetsData);
+      if (activeSheet) {
+        setBotData({ nodes: activeSheet.nodes, connections: activeSheet.connections }, undefined, undefined, true);
+      }
+      
+      // Обновляем отслеживание загруженного проекта
+      setLastLoadedProjectId(activeProject.id);
       localStorage.setItem('lastProjectId', activeProject.id.toString());
     }
-  }, [activeProject?.id, activeProject?.data, setBotData, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId, updateProjectMutation]);
+  }, [activeProject?.id, isLoadingTemplate, hasLocalChanges, lastLoadedProjectId]);
+
 
   const handleSave = useCallback(() => {
     if (activeProject?.id) {
