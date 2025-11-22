@@ -216,7 +216,7 @@ export function CanvasSheets({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className={`flex ${isMobile ? 'gap-1.5' : 'gap-1.5'}`}>
+        <div className={`flex flex-shrink-0 ${isMobile ? 'gap-1.5' : 'gap-1.5'}`}>
           {sheets.map((sheet) => (
             <div
               key={sheet.id}
