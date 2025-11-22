@@ -934,8 +934,7 @@ export function Canvas({
               transformOrigin: '0 0'
             }}
           >
-            {/* ВРЕМЕННО ОТКЛЮЧЕНО: Визуализация связей */}
-            {/* Connections Layer */}
+            {/* Connections Layer (отключена) */}
             <ConnectionsLayer
               connections={currentConnections}
               nodes={currentNodes}
@@ -944,26 +943,7 @@ export function Canvas({
               onConnectionDelete={handleDeleteConnection}
             />
 
-            {/* Уведомление о временном отключении визуализации связей */}
-            {currentConnections.length > 0 && (
-              <foreignObject x="10" y="10" width="280" height="80" className="pointer-events-none">
-                <div className="bg-amber-500/90 dark:bg-amber-600/90 text-white text-xs p-3 rounded-lg shadow-lg border-2 border-amber-400 dark:border-amber-500">
-                  <div className="flex items-center gap-2 mb-1">
-                    <i className="fas fa-info-circle text-sm"></i>
-                    <span className="font-semibold">Визуализация связей отключена</span>
-                  </div>
-                  <div className="text-[11px] opacity-90">
-                    Связи сохраняются в данных, но временно не отображаются на холсте
-                  </div>
-                  <div className="text-[10px] opacity-75 mt-1">
-                    Всего связей: {currentConnections.length}
-                  </div>
-                </div>
-              </foreignObject>
-            )}
-
-            {/* ВРЕМЕННО ОТКЛЮЧЕНО: Временная визуализация при создании связей */}
-            {/* Temporary connection preview */}
+            {/* Temporary connection preview (отключен) */}
             {connectionStart && (
               <TemporaryConnection
                 startNode={currentNodes.find(n => n.id === connectionStart.nodeId)!}
