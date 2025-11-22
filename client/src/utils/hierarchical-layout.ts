@@ -318,8 +318,9 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
   const processedNodes = new Set<string>();
   
   // Обрабатываем цепочки автопереходов
-  autoTransitionChains.forEach(chain => {
+  autoTransitionChains.forEach((chain, chainIndex) => {
     const chainArray = Array.from(chain);
+    console.log(`🔗 Обработка цепочки ${chainIndex}:`, chainArray);
     
     // Находим ВСЕ узлы цепочки в levels и определяем минимальный уровень
     let minLevel = Infinity;
@@ -327,8 +328,13 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     
     // Находим реальный первый узел в цепочке (который не является целью автоперехода)
     const chainNodes = chainArray.map(nodeId => levels.flat().find(n => n.id === nodeId)).filter(Boolean) as LayoutNode[];
+    console.log(`  📦 Найдено узлов в цепочке:`, chainNodes.length);
+    
     const autoTransitionTargets = new Set(chainNodes.map(n => (n.data as any).autoTransitionTo).filter(Boolean));
+    console.log(`  🎯 Цели автопереходов:`, Array.from(autoTransitionTargets));
+    
     const firstNode = chainNodes.find(n => !autoTransitionTargets.has(n.id));
+    console.log(`  🥇 Первый узел цепочки:`, firstNode?.id, firstNode ? `(type: ${firstNode.type})` : 'НЕ НАЙДЕН');
     
     if (firstNode) {
       // Находим уровень и Y координату первого узла
@@ -339,13 +345,17 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
           // Берем Y координату из первого узла
           if ((found as any)._y !== undefined) {
             chainY = (found as any)._y;
+            console.log(`  📍 Найден на уровне ${levelIndex}, Y координата: ${chainY}`);
           }
           break;
         }
       }
     }
     
-    if (minLevel === Infinity) return;
+    if (minLevel === Infinity) {
+      console.log(`  ⚠️ MinLevel = Infinity, пропускаем цепочку`);
+      return;
+    }
     
     // Вычисляем базовую X позицию для минимального уровня
     let baseX = options.startX;
@@ -359,11 +369,17 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     
     // Размещаем все узлы цепочки горизонтально
     let currentX = baseX;
-    chainArray.forEach((nodeId) => {
+    console.log(`  📐 Начальная X позиция: ${baseX}, Y позиция: ${chainY}`);
+    
+    chainArray.forEach((nodeId, index) => {
       const node = levels.flat().find(n => n.id === nodeId);
-      if (!node) return;
+      if (!node) {
+        console.log(`  ❌ Узел ${nodeId} не найден в levels`);
+        return;
+      }
       
       const nodeSize = getNodeSize(nodeId, options);
+      console.log(`  ➡️ Узел ${index + 1}/${chainArray.length} (${nodeId}): x=${currentX}, y=${chainY}`);
       
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
