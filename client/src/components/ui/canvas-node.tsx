@@ -1062,8 +1062,8 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         </div>
       )}
       
-      {/* Auto Transition Indicator */}
-      {node.data.autoTransitionTo && (
+      {/* Auto Transition Indicator - для autoTransitionTo */}
+      {node.data.autoTransitionTo && !node.data.buttons?.length && (
         <div className="bg-gradient-to-br from-emerald-50/70 to-green-50/70 dark:from-emerald-900/30 dark:to-green-900/30 rounded-xl p-3 mb-4 border border-emerald-200 dark:border-emerald-800/30">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
@@ -1075,6 +1075,25 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               </div>
               <div className="text-xs text-emerald-600 dark:text-emerald-400">
                 Автоматически переходит к следующему узлу
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Auto Transition after Input - для inputTargetNodeId */}
+      {(node.data as any).inputTargetNodeId && !node.data.autoTransitionTo && (
+        <div className="bg-gradient-to-br from-cyan-50/70 to-blue-50/70 dark:from-cyan-900/30 dark:to-blue-900/30 rounded-xl p-3 mb-4 border border-cyan-200 dark:border-cyan-800/30">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-full bg-cyan-100 dark:bg-cyan-900/50 flex items-center justify-center">
+              <i className="fas fa-keyboard text-cyan-600 dark:text-cyan-400 text-sm"></i>
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-medium text-cyan-800 dark:text-cyan-200 mb-1">
+                Автопереход после ввода
+              </div>
+              <div className="text-xs text-cyan-600 dark:text-cyan-400">
+                После получения ответа автоматически переходит к следующему узлу
               </div>
             </div>
           </div>
@@ -1373,19 +1392,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                     <span>Сохранить в: <code className="bg-cyan-100 dark:bg-cyan-900/50 px-1 py-0.5 rounded text-xs">{(node.data as any).inputVariable}</code></span>
                   </div>
                 )}
-                {(node.data as any).inputTargetNodeId && (
-                  <div className="flex items-center space-x-1">
-                    <i className="fas fa-arrow-right text-xs"></i>
-                    <span>Автопереход после ввода</span>
-                  </div>
-                )}
-                {!(node.data as any).inputTargetNodeId && (
-                  <div className="flex items-center space-x-1 text-orange-600 dark:text-orange-400">
-                    <i className="fas fa-exclamation-triangle text-xs"></i>
-                    <span>Не указан следующий узел</span>
-                  </div>
-                )}
-              </div>
+                </div>
             </div>
           </div>
         </div>
