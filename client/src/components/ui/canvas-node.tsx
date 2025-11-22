@@ -1212,8 +1212,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                     case 'user_data_contains': return 'fas fa-search';
                     case 'user_data_exists': return 'fas fa-check-circle';
                     case 'user_data_not_exists': return 'fas fa-times-circle';
-                    case 'first_time': return 'fas fa-user-plus';
-                    case 'returning_user': return 'fas fa-user-check';
                     default: return 'fas fa-filter';
                   }
                 };
@@ -1224,8 +1222,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                     case 'user_data_contains': return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30';
                     case 'user_data_exists': return 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30';
                     case 'user_data_not_exists': return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30';
-                    case 'first_time': return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30';
-                    case 'returning_user': return 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-900/30';
                     default: return 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30';
                   }
                 };
@@ -1234,9 +1230,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                   'user_data_equals': 'Точное совпадение',
                   'user_data_contains': 'Содержит текст',
                   'user_data_exists': 'Имя введено ранее',
-                  'user_data_not_exists': 'Имя не введено',
-                  'first_time': 'Первое посещение',
-                  'returning_user': 'Возвращающийся пользователь'
+                  'user_data_not_exists': 'Имя не введено'
                 }[condition.condition] || 'Условие';
 
                 return (

@@ -3432,8 +3432,6 @@ export function PropertiesPanel({
                                   <SelectItem value="user_data_not_exists">Пользователь НЕ отвечал на вопрос</SelectItem>
                                   <SelectItem value="user_data_equals">Ответ пользователя равен определенному значению</SelectItem>
                                   <SelectItem value="user_data_contains">Ответ пользователя содержит определенный текст</SelectItem>
-                                  <SelectItem value="first_time">Пользователь заходит впервые</SelectItem>
-                                  <SelectItem value="returning_user">Пользователь уже заходил ранее</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
