@@ -217,6 +217,9 @@ function fixCollisions(nodes: Node[], options: HierarchicalLayoutOptions): Node[
 function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayoutOptions): Node[] {
   console.log('📋 arrangeNodesByLevel вызван');
   
+  const result: Node[] = [];
+  let nodeMap: Map<string, LayoutNode>;
+  
   try {
     console.log('  levels:', levels.length);
     console.log('  levels содержимое:', levels.map((l, i) => `Level ${i}: ${l?.length || 0} nodes`));
@@ -224,10 +227,8 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     const flatNodes = levels.flat().filter(Boolean);
     console.log('  всего узлов после flat:', flatNodes.length);
     
-    const result: Node[] = [];
-    
     // Создаем карту узлов для быстрого доступа
-    const nodeMap = new Map<string, LayoutNode>();
+    nodeMap = new Map<string, LayoutNode>();
     flatNodes.forEach(node => {
       if (node && node.id) {
         nodeMap.set(node.id, node);
