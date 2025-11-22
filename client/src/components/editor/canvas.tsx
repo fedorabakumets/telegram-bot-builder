@@ -119,7 +119,7 @@ export function Canvas({
   const [autoButtonCreation, setAutoButtonCreation] = useState(true);
   const [showAutoPanel, setShowAutoPanel] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [pan, setPan] = useState({ x: 100000, y: 100000 }); // Центрируем на середине холста
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [lastPanPosition, setLastPanPosition] = useState({ x: 0, y: 0 });
@@ -242,7 +242,7 @@ export function Canvas({
 
   const resetZoom = useCallback(() => {
     setZoom(100);
-    setPan({ x: 0, y: 0 });
+    setPan({ x: 100000, y: 100000 }); // Возврат к центру холста
   }, []);
 
   const setZoomLevel = useCallback((level: number) => {
@@ -872,7 +872,7 @@ export function Canvas({
             backgroundPosition: `${pan.x}px ${pan.y}px`,
             minHeight: '200000px',
             minWidth: '200000px',
-            margin: '-100000px',
+            position: 'relative',
             cursor: isPanning ? 'grabbing' : 'grab'
           }}
           data-drag-over={isDragOver}
