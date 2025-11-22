@@ -87,33 +87,59 @@ export function createHierarchicalLayout(
 
 /**
  * Находит стартовый узел (узел типа 'start' или узел без входящих соединений)
+ * УЛУЧШЕНИЕ: теперь учитывает автопереходы при определении корневых узлов
  */
 function findStartNode(nodes: LayoutNode[], connections: Connection[]): LayoutNode | null {
   // Сначала ищем узел типа 'start'
   const startNode = nodes.find(node => node.type === 'start');
   if (startNode) return startNode;
 
-  // Если нет узла 'start', ищем узел без входящих соединений
-  const nodeIds = nodes.map(n => n.id);
+  // Собираем все целевые узлы (и из connections, и из автопереходов)
   const targetIds = new Set(connections.map(c => c.target));
   
+  // УЛУЧШЕНИЕ: Добавляем цели автопереходов
+  nodes.forEach(node => {
+    const autoTarget = (node as any).data?.autoTransitionTo;
+    if (autoTarget) {
+      targetIds.add(autoTarget);
+    }
+  });
+  
+  // Ищем узел без входящих соединений (ни обычных, ни автопереходов)
   const rootNodes = nodes.filter(node => !targetIds.has(node.id));
   return rootNodes.length > 0 ? rootNodes[0] : nodes[0];
 }
 
 /**
  * Строит дерево зависимостей на основе соединений
+ * УЛУЧШЕНИЕ: теперь учитывает автопереходы
  */
 function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], startNode: LayoutNode) {
   const nodeMap = new Map(nodes.map(node => [node.id, node]));
   
   // Создаем граф соединений
   const graph = new Map<string, string[]>();
+  
+  // Добавляем обычные соединения
   connections.forEach(connection => {
     if (!graph.has(connection.source)) {
       graph.set(connection.source, []);
     }
     graph.get(connection.source)!.push(connection.target);
+  });
+  
+  // УЛУЧШЕНИЕ: Добавляем автопереходы в граф
+  nodes.forEach(node => {
+    const autoTransitionTarget = (node as any).data?.autoTransitionTo;
+    if (autoTransitionTarget) {
+      if (!graph.has(node.id)) {
+        graph.set(node.id, []);
+      }
+      // Добавляем автопереход только если его еще нет
+      if (!graph.get(node.id)!.includes(autoTransitionTarget)) {
+        graph.get(node.id)!.push(autoTransitionTarget);
+      }
+    }
   });
 
   // Рекурсивно строим дерево
