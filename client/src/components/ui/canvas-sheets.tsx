@@ -191,14 +191,14 @@ export function CanvasSheets({
   };
 
   return (
-    <div className={`flex items-center justify-start gap-1.5 relative transition-all duration-300 z-50 ${isMobile ? 'px-2 py-2' : 'px-2 py-2'}`}>
+    <div className={`flex items-center justify-start gap-2 relative transition-all duration-300 z-50 ${isMobile ? 'px-3 py-3' : 'px-3 py-3'}`}>
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
       {(canScrollLeft || (isMobile && sheets.length > 1)) && (
         <Button
           variant="ghost"
           size="sm"
           onClick={isMobile ? switchToPrevSheet : scrollLeft}
-          className={`flex-shrink-0 p-0 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 active:from-blue-500/30 active:to-blue-600/30 dark:from-blue-400/10 dark:to-blue-500/10 dark:hover:from-blue-400/20 dark:hover:to-blue-500/20 dark:active:from-blue-400/30 dark:active:to-blue-500/30 transition-all duration-200 hover:scale-110 active:scale-95 relative z-10 touch-manipulation ${isMobile ? 'h-10 w-10' : 'h-8 w-8'}`}
+          className={`flex-shrink-0 p-0 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 active:from-blue-500/30 active:to-blue-600/30 dark:from-blue-400/10 dark:to-blue-500/10 dark:hover:from-blue-400/20 dark:hover:to-blue-500/20 dark:active:from-blue-400/30 dark:active:to-blue-500/30 transition-all duration-200 hover:scale-110 active:scale-95 relative z-10 touch-manipulation ${isMobile ? 'h-11 w-11' : 'h-10 w-10'}`}
           disabled={isMobile ? (activeSheetId ? sheets.findIndex(s => s.id === activeSheetId) === 0 : true) : false}
         >
           <ChevronLeft className={`text-blue-600 dark:text-blue-400 ${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
@@ -224,8 +224,8 @@ export function CanvasSheets({
               className={cn(
                 "group flex items-center cursor-pointer transition-all duration-300 relative backdrop-blur-sm select-none touch-manipulation",
                 isMobile 
-                  ? "min-w-[90px] max-w-none min-h-[36px] h-9 px-2 active:scale-[0.98] rounded-lg" 
-                  : "min-w-[100px] max-w-none h-8 px-2 transform hover:scale-[1.02] rounded-lg",
+                  ? "min-w-[90px] max-w-none min-h-[40px] h-10 px-3 active:scale-[0.98] rounded-lg" 
+                  : "min-w-[100px] max-w-none h-10 px-3 transform hover:scale-[1.02] rounded-lg",
                 activeSheetId === sheet.id
                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 z-20 ring-2 ring-blue-300/50 dark:ring-blue-600/50"
                   : "bg-white/70 dark:bg-slate-800/70 text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-700/90 shadow-sm hover:shadow-md border border-gray-200/50 dark:border-slate-600/50"
@@ -327,7 +327,7 @@ export function CanvasSheets({
           variant="ghost"
           size="sm"
           onClick={isMobile ? switchToNextSheet : scrollRight}
-          className={`flex-shrink-0 p-0 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 active:from-blue-500/30 active:to-blue-600/30 dark:from-blue-400/10 dark:to-blue-500/10 dark:hover:from-blue-400/20 dark:hover:to-blue-500/20 dark:active:from-blue-400/30 dark:active:to-blue-500/30 transition-all duration-200 hover:scale-110 active:scale-95 relative z-10 touch-manipulation ${isMobile ? 'h-10 w-10' : 'h-8 w-8'}`}
+          className={`flex-shrink-0 p-0 rounded-full bg-gradient-to-r from-blue-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 active:from-blue-500/30 active:to-blue-600/30 dark:from-blue-400/10 dark:to-blue-500/10 dark:hover:from-blue-400/20 dark:hover:to-blue-500/20 dark:active:from-blue-400/30 dark:active:to-blue-500/30 transition-all duration-200 hover:scale-110 active:scale-95 relative z-10 touch-manipulation ${isMobile ? 'h-11 w-11' : 'h-10 w-10'}`}
           disabled={isMobile ? (activeSheetId ? sheets.findIndex(s => s.id === activeSheetId) === sheets.length - 1 : true) : false}
         >
           <ChevronRight className={`text-blue-600 dark:text-blue-400 ${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
@@ -339,7 +339,7 @@ export function CanvasSheets({
         variant="ghost"
         size="sm"
         onClick={addNewSheet}
-        className={`flex-shrink-0 p-0 rounded-full bg-gradient-to-br from-green-500/10 to-emerald-600/10 hover:from-green-500/20 hover:to-emerald-600/20 active:from-green-500/30 active:to-emerald-600/30 dark:from-green-400/10 dark:to-emerald-500/10 dark:hover:from-green-400/20 dark:hover:to-emerald-500/20 dark:active:from-green-400/30 dark:active:to-emerald-500/30 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-green-500/20 active:shadow-green-500/30 relative z-10 ring-2 ring-transparent hover:ring-green-300/30 dark:hover:ring-green-600/30 touch-manipulation ${isMobile ? 'h-10 w-10' : 'h-8 w-8'}`}
+        className={`flex-shrink-0 p-0 rounded-full bg-gradient-to-br from-green-500/10 to-emerald-600/10 hover:from-green-500/20 hover:to-emerald-600/20 active:from-green-500/30 active:to-emerald-600/30 dark:from-green-400/10 dark:to-emerald-500/10 dark:hover:from-green-400/20 dark:hover:to-emerald-500/20 dark:active:from-green-400/30 dark:active:to-emerald-500/30 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-green-500/20 active:shadow-green-500/30 relative z-10 ring-2 ring-transparent hover:ring-green-300/30 dark:hover:ring-green-600/30 touch-manipulation ${isMobile ? 'h-11 w-11' : 'h-10 w-10'}`}
         title="Добавить новый лист"
       >
         <Plus className={`text-green-600 dark:text-green-400 drop-shadow-sm ${isMobile ? 'h-5 w-5' : 'h-5 w-5'}`} />
