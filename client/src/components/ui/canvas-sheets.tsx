@@ -194,7 +194,7 @@ export function CanvasSheets({
   };
 
   return (
-    <div className={`flex items-center justify-start gap-2 relative transition-all duration-300 z-50 w-full ${isMobile ? 'px-3 py-3' : 'px-4 py-3'} bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700`}>
+    <div className={`flex items-center gap-2 relative transition-all duration-300 z-50 w-full ${isMobile ? 'px-3 py-3' : 'px-4 py-3'} bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-t border-gray-200 dark:border-slate-700`}>
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
       {(canScrollLeft || (isMobile && sheets.length > 1)) && (
         <Button
@@ -212,12 +212,11 @@ export function CanvasSheets({
       <div 
         ref={tabsContainerRef}
         className="flex-1 flex overflow-x-auto overflow-y-hidden scroll-smooth relative z-10 items-center"
-        style={{ minWidth: '0', flex: '1 1 auto' }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className={`flex gap-2`} style={{ minWidth: 'max-content', flexShrink: 0 }}>
+        <div className={`flex gap-2 w-full`}>
           {sheets.map((sheet) => (
             <div
               key={sheet.id}
