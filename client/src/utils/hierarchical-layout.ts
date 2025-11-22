@@ -318,30 +318,30 @@ function arrangeNodesByLevel(levels: LayoutNode[][], options: HierarchicalLayout
     const chains: string[][] = [];
     const visited = new Set<string>();
 
-    // Находим все узлы, которые являются целями автопереходов
-    const autoTransitionTargets = new Set<string>();
+    // Находим все узлы, которые НЕ являются целями (это начала цепочек)
+    const isTarget = new Set<string>();
     nodes.forEach(node => {
       const autoTarget = (node as any).data?.autoTransitionTo;
       const inputTarget = (node as any).data?.inputTargetNodeId;
-      if (autoTarget) autoTransitionTargets.add(autoTarget);
-      if (inputTarget) autoTransitionTargets.add(inputTarget);
+      if (autoTarget) isTarget.add(autoTarget);
+      if (inputTarget) isTarget.add(inputTarget);
     });
 
+    // Начинаем цепочки только с узлов, которые не являются целями
     nodes.forEach(node => {
       if (visited.has(node.id)) return;
+      
+      // Пропускаем узлы, которые являются целями - они будут обработаны в составе цепочек
+      if (isTarget.has(node.id)) return;
 
       // Проверяем, есть ли у узла автопереход или inputTargetNodeId
       const hasAutoTransition = (node as any).data?.autoTransitionTo || (node as any).data?.inputTargetNodeId;
       
       if (hasAutoTransition) {
-        // Если этот узел сам является целью автоперехода, пропускаем
-        // (его обработает узел, который на него ссылается)
-        if (autoTransitionTargets.has(node.id)) return;
-
         const chain: string[] = [];
         let currentNode: LayoutNode | undefined = node;
 
-        // Идем по цепочке автопереходов
+        // Идем по цепочке автопереходов, включая все промежуточные узлы
         while (currentNode && !visited.has(currentNode.id)) {
           chain.push(currentNode.id);
           visited.add(currentNode.id);
