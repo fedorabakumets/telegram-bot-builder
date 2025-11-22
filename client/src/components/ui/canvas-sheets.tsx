@@ -191,7 +191,7 @@ export function CanvasSheets({
   };
 
   return (
-    <div className={`flex items-center justify-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl relative transition-all duration-300 hover:shadow-2xl ${isMobile ? 'px-3 py-3' : 'px-4 py-3'}`}>
+    <div className={`flex items-center justify-center gap-2 bg-white/98 dark:bg-slate-900/98 backdrop-blur-lg border-b border-gray-200 dark:border-slate-700 shadow-md fixed top-0 left-0 right-0 transition-all duration-300 z-40 ${isMobile ? 'px-3 py-2 h-16' : 'px-4 py-3 h-16'}`}>
       {/* Градиентная подложка */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-950/20 dark:via-transparent dark:to-purple-950/20 rounded-lg pointer-events-none"></div>
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
