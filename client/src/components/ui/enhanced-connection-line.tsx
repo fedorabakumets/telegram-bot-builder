@@ -65,28 +65,16 @@ export function EnhancedConnectionLine({
     const targetX = targetNode.position.x - 8;
     const targetY = targetNode.position.y + targetHeight / 2;
 
-    // Расчет кривой Безье
+    // Прямая линия
     const deltaX = targetX - sourceX;
     const deltaY = targetY - sourceY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
-    let controlPointOffset = Math.min(Math.abs(deltaX) / 2, Math.max(80, distance * 0.3));
-    
-    if (Math.abs(deltaY) > Math.abs(deltaX)) {
-      controlPointOffset = Math.max(controlPointOffset, 120);
-    }
 
-    const controlPoint1X = sourceX + controlPointOffset;
-    const controlPoint1Y = sourceY;
-    const controlPoint2X = targetX - controlPointOffset;
-    const controlPoint2Y = targetY;
-
-    const path = `M ${sourceX} ${sourceY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${targetX} ${targetY}`;
+    const path = `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
     
-    // Средняя точка кривой
-    const t = 0.5;
-    const midX = Math.pow(1-t, 3) * sourceX + 3 * Math.pow(1-t, 2) * t * controlPoint1X + 3 * (1-t) * Math.pow(t, 2) * controlPoint2X + Math.pow(t, 3) * targetX;
-    const midY = Math.pow(1-t, 3) * sourceY + 3 * Math.pow(1-t, 2) * t * controlPoint1Y + 3 * (1-t) * Math.pow(t, 2) * controlPoint2Y + Math.pow(t, 3) * targetY;
+    // Средняя точка прямой линии
+    const midX = (sourceX + targetX) / 2;
+    const midY = (sourceY + targetY) / 2;
 
     const midPoint = { x: midX, y: midY };
 

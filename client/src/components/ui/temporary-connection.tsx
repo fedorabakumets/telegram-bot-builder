@@ -27,24 +27,8 @@ export function TemporaryConnection({ startNode, endPosition, handle }: Temporar
     const endX = endPosition.x;
     const endY = endPosition.y;
 
-    // Адаптивная кривая Безье с меньшей кривизной
-    const deltaX = endX - startX;
-    const deltaY = endY - startY;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
-    // Уменьшаем offset для более прямой линии
-    let controlPointOffset = Math.min(Math.abs(deltaX) / 4, Math.max(30, distance * 0.15));
-    
-    if (Math.abs(deltaY) > Math.abs(deltaX)) {
-      controlPointOffset = Math.max(controlPointOffset, 50);
-    }
-
-    const controlPoint1X = startX + (handle === 'source' ? controlPointOffset : -controlPointOffset);
-    const controlPoint1Y = startY;
-    const controlPoint2X = endX + (handle === 'source' ? -controlPointOffset : controlPointOffset);
-    const controlPoint2Y = endY;
-
-    return `M ${startX} ${startY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${endX} ${endY}`;
+    // Прямая линия
+    return `M ${startX} ${startY} L ${endX} ${endY}`;
   }, [startNode, endPosition, handle]);
 
   return (
