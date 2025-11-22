@@ -175,16 +175,22 @@ function buildDependencyTree(nodes: LayoutNode[], connections: Connection[], sta
 
 /**
  * Присваивает уровни узлам в дереве
+ * УЛУЧШЕНИЕ: Узлы с несколькими родителями размещаются на уровне самого глубокого родителя + 1
  */
 function assignLevels(startNode: LayoutNode, level = 0) {
-  startNode.level = level;
-  startNode.visited = true;
+  // Если узел уже посещен, обновляем его уровень только если новый уровень глубже
+  if (startNode.visited) {
+    if (level > (startNode.level || 0)) {
+      startNode.level = level;
+    }
+  } else {
+    startNode.level = level;
+    startNode.visited = true;
+  }
 
   if (startNode.children) {
     startNode.children.forEach(child => {
-      if (!child.visited) {
-        assignLevels(child, level + 1);
-      }
+      assignLevels(child, level + 1);
     });
   }
 }
