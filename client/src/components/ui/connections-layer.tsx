@@ -22,7 +22,7 @@ export function ConnectionsLayer({
     <svg 
       className="absolute inset-0 w-full h-full pointer-events-none"
       style={{ 
-        zIndex: 2,
+        zIndex: 0,
         overflow: 'visible'
       }}
     >

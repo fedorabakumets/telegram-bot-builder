@@ -515,7 +515,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         left: node.position.x,
         top: node.position.y,
         transform: (isDragging || isTouchDragging) ? 'rotate(2deg) scale(1.05)' : 'rotate(0deg) scale(1)',
-        zIndex: (isDragging || isTouchDragging) ? 1000 : isSelected ? 10 : 1,
+        zIndex: (isDragging || isTouchDragging) ? 1000 : isSelected ? 100 : 10,
         transition: (isDragging || isTouchDragging) ? 'none' : 'all 0.2s ease'
       }}
     >
