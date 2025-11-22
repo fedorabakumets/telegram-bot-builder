@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Node, Connection, Button, BotData } from '@shared/schema';
 import { applyTemplateLayout } from '@/utils/hierarchical-layout';
+import { generateAutoTransitionConnections } from '@/utils/auto-transition-connections';
 
 interface HistoryState {
   nodes: Node[];
@@ -112,6 +113,17 @@ export function useBotEditor(initialData?: BotData) {
       return () => clearTimeout(timeoutId);
     }
   }, [nodes, connections, saveToHistory, history.length]);
+
+  // Автоматически генерируем соединения для узлов с autoTransitionTo
+  useEffect(() => {
+    if (!isRedoUndoActionRef.current && nodes.length > 0) {
+      const updatedConnections = generateAutoTransitionConnections(nodes, connections);
+      
+      if (JSON.stringify(updatedConnections) !== JSON.stringify(connections)) {
+        setConnections(updatedConnections);
+      }
+    }
+  }, [nodes]);
 
   const addNode = useCallback((node: Node) => {
     setNodes(prev => [...prev, node]);
