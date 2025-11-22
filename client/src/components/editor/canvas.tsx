@@ -1296,27 +1296,21 @@ export function Canvas({
       
       {/* Компонент листов холста - фиксированная панель внизу */}
       {botData && onBotDataUpdate && (
-        <div className="absolute bottom-0 left-0 right-0 z-50 pointer-events-none transition-all duration-300 overflow-visible" style={{
+        <div className="absolute bottom-0 z-50 pointer-events-none transition-all" style={{
           left: isMobile ? '12px' : (sidebarVisible ? '270px' : '16px'),
           right: isMobile ? '12px' : (propertiesVisible ? '310px' : '16px'),
           paddingBottom: '16px'
         }}>
-          <div className="overflow-visible w-full h-full">
-            <div className="pointer-events-auto overflow-visible w-full h-full" style={{
-              minWidth: isMobile ? '280px' : '0'
-            }}>
-              <CanvasSheets
-                sheets={botData.sheets}
-                activeSheetId={botData.activeSheetId || null}
-                onSheetSelect={handleSheetSelect}
-                onSheetAdd={handleSheetAdd}
-                onSheetDelete={handleSheetDelete}
-                onSheetRename={handleSheetRename}
-                onSheetDuplicate={handleSheetDuplicate}
-                maxVisibleTabs={5}
-              />
-            </div>
-          </div>
+          <CanvasSheets
+            sheets={botData.sheets}
+            activeSheetId={botData.activeSheetId || null}
+            onSheetSelect={handleSheetSelect}
+            onSheetAdd={handleSheetAdd}
+            onSheetDelete={handleSheetDelete}
+            onSheetRename={handleSheetRename}
+            onSheetDuplicate={handleSheetDuplicate}
+            maxVisibleTabs={5}
+          />
         </div>
       )}
     </main>
