@@ -12264,7 +12264,8 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
 
   // Validate each node
   nodes.forEach(node => {
-    if (!node.data.messageText && node.type !== 'condition') {
+    // Для узлов command требуем текст, для остальных это опционально
+    if (!node.data.messageText && node.type === 'command') {
       errors.push(`Узел "${node.id}" должен содержать текст сообщения`);
     }
 
@@ -12277,17 +12278,19 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
     }
 
     // Validate buttons
-    node.data.buttons.forEach(button => {
-      if (!button.text.trim()) {
-        errors.push(`Кнопка в узле "${node.id}" должна содержать текст`);
-      }
-      if (button.action === 'url' && !button.url) {
-        errors.push(`Кнопка "${button.text}" должна содержать URL`);
-      }
-      if (button.action === 'goto' && !button.target) {
-        errors.push(`Кнопка "${button.text}" должна содержать цель перехода`);
-      }
-    });
+    if (node.data.buttons && Array.isArray(node.data.buttons)) {
+      node.data.buttons.forEach(button => {
+        if (!button.text.trim()) {
+          errors.push(`Кнопка в узле "${node.id}" должна содержать текст`);
+        }
+        if (button.action === 'url' && !button.url) {
+          errors.push(`Кнопка "${button.text}" должна содержать URL`);
+        }
+        if (button.action === 'goto' && !button.target) {
+          errors.push(`Кнопка "${button.text}" должна содержать цель перехода`);
+        }
+      });
+    }
   });
 
   return {
