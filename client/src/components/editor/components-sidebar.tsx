@@ -759,9 +759,10 @@ export function ComponentsSidebar({
       const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
       queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
       
-      // Also refetch to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+      // Also update the list cache
+      const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
+      const { data, ...projectWithoutData } = newProject;
+      queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
       
       toast({
         title: "Проект создан",
@@ -784,16 +785,48 @@ export function ComponentsSidebar({
   // Удаление проекта
   const deleteProjectMutation = useMutation({
     mutationFn: (projectId: number) => apiRequest('DELETE', `/api/projects/${projectId}`),
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+    onMutate: async (projectId: number) => {
+      // Отменяем текущие запросы для предотвращения race condition
+      await queryClient.cancelQueries({ queryKey: ['/api/projects'] });
+      await queryClient.cancelQueries({ queryKey: ['/api/projects/list'] });
+      await queryClient.cancelQueries({ queryKey: [`/api/projects/${projectId}`] });
       
+      // Сохраняем предыдущие значения для отката
+      const previousProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']);
+      const previousList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']);
+      
+      // Оптимистично удаляем проект из кеша
+      if (previousProjects) {
+        const updatedProjects = previousProjects.filter(p => p.id !== projectId);
+        queryClient.setQueryData<BotProject[]>(['/api/projects'], updatedProjects);
+      }
+      
+      if (previousList) {
+        const updatedList = previousList.filter(p => p.id !== projectId);
+        queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], updatedList);
+      }
+      
+      // Удаляем из кеша конкретный проект
+      queryClient.removeQueries({ queryKey: [`/api/projects/${projectId}`] });
+      
+      // Возвращаем контекст для отката
+      return { previousProjects, previousList };
+    },
+    onSuccess: async () => {
       toast({
         title: "Проект удален",
         description: "Проект успешно удален",
       });
     },
-    onError: () => {
+    onError: (error, projectId, context) => {
+      // Откатываем изменения при ошибке
+      if (context?.previousProjects) {
+        queryClient.setQueryData(['/api/projects'], context.previousProjects);
+      }
+      if (context?.previousList) {
+        queryClient.setQueryData(['/api/projects/list'], context.previousList);
+      }
+      
       toast({
         title: "Ошибка удаления",
         description: "Не удалось удалить проект",
