@@ -498,119 +498,120 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
 
                   <div>
                     <h4 className="font-semibold mb-3">Экспорт файлов проекта</h4>
-                    <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex items-center justify-between'}`}>
-                    <div className={`${isMobile ? 'w-full' : 'flex items-center space-x-4'}`}>
-                      <Select value={selectedFormat} onValueChange={(value: ExportFormat) => setSelectedFormat(value)}>
-                        <SelectTrigger className={`${isMobile ? 'w-full h-12 text-base' : 'w-[200px]'}`} data-testid="select-format-files">
-                          <SelectValue placeholder="Выберите формат" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="python">Python код (.py)</SelectItem>
-                          <SelectItem value="json">JSON данные (.json)</SelectItem>
-                          <SelectItem value="requirements">Зависимости (.txt)</SelectItem>
-                          <SelectItem value="readme">Документация (.md)</SelectItem>
-                          <SelectItem value="dockerfile">Dockerfile</SelectItem>
-                          <SelectItem value="config">Конфигурация (.yaml)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className={`flex ${isMobile ? 'w-full' : ''} space-x-2`}>
-                      <Button onClick={() => copyToClipboard()} variant="outline" className={isMobile ? 'flex-1' : ''} data-testid="button-copy-files">
-                        <i className="fas fa-copy mr-2"></i>
-                        Копировать
-                      </Button>
-                      <Button onClick={() => downloadFile()} className={isMobile ? 'flex-1' : ''} data-testid="button-download-files">
-                        <i className="fas fa-download mr-2"></i>
-                        Скачать
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {codeStats.totalLines > 0 && (
-                      <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
-                        <div className="flex items-center gap-2">
-                          <span>Строк: {codeStats.totalLines}</span>
-                          {selectedFormat === 'python' && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              onClick={toggleAllFunctions}
-                              className="h-6 px-2 text-xs"
-                              data-testid="button-toggle-all-functions"
-                            >
-                              <i className={`fas ${areAllCollapsed ? 'fa-expand' : 'fa-compress'} mr-1`}></i>
-                              {areAllCollapsed ? 'Развернуть всё' : 'Свернуть всё'}
-                            </Button>
-                          )}
+                    <div className="space-y-4">
+                      <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex items-center justify-between'}`}>
+                        <div className={`${isMobile ? 'w-full' : 'flex items-center space-x-4'}`}>
+                          <Select value={selectedFormat} onValueChange={(value: ExportFormat) => setSelectedFormat(value)}>
+                            <SelectTrigger className={`${isMobile ? 'w-full h-12 text-base' : 'w-[200px]'}`} data-testid="select-format-files">
+                              <SelectValue placeholder="Выберите формат" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="python">Python код (.py)</SelectItem>
+                              <SelectItem value="json">JSON данные (.json)</SelectItem>
+                              <SelectItem value="requirements">Зависимости (.txt)</SelectItem>
+                              <SelectItem value="readme">Документация (.md)</SelectItem>
+                              <SelectItem value="dockerfile">Dockerfile</SelectItem>
+                              <SelectItem value="config">Конфигурация (.yaml)</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                        {codeStats.truncated && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-yellow-600 dark:text-yellow-500">⚠️ Показано первые 1000 строк</span>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => setShowFullCode(true)}
-                              data-testid="button-show-full-code"
-                            >
-                              Показать всё ({codeStats.totalLines})
-                            </Button>
+                        
+                        <div className={`flex ${isMobile ? 'w-full' : ''} space-x-2`}>
+                          <Button onClick={() => copyToClipboard()} variant="outline" className={isMobile ? 'flex-1' : ''} data-testid="button-copy-files">
+                            <i className="fas fa-copy mr-2"></i>
+                            Копировать
+                          </Button>
+                          <Button onClick={() => downloadFile()} className={isMobile ? 'flex-1' : ''} data-testid="button-download-files">
+                            <i className="fas fa-download mr-2"></i>
+                            Скачать
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        {codeStats.totalLines > 0 && (
+                          <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
+                            <div className="flex items-center gap-2">
+                              <span>Строк: {codeStats.totalLines}</span>
+                              {selectedFormat === 'python' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost"
+                                  onClick={toggleAllFunctions}
+                                  className="h-6 px-2 text-xs"
+                                  data-testid="button-toggle-all-functions"
+                                >
+                                  <i className={`fas ${areAllCollapsed ? 'fa-expand' : 'fa-compress'} mr-1`}></i>
+                                  {areAllCollapsed ? 'Развернуть всё' : 'Свернуть всё'}
+                                </Button>
+                              )}
+                            </div>
+                            {codeStats.truncated && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-yellow-600 dark:text-yellow-500">⚠️ Показано первые 1000 строк</span>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => setShowFullCode(true)}
+                                  data-testid="button-show-full-code"
+                                >
+                                  Показать всё ({codeStats.totalLines})
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         )}
+                        <div className={`${isMobile ? 'h-48' : 'h-[400px]'} rounded border border-slate-300 dark:border-slate-700 overflow-hidden`}>
+                          {selectedFormat === 'python' ? (
+                            <Editor
+                              value={displayContent}
+                              language="python"
+                              theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
+                              onMount={(editor) => {
+                                editorRef.current = editor;
+                                setTimeout(() => {
+                                  editor.getAction('editor.foldAll')?.run();
+                                  setAreAllCollapsed(true);
+                                }, 100);
+                              }}
+                              options={{
+                                readOnly: true,
+                                lineNumbers: 'on',
+                                wordWrap: 'on',
+                                fontSize: 12,
+                                lineHeight: 1.5,
+                                minimap: { enabled: false },
+                                folding: true,
+                                foldingHighlight: true,
+                                foldingStrategy: 'auto',
+                                showFoldingControls: 'always',
+                                glyphMargin: true,
+                                scrollBeyondLastLine: false,
+                                padding: { top: 8, bottom: 8 },
+                                automaticLayout: true,
+                                contextmenu: false
+                              }}
+                              data-testid="monaco-editor-export-python"
+                            />
+                          ) : (
+                            <Textarea 
+                              value={displayContent} 
+                              readOnly 
+                              className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
+                              style={{
+                                lineHeight: '1.5',
+                                letterSpacing: '0.02em',
+                                tabSize: 4
+                              }}
+                              placeholder="Выберите формат для просмотра содержимого..."
+                              data-testid="textarea-export-preview"
+                            />
+                          )}
+                        </div>
                       </div>
-                    )}
-                    <div className={`${isMobile ? 'h-48' : 'h-[400px]'} rounded border border-slate-300 dark:border-slate-700 overflow-hidden`}>
-                      {selectedFormat === 'python' ? (
-                        <Editor
-                          value={displayContent}
-                          language="python"
-                          theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
-                          onMount={(editor) => {
-                            editorRef.current = editor;
-                            setTimeout(() => {
-                              editor.getAction('editor.foldAll')?.run();
-                              setAreAllCollapsed(true);
-                            }, 100);
-                          }}
-                          options={{
-                            readOnly: true,
-                            lineNumbers: 'on',
-                            wordWrap: 'on',
-                            fontSize: 12,
-                            lineHeight: 1.5,
-                            minimap: { enabled: false },
-                            folding: true,
-                            foldingHighlight: true,
-                            foldingStrategy: 'auto',
-                            showFoldingControls: 'always',
-                            glyphMargin: true,
-                            scrollBeyondLastLine: false,
-                            padding: { top: 8, bottom: 8 },
-                            automaticLayout: true,
-                            contextmenu: false
-                          }}
-                          data-testid="monaco-editor-export-python"
-                        />
-                      ) : (
-                        <Textarea 
-                          value={displayContent} 
-                          readOnly 
-                          className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
-                          style={{
-                            lineHeight: '1.5',
-                            letterSpacing: '0.02em',
-                            tabSize: 4
-                          }}
-                          placeholder="Выберите формат для просмотра содержимого..."
-                          data-testid="textarea-export-preview"
-                        />
-                      )}
-                    </div>
-                  </div>
-                  
-                  <Separator />
-                  
+                      
+                      <Separator />
+                      
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Загрузить все файлы проекта:</span>
                         <Button onClick={downloadAllFiles} variant="default" data-testid="button-download-all-files">
