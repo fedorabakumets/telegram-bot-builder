@@ -1236,6 +1236,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '# Список администраторов (добавьте свой Telegram ID)\n';
   code += 'ADMIN_IDS = [123456789]  # Замените на реальные ID администраторов\n\n';
   
+  // Блок логирования сообщений генерируется только если включена БД
+  if (userDatabaseEnabled) {
   code += '# API configuration для сохранения сообщений\n';
   code += 'API_BASE_URL = os.getenv("REPLIT_DEV_DOMAIN", "http://localhost:5000")\n';
   code += 'PROJECT_ID = os.getenv("PROJECT_ID", "1")  # ID проекта в системе\n\n';
@@ -1560,6 +1562,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '    \n';
   code += '    return result\n\n';
   code += 'bot.send_photo = send_photo_with_logging\n\n';
+  }  // Закрываем if (userDatabaseEnabled) для блока логирования
   
   // Добавляем конфигурацию групп
   if (groups && groups.length > 0) {
@@ -7871,7 +7874,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'async def fallback_text_handler(message: types.Message):\n';
   code += '    """\n';
   code += '    Fallback обработчик для всех текстовых сообщений без специфичного обработчика.\n';
+  if (userDatabaseEnabled) {
   code += '    Благодаря middleware, сообщение уже сохранено в БД.\n';
+  }
   code += '    Этот обработчик просто логирует факт необработанного сообщения.\n';
   code += '    """\n';
   code += '    logging.info(f"💬 Получено необработанное текстовое сообщение от {message.from_user.id}: {message.text}")\n';
@@ -7884,10 +7889,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += 'async def handle_unhandled_photo(message: types.Message):\n';
   code += '    """\n';
   code += '    Обрабатывает фотографии, которые не были обработаны другими обработчиками.\n';
+  if (userDatabaseEnabled) {
   code += '    Благодаря middleware, фото уже будет сохранено в БД.\n';
+  }
   code += '    """\n';
   code += '    logging.info(f"📸 Получено фото от пользователя {message.from_user.id}")\n';
-  code += '    # Middleware автоматически сохранит фото\n\n';
+  if (userDatabaseEnabled) {
+  code += '    # Middleware автоматически сохранит фото\n';
+  }
+  code += '\n';
   
   code += '\n\n# Запуск бота\n';
   code += 'async def main():\n';
@@ -7903,10 +7913,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     code += '        await set_bot_commands()\n';
   }
   code += '        \n';
+  if (userDatabaseEnabled) {
   code += '        # Регистрация middleware для сохранения сообщений\n';
   code += '        dp.message.middleware(message_logging_middleware)\n';
   code += '        dp.callback_query.middleware(callback_query_logging_middleware)\n';
   code += '        \n';
+  }
   code += '        print("🤖 Бот запущен и готов к работе!")\n';
   code += '        await dp.start_polling(bot)\n';
   code += '    except KeyboardInterrupt:\n';
