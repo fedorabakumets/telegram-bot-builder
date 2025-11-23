@@ -618,19 +618,56 @@ async function stopBot(projectId: number, tokenId: number): Promise<{ success: b
     const processKey = `${projectId}_${tokenId}`;
     const process = botProcesses.get(processKey);
     
-    // Если процесс не найден в памяти, но в базе есть запись - исправляем несоответствие
-    if (!process) {
-      const instance = await storage.getBotInstance(projectId);
-      if (instance && instance.status === 'running' && instance.tokenId === tokenId) {
-        console.log(`Процесс бота ${projectId} (токен ${tokenId}) не найден в памяти, но помечен как запущенный в базе. Исправляем состояние.`);
-        await storage.stopBotInstance(projectId);
-        return { success: true };
+    // Убиваем ВСЕ Python процессы для этого проекта (включая старые/зависшие)
+    try {
+      const { execSync } = require('child_process');
+      const botFileName = `bot_${projectId}.py`;
+      
+      // Находим все процессы с этим файлом
+      try {
+        const allPythonProcesses = execSync(`ps aux | grep python | grep "${botFileName}" | grep -v grep`, { encoding: 'utf8' }).trim();
+        
+        if (allPythonProcesses) {
+          const lines = allPythonProcesses.split('\n').filter((line: string) => line.trim());
+          for (const line of lines) {
+            const parts = line.trim().split(/\s+/);
+            const pid = parseInt(parts[1]);
+            if (pid && !isNaN(pid)) {
+              try {
+                console.log(`Убиваем процесс ${pid} для бота ${projectId}`);
+                execSync(`kill -TERM ${pid}`, { encoding: 'utf8' });
+              } catch (killError) {
+                console.log(`Процесс ${pid} уже завершен или недоступен`);
+              }
+            }
+          }
+        }
+      } catch (grepError) {
+        // Процессы не найдены - это нормально
+        console.log(`Процессы для бота ${projectId} не найдены`);
       }
-      return { success: false, error: "Процесс бота не найден" };
+    } catch (error) {
+      console.log(`Ошибка при поиске процессов для бота ${projectId}:`, error);
     }
-
-    process.kill('SIGTERM');
-    botProcesses.delete(processKey);
+    
+    // Если процесс был в памяти - удаляем его
+    if (process) {
+      try {
+        process.kill('SIGTERM');
+      } catch (e) {
+        // Процесс уже завершен
+      }
+      botProcesses.delete(processKey);
+    }
+    
+    // Удаляем ВСЕ процессы для этого проекта из памяти
+    const keysToDelete: string[] = [];
+    for (const [key] of Array.from(botProcesses.entries())) {
+      if (key.startsWith(`${projectId}_`)) {
+        keysToDelete.push(key);
+      }
+    }
+    keysToDelete.forEach(key => botProcesses.delete(key));
     
     await storage.stopBotInstance(projectId);
     
@@ -1431,6 +1468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Дополнительная проверка через поиск процесса с нужным файлом бота
+      // ВАЖНО: НЕ восстанавливаем отслеживание, только проверяем существование
       if (!activeProcessInfo && actualStatus === 'stopped') {
         try {
           const { execSync } = require('child_process');
@@ -1440,37 +1478,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Проверяем есть ли процесс с файлом этого бота
           if (allPythonProcesses.includes(botFileName)) {
-            console.log(`Найден активный процесс для бота ${projectId} (файл: ${botFileName}), восстанавливаем отслеживание`);
+            console.log(`⚠️ Найден зависший процесс для бота ${projectId} (файл: ${botFileName}). Пометим как running, но НЕ восстанавливаем отслеживание. Используйте кнопку "Остановить" для очистки.`);
             
-            // Извлекаем PID из вывода ps
+            // Извлекаем PID из вывода ps для информации
             const lines = allPythonProcesses.split('\n');
             for (const line of lines) {
               if (line.includes(botFileName)) {
                 const parts = line.trim().split(/\s+/);
                 const realPid = parseInt(parts[1]);
                 
-                console.log(`Обнаружен реальный PID ${realPid} для бота ${projectId}, обновляем в базе`);
+                console.log(`Обнаружен зависший PID ${realPid} для бота ${projectId}`);
                 
-                // Обновляем PID в базе данных
+                // Обновляем PID в базе данных для возможности остановки
                 await storage.updateBotInstance(instance.id, { processId: realPid.toString() });
                 
-                // Создаем фиктивный объект процесса для отслеживания
-                const mockProcess = {
-                  pid: realPid,
-                  killed: false,
-                  exitCode: null,
-                  kill: (signal: any) => {
-                    try {
-                      process.kill(realPid, signal);
-                      return true;
-                    } catch {
-                      return false;
-                    }
-                  }
-                } as any;
-                
-                // Восстанавливаем отслеживание процесса
-                botProcesses.set(`${projectId}_${instance.tokenId}`, mockProcess);
+                // НЕ восстанавливаем отслеживание! Просто отмечаем как running
+                // чтобы пользователь мог нажать "Остановить" и убить процесс
                 actualStatus = 'running';
                 break;
               }
