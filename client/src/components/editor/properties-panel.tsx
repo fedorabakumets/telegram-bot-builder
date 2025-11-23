@@ -3620,38 +3620,51 @@ export function PropertiesPanel({
 
 
                             {/* Message Text with Formatting */}
-                            <div>
-                              <Label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                Что показать пользователю, если условие выполнится?
-                              </Label>
-
-                              {/* Rich Text Editor for conditional message */}
-                              <InlineRichEditor
-                                value={condition.messageText}
-                                onChange={(value) => {
-                                  const currentConditions = selectedNode.data.conditionalMessages || [];
-                                  const updatedConditions = currentConditions.map(c => 
-                                    c.id === condition.id ? { ...c, messageText: value } : c
-                                  );
-                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                }}
-                                placeholder="Добро пожаловать обратно! Рады вас снова видеть."
-                                enableMarkdown={condition.formatMode === 'markdown'}
-                                onMarkdownToggle={(enabled) => {
-                                  const currentConditions = selectedNode.data.conditionalMessages || [];
-                                  const updatedConditions = currentConditions.map(c => 
-                                    c.id === condition.id ? { ...c, formatMode: (enabled ? 'markdown' : 'text') as 'text' | 'markdown' | 'html' } : c
-                                  );
-                                  onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                }}
-                                availableVariables={textVariables}
-                              />
-                              
-
-                              
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Если не указано, будет использоваться основной текст узла
+                            <div className="border border-green-200/50 dark:border-green-800/50 rounded-lg p-3 bg-green-50/30 dark:bg-green-950/20">
+                              <div className="flex items-center justify-between mb-2">
+                                <Label className="text-xs font-medium text-green-700 dark:text-green-300">
+                                  Что показать пользователю, если условие выполнится?
+                                </Label>
+                                <Switch
+                                  checked={condition.showCustomMessage ?? false}
+                                  onCheckedChange={(checked) => {
+                                    const currentConditions = selectedNode.data.conditionalMessages || [];
+                                    const updatedConditions = currentConditions.map(c => 
+                                      c.id === condition.id ? { ...c, showCustomMessage: checked } : c
+                                    );
+                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                  }}
+                                />
                               </div>
+                              {condition.showCustomMessage && (
+                                <div className="space-y-2">
+                                  {/* Rich Text Editor for conditional message */}
+                                  <InlineRichEditor
+                                    value={condition.messageText}
+                                    onChange={(value) => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id ? { ...c, messageText: value } : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                    placeholder="Добро пожаловать обратно! Рады вас снова видеть."
+                                    enableMarkdown={condition.formatMode === 'markdown'}
+                                    onMarkdownToggle={(enabled) => {
+                                      const currentConditions = selectedNode.data.conditionalMessages || [];
+                                      const updatedConditions = currentConditions.map(c => 
+                                        c.id === condition.id ? { ...c, formatMode: (enabled ? 'markdown' : 'text') as 'text' | 'markdown' | 'html' } : c
+                                      );
+                                      onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                    }}
+                                    availableVariables={textVariables}
+                                  />
+                                  
+                                  <div className="text-xs text-green-600 dark:text-green-400">
+                                    Если не указано, будет использоваться основной текст узла
+                                  </div>
+                                </div>
+                              )}
                             </div>
 
                             {/* Text Input Configuration */}
