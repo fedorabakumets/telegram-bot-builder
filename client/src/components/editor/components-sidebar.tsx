@@ -866,6 +866,11 @@ export function ComponentsSidebar({
         projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
         projectDescription = '';
         projectData = parsedData;
+        
+        // Убедимся, что все листы имеют версию
+        if (!projectData.version) {
+          projectData.version = 2;
+        }
       }
       // Формат 3: старый формат с узлами
       else if (parsedData.nodes) {
@@ -893,7 +898,7 @@ export function ComponentsSidebar({
         
         toast({
           title: "Проект импортирован",
-          description: `Проект "${newProject.name}" успешно импортирован`,
+          description: `Проект "${newProject.name}" успешно импортирован. Проект готов к редактированию!`,
         });
         
         // Переключаемся на новый проект
