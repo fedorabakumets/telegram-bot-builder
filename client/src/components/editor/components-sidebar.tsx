@@ -1,6 +1,6 @@
 import { ComponentDefinition, BotProject } from '@shared/schema';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SheetsManager } from '@/utils/sheets-manager';
 
@@ -529,6 +529,7 @@ export function ComponentsSidebar({
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importJsonText, setImportJsonText] = useState('');
   const [importError, setImportError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -843,6 +844,45 @@ export function ComponentsSidebar({
 
   const handleCreateProject = () => {
     createProjectMutation.mutate();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        setImportJsonText(content);
+        setImportError('');
+        toast({
+          title: "Файл загружен",
+          description: `Файл "${file.name}" успешно загружен. Нажмите "Импортировать" для создания проекта.`,
+        });
+      } catch (error) {
+        setImportError('Ошибка при чтении файла');
+        toast({
+          title: "Ошибка загрузки",
+          description: "Не удалось прочитать файл",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.onerror = () => {
+      setImportError('Ошибка при чтении файла');
+      toast({
+        title: "Ошибка загрузки",
+        description: "Не удалось прочитать файл",
+        variant: "destructive",
+      });
+    };
+    reader.readAsText(file);
+    
+    // Очищаем input, чтобы можно было загрузить файл с тем же именем снова
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleImportProject = () => {
@@ -1163,21 +1203,56 @@ export function ComponentsSidebar({
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Импортировать проект</DialogTitle>
-                  <DialogDescription>Вставьте JSON данные проекта для импорта</DialogDescription>
+                  <DialogDescription>Вставьте JSON или загрузите файл с данными проекта</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Вставьте JSON проекта:</label>
-                    <Textarea 
-                      value={importJsonText}
-                      onChange={(e) => {
-                        setImportJsonText(e.target.value);
-                        setImportError('');
-                      }}
-                      placeholder='{"name": "Мой бот", "description": "", "data": {...}}'
-                      className="font-mono text-sm h-64 resize-none"
-                      data-testid="textarea-import-json"
-                    />
+                  {/* Две колонки: текст и загрузка файла */}
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Вставка текста */}
+                    <div>
+                      <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <i className="fas fa-paste text-blue-500" />
+                        Вставьте JSON проекта
+                      </label>
+                      <Textarea 
+                        value={importJsonText}
+                        onChange={(e) => {
+                          setImportJsonText(e.target.value);
+                          setImportError('');
+                        }}
+                        placeholder='{"name": "Мой бот", "description": "", "data": {...}}'
+                        className="font-mono text-xs h-48 resize-none"
+                        data-testid="textarea-import-json"
+                      />
+                    </div>
+                    
+                    {/* Загрузка файла */}
+                    <div>
+                      <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <i className="fas fa-file text-green-500" />
+                        Или загрузите файл JSON
+                      </label>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".json,.txt"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        data-testid="input-import-file"
+                      />
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        variant="outline"
+                        className="w-full h-48 flex flex-col items-center justify-center gap-3 border-2 border-dashed hover:bg-muted/50 transition-colors"
+                        data-testid="button-upload-file"
+                      >
+                        <i className="fas fa-cloud-upload-alt text-3xl text-muted-foreground" />
+                        <div className="text-center">
+                          <p className="text-sm font-medium">Нажмите для выбора файла</p>
+                          <p className="text-xs text-muted-foreground">или перетащите файл сюда</p>
+                        </div>
+                      </Button>
+                    </div>
                   </div>
                   
                   {importError && (
@@ -1186,7 +1261,7 @@ export function ComponentsSidebar({
                     </div>
                   )}
                   
-                  <div className="flex gap-3 justify-end">
+                  <div className="flex gap-3 justify-end pt-2">
                     <Button 
                       variant="outline" 
                       onClick={() => {
