@@ -17,7 +17,7 @@ import { useState, useMemo, useCallback } from 'react';
 
 import { InlineRichEditor } from './inline-rich-editor';
 import { EmojiPicker } from './emoji-picker';
-import { Image, Video, Music, FileText, X, Plus } from 'lucide-react';
+import { Image, Video, Music, FileText, X, Plus, Upload } from 'lucide-react';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -2542,6 +2542,41 @@ export function PropertiesPanel({
                   availableVariables={[...textVariables, ...mediaVariables]}
                   onMediaVariableSelect={handleMediaVariableSelect}
                 />
+              </div>
+
+              {/* File Attachment Button */}
+              <div className="space-y-2">
+                <UIButton
+                  variant="outline"
+                  className="w-full justify-start gap-2 text-sm hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
+                  data-testid="button-choose-upload-file"
+                >
+                  <Upload className="h-4 w-4" />
+                  Выбрать или загрузить файл
+                </UIButton>
+                {(selectedNode.data.imageUrl || selectedNode.data.videoUrl || selectedNode.data.audioUrl || selectedNode.data.documentUrl) && (
+                  <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
+                    <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    <span className="text-blue-700 dark:text-blue-300 flex-1">
+                      {selectedNode.data.imageUrl ? 'Изображение прикреплено' : 
+                       selectedNode.data.videoUrl ? 'Видео прикреплено' :
+                       selectedNode.data.audioUrl ? 'Аудио прикреплено' :
+                       'Документ прикреплен'}
+                    </span>
+                    <button
+                      onClick={() => onNodeUpdate(selectedNode.id, { 
+                        imageUrl: undefined, 
+                        videoUrl: undefined, 
+                        audioUrl: undefined, 
+                        documentUrl: undefined 
+                      })}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                      title="Удалить файл"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
