@@ -4142,23 +4142,6 @@ export function PropertiesPanel({
                       )}
                     </div>
                   </div>
-
-                  {/* Fallback Message */}
-                  <div>
-                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2 block">
-                      Что показать, если ни одно правило не подошло?
-                    </Label>
-                    <Textarea
-                      value={selectedNode.data.fallbackMessage || ''}
-                      onChange={(e) => onNodeUpdate(selectedNode.id, { fallbackMessage: e.target.value })}
-                      className="text-xs resize-none border-purple-200 dark:border-purple-700"
-                      rows={3}
-                      placeholder="Оставьте пустым, чтобы показать основной текст узла"
-                    />
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Если не заполнить, покажется обычный текст сообщения
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
