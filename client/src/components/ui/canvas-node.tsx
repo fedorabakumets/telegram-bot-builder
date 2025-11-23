@@ -567,11 +567,8 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
             {(() => {
               const hasRequiredFields = (() => {
                 switch (node.type) {
-                  case 'audio': return !!node.data.audioUrl;
-                  case 'document': return !!node.data.documentUrl;
                   case 'sticker': return !!(node.data.stickerUrl || node.data.stickerFileId);
                   case 'voice': return !!node.data.voiceUrl;
-                  case 'animation': return !!node.data.animationUrl;
                   case 'location': return !!(node.data.latitude && node.data.longitude);
                   case 'contact': return !!(node.data.phoneNumber && node.data.firstName);
                   case 'poll': return !!(node.data.question && node.data.options?.length);
@@ -720,62 +717,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       )}
       
       {/* Media previews */}
-      {/* Audio preview */}
-      {node.type === 'audio' && (
-        <div className="bg-gradient-to-br from-orange-100/50 to-amber-100/50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center border-2 border-dashed border-orange-200 dark:border-orange-700 hover:border-orange-300 dark:hover:border-orange-600 transition-colors group">
-          <div className="text-center space-y-2">
-            <i className="fas fa-music text-orange-400 dark:text-orange-300 text-3xl group-hover:scale-110 transition-transform"></i>
-            {node.data.audioUrl ? (
-              <div className="text-xs text-orange-600 dark:text-orange-400 space-y-1">
-                <div className="font-medium flex items-center justify-center space-x-1">
-                  <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                  <span>{node.data.title || 'Аудио трек'}</span>
-                </div>
-                {node.data.performer && (
-                  <div className="flex items-center justify-center space-x-1">
-                    <i className="fas fa-user text-xs"></i>
-                    <span>{node.data.performer}</span>
-                  </div>
-                )}
-                {node.data.duration && (
-                  <div className="flex items-center justify-center space-x-1">
-                    <i className="fas fa-clock text-xs"></i>
-                    <span>{node.data.duration}с</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-xs text-orange-600 dark:text-orange-400 font-medium">Нажмите для загрузки</div>
-            )}
-          </div>
-        </div>
-      )}
-      
-      {/* Document preview */}
-      {node.type === 'document' && (
-        <div className="bg-gradient-to-br from-teal-100/50 to-cyan-100/50 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center border-2 border-dashed border-teal-200 dark:border-teal-700 hover:border-teal-300 dark:hover:border-teal-600 transition-colors group">
-          <div className="text-center space-y-2">
-            <i className="fas fa-file-alt text-teal-400 dark:text-teal-300 text-3xl group-hover:scale-110 transition-transform"></i>
-            {node.data.documentUrl ? (
-              <div className="text-xs text-teal-600 dark:text-teal-400 space-y-1">
-                <div className="font-medium flex items-center justify-center space-x-1">
-                  <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                  <span>{node.data.filename || 'Документ'}</span>
-                </div>
-                {node.data.fileSize && (
-                  <div className="flex items-center justify-center space-x-1">
-                    <i className="fas fa-hdd text-xs"></i>
-                    <span>{node.data.fileSize} МБ</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-xs text-teal-600 dark:text-teal-400 font-medium">Нажмите для загрузки</div>
-            )}
-          </div>
-        </div>
-      )}
-      
       {/* Sticker preview */}
       {node.type === 'sticker' && (
         <div className="bg-gradient-to-br from-pink-100/50 to-fuchsia-100/50 dark:from-pink-900/30 dark:to-fuchsia-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
@@ -818,33 +759,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         </div>
       )}
       
-      {/* Animation preview */}
-      {node.type === 'animation' && (
-        <div className="bg-gradient-to-br from-yellow-100/50 to-orange-100/50 dark:from-yellow-900/30 dark:to-orange-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center">
-          <div className="text-center space-y-2">
-            <i className="fas fa-film text-yellow-400 dark:text-yellow-300 text-3xl"></i>
-            {node.data.animationUrl ? (
-              <div className="text-xs text-yellow-600 dark:text-yellow-400 space-y-1">
-                <div className="font-medium">GIF анимация</div>
-                {node.data.duration && (
-                  <div className="flex items-center justify-center space-x-1">
-                    <i className="fas fa-clock text-xs"></i>
-                    <span>{node.data.duration}с</span>
-                  </div>
-                )}
-                {node.data.width && node.data.height && (
-                  <div className="flex items-center justify-center space-x-1">
-                    <i className="fas fa-expand text-xs"></i>
-                    <span>{node.data.width}x{node.data.height}</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-xs text-yellow-500 dark:text-yellow-400">Добавьте URL GIF анимации</div>
-            )}
-          </div>
-        </div>
-      )}
       
       {/* Location preview */}
       {node.type === 'location' && (

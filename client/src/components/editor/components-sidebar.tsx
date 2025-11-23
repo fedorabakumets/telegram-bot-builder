@@ -74,43 +74,6 @@ const components: ComponentDefinition[] = [
     }
   },
   {
-    id: 'audio-message',
-    name: 'Аудио сообщение',
-    description: 'Аудио файл с подписью',
-    icon: 'fas fa-music',
-    color: 'bg-yellow-100 text-yellow-600',
-    type: 'audio',
-    defaultData: {
-      messageText: 'Описание аудио',
-      audioUrl: '',
-      mediaCaption: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'document-message',
-    name: 'Документ',
-    description: 'Файл документа',
-    icon: 'fas fa-file',
-    color: 'bg-gray-100 text-gray-600',
-    type: 'document',
-    defaultData: {
-      messageText: 'Описание документа',
-      documentUrl: '',
-      documentName: 'document.pdf',
-      mediaCaption: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
     id: 'sticker-message',
     name: 'Стикер',
     description: 'Анимированный стикер',
@@ -139,27 +102,6 @@ const components: ComponentDefinition[] = [
       messageText: 'Голосовое сообщение',
       voiceUrl: '',
       duration: 0,
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'animation-message',
-    name: 'GIF анимация',
-    description: 'Анимированное изображение',
-    icon: 'fas fa-film',
-    color: 'bg-orange-100 text-orange-600',
-    type: 'animation',
-    defaultData: {
-      messageText: 'GIF анимация',
-      animationUrl: '',
-      duration: 0,
-      width: 0,
-      height: 0,
-      mediaCaption: '',
       keyboardType: 'none',
       buttons: [],
       markdown: false,
@@ -566,7 +508,7 @@ const components: ComponentDefinition[] = [
 const componentCategories = [
   {
     title: 'Сообщения',
-    components: components.filter(c => ['message', 'audio', 'document', 'sticker', 'voice', 'animation', 'location', 'contact'].includes(c.type))
+    components: components.filter(c => ['message', 'sticker', 'voice', 'location', 'contact'].includes(c.type))
   },
   {
     title: 'Кнопки',
