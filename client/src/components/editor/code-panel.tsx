@@ -17,7 +17,7 @@ interface CodePanelProps {
   selectedNodeId?: string | null;
 }
 
-type CodeFormat = 'python' | 'json' | 'requirements' | 'readme' | 'dockerfile';
+type CodeFormat = 'python' | 'json' | 'requirements' | 'readme' | 'dockerfile' | 'config';
 
 export function CodePanel({ botData, projectName, projectId, selectedNodeId }: CodePanelProps) {
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
@@ -26,7 +26,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     json: '',
     requirements: '',
     readme: '',
-    dockerfile: ''
+    dockerfile: '',
+    config: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -97,6 +98,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
           return botGenerator.generateReadme(botData, projectName);
         case 'dockerfile':
           return botGenerator.generateDockerfile();
+        case 'config':
+          return botGenerator.generateConfigYaml(projectName);
         default:
           return '';
       }
@@ -144,7 +147,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
       json: '.json',
       requirements: '.txt',
       readme: '.md',
-      dockerfile: ''
+      dockerfile: '',
+      config: '.yaml'
     };
 
     const fileNames: Record<CodeFormat, string> = {
@@ -152,7 +156,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
       json: 'bot_data',
       requirements: 'requirements',
       readme: 'README',
-      dockerfile: 'Dockerfile'
+      dockerfile: 'Dockerfile',
+      config: 'config'
     };
 
     const blob = new Blob([content as string], { type: 'text/plain' });
@@ -188,7 +193,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
         json: '',
         requirements: '',
         readme: '',
-        dockerfile: ''
+        dockerfile: '',
+        config: ''
       });
       loadedFormatsRef.current.clear();
       prevDataRef.current = { 
@@ -292,6 +298,12 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
                   Dockerfile
                 </div>
               </SelectItem>
+              <SelectItem value="config">
+                <div className="flex items-center">
+                  <i className="fas fa-cog mr-2 text-yellow-500"></i>
+                  Config YAML
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
 
@@ -357,6 +369,7 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
                 selectedFormat === 'json' ? 'json' :
                 selectedFormat === 'readme' ? 'markdown' :
                 selectedFormat === 'dockerfile' ? 'dockerfile' :
+                selectedFormat === 'config' ? 'yaml' :
                 'plaintext'
               }
               theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
