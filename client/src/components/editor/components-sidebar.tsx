@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { LayoutButtons } from '@/components/layout/layout-buttons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -1137,6 +1137,7 @@ export function ComponentsSidebar({
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Импортировать проект</DialogTitle>
+                  <DialogDescription>Вставьте JSON данные проекта для импорта</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
