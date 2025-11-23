@@ -974,6 +974,11 @@ export function ComponentsSidebar({
               setImportPythonText('');
               setImportJsonText('');
               setImportError('');
+              toast({
+                title: "✅ Успешно импортировано!",
+                description: `Python бот загружен (${result.nodeCount} узлов)`,
+                variant: "default",
+              });
               queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
               queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
               setTimeout(() => {
@@ -982,7 +987,7 @@ export function ComponentsSidebar({
             }).catch((error: any) => {
               setImportError(error.message || 'Ошибка при импорте проекта');
               toast({
-                title: "Ошибка импорта",
+                title: "❌ Ошибка импорта",
                 description: error.message || 'Не удалось создать проект',
                 variant: "destructive",
               });
