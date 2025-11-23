@@ -447,31 +447,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
 
       const nodeSize = getNodeSize(nodeId, options);
       
-      // ЦЕНТРИРОВАНИЕ: если у узла несколько родителей, центрируем его между ними
-      let finalY = currentY;
-      const parents = incomingConnections.get(nodeId);
-      if (parents && parents.length > 1) {
-        // Находим позиции всех родительских узлов
-        const parentPositions = parents
-          .map(parentId => {
-            // Ищем родителя в уже обработанных узлах
-            const parentInResult = result.find(n => n.id === parentId);
-            if (parentInResult) {
-              const parentSize = getNodeSize(parentId, options);
-              return parentInResult.position.y + parentSize.height / 2;
-            }
-            return null;
-          })
-          .filter(pos => pos !== null) as number[];
-
-        if (parentPositions.length > 0) {
-          // Вычисляем среднюю Y-позицию родителей
-          const avgParentY = parentPositions.reduce((sum, py) => sum + py, 0) / parentPositions.length;
-          // Центрируем узел относительно средней позиции родителей
-          finalY = avgParentY - nodeSize.height / 2;
-          console.log(`📍 Центрирование узла ${nodeId} (в цепочке) между ${parents.length} родителями: y=${finalY}`);
-        }
-      }
+      const finalY = currentY;
       
       console.log(`  ⬇️ Узел ${index + 1}/${chain.length} (${nodeId}): x=${chainX}, y=${finalY}`);
 
@@ -483,13 +459,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
       });
 
       processedNodes.add(nodeId);
-      // Переходим к следующей позиции по вертикали (только если не было центрирования)
-      if (finalY === currentY) {
-        currentY += nodeSize.height + options.verticalSpacing;
-      } else {
-        // Если было центрирование, используем новую позицию
-        currentY = finalY + nodeSize.height + options.verticalSpacing;
-      }
+      currentY += nodeSize.height + options.verticalSpacing;
     });
   });
 
@@ -509,33 +479,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
       // Пропускаем узлы, которые уже обработаны в цепочках
       if (processedNodes.has(node.id)) return;
 
-      let y = (node as any)._y || (options.startY + result.length * options.verticalSpacing);
-      
-      // ЦЕНТРИРОВАНИЕ: если у узла несколько родителей, центрируем его между ними
-      const parents = incomingConnections.get(node.id);
-      if (parents && parents.length > 1) {
-        // Находим позиции всех родительских узлов
-        const parentPositions = parents
-          .map(parentId => {
-            // Ищем родителя в уже обработанных узлах
-            const parentInResult = result.find(n => n.id === parentId);
-            if (parentInResult) {
-              const parentSize = getNodeSize(parentId, options);
-              return parentInResult.position.y + parentSize.height / 2;
-            }
-            return null;
-          })
-          .filter(pos => pos !== null) as number[];
-
-        if (parentPositions.length > 0) {
-          // Вычисляем среднюю Y-позицию родителей
-          const avgParentY = parentPositions.reduce((sum, py) => sum + py, 0) / parentPositions.length;
-          const nodeSize = getNodeSize(node.id, options);
-          // Центрируем узел относительно средней позиции родителей
-          y = avgParentY - nodeSize.height / 2;
-          console.log(`📍 Центрирование узла ${node.id} между ${parents.length} родителями: y=${y}`);
-        }
-      }
+      const y = (node as any)._y || (options.startY + result.length * options.verticalSpacing);
 
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
