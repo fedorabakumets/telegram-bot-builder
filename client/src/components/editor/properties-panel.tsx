@@ -4555,25 +4555,14 @@ export function PropertiesPanel({
         {/* Universal User Input Collection */}
         {selectedNode.type !== 'input' && !selectedNode.data.collectUserInput && (
           <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">✨ Дополнительный сбор ответов</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-foreground">✨ Дополнительный сбор ответов</h3>
+              <Switch
+                checked={selectedNode.data.collectUserInput ?? false}
+                onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { collectUserInput: checked })}
+              />
+            </div>
             <div className="space-y-4">
-              {/* Enable Input Collection */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
-                <div className="flex-1">
-                  <Label className="text-xs font-medium text-foreground">
-                    Дополнительный сбор ответов
-                  </Label>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Обычные кнопки работают как прежде + дополнительно сохраняются ответы пользователей
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <Switch
-                    checked={selectedNode.data.collectUserInput ?? false}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { collectUserInput: checked })}
-                  />
-                </div>
-              </div>
 
               {/* Input Collection Settings */}
               {selectedNode.data.collectUserInput && (
