@@ -398,21 +398,19 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
           <Tabs defaultValue="stats" className="mt-4">
             {isMobile ? (
               <div className="flex-shrink-0 space-y-2">
-                <TabsList className="grid w-full grid-cols-3 h-auto gap-1">
+                <TabsList className="grid w-full grid-cols-2 h-auto gap-1">
                   <TabsTrigger value="stats" className="text-xs py-2 px-1" data-testid="tab-stats">Статистика</TabsTrigger>
                   <TabsTrigger value="validation" className="text-xs py-2 px-1" data-testid="tab-validation">Валидация</TabsTrigger>
-                  <TabsTrigger value="files" className="text-xs py-2 px-1" data-testid="tab-files">Файлы</TabsTrigger>
                 </TabsList>
                 <TabsList className="grid w-full grid-cols-2 h-auto gap-1">
-                  <TabsTrigger value="setup" className="text-xs py-2 px-1" data-testid="tab-setup">Настройка</TabsTrigger>
                   <TabsTrigger value="export" className="text-xs py-2 px-1" data-testid="tab-export">Экспорт</TabsTrigger>
+                  <TabsTrigger value="setup" className="text-xs py-2 px-1" data-testid="tab-setup">Настройка</TabsTrigger>
                 </TabsList>
               </div>
             ) : (
-              <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
+              <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
                 <TabsTrigger value="stats" data-testid="tab-stats">Статистика</TabsTrigger>
                 <TabsTrigger value="validation" data-testid="tab-validation">Валидация</TabsTrigger>
-                <TabsTrigger value="files" data-testid="tab-files">Файлы</TabsTrigger>
                 <TabsTrigger value="export" data-testid="tab-export">Экспорт</TabsTrigger>
                 <TabsTrigger value="setup" data-testid="tab-setup">Настройка</TabsTrigger>
               </TabsList>
@@ -467,36 +465,40 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                     ) : (
                       <i className="fas fa-exclamation-triangle text-red-500"></i>
                     )}
-                    <span>Проверка структуры бота</span>
+                    <span>Проверка структуры и файлы проекта</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {validationResult.isValid ? (
-                    <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800/40">
-                      <i className="fas fa-check-circle"></i>
-                      <span className="font-medium">Структура бота корректна и готова к экспорту!</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-800/40">
-                        <i className="fas fa-exclamation-triangle"></i>
-                        <span className="font-medium">Найдены ошибки в структуре бота:</span>
+                <CardContent className="space-y-6">
+                  <div>
+                    <h4 className="font-semibold mb-3">Проверка структуры бота</h4>
+                    {validationResult.isValid ? (
+                      <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 p-4 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800/40">
+                        <i className="fas fa-check-circle"></i>
+                        <span className="font-medium">Структура бота корректна и готова к экспорту!</span>
                       </div>
-                      <div className="space-y-2">
-                        {(validationResult.errors || []).map((error, index) => (
-                          <div key={index} className="flex items-start space-x-2 p-3 bg-red-50 dark:bg-red-950/20 rounded border-l-4 border-red-200 dark:border-red-800/60">
-                            <i className="fas fa-times-circle text-red-500 dark:text-red-400 mt-0.5"></i>
-                            <span className="text-sm text-red-700 dark:text-red-300">{error}</span>
-                          </div>
-                        ))}
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-800/40">
+                          <i className="fas fa-exclamation-triangle"></i>
+                          <span className="font-medium">Найдены ошибки в структуре бота:</span>
+                        </div>
+                        <div className="space-y-2">
+                          {(validationResult.errors || []).map((error, index) => (
+                            <div key={index} className="flex items-start space-x-2 p-3 bg-red-50 dark:bg-red-950/20 rounded border-l-4 border-red-200 dark:border-red-800/60">
+                              <i className="fas fa-times-circle text-red-500 dark:text-red-400 mt-0.5"></i>
+                              <span className="text-sm text-red-700 dark:text-red-300">{error}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                    )}
+                  </div>
 
-            <TabsContent value="files" className="space-y-4 mt-4">
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-semibold mb-3">Экспорт файлов проекта</h4>
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
