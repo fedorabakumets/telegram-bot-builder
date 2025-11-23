@@ -560,7 +560,8 @@ function generateAttachedMediaSendCode(
   parseMode: string,
   keyboard: string,
   nodeId: string,
-  indentLevel: string
+  indentLevel: string,
+  autoTransitionTo?: string
 ): string {
   if (!attachedMedia || attachedMedia.length === 0) {
     return '';
@@ -615,6 +616,16 @@ function generateAttachedMediaSendCode(
       code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${parseMode})\n`;
   }
   
+  // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход после отправки медиа
+  if (autoTransitionTo) {
+    const safeAutoTargetId = autoTransitionTo.replace(/-/g, '_');
+    code += `${indentLevel}        \n`;
+    code += `${indentLevel}        # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
+    code += `${indentLevel}        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
+    code += `${indentLevel}        await handle_node_${safeAutoTargetId}(callback_query)\n`;
+    code += `${indentLevel}        return\n`;
+  }
+  
   code += `${indentLevel}    except Exception as e:\n`;
   code += `${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")\n`;
   code += `${indentLevel}        # Fallback на обычное сообщение при ошибке\n`;
@@ -623,6 +634,16 @@ function generateAttachedMediaSendCode(
   code += `${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение\n`;
   code += `${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")\n`;
   code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${parseMode})\n`;
+  
+  // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход и для случая без медиа
+  if (autoTransitionTo) {
+    const safeAutoTargetId = autoTransitionTo.replace(/-/g, '_');
+    code += `${indentLevel}    \n`;
+    code += `${indentLevel}    # ⚡ Автопереход к узлу ${autoTransitionTo}\n`;
+    code += `${indentLevel}    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTo}")\n`;
+    code += `${indentLevel}    await handle_node_${safeAutoTargetId}(callback_query)\n`;
+    code += `${indentLevel}    return\n`;
+  }
   
   return code;
 }
@@ -2596,7 +2617,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   parseModeStr,
                   keyboardStr,
                   targetNode.id,
-                  '    '
+                  '    ',
+                  targetNode.data.autoTransitionTo
                 );
                 
                 if (mediaCode) {
@@ -2606,27 +2628,37 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   // Fallback если не удалось сгенерировать код медиа
                   code += '    # Отправляем сообщение (обычное)\n';
                   code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${parseMode})\n`;
+                  
+                  // АВТОПЕРЕХОД для fallback случая
+                  if (targetNode.data.autoTransitionTo) {
+                    const autoTargetId = targetNode.data.autoTransitionTo;
+                    const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
+                    code += `    # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                    code += `    logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                    code += `    await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                    code += `    return\n`;
+                  }
                 }
               } else {
                 // Обычное сообщение без медиа
                 code += '    # Отправляем сообщение\n';
                 code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None${parseMode})\n`;
-              }
-              
-              // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
-              // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
-              if (targetNode.data.autoTransitionTo) {
-                const autoTargetId = targetNode.data.autoTransitionTo;
-                const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
-                code += '    \n';
-                code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
-                code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
-                code += '        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
-                code += '    else:\n';
-                code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
-                code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
-                code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
-                code += `        return\n`;
+                
+                // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, сразу переходим к следующему узлу
+                // ИСПРАВЛЕНИЕ: НЕ делаем автопереход если установлено waiting_for_conditional_input
+                if (targetNode.data.autoTransitionTo) {
+                  const autoTargetId = targetNode.data.autoTransitionTo;
+                  const safeAutoTargetId = autoTargetId.replace(/-/g, '_');
+                  code += '    \n';
+                  code += '    # Проверяем, не ждем ли мы условный ввод перед автопереходом\n';
+                  code += '    if user_id in user_data and "waiting_for_conditional_input" in user_data[user_id]:\n';
+                  code += '        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем условный ввод для узла ${targetNode.id}")\n';
+                  code += '    else:\n';
+                  code += `        # ⚡ Автопереход к узлу ${autoTargetId}\n`;
+                  code += `        logging.info(f"⚡ Автопереход от узла ${targetNode.id} к узлу ${autoTargetId}")\n`;
+                  code += `        await handle_node_${safeAutoTargetId}(callback_query)\n`;
+                  code += `        return\n`;
+                }
               }
               
               // КРИТИЧЕСКИ ВАЖНАЯ ЛОГИКА: Если этот узел имеет collectUserInput, настраиваем состояние ожидания
