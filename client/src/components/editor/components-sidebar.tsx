@@ -925,184 +925,105 @@ export function ComponentsSidebar({
     }
   };
 
-  const determineNodeType = (nodeId: string, pythonCode: string): string => {
-    // Определяем тип узла по его ID в Python коде
-    if (nodeId === 'start') return 'start';
+  const extractJsonFromFile = (fileContent: string) => {
+    // Ищем JSON блок в файле (может быть в комментариях или как строка)
+    // Поддерживает форматы:
+    // 1. JSON как строка в кавычках
+    // 2. JSON в комментариях между {/* и */}
+    // 3. JSON как обычный текст
     
-    // Ищем обработчик этого узла в коде
-    const nodeSection = new RegExp(`# @@NODE_START:${nodeId}@@[\\s\\S]*?# @@NODE_END:${nodeId}@@`).exec(pythonCode);
-    if (!nodeSection) return 'message';
-    
-    const content = nodeSection[0];
-    if (content.includes('voice') || content.includes('voice_message')) return 'voice';
-    if (content.includes('sticker')) return 'sticker';
-    if (content.includes('photo')) return 'photo';
-    if (content.includes('video')) return 'video';
-    if (content.includes('audio')) return 'audio';
-    if (content.includes('document')) return 'document';
-    if (content.includes('location')) return 'location';
-    if (content.includes('contact')) return 'contact';
-    
-    return 'message';
-  };
-
-  const extractNodeContent = (nodeId: string, pythonCode: string): { messageText: string; } => {
-    // Извлекаем содержимое узла из Python кода
-    const nodeSection = new RegExp(`# @@NODE_START:${nodeId}@@[\\s\\S]*?# @@NODE_END:${nodeId}@@`).exec(pythonCode);
-    if (!nodeSection) {
-      return { messageText: `Узел ${nodeId}` };
+    try {
+      // Попытка 1: прямое парсирование (если весь файл это JSON)
+      return JSON.parse(fileContent);
+    } catch (e1) {
+      try {
+        // Попытка 2: ищем JSON внутри кавычек или комментариев
+        const jsonMatch = fileContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+      } catch (e2) {
+        // Попытка 3: ищем JSON внутри строки Python (в кавычках)
+        const pythonStringMatch = fileContent.match(/['"]{3}([\s\S]*?)['"]{3}/);
+        if (pythonStringMatch) {
+          try {
+            return JSON.parse(pythonStringMatch[1]);
+          } catch (e3) {
+            // Пусто
+          }
+        }
+      }
     }
     
-    const content = nodeSection[0];
-    
-    // Ищем текст в message.answer() или await message.answer()
-    const answerMatch = /(?:await\s+)?message\.answer\(text=?"([^"]+)"/i.exec(content);
-    if (answerMatch) {
-      return { messageText: answerMatch[1] };
-    }
-    
-    // Ищем первую строку текста в кавычках
-    const textMatch = /text\s*=\s*"([^"]+)"/i.exec(content);
-    if (textMatch) {
-      return { messageText: textMatch[1] };
-    }
-    
-    // Ищем строку со словом "текст" или "сообщение"
-    const russianMatch = /(?:текст|сообщение)\s*=\s*"([^"]+)"/i.exec(content);
-    if (russianMatch) {
-      return { messageText: russianMatch[1] };
-    }
-    
-    // Если это команда start
-    if (nodeId === 'start') {
-      return { messageText: 'Добро пожаловать! Я ваш новый бот. Нажмите /help для получения помощи.' };
-    }
-    
-    // Если это обработчик голоса
-    if (content.includes('voice') || content.includes('voice_message')) {
-      return { messageText: '🎤 Получено голосовое сообщение' };
-    }
-    
-    // Если это обработчик стикера
-    if (content.includes('sticker')) {
-      return { messageText: '😊 Спасибо за стикер!' };
-    }
-    
-    // Обработчик без явного текста
-    return { messageText: `Обработчик для ${nodeId}` };
-  };
-
-  const extractPythonBotInfo = (pythonCode: string) => {
-    // Извлекаем информацию из Python кода
-    const handlers: any[] = [];
-    const commands: any[] = [];
-    
-    // Ищем команды (# @@NODE_START и @@NODE_END)
-    const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@[\s\S]*?# @@NODE_END:\1@@/g;
-    let match;
-    const nodeArray: any[] = [];
-    while ((match = nodePattern.exec(pythonCode)) !== null) {
-      const nodeId = match[1];
-      const nodeType = determineNodeType(nodeId, pythonCode);
-      const content = extractNodeContent(nodeId, pythonCode);
-      nodeArray.push({
-        id: nodeId,
-        type: nodeType,
-        messageText: content.messageText
-      });
-      handlers.push({
-        id: nodeId,
-        type: nodeType,
-        messageText: content.messageText
-      });
-    }
-    
-    // Ищем определения команд в set_bot_commands
-    const commandPattern = /BotCommand\(command="([^"]+)",\s*description="([^"]*)"/g;
-    while ((match = commandPattern.exec(pythonCode)) !== null) {
-      commands.push({
-        name: match[1],
-        description: match[2]
-      });
-    }
-    
-    // Создаём соединения (рёбра) между последовательными узлами для автопереходов
-    const edges: any[] = [];
-    for (let i = 0; i < nodeArray.length - 1; i++) {
-      edges.push({
-        id: `${nodeArray[i].id}-to-${nodeArray[i + 1].id}`,
-        source: nodeArray[i].id,
-        target: nodeArray[i + 1].id
-      });
-    }
-    
-    return { handlers, commands, edges };
+    throw new Error('Не удалось найти JSON в файле. Убедитесь, что файл содержит валидный JSON.');
   };
 
   const handleImportProject = () => {
     try {
       setImportError('');
       
-      // Если импортируем Python код
+      // Если импортируем Python/TXT файл с JSON
       if (importPythonText.trim()) {
-        const botInfo = extractPythonBotInfo(importPythonText);
-        const projectName = `Python Bot ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
-        
-        // Создаём структуру проекта из Python кода
-        const projectData = {
-          sheets: [
-            {
-              id: 'main',
-              name: 'Python Bot',
-              nodes: botInfo.handlers.map((h, i) => ({
-                id: h.id,
-                type: h.type,
-                position: { x: 50 + i * 300, y: 50 },
-                data: {
-                  messageText: h.messageText || `Узел ${h.id}`,
-                  description: h.type === 'command' ? h.id : undefined,
-                  command: h.type === 'command' ? h.id : undefined,
-                  keyboardType: 'none',
-                  buttons: [],
-                  showInMenu: true,
-                  autoTransitionTo: i < botInfo.handlers.length - 1 ? botInfo.handlers[i + 1].id : undefined
-                }
-              })),
-              edges: botInfo.edges || []
+        try {
+          const jsonData = extractJsonFromFile(importPythonText);
+          
+          let projectData: any;
+          let projectName: string;
+          let projectDescription: string;
+          
+          // Проверяем формат JSON (аналогично JSON импорту)
+          if (jsonData.name && jsonData.data) {
+            projectName = jsonData.name;
+            projectDescription = jsonData.description || '';
+            projectData = jsonData.data;
+          } else if (jsonData.sheets && (jsonData.version || jsonData.activeSheetId)) {
+            projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
+            projectDescription = '';
+            projectData = jsonData;
+            
+            if (!projectData.version) {
+              projectData.version = 2;
             }
-          ],
-          version: 2,
-          activeSheetId: 'main',
-          metadata: {
-            pythonCode: importPythonText,
-            commands: botInfo.commands,
-            importedFrom: 'python'
+          } else if (jsonData.nodes) {
+            projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
+            projectDescription = '';
+            projectData = jsonData;
+          } else {
+            throw new Error('Неподдерживаемый формат JSON. Должен содержать поле "sheets", "nodes" или "data"');
           }
-        };
-        
-        apiRequest('POST', '/api/projects', {
-          name: projectName,
-          description: `Импортирован из Python кода (${botInfo.handlers.length} обработчиков)`,
-          data: projectData
-        }).then(() => {
-          setIsImportDialogOpen(false);
-          setImportPythonText('');
-          setImportJsonText('');
-          setImportError('');
-          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
-          setTimeout(() => {
+          
+          apiRequest('POST', '/api/projects', {
+            name: projectName,
+            description: projectDescription,
+            data: projectData
+          }).then(() => {
+            setIsImportDialogOpen(false);
+            setImportPythonText('');
+            setImportJsonText('');
+            setImportError('');
             queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-          }, 300);
-        }).catch((error: any) => {
-          setImportError(error.message || 'Ошибка при импорте проекта');
+            queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
+            setTimeout(() => {
+              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+            }, 300);
+          }).catch((error: any) => {
+            setImportError(error.message || 'Ошибка при импорте проекта');
+            toast({
+              title: "Ошибка импорта",
+              description: error.message || 'Не удалось создать проект',
+              variant: "destructive",
+            });
+          });
+          return;
+        } catch (error: any) {
+          setImportError(error.message || 'Ошибка при парсинге JSON из файла');
           toast({
-            title: "Ошибка импорта",
-            description: error.message || 'Не удалось создать проект',
+            title: "Ошибка парсинга",
+            description: error.message,
             variant: "destructive",
           });
-        });
-        return;
+          return;
+        }
       }
       
       // Импорт JSON
