@@ -34,13 +34,13 @@ const ResizableHandle = ({
   return (
     <ResizablePrimitive.PanelResizeHandle
       className={cn(
-        "group relative flex w-px items-center justify-center bg-border transition-all duration-200",
-        "hover:bg-primary/20 hover:w-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+        "group relative flex w-2 items-center justify-center bg-border transition-all duration-200",
+        "hover:bg-primary/20 hover:w-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
         "after:absolute after:inset-y-0 after:left-1/2 after:w-3 after:-translate-x-1/2 after:bg-transparent hover:after:bg-primary/10 after:transition-all after:duration-200",
-        "data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:hover:h-1",
+        "data-[panel-group-direction=vertical]:h-2 data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:hover:h-3",
         "data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-3 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
         "[&[data-panel-group-direction=vertical]>div]:rotate-90",
-        isDragging && "bg-primary w-1 after:bg-primary/20",
+        isDragging && "bg-primary w-3 after:bg-primary/20",
         className
       )}
       onMouseEnter={() => setIsHovered(true)}

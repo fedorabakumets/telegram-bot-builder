@@ -348,7 +348,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                   {getElementContent(leftEl.type)}
                 </div>
               </ResizablePanel>
-              <ResizableHandle withHandle className="w-2 hover:w-3 transition-all" />
+              <ResizableHandle withHandle />
             </>
           )}
           <ResizablePanel 
@@ -360,7 +360,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
           </ResizablePanel>
           {rightElements.length > 0 && (
             <>
-              <ResizableHandle withHandle className="w-2 hover:w-3 transition-all" />
+              <ResizableHandle withHandle />
               <ResizablePanel 
                 defaultSize={totalRightSize} 
                 minSize={15} 
@@ -409,7 +409,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                     {getElementContent(leftEl.type)}
                   </div>
                 </ResizablePanel>
-                <ResizableHandle withHandle className="w-2 hover:w-3 transition-all" />
+                <ResizableHandle withHandle />
               </>
             )}
             <ResizablePanel 
@@ -421,7 +421,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             </ResizablePanel>
             {rightElements.length > 0 && (
               <>
-                <ResizableHandle withHandle className="w-2 hover:w-3 transition-all" />
+                <ResizableHandle withHandle />
                 <ResizablePanel 
                   defaultSize={totalRightSize} 
                   minSize={15} 
@@ -429,7 +429,7 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
                 >
                   <ResizablePanelGroup direction="horizontal" className="h-full">
                     {rightElements.flatMap((rightEl, index) => [
-                      ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle className="w-2 hover:w-3 transition-all" />] : []),
+                      ...(index > 0 ? [<ResizableHandle key={`handle-${rightEl.id}`} withHandle />] : []),
                       <ResizablePanel 
                         key={`panel-${rightEl.id}`}
                         defaultSize={totalRightSize > 0 ? (rightEl.size / totalRightSize) * 100 : 50}
