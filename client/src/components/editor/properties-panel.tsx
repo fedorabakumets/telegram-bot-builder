@@ -3173,25 +3173,14 @@ export function PropertiesPanel({
         {/* Conditional Messages */}
         {(selectedNode.type === 'start' || selectedNode.type === 'command' || selectedNode.type === 'message' || selectedNode.type === 'keyboard') && (
           <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">🔄 Условные сообщения</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-foreground">🔄 Условные сообщения</h3>
+              <Switch
+                checked={selectedNode.data.enableConditionalMessages ?? false}
+                onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked })}
+              />
+            </div>
             <div className="space-y-4">
-              {/* Enable Conditional Messages */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200">
-                <div className="flex-1">
-                  <Label className="text-xs font-medium text-foreground">
-                    Включить условные сообщения
-                  </Label>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Разные сообщения в зависимости от того, отвечал ли пользователь на вопросы
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <Switch
-                    checked={selectedNode.data.enableConditionalMessages ?? false}
-                    onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { enableConditionalMessages: checked })}
-                  />
-                </div>
-              </div>
 
               {/* Conditional Messages Settings */}
               {selectedNode.data.enableConditionalMessages && (
