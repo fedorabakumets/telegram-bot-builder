@@ -946,6 +946,52 @@ export function ComponentsSidebar({
     return 'message';
   };
 
+  const extractNodeContent = (nodeId: string, pythonCode: string): { messageText: string; } => {
+    // Извлекаем содержимое узла из Python кода
+    const nodeSection = new RegExp(`# @@NODE_START:${nodeId}@@[\\s\\S]*?# @@NODE_END:${nodeId}@@`).exec(pythonCode);
+    if (!nodeSection) {
+      return { messageText: `Узел ${nodeId}` };
+    }
+    
+    const content = nodeSection[0];
+    
+    // Ищем текст в message.answer() или await message.answer()
+    const answerMatch = /(?:await\s+)?message\.answer\(text=?"([^"]+)"/i.exec(content);
+    if (answerMatch) {
+      return { messageText: answerMatch[1] };
+    }
+    
+    // Ищем первую строку текста в кавычках
+    const textMatch = /text\s*=\s*"([^"]+)"/i.exec(content);
+    if (textMatch) {
+      return { messageText: textMatch[1] };
+    }
+    
+    // Ищем строку со словом "текст" или "сообщение"
+    const russianMatch = /(?:текст|сообщение)\s*=\s*"([^"]+)"/i.exec(content);
+    if (russianMatch) {
+      return { messageText: russianMatch[1] };
+    }
+    
+    // Если это команда start
+    if (nodeId === 'start') {
+      return { messageText: 'Добро пожаловать! Я ваш новый бот. Нажмите /help для получения помощи.' };
+    }
+    
+    // Если это обработчик голоса
+    if (content.includes('voice') || content.includes('voice_message')) {
+      return { messageText: '🎤 Получено голосовое сообщение' };
+    }
+    
+    // Если это обработчик стикера
+    if (content.includes('sticker')) {
+      return { messageText: '😊 Спасибо за стикер!' };
+    }
+    
+    // Обработчик без явного текста
+    return { messageText: `Обработчик для ${nodeId}` };
+  };
+
   const extractPythonBotInfo = (pythonCode: string) => {
     // Извлекаем информацию из Python кода
     const handlers: any[] = [];
@@ -954,12 +1000,20 @@ export function ComponentsSidebar({
     // Ищем команды (# @@NODE_START и @@NODE_END)
     const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@[\s\S]*?# @@NODE_END:\1@@/g;
     let match;
+    const nodeArray: any[] = [];
     while ((match = nodePattern.exec(pythonCode)) !== null) {
       const nodeId = match[1];
       const nodeType = determineNodeType(nodeId, pythonCode);
+      const content = extractNodeContent(nodeId, pythonCode);
+      nodeArray.push({
+        id: nodeId,
+        type: nodeType,
+        messageText: content.messageText
+      });
       handlers.push({
         id: nodeId,
-        type: nodeType
+        type: nodeType,
+        messageText: content.messageText
       });
     }
     
@@ -972,7 +1026,17 @@ export function ComponentsSidebar({
       });
     }
     
-    return { handlers, commands };
+    // Создаём соединения (рёбра) между последовательными узлами для автопереходов
+    const edges: any[] = [];
+    for (let i = 0; i < nodeArray.length - 1; i++) {
+      edges.push({
+        id: `${nodeArray[i].id}-to-${nodeArray[i + 1].id}`,
+        source: nodeArray[i].id,
+        target: nodeArray[i + 1].id
+      });
+    }
+    
+    return { handlers, commands, edges };
   };
 
   const handleImportProject = () => {
@@ -993,17 +1057,18 @@ export function ComponentsSidebar({
               nodes: botInfo.handlers.map((h, i) => ({
                 id: h.id,
                 type: h.type,
-                position: { x: 50 + i * 200, y: 50 },
+                position: { x: 50 + i * 300, y: 50 },
                 data: {
-                  messageText: h.id === 'start' ? 'Добро пожаловать!' : undefined,
+                  messageText: h.messageText || `Узел ${h.id}`,
                   description: h.type === 'command' ? h.id : undefined,
                   command: h.type === 'command' ? h.id : undefined,
                   keyboardType: 'none',
                   buttons: [],
-                  showInMenu: true
+                  showInMenu: true,
+                  autoTransitionTo: i < botInfo.handlers.length - 1 ? botInfo.handlers[i + 1].id : undefined
                 }
               })),
-              edges: []
+              edges: botInfo.edges || []
             }
           ],
           version: 2,
