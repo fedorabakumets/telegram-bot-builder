@@ -4628,7 +4628,7 @@ export function PropertiesPanel({
         {/* Auto Transition Section - показывать только когда нет кнопок и нет сбора данных */}
         {selectedNode.type !== 'input' && 
          (!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
-         selectedNode.data.keyboardType === 'none' && (
+         (selectedNode.data.keyboardType === 'none' || selectedNode.data.keyboardType === 'reply') && (
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-foreground">⚡ Автопереход</h3>
