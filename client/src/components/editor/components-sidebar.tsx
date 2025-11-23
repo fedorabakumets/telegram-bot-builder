@@ -926,61 +926,55 @@ export function ComponentsSidebar({
   };
 
   const parsePythonBotToJson = (pythonCode: string) => {
-    // Парсим Python код бота и преобразуем в JSON структуру проекта
+    // Используем точно такую же логику парсинга как в extractNodesAndConnections для экспорта
     const nodes: any[] = [];
-    const edges: any[] = [];
-    const nodeIdMap = new Map<string, string>(); // Из Python ID в позицию
-    
-    // Ищем все NODE_START и NODE_END блоки
-    const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@\n([\s\S]*?)# @@NODE_END:\1@@/g;
+    const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@/g;
     let match;
     let nodeIndex = 0;
     
-    while ((match = nodePattern.exec(pythonCode)) !== null) {
-      const nodeId = match[1];
-      const nodeContent = match[2];
-      nodeIdMap.set(nodeId, nodeIndex);
-      
-      // Определяем тип узла
-      let nodeType = 'message';
-      if (nodeId === 'start') nodeType = 'start';
-      else if (nodeContent.includes('voice')) nodeType = 'voice';
-      else if (nodeContent.includes('sticker')) nodeType = 'sticker';
-      else if (nodeContent.includes('photo')) nodeType = 'photo';
-      else if (nodeContent.includes('document')) nodeType = 'document';
-      else if (nodeContent.includes('audio')) nodeType = 'audio';
-      else if (nodeContent.includes('video')) nodeType = 'video';
-      
-      // Извлекаем текст сообщения
-      let messageText = '';
-      const textMatch = /text\s*=\s*"([^"]*)"/.exec(nodeContent);
-      if (textMatch) {
-        messageText = textMatch[1];
+    // Собираем все уникальные узлы по их ID
+    const nodeIds = new Set<string>();
+    const nodeMatches = pythonCode.matchAll(nodePattern);
+    
+    for (const nodeMatch of nodeMatches) {
+      const nodeId = nodeMatch[1];
+      if (!nodeIds.has(nodeId)) {
+        nodeIds.add(nodeId);
       }
+    }
+    
+    // Создаём узлы на основе извлеченных ID из маркеров
+    for (const nodeId of nodeIds) {
+      let nodeType = 'message';
       
-      // Извлекаем кнопки (если есть)
-      const buttons: any[] = [];
-      const buttonMatches = nodeContent.matchAll(/InlineKeyboardButton\(text=([^,]+),\s*callback_data="([^"]+)"\)/g);
-      for (const btnMatch of buttonMatches) {
-        const btnText = btnMatch[1].replace(/["']/g, '').trim();
-        const callbackData = btnMatch[2];
-        buttons.push({
-          id: `btn_${nodeId}_${buttons.length}`,
-          text: btnText,
-          action: 'goto',
-          target: callbackData
-        });
+      // Определяем тип узла по ID или контексту
+      if (nodeId === 'start') {
+        nodeType = 'start';
+      } else if (nodeId.includes('command_')) {
+        nodeType = 'command';
+      } else if (nodeId.includes('photo')) {
+        nodeType = 'photo';
+      } else if (nodeId.includes('video')) {
+        nodeType = 'video';
+      } else if (nodeId.includes('audio')) {
+        nodeType = 'audio';
+      } else if (nodeId.includes('voice')) {
+        nodeType = 'voice';
+      } else if (nodeId.includes('document')) {
+        nodeType = 'document';
+      } else if (nodeId.includes('sticker')) {
+        nodeType = 'sticker';
       }
       
       const node = {
         id: nodeId,
         type: nodeType,
-        position: { x: 50 + nodeIndex * 300, y: 50 },
+        position: { x: 50 + nodeIndex * 250, y: 50 },
         data: {
-          messageText: messageText || `Узел ${nodeId}`,
-          keyboardType: buttons.length > 0 ? 'inline' : 'none',
-          buttons: buttons,
-          showInMenu: nodeType === 'start' || nodeType === 'command'
+          messageText: '',
+          keyboardType: 'none',
+          buttons: [],
+          showInMenu: nodeType === 'start'
         }
       };
       
@@ -988,33 +982,14 @@ export function ComponentsSidebar({
       nodeIndex++;
     }
     
-    // Создаём автопереходы между последовательными узлами
-    for (let i = 0; i < nodes.length - 1; i++) {
-      edges.push({
-        id: `${nodes[i].id}-to-${nodes[i + 1].id}`,
-        source: nodes[i].id,
-        target: nodes[i + 1].id
-      });
-    }
-    
-    // Извлекаем команды для BotFather
-    const commands: any[] = [];
-    const cmdPattern = /BotCommand\(command="\/([^"]+)",\s*description="([^"]*)"/g;
-    while ((match = cmdPattern.exec(pythonCode)) !== null) {
-      commands.push({
-        name: match[1],
-        description: match[2]
-      });
-    }
-    
-    // Создаём структуру проекта
+    // Создаём структуру проекта с листом (sheets), как в extractNodesAndConnections
     const projectData = {
       sheets: [
         {
           id: 'main',
           name: 'Импортированный бот',
           nodes: nodes,
-          edges: edges
+          connections: []
         }
       ],
       version: 2,
@@ -1023,7 +998,6 @@ export function ComponentsSidebar({
     
     return {
       data: projectData,
-      commands: commands,
       nodeCount: nodes.length
     };
   };
