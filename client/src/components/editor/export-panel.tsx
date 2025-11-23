@@ -80,16 +80,6 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
     }
   };
 
-  // Автоматическое сворачивание функций при загрузке
-  useEffect(() => {
-    if (editorRef.current && selectedFormat === 'python') {
-      setTimeout(() => {
-        editorRef.current?.getAction('editor.foldAll')?.run();
-        setAreAllCollapsed(true);
-      }, 100);
-    }
-  }, [displayContent, selectedFormat]);
-
   // Загрузка групп
   const { data: groups = [] } = useQuery<BotGroup[]>({
     queryKey: ['/api/groups'],
