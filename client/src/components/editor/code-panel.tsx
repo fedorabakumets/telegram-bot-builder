@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -10,8 +9,7 @@ import { BotData, BotGroup } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import Editor from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
-
-const loadBotGenerator = () => import('@/lib/bot-generator');
+import { CodeFormat, useCodeGenerator } from '@/hooks/use-code-generator';
 
 interface CodePanelProps {
   botData: BotData;
@@ -20,19 +18,8 @@ interface CodePanelProps {
   selectedNodeId?: string | null;
 }
 
-type CodeFormat = 'python' | 'json' | 'requirements' | 'readme' | 'dockerfile' | 'config';
-
 export function CodePanel({ botData, projectName, projectId, selectedNodeId }: CodePanelProps) {
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
-  const [codeContent, setCodeContent] = useState<Record<CodeFormat, string>>({
-    python: '',
-    json: '',
-    requirements: '',
-    readme: '',
-    dockerfile: '',
-    config: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [areAllCollapsed, setAreAllCollapsed] = useState(true);
   const [showFullCode, setShowFullCode] = useState(false);
@@ -44,15 +31,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     queryKey: ['/api/groups'],
   });
 
-  // Отслеживаем предыдущие значения для обнаружения реальных изменений  
-  const prevDataRef = useRef({ 
-    botDataStr: JSON.stringify(botData), 
-    projectName,
-    groupsStr: JSON.stringify(groups)
-  });
-  
-  // Отслеживаем, какие форматы уже загружены
-  const loadedFormatsRef = useRef(new Set<CodeFormat>());
+  // Используем общий генератор кода
+  const { codeContent, isLoading, loadContent } = useCodeGenerator(botData, projectName, groups);
 
   // Определяем тему из DOM
   useEffect(() => {
@@ -72,55 +52,27 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     return () => observer.disconnect();
   }, []);
 
+  // Загружаем контент для выбранного формата
+  useEffect(() => {
+    loadContent(selectedFormat);
+  }, [selectedFormat, loadContent]);
+
   // Функция для сворачивания/разворачивания всех функций
   const toggleAllFunctions = () => {
     if (editorRef.current) {
       const editor = editorRef.current;
       if (areAllCollapsed) {
-        // Развернуть все
         editor.getAction('editor.unfoldAll')?.run();
         setAreAllCollapsed(false);
       } else {
-        // Свернуть все
         editor.getAction('editor.foldAll')?.run();
         setAreAllCollapsed(true);
       }
     }
   };
 
-  const generateContent = async (format: CodeFormat): Promise<string> => {
-    try {
-      const botGenerator = await loadBotGenerator();
-      
-      switch (format) {
-        case 'python':
-          return botGenerator.generatePythonCode(botData, projectName, groups);
-        case 'json':
-          return JSON.stringify(botData, null, 2);
-        case 'requirements':
-          return botGenerator.generateRequirementsTxt();
-        case 'readme':
-          return botGenerator.generateReadme(botData, projectName);
-        case 'dockerfile':
-          return botGenerator.generateDockerfile();
-        case 'config':
-          return botGenerator.generateConfigYaml(projectName);
-        default:
-          return '';
-      }
-    } catch (error) {
-      console.error('Error generating content:', error);
-      return `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`;
-    }
-  };
-
-  const getCurrentContent = () => {
-    return codeContent[selectedFormat] || '';
-  };
-
   const copyToClipboard = () => {
-    const text = getCurrentContent();
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(getCurrentContent());
     toast({
       title: "Скопировано!",
       description: "Код скопирован в буфер обмена",
@@ -128,24 +80,6 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
   };
 
   const downloadFile = async () => {
-    let content = codeContent[selectedFormat];
-    if (!content) {
-      try {
-        content = await generateContent(selectedFormat);
-        setCodeContent(prev => ({ ...prev, [selectedFormat]: content }));
-        loadedFormatsRef.current.add(selectedFormat);
-      } catch (error) {
-        console.error('❌ downloadFile: Ошибка генерации:', error);
-        toast({
-          title: "Ошибка генерации",
-          description: "Не удалось сгенерировать файл для скачивания.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    if (!content) return;
-
     const fileExtensions: Record<CodeFormat, string> = {
       python: '.py',
       json: '.json',
@@ -164,7 +98,7 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
       config: 'config'
     };
 
-    const blob = new Blob([content as string], { type: 'text/plain' });
+    const blob = new Blob([getCurrentContent()], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -180,72 +114,7 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     });
   };
 
-  // Объединенная логика: сброс кеша при изменении данных + загрузка контента
-  useEffect(() => {
-    const prev = prevDataRef.current;
-    const currentBotDataStr = JSON.stringify(botData);
-    const currentGroupsStr = JSON.stringify(groups);
-    const dataChanged = prev.botDataStr !== currentBotDataStr || 
-                       prev.projectName !== projectName || 
-                       prev.groupsStr !== currentGroupsStr;
-    
-    if (dataChanged) {
-      console.log('🔄 CodePanel: Данные изменились, сбрасываем весь кеш');
-      setCodeContent({
-        python: '',
-        json: '',
-        requirements: '',
-        readme: '',
-        dockerfile: '',
-        config: ''
-      });
-      loadedFormatsRef.current.clear();
-      prevDataRef.current = { 
-        botDataStr: currentBotDataStr, 
-        projectName, 
-        groupsStr: currentGroupsStr 
-      };
-    }
-    
-    if (!botData) {
-      console.warn('⚠️ CodePanel: Нет данных бота');
-      return;
-    }
-    
-    if (loadedFormatsRef.current.has(selectedFormat)) {
-      console.log('✅ CodePanel: Контент уже загружен для', selectedFormat, '- пропускаем');
-      return;
-    }
-    
-    async function loadContent() {
-      console.log('🔄 CodePanel: Генерация контента для', selectedFormat);
-      setIsLoading(true);
-      
-      try {
-        const content = await generateContent(selectedFormat);
-        
-        console.log('✅ CodePanel: Контент загружен для', selectedFormat);
-        setCodeContent(prev => ({ ...prev, [selectedFormat]: content }));
-        loadedFormatsRef.current.add(selectedFormat);
-      } catch (error) {
-        console.error('❌ CodePanel: Ошибка загрузки:', error);
-        toast({
-          title: "Ошибка генерации",
-          description: "Не удалось сгенерировать код.",
-          variant: "destructive",
-        });
-        setCodeContent(prev => ({ 
-          ...prev, 
-          [selectedFormat]: `# Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}` 
-        }));
-        loadedFormatsRef.current.add(selectedFormat);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    loadContent();
-  }, [selectedFormat, botData, projectName, groups]);
+  const getCurrentContent = () => codeContent[selectedFormat] || '';
 
   const content = getCurrentContent();
   const lines = content.split('\n');
@@ -268,8 +137,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     };
   }, [content, showFullCode]);
 
-  const getFormatIcon = (format: CodeFormat) => {
-    const icons = {
+  const getFormatIcon = (format: CodeFormat): string => {
+    const icons: Record<CodeFormat, string> = {
       python: 'fab fa-python text-blue-500',
       json: 'fas fa-database text-green-500',
       requirements: 'fas fa-list text-orange-500',
@@ -280,8 +149,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     return icons[format];
   };
 
-  const getFormatLabel = (format: CodeFormat) => {
-    const labels = {
+  const getFormatLabel = (format: CodeFormat): string => {
+    const labels: Record<CodeFormat, string> = {
       python: 'Python код',
       json: 'JSON данные',
       requirements: 'Requirements.txt',
