@@ -12469,7 +12469,7 @@ function generateKeyboard(node: Node): string {
       }
     } else {
       // Без клавиатуры
-      code += `        await message.answer(text${parseMode})\n`;
+      code += `${indent3}await message.answer(text${parseMode})\n`;
     }
   }
   
