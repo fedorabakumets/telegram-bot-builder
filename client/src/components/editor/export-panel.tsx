@@ -533,7 +533,7 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                           <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
                             <div className="flex items-center gap-2">
                               <span>Строк: {codeStats.totalLines}</span>
-                              {selectedFormat === 'python' && (
+                              {(selectedFormat === 'python' || selectedFormat === 'json') && (
                                 <Button 
                                   size="sm" 
                                   variant="ghost"
@@ -582,16 +582,21 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                                 wordWrap: 'on',
                                 fontSize: 12,
                                 lineHeight: 1.5,
-                                minimap: { enabled: false },
-                                folding: selectedFormat === 'python',
+                                minimap: { enabled: codeStats.totalLines > 500 },
+                                folding: true,
                                 foldingHighlight: true,
                                 foldingStrategy: 'auto',
                                 showFoldingControls: 'always',
-                                glyphMargin: selectedFormat === 'python',
+                                glyphMargin: true,
                                 scrollBeyondLastLine: false,
                                 padding: { top: 8, bottom: 8 },
                                 automaticLayout: true,
-                                contextmenu: false
+                                contextmenu: false,
+                                bracketPairColorization: {
+                                  enabled: selectedFormat === 'json'
+                                },
+                                formatOnPaste: false,
+                                formatOnType: false
                               }}
                               data-testid={selectedFormat === 'python' ? 'monaco-editor-export-python' : 'monaco-editor-export-json'}
                             />
