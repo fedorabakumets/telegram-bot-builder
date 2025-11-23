@@ -1200,6 +1200,13 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                     <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
                       <i className="fas fa-bars text-xs"></i>
                       <span>{node.data.buttons.length} кнопок</span>
+                      {inputVariable && (
+                        <>
+                          <span>•</span>
+                          <i className="fas fa-database text-xs"></i>
+                          <code className="bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded text-xs font-mono text-amber-700 dark:text-amber-300">{inputVariable}</code>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
