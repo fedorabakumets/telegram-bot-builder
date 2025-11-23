@@ -19,9 +19,10 @@ interface ExportPanelProps {
   botData: BotData;
   projectName: string;
   projectId: number;
+  userDatabaseEnabled?: boolean;
 }
 
-export function ExportPanel({ botData, projectName, projectId }: ExportPanelProps) {
+export function ExportPanel({ botData, projectName, projectId, userDatabaseEnabled = false }: ExportPanelProps) {
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [showFullCode, setShowFullCode] = useState(false);
@@ -37,7 +38,7 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
   });
 
   // Используем общий генератор кода
-  const { codeContent, isLoading, loadContent, generateContent } = useCodeGenerator(botData, projectName, groups);
+  const { codeContent, isLoading, loadContent, generateContent } = useCodeGenerator(botData, projectName, groups, userDatabaseEnabled);
 
   // Определяем тему из DOM
   useEffect(() => {

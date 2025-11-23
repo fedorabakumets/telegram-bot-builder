@@ -7,7 +7,7 @@ export type CodeFormat = 'python' | 'json' | 'requirements' | 'readme' | 'docker
 
 type CodeGeneratorState = Record<CodeFormat, string>;
 
-export function useCodeGenerator(botData: BotData, projectName: string, groups: BotGroup[]) {
+export function useCodeGenerator(botData: BotData, projectName: string, groups: BotGroup[], userDatabaseEnabled: boolean = false) {
   const [codeContent, setCodeContent] = useState<CodeGeneratorState>({
     python: '',
     json: '',
@@ -22,7 +22,8 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
   const prevDataRef = useRef({
     botDataStr: JSON.stringify(botData),
     projectName,
-    groupsStr: JSON.stringify(groups)
+    groupsStr: JSON.stringify(groups),
+    userDatabaseEnabled
   });
 
   const generateContent = useCallback(async (format: CodeFormat): Promise<string> => {
@@ -31,7 +32,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
 
       switch (format) {
         case 'python':
-          return botGenerator.generatePythonCode(botData, projectName, groups);
+          return botGenerator.generatePythonCode(botData, projectName, groups, userDatabaseEnabled);
         case 'json':
           return JSON.stringify(botData, null, 2);
         case 'requirements':
@@ -49,7 +50,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
       console.error('Error generating content:', error);
       return `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`;
     }
-  }, [botData, projectName, groups]);
+  }, [botData, projectName, groups, userDatabaseEnabled]);
 
   const loadContent = useCallback(async (selectedFormat: CodeFormat) => {
     // Проверяем, изменились ли данные
@@ -58,7 +59,8 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
     const currentGroupsStr = JSON.stringify(groups);
     const dataChanged = prev.botDataStr !== currentBotDataStr ||
       prev.projectName !== projectName ||
-      prev.groupsStr !== currentGroupsStr;
+      prev.groupsStr !== currentGroupsStr ||
+      prev.userDatabaseEnabled !== userDatabaseEnabled;
 
     if (dataChanged) {
       console.log('🔄 useCodeGenerator: Данные изменились, сбрасываем весь кеш');
@@ -74,7 +76,8 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
       prevDataRef.current = {
         botDataStr: currentBotDataStr,
         projectName,
-        groupsStr: currentGroupsStr
+        groupsStr: currentGroupsStr,
+        userDatabaseEnabled
       };
     }
 
@@ -104,7 +107,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
     } finally {
       setIsLoading(false);
     }
-  }, [botData, projectName, groups, generateContent, codeContent]);
+  }, [botData, projectName, groups, userDatabaseEnabled, generateContent, codeContent]);
 
   return {
     codeContent,

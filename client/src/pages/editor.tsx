@@ -1245,6 +1245,7 @@ export default function Editor() {
             botData={(botDataWithSheets || getBotData()) as any}
             projectName={activeProject.name}
             projectId={activeProject.id}
+            userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
           />
         ) : null}
       </div>
@@ -1440,6 +1441,7 @@ export default function Editor() {
                   botData={(botDataWithSheets || getBotData()) as any}
                   projectName={activeProject.name}
                   projectId={activeProject.id}
+                  userDatabaseEnabled={activeProject.userDatabaseEnabled === 1}
                 />
               ) : null}
             </div>
