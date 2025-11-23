@@ -1625,6 +1625,7 @@ export function ComponentsSidebar({
                       handleProjectDragOver(e, project.id);
                       // Также обрабатываем drop листов на проект
                       if (draggedSheet) {
+                        console.log('🎯 Sheet over project:', project.id);
                         setDragOverSheet(`project-${project.id}`);
                       }
                     }}
@@ -1633,6 +1634,7 @@ export function ComponentsSidebar({
                       setDragOverSheet(null);
                     }}
                     onDrop={(e) => {
+                      console.log('🎯 Drop on project:', draggedSheet, draggedProject);
                       // Если перетаскиваем лист - используем специальный обработчик
                       if (draggedSheet) {
                         handleSheetDropOnProject(e, project.id);
@@ -1749,12 +1751,18 @@ export function ComponentsSidebar({
                                         className="text-xs px-3 py-1.5 h-7 flex-1 font-medium"
                                       />
                                     ) : (
-                                      <Badge 
+                                      <div
                                         draggable
-                                        onDragStart={(e) => handleSheetDragStart(e, sheetId, project.id)}
-                                        variant={isActive ? "default" : "secondary"} 
-                                        className={`text-xs px-3 py-1.5 h-7 cursor-grab active:cursor-grabbing hover:opacity-80 transition-all flex-1 font-medium ${
-                                          isActive ? 'bg-primary text-primary-foreground shadow-sm' : ''
+                                        onDragStart={(e) => {
+                                          console.log('🎯 Sheet drag start:', sheetId, project.id);
+                                          handleSheetDragStart(e, sheetId, project.id);
+                                        }}
+                                        onDragEnd={(e) => {
+                                          console.log('🎯 Sheet drag end');
+                                          setDraggedSheet(null);
+                                        }}
+                                        className={`text-xs px-3 py-1.5 h-7 cursor-grab active:cursor-grabbing hover:opacity-80 transition-all flex-1 font-medium rounded-full border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center justify-center text-center ${
+                                          isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-secondary text-secondary-foreground'
                                         } ${
                                           draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
                                         }`}
@@ -1777,49 +1785,116 @@ export function ComponentsSidebar({
                                         }}
                                         title={name}
                                       >
-                                        <span className="block text-center w-full truncate" style={{ visibility: 'visible', opacity: 1 }}>{name || 'Без названия'}</span>
-                                      </Badge>
+                                        <span className="block truncate w-full">{name || 'Без названия'}</span>
+                                      </div>
                                     )}
                                     
                                     {/* Кнопки управления листом */}
                                     {currentProjectId === project.id && (
                                       <div className="flex gap-1 hidden group-hover/sheet:flex">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 w-6 p-0 hover:bg-muted"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (SheetsManager.isNewFormat(projectData)) {
-                                              const sheetId = projectData.sheets[index]?.id;
-                                              if (sheetId && onSheetDuplicate) {
-                                                onSheetDuplicate(sheetId);
-                                              }
-                                            }
-                                          }}
-                                          title="Дублировать лист"
-                                        >
-                                          <Copy className="h-3 w-3" />
-                                        </Button>
-                                        {sheetsInfo.count > 1 && (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-muted"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              if (SheetsManager.isNewFormat(projectData)) {
-                                                const sheetId = projectData.sheets[index]?.id;
-                                                if (sheetId && onSheetDelete) {
-                                                  onSheetDelete(sheetId);
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 w-6 p-0 hover:bg-muted"
+                                              title="Переместить лист"
+                                            >
+                                              <MoreHorizontal className="h-3 w-3" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end" className="w-40">
+                                            <DropdownMenuItem
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (SheetsManager.isNewFormat(projectData)) {
+                                                  const sheetId = projectData.sheets[index]?.id;
+                                                  if (sheetId && onSheetDuplicate) {
+                                                    onSheetDuplicate(sheetId);
+                                                  }
                                                 }
-                                              }
-                                            }}
-                                            title="Удалить лист"
-                                          >
-                                            <Trash2 className="h-3 w-3" />
-                                          </Button>
-                                        )}
+                                              }}
+                                            >
+                                              <Copy className="h-3 w-3 mr-2" />
+                                              Дублировать
+                                            </DropdownMenuItem>
+                                            {projects.length > 1 && (
+                                              <>
+                                                <Separator />
+                                                {projects.map((otherProject) => {
+                                                  if (otherProject.id === project.id) return null;
+                                                  return (
+                                                    <DropdownMenuItem
+                                                      key={otherProject.id}
+                                                      onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        const sourceData = projectData;
+                                                        const targetData = otherProject.data as any;
+                                                        
+                                                        if (!sourceData?.sheets || !targetData?.sheets) return;
+                                                        
+                                                        const sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === sheetId);
+                                                        if (sourceSheetIndex === -1) return;
+                                                        
+                                                        const sheetToMove = sourceData.sheets[sourceSheetIndex];
+                                                        const newSheet = JSON.parse(JSON.stringify(sheetToMove));
+                                                        targetData.sheets.push(newSheet);
+                                                        sourceData.sheets.splice(sourceSheetIndex, 1);
+                                                        
+                                                        try {
+                                                          await Promise.all([
+                                                            apiRequest('PUT', `/api/projects/${project.id}`, { data: sourceData }),
+                                                            apiRequest('PUT', `/api/projects/${otherProject.id}`, { data: targetData })
+                                                          ]);
+                                                          
+                                                          const updatedProjects = projects.map(p => {
+                                                            if (p.id === project.id) return { ...p, data: sourceData };
+                                                            if (p.id === otherProject.id) return { ...p, data: targetData };
+                                                            return p;
+                                                          });
+                                                          queryClient.setQueryData(['/api/projects'], updatedProjects);
+                                                          
+                                                          toast({
+                                                            title: "✅ Лист перемещен",
+                                                            description: `"${sheetToMove.name}" → "${otherProject.name}"`,
+                                                          });
+                                                        } catch (error: any) {
+                                                          toast({
+                                                            title: "❌ Ошибка",
+                                                            description: error.message,
+                                                            variant: "destructive",
+                                                          });
+                                                        }
+                                                      }}
+                                                    >
+                                                      <i className="fas fa-arrow-right h-3 w-3 mr-2" style={{fontSize: '10px'}} />
+                                                      {otherProject.name}
+                                                    </DropdownMenuItem>
+                                                  );
+                                                })}
+                                              </>
+                                            )}
+                                            {sheetsInfo.count > 1 && (
+                                              <>
+                                                <Separator />
+                                                <DropdownMenuItem
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (SheetsManager.isNewFormat(projectData)) {
+                                                      if (onSheetDelete) {
+                                                        onSheetDelete(sheetId);
+                                                      }
+                                                    }
+                                                  }}
+                                                  className="text-destructive focus:text-destructive"
+                                                >
+                                                  <Trash2 className="h-3 w-3 mr-2" />
+                                                  Удалить
+                                                </DropdownMenuItem>
+                                              </>
+                                            )}
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
                                       </div>
                                     )}
                                   </div>
