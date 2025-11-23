@@ -1188,7 +1188,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
             
             <div className="space-y-2">
               {/* Button Responses Info */}
-              {hasButtonResponses && inputVariable && (
+              {hasButtonResponses && (
                 <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
                   <div className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-xs">
                     <i className="fas fa-mouse text-amber-600 dark:text-amber-400 text-xs"></i>
@@ -1198,8 +1198,14 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                       Кнопки как варианты ответа
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
-                      <i className="fas fa-database text-xs"></i>
-                      <code className="bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded text-xs font-mono text-amber-700 dark:text-amber-300">{inputVariable}</code>
+                      {inputVariable ? (
+                        <>
+                          <i className="fas fa-database text-xs"></i>
+                          <code className="bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded text-xs font-mono text-amber-700 dark:text-amber-300">{inputVariable}</code>
+                        </>
+                      ) : (
+                        <span className="text-amber-600 dark:text-amber-400 italic">Переменная не задана</span>
+                      )}
                     </div>
                   </div>
                 </div>
