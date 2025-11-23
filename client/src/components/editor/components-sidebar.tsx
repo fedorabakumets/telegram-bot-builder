@@ -1678,7 +1678,7 @@ export function ComponentsSidebar({
                           e.stopPropagation();
                           handleDeleteProject(project.id);
                         }}
-                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hidden group-hover:flex hover:bg-destructive/10"
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive opacity-70 group-hover:opacity-100 transition-opacity flex hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
