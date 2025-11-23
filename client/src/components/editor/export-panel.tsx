@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { BotData, BotGroup } from '@shared/schema';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -41,6 +41,8 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
   const [botFatherCommands, setBotFatherCommands] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [showFullCode, setShowFullCode] = useState(false);
+  const [areAllCollapsed, setAreAllCollapsed] = useState(true);
+  const editorRef = useRef<any>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -61,6 +63,32 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
     
     return () => observer.disconnect();
   }, []);
+
+  // Функция для сворачивания/разворачивания всех функций
+  const toggleAllFunctions = () => {
+    if (editorRef.current) {
+      const editor = editorRef.current;
+      if (areAllCollapsed) {
+        // Развернуть все
+        editor.getAction('editor.unfoldAll')?.run();
+        setAreAllCollapsed(false);
+      } else {
+        // Свернуть все
+        editor.getAction('editor.foldAll')?.run();
+        setAreAllCollapsed(true);
+      }
+    }
+  };
+
+  // Автоматическое сворачивание функций при загрузке
+  useEffect(() => {
+    if (editorRef.current && selectedFormat === 'python') {
+      setTimeout(() => {
+        editorRef.current?.getAction('editor.foldAll')?.run();
+        setAreAllCollapsed(true);
+      }, 100);
+    }
+  }, [displayContent, selectedFormat]);
 
   // Загрузка групп
   const { data: groups = [] } = useQuery<BotGroup[]>({
@@ -520,7 +548,21 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                   <div className="space-y-2">
                     {codeStats.totalLines > 0 && (
                       <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
-                        <span>Строк: {codeStats.totalLines}</span>
+                        <div className="flex items-center gap-2">
+                          <span>Строк: {codeStats.totalLines}</span>
+                          {selectedFormat === 'python' && (
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={toggleAllFunctions}
+                              className="h-6 px-2 text-xs"
+                              data-testid="button-toggle-all-functions"
+                            >
+                              <i className={`fas ${areAllCollapsed ? 'fa-expand' : 'fa-compress'} mr-1`}></i>
+                              {areAllCollapsed ? 'Развернуть всё' : 'Свернуть всё'}
+                            </Button>
+                          )}
+                        </div>
                         {codeStats.truncated && (
                           <div className="flex items-center gap-2">
                             <span className="text-yellow-600 dark:text-yellow-500">⚠️ Показано первые 1000 строк</span>
@@ -542,6 +584,13 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                           value={displayContent}
                           language="python"
                           theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
+                          onMount={(editor) => {
+                            editorRef.current = editor;
+                            setTimeout(() => {
+                              editor.getAction('editor.foldAll')?.run();
+                              setAreAllCollapsed(true);
+                            }, 100);
+                          }}
                           options={{
                             readOnly: true,
                             lineNumbers: 'on',
