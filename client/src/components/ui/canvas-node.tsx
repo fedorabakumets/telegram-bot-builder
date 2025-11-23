@@ -1121,6 +1121,30 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         </div>
       )}
       
+      {/* Response Collection Indicator for Keyboard with Button Responses */}
+      {node.type === 'keyboard' && (node.data as any).collectUserInput && node.data.buttons && node.data.buttons.length > 0 && (
+        <div className="bg-gradient-to-br from-amber-50/90 to-yellow-50/90 dark:from-amber-900/25 dark:to-yellow-900/25 border border-amber-200/50 dark:border-amber-800/40 rounded-xl p-4 mb-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center">
+                <i className="fas fa-star text-amber-600 dark:text-amber-400 text-sm"></i>
+              </div>
+              <div className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                Кнопки как ответы
+              </div>
+            </div>
+            <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 px-2 py-1 rounded-full font-medium">
+              <i className="fas fa-check-circle text-xs mr-1"></i>
+              {(node.data as any).inputVariable && `Сохранить в: ${(node.data as any).inputVariable}`}
+            </div>
+          </div>
+          <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+            <i className="fas fa-info-circle mr-1"></i>
+            Выбор кнопки будет сохранен как ответ пользователя
+          </div>
+        </div>
+      )}
+      
       {/* Response Collection Indicator */}
       {(() => {
         const inputVariable = (node.data as any).inputVariable;
@@ -1130,6 +1154,13 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         const documentInputVariable = (node.data as any).documentInputVariable;
         const multiSelectVariable = (node.data as any).multiSelectVariable;
         const allowMultipleSelection = (node.data as any).allowMultipleSelection;
+        
+        // Исключаем кнопки, если это клавиатура с collectUserInput (это уже показано выше)
+        if (node.type === 'keyboard' && (node.data as any).collectUserInput) {
+          // Для клавиатур показываем только другие типы ввода
+          const hasOtherInput = photoInputVariable || videoInputVariable || audioInputVariable || documentInputVariable;
+          if (!hasOtherInput) return null;
+        }
         
         const hasResponseCollection = inputVariable || photoInputVariable || videoInputVariable || audioInputVariable || documentInputVariable || multiSelectVariable;
         
