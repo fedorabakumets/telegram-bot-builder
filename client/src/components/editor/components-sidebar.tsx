@@ -1529,7 +1529,7 @@ export function ComponentsSidebar({
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center flex-1 min-w-0">
-                        <div className="cursor-grab active:cursor-grabbing mr-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="cursor-grab active:cursor-grabbing mr-3 hidden group-hover:flex">
                           <GripVertical className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1550,7 +1550,7 @@ export function ComponentsSidebar({
                           e.stopPropagation();
                           handleDeleteProject(project.id);
                         }}
-                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10"
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hidden group-hover:flex hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -1583,7 +1583,7 @@ export function ComponentsSidebar({
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+                                className="h-6 w-6 p-0 hidden group-hover:flex hover:bg-muted"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (currentProjectId === project.id && onSheetAdd) {
@@ -1653,7 +1653,7 @@ export function ComponentsSidebar({
                                     
                                     {/* Кнопки управления листом */}
                                     {currentProjectId === project.id && (
-                                      <div className="flex gap-1 opacity-0 group-hover/sheet:opacity-100 transition-opacity">
+                                      <div className="flex gap-1 hidden group-hover/sheet:flex">
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -1757,7 +1757,7 @@ export function ComponentsSidebar({
                             e.stopPropagation();
                             onComponentAdd(component);
                           }}
-                          className="ml-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          className="ml-2 w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 text-primary hidden group-hover:flex items-center justify-center"
                           title={`Добавить ${component.name} на холст`}
                         >
                           <Plus className="h-3 w-3" />
