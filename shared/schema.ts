@@ -696,6 +696,7 @@ export const nodeSchema = z.object({
     inputButtonType: z.enum(['inline', 'reply']).default('inline'), // Тип кнопок для ответов
     
     // Автопереход - отправка сообщения и автоматический переход к следующему узлу без ожидания ввода
+    enableAutoTransition: z.boolean().default(false), // Включить автопереход
     autoTransitionTo: z.string().optional(), // ID узла для автоматического перехода после отправки сообщения
     minLength: z.number().optional(), // Минимальная длина текста
     maxLength: z.number().optional(), // Максимальная длина текста
