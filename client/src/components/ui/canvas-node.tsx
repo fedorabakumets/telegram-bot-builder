@@ -1143,7 +1143,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                   <i className="fas fa-inbox text-orange-600 dark:text-orange-400 text-sm"></i>
                 </div>
                 <div className="text-sm font-semibold text-orange-800 dark:text-orange-200">
-                  Збір відповідей
+                  Сбор ответов
                 </div>
               </div>
               <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/50 px-2 py-1 rounded-full font-medium">
@@ -1161,7 +1161,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      Текстовий ввід
+                      Текстовый ввод
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
                       <i className="fas fa-database text-xs"></i>
@@ -1197,7 +1197,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      Відео
+                      Видео
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
                       <i className="fas fa-database text-xs"></i>
@@ -1215,7 +1215,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      Аудіо
+                      Аудио
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
                       <i className="fas fa-database text-xs"></i>
@@ -1265,7 +1265,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
             <div className="mt-3 pt-3 border-t border-orange-200/50 dark:border-orange-700/30">
               <div className="flex items-center justify-center space-x-2 text-xs text-orange-600 dark:text-orange-400">
                 <i className="fas fa-info-circle"></i>
-                <span>Відповіді зберігаються в змінних для подальшого використання</span>
+                <span>Ответы сохраняются в переменных для дальнейшего использования</span>
               </div>
             </div>
           </div>
