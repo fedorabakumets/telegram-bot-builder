@@ -5,8 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { BotData, BotGroup } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import Editor from '@monaco-editor/react';
 import { Loader2 } from 'lucide-react';
 
 const loadBotGenerator = () => import('@/lib/bot-generator');
@@ -31,6 +30,8 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
   });
   const [isLoading, setIsLoading] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [areAllCollapsed, setAreAllCollapsed] = useState(true);
+  const editorRef = useRef<any>(null);
   const { toast } = useToast();
 
   const { data: groups = [] } = useQuery<BotGroup[]>({
@@ -65,114 +66,37 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     return () => observer.disconnect();
   }, []);
 
-  // Объединенная логика: сброс кеша при изменении данных + загрузка контента
-  useEffect(() => {
-    // Проверяем, изменились ли данные (сравниваем по значению, а не по ссылке)
-    const prev = prevDataRef.current;
-    const currentBotDataStr = JSON.stringify(botData);
-    const currentGroupsStr = JSON.stringify(groups);
-    const dataChanged = prev.botDataStr !== currentBotDataStr || 
-                       prev.projectName !== projectName || 
-                       prev.groupsStr !== currentGroupsStr;
-    
-    if (dataChanged) {
-      console.log('🔄 CodePanel: Данные изменились, сбрасываем весь кеш');
-      setCodeContent({
-        python: '',
-        json: '',
-        requirements: '',
-        readme: '',
-        dockerfile: ''
-      });
-      loadedFormatsRef.current.clear(); // Очищаем отслеживание загруженных форматов
-      prevDataRef.current = { 
-        botDataStr: currentBotDataStr, 
-        projectName, 
-        groupsStr: currentGroupsStr 
-      };
-    }
-    
-    if (!botData) {
-      console.warn('⚠️ CodePanel: Нет данных бота');
-      return;
-    }
-    
-    // Проверяем, был ли уже загружен этот формат (используем ref для проверки без ререндера)
-    if (loadedFormatsRef.current.has(selectedFormat)) {
-      console.log('✅ CodePanel: Контент уже загружен для', selectedFormat, '- пропускаем');
-      return;
-    }
-    
-    // Генерируем контент
-    async function loadContent() {
-      console.log('🔄 CodePanel: Генерация контента для', selectedFormat);
-      setIsLoading(true);
-      
-      try {
-        const content = await generateContent(selectedFormat);
-        
-        console.log('✅ CodePanel: Контент загружен для', selectedFormat);
-        setCodeContent(prev => ({ ...prev, [selectedFormat]: content }));
-        loadedFormatsRef.current.add(selectedFormat); // Отмечаем как загруженный
-      } catch (error) {
-        console.error('❌ CodePanel: Ошибка загрузки:', error);
-        toast({
-          title: "Ошибка генерации",
-          description: "Не удалось сгенерировать код.",
-          variant: "destructive",
-        });
-        setCodeContent(prev => ({ 
-          ...prev, 
-          [selectedFormat]: `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}` 
-        }));
-      } finally {
-        setIsLoading(false);
+  // Функция для сворачивания/разворачивания всех функций
+  const toggleAllFunctions = () => {
+    if (editorRef.current) {
+      const editor = editorRef.current;
+      if (areAllCollapsed) {
+        // Развернуть все
+        editor.getAction('editor.unfoldAll')?.run();
+        setAreAllCollapsed(false);
+      } else {
+        // Свернуть все
+        editor.getAction('editor.foldAll')?.run();
+        setAreAllCollapsed(true);
       }
     }
-    
-    loadContent();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedFormat, botData, projectName, groups, toast]);
-
-  const highlightedLines = new Set<number>();
-
-  const getCurrentContent = (): string => {
-    if (isLoading) {
-      return 'Генерация кода...';
-    }
-    const content = codeContent?.[selectedFormat];
-    if (content === undefined || content === null) {
-      return 'Выберите формат для просмотра кода...';
-    }
-    return content;
   };
 
-  // Вспомогательная функция для генерации контента (используется в useEffect и downloadFile)
   const generateContent = async (format: CodeFormat): Promise<string> => {
     try {
       const botGenerator = await loadBotGenerator();
       
       switch (format) {
         case 'python':
-          const validation = botGenerator.validateBotStructure(botData);
-          if (!validation?.isValid) {
-            const errorMsg = validation?.errors?.join('\n') || 'Неизвестная ошибка';
-            console.warn('Validation errors:', errorMsg);
-            return `# Ошибка валидации структуры бота\n# ${errorMsg}`;
-          }
-          const pythonCode = botGenerator.generatePythonCode(botData, projectName, groups || []);
-          return pythonCode || '# Ошибка генерации Python кода';
+          return botGenerator.generatePythonCode(botData, projectName, groups);
         case 'json':
           return JSON.stringify(botData, null, 2);
         case 'requirements':
-          const reqContent = botGenerator.generateRequirementsTxt();
-          return reqContent || '';
+          return botGenerator.generateRequirementsTxt();
         case 'readme':
-          const readmeContent = botGenerator.generateReadme(botData, projectName);
-          return readmeContent || '';
+          return botGenerator.generateReadme(botData, projectName);
         case 'dockerfile':
-          const dockerfileContent = botGenerator.generateDockerfile();
-          return dockerfileContent || '';
+          return botGenerator.generateDockerfile();
         default:
           return '';
       }
@@ -180,6 +104,10 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
       console.error('Error generating content:', error);
       return `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`;
     }
+  };
+
+  const getCurrentContent = () => {
+    return codeContent[selectedFormat] || '';
   };
 
   const copyToClipboard = () => {
@@ -191,15 +119,14 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     });
   };
 
-  const downloadFile = async (format: CodeFormat) => {
-    let content = codeContent[format];
+  const downloadFile = async () => {
+    let content = codeContent[selectedFormat];
     // Если контента нет, генерируем его
     if (!content) {
       try {
-        content = await generateContent(format);
-        // Сохраняем в кеш и отмечаем как загруженный
-        setCodeContent(prev => ({ ...prev, [format]: content }));
-        loadedFormatsRef.current.add(format);
+        content = await generateContent(selectedFormat);
+        setCodeContent(prev => ({ ...prev, [selectedFormat]: content }));
+        loadedFormatsRef.current.add(selectedFormat);
       } catch (error) {
         console.error('❌ downloadFile: Ошибка генерации:', error);
         toast({
@@ -232,7 +159,7 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = fileNames[format] + fileExtensions[format];
+    link.download = fileNames[selectedFormat] + fileExtensions[selectedFormat];
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -243,6 +170,78 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
       description: `Файл ${link.download} успешно загружен`,
     });
   };
+
+  // Объединенная логика: сброс кеша при изменении данных + загрузка контента
+  useEffect(() => {
+    // Проверяем, изменились ли данные (сравниваем по значению, а не по ссылке)
+    const prev = prevDataRef.current;
+    const currentBotDataStr = JSON.stringify(botData);
+    const currentGroupsStr = JSON.stringify(groups);
+    const dataChanged = prev.botDataStr !== currentBotDataStr || 
+                       prev.projectName !== projectName || 
+                       prev.groupsStr !== currentGroupsStr;
+    
+    if (dataChanged) {
+      console.log('🔄 CodePanel: Данные изменились, сбрасываем весь кеш');
+      setCodeContent({
+        python: '',
+        json: '',
+        requirements: '',
+        readme: '',
+        dockerfile: ''
+      });
+      loadedFormatsRef.current.clear();
+      prevDataRef.current = { 
+        botDataStr: currentBotDataStr, 
+        projectName, 
+        groupsStr: currentGroupsStr 
+      };
+    }
+    
+    if (!botData) {
+      console.warn('⚠️ CodePanel: Нет данных бота');
+      return;
+    }
+    
+    // Проверяем, был ли уже загружен этот формат
+    if (loadedFormatsRef.current.has(selectedFormat)) {
+      console.log('✅ CodePanel: Контент уже загружен для', selectedFormat, '- пропускаем');
+      return;
+    }
+    
+    // Генерируем контент
+    async function loadContent() {
+      console.log('🔄 CodePanel: Генерация контента для', selectedFormat);
+      setIsLoading(true);
+      
+      try {
+        const content = await generateContent(selectedFormat);
+        
+        console.log('✅ CodePanel: Контент загружен для', selectedFormat);
+        setCodeContent(prev => ({ ...prev, [selectedFormat]: content }));
+        loadedFormatsRef.current.add(selectedFormat);
+      } catch (error) {
+        console.error('❌ CodePanel: Ошибка загрузки:', error);
+        toast({
+          title: "Ошибка генерации",
+          description: "Не удалось сгенерировать код.",
+          variant: "destructive",
+        });
+        setCodeContent(prev => ({ 
+          ...prev, 
+          [selectedFormat]: `# Ошибка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}` 
+        }));
+        loadedFormatsRef.current.add(selectedFormat);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadContent();
+  }, [selectedFormat, botData, projectName, groups]);
+
+  const content = getCurrentContent();
+  const lineCount = content.split('\n').length;
 
   return (
     <aside className="w-full h-full bg-background border-l border-border flex flex-col">
@@ -257,173 +256,144 @@ export function CodePanel({ botData, projectName, projectId, selectedNodeId }: C
         </div>
         <p className="text-xs text-muted-foreground mb-3">Предварительный просмотр сгенерированного кода</p>
         
-        <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as CodeFormat)}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="python">
-              <div className="flex items-center">
-                <i className="fab fa-python mr-2 text-blue-500"></i>
-                Python код
-              </div>
-            </SelectItem>
-            <SelectItem value="json">
-              <div className="flex items-center">
-                <i className="fas fa-database mr-2 text-green-500"></i>
-                JSON данные
-              </div>
-            </SelectItem>
-            <SelectItem value="requirements">
-              <div className="flex items-center">
-                <i className="fas fa-list mr-2 text-orange-500"></i>
-                Requirements.txt
-              </div>
-            </SelectItem>
-            <SelectItem value="readme">
-              <div className="flex items-center">
-                <i className="fas fa-file-alt mr-2 text-purple-500"></i>
-                README.md
-              </div>
-            </SelectItem>
-            <SelectItem value="dockerfile">
-              <div className="flex items-center">
-                <i className="fab fa-docker mr-2 text-cyan-500"></i>
-                Dockerfile
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="space-y-3">
+          <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as CodeFormat)}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="python">
+                <div className="flex items-center">
+                  <i className="fab fa-python mr-2 text-blue-500"></i>
+                  Python код
+                </div>
+              </SelectItem>
+              <SelectItem value="json">
+                <div className="flex items-center">
+                  <i className="fas fa-database mr-2 text-green-500"></i>
+                  JSON данные
+                </div>
+              </SelectItem>
+              <SelectItem value="requirements">
+                <div className="flex items-center">
+                  <i className="fas fa-list mr-2 text-orange-500"></i>
+                  Requirements.txt
+                </div>
+              </SelectItem>
+              <SelectItem value="readme">
+                <div className="flex items-center">
+                  <i className="fas fa-file-alt mr-2 text-purple-500"></i>
+                  README.md
+                </div>
+              </SelectItem>
+              <SelectItem value="dockerfile">
+                <div className="flex items-center">
+                  <i className="fab fa-docker mr-2 text-cyan-500"></i>
+                  Dockerfile
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="flex gap-2">
+            <Button
+              onClick={copyToClipboard}
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              data-testid="button-copy-code"
+            >
+              <i className="fas fa-copy mr-2"></i>
+              Копировать
+            </Button>
+            <Button
+              onClick={downloadFile}
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              data-testid="button-download-code"
+            >
+              <i className="fas fa-download mr-2"></i>
+              Скачать
+            </Button>
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-hidden p-4">
-        <div className="h-full flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-muted-foreground">
-              {selectedFormat === 'python' ? 'Python' : 
-               selectedFormat === 'json' ? 'JSON' :
-               selectedFormat === 'requirements' ? 'Requirements' :
-               selectedFormat === 'readme' ? 'README' : 'Dockerfile'}
-              {selectedNodeId && selectedFormat === 'python' && highlightedLines.size > 0 && (
-                <span className="ml-2 text-blue-600 dark:text-blue-400">
-                  (выделен узел: {selectedNodeId})
-                </span>
+      <div className="flex-1 overflow-hidden p-4 flex flex-col">
+        {lineCount > 0 && (
+          <div className="flex items-center justify-between text-xs text-muted-foreground px-2 mb-2">
+            <div className="flex items-center gap-2">
+              <span>Строк: {lineCount}</span>
+              {(selectedFormat === 'python' || selectedFormat === 'json') && (
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={toggleAllFunctions}
+                  className="h-6 px-2 text-xs"
+                  data-testid="button-toggle-all-functions"
+                >
+                  <i className={`fas ${areAllCollapsed ? 'fa-expand' : 'fa-compress'} mr-1`}></i>
+                  {areAllCollapsed ? 'Развернуть всё' : 'Свернуть всё'}
+                </Button>
               )}
-            </span>
-            <div className="flex gap-2">
-              <Button
-                onClick={copyToClipboard}
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                data-testid="button-copy-code"
-              >
-                <i className="fas fa-copy mr-1"></i>
-                Копировать
-              </Button>
-              <Button
-                onClick={() => downloadFile(selectedFormat)}
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs"
-                data-testid="button-download-code"
-              >
-                <i className="fas fa-download mr-1"></i>
-                Скачать
-              </Button>
             </div>
           </div>
-          
-          <div 
-            className="flex-1 overflow-auto rounded border border-slate-300 dark:border-slate-700"
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Генерация кода...</p>
-                </div>
+        )}
+
+        <div className="flex-1 overflow-hidden rounded border border-slate-300 dark:border-slate-700">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Генерация кода...</p>
               </div>
-            ) : (() => {
-              const content = getCurrentContent();
-              const lineCount = content.split('\n').length;
-              const isLargeFile = lineCount > 1000;
-              
-              // Для большого Python кода используем Textarea (быстрее, чем SyntaxHighlighter)
-              if (selectedFormat === 'python' && isLargeFile) {
-                return (
-                  <div className="flex flex-col h-full">
-                    <div className="px-3 py-2 bg-yellow-50 dark:bg-yellow-950/20 border-b border-yellow-200 dark:border-yellow-900/30">
-                      <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                        Большой файл ({lineCount} строк). Синтаксис отключен для производительности.
-                      </p>
-                    </div>
-                    <Textarea
-                      value={content}
-                      readOnly
-                      className="flex-1 font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
-                      style={{
-                        lineHeight: '1.5',
-                        letterSpacing: '0.02em',
-                        tabSize: 4
-                      }}
-                      data-testid="textarea-code-preview"
-                    />
-                  </div>
-                );
+            </div>
+          ) : (
+            <Editor
+              value={content}
+              language={
+                selectedFormat === 'python' ? 'python' :
+                selectedFormat === 'json' ? 'json' :
+                selectedFormat === 'readme' ? 'markdown' :
+                selectedFormat === 'dockerfile' ? 'dockerfile' :
+                'plaintext'
               }
-              
-              // Для малых файлов или других форматов используем SyntaxHighlighter
-              if (selectedFormat === 'python') {
-                return (
-                  <SyntaxHighlighter
-                    language="python"
-                    style={theme === 'dark' ? vscDarkPlus : vs}
-                    showLineNumbers={true}
-                    wrapLines={true}
-                    lineProps={(lineNumber) => {
-                      const isHighlighted = highlightedLines.has(lineNumber);
-                      return {
-                        style: {
-                          backgroundColor: isHighlighted 
-                            ? (theme === 'dark' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.15)')
-                            : 'transparent',
-                          display: 'block',
-                          width: '100%',
-                          transition: 'background-color 0.3s ease'
-                        }
-                      };
-                    }}
-                    customStyle={{
-                      margin: 0,
-                      fontSize: '12px',
-                      lineHeight: '1.5',
-                      background: 'transparent'
-                    }}
-                    data-testid="syntax-highlighter-python"
-                  >
-                    {content}
-                  </SyntaxHighlighter>
-                );
-              }
-              
-              // Для других форматов
-              return (
-                <Textarea
-                  value={content}
-                  readOnly
-                  className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
-                  style={{
-                    lineHeight: '1.5',
-                    letterSpacing: '0.02em',
-                    tabSize: 4
-                  }}
-                  placeholder="Выберите формат для просмотра кода..."
-                  data-testid="textarea-code-preview"
-                />
-              );
-            })()}
-          </div>
+              theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
+              onMount={(editor) => {
+                editorRef.current = editor;
+                if (selectedFormat === 'python' || selectedFormat === 'json') {
+                  setTimeout(() => {
+                    editor.getAction('editor.foldAll')?.run();
+                    setAreAllCollapsed(true);
+                  }, 100);
+                }
+              }}
+              options={{
+                readOnly: true,
+                lineNumbers: 'on',
+                wordWrap: 'on',
+                fontSize: 12,
+                lineHeight: 1.5,
+                minimap: { enabled: lineCount > 500 },
+                folding: true,
+                foldingHighlight: true,
+                foldingStrategy: 'auto',
+                showFoldingControls: 'always',
+                glyphMargin: true,
+                scrollBeyondLastLine: false,
+                padding: { top: 8, bottom: 8 },
+                automaticLayout: true,
+                contextmenu: false,
+                bracketPairColorization: {
+                  enabled: selectedFormat === 'json'
+                },
+                formatOnPaste: false,
+                formatOnType: false
+              }}
+              data-testid={`monaco-editor-code-${selectedFormat}`}
+            />
+          )}
         </div>
       </div>
     </aside>
