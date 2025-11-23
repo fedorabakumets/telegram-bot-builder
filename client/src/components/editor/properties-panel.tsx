@@ -2571,9 +2571,7 @@ export function PropertiesPanel({
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Клавиатура</h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-muted-foreground">Тип клавиатуры</Label>
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-end gap-3">
                 <div className="flex items-center gap-2">
                   <Label className="text-xs text-muted-foreground">Inline</Label>
                   <Switch
