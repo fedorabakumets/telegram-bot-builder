@@ -12327,7 +12327,7 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
       }
     }
 
-    // Validate buttons
+    // Валидация кнопок
     if (node.data.buttons && Array.isArray(node.data.buttons)) {
       node.data.buttons.forEach(button => {
         if (!button.text.trim()) {
@@ -12336,9 +12336,8 @@ export function validateBotStructure(botData: BotData): { isValid: boolean; erro
         if (button.action === 'url' && !button.url) {
           errors.push(`Кнопка "${button.text}" должна содержать URL`);
         }
-        if (button.action === 'goto' && !button.target) {
-          errors.push(`Кнопка "${button.text}" должна содержать цель перехода`);
-        }
+        // Проверка цели перехода для кнопок с действием goto опциональна
+        // Кнопка может работать без целевого узла
       });
     }
   });
