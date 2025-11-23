@@ -1065,7 +1065,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   return code;
 }
 
-// Функция для парсинга Python кода обратно в JSON (обратная операция generatePythonCode)
+// Функция для парсинга Python кода обратно в JSON (улучшенная версия)
 export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; connections: any[] } {
   const nodes: Node[] = [];
   const nodeIdMap = new Map<string, Node>();
@@ -1073,81 +1073,144 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
   // Ищем все NODE_START и NODE_END блоки
   const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@\n([\s\S]*?)# @@NODE_END:\1@@/g;
   let match;
-  let yPosition = 50;
+  let xPosition = 50;
   
   while ((match = nodePattern.exec(pythonCode)) !== null) {
     const nodeId = match[1];
     const nodeContent = match[2];
     
-    // Определяем тип узла
+    // Определяем тип узла по декораторам и контексту
     let nodeType = 'message';
     if (nodeId === 'start') {
       nodeType = 'start';
-    } else if (nodeContent.includes('async def command_handler') || nodeContent.includes('/')) {
-      nodeType = 'command';
-    } else if (nodeContent.includes('@dp.message(F.photo)')) {
+    } else if (nodeContent.includes('F.photo') || nodeContent.includes('@dp.message(F.photo)')) {
       nodeType = 'photo';
-    } else if (nodeContent.includes('@dp.message(F.video)')) {
+    } else if (nodeContent.includes('F.video') || nodeContent.includes('@dp.message(F.video)')) {
       nodeType = 'video';
-    } else if (nodeContent.includes('@dp.message(F.audio)')) {
+    } else if (nodeContent.includes('F.audio') || nodeContent.includes('@dp.message(F.audio)')) {
       nodeType = 'audio';
-    } else if (nodeContent.includes('@dp.message(F.voice)')) {
+    } else if (nodeContent.includes('F.voice') || nodeContent.includes('@dp.message(F.voice)')) {
       nodeType = 'voice';
-    } else if (nodeContent.includes('@dp.message(F.document)')) {
+    } else if (nodeContent.includes('F.document') || nodeContent.includes('@dp.message(F.document)')) {
       nodeType = 'document';
-    } else if (nodeContent.includes('@dp.message(F.sticker)')) {
+    } else if (nodeContent.includes('F.sticker') || nodeContent.includes('@dp.message(F.sticker)')) {
       nodeType = 'sticker';
-    } else if (nodeContent.includes('@dp.message(F.animation)')) {
+    } else if (nodeContent.includes('F.animation') || nodeContent.includes('@dp.message(F.animation)')) {
       nodeType = 'animation';
+    } else if (nodeContent.includes('commands=') || nodeContent.includes('F.command')) {
+      nodeType = 'command';
     }
     
-    // Извлекаем текст сообщения
+    // Извлекаем текст сообщения (поддержка многострочного текста)
     let messageText = '';
-    const textMatch = /text\s*=\s*"""([\s\S]*?)"""/.exec(nodeContent) || 
-                      /text\s*=\s*"([^"]*)"/.exec(nodeContent);
+    // Сначала пробуем найти многострочный текст в тройных кавычках
+    let textMatch = /text\s*=\s*"""([\s\S]*?)"""/m.exec(nodeContent);
+    if (!textMatch) {
+      // Потом пробуем однострочный текст
+      textMatch = /text\s*=\s*"([^"]*)"/.exec(nodeContent);
+    }
+    if (!textMatch) {
+      // Пробуем текст с экранированием
+      textMatch = /text\s*=\s*'([^']*)'/.exec(nodeContent);
+    }
     if (textMatch) {
-      messageText = textMatch[1];
+      messageText = textMatch[1]
+        .replace(/\\n/g, '\n')
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\t/g, '\t');
     }
     
-    // Извлекаем команду для command узлов
+    // Извлекаем команду и описание для command узлов
     let command = '';
-    const commandMatch = /commands=\["([^"]+)"\]/.exec(nodeContent);
+    let description = '';
+    const commandMatch = /commands?\s*=\s*\["([^"]+)"\]/.exec(nodeContent);
     if (commandMatch) {
-      command = '/' + commandMatch[1];
+      command = commandMatch[1].startsWith('/') ? commandMatch[1] : '/' + commandMatch[1];
+    }
+    const descriptionMatch = /description\s*=\s*"([^"]*)"/.exec(nodeContent);
+    if (descriptionMatch) {
+      description = descriptionMatch[1];
     }
     
-    // Извлекаем кнопки
+    // Извлекаем Inline кнопки
     const buttons: any[] = [];
-    const buttonMatches = nodeContent.matchAll(/InlineKeyboardButton\(text=([^,]+),\s*callback_data="([^"]+)"\)/g);
-    for (const btnMatch of buttonMatches) {
-      const btnText = btnMatch[1].replace(/["']/g, '').trim();
+    const inlineButtonMatches = nodeContent.matchAll(/InlineKeyboardButton\s*\(\s*text\s*=\s*([^,]+)\s*,\s*callback_data\s*=\s*"([^"]+)"\s*\)/g);
+    for (const btnMatch of inlineButtonMatches) {
+      let btnText = btnMatch[1].replace(/["'`]/g, '').trim();
+      // Убираем префиксы типа 'replace_variables_in_text('
+      if (btnText.includes('(')) {
+        const innerMatch = /\("([^"]+)"\)/.exec(btnText);
+        if (innerMatch) {
+          btnText = innerMatch[1];
+        }
+      }
       const callbackData = btnMatch[2];
       buttons.push({
         id: `btn_${nodeId}_${buttons.length}`,
         text: btnText,
         action: 'goto',
-        target: callbackData
+        target: callbackData,
+        buttonType: 'normal'
       });
     }
     
+    // Извлекаем Reply кнопки
+    const replyButtonMatches = nodeContent.matchAll(/KeyboardButton\s*\(\s*text\s*=\s*([^)]+)\s*\)/g);
+    for (const btnMatch of replyButtonMatches) {
+      let btnText = btnMatch[1].replace(/["'`]/g, '').trim();
+      // Убираем функции типа replace_variables_in_text
+      if (btnText.includes('(')) {
+        const innerMatch = /\("([^"]+)"\)/.exec(btnText);
+        if (innerMatch) {
+          btnText = innerMatch[1];
+        }
+      }
+      if (!buttons.find(b => b.text === btnText)) {
+        buttons.push({
+          id: `btn_${nodeId}_${buttons.length}`,
+          text: btnText,
+          action: 'default',
+          buttonType: 'normal'
+        });
+      }
+    }
+    
+    // Определяем тип клавиатуры
+    let keyboardType = 'none';
+    if (nodeContent.includes('InlineKeyboardMarkup')) {
+      keyboardType = 'inline';
+    } else if (nodeContent.includes('ReplyKeyboardMarkup')) {
+      keyboardType = 'reply';
+    }
+    
+    // Извлекаем настройки ввода текста
+    const collectUserInput = nodeContent.includes('collect_user_input') || nodeContent.includes('enableTextInput');
+    const waitForTextInput = nodeContent.includes('input_variable') || nodeContent.includes('waiting_for_input');
+    const inputVariable = /input_variable\s*=\s*"([^"]*)"/.exec(nodeContent)?.[1] || '';
+    
+    // Создаем узел
     const node: Node = {
       id: nodeId,
       type: nodeType as any,
-      position: { x: 50 + (nodeIdMap.size * 250), y: yPosition },
+      position: { x: xPosition, y: 50 },
       data: {
         messageText: messageText || `Узел ${nodeId}`,
-        keyboardType: buttons.length > 0 ? 'inline' : 'none',
+        keyboardType: keyboardType,
         buttons: buttons,
-        showInMenu: nodeType === 'start' || nodeType === 'command',
+        showInMenu: (nodeType === 'start' || nodeType === 'command') && !nodeContent.includes('showInMenu=False'),
         command: command,
-        description: '',
-        allowMultipleSelection: false,
-        formatMode: 'text',
-        enablePhotoInput: false,
-        enableVideoInput: false,
-        enableAudioInput: false,
-        enableDocumentInput: false,
-        waitForTextInput: false,
+        description: description,
+        allowMultipleSelection: nodeContent.includes('allowMultipleSelection=True'),
+        formatMode: nodeContent.includes('parse_mode=ParseMode.HTML') ? 'html' : 
+                   nodeContent.includes('parse_mode=ParseMode.MARKDOWN') ? 'markdown' : 'text',
+        enablePhotoInput: nodeContent.includes('enablePhotoInput'),
+        enableVideoInput: nodeContent.includes('enableVideoInput'),
+        enableAudioInput: nodeContent.includes('enableAudioInput'),
+        enableDocumentInput: nodeContent.includes('enableDocumentInput'),
+        waitForTextInput: waitForTextInput,
+        inputVariable: inputVariable,
+        collectUserInput: collectUserInput,
         conditionalMessages: [],
         synonyms: [],
         attachedMedia: []
@@ -1156,22 +1219,23 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
     
     nodes.push(node);
     nodeIdMap.set(nodeId, node);
+    xPosition += 280;
   }
   
-  // Восстанавливаем connections на основе кнопок с goto
+  // Восстанавливаем connections на основе кнопок и контекста
   const connections: any[] = [];
   const addedConnections = new Set<string>();
   
   nodes.forEach(node => {
-    if (node.data.buttons) {
+    if (node.data.buttons && Array.isArray(node.data.buttons)) {
       node.data.buttons.forEach(button => {
-        if (button.action === 'goto' && button.target) {
+        if (button.target && button.action === 'goto') {
           const connectionId = `${node.id}-${button.target}`;
-          if (!addedConnections.has(connectionId)) {
+          if (!addedConnections.has(connectionId) && nodeIdMap.has(button.target)) {
             connections.push({
+              id: connectionId,
               source: node.id,
-              target: button.target,
-              id: connectionId
+              target: button.target
             });
             addedConnections.add(connectionId);
           }
