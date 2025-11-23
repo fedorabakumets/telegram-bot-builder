@@ -8116,6 +8116,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   code += '        return\n';
   code += '    \n';
+  
+  // Весь следующий блок генерируется только если есть узлы с множественным выбором
+  if (multiSelectNodes.length > 0) {
   code += '    # Обработка выбора опции\n';
   code += '    logging.info(f"📱 Обрабатываем callback_data: {callback_data}")\n';
   code += '    \n';
@@ -8299,6 +8302,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        logging.info(f"🔄 ОБНОВЛЯЕМ клавиатуру для узла {node_id} с галочками")\n';
   code += '        await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
   code += '\n';
+  }  // Закрываем if (multiSelectNodes.length > 0) для блока обработки выбора опций
   
   // Генерируем обработчик для кнопок "Готово" многомерного выбора ТОЛЬКО если есть узлы с множественным выбором
   if (multiSelectNodes.length > 0) {
