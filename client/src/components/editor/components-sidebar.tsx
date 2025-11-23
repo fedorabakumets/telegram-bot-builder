@@ -1293,6 +1293,7 @@ export function ComponentsSidebar({
 
   const handleProjectDrop = (e: React.DragEvent, targetProject: BotProject) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragOverProject(null);
     
     if (!draggedProject || draggedProject.id === targetProject.id) {
@@ -1300,10 +1301,32 @@ export function ComponentsSidebar({
       return;
     }
 
-    // Здесь можно добавить логику изменения порядка проектов
-    // Пока просто показываем уведомление
+    // Получаем текущий список проектов из кеша
+    const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
+    
+    // Находим индексы перемещаемого и целевого проекта
+    const draggedIndex = currentProjects.findIndex(p => p.id === draggedProject.id);
+    const targetIndex = currentProjects.findIndex(p => p.id === targetProject.id);
+    
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedProject(null);
+      return;
+    }
+
+    // Создаём новый массив с переупорядоченными проектами
+    const newProjects = [...currentProjects];
+    const [movedProject] = newProjects.splice(draggedIndex, 1);
+    newProjects.splice(targetIndex, 0, movedProject);
+    
+    // Обновляем кеш
+    queryClient.setQueryData(['/api/projects'], newProjects);
+    
+    // Обновляем список без данных
+    const newList = newProjects.map(({ data, ...rest }) => rest);
+    queryClient.setQueryData(['/api/projects/list'], newList);
+    
     toast({
-      title: "Перемещение проектов",
+      title: "✅ Проекты переупорядочены",
       description: `Проект "${draggedProject.name}" перемещен`,
     });
     
