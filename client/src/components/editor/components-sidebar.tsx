@@ -472,10 +472,6 @@ const componentCategories = [
     components: components.filter(c => ['message', 'sticker', 'voice', 'location', 'contact'].includes(c.type))
   },
   {
-    title: 'Кнопки',
-    components: components.filter(c => c.type === 'keyboard')
-  },
-  {
     title: 'Команды',
     components: components.filter(c => ['start', 'command'].includes(c.type))
   },
