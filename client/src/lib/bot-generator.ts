@@ -11915,17 +11915,34 @@ function generateKeyboard(node: Node): string {
     code += '    use_conditional_keyboard = conditional_keyboard is not None\n';
   }
   
-  // Определяем режим форматирования (приоритет у условного сообщения)
-  code += '    # Определяем режим форматирования (приоритет у условного сообщения)\n';
-  code += '    if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:\n';
-  code += '        current_parse_mode = conditional_parse_mode\n';
-  code += '    else:\n';
-  if (node.data.formatMode === 'markdown' || node.data.markdown === true) {
-    code += '        current_parse_mode = ParseMode.MARKDOWN\n';
-  } else if (node.data.formatMode === 'html') {
-    code += '        current_parse_mode = ParseMode.HTML\n';
+  // Определяем режим форматирования
+  const hasConditionalMessages = node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0;
+  
+  if (hasConditionalMessages) {
+    // Для узлов с условными сообщениями - проверяем приоритет условного режима
+    code += '    # Определяем режим форматирования (приоритет у условного сообщения)\n';
+    code += '    if "conditional_parse_mode" in locals() and conditional_parse_mode is not None:\n';
+    code += '        current_parse_mode = conditional_parse_mode\n';
+    code += '    else:\n';
+    if (node.data.formatMode === 'markdown' || node.data.markdown === true) {
+      code += '        current_parse_mode = ParseMode.MARKDOWN\n';
+    } else if (node.data.formatMode === 'html') {
+      code += '        current_parse_mode = ParseMode.HTML\n';
+    } else {
+      code += '        current_parse_mode = None\n';
+    }
   } else {
-    code += '        current_parse_mode = None\n';
+    // Для узлов без условных сообщений - просто устанавливаем режим
+    if (node.data.formatMode === 'markdown' || node.data.markdown === true) {
+      code += '    current_parse_mode = ParseMode.MARKDOWN\n';
+    } else if (node.data.formatMode === 'html') {
+      code += '    current_parse_mode = ParseMode.HTML\n';
+    } else {
+      code += '    current_parse_mode = None\n';
+    }
+    // Инициализируем переменные условной клавиатуры
+    code += '    use_conditional_keyboard = False\n';
+    code += '    conditional_keyboard = None\n';
   }
   
   // Генерируем parseMode строку для использования в коде
@@ -11935,13 +11952,6 @@ function generateKeyboard(node: Node): string {
   } else {
     // Для текстового режима добавляем parse_mode только если он установлен
     parseMode = ', parse_mode=current_parse_mode if current_parse_mode else None';
-  }
-  
-  // Инициализируем use_conditional_keyboard для всех случаев
-  if (!node.data.enableConditionalMessages || !node.data.conditionalMessages || node.data.conditionalMessages.length === 0) {
-    code += '    # Инициализируем переменную для проверки условной клавиатуры\n';
-    code += '    use_conditional_keyboard = False\n';
-    code += '    conditional_keyboard = None\n';
   }
 
   // НОВАЯ ЛОГИКА: Сбор ввода как дополнительная функциональность к обычным кнопкам
@@ -11961,50 +11971,53 @@ function generateKeyboard(node: Node): string {
   
   // CASE 1: Есть обычные кнопки + сбор ввода = обычные кнопки работают + дополнительно сохраняются как ответы
   if (hasRegularButtons && hasInputCollection) {
-    // Проверяем, есть ли условная клавиатура
-    code += '    \n';
-    code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
-    code += '    if use_conditional_keyboard:\n';
-    code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
-    code += '    else:\n';
+    // Проверяем условную клавиатуру только если есть условные сообщения
+    if (hasConditionalMessages) {
+      code += '    \n';
+      code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+      code += '    if use_conditional_keyboard:\n';
+      code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+      code += '    else:\n';
+    }
     
     // Отправляем обычные кнопки как обычно
+    const indent = hasConditionalMessages ? '        ' : '    ';
     if (node.data.keyboardType === "reply") {
-      code += '        # Создаем reply клавиатуру (+ дополнительный сбор ответов включен)\n';
-      code += '        builder = ReplyKeyboardBuilder()\n';
+      code += `${indent}# Создаем reply клавиатуру (+ дополнительный сбор ответов включен)\n`;
+      code += `${indent}builder = ReplyKeyboardBuilder()\n`;
       node.data.buttons.forEach(button => {
         if (button.action === "contact" && button.requestContact) {
-          code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
+          code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
         } else if (button.action === "location" && button.requestLocation) {
-          code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
+          code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
         } else {
-          code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+          code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
         }
       });
       
       const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
       const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
-      code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-      code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      code += `${indent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+      code += `${indent}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       
     } else if (node.data.keyboardType === "inline") {
-      code += '        # Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n';
-      code += '        builder = InlineKeyboardBuilder()\n';
+      code += `${indent}# Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n`;
+      code += `${indent}builder = InlineKeyboardBuilder()\n`;
       node.data.buttons.forEach(button => {
         if (button.action === "url") {
-          code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+          code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
         } else if (button.action === 'goto') {
           const callbackData = button.target || button.id || 'no_action';
-          code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+          code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
         } else if (button.action === 'command') {
           const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+          code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
         }
       });
       
-      code += '        builder.adjust(2)  # Используем 2 колонки для консистентности\n';
-      code += '        keyboard = builder.as_markup()\n';
-      code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      code += `${indent}builder.adjust(2)  # Используем 2 колонки для консистентности\n`;
+      code += `${indent}keyboard = builder.as_markup()\n`;
+      code += `${indent}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
     }
     
     // Дополнительно настраиваем сбор ответов с полной структурой ожидания ввода
@@ -12052,13 +12065,18 @@ function generateKeyboard(node: Node): string {
       }
       
     } else {
-      // Текстовый ввод - проверяем условную клавиатуру
-      code += '    \n';
-      code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
-      code += '    if use_conditional_keyboard:\n';
-      code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
-      code += '    else:\n';
-      code += `        await message.answer(text${parseMode})\n`;
+      // Текстовый ввод - проверяем условную клавиатуру только если есть условные сообщения
+      if (hasConditionalMessages) {
+        code += '    \n';
+        code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+        code += '    if use_conditional_keyboard:\n';
+        code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+        code += '    else:\n';
+        code += `        await message.answer(text${parseMode})\n`;
+      } else {
+        code += '    \n';
+        code += `    await message.answer(text${parseMode})\n`;
+      }
     }
     
     // Устанавливаем состояние ожидания ввода
@@ -12073,12 +12091,17 @@ function generateKeyboard(node: Node): string {
   else {
     code += `    # DEBUG: Узел ${node.id} - hasRegularButtons=${toPythonBoolean(hasRegularButtons)}, hasInputCollection=${toPythonBoolean(hasInputCollection)}\n`;
     code += `    logging.info(f"DEBUG: Узел ${node.id} обработка кнопок - keyboardType=${node.data.keyboardType}, buttons=${node.data.buttons ? node.data.buttons.length : 0}")\n`;
-    // Проверяем, есть ли условная клавиатура
-    code += '    \n';
-    code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
-    code += '    if use_conditional_keyboard:\n';
-    code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
-    code += '    else:\n';
+    
+    // Проверяем условную клавиатуру только если есть условные сообщения
+    if (hasConditionalMessages) {
+      code += '    \n';
+      code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
+      code += '    if use_conditional_keyboard:\n';
+      code += '        await message.answer(text, reply_markup=conditional_keyboard, parse_mode=current_parse_mode if current_parse_mode else None)\n';
+      code += '    else:\n';
+    }
+    
+    const indent3 = hasConditionalMessages ? '        ' : '    ';
     
     if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
       // Проверяем, есть ли множественный выбор
