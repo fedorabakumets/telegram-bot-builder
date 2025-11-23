@@ -1276,6 +1276,8 @@ export function ComponentsSidebar({
   // Обработчики drag-and-drop для проектов
   const handleProjectDragStart = (e: React.DragEvent, project: BotProject) => {
     e.stopPropagation();
+    console.log('🎯 Начало перемещения проекта:', project.name);
+    setDraggedSheet(null);  // Очищаем лист, чтобы не конфликтовал с проектом
     setDraggedProject(project);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', project.id.toString());
@@ -1296,19 +1298,26 @@ export function ComponentsSidebar({
     e.stopPropagation();
     setDragOverProject(null);
     
+    console.log('🎯 Попытка перемещения:', draggedProject?.name, '→', targetProject.name);
+    
     if (!draggedProject || draggedProject.id === targetProject.id) {
+      console.log('❌ Отмена: проект не выбран или это тот же проект');
       setDraggedProject(null);
       return;
     }
 
     // Получаем текущий список проектов из кеша
     const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
+    console.log('📋 Текущие проекты:', currentProjects.map(p => p.name));
     
     // Находим индексы перемещаемого и целевого проекта
     const draggedIndex = currentProjects.findIndex(p => p.id === draggedProject.id);
     const targetIndex = currentProjects.findIndex(p => p.id === targetProject.id);
     
+    console.log(`📍 Индексы: перемещаемый=${draggedIndex}, целевой=${targetIndex}`);
+    
     if (draggedIndex === -1 || targetIndex === -1) {
+      console.log('❌ Отмена: проект не найден');
       setDraggedProject(null);
       return;
     }
@@ -1317,6 +1326,8 @@ export function ComponentsSidebar({
     const newProjects = [...currentProjects];
     const [movedProject] = newProjects.splice(draggedIndex, 1);
     newProjects.splice(targetIndex, 0, movedProject);
+    
+    console.log('✅ Новый порядок:', newProjects.map(p => p.name));
     
     // Обновляем кеш
     queryClient.setQueryData(['/api/projects'], newProjects);
