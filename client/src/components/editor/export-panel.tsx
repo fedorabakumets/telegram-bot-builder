@@ -562,17 +562,19 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                           </div>
                         )}
                         <div className={`${isMobile ? 'h-48' : 'h-[400px]'} rounded border border-slate-300 dark:border-slate-700 overflow-hidden`}>
-                          {selectedFormat === 'python' ? (
+                          {(selectedFormat === 'python' || selectedFormat === 'json') ? (
                             <Editor
                               value={displayContent}
-                              language="python"
+                              language={selectedFormat === 'python' ? 'python' : 'json'}
                               theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
                               onMount={(editor) => {
                                 editorRef.current = editor;
-                                setTimeout(() => {
-                                  editor.getAction('editor.foldAll')?.run();
-                                  setAreAllCollapsed(true);
-                                }, 100);
+                                if (selectedFormat === 'python') {
+                                  setTimeout(() => {
+                                    editor.getAction('editor.foldAll')?.run();
+                                    setAreAllCollapsed(true);
+                                  }, 100);
+                                }
                               }}
                               options={{
                                 readOnly: true,
@@ -581,17 +583,17 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                                 fontSize: 12,
                                 lineHeight: 1.5,
                                 minimap: { enabled: false },
-                                folding: true,
+                                folding: selectedFormat === 'python',
                                 foldingHighlight: true,
                                 foldingStrategy: 'auto',
                                 showFoldingControls: 'always',
-                                glyphMargin: true,
+                                glyphMargin: selectedFormat === 'python',
                                 scrollBeyondLastLine: false,
                                 padding: { top: 8, bottom: 8 },
                                 automaticLayout: true,
                                 contextmenu: false
                               }}
-                              data-testid="monaco-editor-export-python"
+                              data-testid={selectedFormat === 'python' ? 'monaco-editor-export-python' : 'monaco-editor-export-json'}
                             />
                           ) : (
                             <Textarea 
