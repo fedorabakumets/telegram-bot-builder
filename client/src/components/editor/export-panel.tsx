@@ -498,17 +498,7 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
 
                   <div>
                     <h4 className="font-semibold mb-3">Экспорт файлов проекта</h4>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <i className="fas fa-file-archive text-blue-500"></i>
-                    <span>Экспорт файлов проекта</span>
-                  </CardTitle>
-                  <CardDescription>Выберите формат для экспорта или загрузите все файлы</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex items-center justify-between'}`}>
+                    <div className={`${isMobile ? 'flex flex-col space-y-4' : 'flex items-center justify-between'}`}>
                     <div className={`${isMobile ? 'w-full' : 'flex items-center space-x-4'}`}>
                       <Select value={selectedFormat} onValueChange={(value: ExportFormat) => setSelectedFormat(value)}>
                         <SelectTrigger className={`${isMobile ? 'w-full h-12 text-base' : 'w-[200px]'}`} data-testid="select-format-files">
@@ -621,12 +611,14 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                   
                   <Separator />
                   
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Загрузить все файлы проекта:</span>
-                    <Button onClick={downloadAllFiles} variant="default" data-testid="button-download-all-files">
-                      <i className="fas fa-archive mr-2"></i>
-                      Скачать все
-                    </Button>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Загрузить все файлы проекта:</span>
+                        <Button onClick={downloadAllFiles} variant="default" data-testid="button-download-all-files">
+                          <i className="fas fa-archive mr-2"></i>
+                          Скачать все
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
