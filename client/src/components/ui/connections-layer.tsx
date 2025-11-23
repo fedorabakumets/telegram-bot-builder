@@ -1,4 +1,5 @@
 import { Connection, Node } from '@/types/bot';
+import { EnhancedConnectionLine } from './enhanced-connection-line';
 
 interface ConnectionsLayerProps {
   connections: Connection[];
@@ -15,11 +16,6 @@ export function ConnectionsLayer({
   onConnectionSelect,
   onConnectionDelete
 }: ConnectionsLayerProps) {
-  // ВРЕМЕННО ОТКЛЮЧЕНО: Визуализация связей
-  // Связи сохраняются в данных, но не отображаются на canvas
-  return null;
-  
-  /* АРХИВ: Оригинальная визуализация связей (временно отключена)
   if (!connections || connections.length === 0) return null;
 
   return (
@@ -43,5 +39,4 @@ export function ConnectionsLayer({
       ))}
     </svg>
   );
-  */
 }

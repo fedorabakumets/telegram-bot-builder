@@ -69,15 +69,15 @@ interface CanvasProps {
   onNodeSizesChange?: (nodeSizes: Map<string, { width: number; height: number }>) => void;
 }
 
-export function Canvas({
+export function Canvas({ 
   botData,
   onBotDataUpdate,
-  nodes,
+  nodes, 
   connections,
   selectedNodeId,
   selectedConnectionId,
-  onNodeSelect,
-  onNodeAdd,
+  onNodeSelect, 
+  onNodeAdd, 
   onNodeDelete,
   onNodeDuplicate,
   onNodeMove,
@@ -151,6 +151,9 @@ export function Canvas({
     }
   }, [nodeSizes, onNodeSizesChange]);
 
+  // Убираем автоматический layout при изменении nodeSizes - он был слишком агрессивным
+  // Автоиерархия должна работать только при загрузке шаблонов, а не постоянно
+
   // Получение активного листа (с fallback'ом для совместимости)
   const activeSheet = botData ? SheetsManager.getActiveSheet(botData) : null;
 
@@ -162,9 +165,9 @@ export function Canvas({
     let dataWithCurrentSheetSaved = botData;
     if (botData.activeSheetId) {
       dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
-        botData,
-        botData.activeSheetId,
-        nodes,
+        botData, 
+        botData.activeSheetId, 
+        nodes, 
         connections
       );
     }
@@ -181,9 +184,9 @@ export function Canvas({
     let dataWithCurrentSheetSaved = botData;
     if (botData.activeSheetId) {
       dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
-        botData,
-        botData.activeSheetId,
-        nodes,
+        botData, 
+        botData.activeSheetId, 
+        nodes, 
         connections
       );
     }
@@ -215,9 +218,9 @@ export function Canvas({
       let dataWithCurrentSheetSaved = botData;
       if (botData.activeSheetId) {
         dataWithCurrentSheetSaved = SheetsManager.updateSheetData(
-          botData,
-          botData.activeSheetId,
-          nodes,
+          botData, 
+          botData.activeSheetId, 
+          nodes, 
           connections
         );
       }
@@ -258,7 +261,7 @@ export function Canvas({
       const centerX = (containerWidth / 2 - pan.x) / (zoom / 100);
       const centerY = (containerHeight / 2 - pan.y) / (zoom / 100);
 
-      const position = {
+      const position = { 
         x: Math.max(50, centerX - 160), // -160 чтобы центрировать узел (половина ширины узла)
         y: Math.max(50, centerY - 50)   // -50 чтобы центрировать узел (половина высоты узла)
       };
@@ -273,9 +276,9 @@ export function Canvas({
   // Функция автоматической раскладки узлов
   const autoArrange = useCallback(() => {
     if (nodes.length === 0) return;
-
+    
     console.log('🎯 Применяем автоматическую раскладку для', nodes.length, 'узлов');
-
+    
     // Применяем иерархическую раскладку с центрированием узлов
     const arrangedNodes = applyTemplateLayout(
       nodes,
@@ -283,7 +286,7 @@ export function Canvas({
       undefined, // templateName не используется для общей раскладки
       nodeSizes
     );
-
+    
     // Обновляем позиции узлов
     if (onNodesUpdate) {
       onNodesUpdate(arrangedNodes);
@@ -310,7 +313,7 @@ export function Canvas({
     }, { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity });
 
     // Проверяем валидность границ
-    if (!isFinite(nodeBounds.left) || !isFinite(nodeBounds.right) ||
+    if (!isFinite(nodeBounds.left) || !isFinite(nodeBounds.right) || 
         !isFinite(nodeBounds.top) || !isFinite(nodeBounds.bottom)) {
       return;
     }
@@ -395,10 +398,10 @@ export function Canvas({
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     // Check if click is on empty canvas (not on a node)
     const target = e.target as HTMLElement;
-    const isEmptyCanvas = target.classList.contains('canvas-grid-modern') ||
+    const isEmptyCanvas = target.classList.contains('canvas-grid-modern') || 
                           target.closest('.canvas-grid-modern') === target;
 
-    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) ||
+    if (e.button === 1 || e.button === 2 || (e.button === 0 && e.altKey) || 
         (e.button === 0 && isEmptyCanvas)) { // Middle mouse, right mouse, Alt+click, or left-click on empty canvas
       e.preventDefault();
       setIsPanning(true);
@@ -678,7 +681,7 @@ export function Canvas({
 
     if (rect) {
       // Transform screen coordinates to canvas coordinates
-      const screenX = e.clientX - rect.left - 160; // Adjust for node width
+      const screenX = e.clientX - rect.left - 160; // Adjust for node width  
       const screenY = e.clientY - rect.top - 50;   // Adjust for node height
 
       // Apply inverse transformation to get canvas coordinates
@@ -714,7 +717,7 @@ export function Canvas({
     onNodeAdd(newNode);
   }, [onNodeAdd, pan, zoom, getCenterPosition]);
 
-  // Обработчик canvas-drop события для touch устройств
+  // Обработчик canvas-drop события для touch устройств  
   const handleCanvasDrop = useCallback((e: CustomEvent) => {
     console.log('Canvas drop event received:', e.detail);
     const { component, position } = e.detail;
@@ -866,11 +869,7 @@ export function Canvas({
   }, [onConnectionAdd]);
 
   const handleAutoConnect = useCallback(() => {
-    // Здесь получаем currentNodes и currentConnections из локального состояния
-    const currentNodes = nodes; // Предполагаем, что `nodes` уже содержит узлы активного листа
-    const currentConnections = connections; // Предполагаем, что `connections` уже содержит соединения активного листа
-
-    const suggestions = generateAutoConnections(currentNodes, currentConnections);
+    const suggestions = generateAutoConnections(nodes, connections);
     const bestSuggestion = suggestions.find(s => s.confidence > 0.8);
 
     if (bestSuggestion) {
@@ -889,16 +888,12 @@ export function Canvas({
     onConnectionDelete?.(connectionId);
   }, [onConnectionDelete]);
 
-  // Здесь мы получаем узлы и соединения активного листа
-  const currentNodes = activeSheet ? activeSheet.nodes : [];
-  const currentConnections = activeSheet ? activeSheet.connections : [];
-
   return (
     <main className="w-full h-full relative overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-slate-950 dark:via-gray-950 dark:to-slate-900">
       <div className="absolute inset-0 overflow-auto">
 
         {/* Enhanced Canvas Grid */}
-        <div
+        <div 
           ref={canvasRef}
           className="min-h-full relative canvas-grid-modern"
           style={{
@@ -927,26 +922,35 @@ export function Canvas({
           onTouchEnd={handleTouchEnd}
         >
           {/* Transformable Canvas Content */}
-          <div
+          <div 
             className="relative origin-top-left transition-transform duration-200 ease-out"
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
               transformOrigin: '0 0'
             }}
           >
-            {/* Connections Layer (отключена) */}
+            {/* Connections Layer */}
             <ConnectionsLayer
-              connections={currentConnections}
-              nodes={currentNodes}
+              connections={connections}
+              nodes={nodes}
               selectedConnectionId={selectedConnectionId}
               onConnectionSelect={handleConnectionClick}
               onConnectionDelete={handleDeleteConnection}
             />
 
-            {/* Temporary connection preview (отключен) */}
+            {/* Debug: показываем количество соединений */}
+            <foreignObject x="10" y="10" width="200" height="60" className="pointer-events-none">
+              <div className="bg-black/50 text-white text-xs p-2 rounded">
+                <div>Всего: {connections.length}</div>
+                <div>Автопереходов: {connections.filter(c => c.isAutoGenerated).length}</div>
+                <div>Ручных: {connections.filter(c => !c.isAutoGenerated).length}</div>
+              </div>
+            </foreignObject>
+
+            {/* Temporary connection preview */}
             {connectionStart && (
               <TemporaryConnection
-                startNode={currentNodes.find(n => n.id === connectionStart.nodeId)!}
+                startNode={nodes.find(n => n.id === connectionStart.nodeId)!}
                 endPosition={{
                   x: (mousePosition.x - pan.x) / (zoom / 100),
                   y: (mousePosition.y - pan.y) / (zoom / 100)
@@ -956,7 +960,7 @@ export function Canvas({
             )}
 
             {/* Nodes */}
-            {currentNodes.map((node) => (
+            {nodes.map((node) => (
               <CanvasNode
                 key={node.id}
                 node={node}
@@ -976,7 +980,7 @@ export function Canvas({
           </div>
 
           {/* Drop Zone Hint */}
-          {currentNodes.length === 0 && (
+          {nodes.length === 0 && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-slate-600/50 p-12 w-96 text-center transition-all duration-500 hover:scale-105">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-400/20 dark:via-purple-400/20 dark:to-pink-400/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-blue-200/50 dark:border-blue-600/30 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/20">
                 <i className="fas fa-plus text-blue-600 dark:text-blue-400 text-3xl drop-shadow-sm"></i>
@@ -987,7 +991,7 @@ export function Canvas({
           )}
 
           {/* Smart Connection Tools */}
-          {currentNodes.length > 1 && (
+          {nodes.length > 1 && (
             <div className="absolute bottom-24 right-4 flex flex-col space-y-2 z-20">
               {/* Auto Connection Panel */}
               <Popover open={showAutoPanel} onOpenChange={setShowAutoPanel}>
@@ -1001,8 +1005,8 @@ export function Canvas({
                 </PopoverTrigger>
                 <PopoverContent side="left" className="w-auto p-0">
                   <AutoConnectionPanel
-                    nodes={currentNodes}
-                    connections={currentConnections}
+                    nodes={nodes}
+                    connections={connections}
                     onConnectionAdd={(connection) => onConnectionAdd?.(connection)}
                     onNodesUpdate={(updatedNodes) => onNodesUpdate?.(updatedNodes)}
                     autoButtonCreation={autoButtonCreation}
@@ -1033,18 +1037,18 @@ export function Canvas({
                 </PopoverTrigger>
                 <PopoverContent side="left" className="w-80 p-0">
                   <ConnectionSuggestions
-                    nodes={currentNodes}
-                    connections={currentConnections}
+                    nodes={nodes}
+                    connections={connections}
                     onCreateConnection={handleCreateSuggestedConnection}
                   />
                 </PopoverContent>
               </Popover>
 
               {/* Clear connections button */}
-              {currentConnections.length > 0 && (
+              {connections.length > 0 && (
                 <Button
                   onClick={() => {
-                    currentConnections.forEach(conn => onConnectionDelete?.(conn.id));
+                    connections.forEach(conn => onConnectionDelete?.(conn.id));
                   }}
                   variant="outline"
                   className="rounded-full w-10 h-10 shadow-md hover:shadow-lg transition-all duration-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -1071,7 +1075,7 @@ export function Canvas({
 
             <div className={`flex items-center flex-shrink-0 ${isMobile ? 'space-x-0.5' : 'space-x-1'}`}>
               {/* Кнопки масштаба */}
-              <button
+              <button 
                 onClick={zoomOut}
                 disabled={zoom <= 1}
                 className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -1123,7 +1127,7 @@ export function Canvas({
                     </button>
                     <button
                       onClick={fitToContent}
-                      disabled={currentNodes.length === 0}
+                      disabled={nodes.length === 0}
                       className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors text-green-600 dark:text-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="flex items-center space-x-2">
@@ -1135,7 +1139,7 @@ export function Canvas({
                 </PopoverContent>
               </Popover>
 
-              <button
+              <button 
                 onClick={zoomIn}
                 disabled={zoom >= 200}
                 className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -1143,9 +1147,9 @@ export function Canvas({
               >
                 <i className="fas fa-search-plus text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
-              <button
+              <button 
                 onClick={fitToContent}
-                disabled={currentNodes.length === 0}
+                disabled={nodes.length === 0}
                 className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Уместить в экран (Ctrl + 1)"
               >
@@ -1153,16 +1157,16 @@ export function Canvas({
               </button>
 
               {/* Кнопка автоматической раскладки */}
-              <button
+              <button 
                 onClick={autoArrange}
-                disabled={currentNodes.length === 0}
+                disabled={nodes.length === 0}
                 className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
                 title="Автоматическая раскладка (центрирует узлы между родителями)"
               >
                 <i className="fas fa-magic text-gray-600 dark:text-gray-400 text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors"></i>
               </button>
 
-              <button
+              <button 
                 onClick={onUndo}
                 disabled={!canUndo}
                 className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -1171,7 +1175,7 @@ export function Canvas({
                 <i className="fas fa-undo text-gray-600 dark:text-gray-400 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></i>
               </button>
 
-              <button
+              <button 
                 onClick={onRedo}
                 disabled={!canRedo}
                 className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -1181,7 +1185,7 @@ export function Canvas({
               </button>
 
               {onSave && (
-                <button
+                <button 
                   onClick={onSave}
                   disabled={isSaving}
                   className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -1197,7 +1201,7 @@ export function Canvas({
 
               {/* Межпроектное копирование/вставка */}
               {onCopyToClipboard && selectedNodeId && (
-                <button
+                <button 
                   onClick={() => onCopyToClipboard([selectedNodeId])}
                   className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}
                   title="Копировать в буфер (Shift + Ctrl + C)"
@@ -1207,7 +1211,7 @@ export function Canvas({
               )}
 
               {onPasteFromClipboard && hasClipboardData && (
-                <button
+                <button 
                   onClick={onPasteFromClipboard}
                   className={`${isMobile ? 'p-2' : 'p-2.5'} bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-lg shadow-lg border border-gray-200/50 dark:border-slate-700/50 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 group`}
                   title="Вставить из буфера (Shift + Ctrl + V)"
@@ -1223,8 +1227,8 @@ export function Canvas({
                     <button
                       onClick={onToggleHeader}
                       className={`p-2 rounded-md transition-all duration-200 ${
-                        headerVisible
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+                        headerVisible 
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
                           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
                       }`}
                       title={`${headerVisible ? 'Скрыть' : 'Показать'} шапку`}
@@ -1237,8 +1241,8 @@ export function Canvas({
                     <button
                       onClick={onToggleSidebar}
                       className={`p-2 rounded-md transition-all duration-200 ${
-                        sidebarVisible
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+                        sidebarVisible 
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
                           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
                       }`}
                       title={`${sidebarVisible ? 'Скрыть' : 'Показать'} боковую панель`}
@@ -1251,8 +1255,8 @@ export function Canvas({
                     <button
                       onClick={onToggleCanvas}
                       className={`p-2 rounded-md transition-all duration-200 ${
-                        canvasVisible
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+                        canvasVisible 
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
                           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
                       }`}
                       title={`${canvasVisible ? 'Скрыть' : 'Показать'} холст`}
@@ -1265,8 +1269,8 @@ export function Canvas({
                     <button
                       onClick={onToggleProperties}
                       className={`p-2 rounded-md transition-all duration-200 ${
-                        propertiesVisible
-                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
+                        propertiesVisible 
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' 
                           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700'
                       }`}
                       title={`${propertiesVisible ? 'Скрыть' : 'Показать'} панель свойств`}
@@ -1338,7 +1342,6 @@ export function Canvas({
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Компонент листов холста - фиксированная панель внизу */}

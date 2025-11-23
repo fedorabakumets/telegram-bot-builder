@@ -6,14 +6,6 @@ This application provides a visual Telegram bot builder, enabling users to creat
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes
-**2024-11-22**: Временно отключена визуализация графических связей между узлами:
-- Связи продолжают сохраняться в данных проекта
-- Визуальные линии между узлами не отображаются на canvas
-- Компоненты связей архивированы в `client/src/components/_archive/`
-- Добавлены заглушки с уведомлениями об отключении
-- Оригинальный код сохранен для будущего восстановления
-
 ## System Architecture
 
 ### Frontend
