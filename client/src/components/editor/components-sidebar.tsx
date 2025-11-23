@@ -927,9 +927,9 @@ export function ComponentsSidebar({
 
   const parsePythonBotToJson = async (pythonCode: string) => {
     // Используем функцию парсинга из bot-generator.ts (обратная операция к generatePythonCode)
-    const modUrl = new URL("../lib/bot-generator.js", import.meta.url);
+    const modUrl = new URL("../../lib/bot-generator.js", import.meta.url);
     modUrl.searchParams.set("t", Date.now().toString());
-    const { parsePythonCodeToJson } = await import(modUrl.href);
+    const { parsePythonCodeToJson } = await import(/* @vite-ignore */ modUrl.href);
     
     const { nodes, connections } = parsePythonCodeToJson(pythonCode);
     
