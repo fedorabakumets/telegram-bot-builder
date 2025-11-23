@@ -927,11 +927,8 @@ export function ComponentsSidebar({
 
   const parsePythonBotToJson = async (pythonCode: string) => {
     // Используем функцию парсинга из bot-generator.ts (обратная операция к generatePythonCode)
-    const modUrl = new URL("../../lib/bot-generator.js", import.meta.url);
-    modUrl.searchParams.set("t", Date.now().toString());
-    const { parsePythonCodeToJson } = await import(/* @vite-ignore */ modUrl.href);
-    
-    const { nodes, connections } = parsePythonCodeToJson(pythonCode);
+    const botGenerator = await import('@/lib/bot-generator');
+    const { nodes, connections } = botGenerator.parsePythonCodeToJson(pythonCode);
     
     // Создаём структуру проекта с листом (sheets), точно как extractNodesAndConnections
     const projectData = {
