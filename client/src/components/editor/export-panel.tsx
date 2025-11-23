@@ -12,6 +12,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import Editor from '@monaco-editor/react';
 
 // Динамический импорт тяжелых генераторов для улучшения производительности
 const loadBotGenerator = () => import('@/lib/bot-generator');
@@ -535,24 +536,31 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                         )}
                       </div>
                     )}
-                    <div className={`${isMobile ? 'h-48' : 'h-[400px]'} overflow-auto rounded border border-slate-300 dark:border-slate-700`}>
+                    <div className={`${isMobile ? 'h-48' : 'h-[400px]'} rounded border border-slate-300 dark:border-slate-700 overflow-hidden`}>
                       {selectedFormat === 'python' ? (
-                        <SyntaxHighlighter
+                        <Editor
+                          value={displayContent}
                           language="python"
-                          style={theme === 'dark' ? vscDarkPlus : vs}
-                          showLineNumbers={true}
-                          wrapLines={true}
-                          customStyle={{
-                            margin: 0,
-                            fontSize: '12px',
-                            lineHeight: '1.5',
-                            background: 'transparent',
-                            height: '100%'
+                          theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
+                          options={{
+                            readOnly: true,
+                            lineNumbers: 'on',
+                            wordWrap: 'on',
+                            fontSize: 12,
+                            lineHeight: 1.5,
+                            minimap: { enabled: false },
+                            folding: true,
+                            foldingHighlight: true,
+                            foldingStrategy: 'auto',
+                            showFoldingControls: 'always',
+                            glyphMargin: true,
+                            scrollBeyondLastLine: false,
+                            padding: { top: 8, bottom: 8 },
+                            automaticLayout: true,
+                            contextmenu: false
                           }}
-                          data-testid="syntax-highlighter-export-python"
-                        >
-                          {displayContent}
-                        </SyntaxHighlighter>
+                          data-testid="monaco-editor-export-python"
+                        />
                       ) : (
                         <Textarea 
                           value={displayContent} 
