@@ -870,12 +870,17 @@ export function ComponentsSidebar({
     setDragOverSheet(null);
   };
 
-  const handleSheetDrop = async (e: React.DragEvent, targetSheetId: string, targetProjectId: number) => {
+  const handleSheetDropOnProject = async (e: React.DragEvent, targetProjectId: number) => {
     e.preventDefault();
     e.stopPropagation();
     setDragOverSheet(null);
 
-    if (!draggedSheet || (draggedSheet.sheetId === targetSheetId && draggedSheet.projectId === targetProjectId)) {
+    if (!draggedSheet) {
+      return;
+    }
+
+    // Если перемещаем в свой же проект - отменяем
+    if (draggedSheet.projectId === targetProjectId) {
       setDraggedSheet(null);
       return;
     }
@@ -893,53 +898,56 @@ export function ComponentsSidebar({
       const sourceData = sourceProject.data as any;
       const targetData = targetProject.data as any;
 
-      // Находим лист в исходном проекте
-      let sheetToMove = null;
-      let sourceSheetIndex = -1;
-
-      if (sourceData.sheets) {
-        sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === draggedSheet.sheetId);
-        if (sourceSheetIndex !== -1) {
-          sheetToMove = sourceData.sheets[sourceSheetIndex];
-        }
-      }
-
-      if (!sheetToMove) {
+      // Проверяем что оба проекта в новом формате
+      if (!sourceData?.sheets || !targetData?.sheets) {
+        toast({
+          title: "❌ Ошибка",
+          description: "Оба проекта должны быть в новом формате с листами",
+          variant: "destructive",
+        });
         setDraggedSheet(null);
         return;
       }
 
-      // Добавляем лист в целевой проект
-      if (targetData.sheets) {
-        const newSheet = JSON.parse(JSON.stringify(sheetToMove)); // Deep copy
-        targetData.sheets.push(newSheet);
-
-        // Удаляем из исходного проекта
-        sourceData.sheets.splice(sourceSheetIndex, 1);
-
-        // Обновляем оба проекта
-        await Promise.all([
-          apiRequest('PUT', `/api/projects/${sourceProject.id}`, { data: sourceData }),
-          apiRequest('PUT', `/api/projects/${targetProject.id}`, { data: targetData })
-        ]);
-
-        // Обновляем кеш
-        const updatedProjects = projects.map(p => {
-          if (p.id === sourceProject.id) return { ...p, data: sourceData };
-          if (p.id === targetProject.id) return { ...p, data: targetData };
-          return p;
-        });
-        queryClient.setQueryData(['/api/projects'], updatedProjects);
-
-        toast({
-          title: "✅ Лист перемещен",
-          description: `"${sheetToMove.name}" перемещен в "${targetProject.name}"`,
-        });
+      // Находим лист в исходном проекте
+      const sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === draggedSheet.sheetId);
+      if (sourceSheetIndex === -1) {
+        setDraggedSheet(null);
+        return;
       }
-    } catch (error) {
+
+      const sheetToMove = sourceData.sheets[sourceSheetIndex];
+
+      // Добавляем лист в целевой проект
+      const newSheet = JSON.parse(JSON.stringify(sheetToMove)); // Deep copy
+      targetData.sheets.push(newSheet);
+
+      // Удаляем из исходного проекта
+      sourceData.sheets.splice(sourceSheetIndex, 1);
+
+      // Обновляем оба проекта на сервере
+      await Promise.all([
+        apiRequest('PUT', `/api/projects/${sourceProject.id}`, { data: sourceData }),
+        apiRequest('PUT', `/api/projects/${targetProject.id}`, { data: targetData })
+      ]);
+
+      // Обновляем кеш
+      const updatedProjects = projects.map(p => {
+        if (p.id === sourceProject.id) return { ...p, data: sourceData };
+        if (p.id === targetProject.id) return { ...p, data: targetData };
+        return p;
+      });
+      queryClient.setQueryData(['/api/projects'], updatedProjects);
+
+      toast({
+        title: "✅ Лист перемещен",
+        description: `"${sheetToMove.name}" перемещен в "${targetProject.name}"`,
+      });
+    } catch (error: any) {
+      console.error('Ошибка при перемещении листа:', error);
       toast({
         title: "❌ Ошибка перемещения",
-        description: "Не удалось переместить лист",
+        description: error.message || "Не удалось переместить лист",
         variant: "destructive",
       });
     } finally {
@@ -1611,16 +1619,35 @@ export function ComponentsSidebar({
                     key={project.id}
                     draggable
                     onDragStart={(e) => handleProjectDragStart(e, project)}
-                    onDragOver={(e) => handleProjectDragOver(e, project.id)}
-                    onDragLeave={handleProjectDragLeave}
-                    onDrop={(e) => handleProjectDrop(e, project)}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      handleProjectDragOver(e, project.id);
+                      // Также обрабатываем drop листов на проект
+                      if (draggedSheet) {
+                        setDragOverSheet(`project-${project.id}`);
+                      }
+                    }}
+                    onDragLeave={() => {
+                      handleProjectDragLeave();
+                      setDragOverSheet(null);
+                    }}
+                    onDrop={(e) => {
+                      // Если перетаскиваем лист - используем специальный обработчик
+                      if (draggedSheet) {
+                        handleSheetDropOnProject(e, project.id);
+                      } else if (draggedProject) {
+                        // Иначе обрабатываем перемещение проекта
+                        handleProjectDrop(e, project);
+                      }
+                    }}
                     onDragEnd={handleProjectDragEnd}
                     className={`group p-4 rounded-xl cursor-pointer transition-all duration-200 border-2 hover:shadow-lg ${
                       currentProjectId === project.id 
                         ? 'bg-primary/10 border-primary/30 shadow-md' 
                         : 'bg-background border-border/50 hover:bg-muted/30 hover:border-border'
                     } ${
-                      dragOverProject === project.id ? 'border-primary border-2 scale-105 shadow-lg' : ''
+                      dragOverProject === project.id || dragOverSheet === `project-${project.id}` ? 'border-primary border-2 scale-105 shadow-lg' : ''
                     } ${
                       draggedProject?.id === project.id ? 'opacity-50 scale-95' : ''
                     }`}
@@ -1725,13 +1752,10 @@ export function ComponentsSidebar({
                                       <Badge 
                                         draggable
                                         onDragStart={(e) => handleSheetDragStart(e, sheetId, project.id)}
-                                        onDragOver={(e) => handleSheetDragOver(e, sheetId)}
-                                        onDragLeave={handleSheetDragLeave}
-                                        onDrop={(e) => handleSheetDrop(e, sheetId, project.id)}
                                         variant={isActive ? "default" : "secondary"} 
                                         className={`text-xs px-3 py-1.5 h-7 cursor-grab active:cursor-grabbing hover:opacity-80 transition-all flex-1 font-medium ${
                                           isActive ? 'bg-primary text-primary-foreground shadow-sm' : ''
-                                        } ${dragOverSheet === sheetId ? 'ring-2 ring-primary ring-offset-1' : ''} ${
+                                        } ${
                                           draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
                                         }`}
                                         onClick={() => {
