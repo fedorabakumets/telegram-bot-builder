@@ -528,8 +528,10 @@ export function ComponentsSidebar({
   // Импорт проекта
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importJsonText, setImportJsonText] = useState('');
+  const [importPythonText, setImportPythonText] = useState('');
   const [importError, setImportError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pythonFileInputRef = useRef<HTMLInputElement>(null);
   const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -885,9 +887,130 @@ export function ComponentsSidebar({
     }
   };
 
+  const handlePythonFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        setImportPythonText(content);
+        setImportError('');
+        toast({
+          title: "Python файл загружен",
+          description: `Файл "${file.name}" успешно загружен. Нажмите "Импортировать" для создания проекта.`,
+        });
+      } catch (error) {
+        setImportError('Ошибка при чтении файла');
+        toast({
+          title: "Ошибка загрузки",
+          description: "Не удалось прочитать файл",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.onerror = () => {
+      setImportError('Ошибка при чтении файла');
+      toast({
+        title: "Ошибка загрузки",
+        description: "Не удалось прочитать файл",
+        variant: "destructive",
+      });
+    };
+    reader.readAsText(file);
+    
+    if (pythonFileInputRef.current) {
+      pythonFileInputRef.current.value = '';
+    }
+  };
+
+  const extractPythonBotInfo = (pythonCode: string) => {
+    // Извлекаем информацию из Python кода
+    const handlers: any[] = [];
+    const commands: any[] = [];
+    
+    // Ищем команды (# @@NODE_START и @@NODE_END)
+    const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@[\s\S]*?# @@NODE_END:\1@@/g;
+    let match;
+    while ((match = nodePattern.exec(pythonCode)) !== null) {
+      handlers.push({
+        id: match[1],
+        type: 'node'
+      });
+    }
+    
+    // Ищем определения команд в set_bot_commands
+    const commandPattern = /BotCommand\(command="([^"]+)",\s*description="([^"]*)"/g;
+    while ((match = commandPattern.exec(pythonCode)) !== null) {
+      commands.push({
+        name: match[1],
+        description: match[2]
+      });
+    }
+    
+    return { handlers, commands };
+  };
+
   const handleImportProject = () => {
     try {
       setImportError('');
+      
+      // Если импортируем Python код
+      if (importPythonText.trim()) {
+        const botInfo = extractPythonBotInfo(importPythonText);
+        const projectName = `Python Bot ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
+        
+        // Создаём структуру проекта из Python кода
+        const projectData = {
+          sheets: [
+            {
+              id: 'main',
+              name: 'Python Bot',
+              nodes: botInfo.handlers.map((h, i) => ({
+                id: h.id,
+                type: 'telegram',
+                position: { x: 50 + i * 200, y: 50 },
+                data: { label: h.id }
+              })),
+              edges: []
+            }
+          ],
+          version: 2,
+          activeSheetId: 'main',
+          metadata: {
+            pythonCode: importPythonText,
+            commands: botInfo.commands,
+            importedFrom: 'python'
+          }
+        };
+        
+        apiRequest('POST', '/api/projects', {
+          name: projectName,
+          description: `Импортирован из Python кода (${botInfo.handlers.length} обработчиков)`,
+          data: projectData
+        }).then(() => {
+          setIsImportDialogOpen(false);
+          setImportPythonText('');
+          setImportJsonText('');
+          setImportError('');
+          queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+          }, 300);
+        }).catch((error: any) => {
+          setImportError(error.message || 'Ошибка при импорте проекта');
+          toast({
+            title: "Ошибка импорта",
+            description: error.message || 'Не удалось создать проект',
+            variant: "destructive",
+          });
+        });
+        return;
+      }
+      
+      // Импорт JSON
       const parsedData = JSON.parse(importJsonText);
       
       let projectData: any;
@@ -1206,9 +1329,9 @@ export function ComponentsSidebar({
                   <DialogDescription>Вставьте JSON или загрузите файл с данными проекта</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
-                  {/* Две колонки: текст и загрузка файла */}
+                  {/* Три раздела: JSON текст, JSON файл и Python код */}
                   <div className="grid grid-cols-1 gap-4">
-                    {/* Вставка текста */}
+                    {/* Вставка JSON текста */}
                     <div>
                       <label className="text-sm font-medium mb-2 flex items-center gap-2">
                         <i className="fas fa-paste text-blue-500" />
@@ -1218,19 +1341,20 @@ export function ComponentsSidebar({
                         value={importJsonText}
                         onChange={(e) => {
                           setImportJsonText(e.target.value);
+                          setImportPythonText('');
                           setImportError('');
                         }}
                         placeholder='{"name": "Мой бот", "description": "", "data": {...}}'
-                        className="font-mono text-xs h-48 resize-none"
+                        className="font-mono text-xs h-40 resize-none"
                         data-testid="textarea-import-json"
                       />
                     </div>
                     
-                    {/* Загрузка файла */}
+                    {/* Загрузка JSON файла */}
                     <div>
                       <label className="text-sm font-medium mb-2 flex items-center gap-2">
                         <i className="fas fa-file text-green-500" />
-                        Или загрузите файл JSON
+                        Загрузить файл JSON
                       </label>
                       <input
                         ref={fileInputRef}
@@ -1243,13 +1367,41 @@ export function ComponentsSidebar({
                       <Button
                         onClick={() => fileInputRef.current?.click()}
                         variant="outline"
-                        className="w-full h-48 flex flex-col items-center justify-center gap-3 border-2 border-dashed hover:bg-muted/50 transition-colors"
+                        className="w-full h-40 flex flex-col items-center justify-center gap-3 border-2 border-dashed hover:bg-muted/50 transition-colors"
                         data-testid="button-upload-file"
                       >
                         <i className="fas fa-cloud-upload-alt text-3xl text-muted-foreground" />
                         <div className="text-center">
                           <p className="text-sm font-medium">Нажмите для выбора файла</p>
-                          <p className="text-xs text-muted-foreground">или перетащите файл сюда</p>
+                          <p className="text-xs text-muted-foreground">JSON / TXT файл</p>
+                        </div>
+                      </Button>
+                    </div>
+
+                    {/* Загрузка Python кода */}
+                    <div>
+                      <label className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <i className="fas fa-python text-yellow-500" />
+                        Или загрузите Python код бота
+                      </label>
+                      <input
+                        ref={pythonFileInputRef}
+                        type="file"
+                        accept=".py,.txt"
+                        onChange={handlePythonFileUpload}
+                        className="hidden"
+                        data-testid="input-import-python"
+                      />
+                      <Button
+                        onClick={() => pythonFileInputRef.current?.click()}
+                        variant="outline"
+                        className="w-full h-40 flex flex-col items-center justify-center gap-3 border-2 border-dashed hover:bg-muted/50 transition-colors"
+                        data-testid="button-upload-python"
+                      >
+                        <i className="fas fa-code text-3xl text-muted-foreground" />
+                        <div className="text-center">
+                          <p className="text-sm font-medium">Нажмите для выбора файла</p>
+                          <p className="text-xs text-muted-foreground">Python (.py) файл</p>
                         </div>
                       </Button>
                     </div>
@@ -1267,6 +1419,7 @@ export function ComponentsSidebar({
                       onClick={() => {
                         setIsImportDialogOpen(false);
                         setImportJsonText('');
+                        setImportPythonText('');
                         setImportError('');
                       }}
                       data-testid="button-cancel-import"
@@ -1275,7 +1428,7 @@ export function ComponentsSidebar({
                     </Button>
                     <Button 
                       onClick={handleImportProject}
-                      disabled={!importJsonText.trim()}
+                      disabled={!importJsonText.trim() && !importPythonText.trim()}
                       data-testid="button-confirm-import"
                     >
                       <i className="fas fa-check mr-2" />
