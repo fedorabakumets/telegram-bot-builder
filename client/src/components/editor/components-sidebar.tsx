@@ -1788,7 +1788,7 @@ export function ComponentsSidebar({
                                     
                                     {/* Кнопки управления листом */}
                                     {currentProjectId === project.id && !isEditing && (
-                                      <div className="flex gap-1.5 opacity-70 group-hover/sheet:opacity-100 transition-opacity">
+                                      <div className="flex gap-1.5 opacity-70 group-hover/sheet:opacity-100 transition-opacity flex-shrink-0">
                                         <Button
                                           variant="ghost"
                                           size="sm"
@@ -1819,7 +1819,7 @@ export function ComponentsSidebar({
                                                 ➡️
                                               </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-44">
+                                            <DropdownMenuContent align="end" className="w-44" side="top" sideOffset={5}>
                                               <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Переместить в:</div>
                                               {projects.map((otherProject) => {
                                                 if (otherProject.id === project.id) return null;
