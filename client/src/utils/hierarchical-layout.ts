@@ -437,7 +437,7 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
     let currentY = (firstNode as any)._y || options.startY;
     const chainX = options.startX;
 
-    // Располагаем узлы цепочки ВЕРТИКАЛЬНО
+    // Располагаем узлы цепочки СТРОГО ВЕРТИКАЛЬНО (без центрирования)
     chain.forEach((nodeId, index) => {
       const node = nodeMap.get(nodeId);
       if (!node) {
@@ -446,16 +446,14 @@ function arrangeNodesByLevel(levels: LayoutNode[][], connections: Connection[], 
       }
 
       const nodeSize = getNodeSize(nodeId, options);
-      
-      const finalY = currentY;
-      
-      console.log(`  ⬇️ Узел ${index + 1}/${chain.length} (${nodeId}): x=${chainX}, y=${finalY}`);
+
+      console.log(`  ⬇️ Узел ${index + 1}/${chain.length} (${nodeId}): x=${chainX}, y=${currentY}`);
 
       // Убираем циклические свойства перед добавлением в результат
       const { children, visited, level, ...cleanNode } = node;
       result.push({
         ...cleanNode,
-        position: { x: chainX, y: finalY }
+        position: { x: chainX, y: currentY }
       });
 
       processedNodes.add(nodeId);
