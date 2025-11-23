@@ -2569,9 +2569,9 @@ export function PropertiesPanel({
 
         {/* Keyboard Settings */}
         <div>
-          <h3 className="text-sm font-medium text-foreground mb-3">Клавиатура</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-end gap-3">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-foreground">Клавиатура</h3>
+            <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <Label className="text-xs text-muted-foreground">Inline</Label>
                 <Switch
@@ -2591,6 +2591,8 @@ export function PropertiesPanel({
                 />
               </div>
             </div>
+          </div>
+          <div className="space-y-4">
 
             {/* Multiple Selection Setting */}
             {selectedNode.data.keyboardType !== 'none' && (
