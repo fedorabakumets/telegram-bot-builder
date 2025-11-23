@@ -1788,7 +1788,7 @@ export function ComponentsSidebar({
                                     
                                     {/* Кнопки управления листом */}
                                     {currentProjectId === project.id && !isEditing && (
-                                      <div className="flex gap-1.5 opacity-0 group-hover/sheet:opacity-100 transition-opacity">
+                                      <div className="flex gap-1.5 opacity-70 group-hover/sheet:opacity-100 transition-opacity">
                                         <DropdownMenu>
                                           <DropdownMenuTrigger asChild>
                                             <Button
