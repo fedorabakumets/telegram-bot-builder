@@ -2571,23 +2571,28 @@ export function PropertiesPanel({
         <div>
           <h3 className="text-sm font-medium text-foreground mb-3">Клавиатура</h3>
           <div className="space-y-4">
-            <div>
+            <div className="flex items-center justify-between">
               <Label className="text-xs font-medium text-muted-foreground">Тип клавиатуры</Label>
-              <Select
-                value={selectedNode.data.keyboardType}
-                onValueChange={(value: 'reply' | 'inline' | 'none') => 
-                  onNodeUpdate(selectedNode.id, { keyboardType: value })
-                }
-              >
-                <SelectTrigger className="mt-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="reply">Reply клавиатура</SelectItem>
-                  <SelectItem value="inline">Inline кнопки</SelectItem>
-                  <SelectItem value="none">Без клавиатуры</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground">Inline</Label>
+                  <Switch
+                    checked={selectedNode.data.keyboardType === 'inline'}
+                    onCheckedChange={(checked) => {
+                      onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
+                    }}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-muted-foreground">Reply</Label>
+                  <Switch
+                    checked={selectedNode.data.keyboardType === 'reply'}
+                    onCheckedChange={(checked) => {
+                      onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
+                    }}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Multiple Selection Setting */}
