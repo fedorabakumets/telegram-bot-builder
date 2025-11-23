@@ -523,6 +523,9 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
       
+      // Инвалидируем кэш проектов чтобы обновить боковую панель
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
       toast({
         title: "Лист создан",
         description: `Лист "${name}" успешно создан`,
@@ -534,7 +537,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes]);
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, queryClient]);
 
   const handleSheetDelete = useCallback((sheetId: string) => {
     if (!botDataWithSheets) return;
@@ -554,6 +557,9 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
       
+      // Инвалидируем кэш проектов чтобы обновить боковую панель
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
       toast({
         title: "Лист удален",
         description: "Лист успешно удален",
@@ -565,7 +571,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast]);
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, queryClient]);
 
   const handleSheetRename = useCallback((sheetId: string, newName: string) => {
     if (!botDataWithSheets) return;
@@ -579,6 +585,9 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
       
+      // Инвалидируем кэш проектов чтобы обновить боковую панель
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
       toast({
         title: "Лист переименован",
         description: `Лист переименован в "${newName}"`,
@@ -590,7 +599,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, updateProjectMutation, toast]);
+  }, [botDataWithSheets, updateProjectMutation, toast, queryClient]);
 
   const handleSheetDuplicate = useCallback((sheetId: string) => {
     if (!botDataWithSheets) return;
@@ -612,6 +621,9 @@ export default function Editor() {
         updateProjectMutation.mutate({});
       }
       
+      // Инвалидируем кэш проектов чтобы обновить боковую панель
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      
       toast({
         title: "Лист дублирован",
         description: "Лист успешно дублирован",
@@ -623,7 +635,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, setBotData, updateProjectMutation, toast]);
+  }, [botDataWithSheets, setBotData, updateProjectMutation, toast, queryClient]);
 
   const handleSheetSelect = useCallback((sheetId: string) => {
     if (!botDataWithSheets) return;
