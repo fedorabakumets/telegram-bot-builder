@@ -439,11 +439,44 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
 
                   <Separator />
 
+                  {/* Статистика кода */}
+                  {codeStats.totalLines > 0 && (
+                    <div className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'} gap-2`}>
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2 text-center">
+                        <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{codeStats.totalLines}</div>
+                        <div className="text-xs text-blue-700 dark:text-blue-300">Строк</div>
+                      </div>
+                      <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-2 text-center">
+                        <div className="text-lg font-bold text-orange-600 dark:text-orange-400">{Math.round(getCurrentContent().length / 1024)}</div>
+                        <div className="text-xs text-orange-700 dark:text-orange-300">KB</div>
+                      </div>
+                      {selectedFormat === 'python' && (
+                        <>
+                          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-2 text-center">
+                            <div className="text-lg font-bold text-green-600 dark:text-green-400">{(getCurrentContent().match(/^def |^async def /gm) || []).length}</div>
+                            <div className="text-xs text-green-700 dark:text-green-300">Функций</div>
+                          </div>
+                          <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-2 text-center">
+                            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{(getCurrentContent().match(/^class /gm) || []).length}</div>
+                            <div className="text-xs text-purple-700 dark:text-purple-300">Классов</div>
+                          </div>
+                        </>
+                      )}
+                      {selectedFormat === 'json' && (
+                        <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-2 text-center">
+                          <div className="text-lg font-bold text-cyan-600 dark:text-cyan-400">{(getCurrentContent().match(/"/g) || []).length / 2}</div>
+                          <div className="text-xs text-cyan-700 dark:text-cyan-300">Ключей</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <Separator />
+
                   {/* Информация о коде */}
                   {codeStats.totalLines > 0 && (
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">Строк: {codeStats.totalLines}</span>
                         {(selectedFormat === 'python' || selectedFormat === 'json') && (
                           <Button 
                             size="sm" 
