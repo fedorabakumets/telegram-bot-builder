@@ -4641,7 +4641,6 @@ export function PropertiesPanel({
 
         {/* Auto Transition Section - показывать только когда нет кнопок и нет сбора данных */}
         {selectedNode.type !== 'input' && 
-         !selectedNode.data.collectUserInput && 
          (!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
          selectedNode.data.keyboardType === 'none' && (
           <div>
