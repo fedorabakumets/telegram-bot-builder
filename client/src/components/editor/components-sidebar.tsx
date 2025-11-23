@@ -154,45 +154,6 @@ const components: ComponentDefinition[] = [
   },
 
   {
-    id: 'reply-keyboard',
-    name: 'Reply клавиатура',
-    description: 'Кнопки внизу экрана',
-    icon: 'fas fa-keyboard',
-    color: 'bg-purple-100 text-purple-600',
-    type: 'keyboard',
-    defaultData: {
-      messageText: 'Выберите действие:',
-      keyboardType: 'reply',
-      buttons: [
-        { id: 'btn-1', text: 'Кнопка 1', action: 'goto', target: '' },
-        { id: 'btn-2', text: 'Кнопка 2', action: 'goto', target: '' }
-      ],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'inline-keyboard',
-    name: 'Inline кнопки',
-    description: 'Кнопки под сообщением',
-    icon: 'fas fa-mouse',
-    color: 'bg-amber-100 text-amber-600',
-    type: 'keyboard',
-    defaultData: {
-      messageText: 'Выберите действие:',
-      keyboardType: 'inline',
-      buttons: [
-        { id: 'btn-1', text: 'Кнопка 1', action: 'goto', target: '' },
-        { id: 'btn-2', text: 'Кнопка 2', action: 'goto', target: '' }
-      ],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-
-  {
     id: 'start-command',
     name: '/start команда',
     description: 'Точка входа в бота',
