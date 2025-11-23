@@ -700,6 +700,27 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
           </div>
         </div>
       )}
+      
+      {/* Media attachment indicator for message nodes */}
+      {node.type === 'message' && (node.data.imageUrl || node.data.videoUrl || node.data.audioUrl || node.data.documentUrl) && (
+        <div className="flex items-center gap-2 px-3 py-2 mb-4 rounded-lg bg-gradient-to-r from-amber-50/80 to-orange-50/80 dark:from-amber-900/30 dark:to-orange-900/30 border border-amber-200 dark:border-amber-700/50">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
+            <i className={`fas fa-${
+              node.data.imageUrl ? 'image' :
+              node.data.videoUrl ? 'video' :
+              node.data.audioUrl ? 'music' :
+              'file'
+            } text-sm`}></i>
+            <span>
+              {node.data.imageUrl ? 'Изображение прикреплено' :
+               node.data.videoUrl ? 'Видео прикреплено' :
+               node.data.audioUrl ? 'Аудио прикреплено' :
+               'Документ прикреплен'}
+            </span>
+          </div>
+        </div>
+      )}
+      
       {/* Media previews */}
       {node.type === 'photo' && (
         <div className="bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center border-2 border-dashed border-purple-200 dark:border-purple-700 hover:border-purple-300 dark:hover:border-purple-600 transition-colors group">
