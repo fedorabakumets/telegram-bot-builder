@@ -421,7 +421,6 @@ export const FlexibleLayout: React.FC<FlexibleLayoutProps> = ({
             </ResizablePanel>
             {rightElements.length > 0 && (
               <>
-                <ResizableHandle withHandle />
                 <ResizablePanel 
                   defaultSize={totalRightSize} 
                   minSize={15} 
