@@ -562,58 +562,49 @@ export function ExportPanel({ botData, projectName, projectId }: ExportPanelProp
                           </div>
                         )}
                         <div className={`${isMobile ? 'h-48' : 'h-[400px]'} rounded border border-slate-300 dark:border-slate-700 overflow-hidden`}>
-                          {(selectedFormat === 'python' || selectedFormat === 'json') ? (
-                            <Editor
-                              value={displayContent}
-                              language={selectedFormat === 'python' ? 'python' : 'json'}
-                              theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
-                              onMount={(editor) => {
-                                editorRef.current = editor;
-                                if (selectedFormat === 'python') {
-                                  setTimeout(() => {
-                                    editor.getAction('editor.foldAll')?.run();
-                                    setAreAllCollapsed(true);
-                                  }, 100);
-                                }
-                              }}
-                              options={{
-                                readOnly: true,
-                                lineNumbers: 'on',
-                                wordWrap: 'on',
-                                fontSize: 12,
-                                lineHeight: 1.5,
-                                minimap: { enabled: codeStats.totalLines > 500 },
-                                folding: true,
-                                foldingHighlight: true,
-                                foldingStrategy: 'auto',
-                                showFoldingControls: 'always',
-                                glyphMargin: true,
-                                scrollBeyondLastLine: false,
-                                padding: { top: 8, bottom: 8 },
-                                automaticLayout: true,
-                                contextmenu: false,
-                                bracketPairColorization: {
-                                  enabled: selectedFormat === 'json'
-                                },
-                                formatOnPaste: false,
-                                formatOnType: false
-                              }}
-                              data-testid={selectedFormat === 'python' ? 'monaco-editor-export-python' : 'monaco-editor-export-json'}
-                            />
-                          ) : (
-                            <Textarea 
-                              value={displayContent} 
-                              readOnly 
-                              className="w-full h-full font-mono text-xs bg-transparent border-0 resize-none focus:outline-none"
-                              style={{
-                                lineHeight: '1.5',
-                                letterSpacing: '0.02em',
-                                tabSize: 4
-                              }}
-                              placeholder="Выберите формат для просмотра содержимого..."
-                              data-testid="textarea-export-preview"
-                            />
-                          )}
+                          <Editor
+                            value={displayContent}
+                            language={
+                              selectedFormat === 'python' ? 'python' :
+                              selectedFormat === 'json' ? 'json' :
+                              selectedFormat === 'readme' ? 'markdown' :
+                              selectedFormat === 'dockerfile' ? 'dockerfile' :
+                              'plaintext'
+                            }
+                            theme={theme === 'dark' ? 'vs-dark' : 'vs-light'}
+                            onMount={(editor) => {
+                              editorRef.current = editor;
+                              if (selectedFormat === 'python') {
+                                setTimeout(() => {
+                                  editor.getAction('editor.foldAll')?.run();
+                                  setAreAllCollapsed(true);
+                                }, 100);
+                              }
+                            }}
+                            options={{
+                              readOnly: true,
+                              lineNumbers: 'on',
+                              wordWrap: 'on',
+                              fontSize: 12,
+                              lineHeight: 1.5,
+                              minimap: { enabled: codeStats.totalLines > 500 },
+                              folding: true,
+                              foldingHighlight: true,
+                              foldingStrategy: 'auto',
+                              showFoldingControls: 'always',
+                              glyphMargin: true,
+                              scrollBeyondLastLine: false,
+                              padding: { top: 8, bottom: 8 },
+                              automaticLayout: true,
+                              contextmenu: false,
+                              bracketPairColorization: {
+                                enabled: selectedFormat === 'json'
+                              },
+                              formatOnPaste: false,
+                              formatOnType: false
+                            }}
+                            data-testid={`monaco-editor-export-${selectedFormat}`}
+                          />
                         </div>
                       </div>
                       
