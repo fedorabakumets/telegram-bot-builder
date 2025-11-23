@@ -925,101 +925,203 @@ export function ComponentsSidebar({
     }
   };
 
-  const extractJsonFromFile = (fileContent: string) => {
-    // Ищем JSON блок в файле (может быть в комментариях или как строка)
-    // Поддерживает форматы:
-    // 1. JSON как строка в кавычках
-    // 2. JSON в комментариях между {/* и */}
-    // 3. JSON как обычный текст
+  const parsePythonBotToJson = (pythonCode: string) => {
+    // Парсим Python код бота и преобразуем в JSON структуру проекта
+    const nodes: any[] = [];
+    const edges: any[] = [];
+    const nodeIdMap = new Map<string, string>(); // Из Python ID в позицию
     
-    try {
-      // Попытка 1: прямое парсирование (если весь файл это JSON)
-      return JSON.parse(fileContent);
-    } catch (e1) {
-      try {
-        // Попытка 2: ищем JSON внутри кавычек или комментариев
-        const jsonMatch = fileContent.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]);
-        }
-      } catch (e2) {
-        // Попытка 3: ищем JSON внутри строки Python (в кавычках)
-        const pythonStringMatch = fileContent.match(/['"]{3}([\s\S]*?)['"]{3}/);
-        if (pythonStringMatch) {
-          try {
-            return JSON.parse(pythonStringMatch[1]);
-          } catch (e3) {
-            // Пусто
-          }
-        }
+    // Ищем все NODE_START и NODE_END блоки
+    const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@\n([\s\S]*?)# @@NODE_END:\1@@/g;
+    let match;
+    let nodeIndex = 0;
+    
+    while ((match = nodePattern.exec(pythonCode)) !== null) {
+      const nodeId = match[1];
+      const nodeContent = match[2];
+      nodeIdMap.set(nodeId, nodeIndex);
+      
+      // Определяем тип узла
+      let nodeType = 'message';
+      if (nodeId === 'start') nodeType = 'start';
+      else if (nodeContent.includes('voice')) nodeType = 'voice';
+      else if (nodeContent.includes('sticker')) nodeType = 'sticker';
+      else if (nodeContent.includes('photo')) nodeType = 'photo';
+      else if (nodeContent.includes('document')) nodeType = 'document';
+      else if (nodeContent.includes('audio')) nodeType = 'audio';
+      else if (nodeContent.includes('video')) nodeType = 'video';
+      
+      // Извлекаем текст сообщения
+      let messageText = '';
+      const textMatch = /text\s*=\s*"([^"]*)"/.exec(nodeContent);
+      if (textMatch) {
+        messageText = textMatch[1];
       }
+      
+      // Извлекаем кнопки (если есть)
+      const buttons: any[] = [];
+      const buttonMatches = nodeContent.matchAll(/InlineKeyboardButton\(text=([^,]+),\s*callback_data="([^"]+)"\)/g);
+      for (const btnMatch of buttonMatches) {
+        const btnText = btnMatch[1].replace(/["']/g, '').trim();
+        const callbackData = btnMatch[2];
+        buttons.push({
+          id: `btn_${nodeId}_${buttons.length}`,
+          text: btnText,
+          action: 'goto',
+          target: callbackData
+        });
+      }
+      
+      const node = {
+        id: nodeId,
+        type: nodeType,
+        position: { x: 50 + nodeIndex * 300, y: 50 },
+        data: {
+          messageText: messageText || `Узел ${nodeId}`,
+          keyboardType: buttons.length > 0 ? 'inline' : 'none',
+          buttons: buttons,
+          showInMenu: nodeType === 'start' || nodeType === 'command'
+        }
+      };
+      
+      nodes.push(node);
+      nodeIndex++;
     }
     
-    throw new Error('Не удалось найти JSON в файле. Убедитесь, что файл содержит валидный JSON.');
+    // Создаём автопереходы между последовательными узлами
+    for (let i = 0; i < nodes.length - 1; i++) {
+      edges.push({
+        id: `${nodes[i].id}-to-${nodes[i + 1].id}`,
+        source: nodes[i].id,
+        target: nodes[i + 1].id
+      });
+    }
+    
+    // Извлекаем команды для BotFather
+    const commands: any[] = [];
+    const cmdPattern = /BotCommand\(command="\/([^"]+)",\s*description="([^"]*)"/g;
+    while ((match = cmdPattern.exec(pythonCode)) !== null) {
+      commands.push({
+        name: match[1],
+        description: match[2]
+      });
+    }
+    
+    // Создаём структуру проекта
+    const projectData = {
+      sheets: [
+        {
+          id: 'main',
+          name: 'Импортированный бот',
+          nodes: nodes,
+          edges: edges
+        }
+      ],
+      version: 2,
+      activeSheetId: 'main'
+    };
+    
+    return {
+      data: projectData,
+      commands: commands,
+      nodeCount: nodes.length
+    };
   };
 
   const handleImportProject = () => {
     try {
       setImportError('');
       
-      // Если импортируем Python/TXT файл с JSON
+      // Если импортируем Python код бота
       if (importPythonText.trim()) {
         try {
-          const jsonData = extractJsonFromFile(importPythonText);
-          
-          let projectData: any;
-          let projectName: string;
-          let projectDescription: string;
-          
-          // Проверяем формат JSON (аналогично JSON импорту)
-          if (jsonData.name && jsonData.data) {
-            projectName = jsonData.name;
-            projectDescription = jsonData.description || '';
-            projectData = jsonData.data;
-          } else if (jsonData.sheets && (jsonData.version || jsonData.activeSheetId)) {
-            projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
-            projectDescription = '';
-            projectData = jsonData;
+          // Проверяем, это ли Python код бота
+          if (importPythonText.includes('@@NODE_START:') && importPythonText.includes('@@NODE_END:')) {
+            // Это Python код бота - парсим его в JSON
+            const result = parsePythonBotToJson(importPythonText);
+            const projectName = `Python Bot ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
+            const projectDescription = `Импортирован из Python кода (${result.nodeCount} узлов)`;
             
-            if (!projectData.version) {
-              projectData.version = 2;
-            }
-          } else if (jsonData.nodes) {
-            projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
-            projectDescription = '';
-            projectData = jsonData;
-          } else {
-            throw new Error('Неподдерживаемый формат JSON. Должен содержать поле "sheets", "nodes" или "data"');
-          }
-          
-          apiRequest('POST', '/api/projects', {
-            name: projectName,
-            description: projectDescription,
-            data: projectData
-          }).then(() => {
-            setIsImportDialogOpen(false);
-            setImportPythonText('');
-            setImportJsonText('');
-            setImportError('');
-            queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
-            setTimeout(() => {
+            apiRequest('POST', '/api/projects', {
+              name: projectName,
+              description: projectDescription,
+              data: result.data
+            }).then(() => {
+              setIsImportDialogOpen(false);
+              setImportPythonText('');
+              setImportJsonText('');
+              setImportError('');
               queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-            }, 300);
-          }).catch((error: any) => {
-            setImportError(error.message || 'Ошибка при импорте проекта');
-            toast({
-              title: "Ошибка импорта",
-              description: error.message || 'Не удалось создать проект',
-              variant: "destructive",
+              queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
+              setTimeout(() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+              }, 300);
+            }).catch((error: any) => {
+              setImportError(error.message || 'Ошибка при импорте проекта');
+              toast({
+                title: "Ошибка импорта",
+                description: error.message || 'Не удалось создать проект',
+                variant: "destructive",
+              });
             });
-          });
-          return;
+            return;
+          } else {
+            // Может быть JSON в файле - пробуем парсить
+            const jsonData = JSON.parse(importPythonText);
+            
+            let projectData: any;
+            let projectName: string;
+            let projectDescription: string;
+            
+            if (jsonData.name && jsonData.data) {
+              projectName = jsonData.name;
+              projectDescription = jsonData.description || '';
+              projectData = jsonData.data;
+            } else if (jsonData.sheets && (jsonData.version || jsonData.activeSheetId)) {
+              projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
+              projectDescription = '';
+              projectData = jsonData;
+              
+              if (!projectData.version) {
+                projectData.version = 2;
+              }
+            } else if (jsonData.nodes) {
+              projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
+              projectDescription = '';
+              projectData = jsonData;
+            } else {
+              throw new Error('Неподдерживаемый формат');
+            }
+            
+            apiRequest('POST', '/api/projects', {
+              name: projectName,
+              description: projectDescription,
+              data: projectData
+            }).then(() => {
+              setIsImportDialogOpen(false);
+              setImportPythonText('');
+              setImportJsonText('');
+              setImportError('');
+              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/projects/list'] });
+              setTimeout(() => {
+                queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+              }, 300);
+            }).catch((error: any) => {
+              setImportError(error.message || 'Ошибка при импорте проекта');
+              toast({
+                title: "Ошибка импорта",
+                description: error.message,
+                variant: "destructive",
+              });
+            });
+            return;
+          }
         } catch (error: any) {
-          setImportError(error.message || 'Ошибка при парсинге JSON из файла');
+          setImportError('Файл должен содержать либо Python код бота (с @@NODE_START@@), либо валидный JSON');
           toast({
             title: "Ошибка парсинга",
-            description: error.message,
+            description: "Неподдерживаемый формат файла",
             variant: "destructive",
           });
           return;
