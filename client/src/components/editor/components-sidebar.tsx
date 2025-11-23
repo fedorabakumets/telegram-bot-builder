@@ -888,27 +888,30 @@ export function ComponentsSidebar({
         description: projectDescription,
         data: projectData
       }).then((newProject: BotProject) => {
-        // Обновляем кеш
-        const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
-        queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
-        
-        const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
-        const { data, ...projectWithoutData } = newProject;
-        queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
-        
-        toast({
-          title: "Проект импортирован",
-          description: `Проект "${newProject.name}" успешно импортирован. Проект готов к редактированию!`,
-        });
-        
-        // Переключаемся на новый проект
-        if (onProjectSelect) {
-          onProjectSelect(newProject.id);
-        }
-        
-        // Закрываем диалог
+        // Сначала закрываем диалог
         setIsImportDialogOpen(false);
         setImportJsonText('');
+        
+        // Небольшая задержка перед обновлением проекта, чтобы диалог успел закрыться
+        setTimeout(() => {
+          // Обновляем кеш
+          const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
+          queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
+          
+          const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
+          const { data, ...projectWithoutData } = newProject;
+          queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
+          
+          toast({
+            title: "Проект импортирован",
+            description: `Проект "${newProject.name}" успешно импортирован. Проект готов к редактированию!`,
+          });
+          
+          // Переключаемся на новый проект
+          if (onProjectSelect) {
+            onProjectSelect(newProject.id);
+          }
+        }, 300);
       }).catch((error) => {
         setImportError(`Ошибка импорта: ${error.message}`);
         toast({
