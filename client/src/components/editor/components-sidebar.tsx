@@ -1789,110 +1789,110 @@ export function ComponentsSidebar({
                                     {/* Кнопки управления листом */}
                                     {currentProjectId === project.id && !isEditing && (
                                       <div className="flex gap-1.5 opacity-70 group-hover/sheet:opacity-100 transition-opacity">
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-5 w-5 p-0 hover:bg-primary/20 text-primary"
-                                              title="Меню листа"
-                                            >
-                                              <MoreHorizontal className="h-3.5 w-3.5" />
-                                            </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end" className="w-44">
-                                            <DropdownMenuItem
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (SheetsManager.isNewFormat(projectData)) {
-                                                  const sheetId = projectData.sheets[index]?.id;
-                                                  if (sheetId && onSheetDuplicate) {
-                                                    onSheetDuplicate(sheetId);
-                                                  }
-                                                }
-                                              }}
-                                            >
-                                              <Copy className="h-4 w-4 mr-2" />
-                                              <span>Дублировать</span>
-                                            </DropdownMenuItem>
-                                            {projects.length > 1 && (
-                                              <>
-                                                <Separator />
-                                                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Переместить в:</div>
-                                                {projects.map((otherProject) => {
-                                                  if (otherProject.id === project.id) return null;
-                                                  return (
-                                                    <DropdownMenuItem
-                                                      key={otherProject.id}
-                                                      onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        const sourceData = projectData;
-                                                        const targetData = otherProject.data as any;
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-5 w-5 p-0 hover:bg-green-500/20 text-green-600 dark:text-green-400 text-sm leading-none"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (SheetsManager.isNewFormat(projectData)) {
+                                              const sheetId = projectData.sheets[index]?.id;
+                                              if (sheetId && onSheetDuplicate) {
+                                                onSheetDuplicate(sheetId);
+                                              }
+                                            }
+                                          }}
+                                          title="Дублировать лист"
+                                        >
+                                          ➕
+                                        </Button>
+
+                                        {projects.length > 1 && (
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-5 w-5 p-0 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-sm leading-none"
+                                                title="Переместить в другой проект"
+                                              >
+                                                ➡️
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-44">
+                                              <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Переместить в:</div>
+                                              {projects.map((otherProject) => {
+                                                if (otherProject.id === project.id) return null;
+                                                return (
+                                                  <DropdownMenuItem
+                                                    key={otherProject.id}
+                                                    onClick={async (e) => {
+                                                      e.stopPropagation();
+                                                      const sourceData = projectData;
+                                                      const targetData = otherProject.data as any;
+                                                      
+                                                      if (!sourceData?.sheets || !targetData?.sheets) return;
+                                                      
+                                                      const sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === sheetId);
+                                                      if (sourceSheetIndex === -1) return;
+                                                      
+                                                      const sheetToMove = sourceData.sheets[sourceSheetIndex];
+                                                      const newSheet = JSON.parse(JSON.stringify(sheetToMove));
+                                                      targetData.sheets.push(newSheet);
+                                                      sourceData.sheets.splice(sourceSheetIndex, 1);
+                                                      
+                                                      try {
+                                                        await Promise.all([
+                                                          apiRequest('PUT', `/api/projects/${project.id}`, { data: sourceData }),
+                                                          apiRequest('PUT', `/api/projects/${otherProject.id}`, { data: targetData })
+                                                        ]);
                                                         
-                                                        if (!sourceData?.sheets || !targetData?.sheets) return;
+                                                        const updatedProjects = projects.map(p => {
+                                                          if (p.id === project.id) return { ...p, data: sourceData };
+                                                          if (p.id === otherProject.id) return { ...p, data: targetData };
+                                                          return p;
+                                                        });
+                                                        queryClient.setQueryData(['/api/projects'], updatedProjects);
                                                         
-                                                        const sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === sheetId);
-                                                        if (sourceSheetIndex === -1) return;
-                                                        
-                                                        const sheetToMove = sourceData.sheets[sourceSheetIndex];
-                                                        const newSheet = JSON.parse(JSON.stringify(sheetToMove));
-                                                        targetData.sheets.push(newSheet);
-                                                        sourceData.sheets.splice(sourceSheetIndex, 1);
-                                                        
-                                                        try {
-                                                          await Promise.all([
-                                                            apiRequest('PUT', `/api/projects/${project.id}`, { data: sourceData }),
-                                                            apiRequest('PUT', `/api/projects/${otherProject.id}`, { data: targetData })
-                                                          ]);
-                                                          
-                                                          const updatedProjects = projects.map(p => {
-                                                            if (p.id === project.id) return { ...p, data: sourceData };
-                                                            if (p.id === otherProject.id) return { ...p, data: targetData };
-                                                            return p;
-                                                          });
-                                                          queryClient.setQueryData(['/api/projects'], updatedProjects);
-                                                          
-                                                          toast({
-                                                            title: "✅ Лист перемещен",
-                                                            description: `"${sheetToMove.name}" → "${otherProject.name}"`,
-                                                          });
-                                                        } catch (error: any) {
-                                                          toast({
-                                                            title: "❌ Ошибка",
-                                                            description: error.message,
-                                                            variant: "destructive",
-                                                          });
-                                                        }
-                                                      }}
-                                                    >
-                                                      <i className="fas fa-arrow-right h-3 w-3 mr-2" />
-                                                      {otherProject.name}
-                                                    </DropdownMenuItem>
-                                                  );
-                                                })}
-                                              </>
-                                            )}
-                                            {sheetsInfo.count > 1 && (
-                                              <>
-                                                <Separator />
-                                                <DropdownMenuItem
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (SheetsManager.isNewFormat(projectData)) {
-                                                      if (onSheetDelete) {
-                                                        onSheetDelete(sheetId);
+                                                        toast({
+                                                          title: "✅ Лист перемещен",
+                                                          description: `"${sheetToMove.name}" → "${otherProject.name}"`,
+                                                        });
+                                                      } catch (error: any) {
+                                                        toast({
+                                                          title: "❌ Ошибка",
+                                                          description: error.message,
+                                                          variant: "destructive",
+                                                        });
                                                       }
-                                                    }
-                                                  }}
-                                                  className="text-destructive focus:text-destructive"
-                                                >
-                                                  <Trash2 className="h-4 w-4 mr-2" />
-                                                  <span>Удалить</span>
-                                                </DropdownMenuItem>
-                                              </>
-                                            )}
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
+                                                    }}
+                                                  >
+                                                    {otherProject.name}
+                                                  </DropdownMenuItem>
+                                                );
+                                              })}
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        )}
+
+                                        {sheetsInfo.count > 1 && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 w-5 p-0 hover:bg-red-500/20 text-red-600 dark:text-red-400 text-sm leading-none"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (SheetsManager.isNewFormat(projectData)) {
+                                                if (onSheetDelete) {
+                                                  onSheetDelete(sheetId);
+                                                }
+                                              }
+                                            }}
+                                            title="Удалить лист"
+                                          >
+                                            🗑️
+                                          </Button>
+                                        )}
                                       </div>
                                     )}
                                   </div>
