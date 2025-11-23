@@ -925,6 +925,27 @@ export function ComponentsSidebar({
     }
   };
 
+  const determineNodeType = (nodeId: string, pythonCode: string): string => {
+    // Определяем тип узла по его ID в Python коде
+    if (nodeId === 'start') return 'start';
+    
+    // Ищем обработчик этого узла в коде
+    const nodeSection = new RegExp(`# @@NODE_START:${nodeId}@@[\\s\\S]*?# @@NODE_END:${nodeId}@@`).exec(pythonCode);
+    if (!nodeSection) return 'message';
+    
+    const content = nodeSection[0];
+    if (content.includes('voice') || content.includes('voice_message')) return 'voice';
+    if (content.includes('sticker')) return 'sticker';
+    if (content.includes('photo')) return 'photo';
+    if (content.includes('video')) return 'video';
+    if (content.includes('audio')) return 'audio';
+    if (content.includes('document')) return 'document';
+    if (content.includes('location')) return 'location';
+    if (content.includes('contact')) return 'contact';
+    
+    return 'message';
+  };
+
   const extractPythonBotInfo = (pythonCode: string) => {
     // Извлекаем информацию из Python кода
     const handlers: any[] = [];
@@ -934,9 +955,11 @@ export function ComponentsSidebar({
     const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@[\s\S]*?# @@NODE_END:\1@@/g;
     let match;
     while ((match = nodePattern.exec(pythonCode)) !== null) {
+      const nodeId = match[1];
+      const nodeType = determineNodeType(nodeId, pythonCode);
       handlers.push({
-        id: match[1],
-        type: 'node'
+        id: nodeId,
+        type: nodeType
       });
     }
     
@@ -969,9 +992,16 @@ export function ComponentsSidebar({
               name: 'Python Bot',
               nodes: botInfo.handlers.map((h, i) => ({
                 id: h.id,
-                type: 'telegram',
+                type: h.type,
                 position: { x: 50 + i * 200, y: 50 },
-                data: { label: h.id }
+                data: {
+                  messageText: h.id === 'start' ? 'Добро пожаловать!' : undefined,
+                  description: h.type === 'command' ? h.id : undefined,
+                  command: h.type === 'command' ? h.id : undefined,
+                  keyboardType: 'none',
+                  buttons: [],
+                  showInMenu: true
+                }
               })),
               edges: []
             }
