@@ -850,20 +850,38 @@ export function ComponentsSidebar({
       setImportError('');
       const parsedData = JSON.parse(importJsonText);
       
-      // Валидация структуры JSON
-      if (!parsedData.name) {
-        throw new Error('Проект должен содержать поле "name"');
-      }
+      let projectData: any;
+      let projectName: string;
+      let projectDescription: string;
       
-      if (!parsedData.data) {
-        throw new Error('Проект должен содержать поле "data"');
+      // Проверяем формат JSON
+      // Формат 1: полный проект {name, description, data}
+      if (parsedData.name && parsedData.data) {
+        projectName = parsedData.name;
+        projectDescription = parsedData.description || '';
+        projectData = parsedData.data;
+      }
+      // Формат 2: только данные проекта {sheets, version, activeSheetId}
+      else if (parsedData.sheets && (parsedData.version || parsedData.activeSheetId)) {
+        projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
+        projectDescription = '';
+        projectData = parsedData;
+      }
+      // Формат 3: старый формат с узлами
+      else if (parsedData.nodes) {
+        projectName = `Импортированный проект ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
+        projectDescription = '';
+        projectData = parsedData;
+      }
+      else {
+        throw new Error('Неподдерживаемый формат JSON. Должен содержать поле "sheets", "nodes" или "data"');
       }
       
       // Создаём проект с импортированными данными
       apiRequest('POST', '/api/projects', {
-        name: parsedData.name,
-        description: parsedData.description || '',
-        data: parsedData.data
+        name: projectName,
+        description: projectDescription,
+        data: projectData
       }).then((newProject: BotProject) => {
         // Обновляем кеш
         const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
