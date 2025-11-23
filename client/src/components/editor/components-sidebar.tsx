@@ -517,6 +517,8 @@ export function ComponentsSidebar({
   const [currentTab, setCurrentTab] = useState<'elements' | 'projects'>('elements');
   const [draggedProject, setDraggedProject] = useState<BotProject | null>(null);
   const [dragOverProject, setDragOverProject] = useState<number | null>(null);
+  const [draggedSheet, setDraggedSheet] = useState<{ sheetId: string; projectId: number } | null>(null);
+  const [dragOverSheet, setDragOverSheet] = useState<string | null>(null);
   const [selectedSheetId, setSelectedSheetId] = useState<string | null>(null);
   // Состояние для inline редактирования листов
   const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
@@ -846,6 +848,103 @@ export function ComponentsSidebar({
 
   const handleCreateProject = () => {
     createProjectMutation.mutate();
+  };
+
+  // Обработчики перемещения листов между проектами
+  const handleSheetDragStart = (e: React.DragEvent, sheetId: string, projectId: number) => {
+    e.stopPropagation();
+    setDraggedSheet({ sheetId, projectId });
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', sheetId);
+  };
+
+  const handleSheetDragOver = (e: React.DragEvent, sheetId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverSheet(sheetId);
+  };
+
+  const handleSheetDragLeave = (e: React.DragEvent) => {
+    e.stopPropagation();
+    setDragOverSheet(null);
+  };
+
+  const handleSheetDrop = async (e: React.DragEvent, targetSheetId: string, targetProjectId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverSheet(null);
+
+    if (!draggedSheet || (draggedSheet.sheetId === targetSheetId && draggedSheet.projectId === targetProjectId)) {
+      setDraggedSheet(null);
+      return;
+    }
+
+    // Находим исходный и целевой проекты
+    const sourceProject = projects.find(p => p.id === draggedSheet.projectId);
+    const targetProject = projects.find(p => p.id === targetProjectId);
+
+    if (!sourceProject || !targetProject) {
+      setDraggedSheet(null);
+      return;
+    }
+
+    try {
+      const sourceData = sourceProject.data as any;
+      const targetData = targetProject.data as any;
+
+      // Находим лист в исходном проекте
+      let sheetToMove = null;
+      let sourceSheetIndex = -1;
+
+      if (sourceData.sheets) {
+        sourceSheetIndex = sourceData.sheets.findIndex((s: any) => s.id === draggedSheet.sheetId);
+        if (sourceSheetIndex !== -1) {
+          sheetToMove = sourceData.sheets[sourceSheetIndex];
+        }
+      }
+
+      if (!sheetToMove) {
+        setDraggedSheet(null);
+        return;
+      }
+
+      // Добавляем лист в целевой проект
+      if (targetData.sheets) {
+        const newSheet = JSON.parse(JSON.stringify(sheetToMove)); // Deep copy
+        targetData.sheets.push(newSheet);
+
+        // Удаляем из исходного проекта
+        sourceData.sheets.splice(sourceSheetIndex, 1);
+
+        // Обновляем оба проекта
+        await Promise.all([
+          apiRequest('PUT', `/api/projects/${sourceProject.id}`, { data: sourceData }),
+          apiRequest('PUT', `/api/projects/${targetProject.id}`, { data: targetData })
+        ]);
+
+        // Обновляем кеш
+        const updatedProjects = projects.map(p => {
+          if (p.id === sourceProject.id) return { ...p, data: sourceData };
+          if (p.id === targetProject.id) return { ...p, data: targetData };
+          return p;
+        });
+        queryClient.setQueryData(['/api/projects'], updatedProjects);
+
+        toast({
+          title: "✅ Лист перемещен",
+          description: `"${sheetToMove.name}" перемещен в "${targetProject.name}"`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Ошибка перемещения",
+        description: "Не удалось переместить лист",
+        variant: "destructive",
+      });
+    } finally {
+      setDraggedSheet(null);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1624,9 +1723,16 @@ export function ComponentsSidebar({
                                       />
                                     ) : (
                                       <Badge 
+                                        draggable
+                                        onDragStart={(e) => handleSheetDragStart(e, sheetId, project.id)}
+                                        onDragOver={(e) => handleSheetDragOver(e, sheetId)}
+                                        onDragLeave={handleSheetDragLeave}
+                                        onDrop={(e) => handleSheetDrop(e, sheetId, project.id)}
                                         variant={isActive ? "default" : "secondary"} 
-                                        className={`text-xs px-3 py-1.5 h-7 cursor-pointer hover:opacity-80 transition-all flex-1 font-medium ${
+                                        className={`text-xs px-3 py-1.5 h-7 cursor-grab active:cursor-grabbing hover:opacity-80 transition-all flex-1 font-medium ${
                                           isActive ? 'bg-primary text-primary-foreground shadow-sm' : ''
+                                        } ${dragOverSheet === sheetId ? 'ring-2 ring-primary ring-offset-1' : ''} ${
+                                          draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
                                         }`}
                                         onClick={() => {
                                           if (currentProjectId === project.id && onSheetSelect && SheetsManager.isNewFormat(projectData)) {
