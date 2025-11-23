@@ -12074,8 +12074,14 @@ function generateMessageSynonymHandler(node: Node, synonym: string): string {
 function generateKeyboard(node: Node): string {
   let code = '';
   
+  // Определяем режим форматирования в начале
+  const hasConditionalMessages = node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0;
+  
+  // Определяем отступ в зависимости от наличия условных сообщений
+  const indent3 = hasConditionalMessages ? '        ' : '    ';
+  
   // Добавляем поддержку условных сообщений для клавиатуры
-  if (node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0) {
+  if (hasConditionalMessages) {
     code += generateUniversalVariableReplacement('    ');
     code += '    text = replace_variables_in_text(text, user_vars)\n';
     code += '    \n';
@@ -12096,9 +12102,6 @@ function generateKeyboard(node: Node): string {
     code += '    # Проверяем, нужно ли использовать условную клавиатуру\n';
     code += '    use_conditional_keyboard = conditional_keyboard is not None\n';
   }
-  
-  // Определяем режим форматирования
-  const hasConditionalMessages = node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0;
   
   // Генерируем parseMode строку для использования в коде
   let parseMode = '';
@@ -12160,44 +12163,43 @@ function generateKeyboard(node: Node): string {
       code += '    else:\n';
     }
     
-    // Отправляем обычные кнопки как обычно
-    const indent = hasConditionalMessages ? '        ' : '    ';
+    // Отправляем обычные кнопки как обычно (используем indent3)
     if (node.data.keyboardType === "reply") {
-      code += `${indent}# Создаем reply клавиатуру (+ дополнительный сбор ответов включен)\n`;
-      code += `${indent}builder = ReplyKeyboardBuilder()\n`;
+      code += `${indent3}# Создаем reply клавиатуру (+ дополнительный сбор ответов включен)\n`;
+      code += `${indent3}builder = ReplyKeyboardBuilder()\n`;
       node.data.buttons.forEach(button => {
         if (button.action === "contact" && button.requestContact) {
-          code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
+          code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
         } else if (button.action === "location" && button.requestLocation) {
-          code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
+          code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
         } else {
-          code += `${indent}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+          code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
         }
       });
       
       const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
       const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
-      code += `${indent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-      code += `${indent}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+      code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       
     } else if (node.data.keyboardType === "inline") {
-      code += `${indent}# Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n`;
-      code += `${indent}builder = InlineKeyboardBuilder()\n`;
+      code += `${indent3}# Создаем inline клавиатуру (+ дополнительный сбор ответов включен)\n`;
+      code += `${indent3}builder = InlineKeyboardBuilder()\n`;
       node.data.buttons.forEach(button => {
         if (button.action === "url") {
-          code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+          code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
         } else if (button.action === 'goto') {
           const callbackData = button.target || button.id || 'no_action';
-          code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+          code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
         } else if (button.action === 'command') {
           const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-          code += `${indent}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+          code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
         }
       });
       
-      code += `${indent}builder.adjust(2)  # Используем 2 колонки для консистентности\n`;
-      code += `${indent}keyboard = builder.as_markup()\n`;
-      code += `${indent}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+      code += `${indent3}builder.adjust(2)  # Используем 2 колонки для консистентности\n`;
+      code += `${indent3}keyboard = builder.as_markup()\n`;
+      code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
     }
     
     // Дополнительно настраиваем сбор ответов с полной структурой ожидания ввода
@@ -12281,13 +12283,11 @@ function generateKeyboard(node: Node): string {
       code += '    else:\n';
     }
     
-    const indent3 = hasConditionalMessages ? '        ' : '    ';
-    
     if (node.data.keyboardType === "reply" && node.data.buttons.length > 0) {
       // Проверяем, есть ли множественный выбор
       if (node.data.allowMultipleSelection) {
-        code += '        # Создаем reply клавиатуру с поддержкой множественного выбора\n';
-        code += '        builder = ReplyKeyboardBuilder()\n';
+        code += `${indent3}# Создаем reply клавиатуру с поддержкой множественного выбора\n`;
+        code += `${indent3}builder = ReplyKeyboardBuilder()\n`;
         
         // Разделяем кнопки на опции выбора и обычные кнопки
         const selectionButtons = node.data.buttons.filter(button => button.action === 'selection');
@@ -12295,97 +12295,97 @@ function generateKeyboard(node: Node): string {
         
         // Добавляем кнопки для множественного выбора
         selectionButtons.forEach(button => {
-          code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+          code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
         });
         
         // Добавляем обычные кнопки
         regularButtons.forEach(button => {
           if (button.action === "contact" && button.requestContact) {
-            code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
+            code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
           } else if (button.action === "location" && button.requestLocation) {
-            code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
+            code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
           } else {
-            code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+            code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
           }
         });
         
         // Добавляем кнопку завершения, если есть опции выбора
         if (selectionButtons.length > 0) {
           const continueText = node.data.continueButtonText || 'Готово';
-          code += `        builder.add(KeyboardButton(text="${continueText}"))\n`;
+          code += `${indent3}builder.add(KeyboardButton(text="${continueText}"))\n`;
         }
         
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
-        code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+        code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
         
         // Инициализируем состояние множественного выбора
         if (selectionButtons.length > 0) {
-          code += '        \n';
-          code += '        # Инициализируем состояние множественного выбора\n';
-          code += '        user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n';
-          code += `        user_data[message.from_user.id]["multi_select_${node.id}"] = []\n`;
-          code += `        user_data[message.from_user.id]["multi_select_node"] = "${node.id}"\n`;
-          code += `        user_data[message.from_user.id]["multi_select_type"] = "reply"\n`;
+          code += `${indent3}\n`;
+          code += `${indent3}# Инициализируем состояние множественного выбора\n`;
+          code += `${indent3}user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
+          code += `${indent3}user_data[message.from_user.id]["multi_select_${node.id}"] = []\n`;
+          code += `${indent3}user_data[message.from_user.id]["multi_select_node"] = "${node.id}"\n`;
+          code += `${indent3}user_data[message.from_user.id]["multi_select_type"] = "reply"\n`;
         }
       } else {
         // Обычная reply клавиатура
-        code += '        builder = ReplyKeyboardBuilder()\n';
+        code += `${indent3}builder = ReplyKeyboardBuilder()\n`;
         node.data.buttons.forEach((button: Button) => {
           if (button.action === "contact" && button.requestContact) {
-            code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
+            code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_contact=True))\n`;
           } else if (button.action === "location" && button.requestLocation) {
-            code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
+            code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}, request_location=True))\n`;
           } else {
-            code += `        builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
+            code += `${indent3}builder.add(KeyboardButton(text=${generateButtonText(button.text)}))\n`;
           }
         });
         
         const resizeKeyboard = toPythonBoolean(node.data.resizeKeyboard);
         const oneTimeKeyboard = toPythonBoolean(node.data.oneTimeKeyboard);
-        code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-        code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent3}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+        code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       }
     } else if (node.data.keyboardType === "inline" && node.data.buttons.length > 0) {
       // Проверяем, есть ли множественный выбор
       if (node.data.allowMultipleSelection) {
         // Добавляем универсальную функцию замены переменных для доступа к user_vars
-        code += generateUniversalVariableReplacement('        ');
+        code += generateUniversalVariableReplacement(indent3);
         
         // Добавляем логику загрузки ранее выбранных интересов
         const multiSelectVariable = node.data.multiSelectVariable || 'user_interests';
         
-        code += '        # Загружаем ранее выбранные интересы из базы данных для восстановления состояния\n';
-        code += '        if user_id not in user_data:\n';
-        code += '            user_data[user_id] = {}\n';
-        code += '        \n';
-        code += '        # Получаем сохраненные интересы из базы данных\n';
-        code += '        saved_interests = []\n';
-        code += '        if user_vars:\n';
-        code += '            # Ищем интересы в любой переменной, которая может их содержать\n';
-        code += '            for var_name, var_data in user_vars.items():\n';
-        code += '                if "интерес" in var_name.lower() or var_name == "interests" or var_name == "' + multiSelectVariable + '":\n';
-        code += '                    if isinstance(var_data, dict) and "value" in var_data:\n';
-        code += '                        interests_str = var_data["value"]\n';
-        code += '                    elif isinstance(var_data, str):\n';
-        code += '                        interests_str = var_data\n';
-        code += '                    else:\n';
-        code += '                        interests_str = str(var_data) if var_data else ""\n';
-        code += '                    \n';
-        code += '                    if interests_str:\n';
-        code += '                        saved_interests = [interest.strip() for interest in interests_str.split(",")]\n';
-        code += '                        logging.info(f"Восстановлены интересы из БД: {saved_interests}")\n';
-        code += '                        break\n';
-        code += '        \n';
-        code += '        # Инициализируем состояние множественного выбора с сохраненными интересами\n';
-        code += `        user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy()\n`;
-        code += `        user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
-        code += '        logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n';
-        code += '        \n';
+        code += `${indent3}# Загружаем ранее выбранные интересы из базы данных для восстановления состояния\n`;
+        code += `${indent3}if user_id not in user_data:\n`;
+        code += `${indent3}    user_data[user_id] = {}\n`;
+        code += `${indent3}\n`;
+        code += `${indent3}# Получаем сохраненные интересы из базы данных\n`;
+        code += `${indent3}saved_interests = []\n`;
+        code += `${indent3}if user_vars:\n`;
+        code += `${indent3}    # Ищем интересы в любой переменной, которая может их содержать\n`;
+        code += `${indent3}    for var_name, var_data in user_vars.items():\n`;
+        code += `${indent3}        if "интерес" in var_name.lower() or var_name == "interests" or var_name == "${multiSelectVariable}":\n`;
+        code += `${indent3}            if isinstance(var_data, dict) and "value" in var_data:\n`;
+        code += `${indent3}                interests_str = var_data["value"]\n`;
+        code += `${indent3}            elif isinstance(var_data, str):\n`;
+        code += `${indent3}                interests_str = var_data\n`;
+        code += `${indent3}            else:\n`;
+        code += `${indent3}                interests_str = str(var_data) if var_data else ""\n`;
+        code += `${indent3}            \n`;
+        code += `${indent3}            if interests_str:\n`;
+        code += `${indent3}                saved_interests = [interest.strip() for interest in interests_str.split(",")]\n`;
+        code += `${indent3}                logging.info(f"Восстановлены интересы из БД: {saved_interests}")\n`;
+        code += `${indent3}                break\n`;
+        code += `${indent3}\n`;
+        code += `${indent3}# Инициализируем состояние множественного выбора с сохраненными интересами\n`;
+        code += `${indent3}user_data[user_id]["multi_select_${node.id}"] = saved_interests.copy()\n`;
+        code += `${indent3}user_data[user_id]["multi_select_node"] = "${node.id}"\n`;
+        code += `${indent3}logging.info(f"Инициализировано состояние множественного выбора с {len(saved_interests)} интересами")\n`;
+        code += `${indent3}\n`;
         
-        code += '        # Создаем inline клавиатуру с поддержкой множественного выбора\n';
-        code += '        builder = InlineKeyboardBuilder()\n';
+        code += `${indent3}# Создаем inline клавиатуру с поддержкой множественного выбора\n`;
+        code += `${indent3}builder = InlineKeyboardBuilder()\n`;
         
         // Разделяем кнопки на опции выбора и обычные кнопки
         const selectionButtons = node.data.buttons.filter(button => button.action === 'selection');
@@ -12395,33 +12395,33 @@ function generateKeyboard(node: Node): string {
         selectionButtons.forEach(button => {
           const buttonValue = button.target || button.id || button.text;
           const safeVarName = buttonValue.toLowerCase().replace(/[^a-z0-9]/g, '_');
-          code += `        # Проверяем каждый интерес и добавляем галочку если он выбран\n`;
-          code += `        logging.info(f"🔧 /START: Проверяем галочку для кнопки '${button.text}' в списке: {saved_interests}")\n`;
-          code += `        ${safeVarName}_selected = "${button.text}" in saved_interests\n`;
-          code += `        logging.info(f"🔍 /START: РЕЗУЛЬТАТ для '${button.text}': selected={${safeVarName}_selected}")\n`;
-          code += `        ${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
-          code += `        logging.info(f"📱 /START: СОЗДАЕМ КНОПКУ: text='{${safeVarName}_text}'")\n`;
-          code += `        builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
+          code += `${indent3}# Проверяем каждый интерес и добавляем галочку если он выбран\n`;
+          code += `${indent3}logging.info(f"🔧 /START: Проверяем галочку для кнопки '${button.text}' в списке: {saved_interests}")\n`;
+          code += `${indent3}${safeVarName}_selected = "${button.text}" in saved_interests\n`;
+          code += `${indent3}logging.info(f"🔍 /START: РЕЗУЛЬТАТ для '${button.text}': selected={${safeVarName}_selected}")\n`;
+          code += `${indent3}${safeVarName}_text = "✅ ${button.text}" if ${safeVarName}_selected else "${button.text}"\n`;
+          code += `${indent3}logging.info(f"📱 /START: СОЗДАЕМ КНОПКУ: text='{${safeVarName}_text}'")\n`;
+          code += `${indent3}builder.add(InlineKeyboardButton(text=${safeVarName}_text, callback_data="multi_select_start_${buttonValue}"))\n`;
         });
         
         // Добавляем обычные кнопки
         regularButtons.forEach((button: Button) => {
           if (button.action === "url") {
-            code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+            code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
           } else if (button.action === 'goto') {
             const callbackData = button.target || button.id || 'no_action';
-            code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+            code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
           } else if (button.action === 'command') {
             const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-            code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+            code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
           }
         });
-        code += '        \n';
+        code += `${indent3}\n`;
         
         // Добавляем кнопку завершения, если есть опции выбора
         if (selectionButtons.length > 0) {
           const continueText = node.data.continueButtonText || 'Готово';
-          code += `        builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
+          code += `${indent3}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="multi_select_done_${node.id}"))\n`;
         }
         
         // Автоматическое распределение колонок
@@ -12437,35 +12437,35 @@ function generateKeyboard(node: Node): string {
           });
         }
         const columns = calculateOptimalColumns(allButtons, node.data);
-        code += `        builder.adjust(${columns})\n`;
-        code += '        keyboard = builder.as_markup()\n';
-        code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent3}builder.adjust(${columns})\n`;
+        code += `${indent3}keyboard = builder.as_markup()\n`;
+        code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
         
         // Состояние множественного выбора уже инициализировано выше с сохраненными значениями
       } else {
         // Обычная inline клавиатура
-        code += '        # Создаем inline клавиатуру с кнопками\n';
-        code += `        logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${node.id} с ${node.data.buttons ? node.data.buttons.length : 0} кнопками")\n`;
-        code += '        builder = InlineKeyboardBuilder()\n';
+        code += `${indent3}# Создаем inline клавиатуру с кнопками\n`;
+        code += `${indent3}logging.info(f"DEBUG: Создаем inline клавиатуру для узла ${node.id} с ${node.data.buttons ? node.data.buttons.length : 0} кнопками")\n`;
+        code += `${indent3}builder = InlineKeyboardBuilder()\n`;
         node.data.buttons.forEach((button: Button) => {
           if (button.action === "url") {
-            code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
+            code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, url="${button.url || '#'}"))\n`;
           } else if (button.action === 'goto') {
             // Если есть target, используем его, иначе используем ID кнопки как callback_data
             const callbackData = button.target || button.id || 'no_action';
-            code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
+            code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
           } else if (button.action === 'command') {
             // Для кнопок команд создаем специальную callback_data
             const commandCallback = `cmd_${button.target ? button.target.replace('/', '') : 'unknown'}`;
-            code += `        builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
+            code += `${indent3}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${commandCallback}"))\n`;
           }
         });
         
         // Автоматическое распределение колонок
         const columns = calculateOptimalColumns(node.data.buttons, node.data);
-        code += `        builder.adjust(${columns})\n`;
-        code += '        keyboard = builder.as_markup()\n';
-        code += `        await message.answer(text, reply_markup=keyboard${parseMode})\n`;
+        code += `${indent3}builder.adjust(${columns})\n`;
+        code += `${indent3}keyboard = builder.as_markup()\n`;
+        code += `${indent3}await message.answer(text, reply_markup=keyboard${parseMode})\n`;
       }
     } else {
       // Без клавиатуры
