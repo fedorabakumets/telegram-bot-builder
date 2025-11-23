@@ -2628,7 +2628,7 @@ export function PropertiesPanel({
                   <div className="text-xs text-muted-foreground">
                     Выбранные опции будут сохранены в эту переменную через запятую.
                     <br />
-                    <span className="text-amber-600 dark:text-amber-400">⚠️ Убедитесь, что имя не совпадает с переменными из "✨ Дополнительный сбор ответов"</span>
+                    <span className="text-amber-600 dark:text-amber-400">⚠️ Убедитесь, что имя не совпадает с переменными из "✨ Сбор ответов"</span>
                   </div>
                 </div>
                 
@@ -4182,7 +4182,7 @@ export function PropertiesPanel({
                 <div className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-purple-200/30 dark:border-purple-800/30 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
                   <div className="flex-1">
                     <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                      Дополнительный сбор ответов
+                      Сбор ответов
                     </Label>
                     <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
                       Обычные кнопки работают как прежде + дополнительно сохраняются ответы пользователей
@@ -4566,7 +4566,7 @@ export function PropertiesPanel({
         {selectedNode.type !== 'input' && !selectedNode.data.collectUserInput && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-foreground">✨ Дополнительный сбор ответов</h3>
+              <h3 className="text-sm font-medium text-foreground">✨ Сбор ответов</h3>
               <Switch
                 checked={selectedNode.data.collectUserInput ?? false}
                 onCheckedChange={(checked) => onNodeUpdate(selectedNode.id, { collectUserInput: checked })}
