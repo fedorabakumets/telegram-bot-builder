@@ -1136,7 +1136,7 @@ export function ComponentsSidebar({
                                 const projectData = project.data as any;
                                 const sheetId = SheetsManager.isNewFormat(projectData) ? projectData.sheets[index]?.id : null;
                                 const isActive = currentProjectId === project.id && sheetId === activeSheetId;
-                                const isEditing = editingSheetId === sheetId;
+                                const isEditing = editingSheetId !== null && sheetId !== null && editingSheetId === sheetId;
                                 
                                 return (
                                   <div key={index} className="flex items-center gap-2 group/sheet">
@@ -1180,7 +1180,7 @@ export function ComponentsSidebar({
                                         }}
                                         title={name}
                                       >
-                                        <span className="block text-center w-full truncate">{name}</span>
+                                        <span className="block text-center w-full truncate" style={{ visibility: 'visible', opacity: 1 }}>{name || 'Без названия'}</span>
                                       </Badge>
                                     )}
                                     
