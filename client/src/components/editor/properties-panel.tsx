@@ -2544,39 +2544,55 @@ export function PropertiesPanel({
                 />
               </div>
 
-              {/* File Attachment Button */}
-              <div className="space-y-2">
-                <UIButton
-                  variant="outline"
-                  className="w-full justify-start gap-2 text-sm hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
-                  data-testid="button-choose-upload-file"
-                >
-                  <Upload className="h-4 w-4" />
-                  Выбрать или загрузить файл
-                </UIButton>
-                {(selectedNode.data.imageUrl || selectedNode.data.videoUrl || selectedNode.data.audioUrl || selectedNode.data.documentUrl) && (
-                  <div className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-xs">
-                    <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                    <span className="text-blue-700 dark:text-blue-300 flex-1">
-                      {selectedNode.data.imageUrl ? 'Изображение прикреплено' : 
-                       selectedNode.data.videoUrl ? 'Видео прикреплено' :
-                       selectedNode.data.audioUrl ? 'Аудио прикреплено' :
-                       'Документ прикреплен'}
-                    </span>
-                    <button
-                      onClick={() => onNodeUpdate(selectedNode.id, { 
-                        imageUrl: undefined, 
-                        videoUrl: undefined, 
-                        audioUrl: undefined, 
-                        documentUrl: undefined 
-                      })}
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
-                      title="Удалить файл"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
+              {/* File Attachment */}
+              <div>
+                <MediaSelector
+                  projectId={projectId}
+                  value={selectedNode.data.imageUrl || selectedNode.data.videoUrl || selectedNode.data.audioUrl || selectedNode.data.documentUrl || ''}
+                  onChange={(url: string, fileName?: string) => {
+                    if (!url) {
+                      // Очистить все медиа поля
+                      onNodeUpdate(selectedNode.id, {
+                        imageUrl: undefined,
+                        videoUrl: undefined,
+                        audioUrl: undefined,
+                        documentUrl: undefined,
+                        documentName: undefined
+                      });
+                      return;
+                    }
+                    
+                    // Определить тип файла по расширению
+                    const extension = url.split('.').pop()?.toLowerCase();
+                    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+                    const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm'];
+                    const audioExtensions = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a'];
+                    
+                    // Очистить все поля и установить только нужное
+                    const updates: Partial<Node['data']> = {
+                      imageUrl: undefined,
+                      videoUrl: undefined,
+                      audioUrl: undefined,
+                      documentUrl: undefined,
+                      documentName: undefined
+                    };
+                    
+                    if (imageExtensions.includes(extension || '')) {
+                      updates.imageUrl = url;
+                    } else if (videoExtensions.includes(extension || '')) {
+                      updates.videoUrl = url;
+                    } else if (audioExtensions.includes(extension || '')) {
+                      updates.audioUrl = url;
+                    } else {
+                      updates.documentUrl = url;
+                      updates.documentName = fileName || 'document';
+                    }
+                    
+                    onNodeUpdate(selectedNode.id, updates);
+                  }}
+                  label=""
+                  placeholder="Выберите медиафайл или введите URL"
+                />
               </div>
             </div>
           </div>
