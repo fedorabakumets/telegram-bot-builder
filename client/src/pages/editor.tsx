@@ -641,6 +641,13 @@ export default function Editor() {
     if (!botDataWithSheets) return;
     
     try {
+      // Проверяем, существует ли лист с таким ID
+      const sheetExists = botDataWithSheets.sheets.some(sheet => sheet.id === sheetId);
+      if (!sheetExists) {
+        console.warn(`Лист ${sheetId} не найден в проекте, игнорируем переключение`);
+        return;
+      }
+      
       // Сначала сохраняем текущие данные холста в активном листе
       const currentCanvasData = getBotData();
       const activeSheetId = botDataWithSheets.activeSheetId;
