@@ -1734,7 +1734,7 @@ export function ComponentsSidebar({
                                 const isEditing = editingSheetId !== null && sheetId !== null && editingSheetId === sheetId;
                                 
                                 return (
-                                  <div key={index} className="flex items-center gap-2 group/sheet">
+                                  <div key={index} className="flex items-center gap-2.5 group/sheet px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors">
                                     {isEditing ? (
                                       <Input
                                         value={editingSheetName}
@@ -1748,21 +1748,19 @@ export function ComponentsSidebar({
                                         }}
                                         onBlur={handleSaveSheetName}
                                         autoFocus
-                                        className="text-xs px-3 py-1.5 h-7 flex-1 font-medium"
+                                        className="text-xs px-2 py-1 h-6 flex-1 font-medium"
                                       />
                                     ) : (
                                       <div
                                         draggable
                                         onDragStart={(e) => {
-                                          console.log('🎯 Sheet drag start:', sheetId, project.id);
                                           handleSheetDragStart(e, sheetId, project.id);
                                         }}
                                         onDragEnd={(e) => {
-                                          console.log('🎯 Sheet drag end');
                                           setDraggedSheet(null);
                                         }}
-                                        className={`text-xs px-3 py-1.5 h-7 cursor-grab active:cursor-grabbing hover:opacity-80 transition-all flex-1 font-medium rounded-full border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center justify-center text-center ${
-                                          isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-secondary text-secondary-foreground'
+                                        className={`text-xs px-2.5 py-1 h-6 cursor-grab active:cursor-grabbing transition-all flex-1 font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent inline-flex items-center justify-center text-center ${
+                                          isActive ? 'bg-primary text-primary-foreground shadow-sm font-semibold' : 'bg-muted/70 text-foreground hover:bg-muted'
                                         } ${
                                           draggedSheet?.sheetId === sheetId && draggedSheet?.projectId === project.id ? 'opacity-50' : ''
                                         }`}
@@ -1775,7 +1773,6 @@ export function ComponentsSidebar({
                                           }
                                         }}
                                         onDoubleClick={() => {
-                                          // Включаем inline редактирование
                                           if (currentProjectId === project.id && SheetsManager.isNewFormat(projectData)) {
                                             const sheetId = projectData.sheets[index]?.id;
                                             if (sheetId) {
@@ -1785,25 +1782,25 @@ export function ComponentsSidebar({
                                         }}
                                         title={name}
                                       >
-                                        <span className="block truncate w-full">{name || 'Без названия'}</span>
+                                        <span className="block truncate">{name || 'Без названия'}</span>
                                       </div>
                                     )}
                                     
                                     {/* Кнопки управления листом */}
-                                    {currentProjectId === project.id && (
-                                      <div className="flex gap-1 hidden group-hover/sheet:flex">
+                                    {currentProjectId === project.id && !isEditing && (
+                                      <div className="flex gap-1.5 opacity-0 group-hover/sheet:opacity-100 transition-opacity">
                                         <DropdownMenu>
                                           <DropdownMenuTrigger asChild>
                                             <Button
                                               variant="ghost"
                                               size="sm"
-                                              className="h-6 w-6 p-0 hover:bg-muted"
-                                              title="Переместить лист"
+                                              className="h-5 w-5 p-0 hover:bg-primary/20 text-primary"
+                                              title="Меню листа"
                                             >
-                                              <MoreHorizontal className="h-3 w-3" />
+                                              <MoreHorizontal className="h-3.5 w-3.5" />
                                             </Button>
                                           </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end" className="w-40">
+                                          <DropdownMenuContent align="end" className="w-44">
                                             <DropdownMenuItem
                                               onClick={(e) => {
                                                 e.stopPropagation();
@@ -1815,12 +1812,13 @@ export function ComponentsSidebar({
                                                 }
                                               }}
                                             >
-                                              <Copy className="h-3 w-3 mr-2" />
-                                              Дублировать
+                                              <Copy className="h-4 w-4 mr-2" />
+                                              <span>Дублировать</span>
                                             </DropdownMenuItem>
                                             {projects.length > 1 && (
                                               <>
                                                 <Separator />
+                                                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Переместить в:</div>
                                                 {projects.map((otherProject) => {
                                                   if (otherProject.id === project.id) return null;
                                                   return (
@@ -1867,7 +1865,7 @@ export function ComponentsSidebar({
                                                         }
                                                       }}
                                                     >
-                                                      <i className="fas fa-arrow-right h-3 w-3 mr-2" style={{fontSize: '10px'}} />
+                                                      <i className="fas fa-arrow-right h-3 w-3 mr-2" />
                                                       {otherProject.name}
                                                     </DropdownMenuItem>
                                                   );
@@ -1888,8 +1886,8 @@ export function ComponentsSidebar({
                                                   }}
                                                   className="text-destructive focus:text-destructive"
                                                 >
-                                                  <Trash2 className="h-3 w-3 mr-2" />
-                                                  Удалить
+                                                  <Trash2 className="h-4 w-4 mr-2" />
+                                                  <span>Удалить</span>
                                                 </DropdownMenuItem>
                                               </>
                                             )}
