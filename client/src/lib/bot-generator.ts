@@ -4350,26 +4350,51 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             
           } else if (targetNode.data.buttons && targetNode.data.buttons.length > 0) {
             // Обычные кнопки без множественного выбора
-            code += '    # Create inline keyboard\n';
-            code += '    builder = InlineKeyboardBuilder()\n';
-            targetNode.data.buttons.forEach((btn: Button, index: number) => {
-              if (btn.action === "goto" && btn.target) {
-                const btnCallbackData = `${btn.target}_btn_${index}`;
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
-              } else if (btn.action === "url") {
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
-              } else if (btn.action === "command" && btn.target) {
-                // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд
-                const commandCallback = `cmd_${btn.target.replace('/', '')}`;
-                code += `    # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
-              } else if (btn.action === "selection") {
-                // Добавляем поддержку кнопок выбора для обычных узлов
-                const callbackData = `multi_select_${nodeId}_${btn.target || btn.id}`;
-                code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
-              }
-            });
-            code += '    keyboard = builder.as_markup()\n';
+            // ИСПРАВЛЕНИЕ: Проверяем keyboardType узла и генерируем соответствующую клавиатуру
+            if (targetNode.data.keyboardType === 'reply') {
+              // Генерируем reply клавиатуру
+              code += '    # Create reply keyboard\n';
+              code += '    # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
+              code += '    await callback_query.message.delete()\n';
+              code += '    builder = ReplyKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach((btn: Button) => {
+                if (btn.action === "contact" && btn.requestContact) {
+                  code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
+                } else if (btn.action === "location" && btn.requestLocation) {
+                  code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
+                } else {
+                  code += `    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                }
+              });
+              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+              code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              code += '    # Для reply клавиатуры нужно отправить новое сообщение\n';
+              code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
+              code += '    keyboard = None  # Устанавливаем None чтобы не отправить дважды\n';
+            } else {
+              // Генерируем inline клавиатуру (по умолчанию)
+              code += '    # Create inline keyboard\n';
+              code += '    builder = InlineKeyboardBuilder()\n';
+              targetNode.data.buttons.forEach((btn: Button, index: number) => {
+                if (btn.action === "goto" && btn.target) {
+                  const btnCallbackData = `${btn.target}_btn_${index}`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${btnCallbackData}"))\n`;
+                } else if (btn.action === "url") {
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, url="${btn.url || '#'}"))\n`;
+                } else if (btn.action === "command" && btn.target) {
+                  // ИСПРАВЛЕНИЕ: Добавляем поддержку кнопок команд
+                  const commandCallback = `cmd_${btn.target.replace('/', '')}`;
+                  code += `    # Кнопка команды: ${btn.text} -> ${btn.target}\n`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${commandCallback}"))\n`;
+                } else if (btn.action === "selection") {
+                  // Добавляем поддержку кнопок выбора для обычных узлов
+                  const callbackData = `multi_select_${nodeId}_${btn.target || btn.id}`;
+                  code += `    builder.add(InlineKeyboardButton(text=${generateButtonText(btn.text)}, callback_data="${callbackData}"))\n`;
+                }
+              });
+              code += '    keyboard = builder.as_markup()\n';
+            }
           } else {
             code += '    keyboard = None\n';
           }
