@@ -271,27 +271,70 @@ export default function Editor() {
         data: projectData
       });
     },
-    onSuccess: async (updatedProject) => {
-      console.log('Проект сохранен, обновляем кеш проектов');
+    onMutate: async (variables) => {
+      if (!activeProject?.id) return;
       
+      // Отменяем текущие запросы для предотвращения race condition
+      await queryClient.cancelQueries({ queryKey: ['/api/projects'] });
+      await queryClient.cancelQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
+      await queryClient.cancelQueries({ queryKey: ['/api/projects/list'] });
+      
+      // Сохраняем предыдущие значения для отката
+      const previousProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']);
+      const previousProject = queryClient.getQueryData<BotProject>([`/api/projects/${activeProject.id}`]);
+      const previousList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']);
+      
+      // Используем botDataWithSheets напрямую (он уже содержит текущие данные активного листа)
+      // так как onMutate вызывается после обновления локального состояния в обработчиках листов
+      const optimisticProjectData = botDataWithSheets || activeProject.data;
+      
+      const optimisticProject: BotProject = {
+        ...activeProject,
+        data: optimisticProjectData,
+        updatedAt: new Date()
+      };
+      
+      // Оптимистично обновляем кеш
+      queryClient.setQueryData<BotProject>([`/api/projects/${activeProject.id}`], optimisticProject);
+      
+      if (previousProjects) {
+        const updatedProjects = previousProjects.map(p => 
+          p.id === activeProject.id ? optimisticProject : p
+        );
+        queryClient.setQueryData<BotProject[]>(['/api/projects'], updatedProjects);
+      }
+      
+      if (previousList) {
+        const updatedList = previousList.map(p => 
+          p.id === activeProject.id ? { ...p, updatedAt: optimisticProject.updatedAt } : p
+        );
+        queryClient.setQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list'], updatedList);
+      }
+      
+      // Возвращаем контекст для отката
+      return { previousProjects, previousProject, previousList };
+    },
+    onSuccess: async (updatedProject) => {
       // Reset local changes flag only after successful save
       setHasLocalChanges(false);
-      
-      // Обновляем и рефетчим кеш проектов
-      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      await Promise.all([
-        queryClient.refetchQueries({ queryKey: ['/api/projects'] }),
-        activeProject?.id ? queryClient.refetchQueries({ queryKey: [`/api/projects/${activeProject.id}`] }) : Promise.resolve()
-      ]);
-      
-      console.log('Кеш проектов обновлен успешно');
       
       toast({
         title: "Проект сохранен",
         description: "Изменения успешно сохранены",
       });
     },
-    onError: () => {
+    onError: (error, variables, context) => {
+      // Откатываем изменения при ошибке
+      if (context?.previousProjects) {
+        queryClient.setQueryData(['/api/projects'], context.previousProjects);
+      }
+      if (context?.previousProject && activeProject?.id) {
+        queryClient.setQueryData([`/api/projects/${activeProject.id}`], context.previousProject);
+      }
+      if (context?.previousList) {
+        queryClient.setQueryData(['/api/projects/list'], context.previousList);
+      }
+      
       toast({
         title: "Ошибка сохранения",
         description: "Не удалось сохранить проект",
