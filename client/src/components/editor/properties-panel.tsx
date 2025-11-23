@@ -3783,25 +3783,34 @@ export function PropertiesPanel({
                                   <i className="fas fa-keyboard mr-1"></i>
                                   Кнопки для условного сообщения
                                 </Label>
-                                <Select
-                                  value={condition.keyboardType || 'none'}
-                                  onValueChange={(value: 'none' | 'inline' | 'reply') => {
-                                    const currentConditions = selectedNode.data.conditionalMessages || [];
-                                    const updatedConditions = currentConditions.map(c => 
-                                      c.id === condition.id ? { ...c, keyboardType: value } : c
-                                    );
-                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                  }}
-                                >
-                                  <SelectTrigger className="text-xs h-7 w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="none">Без кнопок</SelectItem>
-                                    <SelectItem value="inline">Inline кнопки</SelectItem>
-                                    <SelectItem value="reply">Reply кнопки</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-2">
+                                    <Label className="text-xs text-purple-600 dark:text-purple-400">Inline</Label>
+                                    <Switch
+                                      checked={condition.keyboardType === 'inline'}
+                                      onCheckedChange={(checked) => {
+                                        const currentConditions = selectedNode.data.conditionalMessages || [];
+                                        const updatedConditions = currentConditions.map(c => 
+                                          c.id === condition.id ? { ...c, keyboardType: checked ? 'inline' : 'none' } : c
+                                        );
+                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Label className="text-xs text-purple-600 dark:text-purple-400">Reply</Label>
+                                    <Switch
+                                      checked={condition.keyboardType === 'reply'}
+                                      onCheckedChange={(checked) => {
+                                        const currentConditions = selectedNode.data.conditionalMessages || [];
+                                        const updatedConditions = currentConditions.map(c => 
+                                          c.id === condition.id ? { ...c, keyboardType: checked ? 'reply' : 'none' } : c
+                                        );
+                                        onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                      }}
+                                    />
+                                  </div>
+                                </div>
                               </div>
 
                               {/* Buttons Configuration */}
