@@ -33,6 +33,7 @@ const ResizableHandle = ({
 
   return (
     <ResizablePrimitive.PanelResizeHandle
+      data-testid="resizable-handle"
       className={cn(
         "group relative flex w-2 items-center justify-center bg-border transition-all duration-200",
         "hover:bg-primary/20 hover:w-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
