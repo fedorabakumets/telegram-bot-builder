@@ -1147,6 +1147,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       
       {/* Response Collection Indicator */}
       {(() => {
+        const collectUserInput = (node.data as any).collectUserInput;
         const inputVariable = (node.data as any).inputVariable;
         const photoInputVariable = (node.data as any).photoInputVariable;
         const videoInputVariable = (node.data as any).videoInputVariable;
@@ -1155,14 +1156,13 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         const multiSelectVariable = (node.data as any).multiSelectVariable;
         const allowMultipleSelection = (node.data as any).allowMultipleSelection;
         
-        // Исключаем кнопки, если это клавиатура с collectUserInput (это уже показано выше)
-        if (node.type === 'keyboard' && (node.data as any).collectUserInput) {
-          // Для клавиатур показываем только другие типы ввода
-          const hasOtherInput = photoInputVariable || videoInputVariable || audioInputVariable || documentInputVariable;
-          if (!hasOtherInput) return null;
+        // Если это keyboard с collectUserInput и кнопками, это уже показано выше - пропускаем основной блок
+        if (node.type === 'keyboard' && collectUserInput && node.data.buttons && node.data.buttons.length > 0) {
+          return null;
         }
         
-        const hasResponseCollection = inputVariable || photoInputVariable || videoInputVariable || audioInputVariable || documentInputVariable || multiSelectVariable;
+        // Показываем блок если включен collectUserInput или есть переменные для сохранения
+        const hasResponseCollection = collectUserInput || inputVariable || photoInputVariable || videoInputVariable || audioInputVariable || documentInputVariable || multiSelectVariable;
         
         if (!hasResponseCollection) return null;
         
