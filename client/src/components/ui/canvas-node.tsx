@@ -567,8 +567,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
             {(() => {
               const hasRequiredFields = (() => {
                 switch (node.type) {
-                  case 'photo': return !!node.data.imageUrl;
-                  case 'video': return !!node.data.videoUrl;
                   case 'audio': return !!node.data.audioUrl;
                   case 'document': return !!node.data.documentUrl;
                   case 'sticker': return !!(node.data.stickerUrl || node.data.stickerFileId);
@@ -722,51 +720,6 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
       )}
       
       {/* Media previews */}
-      {node.type === 'photo' && (
-        <div className="bg-gradient-to-br from-purple-100/50 to-pink-100/50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center border-2 border-dashed border-purple-200 dark:border-purple-700 hover:border-purple-300 dark:hover:border-purple-600 transition-colors group">
-          {node.data.imageUrl ? (
-            <div className="relative w-full h-full">
-              <img src={node.data.imageUrl} alt="Preview" className="max-h-full max-w-full object-contain rounded-md shadow-sm" />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-md flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-gray-800 rounded-full p-1 shadow-lg">
-                  <i className="fas fa-edit text-purple-600 dark:text-purple-400 text-xs"></i>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center space-y-2">
-              <i className="fas fa-cloud-upload-alt text-purple-400 dark:text-purple-300 text-3xl group-hover:scale-110 transition-transform"></i>
-              <div className="text-xs text-purple-600 dark:text-purple-400 font-medium">Нажмите для загрузки</div>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Video preview */}
-      {node.type === 'video' && (
-        <div className="bg-gradient-to-br from-rose-100/50 to-pink-100/50 dark:from-rose-900/30 dark:to-pink-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center border-2 border-dashed border-rose-200 dark:border-rose-700 hover:border-rose-300 dark:hover:border-rose-600 transition-colors group">
-          <div className="text-center space-y-2">
-            <i className="fas fa-video text-rose-400 dark:text-rose-300 text-3xl group-hover:scale-110 transition-transform"></i>
-            {node.data.videoUrl ? (
-              <div className="text-xs text-rose-600 dark:text-rose-400 space-y-1">
-                <div className="font-medium flex items-center justify-center space-x-1">
-                  <i className="fas fa-check-circle text-green-500 text-xs"></i>
-                  <span>Видео загружено</span>
-                </div>
-                {node.data.duration && (
-                  <div className="flex items-center justify-center space-x-1">
-                    <i className="fas fa-clock text-xs"></i>
-                    <span>{node.data.duration}с</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-xs text-rose-600 dark:text-rose-400 font-medium">Нажмите для загрузки</div>
-            )}
-          </div>
-        </div>
-      )}
-      
       {/* Audio preview */}
       {node.type === 'audio' && (
         <div className="bg-gradient-to-br from-orange-100/50 to-amber-100/50 dark:from-orange-900/30 dark:to-amber-900/30 rounded-lg p-4 mb-4 h-32 flex items-center justify-center border-2 border-dashed border-orange-200 dark:border-orange-700 hover:border-orange-300 dark:hover:border-orange-600 transition-colors group">

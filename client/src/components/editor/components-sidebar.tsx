@@ -74,41 +74,6 @@ const components: ComponentDefinition[] = [
     }
   },
   {
-    id: 'photo-message',
-    name: 'Фото с текстом',
-    description: 'Изображение + описание',
-    icon: 'fas fa-image',
-    color: 'bg-green-100 text-green-600',
-    type: 'photo',
-    defaultData: {
-      messageText: 'Описание изображения',
-      imageUrl: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
-    id: 'video-message',
-    name: 'Видео сообщение',
-    description: 'Видео файл с подписью',
-    icon: 'fas fa-video',
-    color: 'bg-red-100 text-red-600',
-    type: 'video',
-    defaultData: {
-      messageText: 'Описание видео',
-      videoUrl: '',
-      mediaCaption: '',
-      keyboardType: 'none',
-      buttons: [],
-      markdown: false,
-      oneTimeKeyboard: false,
-      resizeKeyboard: true
-    }
-  },
-  {
     id: 'audio-message',
     name: 'Аудио сообщение',
     description: 'Аудио файл с подписью',
@@ -601,7 +566,7 @@ const components: ComponentDefinition[] = [
 const componentCategories = [
   {
     title: 'Сообщения',
-    components: components.filter(c => ['message', 'photo', 'video', 'audio', 'document', 'sticker', 'voice', 'animation', 'location', 'contact'].includes(c.type))
+    components: components.filter(c => ['message', 'audio', 'document', 'sticker', 'voice', 'animation', 'location', 'contact'].includes(c.type))
   },
   {
     title: 'Кнопки',
