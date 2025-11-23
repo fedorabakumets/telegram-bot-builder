@@ -1657,7 +1657,7 @@ export function ComponentsSidebar({
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center flex-1 min-w-0">
-                        <div className="cursor-grab active:cursor-grabbing mr-3 hidden group-hover:flex">
+                        <div className="cursor-grab active:cursor-grabbing mr-3 opacity-70 group-hover:opacity-100 transition-opacity flex">
                           <GripVertical className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
