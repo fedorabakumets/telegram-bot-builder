@@ -754,8 +754,15 @@ export function ComponentsSidebar({
         }
       });
     },
-    onSuccess: (newProject: BotProject) => {
+    onSuccess: async (newProject: BotProject) => {
+      // Immediately update the query cache with the new project
+      const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
+      queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
+      
+      // Also refetch to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+      
       toast({
         title: "Проект создан",
         description: `Проект "${newProject.name}" успешно создан`,
@@ -777,8 +784,10 @@ export function ComponentsSidebar({
   // Удаление проекта
   const deleteProjectMutation = useMutation({
     mutationFn: (projectId: number) => apiRequest('DELETE', `/api/projects/${projectId}`),
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+      
       toast({
         title: "Проект удален",
         description: "Проект успешно удален",
