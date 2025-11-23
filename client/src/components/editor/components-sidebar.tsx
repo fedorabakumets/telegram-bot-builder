@@ -723,6 +723,7 @@ export function ComponentsSidebar({
   // Загрузка списка проектов
   const { data: projects = [], isLoading } = useQuery<BotProject[]>({
     queryKey: ['/api/projects'],
+    staleTime: 0, // Данные всегда считаются устаревшими для немедленного обновления при рефетче
   });
 
   // Создание нового проекта

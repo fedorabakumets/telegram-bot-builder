@@ -271,7 +271,7 @@ export default function Editor() {
         data: projectData
       });
     },
-    onSuccess: (updatedProject) => {
+    onSuccess: async (updatedProject) => {
       console.log('Проект сохранен, обновляем кеш проектов');
       
       // Reset local changes flag only after successful save
@@ -279,13 +279,12 @@ export default function Editor() {
       
       // Обновляем и рефетчим кеш проектов
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-      queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['/api/projects'] }),
+        activeProject?.id ? queryClient.refetchQueries({ queryKey: [`/api/projects/${activeProject.id}`] }) : Promise.resolve()
+      ]);
       
-      // Также обновляем конкретный проект если он открыт
-      if (activeProject?.id) {
-        queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
-        queryClient.refetchQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
-      }
+      console.log('Кеш проектов обновлен успешно');
       
       toast({
         title: "Проект сохранен",
