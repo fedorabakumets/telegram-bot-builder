@@ -1065,6 +1065,124 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
   return code;
 }
 
+// Функция для парсинга Python кода обратно в JSON (обратная операция generatePythonCode)
+export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; connections: any[] } {
+  const nodes: Node[] = [];
+  const nodeIdMap = new Map<string, Node>();
+  
+  // Ищем все NODE_START и NODE_END блоки
+  const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@\n([\s\S]*?)# @@NODE_END:\1@@/g;
+  let match;
+  let yPosition = 50;
+  
+  while ((match = nodePattern.exec(pythonCode)) !== null) {
+    const nodeId = match[1];
+    const nodeContent = match[2];
+    
+    // Определяем тип узла
+    let nodeType = 'message';
+    if (nodeId === 'start') {
+      nodeType = 'start';
+    } else if (nodeContent.includes('async def command_handler') || nodeContent.includes('/')) {
+      nodeType = 'command';
+    } else if (nodeContent.includes('@dp.message(F.photo)')) {
+      nodeType = 'photo';
+    } else if (nodeContent.includes('@dp.message(F.video)')) {
+      nodeType = 'video';
+    } else if (nodeContent.includes('@dp.message(F.audio)')) {
+      nodeType = 'audio';
+    } else if (nodeContent.includes('@dp.message(F.voice)')) {
+      nodeType = 'voice';
+    } else if (nodeContent.includes('@dp.message(F.document)')) {
+      nodeType = 'document';
+    } else if (nodeContent.includes('@dp.message(F.sticker)')) {
+      nodeType = 'sticker';
+    } else if (nodeContent.includes('@dp.message(F.animation)')) {
+      nodeType = 'animation';
+    }
+    
+    // Извлекаем текст сообщения
+    let messageText = '';
+    const textMatch = /text\s*=\s*"""([\s\S]*?)"""/.exec(nodeContent) || 
+                      /text\s*=\s*"([^"]*)"/.exec(nodeContent);
+    if (textMatch) {
+      messageText = textMatch[1];
+    }
+    
+    // Извлекаем команду для command узлов
+    let command = '';
+    const commandMatch = /commands=\["([^"]+)"\]/.exec(nodeContent);
+    if (commandMatch) {
+      command = '/' + commandMatch[1];
+    }
+    
+    // Извлекаем кнопки
+    const buttons: any[] = [];
+    const buttonMatches = nodeContent.matchAll(/InlineKeyboardButton\(text=([^,]+),\s*callback_data="([^"]+)"\)/g);
+    for (const btnMatch of buttonMatches) {
+      const btnText = btnMatch[1].replace(/["']/g, '').trim();
+      const callbackData = btnMatch[2];
+      buttons.push({
+        id: `btn_${nodeId}_${buttons.length}`,
+        text: btnText,
+        action: 'goto',
+        target: callbackData
+      });
+    }
+    
+    const node: Node = {
+      id: nodeId,
+      type: nodeType as any,
+      position: { x: 50 + (nodeIdMap.size * 250), y: yPosition },
+      data: {
+        messageText: messageText || `Узел ${nodeId}`,
+        keyboardType: buttons.length > 0 ? 'inline' : 'none',
+        buttons: buttons,
+        showInMenu: nodeType === 'start' || nodeType === 'command',
+        command: command,
+        description: '',
+        allowMultipleSelection: false,
+        formatMode: 'text',
+        enablePhotoInput: false,
+        enableVideoInput: false,
+        enableAudioInput: false,
+        enableDocumentInput: false,
+        waitForTextInput: false,
+        conditionalMessages: [],
+        synonyms: [],
+        attachedMedia: []
+      }
+    };
+    
+    nodes.push(node);
+    nodeIdMap.set(nodeId, node);
+  }
+  
+  // Восстанавливаем connections на основе кнопок с goto
+  const connections: any[] = [];
+  const addedConnections = new Set<string>();
+  
+  nodes.forEach(node => {
+    if (node.data.buttons) {
+      node.data.buttons.forEach(button => {
+        if (button.action === 'goto' && button.target) {
+          const connectionId = `${node.id}-${button.target}`;
+          if (!addedConnections.has(connectionId)) {
+            connections.push({
+              source: node.id,
+              target: button.target,
+              id: connectionId
+            });
+            addedConnections.add(connectionId);
+          }
+        }
+      });
+    }
+  });
+  
+  return { nodes, connections };
+}
+
 export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false): string {
   const { nodes, connections } = extractNodesAndConnections(botData);
   

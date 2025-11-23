@@ -925,71 +925,22 @@ export function ComponentsSidebar({
     }
   };
 
-  const parsePythonBotToJson = (pythonCode: string) => {
-    // Используем точно такую же логику парсинга как в extractNodesAndConnections для экспорта
-    const nodes: any[] = [];
-    const nodePattern = /# @@NODE_START:([a-zA-Z0-9_@]+)@@/g;
-    let match;
-    let nodeIndex = 0;
+  const parsePythonBotToJson = async (pythonCode: string) => {
+    // Используем функцию парсинга из bot-generator.ts (обратная операция к generatePythonCode)
+    const modUrl = new URL("../lib/bot-generator.js", import.meta.url);
+    modUrl.searchParams.set("t", Date.now().toString());
+    const { parsePythonCodeToJson } = await import(modUrl.href);
     
-    // Собираем все уникальные узлы по их ID
-    const nodeIds = new Set<string>();
-    const nodeMatches = pythonCode.matchAll(nodePattern);
+    const { nodes, connections } = parsePythonCodeToJson(pythonCode);
     
-    for (const nodeMatch of nodeMatches) {
-      const nodeId = nodeMatch[1];
-      if (!nodeIds.has(nodeId)) {
-        nodeIds.add(nodeId);
-      }
-    }
-    
-    // Создаём узлы на основе извлеченных ID из маркеров
-    for (const nodeId of nodeIds) {
-      let nodeType = 'message';
-      
-      // Определяем тип узла по ID или контексту
-      if (nodeId === 'start') {
-        nodeType = 'start';
-      } else if (nodeId.includes('command_')) {
-        nodeType = 'command';
-      } else if (nodeId.includes('photo')) {
-        nodeType = 'photo';
-      } else if (nodeId.includes('video')) {
-        nodeType = 'video';
-      } else if (nodeId.includes('audio')) {
-        nodeType = 'audio';
-      } else if (nodeId.includes('voice')) {
-        nodeType = 'voice';
-      } else if (nodeId.includes('document')) {
-        nodeType = 'document';
-      } else if (nodeId.includes('sticker')) {
-        nodeType = 'sticker';
-      }
-      
-      const node = {
-        id: nodeId,
-        type: nodeType,
-        position: { x: 50 + nodeIndex * 250, y: 50 },
-        data: {
-          messageText: '',
-          keyboardType: 'none',
-          buttons: [],
-          showInMenu: nodeType === 'start'
-        }
-      };
-      
-      nodes.push(node);
-      nodeIndex++;
-    }
-    
-    // Создаём структуру проекта с листом (sheets), как в extractNodesAndConnections
+    // Создаём структуру проекта с листом (sheets), точно как extractNodesAndConnections
     const projectData = {
       sheets: [
         {
           id: 'main',
           name: 'Импортированный бот',
           nodes: nodes,
-          connections: []
+          connections: connections
         }
       ],
       version: 2,
@@ -1012,14 +963,15 @@ export function ComponentsSidebar({
           // Проверяем, это ли Python код бота
           if (importPythonText.includes('@@NODE_START:') && importPythonText.includes('@@NODE_END:')) {
             // Это Python код бота - парсим его в JSON
-            const result = parsePythonBotToJson(importPythonText);
-            const projectName = `Python Bot ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
-            const projectDescription = `Импортирован из Python кода (${result.nodeCount} узлов)`;
-            
-            apiRequest('POST', '/api/projects', {
-              name: projectName,
-              description: projectDescription,
-              data: result.data
+            parsePythonBotToJson(importPythonText).then((result) => {
+              const projectName = `Python Bot ${new Date().toLocaleTimeString('ru-RU').slice(0, 5)}`;
+              const projectDescription = `Импортирован из Python кода (${result.nodeCount} узлов)`;
+              
+              return apiRequest('POST', '/api/projects', {
+                name: projectName,
+                description: projectDescription,
+                data: result.data
+              });
             }).then(() => {
               setIsImportDialogOpen(false);
               setImportPythonText('');
