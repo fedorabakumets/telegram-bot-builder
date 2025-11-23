@@ -11918,6 +11918,9 @@ function generateKeyboard(node: Node): string {
   // Определяем режим форматирования
   const hasConditionalMessages = node.data.enableConditionalMessages && node.data.conditionalMessages && node.data.conditionalMessages.length > 0;
   
+  // Генерируем parseMode строку для использования в коде
+  let parseMode = '';
+  
   if (hasConditionalMessages) {
     // Для узлов с условными сообщениями - проверяем приоритет условного режима
     code += '    # Определяем режим форматирования (приоритет у условного сообщения)\n';
@@ -11931,27 +11934,22 @@ function generateKeyboard(node: Node): string {
     } else {
       code += '        current_parse_mode = None\n';
     }
-  } else {
-    // Для узлов без условных сообщений - просто устанавливаем режим
-    if (node.data.formatMode === 'markdown' || node.data.markdown === true) {
-      code += '    current_parse_mode = ParseMode.MARKDOWN\n';
-    } else if (node.data.formatMode === 'html') {
-      code += '    current_parse_mode = ParseMode.HTML\n';
+    
+    // Для узлов с условными сообщениями используем current_parse_mode
+    if (node.data.formatMode === 'markdown' || node.data.markdown === true || node.data.formatMode === 'html') {
+      parseMode = ', parse_mode=current_parse_mode';
     } else {
-      code += '    current_parse_mode = None\n';
+      parseMode = ', parse_mode=current_parse_mode if current_parse_mode else None';
     }
-    // Инициализируем переменные условной клавиатуры
-    code += '    use_conditional_keyboard = False\n';
-    code += '    conditional_keyboard = None\n';
-  }
-  
-  // Генерируем parseMode строку для использования в коде
-  let parseMode = '';
-  if (node.data.formatMode === 'markdown' || node.data.markdown === true || node.data.formatMode === 'html') {
-    parseMode = ', parse_mode=current_parse_mode';
   } else {
-    // Для текстового режима добавляем parse_mode только если он установлен
-    parseMode = ', parse_mode=current_parse_mode if current_parse_mode else None';
+    // Для узлов без условных сообщений - используем прямые значения ParseMode
+    if (node.data.formatMode === 'markdown' || node.data.markdown === true) {
+      parseMode = ', parse_mode=ParseMode.MARKDOWN';
+    } else if (node.data.formatMode === 'html') {
+      parseMode = ', parse_mode=ParseMode.HTML';
+    } else {
+      parseMode = '';
+    }
   }
 
   // НОВАЯ ЛОГИКА: Сбор ввода как дополнительная функциональность к обычным кнопкам
