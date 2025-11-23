@@ -1166,26 +1166,47 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         
         if (!hasResponseCollection) return null;
         
+        // Проверяем если это узел с кнопками как ответами
+        const hasButtonResponses = node.data.buttons && node.data.buttons.length > 0 && collectUserInput;
+        
         return (
           <div className="bg-gradient-to-br from-orange-50/90 to-amber-50/90 dark:from-orange-900/25 dark:to-amber-900/25 border border-orange-200/50 dark:border-orange-800/40 rounded-xl p-4 mb-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/60 flex items-center justify-center">
-                  <i className="fas fa-inbox text-orange-600 dark:text-orange-400 text-sm"></i>
+                  <i className={`${hasButtonResponses ? 'fas fa-star' : 'fas fa-inbox'} text-orange-600 dark:text-orange-400 text-sm`}></i>
                 </div>
                 <div className="text-sm font-semibold text-orange-800 dark:text-orange-200">
-                  Сбор ответов
+                  {hasButtonResponses ? 'Кнопки как ответы' : 'Сбор ответов'}
                 </div>
               </div>
               <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/50 px-2 py-1 rounded-full font-medium">
                 <i className="fas fa-check-circle text-xs mr-1"></i>
-                Включено
+                {hasButtonResponses && inputVariable ? `Сохранить в: ${inputVariable}` : 'Включено'}
               </div>
             </div>
             
             <div className="space-y-2">
+              {/* Button Responses Info */}
+              {hasButtonResponses && (
+                <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
+                  <div className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-xs">
+                    <i className="fas fa-mouse text-amber-600 dark:text-amber-400 text-xs"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Кнопки как варианты ответа
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
+                      <i className="fas fa-bars text-xs"></i>
+                      <span>{node.data.buttons.length} кнопок</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {/* Text Input */}
-              {inputVariable && (
+              {!hasButtonResponses && inputVariable && (
                 <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
                   <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs">
                     <i className="fas fa-keyboard text-blue-600 dark:text-blue-400 text-xs"></i>
@@ -1203,7 +1224,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               )}
               
               {/* Photo Input */}
-              {photoInputVariable && (
+              {!hasButtonResponses && photoInputVariable && (
                 <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
                   <div className="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-xs">
                     <i className="fas fa-image text-purple-600 dark:text-purple-400 text-xs"></i>
@@ -1221,7 +1242,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               )}
               
               {/* Video Input */}
-              {videoInputVariable && (
+              {!hasButtonResponses && videoInputVariable && (
                 <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
                   <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-xs">
                     <i className="fas fa-video text-red-600 dark:text-red-400 text-xs"></i>
@@ -1239,7 +1260,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               )}
               
               {/* Audio Input */}
-              {audioInputVariable && (
+              {!hasButtonResponses && audioInputVariable && (
                 <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
                   <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-xs">
                     <i className="fas fa-microphone text-green-600 dark:text-green-400 text-xs"></i>
@@ -1257,7 +1278,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               )}
               
               {/* Document Input */}
-              {documentInputVariable && (
+              {!hasButtonResponses && documentInputVariable && (
                 <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
                   <div className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-xs">
                     <i className="fas fa-file text-amber-600 dark:text-amber-400 text-xs"></i>
@@ -1275,7 +1296,7 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
               )}
               
               {/* Multi-Select Variable */}
-              {multiSelectVariable && allowMultipleSelection && (
+              {!hasButtonResponses && multiSelectVariable && allowMultipleSelection && (
                 <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
                   <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-xs">
                     <i className="fas fa-check-double text-indigo-600 dark:text-indigo-400 text-xs"></i>
