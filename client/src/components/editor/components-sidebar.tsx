@@ -525,6 +525,10 @@ export function ComponentsSidebar({
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   // Мобильное меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // Импорт проекта
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importJsonText, setImportJsonText] = useState('');
+  const [importError, setImportError] = useState('');
   const isActuallyMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -841,6 +845,66 @@ export function ComponentsSidebar({
     createProjectMutation.mutate();
   };
 
+  const handleImportProject = () => {
+    try {
+      setImportError('');
+      const parsedData = JSON.parse(importJsonText);
+      
+      // Валидация структуры JSON
+      if (!parsedData.name) {
+        throw new Error('Проект должен содержать поле "name"');
+      }
+      
+      if (!parsedData.data) {
+        throw new Error('Проект должен содержать поле "data"');
+      }
+      
+      // Создаём проект с импортированными данными
+      apiRequest('POST', '/api/projects', {
+        name: parsedData.name,
+        description: parsedData.description || '',
+        data: parsedData.data
+      }).then((newProject: BotProject) => {
+        // Обновляем кеш
+        const currentProjects = queryClient.getQueryData<BotProject[]>(['/api/projects']) || [];
+        queryClient.setQueryData(['/api/projects'], [...currentProjects, newProject]);
+        
+        const currentList = queryClient.getQueryData<Array<Omit<BotProject, 'data'>>>(['/api/projects/list']) || [];
+        const { data, ...projectWithoutData } = newProject;
+        queryClient.setQueryData(['/api/projects/list'], [...currentList, projectWithoutData]);
+        
+        toast({
+          title: "Проект импортирован",
+          description: `Проект "${newProject.name}" успешно импортирован`,
+        });
+        
+        // Переключаемся на новый проект
+        if (onProjectSelect) {
+          onProjectSelect(newProject.id);
+        }
+        
+        // Закрываем диалог
+        setIsImportDialogOpen(false);
+        setImportJsonText('');
+      }).catch((error) => {
+        setImportError(`Ошибка импорта: ${error.message}`);
+        toast({
+          title: "Ошибка импорта",
+          description: error.message,
+          variant: "destructive",
+        });
+      });
+    } catch (error: any) {
+      const errorMsg = error instanceof SyntaxError ? 'Неверный JSON формат' : error.message;
+      setImportError(errorMsg);
+      toast({
+        title: "Ошибка валидации",
+        description: errorMsg,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteProject = (projectId: number) => {
     const project = projects.find(p => p.id === projectId);
     if (project && confirm(`Вы уверены, что хотите удалить проект "${project.name}"? Это действие нельзя отменить.`)) {
@@ -1033,23 +1097,92 @@ export function ComponentsSidebar({
           <div className="space-y-4">
             {/* Заголовок и кнопки управления */}
             <div className="space-y-3 mb-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold text-foreground">
                   Проекты ({projects.length})
                 </h3>
-                <Button 
-                  size="default" 
-                  variant="outline" 
-                  className="h-8 px-3 flex items-center gap-1"
-                  onClick={handleCreateProject}
-                  disabled={createProjectMutation.isPending}
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="text-sm">Новый</span>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="default" 
+                    variant="outline" 
+                    className="h-8 px-3 flex items-center gap-1"
+                    onClick={handleCreateProject}
+                    disabled={createProjectMutation.isPending}
+                    title="Создать новый проект"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span className="text-sm">Новый</span>
+                  </Button>
+                  <Button 
+                    size="default" 
+                    variant="outline" 
+                    className="h-8 px-3 flex items-center gap-1"
+                    onClick={() => {
+                      setIsImportDialogOpen(true);
+                      setImportJsonText('');
+                      setImportError('');
+                    }}
+                    title="Импортировать проект из JSON"
+                  >
+                    <i className="fas fa-upload text-sm" />
+                    <span className="text-sm">Импорт</span>
+                  </Button>
+                </div>
               </div>
               
             </div>
+
+            {/* Диалог импорта проекта */}
+            <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Импортировать проект</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Вставьте JSON проекта:</label>
+                    <Textarea 
+                      value={importJsonText}
+                      onChange={(e) => {
+                        setImportJsonText(e.target.value);
+                        setImportError('');
+                      }}
+                      placeholder='{"name": "Мой бот", "description": "", "data": {...}}'
+                      className="font-mono text-sm h-64 resize-none"
+                      data-testid="textarea-import-json"
+                    />
+                  </div>
+                  
+                  {importError && (
+                    <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3">
+                      <p className="text-sm text-destructive">{importError}</p>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-3 justify-end">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsImportDialogOpen(false);
+                        setImportJsonText('');
+                        setImportError('');
+                      }}
+                      data-testid="button-cancel-import"
+                    >
+                      Отмена
+                    </Button>
+                    <Button 
+                      onClick={handleImportProject}
+                      disabled={!importJsonText.trim()}
+                      data-testid="button-confirm-import"
+                    >
+                      <i className="fas fa-check mr-2" />
+                      Импортировать
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* Список проектов */}
             {isLoading ? (
