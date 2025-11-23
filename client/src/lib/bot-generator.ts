@@ -8288,7 +8288,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        await callback_query.message.edit_reply_markup(reply_markup=keyboard)\n';
   code += '\n';
   
-  // Генерируем обработчик для кнопок "Готово" многомерного выбора
+  // Генерируем обработчик для кнопок "Готово" многомерного выбора ТОЛЬКО если есть узлы с множественным выбором
+  if (multiSelectNodes.length > 0) {
   code += '# Обработчик для кнопок завершения множественного выбора\n';
   code += '@dp.callback_query(lambda callback_query: callback_query.data and callback_query.data.startswith("multi_select_done_"))\n';
   code += 'async def handle_multi_select_done(callback_query: types.CallbackQuery):\n';
@@ -8457,6 +8458,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   });
   
   code += '\n';
+  }  // Закрываем if (multiSelectNodes.length > 0)
 
   // Обработчик для reply кнопок множественного выбора - только если есть узлы с множественным выбором
   if (hasMultiSelectNodes(nodes || [])) {
