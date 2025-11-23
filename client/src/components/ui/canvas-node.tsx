@@ -1121,6 +1121,157 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
         </div>
       )}
       
+      {/* Response Collection Indicator */}
+      {(() => {
+        const inputVariable = (node.data as any).inputVariable;
+        const photoInputVariable = (node.data as any).photoInputVariable;
+        const videoInputVariable = (node.data as any).videoInputVariable;
+        const audioInputVariable = (node.data as any).audioInputVariable;
+        const documentInputVariable = (node.data as any).documentInputVariable;
+        const multiSelectVariable = (node.data as any).multiSelectVariable;
+        const allowMultipleSelection = (node.data as any).allowMultipleSelection;
+        
+        const hasResponseCollection = inputVariable || photoInputVariable || videoInputVariable || audioInputVariable || documentInputVariable || multiSelectVariable;
+        
+        if (!hasResponseCollection) return null;
+        
+        return (
+          <div className="bg-gradient-to-br from-orange-50/90 to-amber-50/90 dark:from-orange-900/25 dark:to-amber-900/25 border border-orange-200/50 dark:border-orange-800/40 rounded-xl p-4 mb-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/60 flex items-center justify-center">
+                  <i className="fas fa-inbox text-orange-600 dark:text-orange-400 text-sm"></i>
+                </div>
+                <div className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                  Збір відповідей
+                </div>
+              </div>
+              <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/50 px-2 py-1 rounded-full font-medium">
+                <i className="fas fa-check-circle text-xs mr-1"></i>
+                Включено
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {/* Text Input */}
+              {inputVariable && (
+                <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
+                  <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs">
+                    <i className="fas fa-keyboard text-blue-600 dark:text-blue-400 text-xs"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Текстовий ввід
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
+                      <i className="fas fa-database text-xs"></i>
+                      <code className="bg-blue-100 dark:bg-blue-900/30 px-1.5 py-0.5 rounded text-xs font-mono text-blue-700 dark:text-blue-300">{inputVariable}</code>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Photo Input */}
+              {photoInputVariable && (
+                <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
+                  <div className="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-xs">
+                    <i className="fas fa-image text-purple-600 dark:text-purple-400 text-xs"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Фото
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
+                      <i className="fas fa-database text-xs"></i>
+                      <code className="bg-purple-100 dark:bg-purple-900/30 px-1.5 py-0.5 rounded text-xs font-mono text-purple-700 dark:text-purple-300">{photoInputVariable}</code>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Video Input */}
+              {videoInputVariable && (
+                <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
+                  <div className="w-5 h-5 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-xs">
+                    <i className="fas fa-video text-red-600 dark:text-red-400 text-xs"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Відео
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
+                      <i className="fas fa-database text-xs"></i>
+                      <code className="bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded text-xs font-mono text-red-700 dark:text-red-300">{videoInputVariable}</code>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Audio Input */}
+              {audioInputVariable && (
+                <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
+                  <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-xs">
+                    <i className="fas fa-microphone text-green-600 dark:text-green-400 text-xs"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Аудіо
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
+                      <i className="fas fa-database text-xs"></i>
+                      <code className="bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded text-xs font-mono text-green-700 dark:text-green-300">{audioInputVariable}</code>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Document Input */}
+              {documentInputVariable && (
+                <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
+                  <div className="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-xs">
+                    <i className="fas fa-file text-amber-600 dark:text-amber-400 text-xs"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Документ
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
+                      <i className="fas fa-database text-xs"></i>
+                      <code className="bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded text-xs font-mono text-amber-700 dark:text-amber-300">{documentInputVariable}</code>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Multi-Select Variable */}
+              {multiSelectVariable && allowMultipleSelection && (
+                <div className="flex items-center space-x-3 bg-white/60 dark:bg-slate-900/40 rounded-lg border border-orange-100 dark:border-orange-800/30 p-3 hover:bg-white/80 dark:hover:bg-slate-900/60 transition-colors">
+                  <div className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-xs">
+                    <i className="fas fa-check-double text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                      Множественный выбор
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-1 mt-1">
+                      <i className="fas fa-database text-xs"></i>
+                      <code className="bg-indigo-100 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded text-xs font-mono text-indigo-700 dark:text-indigo-300">{multiSelectVariable}</code>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-3 pt-3 border-t border-orange-200/50 dark:border-orange-700/30">
+              <div className="flex items-center justify-center space-x-2 text-xs text-orange-600 dark:text-orange-400">
+                <i className="fas fa-info-circle"></i>
+                <span>Відповіді зберігаються в змінних для подальшого використання</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+      
       {/* Text Input Indicator for keyboard type 'none' */}
       {node.type === 'keyboard' && node.data.keyboardType === 'none' && (node.data as any).enableTextInput && (
         <div className="bg-gradient-to-br from-cyan-50/70 to-blue-50/70 dark:from-cyan-900/30 dark:to-blue-900/30 rounded-xl p-4 mb-4 border border-cyan-200 dark:border-cyan-800/30">
