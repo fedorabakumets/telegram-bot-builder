@@ -1174,10 +1174,10 @@ export function CanvasNode({ node, isSelected, onClick, onDelete, onDuplicate, o
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/60 flex items-center justify-center">
-                  <i className={`${hasButtonResponses ? 'fas fa-star' : 'fas fa-inbox'} text-orange-600 dark:text-orange-400 text-sm`}></i>
+                  <i className="fas fa-inbox text-orange-600 dark:text-orange-400 text-sm"></i>
                 </div>
                 <div className="text-sm font-semibold text-orange-800 dark:text-orange-200">
-                  {hasButtonResponses ? 'Кнопки как ответы' : 'Сбор ответов'}
+                  Сбор ответов
                 </div>
               </div>
               <div className="text-xs text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/50 px-2 py-1 rounded-full font-medium">
