@@ -2572,24 +2572,23 @@ export function PropertiesPanel({
           <h3 className="text-sm font-medium text-foreground mb-3">Клавиатура</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-end gap-3">
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground">Inline</Label>
-                  <Switch
-                    checked={selectedNode.data.keyboardType === 'inline'}
-                    onCheckedChange={(checked) => {
-                      onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs text-muted-foreground">Reply</Label>
-                  <Switch
-                    checked={selectedNode.data.keyboardType === 'reply'}
-                    onCheckedChange={(checked) => {
-                      onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
-                    }}
-                  />
-                </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Inline</Label>
+                <Switch
+                  checked={selectedNode.data.keyboardType === 'inline'}
+                  onCheckedChange={(checked) => {
+                    onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
+                  }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Reply</Label>
+                <Switch
+                  checked={selectedNode.data.keyboardType === 'reply'}
+                  onCheckedChange={(checked) => {
+                    onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
+                  }}
+                />
               </div>
             </div>
 
