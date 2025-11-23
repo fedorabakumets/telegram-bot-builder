@@ -638,7 +638,39 @@ export default function Editor() {
       // Проверяем, существует ли лист с таким ID
       const sheetExists = botDataWithSheets.sheets.some(sheet => sheet.id === sheetId);
       if (!sheetExists) {
-        console.warn(`Лист ${sheetId} не найден в проекте, игнорируем переключение`);
+        console.warn(`Лист ${sheetId} не найден в проекте`);
+        
+        // Переключаемся на первый доступный лист
+        if (botDataWithSheets.sheets.length > 0) {
+          const firstAvailableSheet = botDataWithSheets.sheets[0];
+          const updatedData = SheetsManager.setActiveSheet(botDataWithSheets, firstAvailableSheet.id);
+          setBotDataWithSheets(updatedData);
+          
+          // Загружаем данные первого доступного листа
+          const newActiveSheet = SheetsManager.getActiveSheet(updatedData);
+          if (newActiveSheet) {
+            const shouldSkipLayout = false;
+            setBotData({ nodes: newActiveSheet.nodes, connections: newActiveSheet.connections }, undefined, shouldSkipLayout ? undefined : currentNodeSizes, shouldSkipLayout);
+          }
+          
+          // Сохраняем и принудительно перезагружаем проект
+          if (activeProject?.id) {
+            updateProjectMutation.mutate({});
+            // Принудительно перезагружаем данные проекта
+            setTimeout(() => {
+              queryClient.invalidateQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
+              queryClient.refetchQueries({ queryKey: [`/api/projects/${activeProject.id}`] });
+              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+              queryClient.refetchQueries({ queryKey: ['/api/projects'] });
+            }, 100);
+          }
+        }
+        
+        toast({
+          title: "Лист был удален",
+          description: "Переключились на другой лист",
+          variant: "destructive",
+        });
         return;
       }
       
@@ -677,7 +709,7 @@ export default function Editor() {
         variant: "destructive",
       });
     }
-  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject]);
+  }, [botDataWithSheets, getBotData, setBotData, updateProjectMutation, toast, isMobile, nodes.length, currentNodeSizes, activeProject, queryClient]);
 
   // Проверяем, есть ли выбранный шаблон при загрузке страницы
   useEffect(() => {
