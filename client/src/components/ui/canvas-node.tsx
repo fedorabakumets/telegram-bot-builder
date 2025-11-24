@@ -1400,52 +1400,101 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                     ) : (
                       /* Regular inline buttons */
                       <div className="grid grid-cols-2 gap-2">
-                        {node.data.buttons.map((button: any) => (
-                          <div key={button.id} className="group relative">
-                            <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200 shadow-sm">
-                              <div className="flex items-center justify-center space-x-1">
-                                <span className="truncate">{button.text}</span>
-                                {button.action === 'command' && (
-                                  <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
-                                )}
-                                {button.action === 'url' && (
-                                  <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
-                                )}
-                                {button.action === 'goto' && (
-                                  <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
-                                )}
-                                {button.action === 'selection' && (
-                                  <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
-                                )}
+                        {node.data.buttons.map((button: any) => {
+                          const getButtonTarget = () => {
+                            if (button.action === 'goto' && button.target) {
+                              const targetNode = allNodes?.find(n => n.id === button.target);
+                              return targetNode?.data?.title || 'Неизвестный узел';
+                            } else if (button.action === 'url' && button.url) {
+                              return button.url;
+                            }
+                            return '';
+                          };
+                          const targetInfo = getButtonTarget();
+                          return (
+                            <div key={button.id} className="group relative">
+                              <div 
+                                className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors duration-200 shadow-sm"
+                                title={targetInfo ? (button.action === 'goto' ? `Переход к: ${targetInfo}` : `Ссылка: ${targetInfo}`) : ''}
+                              >
+                                <div className="flex flex-col items-center justify-center space-y-0.5">
+                                  <div className="flex items-center justify-center space-x-1">
+                                    <span className="truncate">{button.text}</span>
+                                    {button.action === 'command' && (
+                                      <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
+                                    )}
+                                    {button.action === 'url' && (
+                                      <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title={`Ссылка: ${button.url}`}></i>
+                                    )}
+                                    {button.action === 'goto' && (
+                                      <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title={`Переход к: ${allNodes?.find(n => n.id === button.target)?.data?.title || 'Неизвестный узел'}`}></i>
+                                    )}
+                                    {button.action === 'selection' && (
+                                      <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
+                                    )}
+                                  </div>
+                                  {targetInfo && (
+                                    <span className="text-[10px] text-blue-600 dark:text-blue-300 truncate w-full opacity-75">
+                                      {button.action === 'goto' && '→'}
+                                      {button.action === 'url' && '🔗'}
+                                      {' ' + targetInfo}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
                 ) : (
                   /* Reply keyboard buttons */
                   <div className="space-y-2">
-                    {node.data.buttons.map((button: any) => (
-                      <div key={button.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
-                        <div className="flex items-center space-x-1 ml-2">
-                          {button.action === 'command' && (
-                            <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
-                          )}
-                          {button.action === 'url' && (
-                            <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>
-                          )}
-                          {button.action === 'goto' && (
-                            <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>
-                          )}
-                          {button.action === 'selection' && (
-                            <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
-                          )}
+                    {node.data.buttons.map((button: any) => {
+                      const getButtonTarget = () => {
+                        if (button.action === 'goto' && button.target) {
+                          const targetNode = allNodes?.find(n => n.id === button.target);
+                          return targetNode?.data?.title || 'Неизвестный узел';
+                        } else if (button.action === 'url' && button.url) {
+                          return button.url;
+                        } else if (button.action === 'command') {
+                          return 'Команда';
+                        } else if (button.action === 'selection') {
+                          return 'Выбор';
+                        }
+                        return '';
+                      };
+                      const targetInfo = getButtonTarget();
+                      return (
+                        <div key={button.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/50 dark:to-slate-800/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
+                            {targetInfo && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                {button.action === 'goto' && '→ '}
+                                {button.action === 'url' && '🔗 '}
+                                {targetInfo}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-1 ml-2 flex-shrink-0">
+                            {button.action === 'command' && (
+                              <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>
+                            )}
+                            {button.action === 'url' && (
+                              <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title={`Ссылка: ${button.url}`}></i>
+                            )}
+                            {button.action === 'goto' && (
+                              <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title={`Переход к: ${allNodes?.find(n => n.id === button.target)?.data?.title || 'Неизвестный узел'}`}></i>
+                            )}
+                            {button.action === 'selection' && (
+                              <i className="fas fa-mouse-pointer text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Выбор"></i>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </>
