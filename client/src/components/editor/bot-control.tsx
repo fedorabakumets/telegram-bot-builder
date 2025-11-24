@@ -859,7 +859,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   };
 
   // Получаем статус бота
-  const { data: botStatus, isLoading: isLoadingStatus } = useQuery<BotStatusResponse>({
+  const { data: botStatus, isLoading: isLoadingStatus, refetch: refetchBotStatus } = useQuery<BotStatusResponse>({
     queryKey: [`/api/projects/${projectId}/bot`],
     refetchInterval: 10000, // Уменьшили с 1 секунды до 10 секунд
     refetchIntervalInBackground: false, // Не опрашиваем в фоне
@@ -1042,6 +1042,8 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     onSuccess: () => {
       toast({ title: "Бот запущен", description: "Бот успешно запущен и готов к работе." });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
+      // Сразу обновляем статус на фронтенде
+      refetchBotStatus();
     },
     onError: (error: any) => {
       toast({ title: "Ошибка запуска", description: error.message || "Не удалось запустить бота.", variant: "destructive" });
@@ -1056,6 +1058,8 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     onSuccess: () => {
       toast({ title: "Бот остановлен", description: "Бот успешно остановлен." });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/bot`] });
+      // Сразу обновляем статус на фронтенде
+      refetchBotStatus();
     },
     onError: (error: any) => {
       toast({ title: "Ошибка остановки", description: error.message || "Не удалось остановить бота.", variant: "destructive" });
