@@ -3876,12 +3876,12 @@ export function PropertiesPanel({
 
                             {/* Keyboard Configuration for Conditional Messages */}
                             <div className="space-y-3 border-t border-purple-200/30 dark:border-purple-800/30 pt-3">
-                              <div className="flex items-center justify-between">
+                              <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
                                 <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
                                   <i className="fas fa-keyboard mr-1"></i>
                                   Кнопки для условного сообщения
                                 </Label>
-                                <div className="flex items-center gap-2 bg-purple-100/30 dark:bg-purple-900/20 rounded-lg p-1.5 border border-purple-200/40 dark:border-purple-800/40">
+                                <div className="flex flex-wrap items-center gap-2 bg-purple-100/30 dark:bg-purple-900/20 rounded-lg p-1.5 border border-purple-200/40 dark:border-purple-800/40">
                                   <div className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-purple-200/40 dark:hover:bg-purple-800/40 transition-all">
                                     <i className="fas fa-square text-purple-600 dark:text-purple-400 text-xs"></i>
                                     <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 cursor-pointer">Inline</Label>
