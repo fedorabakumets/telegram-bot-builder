@@ -4644,8 +4644,11 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
             console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем код автоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
             code += '    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла\n';
+            code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура\n';
             code += '    user_id = callback_query.from_user.id\n';
-            code += '    if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
+            code += '    if "conditional_keyboard" in locals() and conditional_keyboard is not None:\n';
+            code += '        logging.info("⏸️ Автопереход ОТЛОЖЕН: показана условная клавиатура - ждём нажатия кнопки")\n';
+            code += '    elif user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
             code += `        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${nodeId}")\n`;
             code += '    else:\n';
             code += `        # ⚡ Автопереход к узлу ${autoTransitionTarget}\n`;
