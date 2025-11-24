@@ -17,12 +17,18 @@ This application provides a **no-code visual Telegram bot builder** that enables
 Preferred communication style: Simple, everyday language. No-code platform for non-technical users.
 
 ## Recent Changes (Current Session)
-- **✨ Simplified Telegram Login Flow** (telegram-auth.tsx + telegram-client.ts):
-  - Removed credentials input step - API ID/Hash now configured via env vars (TELEGRAM_API_ID, TELEGRAM_API_HASH)
+- **✨ Implemented Telegram Login Widget** (telegram-login-widget.tsx + routes.ts + adaptive-header.tsx):
+  - Added official Telegram Login Widget - official authorization button from Telegram
+  - User clicks button, signs in with their Telegram account, receives auth data
+  - Simple authorization endpoint `/api/auth/telegram` that creates user session
+  - Replaces old Client API avторизация - now just standard login like other websites
+  - Flow: Click Telegram button → User signs in with Telegram → Redirects back authenticated
+  - No complex credentials needed - official Telegram widget handles everything
+  
+- Previous: **✨ Simplified Telegram Login Flow** (telegram-auth.tsx + telegram-client.ts):
+  - Removed credentials input step - API ID/Hash now configured via env vars
   - Simplified flow: Номер телефона → Код подтверждения → (опционально) Пароль 2FA
-  - Updated sendCode() and restoreSession() to use env vars with fallback to database
-  - User no longer needs to provide API credentials - much simpler UX
-  - Component can still be used for other functionality requiring credentials via database
+  - User no longer needs to provide API credentials
 
 - Previous session: **✨ Added bot execution time tracking counter** (bot-control.tsx):
   - New toggle "📊 Отслеживать время" to enable/disable time tracking per bot

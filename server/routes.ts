@@ -5974,6 +5974,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Telegram Login Widget авторизация
+  app.post("/api/auth/telegram", async (req, res) => {
+    try {
+      const { id, first_name, last_name, username, photo_url } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          error: "User ID обязателен"
+        });
+      }
+
+      // Создаем простую сессию пользователя
+      (req.session as any).userId = id;
+      (req.session as any).userInfo = {
+        id,
+        first_name,
+        last_name,
+        username,
+        photo_url
+      };
+
+      res.json({
+        success: true,
+        message: "Авторизация успешна",
+        user: {
+          id,
+          first_name,
+          last_name,
+          username
+        }
+      });
+    } catch (error: any) {
+      console.error("Telegram auth error:", error);
+      res.status(500).json({
+        success: false,
+        error: "Ошибка авторизации"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

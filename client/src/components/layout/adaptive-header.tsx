@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github, LogIn } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LayoutConfig } from './layout-manager';
-import { TelegramAuth } from '@/components/telegram-auth';
+import { TelegramLoginWidget } from '@/components/telegram-login-widget';
 
 interface BotInfo {
   first_name: string;
@@ -66,7 +66,6 @@ export function AdaptiveHeader({
   
   // Состояние для мобильного меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showTelegramAuth, setShowTelegramAuth] = useState(false);
   
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
@@ -443,17 +442,9 @@ export function AdaptiveHeader({
         <div className="h-px w-full bg-border my-2"></div>
       )}
       
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => setShowTelegramAuth(true)}
-        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs`}
-        title="Вход через Telegram"
-        data-testid="button-telegram-login"
-      >
-        <LogIn className="h-3.5 w-3.5" />
-        <span className="max-sm:hidden ml-1">Telegram</span>
-      </Button>
+      <div className={`${isVertical ? 'w-full flex justify-center' : ''}`}>
+        <TelegramLoginWidget botUsername="botcraft_studio_bot" />
+      </div>
       
       <Button 
         variant="outline" 
@@ -560,14 +551,6 @@ export function AdaptiveHeader({
         </Sheet>
       </div>
 
-      {/* Telegram Auth Dialog */}
-      <TelegramAuth 
-        open={showTelegramAuth}
-        onOpenChange={setShowTelegramAuth}
-        onSuccess={() => {
-          setShowTelegramAuth(false);
-        }}
-      />
     </header>
   );
 }
