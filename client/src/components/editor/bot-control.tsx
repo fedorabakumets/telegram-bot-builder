@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotToken } from '@shared/schema';
-import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Camera, Upload, ExternalLink } from 'lucide-react';
+import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Camera, Upload, ExternalLink, Database } from 'lucide-react';
 
 interface BotControlProps {
   projectId: number;
@@ -610,13 +610,19 @@ function BotProfile({
   botInfo, 
   onRefresh, 
   isRefreshing,
-  fallbackName = 'Бот'
+  fallbackName = 'Бот',
+  isDatabaseEnabled = false,
+  onToggleDatabase,
+  isTogglingDatabase = false
 }: { 
   projectId: number;
   botInfo?: BotInfo | null; 
   onRefresh: () => void; 
   isRefreshing: boolean; 
   fallbackName?: string;
+  isDatabaseEnabled?: boolean;
+  onToggleDatabase?: (enabled: boolean) => void;
+  isTogglingDatabase?: boolean;
 }) {
   if (!botInfo) {
     return (
@@ -724,6 +730,35 @@ function BotProfile({
             )}
           </div>
         </div>
+        
+        {/* Database Toggle */}
+        {onToggleDatabase && (
+          <>
+            <Separator className="my-3" />
+            <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+              isDatabaseEnabled 
+                ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
+                : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
+            }`} data-testid="database-toggle-container">
+              <Database className={`w-5 h-5 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
+              <Label htmlFor="db-toggle-bot" className={`text-sm font-bold cursor-pointer flex-1 ${
+                isDatabaseEnabled 
+                  ? 'text-green-700 dark:text-green-300' 
+                  : 'text-red-700 dark:text-red-300'
+              }`}>
+                {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
+              </Label>
+              <Switch
+                id="db-toggle-bot"
+                data-testid="switch-database-toggle-bot"
+                checked={isDatabaseEnabled}
+                onCheckedChange={onToggleDatabase}
+                disabled={isTogglingDatabase}
+                className="scale-110"
+              />
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -812,6 +847,35 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     refetchInterval: botStatus?.status === 'running' ? 60000 : false, // Увеличили с 30 секунд до 1 минуты
     refetchIntervalInBackground: false, // Не опрашиваем в фоне
     staleTime: 30000, // Считаем данные свежими 30 секунд
+  });
+
+  // Получаем информацию о проекте
+  const { data: project } = useQuery({
+    queryKey: [`/api/projects/${projectId}`],
+  });
+
+  const isDatabaseEnabled = (project as any)?.userDatabaseEnabled;
+
+  // Toggle user database enabled mutation
+  const toggleDatabaseMutation = useMutation({
+    mutationFn: (enabled: boolean) => 
+      apiRequest('PUT', `/api/projects/${projectId}`, { userDatabaseEnabled: enabled ? 1 : 0 }),
+    onSuccess: (data, enabled) => {
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}`] });
+      toast({
+        title: enabled ? "База данных включена" : "База данных выключена",
+        description: enabled 
+          ? "Функции работы с базой данных пользователей будут генерироваться в коде бота." 
+          : "Функции работы с базой данных НЕ будут генерироваться в коде бота.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось изменить настройку базы данных",
+        variant: "destructive",
+      });
+    }
   });
 
   const isRunning = botStatus?.status === 'running';
@@ -1007,6 +1071,30 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
           <Plus className="w-4 h-4" />
           Подключить бот
         </Button>
+      </div>
+
+      {/* Database Toggle */}
+      <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+        isDatabaseEnabled 
+          ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
+          : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
+      }`} data-testid="database-toggle-container-bot-page">
+        <Database className={`w-5 h-5 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
+        <Label htmlFor="db-toggle-bot-page" className={`text-sm font-bold cursor-pointer flex-1 ${
+          isDatabaseEnabled 
+            ? 'text-green-700 dark:text-green-300' 
+            : 'text-red-700 dark:text-red-300'
+        }`}>
+          {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
+        </Label>
+        <Switch
+          id="db-toggle-bot-page"
+          data-testid="switch-database-toggle-bot-page"
+          checked={isDatabaseEnabled}
+          onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
+          disabled={toggleDatabaseMutation.isPending}
+          className="scale-110"
+        />
       </div>
 
       {isLoading ? (
