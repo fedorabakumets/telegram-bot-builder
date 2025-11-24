@@ -132,7 +132,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
         setValidationResult(validation || { isValid: false, errors: [] });
         
         if (!validation?.isValid) return '';
-        return botGenerator.generatePythonCode(botData, projectName, groups);
+        return botGenerator.generatePythonCode(botData, projectName, groups, false, projectId);
       },
       json: async () => JSON.stringify(botData, null, 2),
       requirements: async () => {

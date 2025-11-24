@@ -7,7 +7,7 @@ export type CodeFormat = 'python' | 'json' | 'requirements' | 'readme' | 'docker
 
 type CodeGeneratorState = Record<CodeFormat, string>;
 
-export function useCodeGenerator(botData: BotData, projectName: string, groups: BotGroup[], userDatabaseEnabled: boolean = false) {
+export function useCodeGenerator(botData: BotData, projectName: string, groups: BotGroup[], userDatabaseEnabled: boolean = false, projectId: number | null = null) {
   const [codeContent, setCodeContent] = useState<CodeGeneratorState>({
     python: '',
     json: '',
@@ -32,7 +32,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
 
       switch (format) {
         case 'python':
-          return botGenerator.generatePythonCode(botData, projectName, groups, userDatabaseEnabled);
+          return botGenerator.generatePythonCode(botData, projectName, groups, userDatabaseEnabled, projectId);
         case 'json':
           return JSON.stringify(botData, null, 2);
         case 'requirements':
@@ -50,7 +50,7 @@ export function useCodeGenerator(botData: BotData, projectName: string, groups: 
       console.error('Error generating content:', error);
       return `# Ошибка генерации\n# ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`;
     }
-  }, [botData, projectName, groups, userDatabaseEnabled]);
+  }, [botData, projectName, groups, userDatabaseEnabled, projectId]);
 
   const loadContent = useCallback(async (selectedFormat: CodeFormat) => {
     // Проверяем, изменились ли данные

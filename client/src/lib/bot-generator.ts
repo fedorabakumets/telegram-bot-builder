@@ -1282,7 +1282,7 @@ export function parsePythonCodeToJson(pythonCode: string): { nodes: Node[]; conn
   return { nodes, connections };
 }
 
-export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false): string {
+export function generatePythonCode(botData: BotData, botName: string = "MyBot", groups: BotGroup[] = [], userDatabaseEnabled: boolean = false, projectId: number | null = null): string {
   const { nodes, connections } = extractNodesAndConnections(botData);
   
   // Собираем все ID узлов для генерации уникальных коротких ID
@@ -1457,7 +1457,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   if (userDatabaseEnabled) {
   code += '# API configuration для сохранения сообщений\n';
   code += 'API_BASE_URL = os.getenv("REPLIT_DEV_DOMAIN", "http://localhost:5000")\n';
-  code += 'PROJECT_ID = os.getenv("PROJECT_ID", "")  # ID проекта в системе\n\n';
+  code += `PROJECT_ID = os.getenv("PROJECT_ID", "${projectId || ''}")  # ID проекта в системе\n\n`;
   
   code += '# Функция для сохранения сообщений в базу данных через API\n';
   code += 'async def save_message_to_api(user_id: str, message_type: str, message_text: str = None, node_id: str = None, message_data: dict = None):\n';
