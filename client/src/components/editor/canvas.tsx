@@ -157,6 +157,18 @@ export function Canvas({
   // Получение активного листа (с fallback'ом для совместимости)
   const activeSheet = botData ? SheetsManager.getActiveSheet(botData) : null;
 
+  // Получение всех узлов со всех листов для отображения связей между листами
+  const getAllNodesFromAllSheets = useCallback(() => {
+    if (!botData?.sheets) return [];
+    const allNodes: Node[] = [];
+    botData.sheets.forEach(sheet => {
+      if (sheet.nodes) {
+        allNodes.push(...sheet.nodes);
+      }
+    });
+    return allNodes;
+  }, [botData]);
+
   // Обработчики для работы с листами
   const handleSheetSelect = useCallback((sheetId: string) => {
     if (!botData || !onBotDataUpdate) return;
@@ -955,7 +967,7 @@ export function Canvas({
               <CanvasNode
                 key={node.id}
                 node={node}
-                allNodes={nodes}
+                allNodes={botData ? getAllNodesFromAllSheets() : nodes}
                 isSelected={selectedNodeId === node.id}
                 onClick={() => onNodeSelect(node.id)}
                 onDelete={() => onNodeDelete(node.id)}
