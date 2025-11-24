@@ -12018,7 +12018,6 @@ function generateKeyboard(node: Node): string {
       // Без клавиатуры
       code += `${indent3}await message.answer(text${parseMode})\n`;
     }
-  }
   
   return code;
 }
