@@ -317,7 +317,7 @@ export function AdaptiveHeader({
 
   // Компонент действий
   const Actions = () => (
-    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden md:flex flex-wrap items-center gap-2 md:w-full md:order-last lg:w-auto lg:order-none lg:ml-auto'}`}>
+    <div className={`flex ${isVertical ? 'flex-col space-y-2 p-2' : 'hidden lg:flex flex-wrap items-center gap-2 lg:w-auto lg:order-none lg:ml-auto'}`}>
       
       {/* Кнопки управления макетом */}
       {(onToggleHeader || onToggleSidebar || onToggleProperties || onToggleCanvas || onToggleCode) && (
