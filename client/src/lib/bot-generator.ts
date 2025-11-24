@@ -4376,7 +4376,29 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
               code += '    # Для reply клавиатуры нужно отправить новое сообщение\n';
               code += '    await bot.send_message(callback_query.from_user.id, text, reply_markup=keyboard)\n';
-              code += '    keyboard = None  # Устанавливаем None чтобы не отправить дважды\n';
+              
+              // Проверяем автопереход для reply клавиатуры
+              const currentNodeForReplyAutoTransition = nodes.find(n => n.id === nodeId);
+              let replyAutoTransitionTarget: string | null = null;
+              if (currentNodeForReplyAutoTransition?.data.enableAutoTransition && currentNodeForReplyAutoTransition?.data.autoTransitionTo) {
+                replyAutoTransitionTarget = currentNodeForReplyAutoTransition.data.autoTransitionTo;
+              } else if (currentNodeForReplyAutoTransition && (!currentNodeForReplyAutoTransition.data.buttons || currentNodeForReplyAutoTransition.data.buttons.length === 0)) {
+                const outgoingConnections = connections.filter(conn => conn.source === nodeId);
+                if (outgoingConnections.length === 1) {
+                  replyAutoTransitionTarget = outgoingConnections[0].target;
+                }
+              }
+              
+              if (replyAutoTransitionTarget) {
+                const safeFunctionName = replyAutoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
+                code += '    \n';
+                code += '    # АВТОПЕРЕХОД после reply клавиатуры\n';
+                code += `    logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${replyAutoTransitionTarget}")\n`;
+                code += `    await handle_callback_${safeFunctionName}(callback_query)\n`;
+                code += `    logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${replyAutoTransitionTarget}")\n`;
+              }
+              
+              code += '    return  # Возвращаемся чтобы не отправить сообщение дважды\n';
             } else {
               // Генерируем inline клавиатуру (по умолчанию)
               code += '    # Create inline keyboard\n';
