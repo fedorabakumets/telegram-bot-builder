@@ -3791,9 +3791,10 @@ export function PropertiesPanel({
                                   <i className="fas fa-keyboard mr-1"></i>
                                   Кнопки для условного сообщения
                                 </Label>
-                                <div className="flex items-center gap-3">
-                                  <div className="flex items-center gap-2">
-                                    <Label className="text-xs text-purple-600 dark:text-purple-400">Inline</Label>
+                                <div className="flex items-center gap-2 bg-purple-100/30 dark:bg-purple-900/20 rounded-lg p-1.5 border border-purple-200/40 dark:border-purple-800/40">
+                                  <div className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-purple-200/40 dark:hover:bg-purple-800/40 transition-all">
+                                    <i className="fas fa-square text-purple-600 dark:text-purple-400 text-xs"></i>
+                                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 cursor-pointer">Inline</Label>
                                     <Switch
                                       checked={(condition as any).keyboardType === 'inline'}
                                       onCheckedChange={(checked) => {
@@ -3805,8 +3806,10 @@ export function PropertiesPanel({
                                       }}
                                     />
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <Label className="text-xs text-purple-600 dark:text-purple-400">Reply</Label>
+                                  <div className="w-px h-4 bg-purple-300/30 dark:bg-purple-700/30"></div>
+                                  <div className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-purple-200/40 dark:hover:bg-purple-800/40 transition-all">
+                                    <i className="fas fa-bars text-purple-600 dark:text-purple-400 text-xs"></i>
+                                    <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 cursor-pointer">Reply</Label>
                                     <Switch
                                       checked={(condition as any).keyboardType === 'reply'}
                                       onCheckedChange={(checked) => {
@@ -4682,7 +4685,7 @@ export function PropertiesPanel({
         )}
 
         {/* Auto Transition Section - показывать только когда нет кнопок и нет сбора данных */}
-        {selectedNode.type !== 'input' && 
+        {selectedNode.type !== 'start' && selectedNode.type !== 'command' && 
          (!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
          (selectedNode.data.keyboardType === 'none' || selectedNode.data.keyboardType === 'reply') && (
           <div>
