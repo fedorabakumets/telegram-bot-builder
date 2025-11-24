@@ -1,6 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation, useParams, useRoute } from 'wouter';
+import { useTelegramAuth } from '@/hooks/use-telegram-auth';
+import { TelegramLoginWidget } from '@/components/telegram-login-widget';
+import { Card, CardContent } from '@/components/ui/card';
 import { Header } from '@/components/editor/header';
 import { ComponentsSidebar } from '@/components/editor/components-sidebar';
 import { Canvas } from '@/components/editor/canvas';
@@ -41,6 +44,67 @@ export default function Editor() {
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
+  
+  // Проверка авторизации
+  const { user } = useTelegramAuth();
+  
+  // Если пользователь не авторизован - показываем форму входа
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <div className="text-center space-y-8">
+            {/* Логотип и название */}
+            <div className="space-y-4">
+              <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto">
+                <i className="fab fa-telegram-plane text-primary-foreground text-2xl"></i>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">BotCraft Studio</h1>
+                <p className="text-muted-foreground mt-2">Конструктор Telegram ботов</p>
+              </div>
+            </div>
+
+            {/* Описание */}
+            <div className="space-y-4 text-left">
+              <Card className="bg-muted/50 border-0">
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Создавайте мощные Telegram ботов с помощью нашего визуального конструктора. Без кода, без усложнений.
+                  </p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-center">
+                      <span className="text-green-600 mr-2">✓</span> Перетаскивание блоков
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-green-600 mr-2">✓</span> Готовые шаблоны
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-green-600 mr-2">✓</span> Мгновенное развертывание
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Кнопка входа */}
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Войдите через свой аккаунт Telegram:</p>
+              <div className="flex justify-center pt-2">
+                <div id="telegram-login-widget"></div>
+              </div>
+              <TelegramLoginWidget />
+            </div>
+
+            {/* Footer */}
+            <div className="text-xs text-muted-foreground pt-4 border-t border-border">
+              <p>Ваши данные защищены. Мы используем официальную авторизацию Telegram.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Определяем мобильное устройство
   const isMobile = useIsMobile();

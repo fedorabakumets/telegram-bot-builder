@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Bot, Edit, Trash2, Calendar, User, Download } from 'lucide-react';
+import { Plus, Bot, Edit, Trash2, Calendar, User, Download, LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -156,6 +156,7 @@ export default function Home() {
     }
   };
 
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -168,6 +169,7 @@ export default function Home() {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-background">
