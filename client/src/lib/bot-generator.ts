@@ -9113,24 +9113,18 @@ function generateStartHandler(node: Node, userDatabaseEnabled: boolean): string 
     
     code += keyboardCode;
     code += '\n    # АВТОПЕРЕХОД: Переходим к следующему узлу автоматически\n';
-    code += '    user_id = message.from_user.id\n';
-    code += '    if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
-    code += `        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${node.id}")\n`;
-    code += '    else:\n';
-    code += `        # ⚡ Автопереход к узлу ${autoTransitionTarget}\n`;
-    code += `        logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTransitionTarget}")\n`;
-    code += '        # Создаем временный callback_query объект для вызова обработчика\n';
-    code += '        from aiogram.types import CallbackQuery\n';
-    code += '        temp_callback = CallbackQuery(\n';
-    code += '            id="auto_transition",\n';
-    code += '            from_user=message.from_user,\n';
-    code += `            data="${autoTransitionTarget}",\n`;
-    code += '            chat_instance=str(message.chat.id),\n';
-    code += '            message=message\n';
-    code += '        )\n';
-    code += `        await handle_callback_${safeFunctionName}(temp_callback)\n`;
-    code += `        logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")\n`;
-    code += '        return\n';
+    code += `    logging.info(f"⚡ Автопереход от узла ${node.id} к узлу ${autoTransitionTarget}")\n`;
+    code += '    # Создаем временный callback_query объект для вызова обработчика\n';
+    code += '    from aiogram.types import CallbackQuery\n';
+    code += '    temp_callback = CallbackQuery(\n';
+    code += '        id="auto_transition",\n';
+    code += '        from_user=message.from_user,\n';
+    code += `        data="${autoTransitionTarget}",\n`;
+    code += '        chat_instance=str(message.chat.id),\n';
+    code += '        message=message\n';
+    code += '    )\n';
+    code += `    await handle_callback_${safeFunctionName}(temp_callback)\n`;
+    code += `    logging.info(f"✅ Автопереход выполнен: ${node.id} -> ${autoTransitionTarget}")\n`;
     return code;
   }
   
