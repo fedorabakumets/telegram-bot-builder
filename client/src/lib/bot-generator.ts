@@ -5784,7 +5784,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем reply button обработчики ПЕРЕД универсальным обработчиком текста
   // Это гарантирует, что специфичные обработчики кнопок срабатывают раньше общего обработчика
-  const replyGotoButtons: Array<{text: string, target: string, nodeId: string, keyboardType: string}> = [];
+  const replyGotoButtons: Array<{text: string, target: string, nodeId: string, keyboardType: string, hideAfterClick?: boolean}> = [];
   console.log('🔍 НАЧИНАЕМ СБОР REPLY КНОПОК С GOTO из', nodes.length, 'узлов');
   
   nodes.forEach(node => {
@@ -5797,7 +5797,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             text: button.text,
             target: button.target,
             nodeId: node.id,
-            keyboardType: node.data.keyboardType
+            keyboardType: node.data.keyboardType,
+            hideAfterClick: button.hideAfterClick || false
           });
         }
       });
@@ -5816,7 +5817,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 text: button.text,
                 target: button.target,
                 nodeId: node.id,
-                keyboardType: keyboardType
+                keyboardType: keyboardType,
+                hideAfterClick: button.hideAfterClick || false
               });
             }
           });
@@ -5862,6 +5864,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += `            logging.info(f"🧹 Очищаем _has_conditional_keyboard при нажатии reply кнопки")\n`;
       code += `            del user_data[user_id]["_has_conditional_keyboard"]\n`;
       code += `    \n`;
+      
+      // Если кнопка должна скрываться после использования
+      if (button.hideAfterClick) {
+        code += `    # СКРЫТИЕ КНОПКИ: Удаляем сообщение с кнопкой после нажатия\n`;
+        code += `    try:\n`;
+        code += `        await message.delete()\n`;
+        code += `        logging.info(f"🗑️ Сообщение с кнопкой удалено (hideAfterClick=true)")\n`;
+        code += `    except Exception as e:\n`;
+        code += `        logging.debug(f"Не удалось удалить сообщение: {e}")\n`;
+        code += `    \n`;
+      }
       
       const targetNode = nodes.find(n => n.id === button.target);
       if (targetNode) {
