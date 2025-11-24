@@ -792,6 +792,9 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
   const [editingField, setEditingField] = useState<{tokenId: number, field: string} | null>(null);
   const [editValue, setEditValue] = useState('');
   
+  // Timer states for running bot
+  const [currentElapsedSeconds, setCurrentElapsedSeconds] = useState(0);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -845,6 +848,24 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
     refetchIntervalInBackground: false, // Не опрашиваем в фоне
     staleTime: 5000, // Считаем данные свежими 5 секунд
   });
+
+  // Timer effect - обновляем таймер каждую секунду если бот запущен
+  useEffect(() => {
+    if (botStatus?.status !== 'running' || !botStatus.instance?.startedAt) {
+      setCurrentElapsedSeconds(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const startTime = new Date(botStatus.instance!.startedAt).getTime();
+      const now = Date.now();
+      const elapsedMs = now - startTime;
+      const elapsedSeconds = Math.floor(elapsedMs / 1000);
+      setCurrentElapsedSeconds(elapsedSeconds);
+    }, 1000); // Обновляем каждую секунду
+
+    return () => clearInterval(interval);
+  }, [botStatus?.status, botStatus?.instance?.startedAt]);
 
   // Получаем все токены проекта (боты)
   const { data: tokens = [], isLoading, refetch } = useQuery<BotToken[]>({
@@ -1121,7 +1142,12 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {tokens.map((token) => (
+          {tokens.map((token) => {
+            const isThisTokenRunning = botStatus?.instance && 
+                                      isRunning && 
+                                      botStatus.instance.tokenId === token.id;
+            
+            return (
             <Card key={token.id} className="transition-all hover:shadow-md">
               <CardContent className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
@@ -1297,7 +1323,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                   </div>
                 </div>
                 
-                {/* Database Toggle and Execution Time Tracking */}
+                {/* Database Toggle and Timer Display */}
                 <div className="space-y-3">
                   {/* Database Toggle */}
                   <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
@@ -1323,48 +1349,25 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                     />
                   </div>
 
-                  {/* Execution Time Tracking Toggle */}
-                  <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
-                    (token.trackExecutionTime === 1)
-                      ? 'bg-blue-50 dark:bg-blue-950 border-blue-500 dark:border-blue-600' 
-                      : 'bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600'
-                  }`} data-testid="execution-time-toggle-container-bot-card">
-                    <Zap className={`w-4 h-4 ${(token.trackExecutionTime === 1) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`} />
-                    <div className="flex-1">
-                      <Label htmlFor={`track-execution-bot-${token.id}`} className={`text-sm font-bold cursor-pointer ${
-                        (token.trackExecutionTime === 1)
-                          ? 'text-blue-700 dark:text-blue-300' 
-                          : 'text-gray-700 dark:text-gray-300'
-                      }`}>
-                        📊 Отслеживать время
-                      </Label>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {(token.trackExecutionTime === 1) 
-                          ? `Всего: ${formatExecutionTime(token.totalExecutionSeconds || 0)}`
-                          : 'Включить отслеживание времени работы'
-                        }
-                      </p>
+                  {/* Execution Timer - Shows when bot is running */}
+                  {isThisTokenRunning && (
+                    <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950 border-amber-500 dark:border-amber-600`} data-testid="timer-display-bot-card">
+                      <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400 animate-spin" />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                          Бот запущен
+                        </p>
+                        <p className="text-lg font-mono font-bold text-amber-600 dark:text-amber-300 mt-1">
+                          ⏱️ {formatExecutionTime(currentElapsedSeconds)}
+                        </p>
+                      </div>
                     </div>
-                    <Switch
-                      id={`track-execution-bot-${token.id}`}
-                      data-testid="switch-execution-time-toggle-bot-card"
-                      checked={token.trackExecutionTime === 1}
-                      onCheckedChange={(checked) => {
-                        updateTokenMutation.mutate({
-                          tokenId: token.id,
-                          data: { 
-                            trackExecutionTime: checked ? 1 : 0
-                          }
-                        });
-                      }}
-                      disabled={updateTokenMutation.isPending}
-                      className="scale-100"
-                    />
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
