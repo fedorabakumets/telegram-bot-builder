@@ -3648,14 +3648,19 @@ export function PropertiesPanel({
 
                               {/* Buttons Configuration */}
                               {condition.keyboardType && condition.keyboardType !== 'none' && (
-                                <div className="space-y-3">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                                      Кнопки ({(condition.buttons || []).length})
-                                    </span>
+                                <div className="space-y-4">
+                                  <div className="border-t border-purple-200/20 dark:border-purple-800/20 pt-4"></div>
+                                  
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+                                      <span className="text-sm font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">
+                                        Кнопки ({(condition.buttons || []).length})
+                                      </span>
+                                    </div>
                                     <UIButton
                                       size="sm"
-                                      variant="outline"
+                                      variant="default"
                                       onClick={() => {
                                         const newButton = {
                                           id: nanoid(),
@@ -3676,9 +3681,9 @@ export function PropertiesPanel({
                                         );
                                         onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                       }}
-                                      className="text-sm"
+                                      className="text-xs bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 transition-all duration-200 h-8"
                                     >
-                                      <i className="fas fa-plus mr-2"></i>
+                                      <i className="fas fa-plus mr-1.5"></i>
                                       Добавить кнопку
                                     </UIButton>
                                   </div>
