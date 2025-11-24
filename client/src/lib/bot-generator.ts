@@ -2596,15 +2596,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const parseMode = getParseMode(targetNode.data.formatMode);
               
               code += `    # Отправляем сообщение для узла ${targetNode.id}\n`;
-              code += `    # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового\n`;
-              code += `    if user_id in user_data and "_delete_reply_message_id" in user_data[user_id]:\n`;
-              code += `        try:\n`;
-              code += `            await bot.delete_message(user_id, user_data[user_id]["_delete_reply_message_id"])\n`;
-              code += `            logging.info(f"🗑️ Reply сообщение удалено перед отправкой нового")\n`;
-              code += `            del user_data[user_id]["_delete_reply_message_id"]\n`;
-              code += `        except Exception as e:\n`;
-              code += `            logging.debug(f"Не удалось удалить reply сообщение: {e}")\n`;
-              code += `    \n`;
               code += `    text = ${formattedText}\n`;
               
               // Применяем универсальную замену переменных
@@ -2722,6 +2713,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 );
                 
                 if (mediaCode) {
+                  code += '    # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового\n';
+                  code += '    if user_id in user_data and "_delete_reply_message_id" in user_data[user_id]:\n';
+                  code += '        try:\n';
+                  code += '            await bot.delete_message(user_id, user_data[user_id]["_delete_reply_message_id"])\n';
+                  code += '            logging.info(f"🗑️ Reply сообщение удалено перед отправкой нового")\n';
+                  code += '            del user_data[user_id]["_delete_reply_message_id"]\n';
+                  code += '        except Exception as e:\n';
+                  code += '            logging.debug(f"Не удалось удалить reply сообщение: {e}")\n';
+                  code += '    \n';
                   code += '    # Отправляем сообщение (с проверкой прикрепленного медиа)\n';
                   code += mediaCode;
                 } else {
@@ -2742,6 +2742,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 }
               } else {
                 // Обычное сообщение без медиа
+                code += '    # КРИТИЧНО: Удаляем reply сообщение ПЕРЕД отправкой нового\n';
+                code += '    if user_id in user_data and "_delete_reply_message_id" in user_data[user_id]:\n';
+                code += '        try:\n';
+                code += '            await bot.delete_message(user_id, user_data[user_id]["_delete_reply_message_id"])\n';
+                code += '            logging.info(f"🗑️ Reply сообщение удалено перед отправкой нового")\n';
+                code += '            del user_data[user_id]["_delete_reply_message_id"]\n';
+                code += '        except Exception as e:\n';
+                code += '            logging.debug(f"Не удалось удалить reply сообщение: {e}")\n';
+                code += '    \n';
                 code += '    # Отправляем сообщение\n';
                 const autoFlag2 = (targetNode.data.enableAutoTransition && targetNode.data.autoTransitionTo) ? ', is_auto_transition=True' : '';
                 code += `    await safe_edit_or_send(callback_query, text, node_id="${targetNode.id}", reply_markup=keyboard if keyboard is not None else None, is_auto_transition=True${autoFlag2}${parseMode})\n`;
