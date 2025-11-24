@@ -1791,16 +1791,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   }
   
   // user_data всегда нужен для временного хранения состояний даже при включенной БД
-  const needsUserData = (
-    hasMultiSelectNodes(nodes || []) || 
-    hasInputCollection(nodes || []) ||
-    hasInlineButtons(nodes || [])
-  );
-  
-  if (needsUserData) {
-    code += '# Хранилище пользователей (временное состояние)\n';
-    code += 'user_data = {}\n\n';
-  }
+  // ИСПРАВЛЕНИЕ: Создаем user_data всегда, так как он используется в callback handlers
+  code += '# Хранилище пользователей (временное состояние)\n';
+  code += 'user_data = {}\n\n';
 
   // Добавляем функции для работы с базой данных только если БД включена
   if (userDatabaseEnabled) {
