@@ -17,17 +17,28 @@ This application provides a **no-code visual Telegram bot builder** that enables
 Preferred communication style: Simple, everyday language. No-code platform for non-technical users.
 
 ## Recent Changes (Current Session)
-- **✅ Telegram Login Widget fully debugged and operational** (telegram-login-widget.tsx + adaptive-header.tsx + routes.ts):
+- **✅ Telegram Login Widget - Complete Authentication System** (telegram-login-widget.tsx + use-telegram-auth.ts + adaptive-header.tsx + routes.ts):
   - Fixed "LogIn is not defined" error - removed old button references
   - Fixed authorization error - removed undefined session middleware dependency
+  - **🔴 → ✅ Fixed widget flashing/pulsing** - optimized useEffect dependencies to load script only once
+  - **🔴 → ✅ Fixed auth persistence** - now saves user to localStorage and persists between page reloads
+  
+  **Features:**
   - Widget configured with environment variable VITE_TELEGRAM_BOT_USERNAME
   - Automatically strips @ from username (e.g., @blogspotbotbotbot → blogspotbotbotbot)
-  - Widget script successfully loads and initializes on editor page
-  - Backend endpoint `/api/auth/telegram` now properly handles OAuth callback without session errors
+  - Uses custom hook `useTelegramAuth()` for state management with localStorage
+  - After successful auth, shows user profile with name instead of login button
+  - Users can logout with X button to clear localStorage
+  - Backend endpoint `/api/auth/telegram` handles OAuth callback without session errors
   - Returns authenticated user data to frontend on successful auth
-  - **Note**: Widget requires HTTPS to display (Telegram requirement). On production/HTTPS URLs it will show Telegram login button in header
+  
+  **Storage:**
+  - localStorage key: `telegram_user`
+  - Persists: id, first_name, last_name, username, photo_url
+  
+  **Note**: Widget requires HTTPS to display (Telegram requirement). On production/HTTPS URLs it will show Telegram login button
   - On localhost HTTP, widget loads but doesn't render (use Replit production domain to test)
-  - **Status**: ✅ Ready for production deployment
+  - **Status**: ✅ Ready for production deployment with full persistence
   
 - **✨ Telegram Login Widget setup** (telegram-login-widget.tsx + routes.ts + adaptive-header.tsx):
   - Official Telegram Login Widget - standard OAuth-style authorization from Telegram

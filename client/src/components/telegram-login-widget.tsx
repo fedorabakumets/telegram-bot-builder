@@ -1,5 +1,8 @@
 import React, { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useTelegramAuth, type TelegramUser } from '@/hooks/use-telegram-auth';
+import { Button } from '@/components/ui/button';
+import { LogOut, User } from 'lucide-react';
 
 interface BotInfo {
   first_name: string;
@@ -10,7 +13,8 @@ interface BotInfo {
 
 interface TelegramLoginWidgetProps {
   botInfo?: BotInfo | null;
-  onAuth?: (user: any) => void;
+  onAuth?: (user: TelegramUser) => void;
+  onLogout?: () => void;
 }
 
 declare global {
@@ -19,8 +23,9 @@ declare global {
   }
 }
 
-export function TelegramLoginWidget({ botInfo, onAuth }: TelegramLoginWidgetProps) {
+export function TelegramLoginWidget({ botInfo, onAuth, onLogout }: TelegramLoginWidgetProps) {
   const { toast } = useToast();
+  const { user, login, logout, isLoading } = useTelegramAuth();
   
   // Используем username бота из env или botInfo
   let botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || botInfo?.username;
@@ -35,9 +40,20 @@ export function TelegramLoginWidget({ botInfo, onAuth }: TelegramLoginWidgetProp
     return null;
   }
 
+  const handleLogout = () => {
+    logout();
+    if (onLogout) {
+      onLogout();
+    }
+    toast({
+      title: "Выход",
+      description: "Вы вышли из системы",
+    });
+  };
+
   useEffect(() => {
     // Определяем глобальную функцию обратного вызова
-    window.onTelegramAuth = async (user: any) => {
+    window.onTelegramAuth = async (telegramUser: any) => {
       try {
         // Отправляем данные пользователя на бэк
         const response = await fetch('/api/auth/telegram', {
@@ -46,27 +62,36 @@ export function TelegramLoginWidget({ botInfo, onAuth }: TelegramLoginWidgetProp
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            id: user.id,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            username: user.username,
-            photo_url: user.photo_url,
-            auth_date: user.auth_date,
-            hash: user.hash,
+            id: telegramUser.id,
+            first_name: telegramUser.first_name,
+            last_name: telegramUser.last_name,
+            username: telegramUser.username,
+            photo_url: telegramUser.photo_url,
+            auth_date: telegramUser.auth_date,
+            hash: telegramUser.hash,
           }),
         });
 
         if (response.ok) {
+          const userData: TelegramUser = {
+            id: telegramUser.id,
+            first_name: telegramUser.first_name,
+            last_name: telegramUser.last_name,
+            username: telegramUser.username,
+            photo_url: telegramUser.photo_url,
+          };
+          
+          // Сохраняем в localStorage
+          login(userData);
+          
           toast({
             title: "Авторизация успешна",
-            description: `Добро пожаловать, ${user.first_name}!`,
+            description: `Добро пожаловать, ${telegramUser.first_name}!`,
           });
           
-          // Перезагружаем страницу или вызываем колбэк
+          // Вызываем колбэк если нужен
           if (onAuth) {
-            onAuth(user);
-          } else {
-            window.location.reload();
+            onAuth(userData);
           }
         } else {
           toast({
@@ -86,26 +111,57 @@ export function TelegramLoginWidget({ botInfo, onAuth }: TelegramLoginWidgetProp
     };
 
     // Загружаем скрипт виджета только один раз при монтировании компонента
-    const script = document.createElement('script');
-    script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.async = true;
-    script.dataset.telegramLogin = botUsername;
-    script.dataset.size = 'small';
-    script.dataset.onauth = 'onTelegramAuth(user)';
-    script.dataset.requestAccess = 'write';
+    // Но только если пользователь не авторизован
+    if (!user && botUsername) {
+      const script = document.createElement('script');
+      script.src = 'https://telegram.org/js/telegram-widget.js?22';
+      script.async = true;
+      script.dataset.telegramLogin = botUsername;
+      script.dataset.size = 'small';
+      script.dataset.onauth = 'onTelegramAuth(user)';
+      script.dataset.requestAccess = 'write';
 
-    const container = document.getElementById('telegram-login-widget');
-    if (container) {
-      container.appendChild(script);
-    }
-
-    return () => {
-      // Очищаем контейнер при размонтировании
+      const container = document.getElementById('telegram-login-widget');
       if (container) {
-        container.innerHTML = '';
+        container.appendChild(script);
       }
-    };
-  }, []); // Пустые зависимости - эффект запускается только один раз
 
+      return () => {
+        // Очищаем контейнер при размонтировании
+        if (container) {
+          container.innerHTML = '';
+        }
+      };
+    }
+  }, [user, login, toast, onAuth]);
+
+  // Пока загружаем состояние авторизации
+  if (isLoading) {
+    return null;
+  }
+
+  // Если пользователь авторизован, показываем его профиль
+  if (user) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-muted text-xs">
+          <User className="w-3 h-3" />
+          <span className="truncate max-w-[120px]">{user.first_name}</span>
+        </div>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleLogout}
+          className="h-7 px-2"
+          title="Выход"
+          data-testid="button-logout-telegram"
+        >
+          <LogOut className="w-3 h-3" />
+        </Button>
+      </div>
+    );
+  }
+
+  // Если не авторизован, показываем виджет
   return <div id="telegram-login-widget" />;
 }
