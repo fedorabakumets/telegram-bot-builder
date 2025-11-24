@@ -3607,14 +3607,14 @@ export function PropertiesPanel({
                             </div>
 
                             {/* Keyboard Configuration for Conditional Messages */}
-                            <div className="space-y-3 border-t border-purple-200/30 dark:border-purple-800/30 pt-3">
-                              <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-                                <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                                  <i className="fas fa-keyboard mr-1"></i>
+                            <div className="space-y-3 border-t border-purple-200/30 dark:border-purple-800/30 pt-4">
+                              <div className="flex flex-col gap-3">
+                                <Label className="text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase tracking-wide">
+                                  <i className="fas fa-keyboard mr-1.5"></i>
                                   Кнопки для условного сообщения
                                 </Label>
-                                <div className="flex flex-wrap items-center gap-2 bg-purple-100/30 dark:bg-purple-900/20 rounded-lg p-1.5 border border-purple-200/40 dark:border-purple-800/40">
-                                  <div className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-purple-200/40 dark:hover:bg-purple-800/40 transition-all">
+                                <div className="flex flex-wrap items-center gap-2 bg-purple-100/30 dark:bg-purple-900/20 rounded-lg p-2 border border-purple-200/40 dark:border-purple-800/40">
+                                  <div className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-purple-200/40 dark:hover:bg-purple-800/40 transition-all cursor-pointer">
                                     <i className="fas fa-square text-purple-600 dark:text-purple-400 text-xs"></i>
                                     <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 cursor-pointer">Inline</Label>
                                     <Switch
@@ -3628,8 +3628,8 @@ export function PropertiesPanel({
                                       }}
                                     />
                                   </div>
-                                  <div className="w-px h-4 bg-purple-300/30 dark:bg-purple-700/30"></div>
-                                  <div className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-purple-200/40 dark:hover:bg-purple-800/40 transition-all">
+                                  <div className="w-px h-5 bg-purple-300/30 dark:bg-purple-700/30"></div>
+                                  <div className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-purple-200/40 dark:hover:bg-purple-800/40 transition-all cursor-pointer">
                                     <i className="fas fa-bars text-purple-600 dark:text-purple-400 text-xs"></i>
                                     <Label className="text-xs font-medium text-purple-700 dark:text-purple-300 cursor-pointer">Reply</Label>
                                     <Switch
@@ -3690,14 +3690,43 @@ export function PropertiesPanel({
                                   </div>
 
                                   {/* Buttons List */}
-                                  <div className="space-y-3">
+                                  <div className="space-y-2.5">
                                     {(condition.buttons || []).map((button, buttonIndex) => (
-                                      <div key={button.id} className="bg-white dark:bg-gray-900/50 rounded-lg p-4 border-2 border-purple-200/40 dark:border-purple-800/40 shadow-sm">
-                                        <div className="space-y-3">
+                                      <div key={button.id} className="bg-white dark:bg-gray-900/50 rounded-lg p-3 border border-purple-200/50 dark:border-purple-800/50 shadow-sm hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-200">
+                                        <div className="space-y-2.5">
+                                          {/* Button Header */}
+                                          <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-purple-100/30 dark:border-purple-800/20">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                              <div className="w-1 h-1 rounded-full bg-purple-500 flex-shrink-0"></div>
+                                              <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 truncate">
+                                                Кнопка {buttonIndex + 1}
+                                              </span>
+                                            </div>
+                                            <UIButton
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => {
+                                                const currentConditions = selectedNode.data.conditionalMessages || [];
+                                                const updatedConditions = currentConditions.map(c => 
+                                                  c.id === condition.id ? {
+                                                    ...c,
+                                                    buttons: (c.buttons || []).filter((_, i) => i !== buttonIndex)
+                                                  } : c
+                                                );
+                                                onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
+                                              }}
+                                              className="h-6 text-destructive hover:text-destructive/80 flex-shrink-0"
+                                              title="Удалить кнопку"
+                                            >
+                                              <i className="fas fa-trash text-xs"></i>
+                                            </UIButton>
+                                          </div>
+
+                                          {/* Button Text Section */}
                                           <div className="space-y-2">
                                             <div className="flex items-center justify-between gap-2">
-                                              <Label className="text-sm font-medium text-foreground">
-                                                Текст кнопки
+                                              <Label className="text-xs font-medium text-foreground">
+                                                Текст
                                               </Label>
                                               <div className="flex items-center gap-1">
                                                 <DropdownMenu>
@@ -3773,24 +3802,6 @@ export function PropertiesPanel({
                                                 )}
                                               </DropdownMenuContent>
                                                 </DropdownMenu>
-                                                <UIButton
-                                                  size="sm"
-                                                  variant="ghost"
-                                                  onClick={() => {
-                                                    const currentConditions = selectedNode.data.conditionalMessages || [];
-                                                    const updatedConditions = currentConditions.map(c => 
-                                                      c.id === condition.id ? {
-                                                        ...c,
-                                                        buttons: (c.buttons || []).filter((_, i) => i !== buttonIndex)
-                                                      } : c
-                                                    );
-                                                    onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
-                                                  }}
-                                                  className="h-7 text-destructive hover:text-destructive/80"
-                                                  title="Удалить кнопку"
-                                                >
-                                                  <i className="fas fa-trash text-xs"></i>
-                                                </UIButton>
                                               </div>
                                             </div>
                                             <Input
@@ -3807,18 +3818,18 @@ export function PropertiesPanel({
                                                 );
                                                 onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                               }}
-                                              className="h-10"
-                                              placeholder="Введите текст кнопки"
+                                              className="h-9 text-sm"
+                                              placeholder="Текст кнопки"
                                             />
-                                            <div className="text-sm text-muted-foreground">
-                                              Переменные в тексте заменятся на значения: {'{возраст}'} → "25"
+                                            <div className="text-xs text-muted-foreground">
+                                              {`Переменные: {age} → "25"`}
                                             </div>
                                           </div>
 
                                           {/* Button Action Configuration */}
-                                          <div className="space-y-2">
-                                            <Label className="text-sm font-medium text-foreground">
-                                              Действие кнопки
+                                          <div className="space-y-2 border-t border-purple-100/30 dark:border-purple-800/20 pt-2.5">
+                                            <Label className="text-xs font-medium text-foreground">
+                                              Действие
                                             </Label>
                                             <Select
                                               value={button.action || 'goto'}
@@ -3835,7 +3846,7 @@ export function PropertiesPanel({
                                                 onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                               }}
                                             >
-                                              <SelectTrigger className="h-10">
+                                              <SelectTrigger className="h-9 text-sm">
                                                 <SelectValue />
                                               </SelectTrigger>
                                               <SelectContent>
@@ -3862,7 +3873,7 @@ export function PropertiesPanel({
                                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                                 }}
                                               >
-                                                <SelectTrigger className="h-10">
+                                                <SelectTrigger className="h-9 text-sm">
                                                   <SelectValue placeholder="Выберите узел" />
                                                 </SelectTrigger>
                                               <SelectContent>
@@ -3901,7 +3912,7 @@ export function PropertiesPanel({
                                                   );
                                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                                 }}
-                                                className="h-10"
+                                                className="h-9 text-sm"
                                                 placeholder="https://example.com"
                                               />
                                             )}
@@ -3921,7 +3932,7 @@ export function PropertiesPanel({
                                                   );
                                                   onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                                 }}
-                                                className="h-10"
+                                                className="h-9 text-sm"
                                                 placeholder="/help"
                                               />
                                             )}
@@ -3933,8 +3944,10 @@ export function PropertiesPanel({
 
                                   {/* Reply Keyboard Settings */}
                                   {condition.keyboardType === 'reply' && (
-                                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-purple-200/20 dark:border-purple-800/20">
-                                      <div className="flex items-center space-x-2">
+                                    <div className="border-t border-purple-100/30 dark:border-purple-800/20 pt-2.5 space-y-2">
+                                      <Label className="text-xs font-medium text-foreground block">Параметры</Label>
+                                      <div className="flex items-center justify-between">
+                                        <Label className="text-xs text-purple-700 dark:text-purple-400 cursor-pointer">Авто-размер</Label>
                                         <Switch
                                           checked={condition.resizeKeyboard ?? true}
                                           onCheckedChange={(checked) => {
@@ -3945,9 +3958,9 @@ export function PropertiesPanel({
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         />
-                                        <Label className="text-xs text-purple-600 dark:text-purple-400">Авто-размер</Label>
                                       </div>
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center justify-between">
+                                        <Label className="text-xs text-purple-700 dark:text-purple-400 cursor-pointer">Скрыть после первого нажатия</Label>
                                         <Switch
                                           checked={condition.oneTimeKeyboard ?? false}
                                           onCheckedChange={(checked) => {
@@ -3958,7 +3971,6 @@ export function PropertiesPanel({
                                             onNodeUpdate(selectedNode.id, { conditionalMessages: updatedConditions });
                                           }}
                                         />
-                                        <Label className="text-xs text-purple-600 dark:text-purple-400">Скрыть после использования</Label>
                                       </div>
                                     </div>
                                   )}
