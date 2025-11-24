@@ -147,9 +147,23 @@ export class SheetsManager {
     if (updatedData?.conditionalMessages && Array.isArray(updatedData.conditionalMessages)) {
       updatedData.conditionalMessages = updatedData.conditionalMessages.map((condition: any) => {
         const updatedCondition = { ...condition };
+        
+        // Обновляем основной target
         if (updatedCondition.target && nodeIdMap.has(updatedCondition.target)) {
           updatedCondition.target = nodeIdMap.get(updatedCondition.target);
         }
+        
+        // Обновляем кнопки в условном сообщении
+        if (updatedCondition.buttons && Array.isArray(updatedCondition.buttons)) {
+          updatedCondition.buttons = updatedCondition.buttons.map((button: any) => {
+            const updatedButton = { ...button };
+            if (updatedButton.target && nodeIdMap.has(updatedButton.target)) {
+              updatedButton.target = nodeIdMap.get(updatedButton.target);
+            }
+            return updatedButton;
+          });
+        }
+        
         return updatedCondition;
       });
     }
@@ -202,29 +216,11 @@ export class SheetsManager {
       originalSheet.nodes.map((node, index) => [node.id, duplicatedNodes[index].id])
     );
 
-    console.log('📋 Дублирование листа. NodeIdMap:', {
-      size: nodeIdMap.size,
-      entries: Array.from(nodeIdMap.entries()).slice(0, 3)
-    });
-
     // Обновляем ссылки на узлы внутри самих узлов
-    const updatedNodesWithReferences = duplicatedNodes.map(node => {
-      const updatedNode = {
-        ...node,
-        data: this.updateNodeReferencesInData(node.data, nodeIdMap)
-      };
-      
-      // Проверяем результат обновления
-      if (node.id === duplicatedNodes[0].id && updatedNode.data?.inputTargetNodeId) {
-        console.log('🔄 Обновленный узел:', {
-          nodeId: node.id,
-          oldInputTarget: node.data?.inputTargetNodeId,
-          newInputTarget: updatedNode.data.inputTargetNodeId
-        });
-      }
-      
-      return updatedNode;
-    });
+    const updatedNodesWithReferences = duplicatedNodes.map(node => ({
+      ...node,
+      data: this.updateNodeReferencesInData(node.data, nodeIdMap)
+    }));
 
     // Обновляем ID в соединениях
     const duplicatedConnections = originalSheet.connections.map(conn => ({
