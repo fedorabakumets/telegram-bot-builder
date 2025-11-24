@@ -2272,6 +2272,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   inputTargetNodeIds.forEach(nodeId => {
     allReferencedNodeIds.add(nodeId);
   });
+  
+  // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Add nodes that are targets of auto-transitions
+  (nodes || []).forEach(node => {
+    if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
+      allReferencedNodeIds.add(node.data.autoTransitionTo);
+      console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);
+    }
+  });
 
   // Add all connection targets to ensure every connected node gets a handler
   console.log(`🔗 ГЕНЕРАТОР: Обрабатываем ${connections.length} соединений`);
