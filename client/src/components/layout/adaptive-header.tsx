@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github, LogOut } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
+import { LoginModal } from '@/components/login-modal';
 import { LayoutConfig } from './layout-manager';
 
 interface BotInfo {
@@ -67,11 +68,26 @@ export function AdaptiveHeader({
   // Состояние для мобильного меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
+  // Состояние модального окна входа
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  
   // Проверка авторизации пользователя
   const { user, logout } = useTelegramAuth();
   
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
+  
+  // Слушаем на успешную авторизацию
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setIsLoginModalOpen(false);
+    };
+
+    window.addEventListener('telegram-auth-change', handleAuthChange);
+    return () => {
+      window.removeEventListener('telegram-auth-change', handleAuthChange);
+    };
+  }, []);
   
   // Определяем ориентацию заголовка
   const isVertical = config.headerPosition === 'left' || config.headerPosition === 'right';
@@ -433,7 +449,7 @@ export function AdaptiveHeader({
       )}
       
       {/* Информация о пользователе и выход */}
-      {user && (
+      {user ? (
         <>
           <div className={`flex items-center space-x-2 ${isVertical ? 'w-full px-2 py-2' : 'px-2'}`}>
             {user.photoUrl && (
@@ -464,6 +480,16 @@ export function AdaptiveHeader({
             <span className="max-sm:hidden ml-1">Выход</span>
           </Button>
         </>
+      ) : (
+        <Button
+          onClick={() => setIsLoginModalOpen(true)}
+          size="sm"
+          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs`}
+          title="Войти через Telegram"
+        >
+          <User className="h-3.5 w-3.5" />
+          <span className="max-sm:hidden ml-1">Войти</span>
+        </Button>
       )}
       
       <Button 
@@ -496,20 +522,24 @@ export function AdaptiveHeader({
 
   if (isVertical) {
     return (
-      <header className={containerClasses}>
-        <BrandSection />
-        <Separator />
-        <div className="flex-1 overflow-y-auto">
-          <Navigation />
-        </div>
-        <Separator />
-        <Actions />
-      </header>
+      <>
+        <header className={containerClasses}>
+          <BrandSection />
+          <Separator />
+          <div className="flex-1 overflow-y-auto">
+            <Navigation />
+          </div>
+          <Separator />
+          <Actions />
+        </header>
+        <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
+      </>
     );
   }
 
   return (
-    <header className={containerClasses}>
+    <>
+      <header className={containerClasses}>
       <div className="flex items-center space-x-4 md:order-first">
         <BrandSection />
         <Separator />
@@ -572,5 +602,7 @@ export function AdaptiveHeader({
       </div>
 
     </header>
+    <LoginModal open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen} />
+    </>
   );
 }
