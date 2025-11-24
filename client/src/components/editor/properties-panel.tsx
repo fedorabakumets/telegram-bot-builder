@@ -2677,10 +2677,7 @@ export function PropertiesPanel({
         )}
 
         {/* Synonyms - для всех узлов кроме управления контентом и управления пользователями */}
-        {selectedNode.type !== 'pin_message' && selectedNode.type !== 'unpin_message' && selectedNode.type !== 'delete_message' &&
-         selectedNode.type !== 'ban_user' && selectedNode.type !== 'unban_user' && selectedNode.type !== 'mute_user' && 
-         selectedNode.type !== 'unmute_user' && selectedNode.type !== 'kick_user' && selectedNode.type !== 'promote_user' && 
-         selectedNode.type !== 'demote_user' && selectedNode.type !== 'admin_rights' && (
+        {!selectedNode.type.includes('management') && !['pin_message', 'unpin_message', 'delete_message', 'ban_user', 'unban_user', 'mute_user', 'unmute_user', 'kick_user', 'promote_user', 'demote_user', 'admin_rights'].includes(selectedNode.type) && (
           <div>
             <h3 className="text-sm font-medium text-foreground mb-3">Синонимы</h3>
             <div className="space-y-4">
