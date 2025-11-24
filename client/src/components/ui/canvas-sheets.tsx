@@ -191,17 +191,17 @@ export function CanvasSheets({
   };
 
   return (
-    <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-slate-900/95 via-slate-800/95 to-slate-900/95 dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-t border-slate-700/50 dark:border-slate-600/50 shadow-2xl shadow-black/20">
+    <div className="flex items-center gap-3 relative z-50 w-full px-4 py-3 bg-gradient-to-r from-white via-slate-50 to-white dark:from-slate-950/95 dark:via-slate-900/95 dark:to-slate-950/95 backdrop-blur-md border-t border-slate-200/50 dark:border-slate-600/50 shadow-lg shadow-slate-300/10 dark:shadow-black/20">
       {/* Кнопка прокрутки влево - для мобильных переключает листы */}
       {(canScrollLeft || (isMobile && sheets.length > 1)) && (
         <Button
           variant="ghost"
           size="sm"
           onClick={isMobile ? switchToPrevSheet : scrollLeft}
-          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-700/50 hover:bg-slate-600/70 border border-slate-600/50 hover:border-slate-500/70 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
+          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
           disabled={isMobile ? (activeSheetId ? sheets.findIndex(s => s.id === activeSheetId) === 0 : true) : false}
         >
-          <ChevronLeft className="h-5 w-5 text-slate-300" />
+          <ChevronLeft className="h-5 w-5 text-slate-700 dark:text-slate-300" />
         </Button>
       )}
       {/* Контейнер вкладок */}
@@ -227,19 +227,20 @@ export function CanvasSheets({
                 "min-w-max",
                 activeSheetId === sheet.id
                   ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-100"
-                  : "bg-slate-800/80 text-slate-200 hover:bg-slate-700/90 border border-slate-600/50 hover:border-slate-500/70 hover:shadow-md"
+                  : "bg-slate-100/80 text-slate-700 hover:bg-slate-200/90 border border-slate-300/50 hover:border-slate-400/70 hover:shadow-md dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700/90 dark:border-slate-600/50 dark:hover:border-slate-500/70"
               )}
               style={{
-                backgroundColor: activeSheetId === sheet.id ? undefined : 'rgba(30, 41, 59, 0.8)',
-                color: 'white'
+                backgroundColor: activeSheetId === sheet.id ? undefined : 'rgba(241, 245, 249, 0.8)',
+                color: activeSheetId === sheet.id ? 'white' : 'rgb(55, 65, 81)'
               }}
+              className="dark:style-dark"
               onClick={() => onSheetSelect(sheet.id)}
             >
               <FileText className={cn(
                 "h-4 w-4 flex-shrink-0 transition-all duration-200",
                 activeSheetId === sheet.id
                   ? "text-white drop-shadow-sm"
-                  : "text-slate-400 group-hover:text-blue-400"
+                  : "text-slate-500 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400"
               )} />
               
               {isRenaming === sheet.id ? (
@@ -260,7 +261,7 @@ export function CanvasSheets({
                     "text-xs font-medium",
                     activeSheetId === sheet.id
                       ? "text-white font-semibold drop-shadow-sm"
-                      : "text-slate-200 group-hover:text-white"
+                      : "text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-white"
                   )}
                   onDoubleClick={() => handleRename(sheet.id)}
                   title={sheet.name}
@@ -325,10 +326,10 @@ export function CanvasSheets({
           variant="ghost"
           size="sm"
           onClick={isMobile ? switchToNextSheet : scrollRight}
-          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-700/50 hover:bg-slate-600/70 border border-slate-600/50 hover:border-slate-500/70 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
+          className="flex-shrink-0 p-0 h-9 w-9 rounded-xl bg-slate-200/60 hover:bg-slate-300/80 dark:bg-slate-700/50 dark:hover:bg-slate-600/70 border border-slate-300/50 hover:border-slate-400/70 dark:border-slate-600/50 dark:hover:border-slate-500/70 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-30"
           disabled={isMobile ? (activeSheetId ? sheets.findIndex(s => s.id === activeSheetId) === sheets.length - 1 : true) : false}
         >
-          <ChevronRight className="h-5 w-5 text-slate-300" />
+          <ChevronRight className="h-5 w-5 text-slate-700 dark:text-slate-300" />
         </Button>
       )}
       {/* Кнопка добавления нового листа */}
