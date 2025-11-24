@@ -1339,8 +1339,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Set global logging flag for this generation run
   globalLoggingEnabled = enableLogging;
   
-  try {
-    const { nodes, connections } = extractNodesAndConnections(botData);
+  const { nodes, connections } = extractNodesAndConnections(botData);
   
   // Собираем все ID узлов для генерации уникальных коротких ID
   const allNodeIds = nodes ? nodes.map(node => node.id) : [];
@@ -12026,10 +12025,6 @@ function generateKeyboard(node: Node): string {
   globalLoggingEnabled = false;
   
   return code;
-  } finally {
-    // Make sure we always reset the flag
-    globalLoggingEnabled = false;
-  }
 }
 
 export function validateBotStructure(botData: BotData): { isValid: boolean; errors: string[] } {
