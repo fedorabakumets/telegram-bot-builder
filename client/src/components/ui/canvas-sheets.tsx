@@ -230,10 +230,9 @@ export function CanvasSheets({
                   : "bg-slate-100/80 text-slate-700 hover:bg-slate-200/90 border border-slate-300/50 hover:border-slate-400/70 hover:shadow-md dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700/90 dark:border-slate-600/50 dark:hover:border-slate-500/70"
               )}
               style={{
-                backgroundColor: activeSheetId === sheet.id ? undefined : 'rgba(241, 245, 249, 0.8)',
-                color: activeSheetId === sheet.id ? 'white' : 'rgb(55, 65, 81)'
+                backgroundColor: activeSheetId === sheet.id ? undefined : undefined,
+                color: activeSheetId === sheet.id ? 'white' : undefined
               }}
-              className="dark:style-dark"
               onClick={() => onSheetSelect(sheet.id)}
             >
               <FileText className={cn(
