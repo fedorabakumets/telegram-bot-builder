@@ -4,6 +4,14 @@ import { z } from 'zod';
 
 type Button = z.infer<typeof buttonSchema>;
 
+// Utility function to check if debug logging is enabled
+const isLoggingEnabled = (): boolean => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('botcraft-generator-logs') === 'true';
+  }
+  return false;
+};
+
 // Функция для сбора всех узлов и связей из всех листов проекта
 function extractNodesAndConnections(botData: BotData) {
   if (!botData) return { nodes: [], connections: [] };
@@ -446,7 +454,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   
   // Если есть множественный выбор, добавляем инициализацию состояния
   if (hasSelectionButtons && isMultipleSelection) {
-    console.log(`🔧 ГЕНЕРАТОР: ИНИЦИАЛИЗИРУЕМ состояние множественного выбора для узла ${nodeId}`);
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИНИЦИАЛИЗИРУЕМ состояние множественного выбора для узла ${nodeId}`);
     const multiSelectVariable = nodeData?.multiSelectVariable || 'user_interests';
     const multiSelectKeyboardType = nodeData?.keyboardType || 'reply';
     
@@ -481,13 +489,13 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   
   code += `${indentLevel}builder = InlineKeyboardBuilder()\n`;
   
-  console.log(`🔧 ГЕНЕРАТОР: generateInlineKeyboardCode для узла ${nodeId}`);
-  console.log(`🔧 ГЕНЕРАТОР: nodeData.allowMultipleSelection = ${nodeData?.allowMultipleSelection}`);
-  console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons = ${hasSelectionButtons}, isMultipleSelection = ${isMultipleSelection}`);
-  console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${nodeData?.continueButtonTarget}`);
-  console.log(`🔧 ГЕНЕРАТОР: Полный объект nodeData:`, JSON.stringify(nodeData, null, 2));
-  console.log(`🔧 ГЕНЕРАТОР: Проверяем условие инициализации: hasSelectionButtons=${hasSelectionButtons} && isMultipleSelection=${isMultipleSelection}`);
-  console.log(`🔧 ГЕНЕРАТОР: Результат проверки: ${hasSelectionButtons && isMultipleSelection}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: generateInlineKeyboardCode для узла ${nodeId}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: nodeData.allowMultipleSelection = ${nodeData?.allowMultipleSelection}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons = ${hasSelectionButtons}, isMultipleSelection = ${isMultipleSelection}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${nodeData?.continueButtonTarget}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Полный объект nodeData:`, JSON.stringify(nodeData, null, 2));
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Проверяем условие инициализации: hasSelectionButtons=${hasSelectionButtons} && isMultipleSelection=${isMultipleSelection}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Результат проверки: ${hasSelectionButtons && isMultipleSelection}`);
   
   buttons.forEach((button, index) => {
     if (button.action === "url") {
@@ -505,13 +513,13 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
       const shortNodeId = nodeId ? generateUniqueShortId(nodeId, allNodeIds || []) : 'sel';
       const shortTarget = button.target || button.id || 'btn'; // Используем полный target без обрезки для совместимости с обработчиком
       const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-      console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Создана кнопка selection: ${button.text} -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
       
       // Добавляем галочки для множественного выбора
-      console.log(`🔧 ГЕНЕРАТОР: 🔍 ПРОВЕРЯЕМ галочки для ${button.text}: isMultipleSelection=${isMultipleSelection}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: 🔍 ПРОВЕРЯЕМ галочки для ${button.text}: isMultipleSelection=${isMultipleSelection}`);
       if (isMultipleSelection) {
-        console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ ГАЛОЧКИ для кнопки selection: ${button.text} (узел: ${nodeId})`);
-        console.log(`🔧 ГЕНЕРАТОР: 📋 ДАННЫЕ КНОПКИ: text="${button.text}", target="${button.target}", id="${button.id}"`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ ГАЛОЧКИ для кнопки selection: ${button.text} (узел: ${nodeId})`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: 📋 ДАННЫЕ КНОПКИ: text="${button.text}", target="${button.target}", id="${button.id}"`);
         code += `${indentLevel}# Кнопка выбора с галочками: ${button.text}\n`;
         code += `${indentLevel}logging.info(f"🔧 ПРОВЕРЯЕМ ГАЛОЧКУ: ищем '${button.text}' в списке: {user_data[user_id]['multi_select_${nodeId}']}")\n`;
         code += `${indentLevel}selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
@@ -519,9 +527,9 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
         code += `${indentLevel}final_text = f"{selected_mark}${button.text}"\n`;
         code += `${indentLevel}logging.info(f"📱 СОЗДАЕМ КНОПКУ: text='{final_text}', callback_data='${callbackData}'")\n`;
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=final_text, callback_data="${callbackData}"))\n`;
-        console.log(`🔧 ГЕНЕРАТОР: ✅ СГЕНЕРИРОВАН КОД ГАЛОЧЕК для ${button.text} с детальным логированием`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ СГЕНЕРИРОВАН КОД ГАЛОЧЕК для ${button.text} с детальным логированием`);
       } else {
-        console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем галочки для ${button.text} (isMultipleSelection=${isMultipleSelection})`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем галочки для ${button.text} (isMultipleSelection=${isMultipleSelection})`);
         code += `${indentLevel}builder.add(InlineKeyboardButton(text=${generateButtonText(button.text)}, callback_data="${callbackData}"))\n`;
       }
     } else {
@@ -534,7 +542,7 @@ function generateInlineKeyboardCode(buttons: any[], indentLevel: string, nodeId?
   if (hasSelectionButtons && isMultipleSelection) {
     const continueText = nodeData?.continueButtonText || 'Готово';
     const callbackData = `multi_select_done_${nodeId}`;
-    console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "${continueText}" для узла ${nodeId} с callback_data: ${callbackData}`);
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "${continueText}" для узла ${nodeId} с callback_data: ${callbackData}`);
     code += `${indentLevel}# Добавляем кнопку "Готово" для множественного выбора\n`;
     code += `${indentLevel}builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${callbackData}"))\n`;
   }
@@ -619,7 +627,7 @@ function generateAttachedMediaSendCode(
   const mediaInfo = mediaVariablesMap.get(firstMediaVar);
   
   if (!mediaInfo) {
-    console.log(`⚠️ ГЕНЕРАТОР: Медиапеременная ${firstMediaVar} не найдена в mediaVariablesMap`);
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Медиапеременная ${firstMediaVar} не найдена в mediaVariablesMap`);
     return '';
   }
 
@@ -1328,40 +1336,40 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   
   // Собираем все медиапеременные из узлов для поддержки attachedMedia
   const mediaVariablesMap = collectMediaVariables(nodes || []);
-  console.log(`🔧 ГЕНЕРАТОР: Собрано медиапеременных: ${mediaVariablesMap.size}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Собрано медиапеременных: ${mediaVariablesMap.size}`);
   if (mediaVariablesMap.size > 0) {
-    console.log('🔧 ГЕНЕРАТОР: Медиапеременные:', Array.from(mediaVariablesMap.entries()));
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Медиапеременные:', Array.from(mediaVariablesMap.entries()));
   }
   
   // ЛОГИРОВАНИЕ ГЕНЕРАТОРА: Подробная информация о данных бота
-  console.log(`🔧 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР НАЧАЛ РАБОТУ: узлов - ${nodes?.length || 0}, связей - ${connections?.length || 0}`);
   
   // Логируем все узлы с их свойствами
   if (nodes && nodes.length > 0) {
-    console.log('🔧 ГЕНЕРАТОР: Анализируем все узлы:');
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем все узлы:');
     nodes.forEach((node, index) => {
       const hasMultiSelect = node.data.allowMultipleSelection;
       const hasButtons = node.data.buttons && node.data.buttons.length > 0;
       const continueTarget = node.data.continueButtonTarget;
       
-      console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: "${node.id}" (тип: ${node.type})`);
-      console.log(`🔧 ГЕНЕРАТОР:   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
-      console.log(`🔧 ГЕНЕРАТОР:   - hasMultiSelect: ${hasMultiSelect}`);
-      console.log(`🔧 ГЕНЕРАТОР:   - кнопок: ${node.data.buttons?.length || 0}`);
-      console.log(`🔧 ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
-      console.log(`🔧 ГЕНЕРАТОР:   - continueButtonTarget: ${continueTarget || 'нет'}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${index + 1}: "${node.id}" (тип: ${node.type})`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - allowMultipleSelection: ${node.data.allowMultipleSelection}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - hasMultiSelect: ${hasMultiSelect}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - кнопок: ${node.data.buttons?.length || 0}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - keyboardType: ${node.data.keyboardType || 'нет'}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР:   - continueButtonTarget: ${continueTarget || 'нет'}`);
       
       if (node.id === 'interests_result') {
-        console.log(`🚨 ГЕНЕРАТОР: НАЙДЕН interests_result!`);
-        console.log(`🚨 ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: НАЙДЕН interests_result!`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: interests_result полные данные:`, JSON.stringify(node.data, null, 2));
       }
     });
     
     // Проверим связи
     if (connections && connections.length > 0) {
-      console.log('🔧 ГЕНЕРАТОР: Анализируем связи:');
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Анализируем связи:');
       connections.forEach((conn, index) => {
-        console.log(`🔧 ГЕНЕРАТОР: Связь ${index + 1}: ${conn.source} -> ${conn.target}`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Связь ${index + 1}: ${conn.source} -> ${conn.target}`);
       });
     }
   }
@@ -2300,20 +2308,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   (nodes || []).forEach(node => {
     if (node.data.enableAutoTransition && node.data.autoTransitionTo) {
       allReferencedNodeIds.add(node.data.autoTransitionTo);
-      console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Добавлен autoTransitionTo ${node.data.autoTransitionTo} в allReferencedNodeIds`);
     }
   });
 
   // Add all connection targets to ensure every connected node gets a handler
-  console.log(`🔗 ГЕНЕРАТОР: Обрабатываем ${connections.length} соединений`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Обрабатываем ${connections.length} соединений`);
   connections.forEach((connection, index) => {
-    console.log(`🔗 ГЕНЕРАТОР: Соединение ${index}: source=${connection.source} -> target=${connection.target}`);
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Соединение ${index}: source=${connection.source} -> target=${connection.target}`);
     if (connection.target) {
       allReferencedNodeIds.add(connection.target);
-      console.log(`✅ ГЕНЕРАТОР: Добавлен target ${connection.target} в allReferencedNodeIds`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Добавлен target ${connection.target} в allReferencedNodeIds`);
     }
   });
-  console.log(`🎯 ГЕНЕРАТОР: Финальный allReferencedNodeIds: ${Array.from(allReferencedNodeIds).join(', ')}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: Финальный allReferencedNodeIds: ${Array.from(allReferencedNodeIds).join(', ')}`);
 
   // Генерируем обработчики только если есть inline кнопки или условные кнопки
   if (inlineNodes.length > 0 || allReferencedNodeIds.size > 0 || allConditionalButtons.size > 0) {
@@ -2340,7 +2348,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Избегаем дублированных обработчиков для target узлов
           if (button.target && processedCallbacks.has(button.target)) {
-            console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
             return;
           }
           
@@ -2352,7 +2360,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем target узел перед созданием обработчика
           if (button.target && processedCallbacks.has(button.target)) {
-            console.log(`🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: ПРОПУСКАЕМ дублирующий обработчик для target ${button.target} - уже создан`);
             return;
           }
           
@@ -2362,17 +2370,17 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем target в processedCallbacks СРАЗУ, чтобы избежать дублирования
           if (button.target) {
             processedCallbacks.add(button.target);
-            console.log(`🔧 ГЕНЕРАТОР: Узел ${button.target} добавлен в processedCallbacks ДО создания обработчика`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${button.target} добавлен в processedCallbacks ДО создания обработчика`);
           }
           
           // ОТЛАДКА: Проверяем если это interests_result или metro_selection
           if (button.target === 'interests_result') {
-            console.log('🔧 ГЕНЕРАТОР DEBUG: Создаем ПЕРВЫЙ обработчик для interests_result в основном цикле');
-            console.log('🔧 ГЕНЕРАТОР DEBUG: processedCallbacks до добавления:', Array.from(processedCallbacks));
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР DEBUG: Создаем ПЕРВЫЙ обработчик для interests_result в основном цикле');
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР DEBUG: processedCallbacks до добавления:', Array.from(processedCallbacks));
           }
           if (button.target === 'metro_selection') {
-            console.log('🔧 ГЕНЕРАТОР DEBUG: Создаем ПЕРВЫЙ обработчик для metro_selection в основном цикле');
-            console.log('🔧 ГЕНЕРАТОР DEBUG: processedCallbacks до добавления:', Array.from(processedCallbacks));
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР DEBUG: Создаем ПЕРВЫЙ обработчик для metro_selection в основном цикле');
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР DEBUG: processedCallbacks до добавления:', Array.from(processedCallbacks));
           }
           
           // Если целевой узел имеет множественный выбор, добавляем обработку кнопки "done_"
@@ -2381,13 +2389,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           
           // ЛОГИРОВАНИЕ: Отслеживаем создание обработчиков для interests_result
           if (actualCallbackData === 'interests_result') {
-            console.log('🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: Создаем обработчик для interests_result!');
-            console.log('🚨 ГЕНЕРАТОР: Текущие processedCallbacks:', Array.from(processedCallbacks));
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log('🚨 ГЕНЕРАТОР ОСНОВНОЙ ЦИКЛ: Создаем обработчик для interests_result!');
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log('🚨 ГЕНЕРАТОР: Текущие processedCallbacks:', Array.from(processedCallbacks));
           }
           
           if (isDoneHandlerNeeded) {
             code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_") or c.data == "multi_select_done_${shortNodeIdForDone}")\n`;
-            console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавлен обработчик кнопки "multi_select_done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавлен обработчик кнопки "multi_select_done_${shortNodeIdForDone}" для узла ${actualCallbackData}`);
           } else {
             code += `\n@dp.callback_query(lambda c: c.data == "${actualCallbackData}" or c.data.startswith("${actualCallbackData}_btn_"))\n`;
           }
@@ -2395,7 +2403,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           const safeFunctionName = actualCallbackData.replace(/[^a-zA-Z0-9_]/g, '_');
           
           if (actualCallbackData === 'interests_result') {
-            console.log('🚨 ГЕНЕРАТОР: Создаем функцию handle_callback_interests_result в ОСНОВНОМ ЦИКЛЕ');
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log('🚨 ГЕНЕРАТОР: Создаем функцию handle_callback_interests_result в ОСНОВНОМ ЦИКЛЕ');
           }
           
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
@@ -2457,20 +2465,20 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const nextNodeId = targetNode.data.continueButtonTarget;
               
               // КРИТИЧЕСКАЯ ОТЛАДКА
-              console.log(`🚨 ГЕНЕРАТОР CONTINUEBUTTON DEBUG:`);
-              console.log(`🚨 ГЕНЕРАТОР: targetNode.id = "${targetNode.id}"`);
-              console.log(`🚨 ГЕНЕРАТОР: targetNode.data.continueButtonTarget = "${targetNode.data.continueButtonTarget}"`);
-              console.log(`🚨 ГЕНЕРАТОР: nextNodeId = "${nextNodeId}"`);
-              console.log(`🚨 ГЕНЕРАТОР: actualCallbackData = "${actualCallbackData}"`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР CONTINUEBUTTON DEBUG:`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: targetNode.id = "${targetNode.id}"`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: targetNode.data.continueButtonTarget = "${targetNode.data.continueButtonTarget}"`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: nextNodeId = "${nextNodeId}"`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: actualCallbackData = "${actualCallbackData}"`);
               
               code += '        # Переход к следующему узлу\n';
               code += `        next_node_id = "${nextNodeId}"\n`;
               code += `        logging.info(f"🚀 DEBUG: targetNode.id=${targetNode.id}, continueButtonTarget=${targetNode.data.continueButtonTarget}, nextNodeId=${nextNodeId}")\n`;
               
               // ИСПРАВЛЕНИЕ: Специальная логика для metro_selection -> interests_result
-              console.log(`🔧 ГЕНЕРАТОР: Проверяем metro_selection -> interests_result: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Проверяем metro_selection -> interests_result: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
               if (targetNode.id.includes('metro_selection') && nextNodeId === 'interests_result') {
-                console.log(`🔧 ГЕНЕРАТОР: ✅ Применяем специальную логику metro_selection -> interests_result`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ Применяем специальную логику metro_selection -> interests_result`);
                 code += '        # ИСПРАВЛЕНИЕ: Сохраняем метро выбор и устанавливаем флаг для показа клавиатуры\n';
                 code += `        selected_metro = user_data.get(user_id, {}).get("multi_select_${actualCallbackData}", [])\n`;
                 code += '        if user_id not in user_data:\n';
@@ -2481,7 +2489,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '        logging.info(f"🚇 Сохранили метро выбор: {selected_metro}, установлен флаг show_metro_keyboard=True")\n';
                 code += '        \n';
               } else {
-                console.log(`🔧 ГЕНЕРАТОР: ❌ Не применяем специальную логику: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ Не применяем специальную логику: targetNode.id="${targetNode.id}", nextNodeId="${nextNodeId}"`);
               }
               
               code += '        try:\n';
@@ -2623,18 +2631,18 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const hasButtons = targetNode.data.buttons && targetNode.data.buttons.length > 0;
               const keyboardType = targetNode.data.keyboardType;
               
-              console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} - кнопок: ${targetNode.data.buttons?.length}, keyboardType: ${keyboardType}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} - кнопок: ${targetNode.data.buttons?.length}, keyboardType: ${keyboardType}`);
               
               if (hasButtons) {
                 code += '    # Проверяем, есть ли условная клавиатура\n';
                 code += '    if keyboard is None:\n';
                 if (keyboardType === "inline") {
-                  console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ INLINE клавиатуру для узла ${targetNode.id}`);
+                  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ INLINE клавиатуру для узла ${targetNode.id}`);
                   code += '        # Создаем inline клавиатуру\n';
                   const keyboardCode = generateInlineKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data, allNodeIds);
                   code += keyboardCode;
                 } else if (keyboardType === "reply") {
-                  console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ REPLY клавиатуру для узла ${targetNode.id}`);
+                  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ СОЗДАЕМ REPLY клавиатуру для узла ${targetNode.id}`);
                   code += '        # Создаем reply клавиатуру\n';
                   const keyboardCode = generateReplyKeyboardCode(targetNode.data.buttons, '        ', targetNode.id, targetNode.data);
                   code += keyboardCode;
@@ -2685,7 +2693,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const attachedMedia = targetNode.data.attachedMedia || [];
               
               if (attachedMedia.length > 0) {
-                console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} имеет attachedMedia:`, attachedMedia);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${targetNode.id} имеет attachedMedia:`, attachedMedia);
                 // Генерируем код отправки с медиа
                 const parseModeStr = targetNode.data.formatMode || '';
                 const keyboardStr = 'keyboard if keyboard is not None else None';
@@ -3556,19 +3564,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     });
     
     // CRITICAL FIX: Ensure interests_result gets a handler BUT avoid duplicates
-    console.log('🔧 ГЕНЕРАТОР CRITICAL FIX: Проверяем interests_result обработчик');
-    console.log('🔧 ГЕНЕРАТОР: processedCallbacks перед check:', Array.from(processedCallbacks));
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР CRITICAL FIX: Проверяем interests_result обработчик');
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: processedCallbacks перед check:', Array.from(processedCallbacks));
     
     // Проверяем, был ли interests_result уже обработан в основном цикле
     const wasInterestsResultProcessed = processedCallbacks.has('interests_result');
-    console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле?', wasInterestsResultProcessed);
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле?', wasInterestsResultProcessed);
     
     // ИСПРАВЛЕНИЕ: НЕ создаем дублирующий обработчик если он уже есть
     if (wasInterestsResultProcessed) {
-      console.log('🔧 ГЕНЕРАТОР: ПРОПУСКАЕМ создание дублирующего обработчика для interests_result');
-      console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле, избегаем конфликта клавиатур');
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: ПРОПУСКАЕМ создание дублирующего обработчика для interests_result');
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: interests_result уже обработан в основном цикле, избегаем конфликта клавиатур');
     } else {
-      console.log('🔧 ГЕНЕРАТОР: Создаем обработчик для interests_result (не найден в основном цикле)');
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Создаем обработчик для interests_result (не найден в основном цикле)');
       processedCallbacks.add('interests_result');
       const interestsResultNode = nodes.find(n => n.id === 'interests_result');
       if (interestsResultNode) {
@@ -3589,7 +3597,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         code += generateUniversalVariableReplacement('    ');
         
         // ИСПРАВЛЕНИЕ: Специальная логика для interests_result - показываем метро клавиатуру
-        console.log('🔧 ГЕНЕРАТОР: Обрабатываем interests_result узел - добавляем метро клавиатуру');
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Обрабатываем interests_result узел - добавляем метро клавиатуру');
         code += '    # ИСПРАВЛЕНИЕ: Проверяем, нужно ли показать метро клавиатуру\n';
         code += '    logging.info("🔧 ГЕНЕРАТОР DEBUG: Вошли в узел interests_result")\n';
         code += '    # Загружаем флаг из базы данных, если он там есть\n';
@@ -3617,9 +3625,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         
         // Находим узел metro_selection для восстановления его кнопок
         const metroNode = nodes.find(n => n.id.includes('metro_selection'));
-        console.log(`🔧 ГЕНЕРАТОР: Поиск узла metro_selection - найден: ${metroNode ? 'да' : 'нет'}`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Поиск узла metro_selection - найден: ${metroNode ? 'да' : 'нет'}`);
         if (metroNode && metroNode.data.buttons) {
-          console.log(`🔧 ГЕНЕРАТОР: Узел metro_selection найден: ${metroNode.id}, кнопок: ${metroNode.data.buttons.length}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел metro_selection найден: ${metroNode.id}, кнопок: ${metroNode.data.buttons.length}`);
           code += '    # Создаем метро клавиатуру если нужно\n';
           code += '    if show_metro_keyboard:\n';
           code += '        logging.info("🚇 ПОКАЗЫВАЕМ метро клавиатуру в interests_result")\n';
@@ -3691,7 +3699,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += '        await bot.send_message(user_id, text)\n';
           }
         } else {
-          console.log('🔧 ГЕНЕРАТОР: Узел metro_selection НЕ найден или у него нет кнопок');
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔧 ГЕНЕРАТОР: Узел metro_selection НЕ найден или у него нет кнопок');
           // Обычная логика если узла метро нет
           code += '    logging.info("🚇 Узел metro_selection не найден, используем обычную логику")\n';
           if (interestsResultNode.data.buttons && interestsResultNode.data.buttons.length > 0) {
@@ -3718,42 +3726,42 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
 
     // Now generate callback handlers for all remaining referenced nodes that don't have inline buttons
-    console.log(`🔍 ГЕНЕРАТОР: Обработка allReferencedNodeIds: ${Array.from(allReferencedNodeIds).join(', ')}`);
-    console.log(`🔍 ГЕНЕРАТОР: Уже обработанные callbacks: ${Array.from(processedCallbacks).join(', ')}`);
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Обработка allReferencedNodeIds: ${Array.from(allReferencedNodeIds).join(', ')}`);
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Уже обработанные callbacks: ${Array.from(processedCallbacks).join(', ')}`);
     
     allReferencedNodeIds.forEach(nodeId => {
-      console.log(`🔎 ГЕНЕРАТОР: Проверяем узел ${nodeId}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 ГЕНЕРАТОР: Проверяем узел ${nodeId}`);
       if (!processedCallbacks.has(nodeId)) {
-        console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} НЕ был обработан ранее, создаем обработчик`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} НЕ был обработан ранее, создаем обработчик`);
         const targetNode = nodes.find(n => n.id === nodeId);
         if (targetNode) {
-          console.log(`📋 ГЕНЕРАТОР: Найден узел ${nodeId}, тип: ${targetNode.type}`);
-          console.log(`📋 ГЕНЕРАТОР: allowMultipleSelection: ${targetNode.data.allowMultipleSelection}`);
-          console.log(`📋 ГЕНЕРАТОР: keyboardType: ${targetNode.data.keyboardType}`);
-          console.log(`📋 ГЕНЕРАТОР: кнопок: ${targetNode.data.buttons?.length || 0}`);
-          console.log(`📋 ГЕНЕРАТОР: continueButtonTarget: ${targetNode.data.continueButtonTarget || 'нет'}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: Найден узел ${nodeId}, тип: ${targetNode.type}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: allowMultipleSelection: ${targetNode.data.allowMultipleSelection}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: keyboardType: ${targetNode.data.keyboardType}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: кнопок: ${targetNode.data.buttons?.length || 0}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 ГЕНЕРАТОР: continueButtonTarget: ${targetNode.data.continueButtonTarget || 'нет'}`);
           
           if (nodeId === 'interests_result') {
-            console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: СОЗДАЕМ ТРЕТИЙ ОБРАБОТЧИК ДЛЯ interests_result!`);
-            console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: interests_result данные:`, JSON.stringify(targetNode.data, null, 2));
-            console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: ЭТО МОЖЕТ БЫТЬ ИСТОЧНИКОМ КОНФЛИКТА КЛАВИАТУР!`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: СОЗДАЕМ ТРЕТИЙ ОБРАБОТЧИК ДЛЯ interests_result!`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: interests_result данные:`, JSON.stringify(targetNode.data, null, 2));
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР ALL_REFERENCED: ЭТО МОЖЕТ БЫТЬ ИСТОЧНИКОМ КОНФЛИКТА КЛАВИАТУР!`);
           }
           
           // ВАЖНО: Не создаваем обработчик для "start", если он уже был создан ранее (избегаем дублирования)
           if (nodeId === 'start') {
-            console.log(`Пропускаем создание дублированной функции для узла ${nodeId} - уже создана ранее`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`Пропускаем создание дублированной функции для узла ${nodeId} - уже создана ранее`);
             return; // Пропускаем создание дублированной функции
           }
           
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Также проверяем interests_result и metro_selection
           if (nodeId === 'interests_result') {
-            console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для interests_result - уже создан в основном цикле`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для interests_result - уже создан в основном цикле`);
             return; // Избегаем дублирования обработчика interests_result
           }
           
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Пропускаем дублирующий обработчик для metro_selection
           if (nodeId === 'metro_selection') {
-            console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для metro_selection - уже создан в основном цикле`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🚨 ГЕНЕРАТОР: ПРОПУСКАЕМ дублирующий обработчик для metro_selection - уже создан в основном цикле`);
             return; // Избегаем дублирования обработчика metro_selection
           }
           
@@ -3877,15 +3885,15 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           const hasSelectionButtons = targetNode.data.buttons && targetNode.data.buttons.some(btn => btn.action === 'selection');
           if (targetNode.data.allowMultipleSelection || hasSelectionButtons) {
             // Узел с множественным выбором - создаем специальную клавиатуру
-            console.log(`🎯 ГЕНЕРАТОР: ========================================`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: ========================================`);
             const reason = hasSelectionButtons ? 'ИМЕЕТ КНОПКИ SELECTION' : 'ИМЕЕТ allowMultipleSelection=true';
-            console.log(`🎯 ГЕНЕРАТОР: УЗЕЛ ${nodeId} ${reason}`);
-            console.log(`🎯 ГЕНЕРАТОР: ЭТО ПРАВИЛЬНЫЙ ПУТЬ ВЫПОЛНЕНИЯ!`);
-            console.log(`🔘 ГЕНЕРАТОР: Кнопки узла ${nodeId}:`, targetNode.data.buttons?.map(b => `${b.text} (action: ${b.action})`)?.join(', ') || 'НЕТ КНОПОК');
-            console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget для ${nodeId}: ${targetNode.data.continueButtonTarget}`);
-            console.log(`🔧 ГЕНЕРАТОР: multiSelectVariable для ${nodeId}: ${targetNode.data.multiSelectVariable}`);
-            console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons: ${hasSelectionButtons}`);
-            console.log(`🎯 ГЕНЕРАТОР: ========================================`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: УЗЕЛ ${nodeId} ${reason}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: ЭТО ПРАВИЛЬНЫЙ ПУТЬ ВЫПОЛНЕНИЯ!`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔘 ГЕНЕРАТОР: Кнопки узла ${nodeId}:`, targetNode.data.buttons?.map(b => `${b.text} (action: ${b.action})`)?.join(', ') || 'НЕТ КНОПОК');
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget для ${nodeId}: ${targetNode.data.continueButtonTarget}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: multiSelectVariable для ${nodeId}: ${targetNode.data.multiSelectVariable}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: hasSelectionButtons: ${hasSelectionButtons}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ГЕНЕРАТОР: ========================================`);
             
             // Добавляем логику инициализации множественного выбора
             const multiSelectVariable = targetNode.data.multiSelectVariable || 'user_interests';
@@ -3957,22 +3965,22 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    builder = InlineKeyboardBuilder()\n';
               
               // Разделяем кнопки на опции выбора и обычные кнопки
-              console.log(`🔧 ГЕНЕРАТОР: targetNode.data.buttons:`, targetNode.data.buttons);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: targetNode.data.buttons:`, targetNode.data.buttons);
               
               let buttonsToUse = targetNode.data.buttons || [];
               
               const selectionButtons = buttonsToUse.filter(button => button.action === 'selection');
               const regularButtons = buttonsToUse.filter(button => button.action !== 'selection');
-              console.log(`🔧 ГЕНЕРАТОР: Найдено ${selectionButtons.length} кнопок выбора и ${regularButtons.length} обычных кнопок`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Найдено ${selectionButtons.length} кнопок выбора и ${regularButtons.length} обычных кнопок`);
               
               // Добавляем кнопки выбора с отметками о состоянии
-              console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Создаем ${selectionButtons.length} кнопок выбора для узла ${nodeId}`);
               selectionButtons.forEach((button, index) => {
                 // Используем короткие callback_data
                 const shortNodeId = generateUniqueShortId(nodeId, allNodeIds || []); // Используем новую функцию
                 const shortTarget = (button.target || button.id || 'btn').slice(-8);
                 const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-                console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> ${callbackData} (shortNodeId: ${shortNodeId}) (длина: ${callbackData.length})`);
                 code += `    # Кнопка выбора ${index + 1}: ${button.text}\n`;
                 code += `    logging.info(f"🔘 Создаем кнопку: ${button.text} -> ${callbackData}")\n`;
                 code += `    selected_mark = "✅ " if "${button.text}" in user_data[user_id]["multi_select_${nodeId}"] else ""\n`;
@@ -3980,26 +3988,26 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               });
               
               // Добавляем кнопку "Готово" для множественного выбора
-              console.log(`🔧 ГЕНЕРАТОР: НАЧИНАЕМ создание кнопки "Готово" для узла ${nodeId}`);
-              console.log(`🔧 ГЕНЕРАТОР: allowMultipleSelection = ${targetNode.data.allowMultipleSelection}`);
-              console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${targetNode.data.continueButtonTarget}`);
-              console.log(`🔧 ГЕНЕРАТОР: selectionButtons.length = ${selectionButtons.length}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: НАЧИНАЕМ создание кнопки "Готово" для узла ${nodeId}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: allowMultipleSelection = ${targetNode.data.allowMultipleSelection}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget = ${targetNode.data.continueButtonTarget}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: selectionButtons.length = ${selectionButtons.length}`);
               
               // ВСЕГДА добавляем кнопку "Готово" если есть кнопки выбора
               if (selectionButtons.length > 0) {
-                console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "Готово" (есть ${selectionButtons.length} кнопок выбора)`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ ДОБАВЛЯЕМ кнопку "Готово" (есть ${selectionButtons.length} кнопок выбора)`);
                 code += '    # Кнопка "Готово" для множественного выбора\n';
                 const shortNodeIdDone = nodeId.slice(-10).replace(/^_+/, ''); // Убираем ведущие underscores
                 const doneCallbackData = `done_${shortNodeIdDone}`;
-                console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
-                console.log(`🔧 ГЕНЕРАТОР: ГЕНЕРИРУЕМ код кнопки "Готово"!`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Кнопка "Готово" -> ${doneCallbackData} (длина: ${doneCallbackData.length})`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ГЕНЕРИРУЕМ код кнопки "Готово"!`);
                 
                 code += `    logging.info(f"🔘 Создаем кнопку Готово -> ${doneCallbackData}")\n`;
                 code += `    builder.add(InlineKeyboardButton(text="Готово", callback_data="${doneCallbackData}"))\n`;
                 
-                console.log(`🔧 ГЕНЕРАТОР: ✅ УСПЕШНО добавили кнопку "Готово" в код генерации`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ✅ УСПЕШНО добавили кнопку "Готово" в код генерации`);
               } else {
-                console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем кнопку "Готово" - нет кнопок выбора`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ❌ НЕ добавляем кнопку "Готово" - нет кнопок выбора`);
               }  
               
               // Добавляем обычные кнопки (navigation и другие)
@@ -4140,7 +4148,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           const attachedMedia = targetNode.data.attachedMedia || [];
           
           if (attachedMedia.length > 0) {
-            console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} имеет attachedMedia:`, attachedMedia);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} имеет attachedMedia:`, attachedMedia);
             // Генерируем код отправки с медиа
             const parseModeStr = targetNode.data.formatMode || '';
             const keyboardStr = 'keyboard if keyboard is not None else None';
@@ -4160,7 +4168,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += mediaCode;
             } else {
               // Fallback если не удалось сгенерировать код медиа
-              console.log(`⚠️ ГЕНЕРАТОР: Не удалось сгенерировать код медиа для узла ${nodeId}, используем обычную отправку`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Не удалось сгенерировать код медиа для узла ${nodeId}, используем обычную отправку`);
               code += '    # Отправляем сообщение\n';
               code += '    try:\n';
               code += '        if keyboard:\n';
@@ -4204,21 +4212,21 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Сначала проверяем явный автопереход через флаг
           if (currentNodeForAutoTransition?.data.enableAutoTransition && currentNodeForAutoTransition?.data.autoTransitionTo) {
             autoTransitionTarget = currentNodeForAutoTransition.data.autoTransitionTo;
-            console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} имеет явный автопереход к ${autoTransitionTarget}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} имеет явный автопереход к ${autoTransitionTarget}`);
           } 
           // Если узел не имеет кнопок и имеет ровно одно исходящее соединение, делаем автопереход
           else if (currentNodeForAutoTransition && (!currentNodeForAutoTransition.data.buttons || currentNodeForAutoTransition.data.buttons.length === 0)) {
             const outgoingConnections = connections.filter(conn => conn.source === nodeId);
-            console.log(`🔍 ГЕНЕРАТОР: Узел ${nodeId} без кнопок, проверяем соединения: ${outgoingConnections.length}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Узел ${nodeId} без кнопок, проверяем соединения: ${outgoingConnections.length}`);
             if (outgoingConnections.length === 1) {
               autoTransitionTarget = outgoingConnections[0].target;
-              console.log(`🔗 ГЕНЕРАТОР: Узел ${nodeId} без кнопок имеет одно соединение к ${autoTransitionTarget}, делаем автопереход`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔗 ГЕНЕРАТОР: Узел ${nodeId} без кнопок имеет одно соединение к ${autoTransitionTarget}, делаем автопереход`);
             }
           }
           
           if (autoTransitionTarget) {
             const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
-            console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем код автоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем код автоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
             code += '    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла\n';
             code += '    # ИСПРАВЛЕНИЕ: НЕ делаем автопереход если была показана условная клавиатура\n';
             code += '    user_id = callback_query.from_user.id\n';
@@ -4355,7 +4363,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // ИСПРАВЛЕНИЕ: редирект только для узлов с кнопками, чтобы избежать дублирования сообщений при автопереходах
           const hasButtons = currentNode && currentNode.data.buttons && currentNode.data.buttons.length > 0;
           const shouldRedirect = hasButtons && !(currentNode && currentNode.data.allowMultipleSelection);
-          console.log(`🔧 ГЕНЕРАТОР КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Узел ${nodeId} hasButtons: ${hasButtons}, allowMultipleSelection: ${currentNode?.data.allowMultipleSelection}, shouldRedirect: ${shouldRedirect}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Узел ${nodeId} hasButtons: ${hasButtons}, allowMultipleSelection: ${currentNode?.data.allowMultipleSelection}, shouldRedirect: ${shouldRedirect}`);
           
           let redirectTarget = nodeId; // По умолчанию остаемся в том же узле
           
@@ -4363,19 +4371,19 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             if (currentNode && currentNode.data.continueButtonTarget) {
               // Для обычных узлов используем continueButtonTarget если есть
               redirectTarget = currentNode.data.continueButtonTarget;
-              console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит к continueButtonTarget ${redirectTarget}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит к continueButtonTarget ${redirectTarget}`);
             } else {
               // Для обычных узлов ищем следующий узел через соединения
               const nodeConnections = connections.filter(conn => conn.source === nodeId);
               if (nodeConnections.length > 0) {
                 redirectTarget = nodeConnections[0].target;
-                console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит через соединение к ${redirectTarget}`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} переходит через соединение к ${redirectTarget}`);
               } else {
-                console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} остается в том же узле (нет соединений)`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР REDIRECTTARGET: Узел ${nodeId} остается в том же узле (нет соединений)`);
               }
             }
           } else {
-            console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} без кнопок или с множественным выбором - НЕ делаем автоматическую переадресацию`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Узел ${nodeId} без кнопок или с множественным выбором - НЕ делаем автоматическую переадресацию`);
           }
           
           if (shouldRedirect && redirectTarget && redirectTarget !== nodeId) {
@@ -5355,14 +5363,14 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Добавляем reply button обработчики ПЕРЕД универсальным обработчиком текста
   // Это гарантирует, что специфичные обработчики кнопок срабатывают раньше общего обработчика
   const replyGotoButtons: Array<{text: string, target: string, nodeId: string, keyboardType: string, hideAfterClick?: boolean}> = [];
-  console.log('🔍 НАЧИНАЕМ СБОР REPLY КНОПОК С GOTO из', nodes.length, 'узлов');
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАЕМ СБОР REPLY КНОПОК С GOTO из', nodes.length, 'узлов');
   
   nodes.forEach(node => {
     // Обычные кнопки узла
     if (node.data.buttons) {
       node.data.buttons.forEach((button: Button) => {
         if (button.action === 'goto' && button.target && node.data.keyboardType === 'reply') {
-          console.log(`✅ НАЙДЕНА reply goto кнопка: "${button.text}" -> ${button.target} в узле ${node.id}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА reply goto кнопка: "${button.text}" -> ${button.target} в узле ${node.id}`);
           replyGotoButtons.push({
             text: button.text,
             target: button.target,
@@ -5382,7 +5390,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Для conditional messages берем keyboardType из condition или node
             const keyboardType = condition.keyboardType || node.data.keyboardType || 'reply';
             if (button.action === 'goto' && button.target && keyboardType === 'reply') {
-              console.log(`✅ НАЙДЕНА reply goto кнопка в conditional message: "${button.text}" -> ${button.target} в узле ${node.id}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА reply goto кнопка в conditional message: "${button.text}" -> ${button.target} в узле ${node.id}`);
               replyGotoButtons.push({
                 text: button.text,
                 target: button.target,
@@ -5397,7 +5405,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   });
   
-  console.log(`🎯 ИТОГО найдено reply goto кнопок: ${replyGotoButtons.length}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ИТОГО найдено reply goto кнопок: ${replyGotoButtons.length}`);
   
   if (replyGotoButtons.length > 0) {
     code += '\n# Обработчики для reply кнопок с переходами (goto)\n';
@@ -7700,36 +7708,36 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
 
   // Добавляем обработчики для кнопок команд (типа cmd_start) с подробным логированием
   const commandButtons = new Set<string>();
-  console.log('🔍 НАЧИНАЕМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log('🔍 НАЧИНАЕМ СБОР КНОПОК КОМАНД из', nodes.length, 'узлов');
   
   nodes.forEach(node => {
-    console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
+    if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔎 Проверяем узел ${node.id} (тип: ${node.type})`);
     
     // Обычные кнопки узла
     if (node.data.buttons) {
-      console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📋 Узел ${node.id} имеет ${node.data.buttons.length} кнопок`);
       node.data.buttons.forEach((button: Button, index: number) => {
-        console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Кнопка ${index}: "${button.text}" (action: ${button.action}, target: ${button.target})`);
         if (button.action === 'command' && button.target) {
           const commandCallback = `cmd_${button.target.replace('/', '')}`;
-          console.log(`✅ НАЙДЕНА кнопка команды: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
           commandButtons.add(commandCallback);
         }
       });
     } else {
-      console.log(`❌ Узел ${node.id} не имеет кнопок`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`❌ Узел ${node.id} не имеет кнопок`);
     }
     
     // Кнопки в условных сообщениях
     if (node.data.conditionalMessages) {
-      console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`📨 Узел ${node.id} имеет ${node.data.conditionalMessages.length} условных сообщений`);
       node.data.conditionalMessages.forEach((condition: any) => {
         if (condition.buttons) {
           condition.buttons.forEach((button: Button) => {
-            console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`  🔘 Условная кнопка: "${button.text}" (action: ${button.action}, target: ${button.target})`);
             if (button.action === 'command' && button.target) {
               const commandCallback = `cmd_${button.target.replace('/', '')}`;
-              console.log(`✅ НАЙДЕНА кнопка команды в условном сообщении: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ НАЙДЕНА кнопка команды в условном сообщении: ${button.text} -> ${button.target} -> ${commandCallback} в узле ${node.id}`);
               commandButtons.add(commandCallback);
             }
           });
@@ -7738,8 +7746,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
     }
   });
   
-  console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
-  console.log('📝 Список найденных кнопок команд:', Array.from(commandButtons));
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🎯 ИТОГО найдено кнопок команд: ${commandButtons.size}`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log('📝 Список найденных кнопок команд:', Array.from(commandButtons));
   
   if (commandButtons.size > 0) {
     code += '\n# Обработчики для кнопок команд\n';
@@ -7953,7 +7961,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   const multiSelectNodes = (nodes || []).filter(node => 
     node.data.allowMultipleSelection
   );
-  console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔍 ГЕНЕРАТОР: Найдено ${multiSelectNodes.length} узлов с множественным выбором:`, multiSelectNodes.map(n => n.id));
   
   // Добавляем обработчики для множественного выбора ТОЛЬКО если есть узлы с множественным выбором
   if (multiSelectNodes.length > 0) {
@@ -8007,12 +8015,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   code += '        # Переходим к следующему узлу, если указан\n';
   
   // Добавим переходы для узлов с множественным выбором
-  console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
+  if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Обрабатываем ${multiSelectNodes.length} узлов множественного выбора для переходов`);
   code += '        # Определяем следующий узел для каждого node_id\n';
   multiSelectNodes.forEach(node => {
-      console.log(`🔧 ГЕНЕРАТОР: Создаем блок if для узла ${node.id}`);
-      console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget: ${node.data.continueButtonTarget}`);
-      console.log(`🔧 ГЕНЕРАТОР: соединения из узла: ${connections.filter(conn => conn.source === node.id).map(c => c.target).join(', ')}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Создаем блок if для узла ${node.id}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: continueButtonTarget: ${node.data.continueButtonTarget}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: соединения из узла: ${connections.filter(conn => conn.source === node.id).map(c => c.target).join(', ')}`);
       
       code += `        if node_id == "${node.id}":\n`;
       
@@ -8022,12 +8030,12 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       if (node.data.continueButtonTarget) {
         const targetNode = nodes.find(n => n.id === node.data.continueButtonTarget);
         if (targetNode) {
-          console.log(`🔧 ГЕНЕРАТОР: Найден целевой узел ${targetNode.id} через continueButtonTarget`);
-          console.log(`🔧 ГЕНЕРАТОР: Тип целевого узла: ${targetNode.type}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Найден целевой узел ${targetNode.id} через continueButtonTarget`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Тип целевого узла: ${targetNode.type}`);
           code += `            # Переход к узлу ${targetNode.id}\n`;
           code += `            logging.info(f"🔄 Переходим к узлу ${targetNode.id} (тип: ${targetNode.type})")\n`;
           if (targetNode.type === 'message') {
-            console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик, отправляем сообщение`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик, отправляем сообщение`);
             const messageText = targetNode.data.messageText || "Продолжение...";
             const formattedText = formatTextForPython(messageText);
             code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
@@ -8035,7 +8043,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             
             // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла
             if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-              console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
               code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для целевого узла\n`;
               code += `            # Загружаем пользовательские данные для клавиатуры\n`;
               code += `            user_vars = await get_user_from_db(user_id)\n`;
@@ -8052,23 +8060,23 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             hasContent = true;
           } else if (targetNode.type === 'command') {
             const safeCommandName = targetNode.data.command?.replace(/[^a-zA-Z0-9_]/g, '_') || 'unknown';
-            console.log(`🔧 ГЕНЕРАТОР: Добавляем вызов handle_command_${safeCommandName}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Добавляем вызов handle_command_${safeCommandName}`);
             code += `            await handle_command_${safeCommandName}(callback_query.message)\n`;
             hasContent = true;
           } else if (targetNode.type === 'start') {
-            console.log(`🔧 ГЕНЕРАТОР: Вызываем полный обработчик start для правильной клавиатуры`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Вызываем полный обработчик start для правильной клавиатуры`);
             code += `            # Вызываем полный обработчик start для правильного отображения главного меню\n`;
             code += `            await handle_command_start(callback_query.message)\n`;
             code += `            return\n`;
             hasContent = true;
           } else {
-            console.log(`⚠️ ГЕНЕРАТОР: Неизвестный тип узла ${targetNode.type}, добавляем pass`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Неизвестный тип узла ${targetNode.type}, добавляем pass`);
             code += `            logging.warning(f"⚠️ Неизвестный тип узла: ${targetNode.type}")\n`;
             code += `            pass\n`;
             hasContent = true;
           }
         } else {
-          console.log(`⚠️ ГЕНЕРАТОР: Целевой узел не найден для continueButtonTarget: ${node.data.continueButtonTarget}`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Целевой узел не найден для continueButtonTarget: ${node.data.continueButtonTarget}`);
           // Если целевой узел не найден, просто завершаем выбор без перехода
           code += `            # Целевой узел не найден, завершаем выбор\n`;
           code += `            logging.warning(f"⚠️ Целевой узел не найден: ${node.data.continueButtonTarget}")\n`;
@@ -8081,10 +8089,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
         if (nodeConnections.length > 0) {
           const targetNode = nodes.find(n => n.id === nodeConnections[0].target);
           if (targetNode) {
-            console.log(`🔧 ГЕНЕРАТОР: Найден целевой узел ${targetNode.id} через соединение`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Найден целевой узел ${targetNode.id} через соединение`);
             code += `            # Переход к узлу ${targetNode.id} через соединение\n`;
             if (targetNode.type === 'message') {
-              console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик через соединение`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик через соединение`);
               const messageText = targetNode.data.messageText || "Продолжение...";
               const formattedText = formatTextForPython(messageText);
               code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
@@ -8092,7 +8100,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла
               if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-                console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для соединения ${targetNode.id}`);
+                if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для соединения ${targetNode.id}`);
                 code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для соединения\n`;
                 code += `            # Загружаем пользовательские данные для клавиатуры\n`;
                 code += `            user_vars = await get_user_from_db(user_id)\n`;
@@ -8117,10 +8125,10 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       
       // Если блок if остался пустым, добавляем return
       if (!hasContent) {
-        console.log(`⚠️ ГЕНЕРАТОР: Блок if для узла ${node.id} остался пустым, добавляем return`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`⚠️ ГЕНЕРАТОР: Блок if для узла ${node.id} остался пустым, добавляем return`);
         code += `            return\n`;
       } else {
-        console.log(`✅ ГЕНЕРАТОР: Блок if для узла ${node.id} заполнен контентом`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`✅ ГЕНЕРАТОР: Блок if для узла ${node.id} заполнен контентом`);
       }
     });
   }
@@ -8274,13 +8282,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       code += `        if node_id == "${node.id}":\n`;
       
       // Добавляем кнопки выбора с галочками
-      console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: Добавляем ${selectionButtons.length} кнопок выбора для узла ${node.id}`);
       selectionButtons.forEach((button, index) => {
         // ИСПРАВЛЕНИЕ: используем тот же формат callback_data как при создании кнопок
         const shortNodeId = generateUniqueShortId(node.id, allNodeIds || []);
         const shortTarget = button.target || button.id || 'btn';
         const callbackData = `ms_${shortNodeId}_${shortTarget}`;
-        console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> callback_data: ${callbackData}`);
+        if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО! Кнопка ${index + 1}: "${button.text}" -> callback_data: ${callbackData}`);
         code += `            selected_mark = "✅ " if "${button.text}" in selected_list else ""\n`;
         code += `            builder.add(InlineKeyboardButton(text=f"{selected_mark}${button.text}", callback_data="${callbackData}"))\n`;
       });
@@ -8301,7 +8309,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       // Добавляем кнопку завершения  
       const continueText = node.data.continueButtonText || 'Готово';
       const doneCallbackData = `multi_select_done_${node.id}`;
-      console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
+      if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем кнопку завершения "${continueText}" с callback_data: ${doneCallbackData}`);
       code += `            builder.add(InlineKeyboardButton(text="${continueText}", callback_data="${doneCallbackData}"))\n`;
       code += `            logging.info(f"🔧 ГЕНЕРАТОР: Применяем adjust(2) для узла ${node.id} (multi-select)")\n`;
       code += `            builder.adjust(2)\n`;
@@ -8482,7 +8490,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             // Обычная клавиатура без множественного выбора
             code += `        # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем, нужна ли клавиатура для целевого узла\n`;
             if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-              console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
+              if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для целевого узла ${targetNode.id}`);
               code += `        # Добавляем клавиатуру для целевого узла\n`;
               code += `        # Загружаем пользовательские данные для клавиатуры\n`;
               code += `        user_vars = await get_user_from_db(user_id)\n`;
@@ -8552,7 +8560,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
       if (targetNode) {
         code += `            # Переход к следующему узлу\n`;
         if (targetNode.type === 'message') {
-          console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик в reply mode`);
+          if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: ИСПРАВЛЕНО - НЕ вызываем обработчик в reply mode`);
           const messageText = targetNode.data.messageText || "Продолжение...";
           const formattedText = formatTextForPython(messageText);
           code += `            # НЕ ВЫЗЫВАЕМ ОБРАБОТЧИК АВТОМАТИЧЕСКИ!\n`;
@@ -8560,7 +8568,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           
           // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: проверяем, нужна ли клавиатура для целевого узла в reply mode
           if (targetNode.data.keyboardType === "inline" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для reply mode ${targetNode.id}`);
+            if (isLoggingEnabled()) isLoggingEnabled() && console.log(`🔧 ГЕНЕРАТОР: КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ! Добавляем клавиатуру для reply mode ${targetNode.id}`);
             code += `            # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: добавляем клавиатуру для reply mode\n`;
             code += `            # Загружаем пользовательские данные для клавиатуры\n`;
             code += `            user_vars = await get_user_from_db(user_id)\n`;

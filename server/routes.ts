@@ -629,7 +629,8 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
         status: 'running',
         token,
         processId,
-        errorMessage: null
+        errorMessage: null,
+        startedAt: new Date()
       });
     } else {
       await storage.createBotInstance({
