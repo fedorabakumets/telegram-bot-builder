@@ -6608,32 +6608,153 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
             code += `${bodyIndent}logging.info(f"✅ Показаны inline кнопки для узла ${targetNode.id} с collectUserInput")\n`;
           } else if (targetNode.data.keyboardType === "reply" && targetNode.data.buttons && targetNode.data.buttons.length > 0) {
-            code += `${bodyIndent}# ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n`;
-            code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
-            
-            // Добавляем кнопки для reply клавиатуры
-            targetNode.data.buttons.forEach((btn: Button) => {
-              if (btn.action === "contact" && btn.requestContact) {
-                code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
-              } else if (btn.action === "location" && btn.requestLocation) {
-                code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
-              } else {
-                code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+            // Проверяем, есть ли условные сообщения
+            if (targetNode.data.enableConditionalMessages && targetNode.data.conditionalMessages && targetNode.data.conditionalMessages.length > 0) {
+              code += `${bodyIndent}# Узел с условными сообщениями - проверяем условия\n`;
+              code += `${bodyIndent}logging.info(f"🔧 Обработка узла с условными сообщениями: ${targetNode.id}")\n`;
+              code += `${bodyIndent}user_data_dict = await get_user_from_db(user_id) or {}\n`;
+              code += `${bodyIndent}user_data_dict.update(user_data.get(user_id, {}))\n`;
+              code += `${bodyIndent}# Функция для проверки переменных пользователя\n`;
+              code += `${bodyIndent}def check_user_variable_inline(var_name, user_data_dict):\n`;
+              code += `${bodyIndent}    if "user_data" in user_data_dict and user_data_dict["user_data"]:\n`;
+              code += `${bodyIndent}        try:\n`;
+              code += `${bodyIndent}            import json\n`;
+              code += `${bodyIndent}            parsed_data = json.loads(user_data_dict["user_data"]) if isinstance(user_data_dict["user_data"], str) else user_data_dict["user_data"]\n`;
+              code += `${bodyIndent}            if var_name in parsed_data:\n`;
+              code += `${bodyIndent}                raw_value = parsed_data[var_name]\n`;
+              code += `${bodyIndent}                if isinstance(raw_value, dict) and "value" in raw_value:\n`;
+              code += `${bodyIndent}                    var_value = raw_value["value"]\n`;
+              code += `${bodyIndent}                    if var_value is not None and str(var_value).strip() != "":\n`;
+              code += `${bodyIndent}                        return True, str(var_value)\n`;
+              code += `${bodyIndent}                else:\n`;
+              code += `${bodyIndent}                    if raw_value is not None and str(raw_value).strip() != "":\n`;
+              code += `${bodyIndent}                        return True, str(raw_value)\n`;
+              code += `${bodyIndent}        except (json.JSONDecodeError, TypeError):\n`;
+              code += `${bodyIndent}            pass\n`;
+              code += `${bodyIndent}    if var_name in user_data_dict:\n`;
+              code += `${bodyIndent}        variable_data = user_data_dict.get(var_name)\n`;
+              code += `${bodyIndent}        if isinstance(variable_data, dict) and "value" in variable_data:\n`;
+              code += `${bodyIndent}            var_value = variable_data["value"]\n`;
+              code += `${bodyIndent}            if var_value is not None and str(var_value).strip() != "":\n`;
+              code += `${bodyIndent}                return True, str(var_value)\n`;
+              code += `${bodyIndent}        elif variable_data is not None and str(variable_data).strip() != "":\n`;
+              code += `${bodyIndent}            return True, str(variable_data)\n`;
+              code += `${bodyIndent}    return False, None\n`;
+              code += `${bodyIndent}\n`;
+              
+              // Генерируем проверку условий
+              code += `${bodyIndent}conditional_met = False\n`;
+              
+              const sortedConditions = [...targetNode.data.conditionalMessages].sort((a: any, b: any) => (b.priority || 0) - (a.priority || 0));
+              sortedConditions.forEach((condition: any, condIndex: number) => {
+                const ifKeyword = condIndex === 0 ? 'if' : 'if';
+                
+                if (condition.condition === 'user_data_exists' && condition.variableName) {
+                  code += `${bodyIndent}${ifKeyword} (\n`;
+                  code += `${bodyIndent}    check_user_variable_inline("${condition.variableName}", user_data_dict)[0]\n`;
+                  code += `${bodyIndent}):\n`;
+                  code += `${bodyIndent}    conditional_met = True\n`;
+                  
+                  // Условная клавиатура
+                  if (condition.buttons && condition.buttons.length > 0) {
+                    code += `${bodyIndent}    builder = ReplyKeyboardBuilder()\n`;
+                    condition.buttons.forEach((btn: Button) => {
+                      code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                    });
+                    const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+                    const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+                    code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+                    code += `${bodyIndent}    main_text = text\n`;
+                    code += `${bodyIndent}    await message.answer(main_text, reply_markup=keyboard)\n`;
+                    
+                    // Настройка ожидания ввода с правильным next_node_id
+                    const conditionalNextNode = condition.nextNodeAfterInput || targetNode.data.inputTargetNodeId;
+                    code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
+                    code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
+                    code += `${bodyIndent}        "type": "text",\n`;
+                    code += `${bodyIndent}        "variable": "${inputVariable}",\n`;
+                    code += `${bodyIndent}        "save_to_database": True,\n`;
+                    code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
+                    code += `${bodyIndent}        "next_node_id": "${conditionalNextNode}",\n`;
+                    code += `${bodyIndent}        "min_length": 0,\n`;
+                    code += `${bodyIndent}        "max_length": 0,\n`;
+                    code += `${bodyIndent}        "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
+                    code += `${bodyIndent}        "success_message": ""\n`;
+                    code += `${bodyIndent}    }\n`;
+                    code += `${bodyIndent}    logging.info(f"✅ Показана условная клавиатура для узла ${targetNode.id}")\n`;
+                  }
+                }
+              });
+              
+              // Если условие не выполнено - показываем основную клавиатуру
+              code += `${bodyIndent}if not conditional_met:\n`;
+              code += `${bodyIndent}    # Условие не выполнено - показываем основное сообщение\n`;
+              code += `${bodyIndent}    # ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n`;
+              code += `${bodyIndent}    builder = ReplyKeyboardBuilder()\n`;
+              
+              // Добавляем кнопки для reply клавиатуры
+              targetNode.data.buttons.forEach((btn: Button) => {
+                if (btn.action === "contact" && btn.requestContact) {
+                  code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
+                } else if (btn.action === "location" && btn.requestLocation) {
+                  code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
+                } else {
+                  code += `${bodyIndent}    builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                }
+              });
+              
+              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+              code += `${bodyIndent}    keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              code += `${bodyIndent}    await message.answer(text, reply_markup=keyboard)\n`;
+              code += `${bodyIndent}    logging.info(f"✅ Показана основная reply клавиатура для узла ${targetNode.id}")\n`;
+              
+              // Настройка ожидания ввода для основной клавиатуры
+              if (targetNode.data.enableTextInput === true || targetNode.data.collectUserInput === true) {
+                code += `${bodyIndent}    # Настраиваем ожидание ввода для message узла с reply кнопками\n`;
+                code += `${bodyIndent}    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})\n`;
+                code += `${bodyIndent}    user_data[message.from_user.id]["waiting_for_input"] = {\n`;
+                code += `${bodyIndent}        "type": "text",\n`;
+                code += `${bodyIndent}        "variable": "${inputVariable}",\n`;
+                code += `${bodyIndent}        "save_to_database": True,\n`;
+                code += `${bodyIndent}        "node_id": "${targetNode.id}",\n`;
+                code += `${bodyIndent}        "next_node_id": "${inputTargetNodeId}",\n`;
+                code += `${bodyIndent}        "min_length": 0,\n`;
+                code += `${bodyIndent}        "max_length": 0,\n`;
+                code += `${bodyIndent}        "retry_message": "Пожалуйста, попробуйте еще раз.",\n`;
+                code += `${bodyIndent}        "success_message": ""\n`;
+                code += `${bodyIndent}    }\n`;
+                code += `${bodyIndent}    logging.info(f"✅ Состояние ожидания настроено: text ввод для переменной ${inputVariable} (узел ${targetNode.id})")\n`;
               }
-            });
-            
-            const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
-            const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
-            code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
-            code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
-            code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
-            
-            // ИСПРАВЛЕНИЕ: Если включен сбор ввода, настраиваем ожидание даже при наличии кнопок
-            if (targetNode.data.enableTextInput === true || targetNode.data.enablePhotoInput === true || 
-                targetNode.data.enableVideoInput === true || targetNode.data.enableAudioInput === true || 
-                targetNode.data.enableDocumentInput === true || targetNode.data.collectUserInput === true) {
-              code += `${bodyIndent}# Настраиваем ожидание ввода для message узла с reply кнопками (используем универсальную функцию)\n`;
-              code += generateWaitingStateCode(targetNode, bodyIndent);
+            } else {
+              // Нет условных сообщений - стандартная обработка
+              code += `${bodyIndent}# ИСПРАВЛЕНИЕ: У узла есть reply кнопки - показываем их вместо ожидания текста\n`;
+              code += `${bodyIndent}builder = ReplyKeyboardBuilder()\n`;
+              
+              // Добавляем кнопки для reply клавиатуры
+              targetNode.data.buttons.forEach((btn: Button) => {
+                if (btn.action === "contact" && btn.requestContact) {
+                  code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_contact=True))\n`;
+                } else if (btn.action === "location" && btn.requestLocation) {
+                  code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}, request_location=True))\n`;
+                } else {
+                  code += `${bodyIndent}builder.add(KeyboardButton(text=${generateButtonText(btn.text)}))\n`;
+                }
+              });
+              
+              const resizeKeyboard = toPythonBoolean(targetNode.data.resizeKeyboard);
+              const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
+              code += `${bodyIndent}keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
+              code += `${bodyIndent}await message.answer(text, reply_markup=keyboard)\n`;
+              code += `${bodyIndent}logging.info(f"✅ Показана reply клавиатура для узла ${targetNode.id} с collectUserInput")\n`;
+              
+              // ИСПРАВЛЕНИЕ: Если включен сбор ввода, настраиваем ожидание даже при наличии кнопок
+              if (targetNode.data.enableTextInput === true || targetNode.data.enablePhotoInput === true || 
+                  targetNode.data.enableVideoInput === true || targetNode.data.enableAudioInput === true || 
+                  targetNode.data.enableDocumentInput === true || targetNode.data.collectUserInput === true) {
+                code += `${bodyIndent}# Настраиваем ожидание ввода для message узла с reply кнопками (используем универсальную функцию)\n`;
+                code += generateWaitingStateCode(targetNode, bodyIndent);
+              }
             }
           } else {
             code += `${bodyIndent}await message.answer(text)\n`;
