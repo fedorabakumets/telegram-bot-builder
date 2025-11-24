@@ -5,9 +5,33 @@
 @tailwind components;
 @tailwind utilities;
 
-/* FINAL SOLUTION: Disable ALL pointer events to prevent hover-triggered re-renders */
-* {
-  pointer-events: none !important;
+/* Disable CSS hover effects on common interactive elements to prevent re-renders on hover */
+button:hover,
+a:hover,
+input:hover,
+textarea:hover,
+select:hover,
+[role="button"]:hover,
+[role="menuitem"]:hover {
+  /* Override any hover styles */
+  background-color: inherit !important;
+  color: inherit !important;
+  border-color: inherit !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Disable CSS hover on container elements */
+div:hover,
+span:hover,
+p:hover,
+li:hover,
+ul:hover {
+  /* Override any hover styles */
+  background-color: inherit !important;
+  color: inherit !important;
+  box-shadow: none !important;
 }
 
 :root {
