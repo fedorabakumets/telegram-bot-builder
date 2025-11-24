@@ -598,7 +598,7 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     const filePath = createBotFile(botCode, projectId, tokenId);
     
     // Запускаем бота
-    const process = spawn('python', [filePath], {
+    const botProcess = spawn('python', [filePath], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
       env: {
@@ -609,18 +609,18 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     });
 
     // Логируем вывод процесса
-    process.stdout?.on('data', (data) => {
+    botProcess.stdout?.on('data', (data) => {
       console.log(`Бот ${projectId} stdout:`, data.toString());
     });
 
-    process.stderr?.on('data', (data) => {
+    botProcess.stderr?.on('data', (data) => {
       console.error(`Бот ${projectId} stderr:`, data.toString());
     });
 
-    const processId = process.pid?.toString();
+    const processId = botProcess.pid?.toString();
     
     // Сохраняем процесс
-    botProcesses.set(processKey, process);
+    botProcesses.set(processKey, botProcess);
     
     // Создаем или обновляем запись в базе данных
     const existingBotInstance = await storage.getBotInstance(projectId);
@@ -642,7 +642,7 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     }
 
     // Обрабатываем события процесса
-    process.on('error', async (error) => {
+    botProcess.on('error', async (error) => {
       console.error(`Ошибка запуска бота ${projectId} (токен ${tokenId}):`, error);
       const instance = await storage.getBotInstance(projectId);
       if (instance) {
@@ -654,7 +654,7 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
       botProcesses.delete(processKey);
     });
 
-    process.on('exit', async (code) => {
+    botProcess.on('exit', async (code) => {
       console.log(`Бот ${projectId} (токен ${tokenId}) завершен с кодом ${code}`);
       const instance = await storage.getBotInstance(projectId);
       if (instance) {
