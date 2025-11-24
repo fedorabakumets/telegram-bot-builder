@@ -6,7 +6,7 @@ import "./index.css";
 const html = document.documentElement;
 html.classList.add("loading");
 
-// Mark global window object to signal app is still loading
+// Mark global window object to signal app is still loading (prevents early auto-transitions)
 (window as any).appIsLoading = true;
 
 // Remove the "loading" class after 25 seconds to allow components to fully stabilize
