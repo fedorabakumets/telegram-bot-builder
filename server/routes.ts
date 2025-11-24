@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { spawn, ChildProcess } from "child_process";
+import { spawn, ChildProcess, execSync } from "child_process";
 import { writeFileSync, existsSync, mkdirSync, unlinkSync, createWriteStream } from "fs";
 import { join } from "path";
 import multer from "multer";
@@ -682,7 +682,6 @@ async function stopBot(projectId: number, tokenId: number): Promise<{ success: b
     
     // Убиваем ВСЕ Python процессы для этого проекта (включая старые/зависшие)
     try {
-      const { execSync } = require('child_process');
       const botFileName = `bot_${projectId}.py`;
       
       // Находим все процессы с этим файлом
