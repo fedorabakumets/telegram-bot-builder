@@ -2335,9 +2335,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           }
           
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
-          code += '    await callback_query.answer()\n';
+          code += '    try:\n';
+          code += '        await callback_query.answer()\n';
+          code += '    except Exception:\n';
+          code += '        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)\n';
           code += '    user_id = callback_query.from_user.id\n';
           code += '    callback_data = callback_query.data\n';
+          code += `    logging.info(f"🔵 Вызван callback handler: handle_callback_${safeFunctionName} для пользователя {user_id}")\n`;
           code += '    \n';
           
           // Добавляем обработку кнопки "done_" для множественного выбора
@@ -4136,9 +4140,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           const shortNodeIdForDone = nodeId.slice(-10).replace(/^_+/, ''); // Такой же как в генерации кнопки
           code += `\n@dp.callback_query(lambda c: c.data == "${nodeId}" or c.data.startswith("${nodeId}_btn_") or c.data == "done_${shortNodeIdForDone}")\n`;
           code += `async def handle_callback_${safeFunctionName}(callback_query: types.CallbackQuery):\n`;
-          code += '    await callback_query.answer()\n';
+          code += '    try:\n';
+          code += '        await callback_query.answer()\n';
+          code += '    except Exception:\n';
+          code += '        pass  # Игнорируем ошибку если callback уже был обработан (при вызове через автопереход)\n';
           code += '    user_id = callback_query.from_user.id\n';
           code += '    callback_data = callback_query.data\n';
+          code += `    logging.info(f"🔵 Вызван callback handler: handle_callback_${safeFunctionName} для пользователя {user_id}")\n`;
           code += '    \n';
           
           // Добавляем обработку кнопки "Готово" для множественного выбора
@@ -4421,6 +4429,44 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += '            await callback_query.message.answer(text, reply_markup=keyboard)\n';
           code += '        else:\n';
           code += '            await callback_query.message.answer(text)\n';
+          code += '    \n';
+          
+          // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем автопереход сразу после отправки сообщения
+          const currentNodeForAutoTransition = nodes.find(n => n.id === nodeId);
+          
+          // Для узлов без кнопок проверяем автопереход либо по флагу enableAutoTransition, либо по единственному соединению
+          let autoTransitionTarget: string | null = null;
+          
+          // Сначала проверяем явный автопереход через флаг
+          if (currentNodeForAutoTransition?.data.enableAutoTransition && currentNodeForAutoTransition?.data.autoTransitionTo) {
+            autoTransitionTarget = currentNodeForAutoTransition.data.autoTransitionTo;
+            console.log(`✅ ГЕНЕРАТОР: Узел ${nodeId} имеет явный автопереход к ${autoTransitionTarget}`);
+          } 
+          // Если узел не имеет кнопок и имеет ровно одно исходящее соединение, делаем автопереход
+          else if (currentNodeForAutoTransition && (!currentNodeForAutoTransition.data.buttons || currentNodeForAutoTransition.data.buttons.length === 0)) {
+            const outgoingConnections = connections.filter(conn => conn.source === nodeId);
+            console.log(`🔍 ГЕНЕРАТОР: Узел ${nodeId} без кнопок, проверяем соединения: ${outgoingConnections.length}`);
+            if (outgoingConnections.length === 1) {
+              autoTransitionTarget = outgoingConnections[0].target;
+              console.log(`🔗 ГЕНЕРАТОР: Узел ${nodeId} без кнопок имеет одно соединение к ${autoTransitionTarget}, делаем автопереход`);
+            }
+          }
+          
+          if (autoTransitionTarget) {
+            const safeFunctionName = autoTransitionTarget.replace(/[^a-zA-Z0-9_]/g, '_');
+            console.log(`✅ ГЕНЕРАТОР АВТОПЕРЕХОД: Добавляем код автоперехода для узла ${nodeId} -> ${autoTransitionTarget}`);
+            code += '    # АВТОПЕРЕХОД: Проверяем, есть ли автопереход для этого узла\n';
+            code += '    user_id = callback_query.from_user.id\n';
+            code += '    if user_id in user_data and ("waiting_for_input" in user_data[user_id] or "waiting_for_conditional_input" in user_data[user_id]):\n';
+            code += `        logging.info(f"⏸️ Автопереход ОТЛОЖЕН: ожидаем ввод для узла ${nodeId}")\n`;
+            code += '    else:\n';
+            code += `        # ⚡ Автопереход к узлу ${autoTransitionTarget}\n`;
+            code += `        logging.info(f"⚡ Автопереход от узла ${nodeId} к узлу ${autoTransitionTarget}")\n`;
+            code += `        await handle_callback_${safeFunctionName}(callback_query)\n`;
+            code += `        logging.info(f"✅ Автопереход выполнен: ${nodeId} -> ${autoTransitionTarget}")\n`;
+            code += `        return\n`;
+            code += '    \n';
+          }
           
           // Сохраняем нажатие кнопки в базу данных
           code += '    # Сохраняем нажатие кнопки в базу данных\n';

@@ -587,7 +587,7 @@ async function startBot(projectId: number, token: string, tokenId: number): Prom
     }
 
     // Генерируем код бота через клиентский генератор (с cache busting)
-    const modUrl = new URL("../client/src/lib/bot-generator.js", import.meta.url);
+    const modUrl = new URL("../client/src/lib/bot-generator.ts", import.meta.url);
     modUrl.searchParams.set("t", Date.now().toString());
     const { generatePythonCode } = await import(modUrl.href);
     const simpleBotData = convertSheetsToSimpleBotData(project.data);
@@ -1419,7 +1419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Generate Python code using dynamic import with cache busting
-      const modUrl = new URL("../client/src/lib/bot-generator.js", import.meta.url);
+      const modUrl = new URL("../client/src/lib/bot-generator.ts", import.meta.url);
       modUrl.searchParams.set("t", Date.now().toString());
       const { generatePythonCode } = await import(modUrl.href);
       const simpleBotData = convertSheetsToSimpleBotData(project.data);
