@@ -1091,22 +1091,46 @@ export function CanvasNode({ node, allNodes, isSelected, onClick, onDelete, onDu
                         
                         {(condition as any).keyboardType === 'inline' ? (
                           <div className="grid grid-cols-2 gap-1">
-                            {(condition as any).buttons.slice(0, 4).map((button: any, btnIndex: number) => (
-                              <div key={button.id || btnIndex} className="p-1.5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200/50 dark:border-blue-800/30 truncate">
-                                {button.text}
-                              </div>
-                            ))}
+                            {(condition as any).buttons.slice(0, 4).map((button: any, btnIndex: number) => {
+                              const targetNode = button.action === 'goto' && button.target ? allNodes?.find(n => n.id === button.target) : null;
+                              const targetNodeDisplay = targetNode?.data?.messageText?.slice(0, 20) || targetNode?.data?.command || (button.action === 'goto' ? button.target?.slice(0, 8) : '');
+                              return (
+                                <div key={button.id || btnIndex} className="flex flex-col p-1.5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded text-xs font-medium text-blue-700 dark:text-blue-300 text-center border border-blue-200/50 dark:border-blue-800/30">
+                                  <div className="truncate">{button.text}</div>
+                                  {button.action === 'goto' && targetNodeDisplay && (
+                                    <div className="text-[9px] text-blue-600 dark:text-blue-400 truncate mt-0.5">К узлу: {targetNodeDisplay}{targetNodeDisplay?.length === 20 ? '...' : ''}</div>
+                                  )}
+                                  {button.action === 'url' && button.url && (
+                                    <div className="text-[9px] text-purple-600 dark:text-purple-400 truncate mt-0.5">🔗 {button.url}</div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
                           <div className="space-y-1">
-                            {(condition as any).buttons.slice(0, 3).map((button: any, btnIndex: number) => (
-                              <div key={button.id || btnIndex} className="flex items-center justify-between p-1.5 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/30 dark:to-slate-800/30 rounded border border-gray-200/50 dark:border-gray-700/30">
-                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
-                                {button.action === 'goto' && <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70 ml-1" title="Переход"></i>}
-                                {button.action === 'command' && <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70 ml-1" title="Команда"></i>}
-                                {button.action === 'url' && <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70 ml-1" title="Ссылка"></i>}
-                              </div>
-                            ))}
+                            {(condition as any).buttons.slice(0, 3).map((button: any, btnIndex: number) => {
+                              const targetNode = button.action === 'goto' && button.target ? allNodes?.find(n => n.id === button.target) : null;
+                              const targetNodeDisplay = targetNode?.data?.messageText?.slice(0, 20) || targetNode?.data?.command || (button.action === 'goto' ? button.target?.slice(0, 8) : '');
+                              return (
+                                <div key={button.id || btnIndex} className="flex flex-col p-1.5 bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-800/30 dark:to-slate-800/30 rounded border border-gray-200/50 dark:border-gray-700/30">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{button.text}</span>
+                                    <div className="flex items-center space-x-1 ml-1 flex-shrink-0">
+                                      {button.action === 'goto' && <i className="fas fa-arrow-right text-blue-600 dark:text-blue-400 text-xs opacity-70" title="Переход"></i>}
+                                      {button.action === 'command' && <i className="fas fa-terminal text-emerald-600 dark:text-emerald-400 text-xs opacity-70" title="Команда"></i>}
+                                      {button.action === 'url' && <i className="fas fa-external-link-alt text-purple-600 dark:text-purple-400 text-xs opacity-70" title="Ссылка"></i>}
+                                    </div>
+                                  </div>
+                                  {button.action === 'goto' && targetNodeDisplay && (
+                                    <div className="text-[9px] text-blue-600 dark:text-blue-400 truncate mt-0.5">К узлу: {targetNodeDisplay}{targetNodeDisplay?.length === 20 ? '...' : ''}</div>
+                                  )}
+                                  {button.action === 'url' && button.url && (
+                                    <div className="text-[9px] text-purple-600 dark:text-purple-400 truncate mt-0.5">🔗 {button.url}</div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                         
