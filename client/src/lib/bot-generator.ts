@@ -642,11 +642,12 @@ function generateAttachedMediaSendCode(
   code += `${indentLevel}    except Exception as e:\n`;
   code += `${indentLevel}        logging.error(f"Ошибка отправки ${mediaType}: {e}")\n`;
   code += `${indentLevel}        # Fallback на обычное сообщение при ошибке\n`;
-  code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${parseMode})\n`;
+  const autoTransitionFlag = autoTransitionTo ? ', is_auto_transition=True' : '';
+  code += `${indentLevel}        await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
   code += `${indentLevel}else:\n`;
   code += `${indentLevel}    # Медиа не найдено, отправляем обычное текстовое сообщение\n`;
   code += `${indentLevel}    logging.info(f"📝 Медиа ${mediaVariable} не найдено, отправка текстового сообщения")\n`;
-  code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${parseMode})\n`;
+  code += `${indentLevel}    await safe_edit_or_send(callback_query, text, node_id="${nodeId}", reply_markup=${keyboard}${autoTransitionFlag}${parseMode})\n`;
   
   // АВТОПЕРЕХОД: Если у узла есть autoTransitionTo, добавляем переход и для случая без медиа
   if (autoTransitionTo) {
@@ -1360,31 +1361,42 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
   // Добавляем safe_edit_or_send только если есть inline кнопки
   if (hasInlineButtons(nodes || [])) {
     code += '# Safe helper for editing messages with fallback to new message\n';
-    code += 'async def safe_edit_or_send(cbq, text, node_id=None, **kwargs):\n';
+    code += 'async def safe_edit_or_send(cbq, text, node_id=None, is_auto_transition=False, **kwargs):\n';
     code += '    """\n';
     code += '    Безопасное редактирование сообщения с fallback на новое сообщение\n';
-    code += '    Решает проблему "message can\'t be edited" когда пытаемся редактировать сообщения пользователя\n';
+    code += '    При автопереходе сразу отправляет новое сообщение без попытки редактирования\n';
     code += '    """\n';
     code += '    result = None\n';
     code += '    user_id = None\n';
+    code += '    \n';
+    code += '    # Получаем user_id для сохранения\n';
+    code += '    if hasattr(cbq, "from_user") and cbq.from_user:\n';
+    code += '        user_id = str(cbq.from_user.id)\n';
+    code += '    elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):\n';
+    code += '        user_id = str(cbq.message.chat.id)\n';
+    code += '    \n';
     code += '    try:\n';
-    code += '        # Получаем user_id для сохранения\n';
-    code += '        if hasattr(cbq, "from_user") and cbq.from_user:\n';
-    code += '            user_id = str(cbq.from_user.id)\n';
-    code += '        elif hasattr(cbq, "message") and cbq.message and hasattr(cbq.message, "chat"):\n';
-    code += '            user_id = str(cbq.message.chat.id)\n';
-    code += '        \n';
-    code += '        # Если у callback объекта есть собственный метод edit_text (например, MockCallback), используем его\n';
-    code += '        if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):\n';
-    code += '            result = await cbq.edit_text(text, **kwargs)\n';
-    code += '        # Иначе пробуем стандартный способ\n';
-    code += '        elif (hasattr(cbq, "message") and cbq.message):\n';
-    code += '            result = await cbq.message.edit_text(text, **kwargs)\n';
+    code += '        # При автопереходе сразу отправляем новое сообщение без редактирования\n';
+    code += '        if is_auto_transition:\n';
+    code += '            logging.info(f"⚡ Автопереход: отправляем новое сообщение вместо редактирования")\n';
+    code += '            if hasattr(cbq, "message") and cbq.message:\n';
+    code += '                result = await cbq.message.answer(text, **kwargs)\n';
+    code += '            else:\n';
+    code += '                raise Exception("Cannot send message in auto-transition")\n';
     code += '        else:\n';
-    code += '            raise Exception("No valid edit method found")\n';
+    code += '            # Пробуем редактировать сообщение\n';
+    code += '            if hasattr(cbq, "edit_text") and callable(getattr(cbq, "edit_text")):\n';
+    code += '                result = await cbq.edit_text(text, **kwargs)\n';
+    code += '            elif (hasattr(cbq, "message") and cbq.message):\n';
+    code += '                result = await cbq.message.edit_text(text, **kwargs)\n';
+    code += '            else:\n';
+    code += '                raise Exception("No valid edit method found")\n';
     code += '    except Exception as e:\n';
     code += '        # При любой ошибке отправляем новое сообщение\n';
-    code += '        logging.warning(f"Не удалось отредактировать сообщение ({e}), отправляем новое")\n';
+    code += '        if is_auto_transition:\n';
+    code += '            logging.info(f"⚡ Автопереход: {e}, отправляем новое сообщение")\n';
+    code += '        else:\n';
+    code += '            logging.warning(f"Не удалось отредактировать сообщение: {e}, отправляем новое")\n';
     code += '        if hasattr(cbq, "message") and cbq.message:\n';
     code += '            result = await cbq.message.answer(text, **kwargs)\n';
     code += '        else:\n';
