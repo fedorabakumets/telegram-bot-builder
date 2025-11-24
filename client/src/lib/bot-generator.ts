@@ -7411,10 +7411,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           const oneTimeKeyboard = toPythonBoolean(targetNode.data.oneTimeKeyboard);
           code += `                keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
           code += '                await fake_message.answer(text, reply_markup=keyboard)\n';
-        } else {
-          code += `                text = ${formattedText}\n`;
-          code += '                await fake_message.answer(text)\n';
-        }
         
         // Проверяем, нужно ли настроить ожидание текстового ввода
         // ИСПРАВЛЕНИЕ: Используем универсальную функцию для настройки ожидания ввода
