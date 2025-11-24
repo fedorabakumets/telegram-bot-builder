@@ -610,7 +610,6 @@ function generateAttachedMediaSendCode(
   code += `${indentLevel}if attached_media and str(attached_media).strip():\n`;
   code += `${indentLevel}    logging.info(f"📎 Отправка ${mediaType} медиа из переменной ${mediaVariable}: {attached_media}")\n`;
   code += `${indentLevel}    try:\n`;
-  code += `${indentLevel}        await callback_query.message.delete()\n`;
   
   // Генерируем код отправки в зависимости от типа медиа
   const keyboardParam = keyboard !== 'None' ? ', reply_markup=keyboard' : '';
@@ -2820,7 +2819,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               code += '        \n';
-              code += '        await callback_query.message.delete()\n';
               code += '        if keyboard is not None:\n';
               code += '            await bot.send_photo(callback_query.from_user.id, photo_file, caption=caption, reply_markup=keyboard)\n';
               code += '        else:\n';
@@ -2937,7 +2935,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               code += '        \n';
-              code += '        await callback_query.message.delete()\n';
               code += '        if keyboard is not None:\n';
               code += '            await bot.send_video(callback_query.from_user.id, video_file, caption=caption, reply_markup=keyboard)\n';
               code += '        else:\n';
@@ -3054,7 +3051,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               }
               
               code += '        \n';
-              code += '        await callback_query.message.delete()\n';
               code += '        if keyboard is not None:\n';
               code += '            await bot.send_audio(callback_query.from_user.id, audio_file, caption=caption, reply_markup=keyboard)\n';
               code += '        else:\n';
@@ -3125,10 +3121,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
-                code += '        await callback_query.message.delete()\n';
                 code += '        await bot.send_document(callback_query.from_user.id, document_file, caption=caption, reply_markup=keyboard)\n';
               } else {
-                code += '        await callback_query.message.delete()\n';
                 code += '        await bot.send_document(callback_query.from_user.id, document_file, caption=caption)\n';
               }
               
@@ -3170,10 +3164,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
-                code += '        await callback_query.message.delete()\n';
                 code += '        await bot.send_sticker(callback_query.from_user.id, sticker_file, reply_markup=keyboard)\n';
               } else {
-                code += '        await callback_query.message.delete()\n';
                 code += '        await bot.send_sticker(callback_query.from_user.id, sticker_file)\n';
               }
               
@@ -3217,10 +3209,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
-                code += '        await callback_query.message.delete()\n';
                 code += '        await bot.send_voice(callback_query.from_user.id, voice_file, duration=duration, reply_markup=keyboard)\n';
               } else {
-                code += '        await callback_query.message.delete()\n';
                 code += '        await bot.send_voice(callback_query.from_user.id, voice_file, duration=duration)\n';
               }
               
@@ -3270,10 +3260,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
-                code += '        await callback_query.message.delete()\n';
                 code += '        await bot.send_animation(callback_query.from_user.id, animation_file, caption=caption, reply_markup=keyboard)\n';
               } else {
-                code += '        await callback_query.message.delete()\n';
                 code += '        await bot.send_animation(callback_query.from_user.id, animation_file, caption=caption)\n';
               }
               
@@ -3323,7 +3311,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               
               code += '    try:\n';
               code += '        # Удаляем старое сообщение\n';
-              code += '        await callback_query.message.delete()\n';
               
               code += '        # Отправляем геолокацию\n';
               if (title || address) {
@@ -3426,7 +3413,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   }
                 });
                 code += '        keyboard = builder.as_markup()\n';
-                code += '        await callback_query.message.delete()\n';
                 if (lastName && userId && vcard) {
                   code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name, last_name=last_name, user_id=user_id, vcard=vcard, reply_markup=keyboard)\n';
                 } else if (lastName) {
@@ -3435,7 +3421,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name, reply_markup=keyboard)\n';
                 }
               } else {
-                code += '        await callback_query.message.delete()\n';
                 if (lastName && userId && vcard) {
                   code += '        await bot.send_contact(callback_query.from_user.id, phone_number=phone_number, first_name=first_name, last_name=last_name, user_id=user_id, vcard=vcard)\n';
                 } else if (lastName) {
@@ -3469,7 +3454,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               const placeholder = targetNode.data.placeholder || "";
               
               code += '    # Удаляем старое сообщение\n';
-              code += '    await callback_query.message.delete()\n';
               code += '    \n';
               
               // Отправляем запрос пользователю
@@ -3740,10 +3724,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                     }
                   });
                   code += '    keyboard = builder.as_markup()\n';
-                  code += '    await callback_query.message.delete()\n';
                   code += `    await bot.send_photo(callback_query.from_user.id, photo=photo_url, caption=caption, reply_markup=keyboard${parseMode})\n`;
                 } else {
-                  code += '    await callback_query.message.delete()\n';
                   code += `    await bot.send_photo(callback_query.from_user.id, photo=photo_url, caption=caption${parseMode})\n`;
                 }
                 
@@ -3864,7 +3846,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   code += `        keyboard = builder.as_markup(resize_keyboard=${resizeKeyboard}, one_time_keyboard=${oneTimeKeyboard})\n`;
                   code += '    # Для reply клавиатуры отправляем новое сообщение и удаляем старое\n';
                   code += '    try:\n';
-                  code += '        await callback_query.message.delete()\n';
                   code += '    except:\n';
                   code += '        pass  # Игнорируем ошибки удаления\n';
                   // Определяем режим форматирования для целевого узла
@@ -4380,7 +4361,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               // Генерируем reply клавиатуру
               code += '    # Create reply keyboard\n';
               code += '    # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
-              code += '    await callback_query.message.delete()\n';
               code += '    builder = ReplyKeyboardBuilder()\n';
               targetNode.data.buttons.forEach((btn: Button) => {
                 if (btn.action === "contact" && btn.requestContact) {
@@ -4699,7 +4679,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         code += `                    nav_attached_media = media_data\n`;
                         code += `            if nav_attached_media and str(nav_attached_media).strip():\n`;
                         code += `                logging.info(f"📎 Отправка фото из переменной ${attachedMedia[0]}: {nav_attached_media}")\n`;
-                        code += `                await callback_query.message.delete()\n`;
                         code += `                await bot.send_photo(callback_query.from_user.id, nav_attached_media, caption=nav_text)\n`;
                         code += `            else:\n`;
                         code += `                logging.info("📝 Медиа не найдено, отправка текстового сообщения")\n`;
@@ -4708,7 +4687,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                         // Проверяем, есть ли reply кнопки
                         if (navTargetNode.data.keyboardType === 'reply' && navTargetNode.data.buttons && navTargetNode.data.buttons.length > 0) {
                           code += '            # Удаляем старое сообщение и отправляем новое с reply клавиатурой\n';
-                          code += '            await callback_query.message.delete()\n';
                           code += '            builder = ReplyKeyboardBuilder()\n';
                           navTargetNode.data.buttons.forEach((button: Button) => {
                             if (button.action === "contact" && button.requestContact) {
@@ -4794,7 +4772,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   
                   if (hasConditionalMessages) {
                     // Если есть условные сообщения, генерируем их обработку
-                    code += '            await callback_query.message.delete()\n';
                     code += '            # Узел с условными сообщениями - проверяем условия\n';
                     code += '            user_id = callback_query.from_user.id\n';
                     code += '            user_data_dict = await get_user_from_db(user_id) or {}\n';
@@ -5006,7 +4983,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       const formattedText = formatTextForPython(messageText);
                       code += `            # Прямая навигация к узлу с множественным выбором ${navTargetNode.id}\n`;
                       code += `            logging.info(f"🔧 Переходим к узлу с множественным выбором: ${navTargetNode.id}")\n`;
-                      code += '            await callback_query.message.delete()\n';
                       code += `            text = ${formattedText}\n`;
                       
                       // Замена переменных
@@ -5032,7 +5008,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                       code += `            logging.info(f"✅ Прямая навигация к узлу множественного выбора ${navTargetNode.id} выполнена")\n`;
                     } else {
                       const formattedText = formatTextForPython(messageText);
-                      code += '            await callback_query.message.delete()\n';
                       code += `            nav_text = ${formattedText}\n`;
                     
                       // ВАЖНО: Проверяем, включен ли сбор пользовательского ввода для этого узла
@@ -5088,7 +5063,6 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
             const saveToDatabase = targetNode.data.saveToDatabase || false;
             
             code += '    # Удаляем старое сообщение\n';
-            code += '    await callback_query.message.delete()\n';
             code += '    \n';
             
             const formattedPrompt = formatTextForPython(inputPrompt);
