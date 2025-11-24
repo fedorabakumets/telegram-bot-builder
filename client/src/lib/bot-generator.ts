@@ -889,7 +889,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
-        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
@@ -947,7 +947,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
-        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
@@ -1012,7 +1012,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
-        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
@@ -1077,7 +1077,7 @@ function generateConditionalMessageLogic(conditionalMessages: any[], indentLevel
         code += `${indentLevel}    conditional_message_config = {\n`;
         code += `${indentLevel}        "condition_id": "${condition.id}",\n`;
         code += `${indentLevel}        "wait_for_input": ${toPythonBoolean(condition.waitForTextInput)},\n`;
-        code += `${indentLevel}        "input_variable": "${condition.textInputVariable || ''}",\n`;
+        code += `${indentLevel}        "input_variable": "${condition.variableName || condition.textInputVariable || ''}",\n`;
         code += `${indentLevel}        "next_node_id": "${condition.nextNodeAfterInput || ''}",\n`;
         code += `${indentLevel}        "source_type": "conditional_message"\n`;
         code += `${indentLevel}    }\n`;
