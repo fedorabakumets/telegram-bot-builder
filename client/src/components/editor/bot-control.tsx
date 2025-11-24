@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { BotToken } from '@shared/schema';
-import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Camera, Upload, ExternalLink, Database } from 'lucide-react';
+import { Play, Square, AlertCircle, CheckCircle, Clock, Trash2, Edit2, Settings, Bot, RefreshCw, Check, X, Plus, MoreHorizontal, Camera, Upload, ExternalLink, Database, Zap } from 'lucide-react';
 
 interface BotControlProps {
   projectId: number;
@@ -61,6 +61,22 @@ interface BotInfo {
     big_file_id: string;
     big_file_unique_id: string;
   };
+}
+
+// Функция для форматирования времени выполнения
+function formatExecutionTime(seconds: number): string {
+  if (seconds === 0) return 'Нет данных';
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  
+  const parts = [];
+  if (hours > 0) parts.push(`${hours}ч`);
+  if (minutes > 0) parts.push(`${minutes}м`);
+  if (secs > 0 && hours === 0) parts.push(`${secs}с`);
+  
+  return parts.length > 0 ? parts.join(' ') : '0с';
 }
 
 // Компонент аватарки бота с fallback
@@ -967,7 +983,7 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
 
   // Обновление информации о токене
   const updateTokenMutation = useMutation({
-    mutationFn: async ({ tokenId, data }: { tokenId: number; data: { name?: string; description?: string } }) => {
+    mutationFn: async ({ tokenId, data }: { tokenId: number; data: { name?: string; description?: string; trackExecutionTime?: number } }) => {
       return apiRequest('PUT', `/api/projects/${projectId}/tokens/${tokenId}`, data);
     },
     onSuccess: () => {
@@ -1213,6 +1229,9 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                         {token.lastUsedAt && (
                           <> • Последний запуск: {new Date(token.lastUsedAt).toLocaleDateString('ru-RU')}</>
                         )}
+                        {token.trackExecutionTime === 1 && (
+                          <> • ⏱️ Времени работы: {formatExecutionTime(token.totalExecutionSeconds || 0)}</>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -1278,28 +1297,70 @@ export function BotControl({ projectId, projectName }: BotControlProps) {
                   </div>
                 </div>
                 
-                {/* Database Toggle for each bot */}
-                <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
-                  isDatabaseEnabled 
-                    ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
-                    : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
-                }`} data-testid="database-toggle-container-bot-card">
-                  <Database className={`w-4 h-4 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
-                  <Label htmlFor={`db-toggle-bot-${token.id}`} className={`text-sm font-bold cursor-pointer flex-1 ${
+                {/* Database Toggle and Execution Time Tracking */}
+                <div className="space-y-3">
+                  {/* Database Toggle */}
+                  <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
                     isDatabaseEnabled 
-                      ? 'text-green-700 dark:text-green-300' 
-                      : 'text-red-700 dark:text-red-300'
-                  }`}>
-                    {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
-                  </Label>
-                  <Switch
-                    id={`db-toggle-bot-${token.id}`}
-                    data-testid="switch-database-toggle-bot-card"
-                    checked={isDatabaseEnabled}
-                    onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
-                    disabled={toggleDatabaseMutation.isPending}
-                    className="scale-100"
-                  />
+                      ? 'bg-green-50 dark:bg-green-950 border-green-500 dark:border-green-600' 
+                      : 'bg-red-50 dark:bg-red-950 border-red-500 dark:border-red-600'
+                  }`} data-testid="database-toggle-container-bot-card">
+                    <Database className={`w-4 h-4 ${isDatabaseEnabled ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
+                    <Label htmlFor={`db-toggle-bot-${token.id}`} className={`text-sm font-bold cursor-pointer flex-1 ${
+                      isDatabaseEnabled 
+                        ? 'text-green-700 dark:text-green-300' 
+                        : 'text-red-700 dark:text-red-300'
+                    }`}>
+                      {isDatabaseEnabled ? 'БД включена' : 'БД выключена'}
+                    </Label>
+                    <Switch
+                      id={`db-toggle-bot-${token.id}`}
+                      data-testid="switch-database-toggle-bot-card"
+                      checked={isDatabaseEnabled}
+                      onCheckedChange={(checked) => toggleDatabaseMutation.mutate(checked)}
+                      disabled={toggleDatabaseMutation.isPending}
+                      className="scale-100"
+                    />
+                  </div>
+
+                  {/* Execution Time Tracking Toggle */}
+                  <div className={`flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+                    (token.trackExecutionTime === 1)
+                      ? 'bg-blue-50 dark:bg-blue-950 border-blue-500 dark:border-blue-600' 
+                      : 'bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600'
+                  }`} data-testid="execution-time-toggle-container-bot-card">
+                    <Zap className={`w-4 h-4 ${(token.trackExecutionTime === 1) ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`} />
+                    <div className="flex-1">
+                      <Label htmlFor={`track-execution-bot-${token.id}`} className={`text-sm font-bold cursor-pointer ${
+                        (token.trackExecutionTime === 1)
+                          ? 'text-blue-700 dark:text-blue-300' 
+                          : 'text-gray-700 dark:text-gray-300'
+                      }`}>
+                        📊 Отслеживать время
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {(token.trackExecutionTime === 1) 
+                          ? `Всего: ${formatExecutionTime(token.totalExecutionSeconds || 0)}`
+                          : 'Включить отслеживание времени работы'
+                        }
+                      </p>
+                    </div>
+                    <Switch
+                      id={`track-execution-bot-${token.id}`}
+                      data-testid="switch-execution-time-toggle-bot-card"
+                      checked={token.trackExecutionTime === 1}
+                      onCheckedChange={(checked) => {
+                        updateTokenMutation.mutate({
+                          tokenId: token.id,
+                          data: { 
+                            trackExecutionTime: checked ? 1 : 0
+                          }
+                        });
+                      }}
+                      disabled={updateTokenMutation.isPending}
+                      className="scale-100"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

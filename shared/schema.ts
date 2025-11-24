@@ -78,6 +78,9 @@ export const botTokens = pgTable("bot_tokens", {
   botSupportsInlineQueries: integer("bot_supports_inline_queries"), // Поддерживает ли инлайн запросы
   botHasMainWebApp: integer("bot_has_main_web_app"), // Есть ли главное веб-приложение
   lastUsedAt: timestamp("last_used_at"), // Время последнего использования
+  // Отслеживание времени выполнения
+  trackExecutionTime: integer("track_execution_time").default(0), // 0 = выключено, 1 = включено
+  totalExecutionSeconds: integer("total_execution_seconds").default(0), // Общее время выполнения в секундах
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

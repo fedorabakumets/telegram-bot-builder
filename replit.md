@@ -17,12 +17,20 @@ This application provides a **no-code visual Telegram bot builder** that enables
 Preferred communication style: Simple, everyday language. No-code platform for non-technical users.
 
 ## Recent Changes (Current Session)
-- Added GitHub repository link button in application header (adaptive-header.tsx)
+- **✨ Added bot execution time tracking counter** (bot-control.tsx):
+  - New toggle "📊 Отслеживать время" to enable/disable time tracking per bot
+  - Displays total execution time in format (10ч 30м, 5м 20с, etc.)
+  - Shows time when tracking is enabled in bot information section (⏱️ Времени работы: Xч Xм)
+  - Tracks execution time via `trackExecutionTime` and `totalExecutionSeconds` fields in botTokens table
+  - Color-coded toggle (blue when enabled, gray when disabled) for clear visual feedback
+  - Added `formatExecutionTime()` utility function for human-readable time display
+  - Fields added to schema:
+    - `trackExecutionTime: integer` (0=disabled, 1=enabled)
+    - `totalExecutionSeconds: integer` (stores total execution time in seconds)
+- Previous: Added GitHub repository link button in application header (adaptive-header.tsx)
 - Updated canvas display to show actual images instead of text indicator
 - Images now preview on canvas nodes with max-height for optimal display
 - GitHub integration added to both desktop and mobile navigation
-- Updated README.md on GitHub repository with complete documentation
-- Synced changes to GitHub via API integration
 - **Responsive header layout optimization**:
   - Desktop (lg+): All navigation and actions in single row as before
   - Tablets (md): Adaptive two-row layout with navigation row and action buttons below
