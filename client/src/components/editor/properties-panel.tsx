@@ -2629,27 +2629,25 @@ export function PropertiesPanel({
 
         {/* Keyboard Settings */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-foreground">Клавиатура</h3>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Label className="text-xs text-muted-foreground">Inline</Label>
-                <Switch
-                  checked={selectedNode.data.keyboardType === 'inline'}
-                  onCheckedChange={(checked) => {
-                    onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
-                  }}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs text-muted-foreground">Reply</Label>
-                <Switch
-                  checked={selectedNode.data.keyboardType === 'reply'}
-                  onCheckedChange={(checked) => {
-                    onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
-                  }}
-                />
-              </div>
+          <h3 className="text-sm font-medium text-foreground mb-3">⌨️ Клавиатура</h3>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 flex-1">
+              <Label className="text-xs font-medium text-foreground cursor-pointer flex-1">Inline кнопки</Label>
+              <Switch
+                checked={selectedNode.data.keyboardType === 'inline'}
+                onCheckedChange={(checked) => {
+                  onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'inline' : 'none' });
+                }}
+              />
+            </div>
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-card/80 transition-all duration-200 flex-1">
+              <Label className="text-xs font-medium text-foreground cursor-pointer flex-1">Reply кнопки</Label>
+              <Switch
+                checked={selectedNode.data.keyboardType === 'reply'}
+                onCheckedChange={(checked) => {
+                  onNodeUpdate(selectedNode.id, { keyboardType: checked ? 'reply' : 'none' });
+                }}
+              />
             </div>
           </div>
           <div className="space-y-4">
