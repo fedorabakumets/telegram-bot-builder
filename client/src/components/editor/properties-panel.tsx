@@ -4717,8 +4717,18 @@ export function PropertiesPanel({
           </div>
         )}
 
-        {/* Auto Transition Section - показывать только когда нет кнопок и нет сбора данных */}
-        {!selectedNode.type.includes('management') &&
+        {/* Auto Transition Section - скрыто для узлов управления */}
+        {selectedNode.type !== 'pin_message' && 
+         selectedNode.type !== 'unpin_message' && 
+         selectedNode.type !== 'delete_message' &&
+         selectedNode.type !== 'ban_user' && 
+         selectedNode.type !== 'unban_user' && 
+         selectedNode.type !== 'mute_user' && 
+         selectedNode.type !== 'unmute_user' && 
+         selectedNode.type !== 'kick_user' && 
+         selectedNode.type !== 'promote_user' && 
+         selectedNode.type !== 'demote_user' && 
+         selectedNode.type !== 'admin_rights' &&
          (!selectedNode.data.buttons || selectedNode.data.buttons.length === 0) &&
          (selectedNode.data.keyboardType === 'none' || selectedNode.data.keyboardType === 'reply') && (
           <div>
