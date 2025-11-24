@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LayoutConfig } from './layout-manager';
 
@@ -291,6 +291,23 @@ export function AdaptiveHeader({
           Экспорт
         </Button>
         
+        <Button 
+          variant="outline"
+          size="sm"
+          asChild
+          className="flex items-center justify-center"
+        >
+          <a
+            href="https://github.com/fedorabakumets/telegram-bot-builder"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Github className="h-3.5 w-3.5 mr-2" />
+            GitHub
+          </a>
+        </Button>
+        
         <div className="flex justify-center pt-2">
           <ThemeToggle />
         </div>
@@ -392,7 +409,7 @@ export function AdaptiveHeader({
           className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs max-sm:px-1 max-sm:py-0.5 max-sm:min-w-0 max-sm:w-full`}
         >
           <Bookmark className="h-2.5 w-2.5 max-sm:mx-auto" />
-          <span className="max-sm:hidden ml-1">Создать</span>
+          <span className="max-sm:hidden ml-1">Создать шаблон</span>
         </Button>
       )}
       
@@ -410,6 +427,23 @@ export function AdaptiveHeader({
       {isVertical && (
         <div className="h-px w-full bg-border my-2"></div>
       )}
+      
+      <Button 
+        variant="outline" 
+        size="sm"
+        asChild
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs`}
+        title="Открыть проект на GitHub"
+      >
+        <a
+          href="https://github.com/fedorabakumets/telegram-bot-builder"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Github className="h-3.5 w-3.5" />
+          <span className="max-sm:hidden ml-1">GitHub</span>
+        </a>
+      </Button>
       
       <div className="max-sm:col-span-1 max-sm:flex max-sm:justify-center">
         <ThemeToggle />

@@ -16,7 +16,15 @@ This application provides a **no-code visual Telegram bot builder** that enables
 ## User Preferences
 Preferred communication style: Simple, everyday language. No-code platform for non-technical users.
 
-## Recent Changes (Session: Major Refactoring)
+## Recent Changes (Current Session)
+- Added GitHub repository link button in application header (adaptive-header.tsx)
+- Updated canvas display to show actual images instead of text indicator
+- Images now preview on canvas nodes with max-height for optimal display
+- GitHub integration added to both desktop and mobile navigation
+- Updated README.md on GitHub repository with complete documentation
+- Synced changes to GitHub via API integration
+
+## Previous Session: Major Refactoring
 - Removed standalone node types: photo, video, audio, document, keyboard
 - Integrated media and keyboard functionality as properties within message nodes
 - Cleaned up ~9,000 lines of redundant code from bot-generator.ts
