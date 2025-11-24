@@ -168,8 +168,8 @@ export function PropertiesPanel({
       location: { latitude: 55.7558, longitude: 37.6176, title: 'Москва', address: 'Москва, Россия', foursquareId: '', foursquareType: '' },
       contact: { phoneNumber: '+7 (999) 123-45-67', firstName: 'Имя', lastName: 'Фамилия', userId: 0, vcard: '' },
       keyboard: { keyboardType: 'reply' },
-      start: { command: '/start', description: 'Запустить бота', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
-      command: { command: '/custom', description: 'Новая команда', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false },
+      start: { command: '/start', description: 'Запустить бота', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false, synonyms: [] },
+      command: { command: '/custom', description: 'Новая команда', showInMenu: true, isPrivateOnly: false, requiresAuth: false, adminOnly: false, synonyms: [] },
       pin_message: { 
         command: '/pin_message',
         synonyms: ['закрепить', 'прикрепить', 'зафиксировать'],
@@ -2676,9 +2676,8 @@ export function PropertiesPanel({
         </div>
         )}
 
-        {/* Synonyms - только для узлов кроме команд, управления контентом и управления пользователями */}
-        {selectedNode.type !== 'start' && selectedNode.type !== 'command' && 
-         selectedNode.type !== 'pin_message' && selectedNode.type !== 'unpin_message' && selectedNode.type !== 'delete_message' &&
+        {/* Synonyms - для всех узлов кроме управления контентом и управления пользователями */}
+        {selectedNode.type !== 'pin_message' && selectedNode.type !== 'unpin_message' && selectedNode.type !== 'delete_message' &&
          selectedNode.type !== 'ban_user' && selectedNode.type !== 'unban_user' && selectedNode.type !== 'mute_user' && 
          selectedNode.type !== 'unmute_user' && selectedNode.type !== 'kick_user' && selectedNode.type !== 'promote_user' && 
          selectedNode.type !== 'demote_user' && selectedNode.type !== 'admin_rights' && (
