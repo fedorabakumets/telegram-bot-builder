@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github } from 'lucide-react';
+import { FolderOpen, Bookmark, Download, User, Send, Layout, Navigation as NavigationIcon, Sidebar, Monitor, Sliders, Users, Menu, X, Code, Github, LogOut } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { LayoutConfig } from './layout-manager';
 
 interface BotInfo {
@@ -65,6 +66,9 @@ export function AdaptiveHeader({
   
   // Состояние для мобильного меню
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Проверка авторизации пользователя
+  const { user, logout } = useTelegramAuth();
   
   // Определяем мобильное устройство
   const isMobile = useIsMobile();
@@ -426,6 +430,40 @@ export function AdaptiveHeader({
       
       {isVertical && (
         <div className="h-px w-full bg-border my-2"></div>
+      )}
+      
+      {/* Информация о пользователе и выход */}
+      {user && (
+        <>
+          <div className={`flex items-center space-x-2 ${isVertical ? 'w-full px-2 py-2' : 'px-2'}`}>
+            {user.photoUrl && (
+              <img 
+                src={user.photoUrl} 
+                alt={user.firstName}
+                className="w-6 h-6 rounded-full"
+              />
+            )}
+            {!isVertical && (
+              <div className="text-right hidden sm:block">
+                <p className="text-xs font-medium text-foreground">{user.firstName}</p>
+                {user.username && (
+                  <p className="text-xs text-muted-foreground">@{user.username}</p>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={logout}
+            className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs text-destructive hover:text-destructive`}
+            title="Выход"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span className="max-sm:hidden ml-1">Выход</span>
+          </Button>
+        </>
       )}
       
       <Button 
