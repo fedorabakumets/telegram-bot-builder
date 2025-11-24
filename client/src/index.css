@@ -5,6 +5,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CRITICAL: Disable all transitions during page load to prevent flashing */
+:root:not(.transitions-enabled) * {
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-delay: 0s !important;
+  transition: none !important;
+  animation: none !important;
+}
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);

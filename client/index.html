@@ -21,16 +21,6 @@
     
     <title>Telegram Bot Builder</title>
     
-    <!-- Отключаем transitions при загрузке для предотвращения мигания -->
-    <style>
-      * {
-        transition-duration: 0s !important;
-        animation-duration: 0s !important;
-        animation-delay: 0s !important;
-        transition-delay: 0s !important;
-      }
-    </style>
-    
     <!-- Inline скрипт для предотвращения мигания темы -->
     <script>
       (function() {
@@ -63,27 +53,13 @@
   <body style="background-color: #ffffff !important; color: #0a0a0a !important; margin: 0 !important; padding: 0 !important;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Включаем transitions после загрузки страницы -->
+    <!-- Показываем страницу после загрузки React -->
     <script>
-      window.addEventListener('load', function() {
-        // Удаляем стиль, отключающий transitions
-        const style = document.head.querySelector('style');
-        if (style && style.textContent.includes('transition-duration')) {
-          style.remove();
-        }
-        
-        // Принудительно применяем transitions через CSS
-        const css = document.createElement('style');
-        css.textContent = `
-          * {
-            transition-duration: inherit !important;
-            animation-duration: inherit !important;
-          }
-        `;
-        document.head.appendChild(css);
-        
-        console.log('✅ Transitions включены после загрузки');
-      });
+      // Даем React время на инициализацию
+      setTimeout(() => {
+        document.documentElement.classList.add('ready');
+        console.log('✅ Страница готова к отображению');
+      }, 500);
     </script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js" defer></script>
