@@ -561,6 +561,7 @@ export const buttonSchema = z.object({
   requestLocation: z.boolean().optional(),
   buttonType: z.enum(['normal', 'option', 'complete']).default('normal'),
   skipDataCollection: z.boolean().default(false), // Отключить сбор ответов для этой кнопки
+  hideAfterClick: z.boolean().default(false), // Скрыть кнопку после использования
 });
 
 export const nodeSchema = z.object({
