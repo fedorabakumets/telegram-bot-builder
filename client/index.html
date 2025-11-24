@@ -20,6 +20,35 @@
     <meta http-equiv="Cache-Control" content="public, max-age=31536000" />
     
     <title>Telegram Bot Builder</title>
+    
+    <!-- Inline скрипт для предотвращения мигания темы -->
+    <script>
+      (function() {
+        try {
+          const storageKey = 'telegram-bot-builder-theme';
+          const theme = localStorage.getItem(storageKey);
+          const root = document.documentElement;
+          
+          if (theme === 'dark') {
+            root.classList.add('dark');
+            root.classList.remove('light');
+          } else if (theme === 'light') {
+            root.classList.add('light');
+            root.classList.remove('dark');
+          } else {
+            // system mode
+            const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (isDark) {
+              root.classList.add('dark');
+            } else {
+              root.classList.add('light');
+            }
+          }
+        } catch (e) {
+          // Fallback в случае ошибки
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
