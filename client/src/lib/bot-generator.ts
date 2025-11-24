@@ -7050,70 +7050,24 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           code += `                # Автопереход к следующему узлу\n`;
           code += `                auto_next_node_id = "${targetNode.data.autoTransitionTo}"\n`;
           code += `                logging.info(f"⚡ Автопереход от {next_node_id} к {auto_next_node_id}")\n`;
+          code += `                # Создаем искусственный callback для вызова обработчика\n`;
+          code += `                import types as aiogram_types\n`;
+          code += `                fake_callback = aiogram_types.SimpleNamespace(\n`;
+          code += `                    id="auto_transition",\n`;
+          code += `                    from_user=message.from_user,\n`;
+          code += `                    chat_instance="",\n`;
+          code += `                    data=auto_next_node_id,\n`;
+          code += `                    message=message,\n`;
+          code += `                    answer=lambda: None\n`;
+          code += `                )\n`;
           
-          // Находим целевой узел автоперехода
+          // Вызываем callback-обработчик вместо инлайн-отправки
           const autoTargetNode = nodes.find(n => n.id === targetNode.data.autoTransitionTo);
           if (autoTargetNode) {
-            const autoMessageText = autoTargetNode.data.messageText || autoTargetNode.data.text || '';
-            const autoFormattedText = formatTextForPython(autoMessageText);
-            code += `                auto_text = ${autoFormattedText}\n`;
-            code += '                # Замена переменных для автоперехода\n';
-            code += '                auto_user_vars = await get_user_from_db(user_id)\n';
-            code += '                if not auto_user_vars:\n';
-            code += '                    auto_user_vars = user_data.get(user_id, {})\n';
-            code += '                if not isinstance(auto_user_vars, dict):\n';
-            code += '                    auto_user_vars = {}\n';
-            code += '                import re\n';
-            code += '                def replace_variables_in_text(text_content, variables_dict):\n';
-            code += '                    if not text_content or not variables_dict:\n';
-            code += '                        return text_content\n';
-            code += '                    for var_name, var_data in variables_dict.items():\n';
-            code += '                        placeholder = "{" + var_name + "}"\n';
-            code += '                        if placeholder in text_content:\n';
-            code += '                            if isinstance(var_data, dict) and "value" in var_data:\n';
-            code += '                                var_value = str(var_data["value"]) if var_data["value"] is not None else var_name\n';
-            code += '                            elif var_data is not None:\n';
-            code += '                                var_value = str(var_data)\n';
-            code += '                            else:\n';
-            code += '                                var_value = var_name\n';
-            code += '                            text_content = text_content.replace(placeholder, var_value)\n';
-            code += '                    return text_content\n';
-            code += '                auto_text = replace_variables_in_text(auto_text, auto_user_vars)\n';
-            
-            // Генерируем клавиатуру для автоперехода
-            const autoButtons = autoTargetNode.data.buttons || [];
-            const autoKeyboardType = autoTargetNode.data.keyboardType || 'none';
-            
-            if (autoButtons.length > 0 && autoKeyboardType !== 'none') {
-              if (autoKeyboardType === 'reply') {
-                // Reply клавиатура
-                code += '                # Создаем reply клавиатуру для автоперехода\n';
-                code += '                auto_builder = ReplyKeyboardBuilder()\n';
-                autoButtons.forEach((btn) => {
-                  const btnText = formatTextForPython(btn.text || 'Button');
-                  code += `                auto_builder.add(KeyboardButton(text=${btnText}))\n`;
-                });
-                code += '                auto_keyboard = auto_builder.as_markup(resize_keyboard=True)\n';
-                code += '                await message.answer(auto_text, reply_markup=auto_keyboard)\n';
-              } else if (autoKeyboardType === 'inline') {
-                // Inline клавиатура
-                code += '                # Создаем inline клавиатуру для автоперехода\n';
-                code += '                auto_builder = InlineKeyboardBuilder()\n';
-                autoButtons.forEach((btn) => {
-                  const btnText = formatTextForPython(btn.text || 'Button');
-                  const callbackData = btn.id || 'callback';
-                  code += `                auto_builder.add(InlineKeyboardButton(text=${btnText}, callback_data="${callbackData}"))\n`;
-                });
-                code += '                auto_keyboard = auto_builder.as_markup()\n';
-                code += '                await message.answer(auto_text, reply_markup=auto_keyboard)\n';
-              }
-            } else {
-              // Нет кнопок
-              code += `                await message.answer(auto_text)\n`;
-            }
-            
-            code += `                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")\n`;
+            const safeFuncName = createSafeFunctionName(autoTargetNode.id);
+            code += `                await handle_callback_${safeFuncName}(fake_callback)\n`;
           }
+          code += `                logging.info(f"✅ Автопереход выполнен: {next_node_id} -> {auto_next_node_id}")\n`;
         }
       });
       code += '            else:\n';
