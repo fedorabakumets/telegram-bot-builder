@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 // Динамический импорт тяжелых генераторов для улучшения производительности
@@ -22,11 +23,12 @@ interface ExportModalProps {
   onClose: () => void;
   botData: BotData;
   projectName: string;
+  projectId: number | null;
 }
 
 type ExportFormat = 'python' | 'json' | 'requirements' | 'readme' | 'dockerfile' | 'config';
 
-export function ExportModal({ isOpen, onClose, botData, projectName }: ExportModalProps) {
+export function ExportModal({ isOpen, onClose, botData, projectName, projectId }: ExportModalProps) {
   const [selectedFormat, setSelectedFormat] = useState<CodeFormat>('python');
   const [validationResult, setValidationResult] = useState<{ isValid: boolean; errors: string[] }>({ isValid: true, errors: [] });
   const [botFatherCommands, setBotFatherCommands] = useState('');
@@ -43,7 +45,7 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
   });
 
   // Используем общий генератор кода
-  const { codeContent, isLoading, loadContent } = useCodeGenerator(botData, projectName, groups);
+  const { codeContent, isLoading, loadContent } = useCodeGenerator(botData, projectName, groups, false, projectId);
 
   // Определяем тему из DOM
   useEffect(() => {
@@ -121,68 +123,9 @@ export function ExportModal({ isOpen, onClose, botData, projectName }: ExportMod
     ).length
   };
 
-  // Асинхронная ленивая генерация экспорта - только когда нужен конкретный формат
-  const generateExportContent = useMemo(() => {
-    if (!isOpen || !botData) return {};
-    
-    return {
-      python: async () => {
-        const botGenerator = await loadBotGenerator();
-        const validation = botGenerator.validateBotStructure(botData);
-        setValidationResult(validation || { isValid: false, errors: [] });
-        
-        if (!validation?.isValid) return '';
-        return botGenerator.generatePythonCode(botData, projectName, groups, false, projectId);
-      },
-      json: async () => JSON.stringify(botData, null, 2),
-      requirements: async () => {
-        const botGenerator = await loadBotGenerator();
-        return botGenerator.generateRequirementsTxt();
-      },
-      readme: async () => {
-        const botGenerator = await loadBotGenerator();
-        return botGenerator.generateReadme(botData, projectName);
-      },
-      dockerfile: async () => {
-        const botGenerator = await loadBotGenerator();
-        return botGenerator.generateDockerfile();
-      },
-      config: async () => {
-        const botGenerator = await loadBotGenerator();
-        return botGenerator.generateConfigYaml(projectName);
-      }
-    };
-  }, [isOpen, botData, projectName, groups]);
-
-  // Асинхронное получение контента для выбранного формата
-  useEffect(() => {
-    async function loadContent() {
-      if (!generateExportContent[selectedFormat] || exportContent[selectedFormat]) return;
-      
-      try {
-        const content = await generateExportContent[selectedFormat]();
-        setExportContent(prev => ({ ...prev, [selectedFormat]: content }));
-        
-        // Для Python также устанавливаем основной код
-        if (selectedFormat === 'python') {
-          setGeneratedCode(content);
-        }
-      } catch (error) {
-        console.error('Error loading export content:', error);
-        toast({
-          title: "Ошибка генерации",
-          description: "Не удалось сгенерировать контент для экспорта",
-          variant: "destructive",
-        });
-      }
-    }
-    
-    loadContent();
-  }, [generateExportContent, selectedFormat, exportContent, toast]);
-
-  // Получение текущего контента
+  // Получение текущего контента из hook
   const getCurrentContent = () => {
-    return exportContent[selectedFormat] || '';
+    return codeContent[selectedFormat] || '';
   };
 
   // Получение свежих данных проекта с нормализацией при открытии
