@@ -3294,24 +3294,24 @@ export function PropertiesPanel({
 
                   {/* Conditional Messages List */}
                   <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <Label className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                        Настройка правил для показа сообщений
+                    <div className="space-y-2 mb-4">
+                      <Label className="text-sm font-semibold text-purple-700 dark:text-purple-300 block">
+                        📋 Настройка правил для показа сообщений
                       </Label>
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap gap-2">
                         <UIButton
                           size="sm"
-                          variant="ghost"
+                          variant="outline"
                           onClick={autoFixPriorities}
-                          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                          className="text-xs border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200"
                           title="Автоматически расставить приоритеты для избежания конфликтов"
                         >
-                          <i className="fas fa-sort-amount-down mr-1"></i>
+                          <i className="fas fa-sort-amount-down mr-1.5"></i>
                           Приоритеты
                         </UIButton>
                         <UIButton
                           size="sm"
-                          variant="outline"
+                          variant="default"
                           onClick={() => {
                             const currentConditions = selectedNode.data.conditionalMessages || [];
                             const nextPriority = Math.max(0, ...currentConditions.map(c => c.priority || 0)) + 10;
@@ -3333,9 +3333,9 @@ export function PropertiesPanel({
                               conditionalMessages: [...currentConditions, newCondition] 
                             });
                           }}
-                          className="text-xs"
+                          className="text-xs bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-600 dark:hover:to-purple-700 transition-all duration-200"
                         >
-                          <i className="fas fa-plus mr-1"></i>
+                          <i className="fas fa-plus mr-1.5"></i>
                           Добавить правило
                         </UIButton>
                       </div>
