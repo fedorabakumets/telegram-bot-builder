@@ -2447,7 +2447,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `            await callback_query.message.edit_text("Переход завершен")\n`;
             } else {
               code += '        # Завершение множественного выбора\n';
-              code += `        await safe_edit_or_send(callback_query, "✅ Выбор завершен!")\n`;
+              code += `        await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)\n`;
             }
             code += '        return\n';
             code += '    \n';
@@ -3643,9 +3643,9 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += '    # Отправляем сообщение start узла\n';
               code += '    try:\n';
               code += '        if keyboard is not None:\n';
-              code += `            await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseMode})\n`;
+              code += `            await safe_edit_or_send(callback_query, text, reply_markup=keyboard, is_auto_transition=True${parseMode})\n`;
               code += '        else:\n';
-              code += `            await safe_edit_or_send(callback_query, text${parseMode})\n`;
+              code += `            await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseMode})\n`;
               code += '    except Exception:\n';
               code += '        if keyboard is not None:\n';
               code += `            await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
@@ -3689,13 +3689,13 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 code += '    keyboard = builder.as_markup()\n';
                 code += '    # Отправляем сообщение command узла с клавиатурой\n';
                 code += '    try:\n';
-                code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseMode})\n`;
+                code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard, is_auto_transition=True${parseMode})\n`;
                 code += '    except Exception:\n';
                 code += `        await callback_query.message.answer(text, reply_markup=keyboard${parseMode})\n`;
               } else {
                 code += '    # Отправляем сообщение command узла без клавиатуры\n';
                 code += '    try:\n';
-                code += `        await safe_edit_or_send(callback_query, text${parseMode})\n`;
+                code += `        await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseMode})\n`;
                 code += '    except Exception:\n';
                 code += `        await callback_query.message.answer(text${parseMode})\n`;
               }
@@ -4220,7 +4220,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
               code += `            await callback_query.message.edit_text("Переход завершен")\n`;
             } else {
               code += '        # Завершение множественного выбора\n';
-              code += `        await safe_edit_or_send(callback_query, "✅ Выбор завершен!")\n`;
+              code += `        await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)\n`;
             }
             code += '        return\n';
             code += '    \n';
@@ -8413,7 +8413,7 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
           // Если целевой узел не найден, просто завершаем выбор без перехода
           code += `            # Целевой узел не найден, завершаем выбор\n`;
           code += `            logging.warning(f"⚠️ Целевой узел не найден: ${node.data.continueButtonTarget}")\n`;
-          code += `            await safe_edit_or_send(callback_query, "✅ Выбор завершен!")\n`;
+          code += `            await safe_edit_or_send(callback_query, "✅ Выбор завершен!", is_auto_transition=True)\n`;
           hasContent = true;
         }
       } else {
