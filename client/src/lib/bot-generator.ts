@@ -3877,7 +3877,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                   } else if (targetNode.data.formatMode === 'html') {
                     parseModeTarget = ', parse_mode=ParseMode.HTML';
                   }
-                  code += `    await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseModeTarget})\n`;
+                  // Для автопереходов отправляем новое сообщение вместо редактирования
+                  code += `    await callback_query.message.answer(text${parseModeTarget})\n`;
                 }
               } // Закрываем else блок для обычного отображения (основной цикл)
             } // Закрываем else блок для обычных текстовых сообщений (основной цикл)
@@ -5244,7 +5245,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 }
                 code += `        await safe_edit_or_send(callback_query, text, reply_markup=keyboard${parseModeTarget})\n`;
               } else {
-                code += '    await safe_edit_or_send(callback_query, text, is_auto_transition=True)\n';
+                // Для автопереходов отправляем новое сообщение вместо редактирования
+                code += '    await callback_query.message.answer(text)\n';
               }
               code += '    \n';
             } else {
@@ -5282,7 +5284,8 @@ export function generatePythonCode(botData: BotData, botName: string = "MyBot", 
                 } else if (targetNode.data.formatMode === 'html') {
                   parseModeTarget = ', parse_mode=ParseMode.HTML';
                 }
-                code += `    await safe_edit_or_send(callback_query, text, is_auto_transition=True${parseModeTarget})\n`;
+                // Для автопереходов отправляем новое сообщение вместо редактирования
+                code += `    await callback_query.message.answer(text${parseModeTarget})\n`;
               }
             } // Закрываем else блок для обычного отображения
           } // Закрываем else блок для regular message nodes
