@@ -23,7 +23,12 @@ export function TelegramLoginWidget({ botInfo, onAuth }: TelegramLoginWidgetProp
   const { toast } = useToast();
   
   // Используем username бота из env или botInfo
-  const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || botInfo?.username;
+  let botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || botInfo?.username;
+  
+  // Удаляем @ в начале если есть
+  if (botUsername && botUsername.startsWith('@')) {
+    botUsername = botUsername.slice(1);
+  }
   
   // Если нет username, не показываем виджет
   if (!botUsername) {

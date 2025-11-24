@@ -17,19 +17,21 @@ This application provides a **no-code visual Telegram bot builder** that enables
 Preferred communication style: Simple, everyday language. No-code platform for non-technical users.
 
 ## Recent Changes (Current Session)
-- **🐛 Fixed "LogIn is not defined" error** (adaptive-header.tsx + telegram-login-widget.tsx):
-  - Removed old TelegramAuth button from MobileActions that was using removed LogIn icon
-  - Added fallback bot username ('botcraft_studio_bot') to TelegramLoginWidget
-  - Widget now displays correctly even when botInfo.username is not available
-  - All LSP diagnostics cleared - app compiles cleanly
+- **✅ Telegram Login Widget fully integrated** (telegram-login-widget.tsx + adaptive-header.tsx):
+  - Fixed "LogIn is not defined" error - removed old button references
+  - Widget configured with environment variable VITE_TELEGRAM_BOT_USERNAME
+  - Automatically strips @ from username (e.g., @blogspotbotbotbot → blogspotbotbotbot)
+  - Widget script successfully loads and initializes on editor page
+  - **Note**: Widget requires HTTPS to display (Telegram requirement). On production/HTTPS URLs it will show Telegram login button in header
+  - On localhost HTTP, widget loads but doesn't render (use Replit production domain to test)
+  - Backend endpoint `/api/auth/telegram` handles OAuth callback and creates user session
   
-- **✨ Implemented Telegram Login Widget** (telegram-login-widget.tsx + routes.ts + adaptive-header.tsx):
-  - Added official Telegram Login Widget - official authorization button from Telegram
-  - User clicks button, signs in with their Telegram account, receives auth data
+- **✨ Telegram Login Widget setup** (telegram-login-widget.tsx + routes.ts + adaptive-header.tsx):
+  - Official Telegram Login Widget - standard OAuth-style authorization from Telegram
+  - User clicks button, signs in with Telegram account, receives auth data
   - Simple authorization endpoint `/api/auth/telegram` that creates user session
-  - Replaces old Client API авторизация - now just standard login like other websites
-  - Flow: Click Telegram button → User signs in with Telegram → Redirects back authenticated
-  - No complex credentials needed - official Telegram widget handles everything
+  - Replaces old Client API авторизация - now official Telegram OAuth login
+  - Flow: Click Telegram button in header → User signs in with Telegram → Returns authenticated
   
 - Previous: **✨ Simplified Telegram Login Flow** (telegram-auth.tsx + telegram-client.ts):
   - Removed credentials input step - API ID/Hash now configured via env vars

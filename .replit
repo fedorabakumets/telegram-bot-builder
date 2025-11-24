@@ -102,3 +102,8 @@ outputType = "webview"
 [agent]
 integrations = ["javascript_database:1.0.0", "github:1.0.0"]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+VITE_TELEGRAM_BOT_USERNAME = "@blogspotbotbotbot"
