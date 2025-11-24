@@ -5,9 +5,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Disable pointer events during page load to prevent flickering on hover */
-:root:not(.page-loaded) {
-  pointer-events: none !important;
+/* Disable ALL hover effects by overriding every possible CSS property */
+*:hover {
+  background-color: inherit !important;
+  background-image: none !important;
+  color: inherit !important;
+  border-color: inherit !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  outline: none !important;
+  text-decoration: inherit !important;
+  text-shadow: none !important;
+  cursor: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: inherit !important;
+  word-spacing: inherit !important;
+}
+
+/* Also disable hover on pseudo-elements */
+*::before:hover,
+*::after:hover {
+  background-color: inherit !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  transform: none !important;
 }
 
 :root {
