@@ -432,19 +432,17 @@ export function AdaptiveHeader({
         <div className="h-px w-full bg-border my-2"></div>
       )}
       
-      {onShowTelegramAuth && (
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setShowTelegramAuth(true)}
-          className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs`}
-          title="Вход через Telegram"
-          data-testid="button-auth-header"
-        >
-          <LogIn className="h-3.5 w-3.5" />
-          <span className="max-sm:hidden ml-1">Вход</span>
-        </Button>
-      )}
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={() => setShowTelegramAuth(true)}
+        className={`${isVertical ? 'w-full justify-center' : 'flex items-center justify-center'} px-1 py-0.5 text-xs`}
+        title="Вход через Telegram"
+        data-testid="button-auth-header"
+      >
+        <LogIn className="h-3.5 w-3.5" />
+        <span className="max-sm:hidden ml-1">Вход</span>
+      </Button>
       
       <Button 
         variant="outline" 
